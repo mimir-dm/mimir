@@ -1246,11 +1246,77 @@ pub async fn export_campaign_documents(
         }
     }
 
+    // Fetch maps and tokens for the campaign
+    let mut maps_data: Vec<(mimir_dm_print::RenderMap, Vec<mimir_dm_print::RenderToken>)> = Vec::new();
+    {
+        use mimir_dm_core::services::{MapService, TokenService};
+
+        let mut map_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut map_service = MapService::new(&mut map_conn);
+        let maps = map_service
+            .list_campaign_maps(campaign_id)
+            .map_err(|e| format!("Failed to get maps: {}", e))?;
+
+        for map_summary in maps {
+            // Get full map details
+            let mut detail_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
+
+            let mut detail_service = MapService::new(&mut detail_conn);
+            if let Ok(Some(map)) = detail_service.get_map(map_summary.id) {
+                // Get tokens for this map
+                let mut token_conn = state
+                    .db
+                    .get_connection()
+                    .map_err(|e| format!("Database error: {}", e))?;
+
+                let mut token_service = TokenService::new(&mut token_conn);
+                let tokens = token_service
+                    .list_tokens_for_map(map.id)
+                    .unwrap_or_default();
+
+                // Convert to RenderMap
+                let render_map = mimir_dm_print::RenderMap {
+                    name: map.name.clone(),
+                    image_path: map.image_path.clone(),
+                    width_px: map.width_px,
+                    height_px: map.height_px,
+                    grid_type: map.grid_type.clone(),
+                    grid_size_px: map.grid_size_px,
+                    grid_offset_x: map.grid_offset_x,
+                    grid_offset_y: map.grid_offset_y,
+                };
+
+                // Convert tokens to RenderToken
+                let render_tokens: Vec<mimir_dm_print::RenderToken> = tokens
+                    .into_iter()
+                    .map(|t| mimir_dm_print::RenderToken {
+                        name: t.name,
+                        x: t.x,
+                        y: t.y,
+                        size: t.size,
+                        color: t.color,
+                        token_type: t.token_type,
+                    })
+                    .collect();
+
+                maps_data.push((render_map, render_tokens));
+            }
+        }
+    }
+
     info!(
-        "Rendering {} campaign documents, {} modules, and {} NPCs for campaign '{}'",
+        "Rendering {} campaign documents, {} modules, {} NPCs, and {} maps for campaign '{}'",
         campaign_file_paths.len(),
         module_export_data.len(),
         npcs_json.len(),
+        maps_data.len(),
         campaign.name
     );
 
@@ -1264,7 +1330,10 @@ pub async fn export_campaign_documents(
     // Convert NPCs to JSON value
     let npcs_value = serde_json::Value::Array(npcs_json);
 
-    match service.render_campaign_combined_with_monsters_and_npcs(&campaign_file_paths, &campaign.name, modules_json, npcs_value) {
+    // Get the campaign base path for resolving map images
+    let campaign_base_path = std::path::PathBuf::from(&campaign.directory_path);
+
+    match service.render_campaign_combined_with_all(&campaign_file_paths, &campaign.name, modules_json, npcs_value, maps_data, &campaign_base_path) {
         Ok(pdf_bytes) => {
             let size_bytes = pdf_bytes.len();
             let pdf_base64 = base64::Engine::encode(
