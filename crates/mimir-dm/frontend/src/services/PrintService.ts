@@ -107,6 +107,23 @@ export interface HandoutData {
   footer?: string
 }
 
+/** Map print mode */
+export type MapPrintMode = 'preview' | 'play'
+
+/** Options for printing a map */
+export interface MapPrintOptions {
+  /** Print mode: preview (fit to page) or play (1"=5ft scale) */
+  mode?: MapPrintMode
+  /** Show grid overlay on the map */
+  show_grid?: boolean
+  /** Show LOS wall segments as red lines */
+  show_los_walls?: boolean
+  /** Show starting positions as numbered circles (instead of tokens) */
+  show_positions?: boolean
+  /** Include token cutout sheets for printing */
+  include_cutouts?: boolean
+}
+
 class PrintServiceClass {
   /**
    * List all available print templates
@@ -300,6 +317,24 @@ class PrintServiceClass {
 
     if (!response.success || !response.data) {
       throw new Error(response.error || 'Failed to export module documents')
+    }
+
+    return response.data
+  }
+
+  /**
+   * Print a map to PDF with configurable options
+   * @param mapId - The ID of the map
+   * @param options - Print options (mode, overlays, etc.)
+   */
+  async printMap(mapId: number, options?: MapPrintOptions): Promise<PrintResult> {
+    const response = await invoke<ApiResponse<PrintResult>>('print_map', {
+      mapId,
+      options
+    })
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to print map')
     }
 
     return response.data

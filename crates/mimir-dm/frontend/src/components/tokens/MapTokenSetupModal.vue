@@ -158,7 +158,6 @@
             </div>
           </div>
         </div>
-      </div>
 
       <!-- Context Menu -->
       <div

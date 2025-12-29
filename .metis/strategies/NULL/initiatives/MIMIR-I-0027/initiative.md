@@ -4,14 +4,14 @@ level: initiative
 title: "PDF Export System Rework"
 short_code: "MIMIR-I-0027"
 created_at: 2025-12-25T02:41:15.291813+00:00
-updated_at: 2025-12-29T16:20:46.492052+00:00
+updated_at: 2025-12-29T16:29:16.826440+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/active"
 
 
 exit_criteria_met: false

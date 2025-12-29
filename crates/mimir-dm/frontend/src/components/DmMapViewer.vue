@@ -122,6 +122,21 @@
           <span>Push View</span>
         </button>
       </div>
+
+      <!-- Print button -->
+      <div class="toolbar-group">
+        <button
+          class="toolbar-btn print-btn"
+          @click="showPrintDialog = true"
+          :disabled="!mapImageUrl"
+          title="Print map to PDF"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+          </svg>
+          <span>Print</span>
+        </button>
+      </div>
     </div>
 
     <!-- Map Viewport -->
@@ -382,6 +397,16 @@
       @close="showQuickAddModal = false"
       @add-token="handleQuickAddToken"
     />
+
+    <!-- Map Print Dialog -->
+    <MapPrintDialog
+      :visible="showPrintDialog"
+      :map-id="mapId"
+      :map-name="mapName"
+      :map-dimensions="mapWidth && mapHeight ? { width: mapWidth, height: mapHeight } : undefined"
+      :grid-size-px="effectiveGridSize"
+      @close="showPrintDialog = false"
+    />
   </div>
 </template>
 
@@ -400,6 +425,7 @@ import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LosDebugOverlay from '@/components/los/LosDebugOverlay.vue'
 import DoorInteractionOverlay from '@/components/los/DoorInteractionOverlay.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
+import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
 import type { Token, CreateTokenRequest } from '@/types/api'
 
 // Throttle helper for smooth updates
@@ -487,6 +513,9 @@ const contextMenu = ref<{
 
 // Quick add modal state
 const showQuickAddModal = ref(false)
+
+// Print dialog state
+const showPrintDialog = ref(false)
 
 // Fog of war state
 const fogEnabled = ref(false)
@@ -1585,6 +1614,16 @@ onUnmounted(() => {
 .push-btn:hover:not(:disabled) {
   background: var(--color-primary-600);
   border-color: var(--color-primary-600);
+}
+
+.print-btn {
+  background: var(--color-base-100);
+  border-color: var(--color-border);
+}
+
+.print-btn:hover:not(:disabled) {
+  background: var(--color-base-200);
+  border-color: var(--color-primary-400);
 }
 
 .zoom-level {

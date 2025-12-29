@@ -525,6 +525,7 @@ fn main() {
             generate_monster_pdf,
             generate_session_pdf,
             save_pdf,
+            print_map,
             export_campaign_document,
             export_campaign_documents,
             export_module_documents

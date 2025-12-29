@@ -43,7 +43,10 @@ pub mod service;
 pub mod world;
 
 pub use error::{PrintError, Result};
-pub use map_renderer::{render_map, RenderMap, RenderToken, RenderedMap};
+pub use map_renderer::{
+    render_map, render_map_for_print, MapPrintOptions, RenderMap, RenderToken, RenderedMap,
+    RenderedMapForPrint,
+};
 pub use markdown::{markdown_to_typst, parse_campaign_document, ParsedDocument};
 pub use service::{PrintService, TemplateInfo};
 pub use world::MimirTypstWorld;
