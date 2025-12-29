@@ -681,21 +681,23 @@ mod tests {
     #[test]
     fn test_process_wide_image_resized() {
         // Wide image exceeding max width - should be scaled down
-        let png_bytes = create_test_png(8000, 4000);
+        // Use 5000x2500 (12.5M pixels) instead of 8000x4000 (32M) for faster tests
+        let png_bytes = create_test_png(5000, 2500);
         let (jpeg_bytes, width, height) = process_map_image(&png_bytes, 4096).unwrap();
 
         assert_eq!(width, 4096);
-        assert_eq!(height, 2048); // Proportional scaling
+        assert_eq!(height, 2048); // Proportional scaling (5000->4096 = 0.8192, 2500*0.8192 = 2048)
         assert!(!jpeg_bytes.is_empty());
     }
 
     #[test]
     fn test_process_tall_image_resized() {
         // Tall image exceeding max height - should be scaled down
-        let png_bytes = create_test_png(3000, 6000);
+        // Use 2500x5000 (12.5M pixels) instead of 3000x6000 (18M) for faster tests
+        let png_bytes = create_test_png(2500, 5000);
         let (jpeg_bytes, width, height) = process_map_image(&png_bytes, 4096).unwrap();
 
-        assert_eq!(width, 2048); // Proportional scaling
+        assert_eq!(width, 2048); // Proportional scaling (5000->4096 = 0.8192, 2500*0.8192 = 2048)
         assert_eq!(height, 4096);
         assert!(!jpeg_bytes.is_empty());
     }

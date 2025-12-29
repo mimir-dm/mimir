@@ -493,6 +493,7 @@ mod tests {
                 pixels_per_grid: 70,
             },
             image: "SGVsbG8=".to_string(),
+            environment: None,
             line_of_sight: vec![
                 vec![
                     UvttPoint { x: 0.0, y: 0.0 },
