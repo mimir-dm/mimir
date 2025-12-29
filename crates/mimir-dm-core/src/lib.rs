@@ -21,7 +21,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 // Re-export commonly used types
 pub use connection::establish_connection;
 pub use db::{DatabaseService, DbConnection, DbPool};
-pub use error::{DbError, MimirError, MimirResult, Result};
+pub use error::{BoxedError, DbError, MimirError, MimirResult, Result};
 
 // Re-export campaign models
 pub use models::campaign::{Campaign, Document, Module, TemplateDocument, WorkflowCard};

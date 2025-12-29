@@ -4,15 +4,15 @@ level: task
 title: "Replace string-based cross-crate errors with proper error types"
 short_code: "MIMIR-T-0172"
 created_at: 2025-12-18T14:25:20.914952+00:00
-updated_at: 2025-12-18T14:25:20.914952+00:00
+updated_at: 2025-12-29T14:26:04.758668+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -65,6 +65,12 @@ Replace string-based error variants for Print and LLM errors in MimirError with 
 - **Current Problems**: In `crates/mimir-dm-core/src/error.rs:57-63`, `Print(String)` and `Llm(String)` variants lose error context at crate boundaries. Cannot pattern match on specific error types. Debugging requires string parsing.
 - **Benefits of Fixing**: Full error chain preserved for debugging, enables proper error matching in handlers, better structured error messages in logs.
 - **Risk Assessment**: Low immediate risk, but debugging cross-crate errors is harder than necessary. Error handling code is more verbose than needed.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

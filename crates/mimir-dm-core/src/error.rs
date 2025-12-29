@@ -27,13 +27,13 @@
 //!
 //! ### Wrapping other error types
 //! ```ignore
-//! // PrintError -> MimirError
+//! // PrintError -> MimirError (preserves full error chain)
 //! let result = print_service.render()
-//!     .map_err(|e| MimirError::Print(e.to_string()))?;
+//!     .map_err(|e| MimirError::Print(Box::new(e)))?;
 //!
-//! // LlmError -> MimirError
+//! // LlmError -> MimirError (preserves full error chain)
 //! let response = llm_service.query()
-//!     .map_err(|e| MimirError::Llm(e.to_string()))?;
+//!     .map_err(|e| MimirError::Llm(Box::new(e)))?;
 //! ```
 
 use thiserror::Error;
@@ -43,6 +43,10 @@ pub type Result<T> = std::result::Result<T, DbError>;
 
 /// Result type alias using the unified MimirError
 pub type MimirResult<T> = std::result::Result<T, MimirError>;
+
+/// Boxed error type for cross-crate error handling.
+/// Preserves the full error chain while avoiding circular dependencies.
+pub type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// Unified error type for the Mimir application.
 ///
@@ -54,13 +58,13 @@ pub enum MimirError {
     #[error("Database error: {0}")]
     Database(#[from] DbError),
 
-    /// Print/PDF generation error (wrapped as string since PrintError is in another crate)
+    /// Print/PDF generation error (boxed to avoid circular deps with mimir-dm-print)
     #[error("Print error: {0}")]
-    Print(String),
+    Print(#[source] BoxedError),
 
-    /// LLM operation error (wrapped as string since LlmError is in another crate)
+    /// LLM operation error (boxed to avoid circular deps with mimir-dm-llm)
     #[error("LLM error: {0}")]
-    Llm(String),
+    Llm(#[source] BoxedError),
 
     /// Configuration error
     #[error("Configuration error: {0}")]
@@ -96,6 +100,16 @@ pub enum MimirError {
 }
 
 impl MimirError {
+    /// Create a print error from any error type
+    pub fn print<E: std::error::Error + Send + Sync + 'static>(err: E) -> Self {
+        MimirError::Print(Box::new(err))
+    }
+
+    /// Create an LLM error from any error type
+    pub fn llm<E: std::error::Error + Send + Sync + 'static>(err: E) -> Self {
+        MimirError::Llm(Box::new(err))
+    }
+
     /// Create a validation error
     pub fn validation(msg: impl Into<String>) -> Self {
         MimirError::Validation(msg.into())
