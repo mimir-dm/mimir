@@ -32,6 +32,11 @@ fontdb = "0.21"
 # File path handling
 walkdir = { workspace = true }
 
+# Image processing for map rendering
+image = "0.25"
+imageproc = "0.25"
+rusttype = "0.9"
+
 # Base64 encoding for Tauri commands
 base64 = { workspace = true }
 

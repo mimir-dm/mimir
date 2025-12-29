@@ -154,6 +154,7 @@ impl<'a> MapService<'a> {
                     original_height_px: m.original_height_px,
                     fog_enabled: m.fog_enabled,
                     ambient_light: m.ambient_light,
+                    image_path: m.image_path,
                 }
             })
             .collect();

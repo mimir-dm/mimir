@@ -531,14 +531,84 @@ pub async fn serve_map_image(
         }
     };
 
-    let image_path = state.paths.data_dir.join("maps").join(&map.image_path);
+    // Check if this is a UVTT file
+    let is_uvtt = map.image_path.ends_with(".dd2vtt");
+
+    // Build the correct path based on storage location
+    let image_path = if is_uvtt {
+        // UVTT files are stored in campaign/module maps directories
+        if let Some(module_id) = map.module_id {
+            state
+                .paths
+                .data_dir
+                .join("modules")
+                .join(module_id.to_string())
+                .join("maps")
+                .join(&map.image_path)
+        } else {
+            state
+                .paths
+                .data_dir
+                .join("campaigns")
+                .join(map.campaign_id.to_string())
+                .join("maps")
+                .join(&map.image_path)
+        }
+    } else {
+        // Legacy path for old-style maps
+        state.paths.data_dir.join("maps").join(&map.image_path)
+    };
 
     if !image_path.exists() {
         error!("Map image not found: {:?}", image_path);
-        return Ok(ApiResponse::error("Map image not found".to_string()));
+        return Ok(ApiResponse::error(format!(
+            "Map image not found: {:?}",
+            image_path
+        )));
     }
 
-    // Read the image file
+    // Read the file
+    let file_data = match fs::read(&image_path) {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Failed to read map file: {}", e);
+            return Ok(ApiResponse::error(format!("Failed to read map: {}", e)));
+        }
+    };
+
+    // For UVTT files, extract the image from the JSON
+    if is_uvtt {
+        // Parse UVTT JSON and extract image
+        let uvtt: serde_json::Value = match serde_json::from_slice(&file_data) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Failed to parse UVTT file: {}", e);
+                return Ok(ApiResponse::error(format!("Invalid UVTT file: {}", e)));
+            }
+        };
+
+        // Get the image field (base64 encoded)
+        let image_base64 = match uvtt.get("image").and_then(|v| v.as_str()) {
+            Some(img) => img,
+            None => {
+                error!("UVTT file missing image field");
+                return Ok(ApiResponse::error("UVTT file missing image".to_string()));
+            }
+        };
+
+        // The UVTT image is already base64, just need to add the data URL prefix
+        // UVTT images are typically PNG
+        let data_url = format!("data:image/png;base64,{}", image_base64);
+
+        info!(
+            "Successfully served UVTT map image: {} ({}KB base64)",
+            map.image_path,
+            image_base64.len() / 1024
+        );
+        return Ok(ApiResponse::success(data_url));
+    }
+
+    // For regular image files
     match fs::read(&image_path) {
         Ok(image_data) => {
             // Determine MIME type based on extension

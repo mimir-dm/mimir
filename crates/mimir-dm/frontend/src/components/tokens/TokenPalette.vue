@@ -194,6 +194,7 @@ const visibleToPlayers = ref(true)
 const monsterSearch = ref('')
 const monsterResults = ref<Monster[]>([])
 const selectedMonster = ref<Monster | null>(null)
+const selectedMonsterSource = ref<string | null>(null)  // e.g., 'MM' for Monster Manual
 
 // Update color when type changes
 watch(selectedType, (type) => {
@@ -223,6 +224,7 @@ function clearSelection() {
   selectedType.value = null
   tokenName.value = ''
   selectedMonster.value = null
+  selectedMonsterSource.value = null
   monsterSearch.value = ''
   monsterResults.value = []
   selectedModuleMonster.value = null
@@ -276,12 +278,13 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
     selectedSize.value = sizeMap[mm.monster_data.size] || 'medium'
   }
 
-  // Set linked monster info
+  // Set linked monster info (for display, not for DB linking)
   selectedMonster.value = {
-    id: mm.monster_data?.id || 0,
+    id: 0,  // Not used - monster_id is not stable
     name: mm.monster_name,
     cr: mm.monster_data?.cr || 'N/A'
   }
+  selectedMonsterSource.value = mm.monster_source
 
   selectedColor.value = TOKEN_TYPE_COLORS.monster
   emitConfig()
@@ -340,6 +343,7 @@ function selectMonster(monster: Monster) {
 
 function clearMonster() {
   selectedMonster.value = null
+  selectedMonsterSource.value = null
   tokenName.value = ''
 }
 
@@ -360,8 +364,10 @@ function emitConfig() {
     map_id: 0 // Will be set by parent
   }
 
-  if (selectedMonster.value) {
-    config.monster_id = selectedMonster.value.id
+  // Set image_path based on monster name/source (like dev seeder does)
+  // Don't use monster_id - it's not stable across reimports
+  if (selectedMonster.value && selectedMonsterSource.value) {
+    config.image_path = `img/bestiary/tokens/${selectedMonsterSource.value}/${selectedMonster.value.name}.webp`
   }
 
   emit('token-config-change', config as CreateTokenRequest)
@@ -375,8 +381,7 @@ const currentConfig = computed(() => {
     token_type: selectedType.value,
     size: selectedSize.value,
     color: selectedColor.value,
-    visible_to_players: visibleToPlayers.value,
-    monster_id: selectedMonster.value?.id
+    visible_to_players: visibleToPlayers.value
   }
 })
 

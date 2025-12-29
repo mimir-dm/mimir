@@ -458,6 +458,7 @@ diesel::table! {
         full_monster_json -> Text,
         fluff_json -> Nullable<Text>,
         created_at -> Nullable<Timestamp>,
+        token_image_path -> Nullable<Text>,
     }
 }
 
