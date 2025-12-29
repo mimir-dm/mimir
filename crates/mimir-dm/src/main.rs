@@ -260,6 +260,10 @@ fn main() {
             update_map_grid,
             delete_map,
             serve_map_image,
+            // Map v2 commands (UVTT-based)
+            upload_map_v2,
+            get_uvtt_map,
+            get_uvtt_map_image,
             // Token commands
             create_token,
             get_token,
@@ -273,6 +277,7 @@ fn main() {
             set_token_visibility,
             delete_token,
             delete_tokens_for_map,
+            serve_token_image,
             // Fog of war commands
             toggle_fog,
             enable_fog,

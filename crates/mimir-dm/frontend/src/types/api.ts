@@ -131,6 +131,7 @@ export interface CreateTokenRequest {
   y: number
   visible_to_players?: boolean
   color?: string
+  image_path?: string
   monster_id?: number
   character_id?: number
   notes?: string

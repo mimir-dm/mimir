@@ -1,35 +1,36 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: refactor-duplicated-log-parsing
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
-parent: MIMIR-I-0028
+title: "Refactor duplicated log parsing logic in logs.rs"
+short_code: "MIMIR-T-0186"
+created_at: 2025-12-19T17:27:59.734989+00:00
+updated_at: 2025-12-19T19:08:09.811944+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0028
+initiative_id: NULL
 ---
 
-# Add UVTT fields to maps table migration
+# Refactor duplicated log parsing logic in logs.rs
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0028]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Consolidate duplicated log parsing and filtering logic in logs.rs into reusable functions.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -61,9 +62,23 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Duplicated parsing logic; changes must be made in multiple places
+- **Benefits of Fixing**: Single parsing implementation, consistent behavior, easier to extend
+- **Risk Assessment**: Low - log parsing is well-isolated functionality
+
+### Duplication Found (jscpd analysis)
+- Lines 84-97 ↔ 129-142: Log entry parsing (~13 lines)
+- Lines 98-109 ↔ 143-155: Log formatting (~12 lines)
+- Lines 212-232 ↔ 286-306: Log filtering (~20 lines)
+
+### Suggested Approach
+1. Create `parse_log_entry()` function for shared parsing
+2. Create `format_log_entry()` function for output formatting
+3. Create `LogFilter` struct with predicate-based filtering
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -71,9 +86,10 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Log parsing consolidated into single function
+- [ ] Log filtering uses shared predicate logic
+- [ ] Existing log viewing functionality unchanged
+- [ ] jscpd reports no duplication in logs.rs
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -123,42 +139,18 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 - **Example Request**: {Code example}
 - **Example Response**: {Expected response format}
 
-## Implementation Notes
+## Implementation Notes **[CONDITIONAL: Technical Task]**
+
+{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
 
 ### Technical Approach
-
-**Migration:** `040_add_los_data/up.sql`
-
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
-
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
-}
-```
+{How this will be implemented}
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+{Other tasks or systems this depends on}
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+{Technical risks and mitigation strategies}
 
 ## Status Updates **[REQUIRED]**
 

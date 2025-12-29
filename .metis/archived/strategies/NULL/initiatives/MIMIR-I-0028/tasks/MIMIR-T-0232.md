@@ -1,10 +1,10 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: create-uvttimportpreview-modal
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Create UvttImportPreview modal with metadata display"
+short_code: "MIMIR-T-0232"
+created_at: 2025-12-25T16:41:50.504724+00:00
+updated_at: 2025-12-25T16:41:50.504724+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Create UvttImportPreview modal with metadata display
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Create UvttImportPreview modal that displays map preview, detected metadata (grid size, wall count, portal count, lights), and import options before committing the import.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -71,9 +71,17 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Modal displays map image thumbnail from UVTT
+- [ ] Shows grid dimensions (e.g., "35 x 20 squares")
+- [ ] Shows wall segment count from line_of_sight
+- [ ] Shows portal count from portals array
+- [ ] Shows light source count from lights array
+- [ ] Checkbox for "Import LOS geometry" (default: checked)
+- [ ] Checkbox for "Import lights" (default: checked)
+- [ ] Name input field (defaults to filename without extension)
+- [ ] Import button calls `import_uvtt` command
+- [ ] Cancel button closes modal without action
+- [ ] Loading state during import with progress feedback
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +135,42 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**File:** `frontend/src/features/campaigns/components/StageLanding/UvttImportPreview.vue`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
-
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
+**Props:**
+```typescript
+interface Props {
+  file: File
+  campaignId: number
+  moduleId?: number
 }
 ```
 
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
+**Client-side parsing:**
+Parse UVTT JSON in browser to extract preview data without sending to backend:
+```typescript
+async function parseUvttPreview(file: File): Promise<UvttPreview> {
+  const text = await file.text()
+  const uvtt = JSON.parse(text)
+  return {
+    gridSize: uvtt.resolution.map_size,
+    wallCount: uvtt.line_of_sight.length,
+    portalCount: uvtt.portals.length,
+    lightCount: uvtt.lights.length,
+    imageDataUrl: uvtt.image  // Already data URL
+  }
 }
 ```
+
+**UX (from Foundry research):**
+- Show parsing stages during import (image → walls → lights)
+- Progress indicator for 3-10 second imports
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0230 (import_uvtt command), MIMIR-T-0231 (modal trigger)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Large UVTT files may cause browser slowdown during JSON parse
 
 ## Status Updates **[REQUIRED]**
 

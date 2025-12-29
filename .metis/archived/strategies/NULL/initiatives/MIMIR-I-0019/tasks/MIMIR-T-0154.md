@@ -3,18 +3,18 @@ id: backend-npc-support
 level: task
 title: "Backend NPC Support"
 short_code: "MIMIR-T-0154"
-created_at: 2025-12-16T18:00:00.000000+00:00
-updated_at: 2025-12-16T18:00:00.000000+00:00
+created_at: 2025-12-16T18:00:00+00:00
+updated_at: 2025-12-29T14:07:37.691253+00:00
 parent: MIMIR-I-0019
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
-status: pending
-estimated_complexity: M
+
+exit_criteria_met: false
 strategy_id: NULL
 initiative_id: npc-character-creation
 ---
@@ -24,6 +24,8 @@ initiative_id: npc-character-creation
 ## Description
 
 Update backend models and services to support NPC creation with nullable player_id and NPC-specific fields.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

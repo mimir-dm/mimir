@@ -67,6 +67,8 @@ Add Tauri command to toggle portal open/closed state and sync state changes to P
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
 - [ ] `toggle_portal(portal_id)` command flips is_closed state

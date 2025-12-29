@@ -1,35 +1,36 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: refactor-duplicated-code-in
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
-parent: MIMIR-I-0028
+title: "Refactor duplicated code in character_tools.rs"
+short_code: "MIMIR-T-0185"
+created_at: 2025-12-19T17:27:59.578271+00:00
+updated_at: 2025-12-19T18:58:33.942064+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0028
+initiative_id: NULL
 ---
 
-# Add UVTT fields to maps table migration
+# Refactor duplicated code in character_tools.rs
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0028]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Refactor duplicated code patterns in character_tools.rs and its test file to improve maintainability.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -61,9 +62,27 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: 15+ code clones make changes error-prone; bugs fixed in one place missed in others
+- **Benefits of Fixing**: Single source of truth, easier maintenance, consistent behavior
+- **Risk Assessment**: Medium - refactoring tests and core logic requires careful verification
+
+### Duplication Found (jscpd analysis)
+**Test file (character_tools_test.rs):**
+- Lines 110-121, 158-168, 191-216: Repeated test setup patterns
+- Lines 244-256, 267-278, 500-510: Repeated assertion blocks
+
+**Main file (character_tools.rs):**
+- Lines 53-84, 560-591, 679-713: Repeated character creation logic (~34 lines each)
+- Lines 220-238, 338-356, 452-470: Repeated validation patterns (~18 lines each)
+
+### Suggested Approach
+1. Extract test fixtures into shared helper module
+2. Create CharacterBuilder pattern for repeated creation logic
+3. Use parameterized tests with rstest or similar
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -71,9 +90,10 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Duplicated test setup extracted to helper functions
+- [ ] Character creation logic consolidated into builder pattern
+- [ ] All existing tests still pass
+- [ ] jscpd reports reduced duplication in character_tools files
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -123,42 +143,18 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 - **Example Request**: {Code example}
 - **Example Response**: {Expected response format}
 
-## Implementation Notes
+## Implementation Notes **[CONDITIONAL: Technical Task]**
+
+{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
 
 ### Technical Approach
-
-**Migration:** `040_add_los_data/up.sql`
-
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
-
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
-}
-```
+{How this will be implemented}
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+{Other tasks or systems this depends on}
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+{Technical risks and mitigation strategies}
 
 ## Status Updates **[REQUIRED]**
 

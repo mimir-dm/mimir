@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: add-uvtt-maps-to-dev-seeder
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Add UVTT maps to dev seeder"
+short_code: "MIMIR-T-0242"
+created_at: 2025-12-25T18:01:56.209723+00:00
+updated_at: 2025-12-29T03:36:43.686260+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Add UVTT maps to dev seeder
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Add sample UVTT maps to dev seeder for testing LOS, portals, and vision rendering during development.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,15 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Dev seeder creates sample UVTT map with walls
+- [ ] Dev seeder creates sample UVTT map with portals (doors)
+- [ ] Maps saved to correct locations (campaign/maps or module/maps)
+- [ ] Sample tokens placed for vision testing
+- [ ] Works with `cargo run -- seed-dev`
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +131,44 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**Location:** `crates/mimir-dm/src/commands/dev/seed_dev_data.rs`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
+**Sample maps to create:**
 
-**Model update:** `models/campaign/maps.rs`
+1. **Tavern map** (campaign-level)
+   - Simple room with 4 walls
+   - 2 doors (portals)
+   - Placed in `{data_dir}/campaigns/{id}/maps/tavern.uvtt`
+
+2. **Dungeon map** (module-level)  
+   - Multiple rooms with corridors
+   - Several walls and doors
+   - Placed in `{data_dir}/modules/{id}/maps/dungeon.uvtt`
+
+**UVTT generation:**
 ```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
+fn create_sample_uvtt(walls: Vec<Vec<Point>>, portals: Vec<Portal>) -> UvttFile {
+    UvttFile {
+        format: 0.3,
+        resolution: UvttResolution {
+            map_size: Point { x: 20.0, y: 15.0 },
+            pixels_per_grid: 70,
+            map_origin: Point { x: 0.0, y: 0.0 },
+        },
+        line_of_sight: walls,
+        portals,
+        lights: vec![],
+        environment: UvttEnvironment::default(),
+        image: generate_simple_grid_image(20, 15, 70),
+    }
 }
 ```
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0227 (UVTT types), MIMIR-T-0240 (storage paths)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Need simple image generation or embed a test PNG
 
 ## Status Updates **[REQUIRED]**
 

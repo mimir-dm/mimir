@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: create-uvtt-wrapper-from-png-after
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Create UVTT wrapper from PNG after grid configuration"
+short_code: "MIMIR-T-0241"
+created_at: 2025-12-25T17:02:32.221449+00:00
+updated_at: 2025-12-29T03:36:43.327697+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Create UVTT wrapper from PNG after grid configuration
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+When user uploads PNG and configures grid, generate a UVTT wrapper file so all maps use unified UVTT format.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,16 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] PNG upload stores temp image until grid configured
+- [ ] Grid config modal captures: grid_size, offset_x, offset_y (square only)
+- [ ] On save, creates UVTT wrapper with image + resolution
+- [ ] UVTT saved to data directory, map record points to it
+- [ ] Original PNG deleted after UVTT created
+- [ ] Generated UVTT has empty walls/portals/lights arrays
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +132,48 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
-
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
-
-**Model update:** `models/campaign/maps.rs`
+**UVTT wrapper generation:**
 ```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
+pub fn create_uvtt_from_png(
+    image_bytes: &[u8],
+    grid_size_px: i32,
+    offset_x: i32,
+    offset_y: i32,
+    width_px: i32,
+    height_px: i32,
+) -> Result<UvttFile> {
+    let grid_width = width_px / grid_size_px;
+    let grid_height = height_px / grid_size_px;
+    
+    Ok(UvttFile {
+        format: 0.3,
+        resolution: UvttResolution {
+            map_size: Point { x: grid_width as f32, y: grid_height as f32 },
+            map_origin: Point { 
+                x: offset_x as f32 / grid_size_px as f32,
+                y: offset_y as f32 / grid_size_px as f32 
+            },
+            pixels_per_grid: grid_size_px,
+        },
+        line_of_sight: vec![],
+        portals: vec![],
+        lights: vec![],
+        environment: UvttEnvironment::default(),
+        image: base64_encode(image_bytes),
+    })
 }
 ```
 
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
-}
-```
+**Flow:**
+1. User uploads PNG → store in temp location
+2. User configures grid in MapGridConfigModal
+3. On save → create_uvtt_from_png() → save .uvtt → create map record
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0227 (UVTT types), MIMIR-T-0240 (simplified schema)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Large images may create large UVTT files (base64 bloat)
 
 ## Status Updates **[REQUIRED]**
 
