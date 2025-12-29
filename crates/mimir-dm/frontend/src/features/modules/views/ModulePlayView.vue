@@ -394,15 +394,14 @@
     />
 
     <!-- Cross-reference modal -->
-    <div v-if="modalContent.visible" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>{{ modalContent.title }}</h2>
-          <button class="modal-close" @click="closeModal">×</button>
-        </div>
-        <div class="modal-body dnd-content" v-html="modalContent.content"></div>
-      </div>
-    </div>
+    <AppModal
+      :visible="modalContent.visible"
+      :title="modalContent.title"
+      size="md"
+      @close="closeModal"
+    >
+      <div class="dnd-content" v-html="modalContent.content"></div>
+    </AppModal>
   </div>
 </template>
 
@@ -419,6 +418,7 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import DmMapViewer from '@/components/DmMapViewer.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 import type { Module, Document, Campaign } from '@/types'
 import { processFormattingTags } from '@/features/sources/utils/textFormatting'
 import { useCrossReferences } from '@/features/sources/composables/useCrossReferences'
@@ -2150,62 +2150,6 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-/* Cross-reference modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-}
-
-.modal-content {
-  background: var(--color-surface, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
-  border-radius: 8px;
-  max-width: 600px;
-  max-height: 80vh;
-  width: 90%;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border, #333);
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--color-text);
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.modal-close:hover {
-  color: var(--color-text);
-}
-
-.modal-body {
-  padding: 1.25rem;
-  overflow-y: auto;
-  flex: 1;
-}
 
 /* ============================================
    COMBAT LAYOUT - Map + Monster Panel

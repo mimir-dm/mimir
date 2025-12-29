@@ -61,25 +61,76 @@
     </div>
     
     <!-- Modal Stack -->
-    <BaseModal
+    <AppModal
       v-for="(modal, index) in modalStack"
       :key="`modal-${index}`"
       :visible="modal.visible"
       :title="modal.title"
-      :content="modal.content"
-      :z-index="1000 + index * 10"
+      size="md"
+      :stack-index="index"
       @close="() => closeModal(index)"
-      @reference-click="handleReferenceClick"
-    />
+    >
+      <div
+        class="dnd-content"
+        v-html="modal.content"
+        @click="(e: MouseEvent) => handleContentClick(e, handleReferenceClick)"
+      ></div>
+    </AppModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, toRef } from 'vue'
 import { useSearch } from '../composables/useSearch'
-import BaseModal from '@/components/shared/BaseModal.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 import ContentCategoryTabs from '../components/search/ContentCategoryTabs.vue'
 import SearchResults from '../components/search/SearchResults.vue'
+
+// Handle clicks on cross-reference links within D&D content
+function handleContentClick(
+  event: MouseEvent,
+  callback: (ref: { type: string; name: string; source?: string }) => void
+) {
+  const target = event.target as HTMLElement
+
+  if (target.classList.contains('cross-ref-link') ||
+      target.classList.contains('reference-link') ||
+      target.classList.contains('creature-ref') ||
+      target.classList.contains('item-ref') ||
+      target.classList.contains('spell-ref') ||
+      target.classList.contains('condition-ref') ||
+      target.classList.contains('race-ref') ||
+      target.classList.contains('class-ref') ||
+      target.classList.contains('feat-ref') ||
+      target.classList.contains('background-ref') ||
+      target.classList.contains('action-ref') ||
+      target.classList.contains('feature-ref') ||
+      target.classList.contains('clickable') ||
+      (target.tagName === 'A' && target.hasAttribute('data-ref-type'))) {
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    let type = target.getAttribute('data-ref-type') || ''
+
+    if (!type) {
+      if (target.classList.contains('creature-ref')) type = 'creature'
+      else if (target.classList.contains('item-ref')) type = 'item'
+      else if (target.classList.contains('spell-ref')) type = 'spell'
+    }
+
+    const name = target.getAttribute('data-ref-name') ||
+                 target.getAttribute('data-name') ||
+                 target.textContent || ''
+    const source = target.getAttribute('data-ref-source') ||
+                   target.getAttribute('data-source') ||
+                   undefined
+
+    if (name && type) {
+      callback({ type, name, source })
+    }
+  }
+}
 
 interface Props {
   selectedSources: string[]

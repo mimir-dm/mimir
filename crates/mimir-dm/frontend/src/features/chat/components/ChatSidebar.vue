@@ -89,34 +89,34 @@
   </div>
 
   <!-- Delete Session Confirmation Modal -->
-  <div v-if="showDeleteModal" class="modal-overlay" @click="cancelDelete">
-    <div class="modal-content delete-modal" @click.stop>
-      <div class="modal-header">
-        <h2 class="modal-title">Delete Chat Session</h2>
-      </div>
-      <div class="modal-body">
-        <p>Are you sure you want to delete this chat session?</p>
-        <p class="warning-text">This action cannot be undone. All messages in this session will be permanently deleted.</p>
-        
-        <div v-if="deleteError" class="error-message">
-          {{ deleteError }}
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button @click="confirmDelete" class="delete-confirm-button">
-          Delete Session
-        </button>
-        <button @click="cancelDelete" class="cancel-button">
-          Cancel
-        </button>
-      </div>
+  <AppModal
+    :visible="showDeleteModal"
+    title="Delete Chat Session"
+    size="sm"
+    @close="cancelDelete"
+  >
+    <p>Are you sure you want to delete this chat session?</p>
+    <p class="warning-text">This action cannot be undone. All messages in this session will be permanently deleted.</p>
+
+    <div v-if="deleteError" class="error-message">
+      {{ deleteError }}
     </div>
-  </div>
+
+    <template #footer>
+      <button @click="cancelDelete" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button @click="confirmDelete" class="btn btn-danger">
+        Delete Session
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 import { useChatStore } from '@/stores/chat'
 
 const chatStore = useChatStore()
