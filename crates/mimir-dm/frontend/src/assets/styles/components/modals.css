@@ -8,11 +8,17 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: var(--spacing-lg);
   animation: fadeIn 0.2s;
+}
+
+.modal-overlay--exiting {
+  animation: fadeOut 0.2s;
 }
 
 /* Modal Container */
@@ -34,9 +40,13 @@
 .modal-content.modal-md { max-width: 600px; }
 .modal-content.modal-lg { max-width: 900px; }
 .modal-content.modal-xl { max-width: 1200px; }
-.modal-content.modal-full { 
-  max-width: calc(100vw - 2rem); 
+.modal-content.modal-full {
+  max-width: calc(100vw - 2rem);
   max-height: calc(100vh - 2rem);
+}
+
+.modal-content--exiting {
+  animation: slideOut 0.2s;
 }
 
 /* Modal Header */
@@ -280,21 +290,89 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: var(--spacing-md);
+  }
+
   .modal-content {
     max-width: calc(100vw - 1rem);
     max-height: calc(100vh - 1rem);
-    margin: 0.5rem;
+    min-width: 280px;
   }
-  
+
   .modal-header {
     padding: var(--spacing-md);
   }
-  
+
   .modal-body {
     padding: var(--spacing-md);
   }
-  
+
   .modal-footer {
     padding: var(--spacing-md);
+    flex-direction: column;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Exit Animations */
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+/* Loading States */
+.modal-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+}
+
+.modal-loading__spinner {
+  margin-right: var(--spacing-sm);
+}
+
+/* Print Styles */
+@media print {
+  .modal-overlay {
+    position: static;
+    background: none;
+    backdrop-filter: none;
+  }
+
+  .modal-content {
+    box-shadow: none;
+    border: 1px solid var(--color-border);
+    max-height: none;
+    max-width: none;
+  }
+
+  .modal-header {
+    border-bottom: 2px solid var(--color-border);
+  }
+
+  .modal-footer {
+    display: none;
   }
 }
