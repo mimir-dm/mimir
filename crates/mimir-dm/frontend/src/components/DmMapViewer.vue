@@ -36,20 +36,64 @@
         </button>
       </div>
 
-      <!-- Fog of War Toggle -->
-      <div class="toolbar-group fog-controls">
-        <label class="fog-toggle" :class="{ disabled: !mapImageUrl }">
-          <span class="fog-label">Fog</span>
-          <div class="toggle-switch" :class="{ active: fogEnabled }">
+      <!-- Reveal Map Toggle (danger style - always visible as warning) -->
+      <div class="toolbar-group reveal-controls">
+        <label class="reveal-toggle" :class="{ disabled: !mapImageUrl, active: revealMap }" title="Reveal map to players - use with caution!">
+          <span class="reveal-label">Reveal Map</span>
+          <div class="toggle-switch danger" :class="{ active: revealMap }">
             <input
               type="checkbox"
-              :checked="fogEnabled"
-              @change="toggleFog"
+              :checked="revealMap"
+              @change="toggleRevealMap"
               :disabled="!mapImageUrl"
             />
             <span class="toggle-slider"></span>
           </div>
         </label>
+      </div>
+
+      <!-- LOS Controls (only when UVTT data available) -->
+      <div v-if="uvttLoaded" class="toolbar-group los-controls">
+        <label class="fog-toggle" :class="{ disabled: !mapImageUrl || revealMap }" title="Token: map visible, tokens hidden. Fog: map hidden outside vision.">
+          <span class="fog-label">LOS</span>
+          <div class="toggle-switch-dual">
+            <span class="dual-label" :class="{ active: !tokenOnlyLos && !revealMap }">Fog</span>
+            <div class="toggle-switch" :class="{ active: tokenOnlyLos }">
+              <input
+                type="checkbox"
+                :checked="tokenOnlyLos"
+                @change="tokenOnlyLos = !tokenOnlyLos"
+                :disabled="!mapImageUrl || revealMap"
+              />
+              <span class="toggle-slider"></span>
+            </div>
+            <span class="dual-label" :class="{ active: tokenOnlyLos && !revealMap }">Token</span>
+          </div>
+        </label>
+        <button
+          class="toolbar-btn"
+          :class="{ active: showLosDebug }"
+          @click="showLosDebug = !showLosDebug"
+          :disabled="!mapImageUrl"
+          title="Toggle LOS debug view"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+            <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <!-- Ambient Light Dropdown -->
+        <select
+          class="ambient-select"
+          :value="currentAmbientLight"
+          @change="ambientLightOverride = ($event.target as HTMLSelectElement).value as 'bright' | 'dim' | 'darkness'"
+          :disabled="!mapImageUrl"
+          title="Ambient light level"
+        >
+          <option value="bright">☀️ Bright</option>
+          <option value="dim">🌙 Dim</option>
+          <option value="darkness">🌑 Dark</option>
+        </select>
       </div>
 
       <div class="toolbar-group">
@@ -158,8 +202,19 @@
           <rect width="100%" height="100%" fill="url(#dmGridPattern)" />
         </svg>
 
+        <!-- UVTT Map Lights (embedded in map file) -->
+        <LightOverlay
+          v-if="uvttLoaded && uvttLights.length > 0 && imageLoaded"
+          :lights="uvttLights"
+          :walls="blockingWalls"
+          :map-width="mapWidth"
+          :map-height="mapHeight"
+          :show-debug="showLosDebug"
+          blend-mode="soft-light"
+        />
+
         <!-- Fog of War Overlay (DM view - semi-transparent) -->
-        <!-- Reveals based on player token vision -->
+        <!-- Uses visibility polygons when UVTT data available, otherwise circles -->
         <svg
           v-if="fogEnabled && imageLoaded"
           class="fog-overlay dm-fog"
@@ -174,8 +229,17 @@
             <mask id="dmFogMask">
               <!-- White = fogged, Black = revealed -->
               <rect width="100%" height="100%" fill="white" />
-              <!-- Cut out vision circles for player tokens (with blur for soft edges) -->
-              <g filter="url(#visionBlur)">
+              <!-- Use visibility polygons when LOS blocking is enabled and UVTT data available -->
+              <g v-if="uvttLoaded && useLosBlocking" filter="url(#visionBlur)">
+                <path
+                  v-for="vis in visibilityPolygons"
+                  :key="'vis-' + vis.tokenId"
+                  :d="vis.path"
+                  fill="black"
+                />
+              </g>
+              <!-- Fall back to circles when no UVTT data or LOS disabled -->
+              <g v-else filter="url(#visionBlur)">
                 <circle
                   v-for="token in playerTokensWithVision"
                   :key="'vision-' + token.id"
@@ -195,6 +259,26 @@
             mask="url(#dmFogMask)"
           />
         </svg>
+
+        <!-- Door Interaction Overlay (DM only, when UVTT data available) -->
+        <DoorInteractionOverlay
+          v-if="uvttLoaded && uvttPortals.length > 0 && imageLoaded"
+          :portals="uvttPortals"
+          :map-width="mapWidth"
+          :map-height="mapHeight"
+          @toggle-door="handleDoorToggle"
+        />
+
+        <!-- LOS Debug Overlay -->
+        <LosDebugOverlay
+          v-if="showLosDebug && uvttLoaded && imageLoaded"
+          :walls="uvttWalls"
+          :portals="uvttPortals"
+          :map-width="mapWidth"
+          :map-height="mapHeight"
+          :visible="showLosDebug"
+          :show-legend="true"
+        />
 
         <!-- Light Source Layer -->
         <LightSourceRenderer
@@ -222,6 +306,9 @@
           :dragging-token-id="draggingTokenId"
           :drag-offset="dragOffset"
           :interactive="true"
+          :token-lights="tokenLightInfo"
+          :dead-token-ids="deadTokenIds"
+          :token-images="tokenImages"
           @token-click="handleTokenClick"
           @token-context="handleTokenContext"
           @token-drag-start="handleTokenDragStart"
@@ -249,9 +336,33 @@
         {{ contextMenu.token?.visible_to_players ? 'Hide from Players' : 'Show to Players' }}
         <span class="shortcut">H</span>
       </button>
-      <button class="danger" @click="deleteSelectedToken">
-        Delete Token
-        <span class="shortcut">Del</span>
+      <div class="context-menu-divider"></div>
+      <!-- Light source options -->
+      <button
+        v-if="contextMenu.token && getTokenLightSource(contextMenu.token.id)"
+        @click="toggleTokenLight"
+        class="light-option"
+      >
+        {{ getTokenLightSource(contextMenu.token.id)?.is_active ? 'Extinguish Light' : 'Light Torch' }}
+        <span class="shortcut">L</span>
+      </button>
+      <button
+        v-else-if="contextMenu.token"
+        @click="addTorchToToken"
+        class="light-option"
+      >
+        Give Torch
+        <span class="shortcut">L</span>
+      </button>
+      <div class="context-menu-divider"></div>
+      <!-- Dead toggle -->
+      <button
+        v-if="contextMenu.token"
+        @click="toggleTokenDead"
+        :class="{ 'dead-option': isTokenDead(contextMenu.token.id) }"
+      >
+        {{ isTokenDead(contextMenu.token.id) ? 'Mark Alive' : 'Mark Dead' }}
+        <span class="shortcut">D</span>
       </button>
     </div>
 
@@ -275,15 +386,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, toRef } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { usePlayerDisplay } from '@/composables/usePlayerDisplay'
 import { useTokens } from '@/composables/useTokens'
 import { useLightSources, type LightSourceSummary } from '@/composables/useLightSources'
+import { useUvttMap } from '@/composables/useUvttMap'
+import { useMultiTokenVisibility } from '@/composables/useVisibilityPolygon'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import QuickAddTokenModal from '@/components/tokens/QuickAddTokenModal.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
+import LosDebugOverlay from '@/components/los/LosDebugOverlay.vue'
+import DoorInteractionOverlay from '@/components/los/DoorInteractionOverlay.vue'
+import LightOverlay from '@/components/los/LightOverlay.vue'
 import type { Token, CreateTokenRequest } from '@/types/api'
 
 // Throttle helper for smooth updates
@@ -319,6 +435,12 @@ interface Props {
   gridOffsetX?: number
   gridOffsetY?: number
   showGrid?: boolean
+  /** Campaign ID for UVTT file loading */
+  campaignId?: number | null
+  /** Module ID for UVTT file loading (null for campaign-level maps) */
+  moduleId?: number | null
+  /** UVTT file path (e.g., "abc123.dd2vtt") */
+  uvttFilePath?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -326,7 +448,10 @@ const props = withDefaults(defineProps<Props>(), {
   gridSizePx: null,
   gridOffsetX: 0,
   gridOffsetY: 0,
-  showGrid: true
+  showGrid: true,
+  campaignId: null,
+  moduleId: null,
+  uvttFilePath: null
 })
 
 const { isDisplayOpen, updateViewport } = usePlayerDisplay()
@@ -334,6 +459,12 @@ const { isDisplayOpen, updateViewport } = usePlayerDisplay()
 // Token state - will be initialized when mapId is available
 const tokens = ref<Token[]>([])
 const selectedTokenId = ref<number | null>(null)
+
+// Token images cache (token_id -> base64 data URL)
+const tokenImages = ref<Map<number, string>>(new Map())
+
+// Dead token state (frontend-only, not persisted)
+const deadTokenIds = ref<number[]>([])
 
 // Token drag state
 const draggingTokenId = ref<number | null>(null)
@@ -363,12 +494,120 @@ const fogEnabled = ref(false)
 // Light source state
 const lightSources = ref<LightSourceSummary[]>([])
 
+// Computed: token light info for TokenRenderer
+const tokenLightInfo = computed(() => {
+  return lightSources.value
+    .filter(ls => ls.token_id !== null)
+    .map(ls => ({
+      tokenId: ls.token_id!,
+      isActive: ls.is_active
+    }))
+})
+
+// LOS (Line of Sight) state
+const showLosDebug = ref(false)
+const useLosBlocking = ref(true) // Always use wall-based LOS blocking when UVTT data available
+const tokenOnlyLos = ref(false) // LOS mode: false = Fog (map hidden), true = Token (map visible, tokens filtered)
+const revealMap = ref(false) // Master toggle: false = hiding active (safe default), true = everything revealed
+
+// UVTT map data composable
+const campaignIdRef = toRef(props, 'campaignId')
+const moduleIdRef = toRef(props, 'moduleId')
+const uvttFilePathRef = toRef(props, 'uvttFilePath')
+const {
+  walls: uvttWalls,
+  portals: uvttPortals,
+  lights: uvttLights,
+  ambientLight: uvttAmbientLight,
+  blockingWalls,
+  isLoaded: uvttLoaded,
+  togglePortal,
+  mapWidthPx: uvttMapWidth,
+  mapHeightPx: uvttMapHeight
+} = useUvttMap(campaignIdRef, moduleIdRef, uvttFilePathRef)
+
+// Ambient light - initialized from UVTT, can be overridden via UI
+const ambientLightOverride = ref<'bright' | 'dim' | 'darkness' | null>(null)
+const currentAmbientLight = computed(() =>
+  ambientLightOverride.value ?? uvttAmbientLight.value ?? 'bright'
+)
+
+// Reset override when UVTT data changes
+watch(uvttAmbientLight, () => {
+  ambientLightOverride.value = null
+})
+
+// Send fog updates when ambient light changes
+watch(currentAmbientLight, () => {
+  if (!revealMap.value) {
+    sendFogToDisplay()
+  }
+})
+
+// Send fog updates when light sources change (token lights affect vision in darkness)
+watch(lightSources, () => {
+  if (!revealMap.value) {
+    sendFogToDisplay()
+  }
+}, { deep: true })
+
+// Send fog updates when visibility settings change
+watch([tokenOnlyLos, revealMap], () => {
+  console.log('Visibility changed - revealMap:', revealMap.value, 'tokenOnlyLos:', tokenOnlyLos.value)
+  sendFogToDisplay()
+})
+
+// Tokens with vision for visibility polygon calculation
+// Depends on: tokens, lightSources, currentAmbientLight for reactivity
+const tokensWithVision = computed(() => {
+  // Access lightSources to ensure reactivity when lights change
+  const lights = lightSources.value
+  const ambient = currentAmbientLight.value
+
+  return tokens.value
+    .filter(t => t.visible_to_players && (t.token_type === 'pc' || t.token_type === 'npc'))
+    .map(t => ({
+      id: t.id,
+      x: t.x,
+      y: t.y,
+      visionRadius: getTokenVisionRadiusPx(t)
+    }))
+    .filter(t => t.visionRadius > 0) // Exclude tokens that can't see
+})
+
+// Map dimensions for visibility calculation
+const mapWidthRef = computed(() => mapWidth.value || uvttMapWidth.value)
+const mapHeightRef = computed(() => mapHeight.value || uvttMapHeight.value)
+
+// Visibility polygon calculation
+const {
+  visibilityPolygons,
+  combinedVisibilityPath
+} = useMultiTokenVisibility(
+  tokensWithVision,
+  computed(() => useLosBlocking.value ? blockingWalls.value : []),
+  uvttPortals,
+  mapWidthRef,
+  mapHeightRef
+)
+
+// Handle door toggle
+function handleDoorToggle(portalId: string) {
+  togglePortal(portalId)
+  // Trigger fog update when door state changes
+  if (!revealMap.value) {
+    sendFogToDisplay()
+  }
+}
+
 // Load tokens when map changes
 async function loadTokens(mapId: number) {
   try {
     const response = await invoke<{ success: boolean; data?: Token[] }>('list_tokens', { mapId })
     if (response.success && response.data) {
       tokens.value = response.data
+      // Load token images for tokens that have image_path
+      await loadTokenImages()
       // Send visible tokens to player display
       sendTokensToDisplay()
     }
@@ -376,6 +615,25 @@ async function loadTokens(mapId: number) {
     console.error('Failed to load tokens:', e)
     tokens.value = []
   }
+}
+
+// Load images for all tokens that have image_path
+async function loadTokenImages() {
+  const tokensWithImages = tokens.value.filter(t => t.image_path)
+  const loadPromises = tokensWithImages.map(async (token) => {
+    // Skip if already cached
+    if (tokenImages.value.has(token.id)) return
+
+    try {
+      const response = await invoke<{ success: boolean; data?: string; error?: string }>('serve_token_image', { tokenId: token.id })
+      if (response.success && response.data) {
+        tokenImages.value.set(token.id, response.data)
+      }
+    } catch (e) {
+      console.error(`Failed to load image for token ${token.id}:`, e)
+    }
+  })
+  await Promise.all(loadPromises)
 }
 
 // Send visible tokens to player display via IPC
@@ -386,7 +644,8 @@ async function sendTokensToDisplay() {
   try {
     await emit('player-display:tokens-update', {
       mapId: props.mapId,
-      tokens: visibleTokens
+      tokens: visibleTokens,
+      deadTokenIds: deadTokenIds.value
     })
   } catch (e) {
     console.error('Failed to send tokens to display:', e)
@@ -438,19 +697,12 @@ async function sendLightSourcesToDisplay() {
   }
 }
 
-// Toggle fog on/off
-async function toggleFog() {
-  if (!props.mapId) return
-
-  try {
-    const response = await invoke<{ success: boolean; data?: boolean }>('toggle_fog', { mapId: props.mapId })
-    if (response.success && response.data !== undefined) {
-      fogEnabled.value = response.data
-      sendFogToDisplay()
-    }
-  } catch (e) {
-    console.error('Failed to toggle fog:', e)
-  }
+// Toggle reveal map (master toggle)
+// revealMap ON = everything visible (0,0,0)
+// revealMap OFF = hiding active based on LOS mode (fog or token)
+function toggleRevealMap() {
+  revealMap.value = !revealMap.value
+  sendFogToDisplay()
 }
 
 // Send fog state to player display (vision-based)
@@ -465,12 +717,42 @@ async function sendFogToDisplay() {
     radiusPx: getTokenVisionRadiusPx(token)
   }))
 
+  // Include visibility polygon data when UVTT LOS is available
+  const visibilityPaths = uvttLoaded.value && useLosBlocking.value
+    ? visibilityPolygons.value.map(v => ({
+        tokenId: v.tokenId,
+        path: v.path,
+        polygon: v.polygon  // Include polygon points for Token LOS mode
+      }))
+    : []
+
+  const payload = {
+    mapId: props.mapId,
+    // revealMap controls whether anything is shown to players
+    revealMap: revealMap.value,
+    // tokenOnlyLos: false = Fog mode (map hidden), true = Token mode (map visible)
+    tokenOnlyLos: tokenOnlyLos.value,
+    visionCircles,
+    // UVTT LOS data
+    useLosBlocking: uvttLoaded.value && useLosBlocking.value,
+    visibilityPaths,
+    // Send blocking walls and lights for player display to render shadows
+    blockingWalls: uvttLoaded.value ? blockingWalls.value : [],
+    uvttLights: uvttLoaded.value ? uvttLights.value : [],
+    // Ambient light level
+    ambientLight: currentAmbientLight.value
+  }
+
+  console.log('DmMapViewer: Sending fog-update:', {
+    revealMap: payload.revealMap,
+    tokenOnlyLos: payload.tokenOnlyLos,
+    los: payload.useLosBlocking,
+    paths: payload.visibilityPaths.length,
+    circles: payload.visionCircles.length
+  })
+
   try {
-    await emit('player-display:fog-update', {
-      mapId: props.mapId,
-      fogEnabled: fogEnabled.value,
-      visionCircles
-    })
+    await emit('player-display:fog-update', payload)
   } catch (e) {
     console.error('Failed to send fog to display:', e)
   }
@@ -523,28 +805,102 @@ async function toggleSelectedTokenVisibility() {
   closeContextMenu()
 }
 
-// Delete selected token
-async function deleteSelectedToken() {
-  const token = contextMenu.value.token || tokens.value.find(t => t.id === selectedTokenId.value)
+// Get light source for a token
+function getTokenLightSource(tokenId: number): LightSourceSummary | undefined {
+  return lightSources.value.find(ls => ls.token_id === tokenId)
+}
+
+// Toggle light source on/off
+async function toggleTokenLight() {
+  const token = contextMenu.value.token
   if (!token) return
 
+  const light = getTokenLightSource(token.id)
+  if (!light) return
+
   try {
-    const response = await invoke<{ success: boolean; error?: string }>('delete_token', {
-      id: token.id
+    const response = await invoke<{ success: boolean; data?: LightSourceSummary; error?: string }>('toggle_light_source', {
+      id: light.id
     })
 
-    if (response.success) {
-      // Remove from local state
-      tokens.value = tokens.value.filter(t => t.id !== token.id)
-      if (selectedTokenId.value === token.id) {
-        selectedTokenId.value = null
+    if (response.success && response.data) {
+      // Update local light source (create new array for reactivity)
+      const index = lightSources.value.findIndex(ls => ls.id === light.id)
+      if (index !== -1) {
+        const newLights = [...lightSources.value]
+        newLights[index] = response.data
+        lightSources.value = newLights
       }
       // Sync to player display
-      sendTokensToDisplay()
+      sendLightSourcesToDisplay()
+      // Update fog when hiding is active (light affects visibility)
+      if (!revealMap.value) {
+        sendFogToDisplay()
+      }
     }
   } catch (e) {
-    console.error('Failed to delete token:', e)
+    console.error('Failed to toggle light source:', e)
   }
+
+  closeContextMenu()
+}
+
+// Add a torch to a token
+async function addTorchToToken() {
+  const token = contextMenu.value.token
+  if (!token || !props.mapId) return
+
+  try {
+    const response = await invoke<{ success: boolean; data?: LightSourceSummary; error?: string }>('create_light_source', {
+      request: {
+        map_id: props.mapId,
+        token_id: token.id,
+        name: `${token.name}'s Torch`,
+        light_type: 'torch',
+        x: token.x,
+        y: token.y,
+        bright_radius_ft: 20,
+        dim_radius_ft: 40,
+        color: '#ffaa44'
+      }
+    })
+
+    if (response.success && response.data) {
+      // Add to local light sources
+      lightSources.value.push(response.data)
+      // Sync to player display
+      sendLightSourcesToDisplay()
+      // Update fog when hiding is active
+      if (!revealMap.value) {
+        sendFogToDisplay()
+      }
+    }
+  } catch (e) {
+    console.error('Failed to add torch to token:', e)
+  }
+
+  closeContextMenu()
+}
+
+// Check if a token is dead
+function isTokenDead(tokenId: number): boolean {
+  return deadTokenIds.value.includes(tokenId)
+}
+
+// Toggle token dead state
+function toggleTokenDead() {
+  const token = contextMenu.value.token
+  if (!token) return
+
+  const index = deadTokenIds.value.indexOf(token.id)
+  if (index === -1) {
+    deadTokenIds.value.push(token.id)
+  } else {
+    deadTokenIds.value.splice(index, 1)
+  }
+
+  // Sync to player display
+  sendTokensToDisplay()
 
   closeContextMenu()
 }
@@ -586,6 +942,19 @@ async function handleQuickAddToken(request: CreateTokenRequest) {
       tokens.value.push(response.data)
       // Select the new token
       selectedTokenId.value = response.data.id
+
+      // Load token image if token has one
+      if (response.data.image_path) {
+        try {
+          const imgResponse = await invoke<{ success: boolean; data?: string }>('serve_token_image', { tokenId: response.data.id })
+          if (imgResponse.success && imgResponse.data) {
+            tokenImages.value.set(response.data.id, imgResponse.data)
+          }
+        } catch (e) {
+          console.error('Failed to load token image:', e)
+        }
+      }
+
       // Sync to player display
       sendTokensToDisplay()
     } else {
@@ -682,8 +1051,8 @@ async function handleTokenDragEnd(event: MouseEvent) {
         token.y = snappedY
         // Sync to player display
         sendTokensToDisplay()
-        // Update fog vision circles if fog is enabled
-        if (fogEnabled.value) {
+        // Update fog/visibility when hiding is active (revealMap OFF)
+        if (!revealMap.value) {
           sendFogToDisplay()
         }
       } else {
@@ -753,13 +1122,39 @@ const playerTokensWithVision = computed(() => {
   )
 })
 
-// Calculate vision radius in pixels for a token
-// Default 60ft vision (12 squares) if no darkvision, else use vision_range_ft
+// Calculate vision radius in pixels for a token based on ambient light
+// In bright/dim light: all tokens can see 60ft
+// In darkness: only darkvision/blindsight/etc OR tokens with active light can see
 function getTokenVisionRadiusPx(token: Token): number {
   const gridSize = effectiveGridSize.value
-  // Default vision is 60ft (can see in normal/dim light)
-  // Darkvision extends vision in darkness
-  const visionFeet = token.vision_range_ft || 60
+  const ambient = currentAmbientLight.value
+
+  // Vision types that can see in darkness
+  const darkVisionTypes = ['darkvision', 'blindsight', 'tremorsense', 'truesight', 'devils_sight']
+  const hasDarkVision = darkVisionTypes.includes(token.vision_type)
+
+  // Check if token has a light source that is ON
+  // Note: is_active=true means light is ON and emitting
+  const tokenLight = lightSources.value.find(ls => ls.token_id === token.id)
+  const hasActiveLight = tokenLight?.is_active === true
+
+  // In darkness, need darkvision OR a light source
+  if (ambient === 'darkness' && !hasDarkVision && !hasActiveLight) {
+    return 0
+  }
+
+  // If token has a light, use the light's range (bright + dim)
+  // Otherwise use darkvision range or default 60ft
+  let visionFeet: number
+  if (hasActiveLight && tokenLight) {
+    // Light provides vision equal to its bright + dim range
+    const lightRange = (tokenLight.bright_radius_ft || 0) + (tokenLight.dim_radius_ft || 0)
+    // Fallback to 40ft (torch) if light has no range defined
+    visionFeet = lightRange > 0 ? lightRange : 40
+  } else {
+    visionFeet = token.vision_range_ft || 60
+  }
+
   // 1 grid square = 5 feet
   return (visionFeet / 5) * gridSize
 }
@@ -1037,11 +1432,27 @@ function handleKeydown(event: KeyboardEvent) {
         toggleSelectedTokenVisibility()
       }
       break
-    case 'Delete':
-    case 'Backspace':
-      // Delete selected token
+    case 'l':
+    case 'L':
+      // Toggle light or add torch to selected token
       if (selectedTokenId.value) {
-        deleteSelectedToken()
+        const light = getTokenLightSource(selectedTokenId.value)
+        if (light) {
+          // Set context menu token for toggleTokenLight
+          contextMenu.value.token = tokens.value.find(t => t.id === selectedTokenId.value) || null
+          toggleTokenLight()
+        } else {
+          contextMenu.value.token = tokens.value.find(t => t.id === selectedTokenId.value) || null
+          addTorchToToken()
+        }
+      }
+      break
+    case 'd':
+    case 'D':
+      // Toggle dead state for selected token
+      if (selectedTokenId.value) {
+        contextMenu.value.token = tokens.value.find(t => t.id === selectedTokenId.value) || null
+        toggleTokenDead()
       }
       break
     case 'Escape':
@@ -1127,6 +1538,26 @@ onUnmounted(() => {
 .toolbar-btn svg {
   width: 16px;
   height: 16px;
+}
+
+.ambient-select {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ambient-select:hover:not(:disabled) {
+  border-color: var(--color-primary-500);
+}
+
+.ambient-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .add-token-btn {
@@ -1234,6 +1665,63 @@ onUnmounted(() => {
 
 .toggle-switch.active:hover .toggle-slider {
   background-color: var(--color-primary-600);
+}
+
+/* Danger toggle (Reveal Map) - always styled as warning */
+.reveal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background-color: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.reveal-toggle.active {
+  background-color: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.reveal-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.toggle-switch.danger .toggle-slider {
+  background-color: rgba(220, 38, 38, 0.3);
+}
+
+.toggle-switch.danger.active .toggle-slider {
+  background-color: #dc2626;
+}
+
+.toggle-switch.danger:hover .toggle-slider {
+  background-color: rgba(220, 38, 38, 0.4);
+}
+
+.toggle-switch.danger.active:hover .toggle-slider {
+  background-color: #b91c1c;
+}
+
+/* Dual-label toggle (Fog/Token) */
+.toggle-switch-dual {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dual-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-base-500);
+  transition: color 0.2s ease;
+}
+
+.dual-label.active {
+  color: var(--color-primary-500);
+  font-weight: 600;
 }
 
 .map-viewport {
@@ -1386,11 +1874,46 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
 }
 
+.context-menu-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--spacing-xs) 0;
+}
+
+.context-menu button.light-option {
+  color: #fbbf24;
+}
+
+.context-menu button.light-option:hover {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.context-menu button.dead-option {
+  color: #dc2626;
+}
+
+.context-menu button.dead-option:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
 /* Fog of War Controls */
 .fog-controls {
   border-left: 1px solid var(--color-border);
   padding-left: var(--spacing-md);
   margin-left: var(--spacing-sm);
+}
+
+/* LOS Controls */
+.los-controls {
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--spacing-md);
+  margin-left: var(--spacing-sm);
+}
+
+.los-controls .toolbar-btn.active {
+  background: var(--color-warning-100);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
 }
 
 /* Fog Overlay */

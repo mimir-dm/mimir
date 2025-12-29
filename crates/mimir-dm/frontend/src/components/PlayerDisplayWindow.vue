@@ -4,8 +4,10 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, emit, type UnlistenFn } from '@tauri-apps/api/event'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
+import LightOverlay from '@/components/los/LightOverlay.vue'
 import type { Token } from '@/types/api'
 import type { LightSourceSummary } from '@/composables/useLightSources'
+import type { Light, Wall } from '@/composables/useVisibilityPolygon'
 import { useVisionCalculation, type AmbientLight } from '@/composables/useVisionCalculation'
 
 // Types for map display
@@ -46,6 +48,8 @@ const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const tokens = ref<Token[]>([])
+const deadTokenIds = ref<number[]>([])
+const tokenImages = ref<Map<number, string>>(new Map())
 
 // Track actual display scale and image dimensions
 const displayScale = ref(1)
@@ -60,10 +64,84 @@ interface VisionCircle {
   radiusPx: number
 }
 
-const fogEnabled = ref(false)
+const revealMap = ref(false) // Master toggle: false = blackout, true = show something
 const visionCircles = ref<VisionCircle[]>([])
 
-// Light source state
+// UVTT LOS state
+const useLosBlocking = ref(false)
+const visibilityPaths = ref<{ tokenId: number; path: string; polygon?: { x: number; y: number }[] }[]>([])
+const blockingWalls = ref<Wall[]>([])
+const uvttLights = ref<Light[]>([])
+const tokenOnlyLos = ref(false) // Token LOS mode: map visible but tokens hidden outside LOS
+
+// Point-in-polygon test using ray casting algorithm
+function isPointInPolygon(point: { x: number; y: number }, polygon: { x: number; y: number }[]): boolean {
+  if (polygon.length < 3) return false
+
+  let inside = false
+  const n = polygon.length
+
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y
+    const xj = polygon[j].x, yj = polygon[j].y
+
+    if (((yi > point.y) !== (yj > point.y)) &&
+        (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi)) {
+      inside = !inside
+    }
+  }
+
+  return inside
+}
+
+// Tokens visible based on reveal mode and LOS settings
+// revealMap ON = everything visible (show all tokens)
+// revealMap OFF = hiding active (fog or token LOS mode)
+const visibleTokens = computed(() => {
+  // If revealMap is ON, show all tokens (everything revealed)
+  if (revealMap.value) {
+    console.log('visibleTokens: revealMap ON, showing all', tokens.value.length, 'tokens')
+    return tokens.value
+  }
+
+  // revealMap OFF = hiding active
+  // If Fog mode (tokenOnlyLos OFF), show all tokens (fog overlay hides the map, not tokens)
+  if (!tokenOnlyLos.value) {
+    console.log('visibleTokens: Fog mode, showing all', tokens.value.length, 'tokens')
+    return tokens.value
+  }
+
+  // Token LOS mode: filter tokens by visibility polygons
+  // If no visibility polygons, fall back to showing all tokens
+  if (visibilityPaths.value.length === 0) {
+    console.log('visibleTokens: Token LOS mode but no visibility paths, showing all', tokens.value.length, 'tokens')
+    return tokens.value
+  }
+
+  // Filter tokens: show if they're within any visibility polygon
+  const filtered = tokens.value.filter(token => {
+    // Get the token IDs that have visibility (player tokens)
+    const playerTokenIds = visibilityPaths.value.map(v => v.tokenId)
+
+    // Always show player tokens (the ones with visibility polygons)
+    if (playerTokenIds.includes(token.id)) {
+      return true
+    }
+
+    // For other tokens (enemies), check if they're in any visibility polygon
+    const tokenPoint = { x: token.x, y: token.y }
+
+    return visibilityPaths.value.some(vis => {
+      if (!vis.polygon || vis.polygon.length < 3) return false
+      return isPointInPolygon(tokenPoint, vis.polygon)
+    })
+  })
+
+  console.log('visibleTokens: Token LOS mode, filtered', tokens.value.length, '->', filtered.length, 'tokens')
+  return filtered
+})
+
+// Light source state (database-stored lights)
 const lightSources = ref<LightSourceSummary[]>([])
 
 // Vision calculation
@@ -85,8 +163,25 @@ const {
   mapHeight: mapHeightRef
 })
 
-// No viewport transforms - map always fits to screen
-// The DM can pan/zoom their view independently
+// Combined transform: mirror DM's viewport and fill player screen
+const combinedTransform = computed(() => {
+  const baseScale = displayScale.value
+  const dmZoom = mapState.value.zoom
+  const dmPanX = mapState.value.viewportX
+  const dmPanY = mapState.value.viewportY
+
+  // Scale to fill player screen: combine fit-to-screen scale with DM's zoom
+  const finalScale = baseScale * dmZoom
+
+  // Scale pan values to match the final scale
+  const scaledPanX = dmPanX * baseScale
+  const scaledPanY = dmPanY * baseScale
+
+  return {
+    transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${finalScale})`,
+    transformOrigin: 'center center'
+  }
+})
 
 // Grid overlay types
 interface SquareGridPattern {
@@ -229,25 +324,71 @@ onMounted(async () => {
   unlistenTokensUpdate = await listen<{
     mapId: number
     tokens: Token[]
-  }>('player-display:tokens-update', (event) => {
+    deadTokenIds?: number[]
+  }>('player-display:tokens-update', async (event) => {
     console.log('PlayerDisplayWindow: Received tokens-update event:', event.payload.tokens.length, 'tokens')
     // Accept tokens if they're for the current map OR if we don't have a map yet (initial load)
     if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
       tokens.value = event.payload.tokens
+      deadTokenIds.value = event.payload.deadTokenIds || []
+
+      // Load token images for tokens that have image_path
+      const tokensWithImages = event.payload.tokens.filter(t => t.image_path)
+      for (const token of tokensWithImages) {
+        if (!tokenImages.value.has(token.id)) {
+          try {
+            const response = await invoke<{ success: boolean; data?: string }>('serve_token_image', { tokenId: token.id })
+            if (response.success && response.data) {
+              tokenImages.value.set(token.id, response.data)
+            }
+          } catch (e) {
+            console.error(`Failed to load token image for ${token.id}:`, e)
+          }
+        }
+      }
     }
   })
 
-  // Listen for fog of war updates (vision-based)
+  // Listen for fog of war updates (vision-based, with optional LOS data)
   unlistenFogUpdate = await listen<{
     mapId: number
-    fogEnabled: boolean
+    revealMap: boolean
+    tokenOnlyLos: boolean
     visionCircles: VisionCircle[]
+    useLosBlocking?: boolean
+    visibilityPaths?: { tokenId: number; path: string; polygon?: { x: number; y: number }[] }[]
+    blockingWalls?: Wall[]
+    uvttLights?: Light[]
+    ambientLight?: 'bright' | 'dim' | 'darkness'
   }>('player-display:fog-update', (event) => {
-    console.log('PlayerDisplayWindow: Received fog-update event:', event.payload.fogEnabled, event.payload.visionCircles?.length || 0, 'vision circles')
-    // Accept fog if it's for the current map OR if we don't have a map yet (initial load)
-    if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
-      fogEnabled.value = event.payload.fogEnabled
-      visionCircles.value = event.payload.visionCircles || []
+    const payload = event.payload
+    console.log('PlayerDisplayWindow: Received fog-update event:',
+      'revealMap:', payload.revealMap,
+      'tokenOnlyLos:', payload.tokenOnlyLos,
+      'circles:', payload.visionCircles?.length || 0,
+      'los:', payload.useLosBlocking,
+      'paths:', payload.visibilityPaths?.length || 0,
+      'walls:', payload.blockingWalls?.length || 0,
+      'lights:', payload.uvttLights?.length || 0,
+      'ambient:', payload.ambientLight
+    )
+    // Accept if it's for the current map OR if we don't have a map yet (initial load)
+    if (mapState.value.mapId === null || payload.mapId === mapState.value.mapId) {
+      revealMap.value = payload.revealMap ?? false
+      tokenOnlyLos.value = payload.tokenOnlyLos ?? false
+      visionCircles.value = payload.visionCircles || []
+      // UVTT LOS data
+      useLosBlocking.value = payload.useLosBlocking || false
+      visibilityPaths.value = payload.visibilityPaths || []
+      blockingWalls.value = payload.blockingWalls || []
+      uvttLights.value = payload.uvttLights || []
+      // Ambient light
+      if (payload.ambientLight) {
+        mapState.value.ambientLight = payload.ambientLight
+      }
+      console.log('PlayerDisplayWindow: State updated - revealMap:', revealMap.value, 'tokenOnlyLos:', tokenOnlyLos.value, 'visibilityPaths:', visibilityPaths.value.length)
+    } else {
+      console.log('PlayerDisplayWindow: Ignoring fog update for different map', payload.mapId, 'vs', mapState.value.mapId)
     }
   })
 
@@ -287,6 +428,11 @@ async function loadMapImage(mapId: number) {
   errorMessage.value = null
   tokens.value = [] // Clear tokens when loading a new map
   lightSources.value = [] // Clear light sources when loading a new map
+  // Clear UVTT LOS data
+  useLosBlocking.value = false
+  visibilityPaths.value = []
+  blockingWalls.value = []
+  uvttLights.value = []
 
   try {
     const response = await invoke<{ success: boolean; data?: string; error?: string }>(
@@ -323,12 +469,12 @@ function updateDisplayScale() {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
 
-  // Calculate scale to fit (same as object-fit: contain logic)
+  // Calculate scale to fill (same as object-fit: cover logic)
   const scaleX = viewportWidth / naturalWidth
   const scaleY = viewportHeight / naturalHeight
 
-  // Use the smaller scale to fit within viewport
-  displayScale.value = Math.min(scaleX, scaleY)
+  // Use the larger scale to fill the viewport (no black bars)
+  displayScale.value = Math.max(scaleX, scaleY)
   console.log('PlayerDisplayWindow: Updated display scale to', displayScale.value,
     `(natural: ${naturalWidth}x${naturalHeight}, viewport: ${viewportWidth}x${viewportHeight})`)
 }
@@ -362,7 +508,7 @@ function handleResize() {
 
 <template>
   <div class="player-display" :class="{ blackout: mapState.isBlackout }">
-    <!-- Blackout overlay -->
+    <!-- Blackout overlay (manual pause) -->
     <div v-if="mapState.isBlackout" class="blackout-overlay">
       <div class="blackout-text">Display Paused</div>
     </div>
@@ -392,14 +538,11 @@ function handleResize() {
         <div class="empty-hint">Select a map from the DM window to display</div>
       </div>
 
-      <!-- Map with grid overlay - scaled to fit screen -->
+      <!-- Map with grid overlay - synced with DM viewport -->
       <div
         v-else
         class="map-container"
-        :style="{
-          transform: `scale(${displayScale})`,
-          transformOrigin: 'center center'
-        }"
+        :style="combinedTransform"
       >
         <img
           ref="imageRef"
@@ -458,6 +601,17 @@ function handleResize() {
           <rect width="100%" height="100%" fill="url(#grid-pattern)" />
         </svg>
 
+        <!-- UVTT Map Lights (embedded in map file, with shadow casting) -->
+        <LightOverlay
+          v-if="uvttLights.length > 0 && imageNaturalWidth > 0"
+          :lights="uvttLights"
+          :walls="blockingWalls"
+          :map-width="imageNaturalWidth"
+          :map-height="imageNaturalHeight"
+          :show-debug="false"
+          blend-mode="soft-light"
+        />
+
         <!-- Light Source Layer (only active lights) -->
         <LightSourceRenderer
           v-if="lightSources.length > 0 && mapState.gridSizePx && imageNaturalWidth > 0"
@@ -472,20 +626,22 @@ function handleResize() {
           :show-labels="false"
         />
 
-        <!-- Token Layer (only visible tokens, below fog overlay) -->
+        <!-- Token Layer (filtered by Token LOS mode if enabled) -->
         <TokenRenderer
-          v-if="tokens.length > 0 && mapState.gridSizePx"
-          :key="`tokens-${mapState.mapId}-${mapState.gridSizePx}`"
-          :tokens="tokens"
+          v-if="visibleTokens.length > 0 && mapState.gridSizePx"
+          :key="`tokens-${mapState.mapId}-${mapState.gridSizePx}-${tokenOnlyLos}`"
+          :tokens="visibleTokens"
           :grid-size-px="mapState.gridSizePx"
           :base-scale="1"
           :show-hidden="false"
           :interactive="false"
+          :dead-token-ids="deadTokenIds"
+          :token-images="tokenImages"
         />
 
-        <!-- Fog of War Overlay (Player view - vision-based) -->
+        <!-- Fog of War Overlay (Fog mode: revealMap OFF + tokenOnlyLos OFF) -->
         <svg
-          v-if="fogEnabled && imageNaturalWidth > 0"
+          v-if="!revealMap && !tokenOnlyLos && imageNaturalWidth > 0"
           class="fog-overlay"
           :style="{
             width: imageNaturalWidth + 'px',
@@ -494,15 +650,24 @@ function handleResize() {
           :viewBox="`0 0 ${imageNaturalWidth} ${imageNaturalHeight}`"
         >
           <defs>
-            <!-- Blur filter for soft vision edges -->
+            <!-- Blur filter for soft vision edges (only used for circle fallback) -->
             <filter id="playerVisionBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="20" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="12" />
             </filter>
             <mask id="playerFogMask">
               <!-- White = visible (fog), Black = hidden (revealed) -->
               <rect width="100%" height="100%" fill="white" />
-              <!-- Cut out vision circles from player tokens (with blur for soft edges) -->
-              <g filter="url(#playerVisionBlur)">
+              <!-- Use visibility polygons when LOS blocking is enabled (no blur for sharp wall edges) -->
+              <g v-if="useLosBlocking && visibilityPaths.length > 0">
+                <path
+                  v-for="vis in visibilityPaths"
+                  :key="'vis-' + vis.tokenId"
+                  :d="vis.path"
+                  fill="black"
+                />
+              </g>
+              <!-- Fall back to circles when no LOS data (with blur for soft edges) -->
+              <g v-else filter="url(#playerVisionBlur)">
                 <circle
                   v-for="circle in visionCircles"
                   :key="'vision-' + circle.tokenId"
