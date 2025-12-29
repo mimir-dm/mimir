@@ -1,65 +1,68 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
-    <div class="modal-content pdf-modal" @click.stop>
-      <div class="modal-header">
-        <h2 class="modal-title">{{ title }}</h2>
-        <div class="header-actions">
-          <span v-if="pdfSize" class="pdf-size">{{ formatSize(pdfSize) }}</span>
-          <button @click="closeModal" class="close-button">×</button>
-        </div>
+  <AppModal
+    :visible="visible"
+    :title="title"
+    size="lg"
+    @close="closeModal"
+  >
+    <template #header>
+      <h2>{{ title }}</h2>
+      <div class="header-actions">
+        <span v-if="pdfSize" class="pdf-size">{{ formatSize(pdfSize) }}</span>
+      </div>
+    </template>
+
+    <div class="pdf-body">
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Generating PDF...</p>
       </div>
 
-      <div class="modal-body">
-        <div v-if="isLoading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Generating PDF...</p>
-        </div>
-
-        <div v-else-if="error" class="error-state">
-          <p class="error-title">Failed to generate PDF</p>
-          <p class="error-message">{{ error }}</p>
-          <button @click="retry" class="retry-button">Try Again</button>
-        </div>
-
-        <div v-else-if="pdfUrl" class="pdf-container">
-          <iframe
-            :src="pdfUrl"
-            class="pdf-frame"
-            title="PDF Preview"
-          ></iframe>
-        </div>
-
-        <div v-else class="empty-state">
-          <p>No PDF to display</p>
-        </div>
+      <div v-else-if="error" class="error-state">
+        <p class="error-title">Failed to generate PDF</p>
+        <p class="error-message">{{ error }}</p>
+        <button @click="retry" class="btn btn-primary">Try Again</button>
       </div>
 
-      <div class="modal-footer">
-        <button
-          @click="handlePrint"
-          class="action-button print-button"
-          :disabled="!pdfUrl || isLoading"
-        >
-          Print
-        </button>
-        <button
-          @click="handleSave"
-          class="action-button save-button"
-          :disabled="!pdfUrl || isLoading"
-        >
-          Save PDF
-        </button>
-        <button @click="closeModal" class="cancel-button">
-          Close
-        </button>
+      <div v-else-if="pdfUrl" class="pdf-container">
+        <iframe
+          :src="pdfUrl"
+          class="pdf-frame"
+          title="PDF Preview"
+        ></iframe>
+      </div>
+
+      <div v-else class="empty-state">
+        <p>No PDF to display</p>
       </div>
     </div>
-  </div>
+
+    <template #footer>
+      <button
+        @click="handlePrint"
+        class="btn btn-secondary"
+        :disabled="!pdfUrl || isLoading"
+      >
+        Print
+      </button>
+      <button
+        @click="handleSave"
+        class="btn btn-primary"
+        :disabled="!pdfUrl || isLoading"
+      >
+        Save PDF
+      </button>
+      <button @click="closeModal" class="btn btn-secondary">
+        Close
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
 import { PrintService, type PrintResult } from '../../services/PrintService'
+import AppModal from '@/components/shared/AppModal.vue'
 
 interface Props {
   visible: boolean
@@ -167,10 +170,6 @@ function closeModal() {
   emit('close')
 }
 
-function handleOverlayClick() {
-  closeModal()
-}
-
 // Expose methods to parent
 defineExpose({
   setLoading,
@@ -180,45 +179,17 @@ defineExpose({
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--color-overlay);
+/* Domain-specific styles */
+.pdf-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  background: var(--color-gray-100);
+  min-height: 60vh;
 }
 
-.pdf-modal {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl);
-  width: 90%;
-  max-width: 900px;
-  height: 85vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.modal-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
+.theme-dark .pdf-body {
+  background: var(--color-gray-900);
 }
 
 .header-actions {
@@ -233,34 +204,6 @@ defineExpose({
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-surface-variant);
   border-radius: var(--radius-sm);
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-  transition: color var(--transition-fast);
-}
-
-.close-button:hover {
-  color: var(--color-text);
-}
-
-.modal-body {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-gray-100);
-}
-
-.theme-dark .modal-body {
-  background: var(--color-gray-900);
 }
 
 .loading-state,
@@ -309,21 +252,6 @@ defineExpose({
   margin: 0 0 var(--spacing-lg);
 }
 
-.retry-button {
-  background: var(--color-primary-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.retry-button:hover {
-  background: var(--color-primary-600);
-}
-
 .empty-state p {
   color: var(--color-text-secondary);
   margin: 0;
@@ -338,72 +266,5 @@ defineExpose({
   width: 100%;
   height: 100%;
   border: none;
-}
-
-.modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.action-button {
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.action-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.print-button {
-  background: var(--color-surface-variant);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-}
-
-.print-button:hover:not(:disabled) {
-  background: var(--color-gray-200);
-}
-
-.theme-dark .print-button:hover:not(:disabled) {
-  background: var(--color-gray-700);
-}
-
-.save-button {
-  background: var(--color-primary-500);
-  color: white;
-}
-
-.save-button:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.cancel-button {
-  background: var(--color-surface-variant);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.cancel-button:hover {
-  background: var(--color-gray-200);
-  border-color: var(--color-border-hover);
-}
-
-.theme-dark .cancel-button:hover {
-  background: var(--color-gray-700);
 }
 </style>

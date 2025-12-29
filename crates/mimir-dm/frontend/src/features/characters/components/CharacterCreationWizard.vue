@@ -1,11 +1,15 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
-    <div class="wizard-content" @click.stop>
-      <div class="wizard-header">
-        <h2 class="wizard-title">Create New Character</h2>
-        <button @click="closeWizard" class="close-button">×</button>
-      </div>
-
+  <AppModal
+    :visible="visible"
+    title="Create New Character"
+    size="lg"
+    :closable="!creating"
+    :close-on-overlay="!creating"
+    :close-on-escape="!creating"
+    @close="closeWizard"
+  >
+    <template #header>
+      <h2>Create New Character</h2>
       <div class="wizard-progress">
         <div
           v-for="(step, index) in steps"
@@ -17,8 +21,9 @@
           <div class="step-label">{{ step }}</div>
         </div>
       </div>
+    </template>
 
-      <div class="wizard-body">
+    <div class="wizard-body">
         <!-- Step 1: Character Type & Player Selection -->
         <div v-if="steps[currentStep] === 'Player'" class="wizard-step">
           <h3>Character Type</h3>
@@ -463,36 +468,35 @@
         </div>
 
         <div v-if="error" class="error-message">{{ error }}</div>
-      </div>
-
-      <div class="wizard-footer">
-        <button
-          v-if="currentStep > 0"
-          @click="previousStep"
-          class="btn-secondary"
-          :disabled="creating"
-        >
-          Back
-        </button>
-        <button
-          v-if="currentStep < steps.length - 1"
-          @click="nextStep"
-          class="btn-primary"
-          :disabled="!canProceed || creating"
-        >
-          Next
-        </button>
-        <button
-          v-if="currentStep === steps.length - 1"
-          @click="createCharacter"
-          class="btn-primary"
-          :disabled="creating"
-        >
-          {{ creating ? 'Creating...' : 'Create Character' }}
-        </button>
-      </div>
     </div>
-  </div>
+
+    <template #footer>
+      <button
+        v-if="currentStep > 0"
+        @click="previousStep"
+        class="btn btn-secondary"
+        :disabled="creating"
+      >
+        Back
+      </button>
+      <button
+        v-if="currentStep < steps.length - 1"
+        @click="nextStep"
+        class="btn btn-primary"
+        :disabled="!canProceed || creating"
+      >
+        Next
+      </button>
+      <button
+        v-if="currentStep === steps.length - 1"
+        @click="createCharacter"
+        class="btn btn-primary"
+        :disabled="creating"
+      >
+        {{ creating ? 'Creating...' : 'Create Character' }}
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
@@ -500,6 +504,7 @@ import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { usePlayerStore } from '../../../stores/players'
 import { useCampaignStore } from '../../../stores/campaigns'
+import AppModal from '@/components/shared/AppModal.vue'
 import SpellSelector from './SpellSelector.vue'
 import type { SpellReferenceInput, LegendaryAction } from '@/types/character'
 
@@ -1178,12 +1183,6 @@ const canProceed = computed(() => {
   }
 })
 
-const handleOverlayClick = () => {
-  if (!creating.value) {
-    closeWizard()
-  }
-}
-
 const closeWizard = () => {
   if (!creating.value) {
     resetForm()
@@ -1442,66 +1441,7 @@ watch(
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.wizard-content {
-  background: var(--color-surface);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 700px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--color-border);
-}
-
-.wizard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.wizard-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 32px;
-  line-height: 1;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-}
-
-.close-button:hover {
-  color: var(--text);
-}
-
+/* Domain-specific styles */
 .wizard-progress {
   display: flex;
   padding: 20px;
@@ -1643,54 +1583,6 @@ watch(
   border-radius: 4px;
   color: var(--error);
   font-size: 14px;
-}
-
-.wizard-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 20px;
-  border-top: 1px solid var(--border);
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--primary-dark);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  border-color: var(--text-secondary);
-}
-
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Ability Score Controls */
