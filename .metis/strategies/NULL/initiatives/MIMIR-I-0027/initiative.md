@@ -4,14 +4,14 @@ level: initiative
 title: "PDF Export System Rework"
 short_code: "MIMIR-I-0027"
 created_at: 2025-12-25T02:41:15.291813+00:00
-updated_at: 2025-12-25T15:48:03.410058+00:00
+updated_at: 2025-12-29T16:20:46.492052+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/ready"
+  - "#phase/decompose"
 
 
 exit_criteria_met: false
@@ -107,9 +107,23 @@ Vue UI → PrintService.ts → Tauri Commands → PrintService (Rust)
 | `print/mod.rs` | **1600 lines, too many responsibilities** | Split into focused modules |
 | Data gathering | Each command does own DB queries (~230 lines for character) | Create `PrintDataService` to prepare data |
 | Template path resolution | Uses `CARGO_MANIFEST_DIR`, won't work in production | Proper Tauri resource bundling |
-| No map printing | Missing entirely | Add map templates and image handling |
+| Map printing incomplete | Basic rendering exists but no standalone print path or options UI | Add map print dialog, tiling, cutouts |
 | No print options UI | Frontend has no template picker | Add options dialog per print path |
 | Duplicated patterns | Each export command repeats connection handling | Extract common patterns |
+
+### Current State (Updated Dec 2025)
+
+Some progress has been made since initial planning:
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `map_renderer.rs` | ✅ Exists | Basic grid overlay and token rendering |
+| `campaign.rs` | ✅ Exists | Campaign export logic extracted (171 KB) |
+| UVTT format | ✅ Adopted | Maps stored as `.dd2vtt` with LOS/portals/lights |
+| Map in campaign export | ✅ Working | Maps included as preview pages |
+| Standalone map print | ❌ Missing | No print button in Map Viewer |
+| Map print options | ❌ Missing | No UI for scale/tiling/cutouts |
+| Play Kit export | ❌ Missing | No tiled maps or cutout generation |
 
 ### Proposed New Architecture
 
@@ -239,31 +253,66 @@ Show template picker when multiple formats available:
 - Archiving a completed campaign
 - Onboarding materials for new campaign
 
+**Export Types:**
+
+There are two distinct export outputs:
+
+| Type | Purpose | Contents |
+|------|---------|----------|
+| **Reference Document** | Digital/screen viewing, DM prep | Combined PDF with docs, monsters, NPCs, map previews (1 page each) |
+| **Physical Play Kit** | Tabletop play materials | Tiled maps at true scale + token cutout sheets |
+
 **Available from Module View:**
-| Selection | Template | Output |
-|-----------|----------|--------|
-| All module documents | `campaign/combined` | Single PDF with TOC |
-| All module NPCs | `session/npc-cards-multiup` | Multi-up NPC cards |
-| All module monsters | `monsters/cards-multiup` | Multi-up monster cards |
-| Module encounter sheet | `monsters/encounter` | Grouped stat blocks |
-| Module play notes | `campaign/document` | Session notes document |
+
+| Selection | Output |
+|-----------|--------|
+| Reference Document | Single PDF: Documents → Monsters → NPCs → Map Previews (fit to page) |
+| Physical Play Kit | Separate PDF: All maps tiled at 1"=5ft + token cutouts |
+| NPC Cards | Multi-up NPC cards for cutting |
+| Monster Cards | Multi-up monster cards for cutting |
 
 **Available from Campaign View:**
-| Selection | Template | Output |
-|-----------|----------|--------|
-| All campaign documents | `campaign/combined` | Combined narrative docs |
-| Full campaign export | *Multiple* | See "Full Campaign Export" below |
+
+| Selection | Output |
+|-----------|--------|
+| Reference Document | Combined narrative docs with map previews |
+| Physical Play Kit | All campaign/module maps tiled + cutouts |
+| Full Campaign Export | See "Full Campaign Export" below |
 
 **UI Flow:**
 1. User navigates to Module or Campaign view
 2. Clicks "Export" dropdown in view header
 3. Selects export type from menu:
-   - "Export All Documents"
-   - "Export NPC Cards"
-   - "Export Monster Cards"
-   - "Full Campaign Export..." (Campaign view only)
-4. For simple exports: generates immediately, shows preview
-5. For Full Campaign Export: opens selection dialog (see below)
+   ```
+   ┌─────────────────────────────────────────────────┐
+   │  Export Module: The Lost Mine                   │
+   ├─────────────────────────────────────────────────┤
+   │                                                 │
+   │  ☑ Reference Document                           │
+   │    Combined PDF with documents, monsters,       │
+   │    NPCs, and map previews                       │
+   │                                                 │
+   │  ☐ Physical Play Kit                            │
+   │    Separate PDF with:                           │
+   │    • All maps at true scale (tiled)             │
+   │    • Token cutout sheets                        │
+   │    • Assembly guides                            │
+   │                                                 │
+   ├─────────────────────────────────────────────────┤
+   │                        [Cancel] [Export]        │
+   └─────────────────────────────────────────────────┘
+   ```
+4. Reference doc generates immediately, shows preview
+5. Play kit generates separately (can be large)
+
+**Why Separate Documents?**
+
+| Concern | Reference Doc | Play Kit |
+|---------|---------------|----------|
+| Page count | Manageable (~50 pages) | Can be huge (20+ pages per map) |
+| Print cost | Normal | Expensive if printed unnecessarily |
+| Use case | Digital/screen, session prep | Physical tabletop only |
+| Frequency | Every session | Once per location |
 
 ---
 
@@ -273,14 +322,28 @@ Show template picker when multiple formats available:
 
 **Context:** DM wants to print a map for physical tabletop play, optionally with grid and token positions.
 
+**Map Format:** Maps are stored in UVTT format (`.dd2vtt`) containing:
+- Base image (PNG embedded as base64)
+- LOS walls (line segments for visibility calculations)
+- Portals (doors with open/closed state)
+- Lights (embedded light sources)
+- Grid configuration (size, offset)
+
+**Print Modes:**
+
+| Mode | Scale | Output | Use Case |
+|------|-------|--------|----------|
+| **Preview** | Fit to page | Single page | Quick reference, sharing, handouts |
+| **Play** | 1"=5ft (true scale) | Tiled pages with assembly guide | Physical tabletop |
+
 **Print Options:**
 
-| Option | Description | Use Case |
-|--------|-------------|----------|
-| Map Only | Clean map image, no overlays | Scenic handout, player map |
-| Map + Grid | Map with grid overlay | Physical play with own minis |
-| Map + Grid + Tokens | Grid overlay with tokens shown on map | Reference for DM setup |
-| Map + Grid + Token Cutouts | Grid map + separate page of token standees | Full physical play kit |
+| Option | Default | Description |
+|--------|---------|-------------|
+| Grid overlay | On | Show grid lines over map |
+| LOS walls | **Off** | Show wall boundaries (debug/reference only - walls align with PNG artwork) |
+| Starting positions | Off | Numbered markers showing token placements |
+| Token cutouts | Off | Append page with standee cutouts for physical play |
 
 **UI Flow:**
 1. User opens map in Map Viewer
@@ -290,25 +353,32 @@ Show template picker when multiple formats available:
    ┌─────────────────────────────────────┐
    │  Print Map                          │
    ├─────────────────────────────────────┤
+   │  Mode:                              │
+   │  ○ Preview (fit to page)            │
+   │  ● Play (1"=5ft, tiled if needed)   │
    │                                     │
    │  Include:                           │
    │  ☑ Grid Overlay                     │
-   │  ☐ Token Positions                  │
-   │  ☐ Token Cutouts (separate page)    │
+   │  ☐ LOS Walls (debug)                │
+   │  ☐ Starting Positions               │
+   │  ☐ Token Cutouts Page               │
    │                                     │
-   │  Scale:                             │
-   │  ○ Fit to page                      │
-   │  ● 1" = 5ft (standard grid)         │
-   │  ○ Custom: [___] inches per square  │
-   │                                     │
-   │  Pages: 1 (Letter) or 4 (tiled)     │
-   │                                     │
+   │  Pages: 4 (2×2 tiled)               │
    ├─────────────────────────────────────┤
    │              [Cancel] [Print]       │
    └─────────────────────────────────────┘
    ```
 4. PDF generates with selected options
 5. Preview modal opens
+
+**Output Examples:**
+
+| Selection | Result |
+|-----------|--------|
+| Preview only | Single page, scaled map with grid |
+| Play + Positions | Tiled map pages + numbered token markers |
+| Play + Cutouts | Tiled map pages + standee sheet |
+| Play + Positions + Cutouts | Full physical play kit |
 
 **Token Cutouts Page:**
 When "Token Cutouts" is selected, append a page with:
@@ -317,14 +387,7 @@ When "Token Cutouts" is selected, append a page with:
 - Fold lines for paper standees
 - Arranged in grid for easy cutting
 
-**Scale Options:**
-| Option | Behavior |
-|--------|----------|
-| Fit to page | Scales map to fit single page (may distort grid) |
-| 1" = 5ft | Standard D&D grid, may tile across multiple pages |
-| Custom | User-specified scale for specific table setups |
-
-**Multi-Page Tiling:**
+**Multi-Page Tiling (Play Mode):**
 For large maps at true scale:
 - Split across multiple letter/A4 pages
 - Each page shows adjacent piece numbers in margins for assembly
@@ -661,97 +724,89 @@ For each template:
 
 ## Implementation Plan
 
-### Phase 1: Architecture Refactor
+### Phase 1: Map Print Path (Priority)
 
-**Goal:** Clean separation of concerns, testable code
+**Goal:** Standalone map printing with options
 
-1. **Create `PrintDataService` in `mimir-dm-core`**
-   - `CharacterPrintData` struct with all needed fields
-   - `DocumentPrintData` struct for campaign docs
-   - `MapPrintData` struct with grid/token options
-   - `BulkPrintSelection` for campaign export
-   - Move data gathering logic from commands here
-   - Add unit tests for each prepare method
+1. **Add map print command**
+   - New `print_map` Tauri command
+   - Accept options: mode (preview/play), grid, positions, cutouts
+   - Use existing `map_renderer.rs` as base
 
-2. **Split `print/mod.rs` into modules**
-   - `document.rs` - `print_document` command
-   - `character.rs` - `print_character` command
-   - `map.rs` - `print_map` command (new)
-   - `bulk.rs` - `print_bulk` command
-   - Keep commands thin: validate, call service, return
+2. **Create `MapPrintDialog.vue`**
+   - Mode selector (Preview / Play)
+   - Checkbox options (grid, LOS walls, positions, cutouts)
+   - Page count preview for tiled output
 
-3. **Fix template bundling**
-   - Add templates to `tauri.conf.json` resources
-   - Update `PrintService::new()` to accept resource path
-   - Test in release build
+3. **Add Print button to Map Viewer**
+   - Button in map toolbar
+   - Opens MapPrintDialog
+   - Integrates with PdfPreviewModal
 
-### Phase 2: Map Printing
+4. **Implement tiled map output**
+   - Split large maps across pages at true scale
+   - Assembly guide on first page
+   - Margin labels for alignment
 
-**Goal:** Full physical play support
+5. **Implement token cutout sheet**
+   - Extract tokens from UVTT/database
+   - Render at grid scale with names
+   - Fold lines for standees
 
-4. **Add map templates**
-   - `map/full.typ` - Single page with overlays
-   - `map/tiled.typ` - Multi-page with assembly guide
-   - `map/cutouts.typ` - Token standee sheet
+### Phase 2: Bulk Export Enhancement
 
-5. **Extend `MimirTypstWorld` for images**
-   - Handle map image loading
-   - Handle token image loading
-   - Scale calculations for grid sizing
+**Goal:** Reference Doc + Play Kit split
 
-6. **Add map print options dialog**
-   - Grid overlay toggle
-   - Token positions toggle
-   - Token cutouts toggle
-   - Scale selector (fit/1"=5ft/custom)
+6. **Add export options dialog**
+   - Checkbox: Reference Document
+   - Checkbox: Physical Play Kit
+   - Show estimated page counts
 
-### Phase 3: Frontend Polish
+7. **Implement Play Kit generation**
+   - Iterate all maps in module/campaign
+   - Generate tiled output for each
+   - Append cutout sheets
+   - Assembly guides per map
 
-**Goal:** Complete print UX for all paths
+8. **Update campaign export**
+   - Map previews (fit to page) in reference doc
+   - Starting positions shown on preview maps
+   - Separate Play Kit PDF option
 
-7. **Create `PrintOptionsDialog.vue`**
-   - Template picker for items with multiple formats
-   - Preview of selected template
-   - Per-path options (map scale, etc.)
+### Phase 3: Architecture Cleanup
 
-8. **Simplify `PrintService.ts`**
-   - One method per print path
-   - Options passed as typed objects
-   - Remove legacy code paths
+**Goal:** Maintainable, testable code
 
-9. **Add print buttons to all views**
-   - Document sidebar print button
-   - Character editor print button
-   - Map viewer print button
-   - Module/Campaign export menus
+9. **Create `PrintDataService` in `mimir-dm-core`**
+   - `MapPrintData` struct with UVTT data, tokens, options
+   - Move data gathering logic from commands
+   - Unit tests for data preparation
 
-### Phase 4: Templates & Testing
+10. **Split `print/mod.rs`**
+    - `map.rs` - Map print commands
+    - `character.rs` - Character sheet commands
+    - `document.rs` - Document export commands
+    - `bulk.rs` - Campaign/module bulk export
 
-**Goal:** Reliable, well-tested templates
+11. **Fix template bundling**
+    - Add templates to `tauri.conf.json` resources
+    - Test in release build
 
-10. **Create test fixtures directory**
-    - `fixtures/character/` - level 1, multiclass, NPC
-    - `fixtures/monster/` - simple, legendary, spellcaster
-    - `fixtures/map/` - small, large tiled, with tokens
+### Phase 4: Testing & Polish
 
-11. **Add template compilation tests**
-    - Each template compiles with minimal data
-    - Each template compiles with full data
-    - Edge cases: empty arrays, Unicode, long text
+**Goal:** Reliable generation
 
-12. **Template refinement**
-    - Audit against feature specifications
-    - Fix any layout/styling issues
-    - Ensure consistent use of `_shared/`
+12. **Create map test fixtures**
+    - Small map (single page)
+    - Large map (requires tiling)
+    - Map with various token types/sizes
 
-### Phase 5: Documentation
+13. **Add integration tests**
+    - Map print generates valid PDF
+    - Tiled output has correct page count
+    - Cutouts include all tokens
 
-13. **Update user docs**
-    - Print button locations
-    - Template options
-    - Map printing guide
-
-14. **Add template authoring guide**
-    - Data schema per template
-    - Shared component reference
-    - How to customize
+14. **Template refinement**
+    - Audit map templates
+    - Consistent styling with other exports
+    - Error handling for edge cases

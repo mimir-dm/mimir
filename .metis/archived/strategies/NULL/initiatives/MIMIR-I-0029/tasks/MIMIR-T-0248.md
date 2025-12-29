@@ -1,13 +1,13 @@
 ---
-id: create-appmodal-vue-component
+id: migrate-simple-modals-to-appmodal
 level: task
-title: "Create AppModal.vue component"
-short_code: "MIMIR-T-0247"
-created_at: 2025-12-29T15:13:20.727678+00:00
-updated_at: 2025-12-29T15:24:12.872891+00:00
+title: "Migrate simple modals to AppModal (Batch 1)"
+short_code: "MIMIR-T-0248"
+created_at: 2025-12-29T15:13:20.863099+00:00
+updated_at: 2025-12-29T15:26:58.069599+00:00
 parent: MIMIR-I-0029
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0029
 ---
 
-# Create AppModal.vue component
+# Migrate simple modals to AppModal (Batch 1)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,9 +29,13 @@ initiative_id: MIMIR-I-0029
 
 ## Objective **[REQUIRED]**
 
-Create a reusable slot-based `AppModal.vue` component for general-purpose modals.
+Migrate simple modals to use AppModal component as proof of concept.
 
-**Location:** `components/shared/AppModal.vue`
+**Components:**
+- `CreateModuleModal.vue`
+- `ModuleListView.vue` (inline create modal)
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -39,17 +43,13 @@ Create a reusable slot-based `AppModal.vue` component for general-purpose modals
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [x] Props: `visible`, `title`, `size` (sm/md/lg/xl/full), `closable`, `closeOnOverlay`, `closeOnEscape`, `noPadding`, `stackIndex`
-- [x] Slots: `header`, `default` (body), `footer`
-- [x] Emits: `close`, `update:visible` (v-model support)
-- [x] Teleport to body for proper z-index stacking
-- [x] Escape key closes modal (global handler + local)
-- [x] Overlay click closes modal (when `closeOnOverlay` true)
-- [x] Body scroll locked when modal open
-- [x] Uses consolidated `modals.css` class names
-- [x] Vue Transition for enter/leave animations
-- [x] Focus management (auto-focus first focusable element)
-- [x] ARIA attributes for accessibility
+- [x] CreateModuleModal uses `<AppModal>` wrapper
+- [x] ModuleListView inline modal uses `<AppModal>` wrapper
+- [x] Scoped `.modal-overlay` CSS removed from both
+- [x] Open/close behavior works correctly (via AppModal)
+- [x] Overlay click closes modal (via AppModal closeOnOverlay)
+- [x] Escape key closes modal (via AppModal closeOnEscape)
+- [x] Visual appearance unchanged (uses modals.css)
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -115,15 +115,21 @@ Create a reusable slot-based `AppModal.vue` component for general-purpose modals
 ## Status Updates **[REQUIRED]**
 
 ### 2025-12-29: Completed
-Created `components/shared/AppModal.vue` with:
-- Full slot-based architecture (header, default, footer)
-- v-model support via `update:visible` emit
-- Size variants using modals.css classes (modal-sm/md/lg/xl/full)
-- Teleport to body for proper stacking
-- Escape key handling (both global and local)
-- Overlay click to close (configurable)
-- Body scroll lock when modal open
-- Focus management (auto-focus first focusable element)
-- ARIA attributes for accessibility
-- Vue Transition for smooth animations
-- Stack index support for nested modals
+Migrated 2 simple modals to AppModal:
+
+1. **CreateModuleModal.vue**
+   - Replaced inline modal HTML with `<AppModal>` wrapper
+   - Used slots for body content and footer buttons
+   - Removed all scoped styles (component had none)
+
+2. **ModuleListView.vue**
+   - Replaced inline modal with `<AppModal>` component
+   - Added AppModal import
+   - Removed ~60 lines of scoped modal CSS (.modal-overlay, .modal-content, .form-group, .modal-actions)
+   - Kept .btn-secondary styles (still needed for buttons)
+
+Both modals now use centralized modals.css via AppModal, with automatic:
+- Escape key handling
+- Overlay click to close
+- Body scroll lock
+- Proper z-index stacking via Teleport

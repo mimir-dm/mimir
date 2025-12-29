@@ -1,11 +1,11 @@
 ---
-id: migrate-d-d-content-modals-batch-5
+id: create-map-test-fixtures
 level: task
-title: "Migrate D&D content modals (Batch 5)"
-short_code: "MIMIR-T-0252"
-created_at: 2025-12-29T15:13:21.760594+00:00
-updated_at: 2025-12-29T15:13:21.760594+00:00
-parent: MIMIR-I-0029
+title: "Create map test fixtures"
+short_code: "MIMIR-T-0264"
+created_at: 2025-12-29T16:21:51.898664+00:00
+updated_at: 2025-12-29T16:21:51.898664+00:00
+parent: MIMIR-I-0027
 blocked_by: []
 archived: false
 
@@ -16,20 +16,20 @@ tags:
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0029
+initiative_id: MIMIR-I-0027
 ---
 
-# Migrate D&D content modals (Batch 5)
+# Create map test fixtures
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0029]]
+[[MIMIR-I-0027]]
 
-## Objective **[REQUIRED]**
+## Objective
 
-{Clear statement of what this task accomplishes}
+Create test fixture files for map printing: small single-page map, large multi-tile map, and map with various token types and sizes.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -65,11 +65,13 @@ initiative_id: MIMIR-I-0029
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
 
-## Acceptance Criteria **[REQUIRED]**
+## Acceptance Criteria
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+- [ ] Fixture: small map (fits single page at true scale)
+- [ ] Fixture: large map (requires 2x2 or larger tiling)
+- [ ] Fixture: map with tokens of various sizes (tiny to gargantuan)
+- [ ] Fixtures stored in `tests/fixtures/maps/`
+- [ ] UVTT format with walls, portals, lights
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
