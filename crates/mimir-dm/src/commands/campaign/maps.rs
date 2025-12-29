@@ -2,53 +2,219 @@
 //!
 //! Provides Tauri commands for uploading, managing, and serving battle maps,
 //! dungeon maps, and regional maps for visual display during in-person play sessions.
+//!
+//! Maps are stored in Universal VTT (.dd2vtt) format which contains the image,
+//! grid config, LOS walls, portals, and lights.
+//!
+//! Storage paths:
+//! - Campaign maps: `{data_dir}/campaigns/{campaign_id}/maps/{uuid}.dd2vtt`
+//! - Module maps: `{data_dir}/modules/{module_id}/maps/{uuid}.dd2vtt`
 
 use crate::state::AppState;
 use crate::types::{ApiError, ApiResponse};
 use base64::{engine::general_purpose::STANDARD, Engine};
-use image::codecs::jpeg::JpegEncoder;
-use image::imageops::FilterType;
 use image::ImageReader;
 use mimir_dm_core::{
-    models::campaign::{Map, MapSummary, NewMap, UpdateMap},
+    models::campaign::{GridType, Map, MapSummary, NewMap},
     services::MapService,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Cursor;
+use std::path::PathBuf;
 use tauri::State;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
-/// Maximum dimension (width or height) for uploaded map images.
-/// Images larger than this will be scaled down proportionally.
-const MAX_MAP_DIMENSION: u32 = 4096;
+/// UVTT file format version we generate
+const UVTT_FORMAT_VERSION: f32 = 0.3;
 
-/// JPEG quality for processed map images (0-100).
-const JPEG_QUALITY: u8 = 85;
+// ============================================================================
+// UVTT Types
+// ============================================================================
 
-/// Request to upload a new map image.
+/// Summary of a UVTT file's contents for preview/display.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UvttSummary {
+    /// Grid dimensions (columns x rows)
+    pub grid_size: (u32, u32),
+    /// Pixels per grid cell
+    pub pixels_per_grid: u32,
+    /// Map dimensions in pixels
+    pub dimensions_px: (u32, u32),
+    /// Number of LOS wall segments
+    pub wall_count: usize,
+    /// Number of portals (doors)
+    pub portal_count: usize,
+    /// Number of light sources
+    pub light_count: usize,
+}
+
+/// UVTT file structure for parsing/serializing.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UvttFile {
+    pub format: f32,
+    pub resolution: UvttResolution,
+    pub image: String,
+    #[serde(default)]
+    pub line_of_sight: Vec<Vec<UvttPoint>>,
+    #[serde(default)]
+    pub portals: Vec<UvttPortal>,
+    #[serde(default)]
+    pub lights: Vec<UvttLight>,
+    #[serde(default)]
+    pub environment: Option<UvttEnvironment>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UvttResolution {
+    pub map_origin: UvttPoint,
+    pub map_size: UvttPoint,
+    pub pixels_per_grid: u32,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct UvttPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UvttPortal {
+    pub position: UvttPoint,
+    pub bounds: [UvttPoint; 2],
+    #[serde(default)]
+    pub rotation: f64,
+    #[serde(default = "default_true")]
+    pub closed: bool,
+    #[serde(default)]
+    pub freestanding: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UvttLight {
+    pub position: UvttPoint,
+    pub range: f64,
+    #[serde(default = "default_intensity")]
+    pub intensity: f64,
+    #[serde(default = "default_color")]
+    pub color: String,
+    #[serde(default = "default_true")]
+    pub shadows: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UvttEnvironment {
+    #[serde(default)]
+    pub baked_lighting: bool,
+    /// Ambient light as ARGB hex (e.g., "ffffffff" = bright, "ff000000" = darkness)
+    #[serde(default = "default_ambient_light")]
+    pub ambient_light: String,
+}
+
+fn default_ambient_light() -> String {
+    "ffffffff".to_string() // Full bright by default
+}
+
+fn default_intensity() -> f64 {
+    1.0
+}
+
+fn default_color() -> String {
+    "#ffffff".to_string()
+}
+
+impl UvttFile {
+    /// Parse from JSON bytes
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        serde_json::from_slice(bytes).map_err(|e| format!("Failed to parse UVTT file: {}", e))
+    }
+
+    /// Serialize to JSON bytes
+    pub fn to_bytes(&self) -> Result<Vec<u8>, String> {
+        serde_json::to_vec(self).map_err(|e| format!("Failed to serialize UVTT file: {}", e))
+    }
+
+    /// Get map width in pixels
+    pub fn width_px(&self) -> u32 {
+        (self.resolution.map_size.x * self.resolution.pixels_per_grid as f64) as u32
+    }
+
+    /// Get map height in pixels
+    pub fn height_px(&self) -> u32 {
+        (self.resolution.map_size.y * self.resolution.pixels_per_grid as f64) as u32
+    }
+
+    /// Create summary for frontend display
+    pub fn summary(&self) -> UvttSummary {
+        UvttSummary {
+            grid_size: (
+                self.resolution.map_size.x as u32,
+                self.resolution.map_size.y as u32,
+            ),
+            pixels_per_grid: self.resolution.pixels_per_grid,
+            dimensions_px: (self.width_px(), self.height_px()),
+            wall_count: self.line_of_sight.len(),
+            portal_count: self.portals.len(),
+            light_count: self.lights.len(),
+        }
+    }
+
+    /// Create a UVTT wrapper for a plain image (no LOS/portals/lights)
+    pub fn from_image(image_base64: String, width_px: u32, height_px: u32, grid_size_px: u32) -> Self {
+        let grid_cols = width_px as f64 / grid_size_px as f64;
+        let grid_rows = height_px as f64 / grid_size_px as f64;
+
+        Self {
+            format: UVTT_FORMAT_VERSION,
+            resolution: UvttResolution {
+                map_origin: UvttPoint { x: 0.0, y: 0.0 },
+                map_size: UvttPoint {
+                    x: grid_cols,
+                    y: grid_rows,
+                },
+                pixels_per_grid: grid_size_px,
+            },
+            image: image_base64,
+            line_of_sight: Vec::new(),
+            portals: Vec::new(),
+            lights: Vec::new(),
+            environment: Some(UvttEnvironment {
+                baked_lighting: false,
+                ambient_light: default_ambient_light(),
+            }),
+        }
+    }
+}
+
+// ============================================================================
+// Request/Response Types
+// ============================================================================
+
+/// Request to upload a new map (either UVTT or image).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UploadMapRequest {
     pub campaign_id: i32,
     pub module_id: Option<i32>,
     pub name: String,
-    /// Base64-encoded image data
-    pub image_data: String,
-    /// Original filename for extension detection
+    /// Base64-encoded file data (.dd2vtt or image)
+    pub file_data: String,
+    /// Original filename for format detection
     pub filename: String,
-    pub width_px: i32,
-    pub height_px: i32,
 }
 
-/// Request to update map properties.
+/// Response after uploading a map.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UpdateMapRequest {
-    pub name: Option<String>,
-    pub grid_type: Option<String>,
-    pub grid_size_px: Option<Option<i32>>,
-    pub grid_offset_x: Option<i32>,
-    pub grid_offset_y: Option<i32>,
+pub struct UploadMapResponse {
+    pub id: i32,
+    pub name: String,
+    pub file_path: String,
+    /// Summary of UVTT contents
+    pub summary: UvttSummary,
 }
 
 /// Request to list maps.
@@ -58,93 +224,84 @@ pub struct ListMapsRequest {
     pub module_id: Option<i32>,
 }
 
-/// Process an uploaded map image: resize if needed and convert to JPEG.
-///
-/// # Arguments
-/// * `image_bytes` - Raw image bytes (PNG, JPEG, WebP, etc.)
-/// * `max_dimension` - Maximum width or height in pixels
-///
-/// # Returns
-/// Tuple of (processed_jpeg_bytes, width, height) or an error message.
-fn process_map_image(
-    image_bytes: &[u8],
-    max_dimension: u32,
-) -> Result<(Vec<u8>, u32, u32), String> {
-    // Decode the image from bytes
-    let img = ImageReader::new(Cursor::new(image_bytes))
-        .with_guessed_format()
-        .map_err(|e| format!("Failed to detect image format: {}", e))?
-        .decode()
-        .map_err(|e| format!("Failed to decode image: {}", e))?;
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
-    let (orig_width, orig_height) = (img.width(), img.height());
-    info!(
-        "Processing map image: {}x{} (max: {})",
-        orig_width, orig_height, max_dimension
-    );
-
-    // Resize if either dimension exceeds the max
-    let img = if orig_width > max_dimension || orig_height > max_dimension {
-        let scale = max_dimension as f32 / orig_width.max(orig_height) as f32;
-        let new_width = (orig_width as f32 * scale) as u32;
-        let new_height = (orig_height as f32 * scale) as u32;
-
-        info!(
-            "Resizing map from {}x{} to {}x{}",
-            orig_width, orig_height, new_width, new_height
-        );
-
-        img.resize(new_width, new_height, FilterType::Lanczos3)
-    } else {
-        img
-    };
-
-    let (final_width, final_height) = (img.width(), img.height());
-
-    // Convert to RGB (JPEG doesn't support alpha)
-    let rgb_img = img.to_rgb8();
-
-    // Encode as JPEG
-    let mut jpeg_bytes = Vec::new();
-    let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_bytes, JPEG_QUALITY);
-    encoder
-        .encode_image(&rgb_img)
-        .map_err(|e| format!("Failed to encode JPEG: {}", e))?;
-
-    info!(
-        "Processed map: {}x{} -> {} KB JPEG",
-        final_width,
-        final_height,
-        jpeg_bytes.len() / 1024
-    );
-
-    Ok((jpeg_bytes, final_width, final_height))
+/// Get the storage directory for a map based on campaign/module.
+fn get_maps_dir(data_dir: &PathBuf, campaign_id: i32, module_id: Option<i32>) -> PathBuf {
+    match module_id {
+        Some(mid) => data_dir.join("modules").join(mid.to_string()).join("maps"),
+        None => data_dir
+            .join("campaigns")
+            .join(campaign_id.to_string())
+            .join("maps"),
+    }
 }
 
-/// Upload a new map image.
+/// Check if a filename indicates a UVTT file.
+fn is_uvtt_file(filename: &str) -> bool {
+    let lower = filename.to_lowercase();
+    lower.ends_with(".dd2vtt") || lower.ends_with(".uvtt")
+}
+
+// ============================================================================
+// Tauri Commands
+// ============================================================================
+
+/// Upload a new map (UVTT or image file).
 ///
-/// Accepts base64-encoded image data, stores it in the app data directory,
-/// and creates a database record for the map. Images are automatically
-/// resized to max 4096px and converted to JPEG for optimal performance.
-///
-/// # Parameters
-/// - `request` - Upload request with image data and metadata
-/// - `state` - Application state
-///
-/// # Returns
-/// `ApiResponse` containing the created `Map` record.
+/// For UVTT files: stores directly, extracts metadata.
+/// For images: wraps in UVTT format with default grid (70px), no LOS.
 #[tauri::command]
 pub async fn upload_map(
     request: UploadMapRequest,
     state: State<'_, AppState>,
-) -> Result<ApiResponse<Map>, ApiError> {
+) -> Result<ApiResponse<UploadMapResponse>, ApiError> {
     info!(
         "Uploading map '{}' for campaign {} (module: {:?})",
         request.name, request.campaign_id, request.module_id
     );
 
-    // Create maps directory if it doesn't exist
-    let maps_dir = state.paths.data_dir.join("maps");
+    // Decode base64 file data
+    let file_bytes = match STANDARD.decode(&request.file_data) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            error!("Failed to decode base64 file data: {}", e);
+            return Ok(ApiResponse::error(format!("Invalid file data: {}", e)));
+        }
+    };
+
+    // Parse or create UVTT structure
+    let uvtt = if is_uvtt_file(&request.filename) {
+        // Parse existing UVTT file
+        match UvttFile::from_bytes(&file_bytes) {
+            Ok(uvtt) => uvtt,
+            Err(e) => {
+                error!("Failed to parse UVTT file: {}", e);
+                return Ok(ApiResponse::error(format!("Invalid UVTT file: {}", e)));
+            }
+        }
+    } else {
+        // Image file - wrap in UVTT format
+        // Detect image dimensions
+        let (width, height) = ImageReader::new(Cursor::new(&file_bytes))
+            .with_guessed_format()
+            .ok()
+            .and_then(|reader| reader.into_dimensions().ok())
+            .unwrap_or_else(|| {
+                warn!("Failed to detect image dimensions, using defaults");
+                (1400, 1050)
+            });
+
+        let image_base64 = STANDARD.encode(&file_bytes);
+
+        // Default 70px grid - will be configured after upload
+        UvttFile::from_image(image_base64, width, height, 70)
+    };
+
+    // Create storage directory
+    let maps_dir = get_maps_dir(&state.paths.data_dir, request.campaign_id, request.module_id);
     if let Err(e) = fs::create_dir_all(&maps_dir) {
         error!("Failed to create maps directory: {}", e);
         return Ok(ApiResponse::error(format!(
@@ -153,53 +310,48 @@ pub async fn upload_map(
         )));
     }
 
-    // Decode base64 image data
-    let raw_bytes = match STANDARD.decode(&request.image_data) {
+    // Generate unique filename
+    let unique_id = Uuid::new_v4();
+    let stored_filename = format!("{}.dd2vtt", unique_id);
+    let file_path = maps_dir.join(&stored_filename);
+
+    // Serialize and save UVTT file
+    let uvtt_bytes = match uvtt.to_bytes() {
         Ok(bytes) => bytes,
         Err(e) => {
-            error!("Failed to decode base64 image: {}", e);
-            return Ok(ApiResponse::error(format!("Invalid image data: {}", e)));
+            error!("Failed to serialize UVTT: {}", e);
+            return Ok(ApiResponse::error(format!("Failed to save map: {}", e)));
         }
     };
 
-    // Process image: resize if needed and convert to JPEG
-    let (processed_bytes, width, height) = match process_map_image(&raw_bytes, MAX_MAP_DIMENSION) {
-        Ok(result) => result,
-        Err(e) => {
-            error!("Failed to process image: {}", e);
-            return Ok(ApiResponse::error(format!("Failed to process image: {}", e)));
-        }
-    };
-
-    // Generate unique filename (always .jpg now)
-    let unique_id = Uuid::new_v4();
-    let stored_filename = format!("{}.jpg", unique_id);
-    let image_path = maps_dir.join(&stored_filename);
-
-    // Save the processed image
-    if let Err(e) = fs::write(&image_path, &processed_bytes) {
-        error!("Failed to write image file: {}", e);
-        return Ok(ApiResponse::error(format!("Failed to save image: {}", e)));
+    if let Err(e) = fs::write(&file_path, &uvtt_bytes) {
+        error!("Failed to write UVTT file: {}", e);
+        return Ok(ApiResponse::error(format!("Failed to save map: {}", e)));
     }
 
     info!(
-        "Saved processed map to {:?} ({}KB, {}x{})",
-        image_path,
-        processed_bytes.len() / 1024,
-        width,
-        height
+        "Saved UVTT map to {:?} ({}KB, {}x{} grid)",
+        file_path,
+        uvtt_bytes.len() / 1024,
+        uvtt.resolution.map_size.x as u32,
+        uvtt.resolution.map_size.y as u32,
     );
 
-    // Create database record with processed dimensions and original dimensions
+    // Create database record
+    let width_px = uvtt.width_px() as i32;
+    let height_px = uvtt.height_px() as i32;
+    let grid_size_px = uvtt.resolution.pixels_per_grid as i32;
+
     let new_map = NewMap::new(
         request.campaign_id,
-        request.name,
-        stored_filename,
-        width as i32,
-        height as i32,
-        request.width_px,  // Original dimensions from frontend
-        request.height_px,
-    );
+        request.name.clone(),
+        stored_filename.clone(),
+        width_px,
+        height_px,
+        width_px, // Original dimensions same as current for UVTT
+        height_px,
+    )
+    .with_grid(GridType::Square, grid_size_px, 0, 0);
 
     let new_map = if let Some(module_id) = request.module_id {
         new_map.with_module(module_id)
@@ -213,16 +365,19 @@ pub async fn upload_map(
     match service.create_map(new_map) {
         Ok(map) => {
             info!("Map created with ID: {}", map.id);
-            Ok(ApiResponse::success(map))
+            let summary = uvtt.summary();
+            Ok(ApiResponse::success(UploadMapResponse {
+                id: map.id,
+                name: map.name,
+                file_path: stored_filename,
+                summary,
+            }))
         }
         Err(e) => {
-            // Clean up the saved image on failure
-            let _ = fs::remove_file(&image_path);
+            // Clean up the saved file on failure
+            let _ = fs::remove_file(&file_path);
             error!("Failed to create map record: {}", e);
-            Ok(ApiResponse::error(format!(
-                "Failed to create map: {}",
-                e
-            )))
+            Ok(ApiResponse::error(format!("Failed to create map: {}", e)))
         }
     }
 }
@@ -236,10 +391,7 @@ pub async fn upload_map(
 /// # Returns
 /// `ApiResponse` containing the `Map` if found.
 #[tauri::command]
-pub async fn get_map(
-    id: i32,
-    state: State<'_, AppState>,
-) -> Result<ApiResponse<Map>, ApiError> {
+pub async fn get_map(id: i32, state: State<'_, AppState>) -> Result<ApiResponse<Map>, ApiError> {
     info!("Getting map with ID: {}", id);
 
     let mut conn = state.db.get_connection()?;
@@ -341,49 +493,6 @@ pub async fn list_map_summaries(
     }
 }
 
-/// Update a map's properties.
-///
-/// # Parameters
-/// - `id` - Database ID of the map
-/// - `request` - Fields to update
-/// - `state` - Application state
-///
-/// # Returns
-/// `ApiResponse` containing the updated `Map`.
-#[tauri::command]
-pub async fn update_map(
-    id: i32,
-    request: UpdateMapRequest,
-    state: State<'_, AppState>,
-) -> Result<ApiResponse<Map>, ApiError> {
-    info!("Updating map with ID: {}", id);
-
-    let mut conn = state.db.get_connection()?;
-    let mut service = MapService::new(&mut conn);
-
-    let update = UpdateMap {
-        name: request.name,
-        grid_type: request.grid_type,
-        grid_size_px: request.grid_size_px,
-        grid_offset_x: request.grid_offset_x,
-        grid_offset_y: request.grid_offset_y,
-        updated_at: None, // Service handles this
-        fog_enabled: None,
-        ambient_light: None,
-    };
-
-    match service.update_map(id, update) {
-        Ok(map) => {
-            info!("Map updated successfully");
-            Ok(ApiResponse::success(map))
-        }
-        Err(e) => {
-            error!("Failed to update map: {}", e);
-            Ok(ApiResponse::error(format!("Failed to update map: {}", e)))
-        }
-    }
-}
-
 /// Update a map's grid configuration.
 ///
 /// Convenience command for updating just the grid settings.
@@ -441,10 +550,7 @@ pub async fn update_map_grid(
 /// # Returns
 /// `ApiResponse` with success or error status.
 #[tauri::command]
-pub async fn delete_map(
-    id: i32,
-    state: State<'_, AppState>,
-) -> Result<ApiResponse<()>, ApiError> {
+pub async fn delete_map(id: i32, state: State<'_, AppState>) -> Result<ApiResponse<()>, ApiError> {
     info!("Deleting map with ID: {}", id);
 
     let mut conn = state.db.get_connection()?;
@@ -461,28 +567,31 @@ pub async fn delete_map(
         }
         Err(e) => {
             error!("Failed to get map for deletion: {}", e);
-            return Ok(ApiResponse::error(format!(
-                "Failed to get map: {}",
-                e
-            )));
+            return Ok(ApiResponse::error(format!("Failed to get map: {}", e)));
         }
     };
 
     // Delete the database record
     if let Err(e) = service.delete_map(id) {
         error!("Failed to delete map record: {}", e);
-        return Ok(ApiResponse::error(format!(
-            "Failed to delete map: {}",
-            e
-        )));
+        return Ok(ApiResponse::error(format!("Failed to delete map: {}", e)));
     }
 
-    // Delete the image file
-    let image_path = state.paths.data_dir.join("maps").join(&map.image_path);
+    // Delete the image file - handle both UVTT and legacy paths
+    let is_uvtt = map.image_path.ends_with(".dd2vtt");
+    let image_path = if is_uvtt {
+        get_maps_dir(&state.paths.data_dir, map.campaign_id, map.module_id).join(&map.image_path)
+    } else {
+        state.paths.data_dir.join("maps").join(&map.image_path)
+    };
+
     if image_path.exists() {
         if let Err(e) = fs::remove_file(&image_path) {
             // Log but don't fail - the DB record is already deleted
-            error!("Warning: Failed to delete image file {:?}: {}", image_path, e);
+            error!(
+                "Warning: Failed to delete image file {:?}: {}",
+                image_path, e
+            );
         } else {
             info!("Deleted image file: {:?}", image_path);
         }
@@ -524,10 +633,7 @@ pub async fn serve_map_image(
         }
         Err(e) => {
             error!("Failed to get map: {}", e);
-            return Ok(ApiResponse::error(format!(
-                "Failed to get map: {}",
-                e
-            )));
+            return Ok(ApiResponse::error(format!("Failed to get map: {}", e)));
         }
     };
 
@@ -537,23 +643,7 @@ pub async fn serve_map_image(
     // Build the correct path based on storage location
     let image_path = if is_uvtt {
         // UVTT files are stored in campaign/module maps directories
-        if let Some(module_id) = map.module_id {
-            state
-                .paths
-                .data_dir
-                .join("modules")
-                .join(module_id.to_string())
-                .join("maps")
-                .join(&map.image_path)
-        } else {
-            state
-                .paths
-                .data_dir
-                .join("campaigns")
-                .join(map.campaign_id.to_string())
-                .join("maps")
-                .join(&map.image_path)
-        }
+        get_maps_dir(&state.paths.data_dir, map.campaign_id, map.module_id).join(&map.image_path)
     } else {
         // Legacy path for old-style maps
         state.paths.data_dir.join("maps").join(&map.image_path)
@@ -641,101 +731,145 @@ pub async fn serve_map_image(
     }
 }
 
+/// Get UVTT file contents for a map.
+#[tauri::command]
+pub async fn get_uvtt_map(
+    campaign_id: i32,
+    module_id: Option<i32>,
+    file_path: String,
+    state: State<'_, AppState>,
+) -> Result<ApiResponse<UvttFile>, ApiError> {
+    let maps_dir = get_maps_dir(&state.paths.data_dir, campaign_id, module_id);
+    let full_path = maps_dir.join(&file_path);
+
+    if !full_path.exists() {
+        return Ok(ApiResponse::error(format!(
+            "Map file not found: {}",
+            file_path
+        )));
+    }
+
+    let bytes = match fs::read(&full_path) {
+        Ok(b) => b,
+        Err(e) => {
+            error!("Failed to read UVTT file: {}", e);
+            return Ok(ApiResponse::error(format!("Failed to read map: {}", e)));
+        }
+    };
+
+    match UvttFile::from_bytes(&bytes) {
+        Ok(uvtt) => Ok(ApiResponse::success(uvtt)),
+        Err(e) => Ok(ApiResponse::error(format!("Failed to parse map: {}", e))),
+    }
+}
+
+// ============================================================================
+// Tests
+// ============================================================================
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use image::{ImageBuffer, Rgb};
 
-    /// Create a test PNG image of given dimensions
-    fn create_test_png(width: u32, height: u32) -> Vec<u8> {
-        let img: ImageBuffer<Rgb<u8>, Vec<u8>> =
-            ImageBuffer::from_fn(width, height, |x, y| {
-                // Simple gradient pattern
-                Rgb([
-                    (x % 256) as u8,
-                    (y % 256) as u8,
-                    ((x + y) % 256) as u8,
-                ])
-            });
+    #[test]
+    fn test_uvtt_from_image() {
+        let uvtt = UvttFile::from_image(
+            "SGVsbG8=".to_string(), // "Hello" in base64
+            1400,
+            1050,
+            70,
+        );
 
-        let mut bytes = Vec::new();
-        let mut cursor = Cursor::new(&mut bytes);
-        img.write_to(&mut cursor, image::ImageFormat::Png)
-            .expect("Failed to encode test PNG");
-        bytes
+        assert_eq!(uvtt.format, 0.3);
+        assert_eq!(uvtt.resolution.pixels_per_grid, 70);
+        assert_eq!(uvtt.resolution.map_size.x, 20.0);
+        assert_eq!(uvtt.resolution.map_size.y, 15.0);
+        assert!(uvtt.line_of_sight.is_empty());
+        assert!(uvtt.portals.is_empty());
+        assert!(uvtt.lights.is_empty());
     }
 
     #[test]
-    fn test_process_small_image_no_resize() {
-        // Image smaller than max - should not be resized
-        let png_bytes = create_test_png(1024, 768);
-        let (jpeg_bytes, width, height) = process_map_image(&png_bytes, 4096).unwrap();
+    fn test_uvtt_summary() {
+        let uvtt = UvttFile::from_image("SGVsbG8=".to_string(), 1400, 1050, 70);
+        let summary = uvtt.summary();
 
-        assert_eq!(width, 1024);
-        assert_eq!(height, 768);
-        assert!(!jpeg_bytes.is_empty());
-        // JPEG magic bytes
-        assert_eq!(&jpeg_bytes[0..2], &[0xFF, 0xD8]);
+        assert_eq!(summary.grid_size, (20, 15));
+        assert_eq!(summary.pixels_per_grid, 70);
+        assert_eq!(summary.dimensions_px, (1400, 1050));
+        assert_eq!(summary.wall_count, 0);
+        assert_eq!(summary.portal_count, 0);
+        assert_eq!(summary.light_count, 0);
     }
 
     #[test]
-    fn test_process_wide_image_resized() {
-        // Wide image exceeding max width - should be scaled down
-        // Use 5000x2500 (12.5M pixels) instead of 8000x4000 (32M) for faster tests
-        let png_bytes = create_test_png(5000, 2500);
-        let (jpeg_bytes, width, height) = process_map_image(&png_bytes, 4096).unwrap();
-
-        assert_eq!(width, 4096);
-        assert_eq!(height, 2048); // Proportional scaling (5000->4096 = 0.8192, 2500*0.8192 = 2048)
-        assert!(!jpeg_bytes.is_empty());
+    fn test_is_uvtt_file() {
+        assert!(is_uvtt_file("map.dd2vtt"));
+        assert!(is_uvtt_file("Map.DD2VTT"));
+        assert!(is_uvtt_file("test.uvtt"));
+        assert!(!is_uvtt_file("map.png"));
+        assert!(!is_uvtt_file("map.jpg"));
     }
 
     #[test]
-    fn test_process_tall_image_resized() {
-        // Tall image exceeding max height - should be scaled down
-        // Use 2500x5000 (12.5M pixels) instead of 3000x6000 (18M) for faster tests
-        let png_bytes = create_test_png(2500, 5000);
-        let (jpeg_bytes, width, height) = process_map_image(&png_bytes, 4096).unwrap();
+    fn test_get_maps_dir() {
+        let data_dir = PathBuf::from("/data");
 
-        assert_eq!(width, 2048); // Proportional scaling (5000->4096 = 0.8192, 2500*0.8192 = 2048)
-        assert_eq!(height, 4096);
-        assert!(!jpeg_bytes.is_empty());
+        // Campaign-level map
+        let dir = get_maps_dir(&data_dir, 1, None);
+        assert_eq!(dir, PathBuf::from("/data/campaigns/1/maps"));
+
+        // Module-level map
+        let dir = get_maps_dir(&data_dir, 1, Some(5));
+        assert_eq!(dir, PathBuf::from("/data/modules/5/maps"));
     }
 
     #[test]
-    fn test_process_exact_max_size_no_resize() {
-        // Image exactly at max size - should not be resized
-        let png_bytes = create_test_png(4096, 2048);
-        let (_, width, height) = process_map_image(&png_bytes, 4096).unwrap();
+    fn test_uvtt_roundtrip() {
+        let original = UvttFile {
+            format: 0.3,
+            resolution: UvttResolution {
+                map_origin: UvttPoint { x: 0.0, y: 0.0 },
+                map_size: UvttPoint { x: 20.0, y: 15.0 },
+                pixels_per_grid: 70,
+            },
+            image: "SGVsbG8=".to_string(),
+            environment: None,
+            line_of_sight: vec![vec![
+                UvttPoint { x: 0.0, y: 0.0 },
+                UvttPoint { x: 10.0, y: 0.0 },
+            ]],
+            portals: vec![UvttPortal {
+                position: UvttPoint { x: 5.0, y: 0.0 },
+                bounds: [
+                    UvttPoint { x: 4.5, y: 0.0 },
+                    UvttPoint { x: 5.5, y: 0.0 },
+                ],
+                rotation: 0.0,
+                closed: true,
+                freestanding: false,
+            }],
+            lights: vec![UvttLight {
+                position: UvttPoint { x: 5.0, y: 5.0 },
+                range: 6.0,
+                intensity: 0.8,
+                color: "#ffaa00".to_string(),
+                shadows: true,
+            }],
+        };
 
-        assert_eq!(width, 4096);
-        assert_eq!(height, 2048);
-    }
+        let bytes = original.to_bytes().unwrap();
+        let parsed = UvttFile::from_bytes(&bytes).unwrap();
 
-    #[test]
-    fn test_process_invalid_image_data() {
-        // Random bytes - should fail gracefully
-        let invalid_bytes = vec![0u8, 1, 2, 3, 4, 5];
-        let result = process_map_image(&invalid_bytes, 4096);
-
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Failed to"));
-    }
-
-    #[test]
-    fn test_output_is_valid_jpeg() {
-        let png_bytes = create_test_png(800, 600);
-        let (jpeg_bytes, _, _) = process_map_image(&png_bytes, 4096).unwrap();
-
-        // Verify we can decode the output as a valid image
-        let decoded = ImageReader::new(Cursor::new(&jpeg_bytes))
-            .with_guessed_format()
-            .unwrap()
-            .decode();
-
-        assert!(decoded.is_ok());
-        let img = decoded.unwrap();
-        assert_eq!(img.width(), 800);
-        assert_eq!(img.height(), 600);
+        assert_eq!(parsed.format, original.format);
+        assert_eq!(
+            parsed.resolution.pixels_per_grid,
+            original.resolution.pixels_per_grid
+        );
+        assert_eq!(parsed.line_of_sight.len(), 1);
+        assert_eq!(parsed.portals.len(), 1);
+        assert_eq!(parsed.lights.len(), 1);
+        assert!(parsed.portals[0].closed);
+        assert_eq!(parsed.lights[0].color, "#ffaa00");
     }
 }

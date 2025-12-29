@@ -282,8 +282,8 @@ async function handleUpload() {
     // Convert file to base64
     const base64Data = await fileToBase64(selectedFile.value)
 
-    // Use upload_map_v2 for all files (handles both UVTT and images)
-    const response = await invoke<{ success: boolean; error?: string; data?: unknown }>('upload_map_v2', {
+    // Upload map (handles both UVTT and images)
+    const response = await invoke<{ success: boolean; error?: string; data?: unknown }>('upload_map', {
       request: {
         campaign_id: props.campaignId,
         module_id: props.moduleId ?? null,

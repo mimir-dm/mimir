@@ -1,13 +1,13 @@
 ---
-id: extract-shared-modal-component
+id: consolidate-modal-system-css
 level: task
-title: "Extract shared modal component from Book/Campaign modals"
-short_code: "MIMIR-T-0187"
-created_at: 2025-12-19T17:27:59.898977+00:00
-updated_at: 2025-12-19T17:27:59.898977+00:00
+title: "Consolidate modal system (CSS + component)"
+short_code: "MIMIR-T-0245"
+created_at: 2025-12-29T14:49:48.560894+00:00
+updated_at: 2025-12-29T14:49:48.560894+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -20,7 +20,7 @@ strategy_id: NULL
 initiative_id: NULL
 ---
 
-# Extract shared modal component from Book/Campaign modals
+# Consolidate modal system (CSS + component)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -30,7 +30,7 @@ initiative_id: NULL
 
 ## Objective **[REQUIRED]**
 
-Extract shared modal structure from BookManagementModal and CampaignManagementModal into a reusable component.
+{Clear statement of what this task accomplishes}
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -62,30 +62,17 @@ Extract shared modal structure from BookManagementModal and CampaignManagementMo
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: Modal styling/structure duplicated; UI inconsistencies when updating one
-- **Benefits of Fixing**: Consistent modal UX, single place to update modal behavior
-- **Risk Assessment**: Low - Vue composition makes extraction straightforward
+- **Current Problems**: {What's difficult/slow/buggy now}
+- **Benefits of Fixing**: {What improves after refactoring}
+- **Risk Assessment**: {Risks of not addressing this}
 
-### Duplication Found (jscpd analysis)
-**Cross-file duplication:**
-- BookManagementModal.vue lines 222-254 ↔ CampaignManagementModal.vue lines 288-320 (32 lines)
-
-**Internal duplication:**
-- LogsSection.vue lines 56-77 ↔ 92-112 (20 lines)
-- ModuleService.ts lines 68-78 ↔ 129-139, and 161-173 ↔ 206-218
-
-### Suggested Approach
-1. Create `ManagementModal.vue` with header/body/footer slots
-2. Extract shared modal CSS to dedicated stylesheet
-3. Refactor Book/Campaign modals to use shared component
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Shared ManagementModal component created with slots
-- [ ] BookManagementModal refactored to use shared component
-- [ ] CampaignManagementModal refactored to use shared component
-- [ ] Both modals visually identical to before
-- [ ] jscpd reports reduced duplication in Vue files
+- [ ] {Specific, testable requirement 1}
+- [ ] {Specific, testable requirement 2}
+- [ ] {Specific, testable requirement 3}
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
