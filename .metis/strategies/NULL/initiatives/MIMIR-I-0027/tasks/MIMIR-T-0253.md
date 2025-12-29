@@ -4,14 +4,14 @@ level: task
 title: "Add print_map Tauri command"
 short_code: "MIMIR-T-0253"
 created_at: 2025-12-29T16:20:59.493216+00:00
-updated_at: 2025-12-29T16:20:59.493216+00:00
+updated_at: 2025-12-29T16:40:39.492858+00:00
 parent: MIMIR-I-0027
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -64,6 +64,10 @@ Create a new Tauri command `print_map` that generates a PDF from a map with conf
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

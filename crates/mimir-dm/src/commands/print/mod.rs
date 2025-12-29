@@ -30,6 +30,58 @@ pub struct PrintResult {
     pub size_bytes: usize,
 }
 
+/// Map print mode
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MapPrintMode {
+    /// Fit map to single page (for preview/reference)
+    Preview,
+    /// Print at true 1"=5ft scale (may tile across multiple pages)
+    Play,
+}
+
+impl Default for MapPrintMode {
+    fn default() -> Self {
+        Self::Preview
+    }
+}
+
+/// Options for printing a map
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MapPrintOptions {
+    /// Print mode: preview (fit to page) or play (1"=5ft scale)
+    #[serde(default)]
+    pub mode: MapPrintMode,
+    /// Show grid overlay on the map
+    #[serde(default = "default_true")]
+    pub show_grid: bool,
+    /// Show LOS wall segments as red lines
+    #[serde(default)]
+    pub show_los_walls: bool,
+    /// Show starting positions as numbered circles (instead of tokens)
+    #[serde(default)]
+    pub show_positions: bool,
+    /// Include token cutout sheets for printing
+    #[serde(default)]
+    pub include_cutouts: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl Default for MapPrintOptions {
+    fn default() -> Self {
+        Self {
+            mode: MapPrintMode::Preview,
+            show_grid: true,
+            show_los_walls: false,
+            show_positions: false,
+            include_cutouts: false,
+        }
+    }
+}
+
 /// Get the templates root path.
 ///
 /// In development, this uses the crate's templates directory.
@@ -658,6 +710,369 @@ pub async fn save_pdf(pdf_base64: String, path: String) -> Result<ApiResponse<()
 
     info!("PDF saved successfully ({} bytes)", pdf_bytes.len());
     Ok(ApiResponse::success(()))
+}
+
+/// Print a map to PDF with configurable options.
+///
+/// Generates a PDF from a map with optional grid overlay, LOS walls,
+/// position markers, and token cutouts.
+///
+/// # Parameters
+/// - `map_id` - Database ID of the map
+/// - `options` - Print options (mode, show_grid, show_los_walls, etc.)
+///
+/// # Returns
+/// PrintResult with base64-encoded PDF
+#[tauri::command]
+pub async fn print_map(
+    state: State<'_, AppState>,
+    map_id: i32,
+    options: Option<MapPrintOptions>,
+) -> Result<ApiResponse<PrintResult>, String> {
+    use crate::commands::campaign::maps::UvttFile;
+    use mimir_dm_core::services::{MapService, TokenService};
+    use mimir_dm_print::{RenderMap, RenderToken};
+
+    let options = options.unwrap_or_default();
+    info!(
+        "Printing map {} with options: mode={:?}, grid={}, los={}, positions={}, cutouts={}",
+        map_id, options.mode, options.show_grid, options.show_los_walls,
+        options.show_positions, options.include_cutouts
+    );
+
+    // Get the map from database
+    let mut conn = state
+        .db
+        .get_connection()
+        .map_err(|e| format!("Database error: {}", e))?;
+
+    let mut map_service = MapService::new(&mut conn);
+    let map = map_service
+        .get_map(map_id)
+        .map_err(|e| format!("Failed to get map: {}", e))?
+        .ok_or_else(|| format!("Map not found with ID: {}", map_id))?;
+
+    // Load the UVTT file to get LOS walls and grid config
+    let maps_dir = if let Some(module_id) = map.module_id {
+        state.paths.data_dir.join("modules").join(module_id.to_string()).join("maps")
+    } else {
+        state.paths.data_dir.join("campaigns").join(map.campaign_id.to_string()).join("maps")
+    };
+
+    let uvtt_path = maps_dir.join(&map.image_path);
+    let uvtt_bytes = std::fs::read(&uvtt_path)
+        .map_err(|e| format!("Failed to read UVTT file: {}", e))?;
+    let uvtt = UvttFile::from_bytes(&uvtt_bytes)
+        .map_err(|e| format!("Failed to parse UVTT file: {}", e))?;
+
+    // Get tokens for this map
+    let mut token_conn = state
+        .db
+        .get_connection()
+        .map_err(|e| format!("Database error: {}", e))?;
+
+    let mut token_service = TokenService::new(&mut token_conn);
+    let tokens = token_service
+        .list_tokens_for_map(map_id)
+        .unwrap_or_default();
+
+    // Convert to RenderToken format
+    // Resolve image paths to absolute paths for Typst
+    // Token images are stored in books/{source}/{image_path}
+    // WebP images need to be converted to PNG for Typst compatibility
+    let books_dir = state.paths.data_dir.join("books");
+    let temp_dir = std::env::temp_dir().join("mimir-token-images");
+    std::fs::create_dir_all(&temp_dir).ok();
+
+    let render_tokens: Vec<RenderToken> = tokens
+        .into_iter()
+        .map(|t| {
+            // Resolve image path to absolute if present and file exists
+            // If file doesn't exist, return None to fall back to colored circle
+            let resolved_image_path = t.image_path.and_then(|p| {
+                // Extract source from path (e.g., "img/bestiary/tokens/MM/Goblin.webp" -> "MM")
+                let source = p.split('/').nth(3).unwrap_or("MM");
+                let full_path = books_dir.join(source).join(&p);
+                if full_path.exists() {
+                    // Check if it's a webp - Typst doesn't support webp, convert to PNG
+                    if p.ends_with(".webp") {
+                        // Convert webp to png in temp directory
+                        let png_name = format!("{}_{}.png", source, p.replace('/', "_").replace(".webp", ""));
+                        let png_path = temp_dir.join(&png_name);
+
+                        // Only convert if not already cached
+                        if !png_path.exists() {
+                            match image::open(&full_path) {
+                                Ok(img) => {
+                                    if let Err(e) = img.save_with_format(&png_path, image::ImageFormat::Png) {
+                                        debug!("Failed to convert webp to png: {}", e);
+                                        return None;
+                                    }
+                                }
+                                Err(e) => {
+                                    debug!("Failed to open webp image: {}", e);
+                                    return None;
+                                }
+                            }
+                        }
+                        Some(png_path.to_string_lossy().to_string())
+                    } else {
+                        Some(full_path.to_string_lossy().to_string())
+                    }
+                } else {
+                    debug!("Token image not found: {:?}", full_path);
+                    None
+                }
+            });
+            RenderToken {
+                name: t.name,
+                x: t.x,
+                y: t.y,
+                size: t.size,
+                color: t.color,
+                token_type: t.token_type,
+                image_path: resolved_image_path,
+            }
+        })
+        .collect();
+
+    // Build RenderMap from database map
+    let render_map = RenderMap {
+        name: map.name.clone(),
+        image_path: map.image_path.clone(),
+        width_px: map.width_px,
+        height_px: map.height_px,
+        grid_type: map.grid_type.clone(),
+        grid_size_px: map.grid_size_px,
+        grid_offset_x: map.grid_offset_x,
+        grid_offset_y: map.grid_offset_y,
+    };
+
+    // Build map print options for the renderer
+    let print_options = mimir_dm_print::MapPrintOptions {
+        show_grid: options.show_grid,
+        show_los_walls: options.show_los_walls,
+        show_positions: options.show_positions,
+        los_walls: if options.show_los_walls {
+            uvtt.line_of_sight.iter().map(|wall| {
+                wall.iter().map(|p| (p.x, p.y)).collect()
+            }).collect()
+        } else {
+            Vec::new()
+        },
+        pixels_per_grid: uvtt.resolution.pixels_per_grid,
+    };
+
+    // Render the map
+    // In Play mode, don't render tokens on the map (users will use physical cutouts)
+    // In Preview mode, render tokens or position markers based on options
+    let tokens_for_render: &[RenderToken] = if options.mode == MapPrintMode::Play {
+        &[] // No tokens on play mode tiles
+    } else {
+        &render_tokens
+    };
+
+    let rendered = mimir_dm_print::render_map_for_print(
+        &render_map,
+        tokens_for_render,
+        &maps_dir,
+        &uvtt.image,
+        &print_options,
+    ).map_err(|e| format!("Failed to render map: {}", e))?;
+
+    // Create the print service
+    let service = create_print_service();
+
+    // Save rendered map image to temp file
+    let temp_dir = std::env::temp_dir().join("mimir-maps");
+    std::fs::create_dir_all(&temp_dir)
+        .map_err(|e| format!("Failed to create temp directory: {}", e))?;
+
+    let map_image_path = temp_dir.join(format!("{}_print.png", map_id));
+    std::fs::write(&map_image_path, &rendered.image_bytes)
+        .map_err(|e| format!("Failed to write temp map image: {}", e))?;
+
+    // Handle Play mode (tiled output at 1"=5ft scale)
+    let (template, data) = if options.mode == MapPrintMode::Play {
+        // Calculate tile dimensions
+        // At 1"=5ft scale: 1 grid square = 1 inch on paper
+        // Letter size printable area (landscape): ~10" x 7.5"
+        // So each tile can show ~10x7 grid squares
+        let ppg = uvtt.resolution.pixels_per_grid as f64;
+        let grid_width = (rendered.width_px as f64 / ppg).ceil() as u32;
+        let grid_height = (rendered.height_px as f64 / ppg).ceil() as u32;
+
+        // Printable area in grid squares (with some margin)
+        let tile_grid_width: u32 = 9;  // 9 inches = 9 grid squares
+        let tile_grid_height: u32 = 6; // 6 inches = 6 grid squares
+
+        // Calculate number of tiles needed
+        let tiles_x = ((grid_width as f64) / (tile_grid_width as f64)).ceil() as u32;
+        let tiles_y = ((grid_height as f64) / (tile_grid_height as f64)).ceil() as u32;
+
+        // Tile size in pixels
+        let tile_px_width = tile_grid_width * uvtt.resolution.pixels_per_grid;
+        let tile_px_height = tile_grid_height * uvtt.resolution.pixels_per_grid;
+
+        info!(
+            "Play mode: image {}x{} px, ppg={}, grid {}x{}, tile_px {}x{}, tiles {}x{} = {} total",
+            rendered.width_px, rendered.height_px, uvtt.resolution.pixels_per_grid,
+            grid_width, grid_height, tile_px_width, tile_px_height,
+            tiles_x, tiles_y, tiles_x * tiles_y
+        );
+
+        // Slice the rendered image into tiles
+        let img = image::load_from_memory(&rendered.image_bytes)
+            .map_err(|e| format!("Failed to load rendered image: {}", e))?;
+
+        let mut tile_paths: Vec<serde_json::Value> = Vec::new();
+
+        for ty in 0..tiles_y {
+            for tx in 0..tiles_x {
+                let x = tx * tile_px_width;
+                let y = ty * tile_px_height;
+
+                // Calculate actual tile dimensions (may be smaller at edges)
+                let w = std::cmp::min(tile_px_width, rendered.width_px.saturating_sub(x));
+                let h = std::cmp::min(tile_px_height, rendered.height_px.saturating_sub(y));
+
+                if w == 0 || h == 0 {
+                    debug!("Skipping tile ({},{}) - zero size: w={}, h={}", tx, ty, w, h);
+                    continue;
+                }
+
+                debug!("Tile ({},{}) crop: x={}, y={}, w={}, h={}", tx, ty, x, y, w, h);
+
+                // Crop the tile
+                let tile = img.crop_imm(x, y, w, h);
+
+                // Save tile to temp file
+                let tile_path = temp_dir.join(format!("{}_tile_{}_{}.png", map_id, tx, ty));
+                tile.save(&tile_path)
+                    .map_err(|e| format!("Failed to save tile: {}", e))?;
+
+                // Generate tile label (A1, A2, B1, B2, etc.)
+                let row_label = (b'A' + ty as u8) as char;
+                let col_label = tx + 1;
+                let tile_label = format!("{}{}", row_label, col_label);
+
+                // Determine neighbor labels
+                let left_neighbor = if tx > 0 {
+                    Some(format!("{}{}", row_label, tx))
+                } else {
+                    None
+                };
+                let right_neighbor = if tx < tiles_x - 1 {
+                    Some(format!("{}{}", row_label, tx + 2))
+                } else {
+                    None
+                };
+                let top_neighbor = if ty > 0 {
+                    Some(format!("{}{}", (b'A' + ty as u8 - 1) as char, col_label))
+                } else {
+                    None
+                };
+                let bottom_neighbor = if ty < tiles_y - 1 {
+                    Some(format!("{}{}", (b'A' + ty as u8 + 1) as char, col_label))
+                } else {
+                    None
+                };
+
+                tile_paths.push(serde_json::json!({
+                    "path": tile_path.to_string_lossy(),
+                    "label": tile_label,
+                    "row": ty,
+                    "col": tx,
+                    "width_px": w,
+                    "height_px": h,
+                    "left_neighbor": left_neighbor,
+                    "right_neighbor": right_neighbor,
+                    "top_neighbor": top_neighbor,
+                    "bottom_neighbor": bottom_neighbor,
+                }));
+            }
+        }
+
+        info!("Generated {} tile images for template", tile_paths.len());
+
+        let data = serde_json::json!({
+            "name": map.name,
+            "tiles": tile_paths,
+            "tiles_x": tiles_x,
+            "tiles_y": tiles_y,
+            "total_tiles": tile_paths.len(),
+            "grid_width": grid_width,
+            "grid_height": grid_height,
+            "tile_grid_width": tile_grid_width,
+            "tile_grid_height": tile_grid_height,
+            "include_cutouts": options.include_cutouts,
+            "tokens": render_tokens.iter().map(|t| {
+                serde_json::json!({
+                    "name": t.name,
+                    "size": t.size,
+                    "color": t.color,
+                    "token_type": t.token_type,
+                    "image_path": t.image_path,
+                })
+            }).collect::<Vec<_>>(),
+        });
+
+        info!(
+            "Tiled template data: include_cutouts={}, tokens_count={}, token_names={:?}",
+            options.include_cutouts,
+            render_tokens.len(),
+            render_tokens.iter().map(|t| &t.name).collect::<Vec<_>>()
+        );
+
+        ("map/tiled.typ", data)
+    } else {
+        // Preview mode - single page
+        let data = serde_json::json!({
+            "name": map.name,
+            "image_path": map_image_path.to_string_lossy(),
+            "width_px": rendered.width_px,
+            "height_px": rendered.height_px,
+            "mode": "preview",
+            "include_cutouts": options.include_cutouts,
+            "tokens": render_tokens.iter().map(|t| {
+                serde_json::json!({
+                    "name": t.name,
+                    "size": t.size,
+                    "color": t.color,
+                    "token_type": t.token_type,
+                    "image_path": t.image_path,
+                })
+            }).collect::<Vec<_>>(),
+        });
+
+        ("map/single.typ", data)
+    };
+
+    match service.render_to_pdf(template, data) {
+        Ok(pdf_bytes) => {
+            let size_bytes = pdf_bytes.len();
+            let pdf_base64 = base64::Engine::encode(
+                &base64::engine::general_purpose::STANDARD,
+                &pdf_bytes,
+            );
+
+            // Clean up temp file
+            let _ = std::fs::remove_file(&map_image_path);
+
+            info!("Map PDF generated successfully ({} bytes)", size_bytes);
+
+            Ok(ApiResponse::success(PrintResult {
+                pdf_base64,
+                size_bytes,
+            }))
+        }
+        Err(e) => {
+            // Clean up temp file on error
+            let _ = std::fs::remove_file(&map_image_path);
+            error!("Failed to generate map PDF: {:?}", e);
+            Ok(ApiResponse::error(format!("Failed to generate PDF: {}", e)))
+        }
+    }
 }
 
 /// Export a single campaign document to PDF.
@@ -1294,15 +1709,29 @@ pub async fn export_campaign_documents(
                 };
 
                 // Convert tokens to RenderToken
+                // Token images are stored in books/{source}/{image_path}
+                let books_dir = state.paths.data_dir.join("books");
                 let render_tokens: Vec<mimir_dm_print::RenderToken> = tokens
                     .into_iter()
-                    .map(|t| mimir_dm_print::RenderToken {
-                        name: t.name,
-                        x: t.x,
-                        y: t.y,
-                        size: t.size,
-                        color: t.color,
-                        token_type: t.token_type,
+                    .map(|t| {
+                        let resolved_image_path = t.image_path.and_then(|p| {
+                            let source = p.split('/').nth(3).unwrap_or("MM");
+                            let full_path = books_dir.join(source).join(&p);
+                            if full_path.exists() {
+                                Some(full_path.to_string_lossy().to_string())
+                            } else {
+                                None
+                            }
+                        });
+                        mimir_dm_print::RenderToken {
+                            name: t.name,
+                            x: t.x,
+                            y: t.y,
+                            size: t.size,
+                            color: t.color,
+                            token_type: t.token_type,
+                            image_path: resolved_image_path,
+                        }
                     })
                     .collect();
 

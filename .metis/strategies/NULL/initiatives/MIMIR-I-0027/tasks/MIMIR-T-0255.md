@@ -4,14 +4,14 @@ level: task
 title: "Add Print button to DmMapViewer"
 short_code: "MIMIR-T-0255"
 created_at: 2025-12-29T16:20:59.778080+00:00
-updated_at: 2025-12-29T16:20:59.778080+00:00
+updated_at: 2025-12-29T16:48:32.143813+00:00
 parent: MIMIR-I-0027
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -64,6 +64,10 @@ Add a Print button to the DmMapViewer toolbar that opens the MapPrintDialog and 
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

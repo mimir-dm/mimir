@@ -108,8 +108,18 @@ impl MimirTypstWorld {
     /// Resolve a file path to actual filesystem path
     fn resolve_path(&self, id: FileId) -> PathBuf {
         let vpath = id.vpath();
-        self.templates_root
-            .join(vpath.as_rooted_path().strip_prefix("/").unwrap_or(vpath.as_rooted_path()))
+        let rooted = vpath.as_rooted_path();
+
+        // Check if this looks like an absolute filesystem path (e.g., /var/folders/...)
+        // If so, and it exists, return it directly without joining to templates_root
+        let stripped = rooted.strip_prefix("/").unwrap_or(rooted);
+        let as_absolute = PathBuf::from("/").join(stripped);
+        if as_absolute.exists() {
+            return as_absolute;
+        }
+
+        // Otherwise, resolve relative to templates root
+        self.templates_root.join(stripped)
     }
 
     /// Read and cache a source file
