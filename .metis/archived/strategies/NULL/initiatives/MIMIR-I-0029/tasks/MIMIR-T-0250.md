@@ -7,7 +7,7 @@ created_at: 2025-12-29T15:13:21.145335+00:00
 updated_at: 2025-12-29T15:43:52.767525+00:00
 parent: MIMIR-I-0029
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0029
 ## Objective
 
 Migrate management modals (Batch 3) to use the AppModal component.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

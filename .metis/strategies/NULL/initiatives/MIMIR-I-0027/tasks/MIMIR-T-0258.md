@@ -1,48 +1,78 @@
 ---
-id: consolidate-modal-css-files
+id: add-module-campaign-export-options
 level: task
-title: "Consolidate modal CSS files"
-short_code: "MIMIR-T-0246"
-created_at: 2025-12-29T15:13:20.588965+00:00
-updated_at: 2025-12-29T15:21:46.499944+00:00
-parent: MIMIR-I-0029
+title: "Add module/campaign export options dialog"
+short_code: "MIMIR-T-0258"
+created_at: 2025-12-29T16:21:10.218837+00:00
+updated_at: 2025-12-29T16:21:10.218837+00:00
+parent: MIMIR-I-0027
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/completed"
+  - "#phase/todo"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0029
+initiative_id: MIMIR-I-0027
 ---
 
-# Consolidate modal CSS files
+# Add module/campaign export options dialog
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0029]]
+[[MIMIR-I-0027]]
 
-## Objective **[REQUIRED]**
+## Objective
 
-Merge `modals.css` into `base-modal.css` and remove the duplicate file to eliminate conflicting `.modal-overlay` definitions.
+Create an export options dialog for module/campaign views that offers Reference Document and Physical Play Kit as separate export options.
+
+## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+
+{Delete this section when task is assigned to an initiative}
+
+### Type
+- [ ] Bug - Production issue that needs fixing
+- [ ] Feature - New functionality or enhancement  
+- [ ] Tech Debt - Code improvement or refactoring
+- [ ] Chore - Maintenance or setup work
+
+### Priority
+- [ ] P0 - Critical (blocks users/revenue)
+- [ ] P1 - High (important for user experience)
+- [ ] P2 - Medium (nice to have)
+- [ ] P3 - Low (when time permits)
+
+### Impact Assessment **[CONDITIONAL: Bug]**
+- **Affected Users**: {Number/percentage of users affected}
+- **Reproduction Steps**: 
+  1. {Step 1}
+  2. {Step 2}
+  3. {Step 3}
+- **Expected vs Actual**: {What should happen vs what happens}
+
+### Business Justification **[CONDITIONAL: Feature]**
+- **User Value**: {Why users need this}
+- **Business Value**: {Impact on metrics/revenue}
+- **Effort Estimate**: {Rough size - S/M/L/XL}
+
+### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
+- **Current Problems**: {What's difficult/slow/buggy now}
+- **Benefits of Fixing**: {What improves after refactoring}
+- **Risk Assessment**: {Risks of not addressing this}
 
 ## Acceptance Criteria
 
-## Acceptance Criteria
-
-## Acceptance Criteria **[REQUIRED]**
-
-- [x] Audit `modals.css` for unique styles not in `base-modal.css`
-- [x] Merge useful features from `base-modal.css` into `modals.css` (reversed approach - kept naming that components use)
-- [x] Remove `@import './components/base-modal.css';` from `main.css`
-- [x] Delete `base-modal.css`
-- [x] Single modal CSS file remains (`modals.css`)
-- [x] All existing modals render correctly (build passes)
+- [ ] New `ExportOptionsDialog.vue` component
+- [ ] Checkbox for Reference Document (default on)
+- [ ] Checkbox for Physical Play Kit (default off)
+- [ ] Shows estimated page counts for each option
+- [ ] Available from Module and Campaign views
+- [ ] Generates separate PDFs when both selected
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -107,15 +137,4 @@ Merge `modals.css` into `base-modal.css` and remove the duplicate file to elimin
 
 ## Status Updates **[REQUIRED]**
 
-### 2025-12-29: Completed
-- Audited both CSS files - found that `modals.css` naming is used by all 13 components, `base-modal.css` BEM naming unused
-- **Reversed approach**: Kept `modals.css` (what components use), deleted `base-modal.css`
-- Merged useful features from `base-modal.css` into `modals.css`:
-  - backdrop-filter: blur(4px)
-  - Exit animations (fadeOut, slideOut, --exiting modifiers)
-  - Loading states (.modal-loading)
-  - Print styles
-  - Improved responsive behavior
-- Removed `@import './components/base-modal.css';` from main.css
-- Deleted base-modal.css
-- Build passes, single consolidated modal CSS file remains
+*To be added during implementation*

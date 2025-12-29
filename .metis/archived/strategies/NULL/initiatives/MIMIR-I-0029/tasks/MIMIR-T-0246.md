@@ -1,13 +1,13 @@
 ---
-id: migrate-simple-modals-to-appmodal
+id: consolidate-modal-css-files
 level: task
-title: "Migrate simple modals to AppModal (Batch 1)"
-short_code: "MIMIR-T-0248"
-created_at: 2025-12-29T15:13:20.863099+00:00
-updated_at: 2025-12-29T15:26:58.069599+00:00
+title: "Consolidate modal CSS files"
+short_code: "MIMIR-T-0246"
+created_at: 2025-12-29T15:13:20.588965+00:00
+updated_at: 2025-12-29T15:21:46.499944+00:00
 parent: MIMIR-I-0029
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0029
 ---
 
-# Migrate simple modals to AppModal (Batch 1)
+# Consolidate modal CSS files
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,11 +29,9 @@ initiative_id: MIMIR-I-0029
 
 ## Objective **[REQUIRED]**
 
-Migrate simple modals to use AppModal component as proof of concept.
+Merge `modals.css` into `base-modal.css` and remove the duplicate file to eliminate conflicting `.modal-overlay` definitions.
 
-**Components:**
-- `CreateModuleModal.vue`
-- `ModuleListView.vue` (inline create modal)
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -41,13 +39,12 @@ Migrate simple modals to use AppModal component as proof of concept.
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [x] CreateModuleModal uses `<AppModal>` wrapper
-- [x] ModuleListView inline modal uses `<AppModal>` wrapper
-- [x] Scoped `.modal-overlay` CSS removed from both
-- [x] Open/close behavior works correctly (via AppModal)
-- [x] Overlay click closes modal (via AppModal closeOnOverlay)
-- [x] Escape key closes modal (via AppModal closeOnEscape)
-- [x] Visual appearance unchanged (uses modals.css)
+- [x] Audit `modals.css` for unique styles not in `base-modal.css`
+- [x] Merge useful features from `base-modal.css` into `modals.css` (reversed approach - kept naming that components use)
+- [x] Remove `@import './components/base-modal.css';` from `main.css`
+- [x] Delete `base-modal.css`
+- [x] Single modal CSS file remains (`modals.css`)
+- [x] All existing modals render correctly (build passes)
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -113,21 +110,14 @@ Migrate simple modals to use AppModal component as proof of concept.
 ## Status Updates **[REQUIRED]**
 
 ### 2025-12-29: Completed
-Migrated 2 simple modals to AppModal:
-
-1. **CreateModuleModal.vue**
-   - Replaced inline modal HTML with `<AppModal>` wrapper
-   - Used slots for body content and footer buttons
-   - Removed all scoped styles (component had none)
-
-2. **ModuleListView.vue**
-   - Replaced inline modal with `<AppModal>` component
-   - Added AppModal import
-   - Removed ~60 lines of scoped modal CSS (.modal-overlay, .modal-content, .form-group, .modal-actions)
-   - Kept .btn-secondary styles (still needed for buttons)
-
-Both modals now use centralized modals.css via AppModal, with automatic:
-- Escape key handling
-- Overlay click to close
-- Body scroll lock
-- Proper z-index stacking via Teleport
+- Audited both CSS files - found that `modals.css` naming is used by all 13 components, `base-modal.css` BEM naming unused
+- **Reversed approach**: Kept `modals.css` (what components use), deleted `base-modal.css`
+- Merged useful features from `base-modal.css` into `modals.css`:
+  - backdrop-filter: blur(4px)
+  - Exit animations (fadeOut, slideOut, --exiting modifiers)
+  - Loading states (.modal-loading)
+  - Print styles
+  - Improved responsive behavior
+- Removed `@import './components/base-modal.css';` from main.css
+- Deleted base-modal.css
+- Build passes, single consolidated modal CSS file remains
