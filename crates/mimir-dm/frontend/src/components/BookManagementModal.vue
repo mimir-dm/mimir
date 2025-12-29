@@ -1,82 +1,82 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h2 class="modal-title">Manage Reference Books</h2>
-        <button @click="closeModal" class="close-button">×</button>
-      </div>
-      
-      <div class="modal-body">
-        <div v-if="isLoadingBooks" class="loading-message">
-          Loading books...
+  <AppModal
+    :visible="visible"
+    title="Manage Reference Books"
+    size="md"
+    :closable="!isImporting"
+    :close-on-overlay="!isImporting"
+    :close-on-escape="!isImporting"
+    @close="closeModal"
+  >
+    <div v-if="isLoadingBooks" class="loading-message">
+      Loading books...
+    </div>
+
+    <div v-else-if="books.length === 0" class="empty-state">
+      <p>No books imported yet</p>
+      <p class="empty-subtitle">Import book archives to start building your reference library</p>
+    </div>
+
+    <div v-else class="book-list">
+      <div v-for="book in books" :key="book.id" class="book-item">
+        <div class="book-info">
+          <span class="book-name">{{ book.name }}</span>
+          <span v-if="book.image_count" class="book-meta">{{ book.image_count }} images</span>
         </div>
-        
-        <div v-else-if="books.length === 0" class="empty-state">
-          <p>No books imported yet</p>
-          <p class="empty-subtitle">Import book archives to start building your reference library</p>
-        </div>
-        
-        <div v-else class="book-list">
-          <div v-for="book in books" :key="book.id" class="book-item">
-            <div class="book-info">
-              <span class="book-name">{{ book.name }}</span>
-              <span v-if="book.image_count" class="book-meta">{{ book.image_count }} images</span>
-            </div>
-            <button 
-              @click="handleRemoveBook(book)" 
-              class="remove-button"
-              title="Remove book"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="modal-footer">
-        <div v-if="isImporting" class="import-progress">
-          Importing {{ importProgress.current }}/{{ importProgress.total }}: {{ importProgress.currentName }}
-        </div>
-        <button @click="handleImportBook" class="import-button" :disabled="isImporting">
-          {{ isImporting ? 'Importing...' : 'Import Books' }}
-        </button>
-        <button @click="closeModal" class="cancel-button" :disabled="isImporting">
-          Close
+        <button
+          @click="handleRemoveBook(book)"
+          class="remove-button"
+          title="Remove book"
+        >
+          ×
         </button>
       </div>
     </div>
-  </div>
+
+    <template #footer>
+      <div v-if="isImporting" class="import-progress">
+        Importing {{ importProgress.current }}/{{ importProgress.total }}: {{ importProgress.currentName }}
+      </div>
+      <button @click="handleImportBook" class="btn btn-primary" :disabled="isImporting">
+        {{ isImporting ? 'Importing...' : 'Import Books' }}
+      </button>
+      <button @click="closeModal" class="btn btn-secondary" :disabled="isImporting">
+        Close
+      </button>
+    </template>
+  </AppModal>
 
   <!-- Delete Confirmation Modal -->
-  <div v-if="showDeleteModal" class="modal-overlay">
-    <div class="modal-content delete-modal" @click.stop>
-      <div class="modal-header">
-        <h2 class="modal-title">Remove Book</h2>
-      </div>
-      <div class="modal-body">
-        <p>Are you sure you want to remove "<strong>{{ bookToDelete?.name }}</strong>" from your library?</p>
-        <p class="warning-text">This will remove the book from your reference library.</p>
-        
-        <div v-if="deleteError" class="error-message">
-          {{ deleteError }}
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button @click="confirmDelete" class="delete-confirm-button">
-          Remove Book
-        </button>
-        <button @click="cancelDelete" class="cancel-button">
-          Cancel
-        </button>
-      </div>
+  <AppModal
+    :visible="showDeleteModal"
+    title="Remove Book"
+    size="sm"
+    :stack-index="1"
+    @close="cancelDelete"
+  >
+    <p>Are you sure you want to remove "<strong>{{ bookToDelete?.name }}</strong>" from your library?</p>
+    <p class="warning-text">This will remove the book from your reference library.</p>
+
+    <div v-if="deleteError" class="error-message">
+      {{ deleteError }}
     </div>
-  </div>
+
+    <template #footer>
+      <button @click="cancelDelete" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button @click="confirmDelete" class="btn btn-danger">
+        Remove Book
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 import type { BookInfo } from '../types/book'
 
 interface Props {
@@ -229,75 +229,10 @@ function cancelDelete() {
 function closeModal() {
   emit('close')
 }
-
-function handleOverlayClick() {
-  closeModal()
-}
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--color-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-  transition: color var(--transition-fast);
-}
-
-.close-button:hover {
-  color: var(--color-text);
-}
-
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-  min-height: 200px;
-}
-
+/* Domain-specific styles */
 .loading-message {
   text-align: center;
   color: var(--color-text-secondary);
@@ -388,36 +323,6 @@ function handleOverlayClick() {
   color: var(--color-error-300);
 }
 
-.modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.import-button {
-  background: var(--color-primary-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.import-button:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.import-button:disabled,
-.cancel-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .import-progress {
   flex: 1;
   font-size: 0.875rem;
@@ -425,30 +330,6 @@ function handleOverlayClick() {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.cancel-button {
-  background: var(--color-surface-variant);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.cancel-button:hover {
-  background: var(--color-gray-200);
-  border-color: var(--color-border-hover);
-}
-
-.theme-dark .cancel-button:hover {
-  background: var(--color-gray-700);
-}
-
-.delete-modal {
-  max-width: 500px;
 }
 
 .warning-text {
@@ -471,29 +352,5 @@ function handleOverlayClick() {
   background: var(--color-error-900);
   color: var(--color-error-300);
   border-color: var(--color-error-800);
-}
-
-.modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.delete-confirm-button {
-  background: var(--color-error-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.delete-confirm-button:hover {
-  background: var(--color-error-600);
 }
 </style>

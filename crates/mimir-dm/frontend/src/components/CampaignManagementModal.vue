@@ -1,144 +1,144 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h2 class="modal-title">Manage Campaigns</h2>
-        <button @click="closeModal" class="close-button">×</button>
-      </div>
-      
+  <AppModal
+    :visible="visible"
+    title="Manage Campaigns"
+    size="lg"
+    @close="closeModal"
+  >
+    <template #header>
+      <h2>Manage Campaigns</h2>
       <div class="modal-tabs">
-        <button 
+        <button
           :class="['tab-button', { active: activeTab === 'active' }]"
           @click="activeTab = 'active'"
         >
           Active Campaigns
         </button>
-        <button 
+        <button
           :class="['tab-button', { active: activeTab === 'archived' }]"
           @click="activeTab = 'archived'"
         >
           Archived Campaigns
         </button>
       </div>
-      
-      <div class="modal-body">
-        <!-- Active Campaigns Tab -->
-        <div v-if="activeTab === 'active'">
-          <div v-if="isLoading" class="loading-message">
-            Loading campaigns...
-          </div>
-          
-          <div v-else-if="activeCampaigns.length === 0" class="empty-state">
-            <p>No active campaigns</p>
-            <p class="empty-subtitle">Create a new campaign to get started</p>
-          </div>
-          
-          <div v-else class="campaign-list">
-            <div v-for="campaign in activeCampaigns" :key="campaign.id" class="campaign-item">
-              <div class="campaign-info">
-                <div class="campaign-name">{{ campaign.name }}</div>
-                <div class="campaign-meta">
-                  <span class="campaign-status">{{ formatStatus(campaign.status) }}</span>
-                  <span class="campaign-activity">
-                    Last activity: {{ formatDate(campaign.last_activity_at) }}
-                  </span>
-                </div>
-              </div>
-              <button 
-                @click="handleArchiveCampaign(campaign)" 
-                class="archive-button"
-                title="Archive campaign"
-              >
-                Archive
-              </button>
-            </div>
-          </div>
-        </div>
+    </template>
 
-        <!-- Archived Campaigns Tab -->
-        <div v-if="activeTab === 'archived'">
-          <div v-if="isLoading" class="loading-message">
-            Loading archived campaigns...
-          </div>
-          
-          <div v-else-if="archivedCampaigns.length === 0" class="empty-state">
-            <p>No archived campaigns</p>
-            <p class="empty-subtitle">Archived campaigns will appear here</p>
-          </div>
-          
-          <div v-else class="campaign-list">
-            <div v-for="campaign in archivedCampaigns" :key="campaign.id" class="campaign-item archived">
-              <div class="campaign-info">
-                <div class="campaign-name">{{ campaign.name }}</div>
-                <div class="campaign-meta">
-                  <span class="campaign-status">{{ formatStatus(campaign.status) }}</span>
-                  <span class="campaign-activity">
-                    Archived: {{ formatDate(campaign.archived_at!) }}
-                  </span>
-                </div>
-              </div>
-              <div class="campaign-actions">
-                <button 
-                  @click="handleUnarchiveCampaign(campaign)" 
-                  class="unarchive-button"
-                  title="Restore campaign"
-                >
-                  Restore
-                </button>
-                <button 
-                  @click="handleDeleteCampaign(campaign)" 
-                  class="delete-button"
-                  title="Delete campaign permanently"
-                >
-                  Delete
-                </button>
-              </div>
+    <!-- Active Campaigns Tab -->
+    <div v-if="activeTab === 'active'">
+      <div v-if="isLoading" class="loading-message">
+        Loading campaigns...
+      </div>
+
+      <div v-else-if="activeCampaigns.length === 0" class="empty-state">
+        <p>No active campaigns</p>
+        <p class="empty-subtitle">Create a new campaign to get started</p>
+      </div>
+
+      <div v-else class="campaign-list">
+        <div v-for="campaign in activeCampaigns" :key="campaign.id" class="campaign-item">
+          <div class="campaign-info">
+            <div class="campaign-name">{{ campaign.name }}</div>
+            <div class="campaign-meta">
+              <span class="campaign-status">{{ formatStatus(campaign.status) }}</span>
+              <span class="campaign-activity">
+                Last activity: {{ formatDate(campaign.last_activity_at) }}
+              </span>
             </div>
+          </div>
+          <button
+            @click="handleArchiveCampaign(campaign)"
+            class="archive-button"
+            title="Archive campaign"
+          >
+            Archive
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Archived Campaigns Tab -->
+    <div v-if="activeTab === 'archived'">
+      <div v-if="isLoading" class="loading-message">
+        Loading archived campaigns...
+      </div>
+
+      <div v-else-if="archivedCampaigns.length === 0" class="empty-state">
+        <p>No archived campaigns</p>
+        <p class="empty-subtitle">Archived campaigns will appear here</p>
+      </div>
+
+      <div v-else class="campaign-list">
+        <div v-for="campaign in archivedCampaigns" :key="campaign.id" class="campaign-item archived">
+          <div class="campaign-info">
+            <div class="campaign-name">{{ campaign.name }}</div>
+            <div class="campaign-meta">
+              <span class="campaign-status">{{ formatStatus(campaign.status) }}</span>
+              <span class="campaign-activity">
+                Archived: {{ formatDate(campaign.archived_at!) }}
+              </span>
+            </div>
+          </div>
+          <div class="campaign-actions">
+            <button
+              @click="handleUnarchiveCampaign(campaign)"
+              class="unarchive-button"
+              title="Restore campaign"
+            >
+              Restore
+            </button>
+            <button
+              @click="handleDeleteCampaign(campaign)"
+              class="delete-button"
+              title="Delete campaign permanently"
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </AppModal>
 
   <!-- Delete Confirmation Modal -->
-  <div v-if="showDeleteModal" class="modal-overlay">
-    <div class="modal-content delete-modal" @click.stop>
-      <div class="modal-header">
-        <h2 class="modal-title">Delete Campaign</h2>
-      </div>
-      <div class="modal-body">
-        <p>Are you sure you want to permanently delete "<strong>{{ campaignToDelete?.name }}</strong>"?</p>
-        <p class="warning-text">This action cannot be undone.</p>
-        
-        <div v-if="deleteError" class="error-message">
-          {{ deleteError }}
-        </div>
-        
-        <div class="delete-options">
-          <label class="checkbox-label">
-            <input 
-              type="checkbox" 
-              v-model="deleteFiles"
-            />
-            Also delete all campaign files and directories
-          </label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button @click="confirmDelete" class="delete-confirm-button">
-          Delete Campaign
-        </button>
-        <button @click="cancelDelete" class="cancel-button">
-          Cancel
-        </button>
-      </div>
+  <AppModal
+    :visible="showDeleteModal"
+    title="Delete Campaign"
+    size="sm"
+    :stack-index="1"
+    @close="cancelDelete"
+  >
+    <p>Are you sure you want to permanently delete "<strong>{{ campaignToDelete?.name }}</strong>"?</p>
+    <p class="warning-text">This action cannot be undone.</p>
+
+    <div v-if="deleteError" class="error-message">
+      {{ deleteError }}
     </div>
-  </div>
+
+    <div class="delete-options">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          v-model="deleteFiles"
+        />
+        Also delete all campaign files and directories
+      </label>
+    </div>
+
+    <template #footer>
+      <button @click="cancelDelete" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button @click="confirmDelete" class="btn btn-danger">
+        Delete Campaign
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useCampaignStore } from '@/stores/campaigns'
+import AppModal from '@/components/shared/AppModal.vue'
 import type { Campaign } from '@/types/api'
 
 interface Props {
@@ -242,10 +242,6 @@ function closeModal() {
   emit('close')
 }
 
-function handleOverlayClick() {
-  closeModal()
-}
-
 function formatStatus(status: string): string {
   return status.replace('_', ' ').split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -258,65 +254,7 @@ function formatDate(dateString: string): string {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--color-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  width: 90%;
-  max-width: 700px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.delete-modal {
-  max-width: 500px;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-  transition: color var(--transition-fast);
-}
-
-.close-button:hover {
-  color: var(--color-text);
-}
-
+/* Domain-specific styles */
 .modal-tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);
@@ -343,13 +281,6 @@ function formatDate(dateString: string): string {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
   background: var(--color-surface-hover);
-}
-
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-  min-height: 300px;
 }
 
 .loading-message {
@@ -550,49 +481,5 @@ function formatDate(dateString: string): string {
 .checkbox-label input[type="checkbox"] {
   cursor: pointer;
   margin: 0;
-}
-
-.modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.delete-confirm-button {
-  background: var(--color-error-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.delete-confirm-button:hover {
-  background: var(--color-error-600);
-}
-
-.cancel-button {
-  background: var(--color-surface-variant);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.cancel-button:hover {
-  background: var(--color-gray-200);
-  border-color: var(--color-border-hover);
-}
-
-.theme-dark .cancel-button:hover {
-  background: var(--color-gray-700);
 }
 </style>
