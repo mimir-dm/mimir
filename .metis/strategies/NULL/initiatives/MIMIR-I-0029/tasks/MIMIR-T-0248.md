@@ -4,14 +4,14 @@ level: task
 title: "Migrate simple modals to AppModal (Batch 1)"
 short_code: "MIMIR-T-0248"
 created_at: 2025-12-29T15:13:20.863099+00:00
-updated_at: 2025-12-29T15:13:20.863099+00:00
+updated_at: 2025-12-29T15:26:58.069599+00:00
 parent: MIMIR-I-0029
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -35,15 +35,19 @@ Migrate simple modals to use AppModal component as proof of concept.
 - `CreateModuleModal.vue`
 - `ModuleListView.vue` (inline create modal)
 
+## Acceptance Criteria
+
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] CreateModuleModal uses `<AppModal>` wrapper
-- [ ] ModuleListView inline modal uses `<AppModal>` wrapper
-- [ ] Scoped `.modal-overlay` CSS removed from both
-- [ ] Open/close behavior works correctly
-- [ ] Overlay click closes modal
-- [ ] Escape key closes modal
-- [ ] Visual appearance unchanged
+- [x] CreateModuleModal uses `<AppModal>` wrapper
+- [x] ModuleListView inline modal uses `<AppModal>` wrapper
+- [x] Scoped `.modal-overlay` CSS removed from both
+- [x] Open/close behavior works correctly (via AppModal)
+- [x] Overlay click closes modal (via AppModal closeOnOverlay)
+- [x] Escape key closes modal (via AppModal closeOnEscape)
+- [x] Visual appearance unchanged (uses modals.css)
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -108,4 +112,22 @@ Migrate simple modals to use AppModal component as proof of concept.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+### 2025-12-29: Completed
+Migrated 2 simple modals to AppModal:
+
+1. **CreateModuleModal.vue**
+   - Replaced inline modal HTML with `<AppModal>` wrapper
+   - Used slots for body content and footer buttons
+   - Removed all scoped styles (component had none)
+
+2. **ModuleListView.vue**
+   - Replaced inline modal with `<AppModal>` component
+   - Added AppModal import
+   - Removed ~60 lines of scoped modal CSS (.modal-overlay, .modal-content, .form-group, .modal-actions)
+   - Kept .btn-secondary styles (still needed for buttons)
+
+Both modals now use centralized modals.css via AppModal, with automatic:
+- Escape key handling
+- Overlay click to close
+- Body scroll lock
+- Proper z-index stacking via Teleport

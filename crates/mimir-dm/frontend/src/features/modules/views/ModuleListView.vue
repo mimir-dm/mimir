@@ -9,51 +9,54 @@
       </div>
       
       <!-- Create Module Modal -->
-      <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
-        <div class="modal-content">
-          <h2>Create New Module</h2>
-          <div class="form-group">
-            <label for="module-name">Module Name:</label>
-            <input 
-              id="module-name"
-              v-model="newModuleName" 
-              type="text" 
-              placeholder="Enter module name"
-              @keyup.enter="confirmCreateModule"
-            />
-          </div>
-          <div class="form-group">
-            <label for="module-type">Module Type:</label>
-            <select id="module-type" v-model="newModuleType">
-              <option value="standard">Standard Adventure</option>
-              <option value="mystery">Mystery</option>
-              <option value="dungeon">Dungeon Crawl</option>
-              <option value="heist">Heist</option>
-              <option value="horror">Horror</option>
-              <option value="political">Political Intrigue</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="module-sessions">Expected Sessions:</label>
-            <input 
-              id="module-sessions"
-              v-model.number="newModuleSessions" 
-              type="number" 
-              min="1"
-              placeholder="4"
-              @keyup.enter="confirmCreateModule"
-            />
-          </div>
-          <div class="modal-actions">
-            <button @click="showCreateModal = false" class="btn btn-secondary">
-              Cancel
-            </button>
-            <button @click="confirmCreateModule" class="btn btn-primary">
-              Create Module
-            </button>
-          </div>
+      <AppModal
+        :visible="showCreateModal"
+        title="Create New Module"
+        size="sm"
+        @close="showCreateModal = false"
+      >
+        <div class="form-group">
+          <label for="module-name">Module Name:</label>
+          <input
+            id="module-name"
+            v-model="newModuleName"
+            type="text"
+            placeholder="Enter module name"
+            @keyup.enter="confirmCreateModule"
+          />
         </div>
-      </div>
+        <div class="form-group">
+          <label for="module-type">Module Type:</label>
+          <select id="module-type" v-model="newModuleType">
+            <option value="standard">Standard Adventure</option>
+            <option value="mystery">Mystery</option>
+            <option value="dungeon">Dungeon Crawl</option>
+            <option value="heist">Heist</option>
+            <option value="horror">Horror</option>
+            <option value="political">Political Intrigue</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="module-sessions">Expected Sessions:</label>
+          <input
+            id="module-sessions"
+            v-model.number="newModuleSessions"
+            type="number"
+            min="1"
+            placeholder="4"
+            @keyup.enter="confirmCreateModule"
+          />
+        </div>
+
+        <template #footer>
+          <button @click="showCreateModal = false" class="btn btn-secondary">
+            Cancel
+          </button>
+          <button @click="confirmCreateModule" class="btn btn-primary">
+            Create Module
+          </button>
+        </template>
+      </AppModal>
 
       <div v-if="loading" class="loading-state">
         Loading modules...
@@ -102,6 +105,7 @@ import { useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 
 const route = useRoute()
 const campaignId = parseInt(route.params.id as string)
@@ -369,70 +373,7 @@ onMounted(() => {
   background-color: var(--color-error-dark);
 }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  width: 90%;
-  max-width: 500px;
-  box-shadow: var(--shadow-lg);
-}
-
-.modal-content h2 {
-  margin: 0 0 var(--spacing-lg) 0;
-  color: var(--color-text);
-}
-
-.form-group {
-  margin-bottom: var(--spacing-lg);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 1rem;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--color-primary-400);
-}
-
-.modal-actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: flex-end;
-  margin-top: var(--spacing-xl);
-}
-
+/* Button secondary variant */
 .btn-secondary {
   background-color: var(--color-surface-variant);
   color: var(--color-text);
