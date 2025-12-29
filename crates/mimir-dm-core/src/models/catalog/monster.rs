@@ -60,6 +60,10 @@ pub struct Monster {
     // Flags
     pub srd: Option<serde_json::Value>,
     pub basic_rules: Option<bool>,
+
+    // Token image
+    #[serde(rename = "hasToken")]
+    pub has_token: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -309,6 +313,7 @@ pub struct CatalogMonster {
     pub full_monster_json: String,
     pub fluff_json: Option<String>,
     pub created_at: Option<chrono::NaiveDateTime>,
+    pub token_image_path: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -326,6 +331,7 @@ pub struct NewCatalogMonster {
     pub page: Option<i32>,
     pub full_monster_json: String,
     pub fluff_json: Option<String>,
+    pub token_image_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -458,6 +464,16 @@ impl From<&Monster> for NewCatalogMonster {
             None
         };
 
+        // Build token image path if monster has a token
+        let token_image_path = if monster.has_token.unwrap_or(false) {
+            Some(format!(
+                "img/bestiary/tokens/{}/{}.webp",
+                monster.source, monster.name
+            ))
+        } else {
+            None
+        };
+
         Self {
             name: monster.name.clone(),
             size,
@@ -471,6 +487,7 @@ impl From<&Monster> for NewCatalogMonster {
             page: monster.page.map(|p| p as i32),
             full_monster_json: serde_json::to_string(monster).unwrap_or_default(),
             fluff_json: None, // Fluff data will be set separately during import
+            token_image_path,
         }
     }
 }

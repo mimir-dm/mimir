@@ -906,6 +906,72 @@
   ]
 ]
 
+// =============================================================================
+// CAMPAIGN MAPS
+// =============================================================================
+
+#let maps-raw = data.at("maps", default: ())
+#let maps = if maps-raw == none { () } else { maps-raw }
+
+#if maps.len() > 0 [
+  #pagebreak()
+
+  = Campaign Maps
+
+  #for (map-index, map) in maps.enumerate() [
+    #let map-name = map.at("name", default: "Unknown Map")
+    #let grid-path = map.at("grid_path", default: none)
+    #let has-tokens = map.at("has_tokens", default: false)
+    #let tokens-path = map.at("tokens_path", default: none)
+
+    // Map page with grid-only version (or just grid if no tokens)
+    #if map-index > 0 [
+      #pagebreak()
+    ]
+
+    #align(center)[
+      #text(size: sizes.lg, weight: "bold", font: font-heading)[#map-name]
+      #if has-tokens [
+        #text(size: sizes.sm, fill: colors.text-secondary)[ (Grid Only)]
+      ]
+    ]
+
+    #v(spacing.sm)
+
+    #if grid-path != none [
+      #align(center)[
+        #image(
+          grid-path,
+          width: 100%,
+          height: auto,
+          fit: "contain",
+        )
+      ]
+    ]
+
+    // If tokens exist, add a second page with tokens
+    #if has-tokens and tokens-path != none [
+      #pagebreak()
+
+      #align(center)[
+        #text(size: sizes.lg, weight: "bold", font: font-heading)[#map-name]
+        #text(size: sizes.sm, fill: colors.text-secondary)[ (With Tokens)]
+      ]
+
+      #v(spacing.sm)
+
+      #align(center)[
+        #image(
+          tokens-path,
+          width: 100%,
+          height: auto,
+          fit: "contain",
+        )
+      ]
+    ]
+  ]
+]
+
 // Footer on last page
 #v(1fr)
 #align(center)[

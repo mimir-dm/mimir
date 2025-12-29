@@ -128,6 +128,7 @@ pub struct NewMap {
     pub grid_offset_x: i32,
     pub grid_offset_y: i32,
     pub ambient_light: String,
+    pub fog_enabled: bool,
 }
 
 impl NewMap {
@@ -154,6 +155,7 @@ impl NewMap {
             grid_offset_x: 0,
             grid_offset_y: 0,
             ambient_light: AmbientLight::default().as_str().to_string(),
+            fog_enabled: true,
         }
     }
 
@@ -172,6 +174,11 @@ impl NewMap {
         self.grid_size_px = Some(size_px);
         self.grid_offset_x = offset_x;
         self.grid_offset_y = offset_y;
+        self
+    }
+
+    pub fn with_fog_enabled(mut self, enabled: bool) -> Self {
+        self.fog_enabled = enabled;
         self
     }
 }
@@ -207,4 +214,6 @@ pub struct MapSummary {
     pub original_height_px: Option<i32>,
     pub fog_enabled: bool,
     pub ambient_light: String,
+    /// Path to the map file (UVTT or image)
+    pub image_path: String,
 }

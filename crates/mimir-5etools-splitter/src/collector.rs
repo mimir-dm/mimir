@@ -984,6 +984,16 @@ fn collect_images(content: &mut BookContent, repo_path: &Path, source: &str) -> 
         )?;
     }
 
+    // Collect bestiary token images
+    let bestiary_tokens_dir = img_dir.join("bestiary").join("tokens").join(source);
+    if bestiary_tokens_dir.exists() {
+        collect_directory_recursive(
+            content,
+            &bestiary_tokens_dir,
+            &format!("img/bestiary/tokens/{}", source),
+        )?;
+    }
+
     // Collect item images
     let items_img_dir = img_dir.join("items").join(source);
     if items_img_dir.exists() {
