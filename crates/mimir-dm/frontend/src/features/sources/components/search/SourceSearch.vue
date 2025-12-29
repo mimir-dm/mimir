@@ -86,15 +86,17 @@
     </div>
     
     <!-- Content Modal (temporary, will be replaced) -->
-    <BaseModal
+    <AppModal
       v-for="(modal, index) in modalStack"
       :key="`modal-${index}`"
       :visible="modal.visible"
       :title="modal.title"
-      :content="modal.content"
-      :z-index="1000 + index"
+      size="md"
+      :stack-index="index"
       @close="closeModal(index)"
-    />
+    >
+      <div class="dnd-content" v-html="modal.content"></div>
+    </AppModal>
   </div>
 </template>
 
@@ -106,7 +108,7 @@ import { useSourceSearch } from '../../composables/useSourceSearch'
 import SpellTable from './SpellTable.vue'
 import ItemTable from './ItemTable.vue'
 import MonsterTable from './MonsterTable.vue'
-import BaseModal from '@/components/shared/BaseModal.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 
 // Props
 interface Props {

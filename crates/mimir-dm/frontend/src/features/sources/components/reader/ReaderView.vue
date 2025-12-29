@@ -87,15 +87,14 @@
     />
     
     <!-- Cross-reference modal -->
-    <div v-if="modalContent.visible" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>{{ modalContent.title }}</h2>
-          <button class="modal-close" @click="closeModal">×</button>
-        </div>
-        <div class="modal-body" v-html="modalContent.content"></div>
-      </div>
-    </div>
+    <AppModal
+      :visible="modalContent.visible"
+      :title="modalContent.title"
+      size="md"
+      @close="closeModal"
+    >
+      <div class="dnd-content" v-html="modalContent.content"></div>
+    </AppModal>
   </div>
 </template>
 
@@ -109,6 +108,7 @@ import { useBookNavigation } from '../../composables/useBookNavigation'
 import { useCrossReferences } from '../../composables/useCrossReferences'
 
 // Components
+import AppModal from '@/components/shared/AppModal.vue'
 import ThreePanelLayout from '../../../../shared/components/layout/ThreePanelLayout.vue'
 import TwoPanelLayout from '../../../../shared/components/layout/TwoPanelLayout.vue'
 import Panel from '../../../../shared/components/layout/Panel.vue'

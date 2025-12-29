@@ -1,11 +1,12 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
-    <div class="dialog-content" @click.stop>
-      <div class="dialog-header">
-        <h2 class="dialog-title">Level Up to {{ newLevel }}</h2>
-        <button @click="closeDialog" class="close-button">×</button>
-      </div>
-
+  <AppModal
+    :visible="visible"
+    :title="`Level Up to ${newLevel}`"
+    size="md"
+    @close="closeDialog"
+  >
+    <template #header>
+      <h2>Level Up to {{ newLevel }}</h2>
       <div class="dialog-progress">
         <div
           v-for="(step, index) in steps"
@@ -17,8 +18,9 @@
           <div class="step-label">{{ step }}</div>
         </div>
       </div>
+    </template>
 
-      <div class="dialog-body">
+    <div class="dialog-body">
         <!-- Step: Class Selection -->
         <div v-if="steps[currentStep] === 'Class'" class="dialog-step">
           <h3>Choose Class</h3>
@@ -289,28 +291,28 @@
         </div>
       </div>
 
-      <div class="dialog-footer">
-        <button v-if="currentStep > 0" @click="prevStep" class="btn-secondary">
-          Back
-        </button>
-        <div class="footer-spacer"></div>
-        <button @click="closeDialog" class="btn-cancel">
-          Cancel
-        </button>
-        <button v-if="currentStep < steps.length - 1" @click="nextStep" class="btn-primary" :disabled="!canProceed">
-          Next
-        </button>
-        <button v-else @click="confirmLevelUp" class="btn-primary" :disabled="isSubmitting">
-          {{ isSubmitting ? 'Leveling Up...' : 'Confirm Level Up' }}
-        </button>
-      </div>
-    </div>
-  </div>
+    <template #footer>
+      <button v-if="currentStep > 0" @click="prevStep" class="btn btn-secondary">
+        Back
+      </button>
+      <div class="footer-spacer"></div>
+      <button @click="closeDialog" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button v-if="currentStep < steps.length - 1" @click="nextStep" class="btn btn-primary" :disabled="!canProceed">
+        Next
+      </button>
+      <button v-else @click="confirmLevelUp" class="btn btn-primary" :disabled="isSubmitting">
+        {{ isSubmitting ? 'Leveling Up...' : 'Confirm Level Up' }}
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 import SpellSelector from './SpellSelector.vue'
 import { useCharacterStore } from '../../../stores/characters'
 import type { CharacterData, LevelUpRequest, SpellReferenceInput, SpellReference } from '../../../types/character'
@@ -691,10 +693,6 @@ const canProceed = computed(() => {
 })
 
 // Methods
-const handleOverlayClick = () => {
-  closeDialog()
-}
-
 const closeDialog = () => {
   emit('close')
 }
@@ -817,62 +815,12 @@ watch(selectedClassName, async () => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--color-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-xl);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.dialog-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: var(--spacing-xs);
-}
-
-.close-button:hover {
-  color: var(--color-text);
-}
+/* Domain-specific styles for Level Up Dialog */
 
 .dialog-progress {
   display: flex;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
   gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
 }
 
 .progress-step {
@@ -913,12 +861,6 @@ watch(selectedClassName, async () => {
 .step-label {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
-}
-
-.dialog-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
 }
 
 .dialog-step h3 {
@@ -1238,51 +1180,9 @@ watch(selectedClassName, async () => {
   color: var(--color-text-secondary);
 }
 
-/* Footer */
-.dialog-footer {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
+/* Footer spacer for wizard layout */
 .footer-spacer {
   flex: 1;
-}
-
-.btn-secondary,
-.btn-cancel,
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-}
-
-.btn-secondary {
-  background: var(--color-surface-variant);
-  color: var(--color-text);
-}
-
-.btn-cancel {
-  background: transparent;
-  color: var(--color-text-secondary);
-}
-
-.btn-primary {
-  background: var(--color-primary-500);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .loading {

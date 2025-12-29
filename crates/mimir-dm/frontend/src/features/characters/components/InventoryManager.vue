@@ -1,12 +1,11 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
-    <div class="dialog-content" @click.stop>
-      <div class="dialog-header">
-        <h2 class="dialog-title">Inventory & Equipment</h2>
-        <button @click="closeDialog" class="close-button">×</button>
-      </div>
-
-      <div class="dialog-body">
+  <AppModal
+    :visible="visible"
+    title="Inventory & Equipment"
+    size="lg"
+    @close="closeDialog"
+  >
+    <div class="dialog-body">
         <!-- Tabs -->
         <div class="tabs">
           <button
@@ -194,20 +193,20 @@
         </div>
       </div>
 
-      <div class="dialog-footer">
-        <button @click="closeDialog" class="btn-primary">Done</button>
-      </div>
-    </div>
+    <template #footer>
+      <button @click="closeDialog" class="btn btn-primary">Done</button>
+    </template>
+  </AppModal>
 
-    <!-- Add Item Modal -->
-    <div v-if="showAddItemModal" class="modal-overlay inner-modal" @click="showAddItemModal = false">
-      <div class="add-item-modal" @click.stop>
-        <div class="modal-header">
-          <h3>Add Item</h3>
-          <button @click="showAddItemModal = false" class="close-button">×</button>
-        </div>
-
-        <div class="modal-body">
+  <!-- Add Item Modal -->
+  <AppModal
+    :visible="showAddItemModal"
+    title="Add Item"
+    size="sm"
+    :stack-index="1"
+    @close="showAddItemModal = false"
+  >
+    <div class="add-item-body">
           <div class="search-box">
             <input
               type="text"
@@ -243,26 +242,25 @@
               <input type="text" v-model="addNotes" placeholder="e.g., +1, silvered" />
             </div>
           </div>
-        </div>
-
-        <div class="modal-footer">
-          <button @click="showAddItemModal = false" class="btn-cancel">Cancel</button>
-          <button
-            @click="addItem"
-            class="btn-primary"
-            :disabled="!selectedItem"
-          >
-            Add to Inventory
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <template #footer>
+      <button @click="showAddItemModal = false" class="btn btn-secondary">Cancel</button>
+      <button
+        @click="addItem"
+        class="btn btn-primary"
+        :disabled="!selectedItem"
+      >
+        Add to Inventory
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 import { useCharacterStore } from '../../../stores/characters'
 import type { CharacterData, InventoryItem } from '../../../types/character'
 
@@ -383,10 +381,6 @@ const totalGoldValue = computed(() => {
 })
 
 // Methods
-const handleOverlayClick = () => {
-  closeDialog()
-}
-
 const closeDialog = () => {
   emit('close')
 }
@@ -543,66 +537,7 @@ watch(() => props.visible, (visible) => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-overlay.inner-modal {
-  z-index: 1001;
-}
-
-.dialog-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 700px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-xl);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.dialog-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: var(--spacing-xs);
-}
-
-.close-button:hover {
-  color: var(--color-text);
-}
-
-.dialog-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-}
+/* Domain-specific styles for Inventory Manager */
 
 /* Tabs */
 .tabs {
@@ -829,63 +764,11 @@ watch(() => props.visible, (visible) => {
   color: var(--color-text-secondary);
 }
 
-/* Dialog footer */
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background: var(--color-primary-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Add Item Modal */
-.add-item-modal {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
+/* Add Item Modal - domain-specific styles */
+.add-item-body {
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-xl);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-md);
+  gap: var(--spacing-md);
 }
 
 .search-box {
@@ -978,26 +861,5 @@ watch(() => props.visible, (visible) => {
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-cancel {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.btn-cancel:hover {
-  background: var(--color-surface-variant);
 }
 </style>
