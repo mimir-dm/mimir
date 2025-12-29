@@ -67,6 +67,8 @@ Add database migration for LOS geometry storage (walls and portals tables) with 
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
 - [ ] Migration 040_add_los_geometry creates los_walls table

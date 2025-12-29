@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: create-doorinteractionoverlay-for
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Create DoorInteractionOverlay for play mode portal toggling"
+short_code: "MIMIR-T-0237"
+created_at: 2025-12-25T16:42:05.308092+00:00
+updated_at: 2025-12-29T03:36:43.184018+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Create DoorInteractionOverlay for play mode portal toggling
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Create DoorInteractionOverlay component for DmMapViewer that allows DM to click doors to toggle open/closed state during play.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,18 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Doors display clickable icon at portal position
+- [ ] Closed doors show closed-door icon (blue per Foundry pattern)
+- [ ] Open doors show open-door icon (green per Foundry pattern)
+- [ ] Hover state highlights door with subtle glow
+- [ ] Click toggles portal state in Vue reactive state
+- [ ] UI updates immediately on toggle (optimistic update)
+- [ ] Works correctly at all zoom levels
+- [ ] Overlay only visible in play mode, not edit mode
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +134,37 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**File:** `frontend/src/components/DoorInteractionOverlay.vue`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
+**UX Pattern (from Foundry research):**
+- Door icons: Blue (closed), Green (open), Red (locked - future)
+- Players can click to open/close if unlocked
+- Only DM can unlock (right-click context menu - future)
+
+**Component:**
+```vue
+<template>
+  <div class="door-overlay">
+    <button
+      v-for="portal in portals"
+      :key="portal.id"
+      :style="portalPosition(portal)"
+      :class="{ 'door-closed': portal.is_closed, 'door-open': !portal.is_closed }"
+      @click="toggleDoor(portal.id)"
+    >
+      <DoorIcon :closed="portal.is_closed" />
+    </button>
+  </div>
+</template>
 ```
 
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
-}
-```
+**Icon sizing:** Scale inversely with zoom to maintain consistent click target
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0233 (VisionService for portal state)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Click targets may be small on dense maps; ensure minimum 24px hit area
 
 ## Status Updates **[REQUIRED]**
 

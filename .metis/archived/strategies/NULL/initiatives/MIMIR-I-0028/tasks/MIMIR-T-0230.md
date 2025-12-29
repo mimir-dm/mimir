@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: add-import-uvtt-tauri-command-for
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Add import_uvtt Tauri command for UVTT file processing"
+short_code: "MIMIR-T-0230"
+created_at: 2025-12-25T16:41:50.289830+00:00
+updated_at: 2025-12-29T03:36:42.553209+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Add import_uvtt Tauri command for UVTT file processing
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Add Tauri command `import_uvtt` that handles end-to-end UVTT file import: parsing, image extraction, map creation, and LOS geometry import.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,17 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] `import_uvtt` command accepts file bytes, campaign_id, optional module_id, name
+- [ ] UVTT file validated before saving
+- [ ] Campaign maps saved to `campaigns/{id}/maps/`
+- [ ] Module maps saved to `modules/{id}/maps/`
+- [ ] Directories created if they don't exist
+- [ ] Minimal map record created (just location + file_path)
+- [ ] TypeScript bindings generated for frontend
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +133,35 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**Location:** `crates/mimir-dm/src/commands/campaign/maps.rs`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
-
-**Model update:** `models/campaign/maps.rs`
 ```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
+#[tauri::command]
+pub async fn import_uvtt(
+    state: State<'_, AppState>,
+    campaign_id: i32,
+    module_id: Option<i32>,
+    name: String,
+    file_data: Vec<u8>,
+    import_los: bool,
+    import_lights: bool,
+) -> Result<Map, Error>
 ```
 
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
-}
-```
+**Steps:**
+1. Validate UVTT file structure
+2. Determine storage path:
+   - Campaign map: `{data_dir}/campaigns/{campaign_id}/maps/{uuid}.uvtt`
+   - Module map: `{data_dir}/modules/{module_id}/maps/{uuid}.uvtt`
+3. Create directories if needed, save .uvtt file
+4. Create minimal Map record (id, campaign_id, module_id, name, file_path)
+5. Return Map
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0227 (parser), MIMIR-T-0240 (simplified schema)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Large UVTT files (5MB+) may need streaming or chunked processing
 
 ## Status Updates **[REQUIRED]**
 

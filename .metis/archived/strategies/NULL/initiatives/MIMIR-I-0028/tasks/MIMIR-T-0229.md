@@ -67,6 +67,8 @@ Create LosGeometryService for CRUD operations on walls and portals, including bu
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
 - [ ] `get_walls_for_map(map_id)` returns all wall polylines

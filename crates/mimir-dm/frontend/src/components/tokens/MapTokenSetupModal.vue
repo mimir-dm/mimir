@@ -61,7 +61,7 @@
 
               <!-- Grid Overlay -->
               <svg
-                v-if="mapImageUrl && imageLoaded && map.grid_type !== 'none'"
+                v-if="mapImageUrl && imageLoaded && uvttGridSize > 0"
                 class="grid-overlay"
                 :style="gridOverlayStyle"
               >
@@ -197,12 +197,14 @@ import { useTokens } from '@/composables/useTokens'
 interface Map {
   id: number
   name: string
+  image_path: string
   width_px: number
   height_px: number
   grid_type: string
   grid_size_px: number | null
   grid_offset_x: number
   grid_offset_y: number
+  campaign_id: number
   module_id?: number | null
 }
 
@@ -233,6 +235,7 @@ const viewportRef = ref<HTMLElement | null>(null)
 // Map image state
 const mapImageUrl = ref<string | null>(null)
 const imageLoaded = ref(false)
+const uvttGridSize = ref<number>(70)  // Grid size from UVTT file (default 70px)
 
 // View state
 const zoom = ref(1)
@@ -274,9 +277,10 @@ const baseScale = computed(() => {
 const baseImageWidth = computed(() => props.map.width_px * baseScale.value)
 const baseImageHeight = computed(() => props.map.height_px * baseScale.value)
 
-const displayGridSize = computed(() => (props.map.grid_size_px || 50) * baseScale.value)
-const displayOffsetX = computed(() => props.map.grid_offset_x * baseScale.value)
-const displayOffsetY = computed(() => props.map.grid_offset_y * baseScale.value)
+const displayGridSize = computed(() => uvttGridSize.value * baseScale.value)
+// UVTT maps don't use grid offsets - the grid starts at origin
+const displayOffsetX = computed(() => 0)
+const displayOffsetY = computed(() => 0)
 
 const imageStyle = computed(() => ({
   width: baseImageWidth.value + 'px',
@@ -309,7 +313,7 @@ const tokenLayerStyle = computed(() => ({
 // Watch for visibility changes
 watch(() => props.visible, async (visible) => {
   if (visible && props.map.id) {
-    await Promise.all([loadMapImage(), loadTokens()])
+    await Promise.all([loadMapImage(), loadUvttData(), loadTokens()])
   }
 })
 
@@ -318,6 +322,14 @@ watch(() => props.map.id, () => {
     loadTokens()
   }
 })
+
+// UVTT data interface
+interface UvttData {
+  resolution: {
+    pixels_per_grid: number
+    map_size: { x: number; y: number }
+  }
+}
 
 // Functions
 async function loadMapImage() {
@@ -328,6 +340,24 @@ async function loadMapImage() {
     }
   } catch (e) {
     console.error('Failed to load map image:', e)
+  }
+}
+
+async function loadUvttData() {
+  // Load UVTT to get grid size
+  try {
+    const response = await invoke<{ success: boolean; data?: UvttData }>('get_uvtt_map', {
+      campaignId: props.map.campaign_id,
+      moduleId: props.map.module_id ?? null,
+      filePath: props.map.image_path
+    })
+    if (response.success && response.data) {
+      uvttGridSize.value = response.data.resolution.pixels_per_grid
+    }
+  } catch (e) {
+    console.error('Failed to load UVTT data:', e)
+    // Fall back to database value or default
+    uvttGridSize.value = props.map.grid_size_px || 70
   }
 }
 
@@ -419,19 +449,18 @@ async function handleCanvasClick(event: MouseEvent) {
   const imageX = (clickX - panX.value) / effectiveScale
   const imageY = (clickY - panY.value) / effectiveScale
 
-  // Snap to grid if grid is configured
+  // Snap to grid (all UVTT maps have a grid)
   let finalX = imageX
   let finalY = imageY
 
-  if (props.map.grid_type !== 'none' && props.map.grid_size_px) {
-    const gridSize = props.map.grid_size_px
-    const offsetX = props.map.grid_offset_x
-    const offsetY = props.map.grid_offset_y
+  const gridSize = uvttGridSize.value
+  // UVTT maps don't use grid offsets
+  const offsetX = 0
+  const offsetY = 0
 
-    // Snap to grid cell center
-    finalX = Math.round((imageX - offsetX) / gridSize) * gridSize + offsetX + gridSize / 2
-    finalY = Math.round((imageY - offsetY) / gridSize) * gridSize + offsetY + gridSize / 2
-  }
+  // Snap to grid cell center
+  finalX = Math.round((imageX - offsetX) / gridSize) * gridSize + offsetX + gridSize / 2
+  finalY = Math.round((imageY - offsetY) / gridSize) * gridSize + offsetY + gridSize / 2
 
   // Create the token
   const request: CreateTokenRequest = {
@@ -502,9 +531,8 @@ function getTokenColor(token: Token): string {
 }
 
 function getTokenStyle(token: Token) {
-  const gridSize = props.map.grid_size_px || 50
   const gridSquares = TOKEN_SIZE_GRID_SQUARES[token.size as TokenSize] || 1
-  const tokenSize = gridSquares * gridSize * baseScale.value
+  const tokenSize = gridSquares * uvttGridSize.value * baseScale.value
   const color = getTokenColor(token)
 
   return {
@@ -524,7 +552,7 @@ function getTokenInitial(token: Token): string {
 function getPlacementPreviewStyle() {
   if (!mousePosition.value || !pendingTokenConfig.value) return {}
 
-  const gridSize = props.map.grid_size_px || 50
+  const gridSize = uvttGridSize.value
   const size = pendingTokenConfig.value.size as TokenSize
   const gridSquares = TOKEN_SIZE_GRID_SQUARES[size] || 1
   const tokenSize = gridSquares * gridSize * baseScale.value * zoom.value
@@ -552,7 +580,7 @@ function handleClickOutside() {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   if (props.visible && props.map.id) {
-    Promise.all([loadMapImage(), loadTokens()])
+    Promise.all([loadMapImage(), loadUvttData(), loadTokens()])
   }
 })
 

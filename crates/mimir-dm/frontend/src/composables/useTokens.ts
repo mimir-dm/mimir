@@ -19,6 +19,9 @@ export function useTokens(mapId: number) {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
+  // Cache for token images (token_id -> base64 data URL)
+  const tokenImages = ref<Map<number, string>>(new Map())
+
   // Computed
   const visibleTokens = computed(() =>
     tokens.value.filter(t => t.visible_to_players)
@@ -194,10 +197,42 @@ export function useTokens(mapId: number) {
     return token.color || TOKEN_TYPE_COLORS[token.token_type as TokenType] || '#666666'
   }
 
+  // Load a token's image
+  async function loadTokenImage(tokenId: number): Promise<string | null> {
+    // Check cache first
+    if (tokenImages.value.has(tokenId)) {
+      return tokenImages.value.get(tokenId)!
+    }
+
+    try {
+      const response = await invoke<ApiResponse<string>>('serve_token_image', { tokenId })
+      if (response.success && response.data) {
+        tokenImages.value.set(tokenId, response.data)
+        return response.data
+      }
+      return null
+    } catch (e) {
+      console.error('Failed to load token image:', e)
+      return null
+    }
+  }
+
+  // Load images for all tokens that have image_path
+  async function loadAllTokenImages(): Promise<void> {
+    const tokensWithImages = tokens.value.filter(t => t.image_path)
+    await Promise.all(tokensWithImages.map(t => loadTokenImage(t.id)))
+  }
+
+  // Get cached token image
+  function getTokenImage(tokenId: number): string | undefined {
+    return tokenImages.value.get(tokenId)
+  }
+
   return {
     // State
     tokens,
     tokenSummaries,
+    tokenImages,
     loading,
     error,
     // Computed
@@ -212,6 +247,9 @@ export function useTokens(mapId: number) {
     toggleVisibility,
     deleteToken,
     getTokenDisplaySize,
-    getTokenColor
+    getTokenColor,
+    loadTokenImage,
+    loadAllTokenImages,
+    getTokenImage
   }
 }

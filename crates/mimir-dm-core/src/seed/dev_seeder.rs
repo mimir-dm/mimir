@@ -226,15 +226,40 @@ pub fn seed_dev_data(conn: &mut DbConnection, campaigns_directory: &str, data_di
     Ok(true)
 }
 
-/// Embedded test map image (Goblin Hideout - module level)
-const GOBLIN_HIDEOUT_PNG: &[u8] = include_bytes!("assets/GoblinHideout.png");
+/// Embedded UVTT map with LOS data (Goblin Hideout - module level)
+/// Has 4 wall segments, 11 portals (doors), and 3 lights
+const GOBLIN_HIDEOUT_UVTT: &[u8] = include_bytes!("assets/goblin-hideout.dd2vtt");
+/// Goblin Hideout dimensions: 48x27 grid at 54px = 2592x1458
 const GOBLIN_HIDEOUT_WIDTH: i32 = 2592;
 const GOBLIN_HIDEOUT_HEIGHT: i32 = 1458;
+const GOBLIN_HIDEOUT_GRID_PX: i32 = 54;
 
-/// Embedded test map image (Goblin Region - campaign level)
+/// Embedded test map image (Goblin Region - campaign level, no LOS)
 const GOBLIN_REGION_PNG: &[u8] = include_bytes!("assets/GoblinRegion.png");
 const GOBLIN_REGION_WIDTH: i32 = 1792;
 const GOBLIN_REGION_HEIGHT: i32 = 1024;
+
+/// Create a minimal UVTT wrapper for a plain image (no LOS/portals/lights)
+fn create_image_uvtt(image_bytes: &[u8], width_px: u32, height_px: u32, grid_size_px: u32) -> serde_json::Value {
+    use base64::{engine::general_purpose::STANDARD, Engine};
+
+    let image_base64 = STANDARD.encode(image_bytes);
+    let grid_cols = width_px as f64 / grid_size_px as f64;
+    let grid_rows = height_px as f64 / grid_size_px as f64;
+
+    serde_json::json!({
+        "format": 0.3,
+        "resolution": {
+            "map_origin": {"x": 0, "y": 0},
+            "map_size": {"x": grid_cols, "y": grid_rows},
+            "pixels_per_grid": grid_size_px
+        },
+        "image": image_base64,
+        "line_of_sight": [],
+        "portals": [],
+        "lights": []
+    })
+}
 
 /// Seed test maps for modules
 fn seed_maps(
@@ -246,26 +271,25 @@ fn seed_maps(
     use crate::models::campaign::{NewMap, GridType, NewToken, TokenType, TokenSize, VisionType};
     use std::path::PathBuf;
 
-    // Create maps directory if it doesn't exist
-    let maps_dir = PathBuf::from(data_directory).join("maps");
+    // Find the "Cragmaw Hideout" module to associate the map with
+    let module = modules.iter().find(|m| m.name == "Cragmaw Hideout");
+    let module_id = module.map(|m| m.id);
+
+    // Determine storage path based on module association
+    let maps_dir = if let Some(mid) = module_id {
+        PathBuf::from(data_directory).join("modules").join(mid.to_string()).join("maps")
+    } else {
+        PathBuf::from(data_directory).join("campaigns").join(campaign_id.to_string()).join("maps")
+    };
     std::fs::create_dir_all(&maps_dir)?;
 
-    // Use fixed filename for dev seed map (overwrites cleanly on reset)
-    let stored_filename = "dev-seed-goblin-hideout.png".to_string();
-    let image_path = maps_dir.join(&stored_filename);
-
-    // Write the embedded image to disk
-    std::fs::write(&image_path, GOBLIN_HIDEOUT_PNG)?;
-    info!("Wrote test map to {:?}", image_path);
-
-    // Find the "Cragmaw Hideout" module to associate the map with
-    let module_id = modules
-        .iter()
-        .find(|m| m.name == "Cragmaw Hideout")
-        .map(|m| m.id);
+    // Use the embedded UVTT file directly (has real LOS walls from DungeonDraft)
+    let stored_filename = "goblin-hideout.dd2vtt".to_string();
+    let uvtt_path = maps_dir.join(&stored_filename);
+    std::fs::write(&uvtt_path, GOBLIN_HIDEOUT_UVTT)?;
+    info!("Wrote UVTT map to {:?} ({} KB)", uvtt_path, GOBLIN_HIDEOUT_UVTT.len() / 1024);
 
     // Create database record with grid configuration
-    // Grid size 53px measured from the Goblin Hideout map
     let new_map = NewMap::new(
         campaign_id,
         "Goblin Hideout".to_string(),
@@ -275,7 +299,7 @@ fn seed_maps(
         GOBLIN_HIDEOUT_WIDTH,
         GOBLIN_HIDEOUT_HEIGHT,
     )
-    .with_grid(GridType::Square, 54, 0, 0);
+    .with_grid(GridType::Square, GOBLIN_HIDEOUT_GRID_PX, 0, 0);
 
     // Associate with module if found
     let new_map = if let Some(mid) = module_id {
@@ -287,53 +311,54 @@ fn seed_maps(
     let mut service = MapService::new(conn);
     let map = service.create_map(new_map)?;
 
-    // Add monster tokens matching the Cragmaw Hideout encounters
-    // Positions at cell centers (grid cell * 54 + 27 for 54px grid)
+    // Add monster tokens for Goblin Hideout
+    // Map is 48x27 grid at 54px = 2592x1458 pixels
+    // Cell center = (cell * 54 + 27)
     // Format: (name, x, y, size)
     let monster_tokens: Vec<(&str, f32, f32, TokenSize)> = vec![
-        // Boss Chamber - Adult Black Dragon and 2 Goblins (TPK incoming!)
-        ("Adult Black Dragon", 837.0, 783.0, TokenSize::Huge),
-        ("Goblin", 945.0, 783.0, TokenSize::Small),
-        ("Goblin", 837.0, 675.0, TokenSize::Small),
-        // Main Chamber - 5 Goblins + Mage
-        ("Goblin", 1701.0, 513.0, TokenSize::Small),
-        ("Goblin", 1809.0, 513.0, TokenSize::Small),
-        ("Goblin", 1917.0, 513.0, TokenSize::Small),
-        ("Mage", 1701.0, 567.0, TokenSize::Medium), // Spellcaster!
-        ("Goblin", 1863.0, 621.0, TokenSize::Small),
-        ("Goblin", 1917.0, 567.0, TokenSize::Small),
-        // Guard area
-        ("Goblin", 1863.0, 999.0, TokenSize::Small),
-        ("Goblin", 1755.0, 999.0, TokenSize::Small),
-        // Guard Post - 4 Goblins
-        ("Goblin", 1161.0, 567.0, TokenSize::Small),
-        ("Goblin", 1161.0, 675.0, TokenSize::Small),
-        ("Goblin", 1269.0, 675.0, TokenSize::Small),
-        ("Goblin", 1323.0, 621.0, TokenSize::Small),
-        ("Goblin", 1647.0, 999.0, TokenSize::Small),
-        // Kennel - 2 Wolves
-        ("Wolf", 1809.0, 945.0, TokenSize::Medium),
-        ("Wolf", 1647.0, 945.0, TokenSize::Medium),
+        // Adult Black Dragon - huge boss in upper left area
+        ("Adult Black Dragon", 513.0, 351.0, TokenSize::Huge),
+        // Bugbear in lower left area
+        ("Bugbear", 621.0, 837.0, TokenSize::Medium),
+        // Goblins in lower left cave area
+        ("Goblin", 729.0, 945.0, TokenSize::Small),
+        ("Goblin", 621.0, 945.0, TokenSize::Small),
+        // Goblins in central cave
+        ("Goblin", 1701.0, 459.0, TokenSize::Small),
+        ("Goblin", 1593.0, 459.0, TokenSize::Small),
+        ("Goblin", 1647.0, 567.0, TokenSize::Small),
+        ("Goblin", 1593.0, 513.0, TokenSize::Small),
+        ("Goblin", 1647.0, 675.0, TokenSize::Small),
+        // Guard goblin near entrance
+        ("Goblin", 2025.0, 567.0, TokenSize::Small),
+        // Goblin in lower area
+        ("Goblin", 1809.0, 1053.0, TokenSize::Small),
+        // Wolves in kennel area
+        ("Wolf", 1863.0, 1107.0, TokenSize::Medium),
+        ("Wolf", 1755.0, 1107.0, TokenSize::Medium),
     ];
 
     let mut token_service = TokenService::new(conn);
     for (name, x, y, size) in &monster_tokens {
-        let token = NewToken::new(map.id, name.to_string(), *x, *y)
+        let mut token = NewToken::new(map.id, name.to_string(), *x, *y)
             .with_type(TokenType::Monster)
             .with_size(*size)
             .with_visibility(true);
+
+        // Set token image path for MM monsters (works once MM book is imported)
+        // Note: monster_id not set since catalog may not be populated yet
+        token.image_path = Some(format!("img/bestiary/tokens/MM/{}.webp", name));
+
         token_service.create_token(token)?;
     }
     info!("Created {} monster tokens on battle map", monster_tokens.len());
 
-    // Add PC tokens (positioned near cave entrance for start of encounter)
-    // Positions at cell centers (grid cell * 54 + 27 for 54px grid)
-    // 2x2 formation at cells (41,22), (42,22), (41,23), (42,23)
+    // Add PC tokens at entrance (bottom right of map)
     let pc_tokens = [
-        ("Thorin Ironforge", 2241.0, 1215.0, TokenSize::Medium, VisionType::Darkvision, Some(60.0)),
-        ("Elara Moonwhisper", 2295.0, 1215.0, TokenSize::Medium, VisionType::Darkvision, Some(60.0)),
-        ("Finn Lightfoot", 2241.0, 1269.0, TokenSize::Small, VisionType::Normal, None),
-        ("Sister Helena", 2295.0, 1269.0, TokenSize::Medium, VisionType::Normal, None),
+        ("Thorin Ironforge", 2187.0, 1431.0, TokenSize::Medium, VisionType::Darkvision, Some(60.0)),
+        ("Elara Moonwhisper", 2187.0, 1377.0, TokenSize::Medium, VisionType::Darkvision, Some(60.0)),
+        ("Finn Lightfoot", 2241.0, 1431.0, TokenSize::Small, VisionType::Normal, None),
+        ("Sister Helena", 2241.0, 1431.0, TokenSize::Medium, VisionType::Normal, None),
     ];
 
     for (name, x, y, size, vision_type, vision_range) in pc_tokens {
@@ -347,10 +372,26 @@ fn seed_maps(
     info!("Created {} PC tokens on battle map", pc_tokens.len());
 
     // Create campaign-level map (Goblin Region - not associated with any module)
-    let region_filename = "dev-seed-goblin-region.png".to_string();
-    let region_path = maps_dir.join(&region_filename);
-    std::fs::write(&region_path, GOBLIN_REGION_PNG)?;
-    info!("Wrote campaign map to {:?}", region_path);
+    // Campaign maps go to campaigns/{campaign_id}/maps/
+    let campaign_maps_dir = PathBuf::from(data_directory)
+        .join("campaigns")
+        .join(campaign_id.to_string())
+        .join("maps");
+    std::fs::create_dir_all(&campaign_maps_dir)?;
+
+    // Region map has no LOS/portals (it's a world map) - wrap PNG in minimal UVTT
+    let region_uvtt = create_image_uvtt(
+        GOBLIN_REGION_PNG,
+        GOBLIN_REGION_WIDTH as u32,
+        GOBLIN_REGION_HEIGHT as u32,
+        70, // Standard 70px grid for region maps
+    );
+
+    let region_filename = "dev-seed-goblin-region.dd2vtt".to_string();
+    let region_path = campaign_maps_dir.join(&region_filename);
+    let region_bytes = serde_json::to_vec_pretty(&region_uvtt)?;
+    std::fs::write(&region_path, &region_bytes)?;
+    info!("Wrote campaign UVTT map to {:?} ({} KB)", region_path, region_bytes.len() / 1024);
 
     let region_map = NewMap::new(
         campaign_id,

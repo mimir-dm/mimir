@@ -414,6 +414,14 @@ impl<'a> MonsterService<'a> {
                     // Always override the source with the book source to ensure consistency
                     new_monster.source = source.to_string();
 
+                    // Update token_image_path to use the book's source code
+                    if monster.has_token.unwrap_or(false) {
+                        new_monster.token_image_path = Some(format!(
+                            "img/bestiary/tokens/{}/{}.webp",
+                            source, monster.name
+                        ));
+                    }
+
                     // Also update the source in the full_monster_json to maintain consistency
                     if let Ok(mut monster_json) =
                         serde_json::from_str::<serde_json::Value>(&new_monster.full_monster_json)

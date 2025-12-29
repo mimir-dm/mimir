@@ -67,6 +67,8 @@ Convert existing PNG maps to minimal UVTT format internally when grid configurat
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
 - [ ] When grid config saved, pixels_per_grid calculated and stored

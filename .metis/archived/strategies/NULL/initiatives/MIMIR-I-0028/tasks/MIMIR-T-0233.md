@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: implement-raycasting-visibility
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Implement raycasting visibility polygon algorithm in VisionService"
+short_code: "MIMIR-T-0233"
+created_at: 2025-12-25T16:42:04.895851+00:00
+updated_at: 2025-12-29T03:36:42.796619+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Implement raycasting visibility polygon algorithm in VisionService
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Implement raycasting algorithm in VisionService that calculates visibility polygons from token positions against LOS wall geometry.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,17 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] `calculateVisibility(origin, range, walls, portals)` returns visibility polygon
+- [ ] Rays cast to all wall segment endpoints
+- [ ] Ray-wall intersection correctly blocks vision
+- [ ] Closed portals block vision, open portals allow through
+- [ ] `combinePartyVision(polygons)` unions multiple visibility polygons
+- [ ] Performance: <16ms for typical map (50 walls, 5 tokens)
+- [ ] Unit tests with sample wall configurations
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +133,48 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**File:** `frontend/src/services/VisionService.ts`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
+**Algorithm (2D Raycasting):**
+1. Collect all wall segment endpoints
+2. For each endpoint, cast ray from origin through endpoint
+3. Cast additional rays ±0.0001 radians to catch corners
+4. Find closest wall intersection for each ray
+5. Sort intersections by angle
+6. Connect intersections to form visibility polygon
 
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
+```typescript
+interface WallSegment {
+  start: Point
+  end: Point
 }
-```
 
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
+interface VisibilityPolygon {
+  points: Point[]
 }
+
+function calculateVisibility(
+  origin: Point,
+  range: number,
+  walls: WallSegment[],
+  portals: Portal[]
+): VisibilityPolygon
+
+function rayWallIntersection(
+  rayOrigin: Point,
+  rayDirection: Point,
+  wallStart: Point,
+  wallEnd: Point
+): Point | null
 ```
+
+**Reference:** Red Blob Games visibility algorithm
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0240 (UVTT file as source of truth)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Complex wall configurations may produce degenerate polygons
 
 ## Status Updates **[REQUIRED]**
 

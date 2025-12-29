@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: add-los-debug-overlay-to
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Add LOS debug overlay to DmMapViewer"
+short_code: "MIMIR-T-0235"
+created_at: 2025-12-25T16:42:05.097171+00:00
+updated_at: 2025-12-29T03:36:43.056076+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Add LOS debug overlay to DmMapViewer
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Add optional LOS debug overlay to DmMapViewer that visualizes wall geometry and portal states for debugging and verification.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,17 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Toggle button in DM toolbar shows/hides LOS overlay
+- [ ] Walls rendered as semi-transparent colored lines
+- [ ] Portals rendered with different color (open vs closed)
+- [ ] Closed portals show solid line, open portals show dashed
+- [ ] Wall endpoints visible as small circles
+- [ ] Overlay scales correctly with zoom
+- [ ] Overlay hidden by default, persists across map changes
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +133,42 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**File:** `frontend/src/components/LosDebugOverlay.vue`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
+**Color scheme (from Foundry research):**
+- Walls: Yellow/amber semi-transparent
+- Closed portals: Red
+- Open portals: Green dashed
+
+**Component structure:**
+```vue
+<template>
+  <svg class="los-debug-overlay" v-if="visible">
+    <!-- Walls -->
+    <polyline
+      v-for="wall in walls"
+      :points="wall.points.map(p => `${p.x},${p.y}`).join(' ')"
+      stroke="rgba(251, 191, 36, 0.6)"
+      stroke-width="2"
+      fill="none"
+    />
+    <!-- Portals -->
+    <line
+      v-for="portal in portals"
+      :class="{ 'portal-closed': portal.is_closed }"
+      ...
+    />
+  </svg>
+</template>
 ```
 
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
-}
-```
+**Integration:** Add to DmMapViewer toolbar alongside fog toggle
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0240 (UVTT file parsed for walls/portals)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+SVG performance with many walls; may need canvas fallback
 
 ## Status Updates **[REQUIRED]**
 

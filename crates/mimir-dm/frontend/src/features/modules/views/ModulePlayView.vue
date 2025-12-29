@@ -214,6 +214,9 @@
                   :grid-offset-x="activeMap?.grid_offset_x"
                   :grid-offset-y="activeMap?.grid_offset_y"
                   :show-grid="true"
+                  :campaign-id="campaign?.id"
+                  :module-id="activeMap?.module_id"
+                  :uvtt-file-path="activeMap?.image_path"
                 />
               </div>
 
@@ -526,6 +529,7 @@ interface MapSummary {
   width_px: number
   height_px: number
   ambient_light: string
+  image_path: string
 }
 
 const allMaps = ref<MapSummary[]>([])

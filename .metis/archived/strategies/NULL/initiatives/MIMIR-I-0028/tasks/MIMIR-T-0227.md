@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: create-uvtt-types-and-parser-in
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Create UVTT types and parser in mimir-dm-core"
+short_code: "MIMIR-T-0227"
+created_at: 2025-12-25T16:41:49.988476+00:00
+updated_at: 2025-12-29T03:36:28.158909+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Create UVTT types and parser in mimir-dm-core
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Create Rust types and parser for Universal VTT (.dd2vtt) format in mimir-dm-core, enabling import of Dungeondraft maps with LOS geometry.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,17 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] `UvttFile` struct parses all UVTT format 0.3 fields
+- [ ] `UvttResolution` correctly extracts map_size, map_origin, pixels_per_grid
+- [ ] `UvttPoint` handles fractional grid coordinates (f32)
+- [ ] `UvttPortal` includes position, bounds, rotation, closed state
+- [ ] `parse_uvtt()` decodes base64 image data to raw bytes
+- [ ] `validate_uvtt()` returns errors for missing required fields
+- [ ] Unit tests pass with sample UVTT JSON (without image)
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +133,40 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**Location:** `crates/mimir-dm-core/src/services/uvtt_service.rs`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
-
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
+**UVTT Format (from sample file):**
 ```json
 {
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
+  "format": 0.3,
+  "resolution": { "map_origin": {x,y}, "map_size": {x,y}, "pixels_per_grid": 54 },
+  "line_of_sight": [[{x,y}, {x,y}, ...]],
+  "objects_line_of_sight": [],
+  "portals": [{ "position": {x,y}, "bounds": [...], "rotation": 0, "closed": true }],
+  "lights": [{ "position": {x,y}, "range": 5, "intensity": 1.0, "color": "ffaa00" }],
+  "environment": { "baked_lighting": true, "ambient_light": "ffffffff" },
+  "image": "data:image/png;base64,..."
 }
 ```
 
+**Types to create:**
+- `UvttFile` - Top-level with all fields
+- `UvttResolution` - Grid dimensions
+- `UvttPoint` - x/y as f32
+- `UvttPortal` - Door/window geometry
+- `UvttLight` - Light source data
+- `UvttEnvironment` - Ambient settings
+
+**Functions:**
+- `parse_uvtt(data: &[u8]) -> Result<UvttFile>`
+- `extract_image(uvtt: &UvttFile) -> Result<Vec<u8>>`
+- `validate_uvtt(uvtt: &UvttFile) -> Result<()>`
+
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+None - foundational task
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Base64 image decoding may fail on malformed files
 
 ## Status Updates **[REQUIRED]**
 

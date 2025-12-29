@@ -1,17 +1,17 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: integrate-los-visibility-into
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Integrate LOS visibility into PlayerDisplayWindow fog rendering"
+short_code: "MIMIR-T-0234"
+created_at: 2025-12-25T16:42:04.997366+00:00
+updated_at: 2025-12-29T03:36:42.926167+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Integrate LOS visibility into PlayerDisplayWindow fog rendering
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Integrate LOS visibility polygons into PlayerDisplayWindow fog rendering so players only see areas within their tokens' line of sight.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -69,11 +69,17 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Fog respects LOS walls when map has LOS geometry
+- [ ] Vision polygon clips fog reveal to visible areas only
+- [ ] Combined party vision shows union of all PC token vision
+- [ ] Explored areas (grey fog) remain visible but dimmed
+- [ ] Currently visible areas (in LOS) fully clear
+- [ ] Smooth fog edge rendering (no jagged polygon edges)
+- [ ] Falls back to current behavior when map has no LOS data
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +133,41 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
+**File:** `frontend/src/components/PlayerDisplayWindow.vue`
 
-```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
-```
+**Three-state fog model (from Foundry research):**
+1. **Unexplored (black):** Never revealed
+2. **Explored (grey):** Previously seen, shows terrain
+3. **Visible (clear):** Currently in LOS
 
-**Model update:** `models/campaign/maps.rs`
-```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
-}
-```
-
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
+**Rendering approach:**
+```typescript
+function renderFogWithLOS(ctx: CanvasRenderingContext2D) {
+  // 1. Draw revealed areas (from fog_revealed_areas)
+  drawExploredFog(ctx, revealedAreas)
+  
+  // 2. Calculate party vision polygon
+  const partyVision = visionService.combinePartyVision(
+    pcTokens.map(t => visionService.calculateVisibility(t.position, t.visionRange, walls, portals))
+  )
+  
+  // 3. Clip to vision polygon for "currently visible"
+  ctx.save()
+  ctx.beginPath()
+  partyVision.points.forEach(p => ctx.lineTo(p.x, p.y))
+  ctx.closePath()
+  ctx.clip()
+  ctx.globalCompositeOperation = 'destination-out'
+  ctx.fill()
+  ctx.restore()
 }
 ```
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0233 (VisionService)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Performance with many tokens; may need caching/memoization
 
 ## Status Updates **[REQUIRED]**
 

@@ -1,10 +1,10 @@
 ---
-id: add-uvtt-fields-to-maps-table
+id: simplify-maps-table-to-uvtt-file
 level: task
-title: "Add UVTT fields to maps table migration"
-short_code: "MIMIR-T-0239"
-created_at: 2025-12-25T16:58:22.051473+00:00
-updated_at: 2025-12-25T16:58:22.051473+00:00
+title: "Simplify maps table to UVTT file reference"
+short_code: "MIMIR-T-0240"
+created_at: 2025-12-25T17:02:32.139735+00:00
+updated_at: 2025-12-25T17:02:32.139735+00:00
 parent: MIMIR-I-0028
 blocked_by: []
 archived: true
@@ -19,7 +19,7 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0028
 ---
 
-# Add UVTT fields to maps table migration
+# Simplify maps table to UVTT file reference
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -29,7 +29,7 @@ initiative_id: MIMIR-I-0028
 
 ## Objective **[REQUIRED]**
 
-Add UVTT-related columns to maps table for storing grid resolution and LOS geometry as JSON blob.
+Refactor maps table to minimal schema where UVTT file is source of truth for all map data (grid, dimensions, LOS, lights).
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -71,9 +71,13 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] Migration adds los_data TEXT column for LOS geometry JSON
-- [ ] Map model updated with los_data field
-- [ ] Down migration removes column cleanly
+- [ ] Maps table reduced to: id, campaign_id, module_id, name, file_path, timestamps
+- [ ] Hex grid support removed (square only, matches UVTT)
+- [ ] file_path points to .uvtt file (campaigns/{id}/maps/ or modules/{id}/maps/)
+- [ ] All grid/dimension data derived from parsing UVTT on load
+- [ ] Migration handles existing maps (create UVTT wrappers)
+- [ ] MapService returns parsed UVTT data with map
+- [ ] Backwards compatible with existing functionality
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -127,38 +131,52 @@ Add UVTT-related columns to maps table for storing grid resolution and LOS geome
 
 ### Technical Approach
 
-**Migration:** `040_add_los_data/up.sql`
-
+**New minimal schema:**
 ```sql
-ALTER TABLE maps ADD COLUMN los_data TEXT;
+CREATE TABLE maps (
+  id INTEGER PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id),
+  module_id INTEGER REFERENCES modules(id),
+  name TEXT NOT NULL,
+  file_path TEXT NOT NULL,  -- Path to .uvtt file
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 ```
 
-**Model update:** `models/campaign/maps.rs`
+**Storage paths:**
+- Campaign maps: `{data_dir}/campaigns/{campaign_id}/maps/{uuid}.uvtt`
+- Module maps: `{data_dir}/modules/{module_id}/maps/{uuid}.uvtt`
+
+**Migration strategy:**
+1. For each existing map with image_path:
+   - Read image file
+   - Create minimal UVTT wrapper with existing grid config
+   - Save to appropriate path (campaign or module)
+   - Update file_path to new .uvtt
+2. Drop old columns (grid_*, width_*, etc.)
+
+**MapService changes:**
 ```rust
-pub struct Map {
-    // existing fields (grid_size_px, grid_offset_x, grid_offset_y already exist)
-    pub los_data: Option<String>,  // JSON blob
+pub struct MapWithData {
+    pub map: Map,           // DB record
+    pub uvtt: UvttFile,     // Parsed file
 }
-```
 
-**On UVTT import, populate existing grid fields:**
-- `grid_size_px` ← `resolution.pixels_per_grid`
-- `grid_offset_x` ← `resolution.map_origin.x * pixels_per_grid`
-- `grid_offset_y` ← `resolution.map_origin.y * pixels_per_grid`
-
-**los_data JSON structure:**
-```json
-{
-  "walls": [[{x, y}, {x, y}, ...]],
-  "portals": [{ "position": {x, y}, "bounds": [...], "closed": true }]
+impl MapService {
+    pub fn get_map_with_data(id: i32) -> Result<MapWithData> {
+        let map = self.get_map(id)?;
+        let uvtt = UvttService::parse_file(&map.file_path)?;
+        Ok(MapWithData { map, uvtt })
+    }
 }
 ```
 
 ### Dependencies
-Depends on: MIMIR-T-0227 (defines JSON structure)
+Depends on: MIMIR-T-0227 (UVTT parser)
 
 ### Risk Considerations
-Nullable columns maintain backwards compatibility
+Migration must handle existing maps without data loss
 
 ## Status Updates **[REQUIRED]**
 

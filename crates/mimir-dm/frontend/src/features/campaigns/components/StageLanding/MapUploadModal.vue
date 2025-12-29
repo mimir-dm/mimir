@@ -24,7 +24,7 @@
             <input
               ref="fileInput"
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp"
+              accept="image/png,image/jpeg,image/jpg,image/webp,.dd2vtt,.uvtt"
               class="file-input"
               @change="handleFileSelect"
             />
@@ -36,14 +36,19 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+              <!-- UVTT metadata badge -->
+              <div v-if="uvttInfo" class="uvtt-badge">
+                <span class="uvtt-label">UVTT</span>
+                <span class="uvtt-stats">{{ uvttInfo.walls }} walls · {{ uvttInfo.portals }} doors · {{ uvttInfo.lights }} lights</span>
+              </div>
             </div>
 
             <div v-else class="drop-prompt">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              <p class="drop-text">Drop map image here or click to browse</p>
-              <p class="drop-hint">Supports PNG, JPG, WebP</p>
+              <p class="drop-text">Drop map here or click to browse</p>
+              <p class="drop-hint">Supports UVTT (.dd2vtt), PNG, JPG, WebP</p>
             </div>
           </div>
 
@@ -108,6 +113,15 @@ const emit = defineEmits<{
   uploaded: []
 }>()
 
+interface UvttInfo {
+  walls: number
+  portals: number
+  lights: number
+  gridCols: number
+  gridRows: number
+  pixelsPerGrid: number
+}
+
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string | null>(null)
@@ -117,6 +131,7 @@ const imageHeight = ref<number | null>(null)
 const isDragging = ref(false)
 const uploading = ref(false)
 const errorMessage = ref('')
+const uvttInfo = ref<UvttInfo | null>(null)
 
 const canUpload = computed(() => {
   return selectedFile.value && mapName.value.trim() && imageWidth.value && imageHeight.value
@@ -136,16 +151,22 @@ function handleFileSelect(event: Event) {
 function handleDrop(event: DragEvent) {
   isDragging.value = false
   const file = event.dataTransfer?.files?.[0]
-  if (file && file.type.startsWith('image/')) {
-    processFile(file)
+  if (file) {
+    const isImage = file.type.startsWith('image/')
+    const isUvtt = file.name.toLowerCase().endsWith('.dd2vtt') || file.name.toLowerCase().endsWith('.uvtt')
+    if (isImage || isUvtt) {
+      processFile(file)
+    }
   }
 }
 
 function processFile(file: File) {
+  const isUvtt = file.name.toLowerCase().endsWith('.dd2vtt') || file.name.toLowerCase().endsWith('.uvtt')
+
   // Validate file type
-  const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
-  if (!validTypes.includes(file.type)) {
-    errorMessage.value = 'Invalid file type. Please upload PNG, JPG, or WebP.'
+  const validImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+  if (!isUvtt && !validImageTypes.includes(file.type)) {
+    errorMessage.value = 'Invalid file type. Please upload UVTT, PNG, JPG, or WebP.'
     return
   }
 
@@ -157,6 +178,7 @@ function processFile(file: File) {
 
   errorMessage.value = ''
   selectedFile.value = file
+  uvttInfo.value = null
 
   // Auto-generate map name from filename
   if (!mapName.value) {
@@ -166,7 +188,64 @@ function processFile(file: File) {
       .replace(/\b\w/g, c => c.toUpperCase())
   }
 
-  // Create preview and get dimensions
+  if (isUvtt) {
+    // Parse UVTT file
+    processUvttFile(file)
+  } else {
+    // Process image file
+    processImageFile(file)
+  }
+}
+
+function processUvttFile(file: File) {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const uvtt = JSON.parse(e.target?.result as string)
+
+      // Extract UVTT metadata
+      uvttInfo.value = {
+        walls: uvtt.line_of_sight?.length || 0,
+        portals: uvtt.portals?.length || 0,
+        lights: uvtt.lights?.length || 0,
+        gridCols: Math.round(uvtt.resolution?.map_size?.x || 0),
+        gridRows: Math.round(uvtt.resolution?.map_size?.y || 0),
+        pixelsPerGrid: uvtt.resolution?.pixels_per_grid || 70
+      }
+
+      // Extract image for preview
+      let imageData = uvtt.image || ''
+      if (!imageData.startsWith('data:')) {
+        imageData = `data:image/png;base64,${imageData}`
+      }
+      previewUrl.value = imageData
+
+      // Get dimensions from the image
+      const img = new Image()
+      img.onload = () => {
+        imageWidth.value = img.naturalWidth
+        imageHeight.value = img.naturalHeight
+      }
+      img.onerror = () => {
+        // Fallback to calculated dimensions
+        imageWidth.value = uvttInfo.value!.gridCols * uvttInfo.value!.pixelsPerGrid
+        imageHeight.value = uvttInfo.value!.gridRows * uvttInfo.value!.pixelsPerGrid
+      }
+      img.src = imageData
+    } catch (err) {
+      console.error('Failed to parse UVTT file:', err)
+      errorMessage.value = 'Failed to parse UVTT file. Please check the file format.'
+      clearFile()
+    }
+  }
+  reader.onerror = () => {
+    errorMessage.value = 'Failed to read file.'
+    clearFile()
+  }
+  reader.readAsText(file)
+}
+
+function processImageFile(file: File) {
   const reader = new FileReader()
   reader.onload = (e) => {
     previewUrl.value = e.target?.result as string
@@ -187,6 +266,7 @@ function clearFile() {
   previewUrl.value = null
   imageWidth.value = null
   imageHeight.value = null
+  uvttInfo.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -202,15 +282,14 @@ async function handleUpload() {
     // Convert file to base64
     const base64Data = await fileToBase64(selectedFile.value)
 
-    const response = await invoke<{ success: boolean; error?: string }>('upload_map', {
+    // Use upload_map_v2 for all files (handles both UVTT and images)
+    const response = await invoke<{ success: boolean; error?: string; data?: unknown }>('upload_map_v2', {
       request: {
         campaign_id: props.campaignId,
         module_id: props.moduleId ?? null,
         name: mapName.value.trim(),
-        image_data: base64Data,
-        filename: selectedFile.value.name,
-        width_px: imageWidth.value,
-        height_px: imageHeight.value
+        file_data: base64Data,
+        filename: selectedFile.value.name
       }
     })
 
@@ -246,6 +325,7 @@ function resetForm() {
   clearFile()
   mapName.value = ''
   errorMessage.value = ''
+  uvttInfo.value = null
 }
 
 function handleClose() {
@@ -417,6 +497,30 @@ watch(() => props.visible, (visible) => {
 .clear-btn svg {
   width: 16px;
   height: 16px;
+}
+
+.uvtt-badge {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+}
+
+.uvtt-label {
+  color: #10b981;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.uvtt-stats {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .form-group {
