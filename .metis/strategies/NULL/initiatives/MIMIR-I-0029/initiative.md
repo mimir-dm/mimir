@@ -4,14 +4,14 @@ level: initiative
 title: "Frontend Modal System Consolidation"
 short_code: "MIMIR-I-0029"
 created_at: 2025-12-29T14:50:21.505678+00:00
-updated_at: 2025-12-29T14:50:21.505678+00:00
+updated_at: 2025-12-29T15:12:59.731358+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/decompose"
 
 
 exit_criteria_met: false
@@ -97,9 +97,108 @@ This leads to inconsistent UX, duplicated code, and maintenance burden when upda
 ### Deployment Diagrams
 {Describe or link to deployment diagrams - for infrastructure}
 
+## Discovery Findings
+
+### CSS File Analysis
+
+| File | Lines | Location | Container Class | Overlay Style |
+|------|-------|----------|-----------------|---------------|
+| `modals.css` | 300 | `styles/components/` | `.modal-content` | `rgba(0,0,0,0.8)` |
+| `base-modal.css` | 356 | `styles/components/` | `.modal-container` | `var(--color-overlay)` + blur |
+
+**Import order in `main.css`:**
+- Line 17: `@import './components/modals.css';`
+- Line 30: `@import './components/base-modal.css';`
+
+**Conflict:** Both define `.modal-overlay` - `base-modal.css` wins due to later import order.
+
+**Recommendation:** Keep `base-modal.css` (BEM naming, exit animations, variants, print styles). Merge unique `modals.css` styles, then delete it.
+
+### Components with Inline Modal Template (17 files)
+
+All use pattern: `<div class="modal-overlay">` → `<div class="modal-content|dialog-content|wizard-content">`
+
+| Component | Nested Modals | Container Class | Notes |
+|-----------|---------------|-----------------|-------|
+| BookManagementModal | Yes (delete) | modal-content | |
+| CampaignManagementModal | Yes (delete) | modal-content | |
+| PlayerManager | Yes (2 dialogs) | modal-content, dialog-content | |
+| MapUploadModal | No | modal-content | |
+| MapGridConfigModal | No | modal-content | |
+| CreateModuleModal | No | modal-content | Simple |
+| MapTokenSetupModal | No | modal-content | |
+| QuickAddTokenModal | No | modal-content | |
+| PdfPreviewModal | No | modal-content | Large modal |
+| CharacterCreationWizard | No | wizard-content | Multi-step |
+| LevelUpDialog | No | dialog-content | |
+| InventoryManager | No | dialog-content | |
+| ChatSidebar | Yes (delete) | modal-content | |
+| ReaderView | No | modal-content | D&D content |
+| ModulePlayView | No | modal-content | D&D content |
+| ModuleListView | No | modal-content | Simple |
+| BaseModal | No | modal-content | **Keep as-is** (specialized) |
+
+### Components with Scoped Modal CSS (13 files)
+
+Each reimplements `.modal-overlay` styles in `<style scoped>`:
+- BookManagementModal, CampaignManagementModal, PlayerManager
+- MapUploadModal, MapGridConfigModal, MapTokenSetupModal, QuickAddTokenModal  
+- PdfPreviewModal, CharacterCreationWizard, LevelUpDialog, InventoryManager
+- ModuleListView, ModulePlayView
+
+### BaseModal.vue Analysis
+
+**Current purpose:** Specialized D&D content modal with:
+- `v-html` rendering of formatted content
+- Cross-reference click handling (creature, spell, item, etc.)
+- Emits `reference-click` events for navigation
+
+**Decision:** Leave as-is (non-goal to refactor). New `AppModal.vue` will be separate.
+
 ## Detailed Design **[REQUIRED]**
 
-{Technical approach and implementation details}
+### AppModal.vue Component Design
+
+```vue
+<template>
+  <Teleport to="body">
+    <div v-if="visible" class="modal-overlay" @click.self="handleOverlayClick">
+      <div class="modal-container" :class="sizeClass">
+        <div v-if="$slots.header || title" class="modal-header">
+          <slot name="header">
+            <h3 class="modal-header__title">{{ title }}</h3>
+          </slot>
+          <button v-if="closable" class="modal-header__close" @click="close">×</button>
+        </div>
+        <div class="modal-content" :class="{ 'modal-content--no-padding': noPadding }">
+          <slot></slot>
+        </div>
+        <div v-if="$slots.footer" class="modal-footer">
+          <slot name="footer"></slot>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</template>
+```
+
+**Props:**
+- `visible: boolean` - Show/hide modal
+- `title?: string` - Header title (optional if using header slot)
+- `size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'` - Modal width
+- `closable?: boolean` - Show close button (default: true)
+- `closeOnOverlay?: boolean` - Close on overlay click (default: true)
+- `noPadding?: boolean` - Remove body padding
+
+**Emits:**
+- `close` - When modal should close
+- `update:visible` - For v-model support
+
+**Features:**
+- Teleport to body (proper stacking)
+- Focus trap (accessibility)
+- Escape key handling
+- Prevent body scroll when open
 
 ## UI/UX Design **[CONDITIONAL: Frontend Initiative]**
 
@@ -141,32 +240,72 @@ This leads to inconsistent UX, duplicated code, and maintenance burden when upda
 
 ## Alternatives Considered **[REQUIRED]**
 
-{Alternative approaches and why they were rejected}
+### 1. Use Vue UI Library (Vuetify, PrimeVue, etc.)
+**Rejected:** Would require significant refactoring, adds large dependency, conflicts with existing custom design system.
+
+### 2. Keep Both CSS Files, Fix Naming Conflicts
+**Rejected:** Doesn't address root cause. Still have duplicate class definitions and confusing which to use.
+
+### 3. Extend BaseModal.vue to Be General-Purpose
+**Rejected:** BaseModal has specialized D&D content logic (v-html, reference click handling). Making it general-purpose would complicate it. Better to have two separate components with clear purposes.
+
+### 4. Migrate All Modals at Once (Big Bang)
+**Rejected:** High risk, hard to test. Incremental migration allows validation at each step.
+
+**Chosen approach:** Create new `AppModal.vue`, keep `base-modal.css` as canonical styles, migrate incrementally.
 
 ## Implementation Plan **[REQUIRED]**
 
-**Phase 1: CSS Consolidation**
-- Merge `modals.css` and `base-modal.css` into unified `modals.css`
-- Remove `base-modal.css` import from `main.css`
-- Verify no visual regressions
+### Phase 1: CSS Consolidation
+1. Audit `modals.css` for any unique styles not in `base-modal.css`
+2. Merge necessary styles (`.modal-actions`, form enhancements) into `base-modal.css`
+3. Update class references: `.modal-content` → `.modal-container` where needed
+4. Remove `modals.css` import from `main.css`
+5. Delete `modals.css`
+6. Verify no visual regressions
 
-**Phase 2: Create AppModal Component**
-- Create `AppModal.vue` with slots: header, default (body), footer
-- Props: visible, title, size (sm/md/lg/xl), closable
-- Emit: close
-- Handle overlay click, escape key, focus trap
+### Phase 2: Create AppModal Component
+1. Create `AppModal.vue` in `components/shared/`
+2. Implement props: visible, title, size, closable, closeOnOverlay, noPadding
+3. Implement slots: header, default, footer
+4. Add keyboard handling (Escape to close)
+5. Add focus trap for accessibility
+6. Add body scroll lock when modal open
+7. Use `<Teleport to="body">` for proper z-index stacking
 
-**Phase 3: Migrate Modals (incremental)**
-- Start with simpler modals (CreateModuleModal, MapUploadModal)
-- Migrate management modals (BookManagementModal, CampaignManagementModal)
-- Migrate complex modals (CharacterCreationWizard, etc.)
-- Remove scoped CSS as each modal is migrated
+### Phase 3: Migrate Modals (incremental by complexity)
 
-**Affected Components (17):**
-- BookManagementModal, CampaignManagementModal
-- MapGridConfigModal, MapUploadModal, CreateModuleModal
-- CharacterCreationWizard, LevelUpDialog, InventoryManager
-- MapTokenSetupModal, QuickAddTokenModal
-- PdfPreviewModal, ChatSidebar (delete modal)
-- ReaderView, ModulePlayView, ModuleListView
-- SourceSearch, SearchView
+**Batch 1 - Simple modals (low risk):**
+- CreateModuleModal
+- ModuleListView (create modal)
+
+**Batch 2 - Standard modals:**
+- MapUploadModal
+- MapGridConfigModal
+- QuickAddTokenModal
+- MapTokenSetupModal
+
+**Batch 3 - Management modals (nested delete dialogs):**
+- BookManagementModal
+- CampaignManagementModal
+- PlayerManager
+- ChatSidebar
+
+**Batch 4 - Large/complex modals:**
+- PdfPreviewModal
+- CharacterCreationWizard
+- LevelUpDialog
+- InventoryManager
+
+**Batch 5 - D&D content modals (may need BaseModal):**
+- ReaderView
+- ModulePlayView
+
+### Migration Checklist Per Component
+- [ ] Replace inline modal template with `<AppModal>`
+- [ ] Remove scoped `.modal-overlay` CSS
+- [ ] Update container class to `.modal-container` variant
+- [ ] Test open/close behavior
+- [ ] Test overlay click
+- [ ] Test escape key
+- [ ] Verify styling matches original
