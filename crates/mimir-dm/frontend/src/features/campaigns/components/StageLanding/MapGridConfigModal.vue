@@ -1,17 +1,13 @@
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
-      <div class="modal-content" :class="{ 'expanded': gridType !== 'none' }">
-        <div class="modal-header">
-          <h2>Configure Grid - {{ map.name }}</h2>
-          <button class="close-btn" @click="handleClose">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="modal-body">
+  <AppModal
+    :visible="visible"
+    :title="`Configure Grid - ${map.name}`"
+    :size="gridType !== 'none' ? 'lg' : 'sm'"
+    :closable="!saving"
+    :close-on-overlay="!saving"
+    :close-on-escape="!saving"
+    @close="handleClose"
+  >
           <!-- Grid Type Selection -->
           <div class="form-group">
             <label>Grid Type</label>
@@ -249,22 +245,20 @@
               </div>
             </details>
           </div>
-        </div>
 
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="handleClose" :disabled="saving">Cancel</button>
-          <button class="btn-primary" @click="handleSave" :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save Grid Settings' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
+    <template #footer>
+      <button class="btn btn-secondary" @click="handleClose" :disabled="saving">Cancel</button>
+      <button class="btn btn-primary" @click="handleSave" :disabled="saving">
+        {{ saving ? 'Saving...' : 'Save Grid Settings' }}
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 
 interface Map {
   id: number
@@ -608,75 +602,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 450px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: max-width 0.2s ease;
-}
-
-.modal-content.expanded {
-  max-width: 800px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.close-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.close-btn:hover {
-  background: var(--color-base-200);
-  color: var(--color-text);
-}
-
-.close-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-.modal-body {
-  padding: var(--spacing-lg);
-  overflow-y: auto;
-}
-
+/* Grid editor form styles */
 .form-group {
   margin-bottom: var(--spacing-md);
 }
@@ -1009,48 +935,5 @@ onMounted(() => {
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   background: var(--color-background);
-}
-
-/* Footer */
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-secondary, .btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-secondary {
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  color: var(--color-text);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-surface);
-}
-
-.btn-primary {
-  border: none;
-  background: var(--color-primary-500);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.btn-primary:disabled, .btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>
