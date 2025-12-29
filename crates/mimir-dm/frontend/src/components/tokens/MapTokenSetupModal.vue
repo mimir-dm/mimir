@@ -1,17 +1,12 @@
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Token Setup - {{ map.name }}</h2>
-          <button class="close-btn" @click="handleClose">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="modal-body">
+  <AppModal
+    :visible="visible"
+    :title="`Token Setup - ${map.name}`"
+    size="xl"
+    no-padding
+    @close="handleClose"
+  >
+    <div class="token-setup-body">
           <!-- Token Palette (left side, scrollable) -->
           <div class="palette-wrapper">
             <TokenPalette
@@ -163,32 +158,32 @@
             </div>
           </div>
         </div>
-
-        <!-- Context Menu -->
-        <div
-          v-if="contextMenu.visible"
-          class="context-menu"
-          :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
-          @click.stop
-        >
-          <button @click="handleEditToken">Edit</button>
-          <button @click="handleToggleSelectedVisibility">
-            {{ contextMenu.token?.visible_to_players ? 'Hide from Players' : 'Show to Players' }}
-          </button>
-          <button class="danger" @click="handleDeleteFromContext">Delete</button>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="handleClose">Close</button>
-        </div>
       </div>
-    </div>
-  </Teleport>
+
+      <!-- Context Menu -->
+      <div
+        v-if="contextMenu.visible"
+        class="context-menu"
+        :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+        @click.stop
+      >
+        <button @click="handleEditToken">Edit</button>
+        <button @click="handleToggleSelectedVisibility">
+          {{ contextMenu.token?.visible_to_players ? 'Hide from Players' : 'Show to Players' }}
+        </button>
+        <button class="danger" @click="handleDeleteFromContext">Delete</button>
+      </div>
+
+    <template #footer>
+      <button class="btn btn-secondary" @click="handleClose">Close</button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 import TokenPalette from './TokenPalette.vue'
 import type { Token, CreateTokenRequest, TokenSize } from '@/types/api'
 import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
@@ -590,72 +585,15 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-  width: 95vw;
-  max-width: 1200px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.close-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.close-btn:hover {
-  background: var(--color-base-200);
-  color: var(--color-text);
-}
-
-.close-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-.modal-body {
+/* Token Setup Body Layout */
+.token-setup-body {
   display: flex;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   overflow: hidden;
   flex: 1;
-  min-height: 0; /* Allow flex child to shrink below content size */
+  min-height: 0;
+  height: 70vh;
 }
 
 .palette-wrapper {
@@ -948,29 +886,5 @@ onUnmounted(() => {
 
 .context-menu button.danger:hover {
   background: var(--color-error-100);
-}
-
-/* Footer */
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-secondary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: var(--color-surface);
 }
 </style>

@@ -1,106 +1,100 @@
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Upload Map</h2>
-          <button class="close-btn" @click="handleClose">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+  <AppModal
+    :visible="visible"
+    title="Upload Map"
+    size="md"
+    :closable="!uploading"
+    :close-on-overlay="!uploading"
+    :close-on-escape="!uploading"
+    @close="handleClose"
+  >
+    <!-- Drop Zone -->
+    <div
+      class="drop-zone"
+      :class="{ 'drag-over': isDragging, 'has-file': previewUrl }"
+      @dragover.prevent="isDragging = true"
+      @dragleave.prevent="isDragging = false"
+      @drop.prevent="handleDrop"
+      @click="triggerFileInput"
+    >
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/webp,.dd2vtt,.uvtt"
+        class="file-input"
+        @change="handleFileSelect"
+      />
 
-        <div class="modal-body">
-          <!-- Drop Zone -->
-          <div
-            class="drop-zone"
-            :class="{ 'drag-over': isDragging, 'has-file': previewUrl }"
-            @dragover.prevent="isDragging = true"
-            @dragleave.prevent="isDragging = false"
-            @drop.prevent="handleDrop"
-            @click="triggerFileInput"
-          >
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp,.dd2vtt,.uvtt"
-              class="file-input"
-              @change="handleFileSelect"
-            />
-
-            <div v-if="previewUrl" class="preview-container">
-              <img :src="previewUrl" :alt="mapName" class="preview-image" />
-              <button class="clear-btn" @click.stop="clearFile">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <!-- UVTT metadata badge -->
-              <div v-if="uvttInfo" class="uvtt-badge">
-                <span class="uvtt-label">UVTT</span>
-                <span class="uvtt-stats">{{ uvttInfo.walls }} walls · {{ uvttInfo.portals }} doors · {{ uvttInfo.lights }} lights</span>
-              </div>
-            </div>
-
-            <div v-else class="drop-prompt">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
-              <p class="drop-text">Drop map here or click to browse</p>
-              <p class="drop-hint">Supports UVTT (.dd2vtt), PNG, JPG, WebP</p>
-            </div>
-          </div>
-
-          <!-- Map Name Input -->
-          <div class="form-group">
-            <label for="map-name">Map Name</label>
-            <input
-              id="map-name"
-              v-model="mapName"
-              type="text"
-              class="form-input"
-              placeholder="e.g., Goblin Cave - Entrance"
-            />
-          </div>
-
-          <!-- Image Dimensions (read-only) -->
-          <div v-if="imageWidth && imageHeight" class="dimensions-info">
-            <span>Image Size: {{ imageWidth }} x {{ imageHeight }} px</span>
-          </div>
-
-          <!-- Error Message -->
-          <div v-if="errorMessage" class="error-message">
-            {{ errorMessage }}
-          </div>
-
-          <!-- Upload Progress Message -->
-          <div v-if="uploading" class="upload-progress">
-            <div class="progress-spinner"></div>
-            <span>Processing image... This may take a moment for large files.</span>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="handleClose" :disabled="uploading">
-            Cancel
-          </button>
-          <button
-            class="btn-primary"
-            @click="handleUpload"
-            :disabled="!canUpload || uploading"
-          >
-            {{ uploading ? 'Uploading...' : 'Upload Map' }}
-          </button>
+      <div v-if="previewUrl" class="preview-container">
+        <img :src="previewUrl" :alt="mapName" class="preview-image" />
+        <button class="clear-btn" @click.stop="clearFile">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <!-- UVTT metadata badge -->
+        <div v-if="uvttInfo" class="uvtt-badge">
+          <span class="uvtt-label">UVTT</span>
+          <span class="uvtt-stats">{{ uvttInfo.walls }} walls · {{ uvttInfo.portals }} doors · {{ uvttInfo.lights }} lights</span>
         </div>
       </div>
+
+      <div v-else class="drop-prompt">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        <p class="drop-text">Drop map here or click to browse</p>
+        <p class="drop-hint">Supports UVTT (.dd2vtt), PNG, JPG, WebP</p>
+      </div>
     </div>
-  </Teleport>
+
+    <!-- Map Name Input -->
+    <div class="form-group">
+      <label for="map-name">Map Name</label>
+      <input
+        id="map-name"
+        v-model="mapName"
+        type="text"
+        class="form-input"
+        placeholder="e.g., Goblin Cave - Entrance"
+      />
+    </div>
+
+    <!-- Image Dimensions (read-only) -->
+    <div v-if="imageWidth && imageHeight" class="dimensions-info">
+      <span>Image Size: {{ imageWidth }} x {{ imageHeight }} px</span>
+    </div>
+
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Upload Progress Message -->
+    <div v-if="uploading" class="upload-progress">
+      <div class="progress-spinner"></div>
+      <span>Processing image... This may take a moment for large files.</span>
+    </div>
+
+    <template #footer>
+      <button class="btn btn-secondary" @click="handleClose" :disabled="uploading">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        @click="handleUpload"
+        :disabled="!canUpload || uploading"
+      >
+        {{ uploading ? 'Uploading...' : 'Upload Map' }}
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import AppModal from '@/components/shared/AppModal.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -344,72 +338,7 @@ watch(() => props.visible, (visible) => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.close-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.close-btn:hover {
-  background: var(--color-base-200);
-  color: var(--color-text);
-}
-
-.close-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-.modal-body {
-  padding: var(--spacing-lg);
-  overflow-y: auto;
-}
-
+/* Drop zone styles */
 .drop-zone {
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-md);
@@ -593,49 +522,5 @@ watch(() => props.visible, (visible) => {
   to {
     transform: rotate(360deg);
   }
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-secondary,
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.btn-secondary {
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  color: var(--color-text);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-surface);
-}
-
-.btn-primary {
-  border: none;
-  background: var(--color-primary-500);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

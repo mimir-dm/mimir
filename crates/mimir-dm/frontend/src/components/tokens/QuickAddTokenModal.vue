@@ -1,13 +1,10 @@
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Quick Add Token</h2>
-          <button class="close-btn" @click="$emit('close')">×</button>
-        </div>
-
-        <div class="modal-body">
+  <AppModal
+    :visible="visible"
+    title="Quick Add Token"
+    size="md"
+    @close="$emit('close')"
+  >
           <!-- Monster Search -->
           <div class="form-group">
             <label>Search Monsters</label>
@@ -122,21 +119,18 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="$emit('close')">Cancel</button>
-          <button
-            class="btn-primary"
-            :disabled="!selectedMonster"
-            @click="handleAdd"
-          >
-            Add to Map
-          </button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
+    <template #footer>
+      <button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+      <button
+        class="btn btn-primary"
+        :disabled="!selectedMonster"
+        @click="handleAdd"
+      >
+        Add to Map
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
@@ -144,6 +138,7 @@ import { ref, watch, nextTick } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { TokenSize, CreateTokenRequest, VisionType } from '@/types/api'
 import { VISION_PRESETS } from '@/types/api'
+import AppModal from '@/components/shared/AppModal.vue'
 
 interface MonsterResult {
   id: number
@@ -285,63 +280,7 @@ function handleAdd() {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 480px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.close-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: none;
-  color: var(--color-text-muted);
-  font-size: 1.25rem;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.close-btn:hover {
-  background: var(--color-base-200);
-  color: var(--color-text);
-}
-
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-}
-
+/* Token search form styles */
 .form-group {
   margin-bottom: var(--spacing-md);
 }
@@ -527,49 +466,6 @@ function handleAdd() {
 
 .toggle input:checked + .toggle-slider::before {
   transform: translateX(20px);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-secondary,
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.btn-secondary {
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  color: var(--color-text);
-}
-
-.btn-secondary:hover {
-  background: var(--color-base-200);
-}
-
-.btn-primary {
-  border: none;
-  background: var(--color-primary-500);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Vision Section */
