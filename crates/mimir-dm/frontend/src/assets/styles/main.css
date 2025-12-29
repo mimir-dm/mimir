@@ -27,7 +27,6 @@
 
 /* Import consolidated component utilities - AFTER tables.css to override */
 @import './components/catalog-tables.css';
-@import './components/base-modal.css';
 @import './components/form-inputs.css';
 @import './components/chat.css';
 
