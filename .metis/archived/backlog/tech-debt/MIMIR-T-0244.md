@@ -1,18 +1,18 @@
 ---
-id: audit-and-replace-unwrap-expect
+id: unify-maps-rs-and-maps-v2-rs-into
 level: task
-title: "Audit and replace unwrap()/expect() calls with proper error handling"
-short_code: "MIMIR-T-0173"
-created_at: 2025-12-18T14:25:21.040613+00:00
-updated_at: 2025-12-18T14:25:21.040613+00:00
+title: "Unify maps.rs and maps_v2.rs into single module"
+short_code: "MIMIR-T-0244"
+created_at: 2025-12-29T14:45:57.334097+00:00
+updated_at: 2025-12-29T15:06:24.172760+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -20,7 +20,7 @@ strategy_id: NULL
 initiative_id: NULL
 ---
 
-# Audit and replace unwrap()/expect() calls with proper error handling
+# Unify maps.rs and maps_v2.rs into single module
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
@@ -30,7 +30,7 @@ initiative_id: NULL
 
 ## Objective **[REQUIRED]**
 
-Audit ~316 `unwrap()` and `expect()` calls, replacing production code instances with proper error propagation using `?` operator. Target <50 remaining (test code and true invariants only).
+Consolidate `maps.rs` and `maps_v2.rs` into a single unified map module. The v2 file was created for UVTT upload support as a breaking change, but having both files creates confusion and maintenance burden.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -62,16 +62,24 @@ Audit ~316 `unwrap()` and `expect()` calls, replacing production code instances 
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: ~316 `unwrap()`/`expect()` calls scattered throughout crates. Many in production code paths where errors are recoverable but would cause panics. Example: `env::current_dir().expect("Could not get current directory")`.
-- **Benefits of Fixing**: Reduced panic risk in production, better error messages, more predictable failure modes, graceful degradation instead of crashes.
-- **Risk Assessment**: Medium risk - panics in production are bad UX and can lose user data. Each unwrap is a potential crash site.
+- **Current Problems**: Two separate map modules (maps.rs, maps_v2.rs) with overlapping functionality. Confusing which to use, duplicated code patterns.
+- **Benefits of Fixing**: Single source of truth for map handling, cleaner codebase, easier maintenance.
+- **Risk Assessment**: Low - primarily code organization, not behavioral changes.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] All production code `unwrap()`/`expect()` calls audited and categorized
-- [ ] Recoverable error cases converted to use `?` operator with proper error types
-- [ ] Remaining unwraps documented as true invariants (e.g., regex compilation, mutex locks)
-- [ ] <50 total unwrap/expect calls remaining in non-test code
+- [ ] Single maps.rs file with all map functionality
+- [ ] maps_v2.rs deleted
+- [ ] Dead code removed (old upload_map, update_map, get_uvtt_map_image)
+- [ ] Frontend updated to use renamed functions
 - [ ] All tests pass
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
@@ -127,7 +135,27 @@ Audit ~316 `unwrap()` and `expect()` calls, replacing production code instances 
 {Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
 
 ### Technical Approach
-{How this will be implemented}
+
+**Step 1: Move UVTT types to maps.rs**
+- UvttFile, UvttResolution, UvttPoint, UvttPortal, UvttLight, UvttEnvironment, UvttSummary
+- UploadMapRequestV2 → UploadMapRequest (replace old)
+- UploadMapResponseV2
+
+**Step 2: Move used functions to maps.rs**
+- upload_map_v2 → upload_map (rename)
+- get_uvtt_map
+
+**Step 3: Remove dead code from maps.rs**
+- Old upload_map function
+- update_map function (unused)
+
+**Step 4: Delete maps_v2.rs**
+
+**Step 5: Update mod.rs**
+- Remove maps_v2 module
+
+**Step 6: Update frontend**
+- MapUploadModal.vue: upload_map_v2 → upload_map
 
 ### Dependencies
 {Other tasks or systems this depends on}
@@ -137,4 +165,16 @@ Audit ~316 `unwrap()` and `expect()` calls, replacing production code instances 
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+### 2025-12-29: Completed
+
+**Changes made:**
+- Consolidated UVTT types (UvttFile, UvttResolution, UvttPoint, UvttPortal, UvttLight, UvttEnvironment, UvttSummary) into maps.rs
+- Consolidated request/response types (UploadMapRequest, UploadMapResponse) into maps.rs
+- Moved upload_map_v2 → upload_map (renamed)
+- Moved get_uvtt_map to maps.rs
+- Removed dead code: old upload_map, update_map, process_map_image, get_uvtt_map_image
+- Deleted maps_v2.rs
+- Updated mod.rs to remove maps_v2 module
+- Updated main.rs to remove v2 command registrations
+- Updated MapUploadModal.vue to use upload_map instead of upload_map_v2
+- All 5 map tests pass
