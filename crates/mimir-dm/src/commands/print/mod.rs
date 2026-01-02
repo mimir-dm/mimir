@@ -497,6 +497,164 @@ pub async fn generate_character_sheet(
     }
 }
 
+/// Options for exporting a character to PDF with composable sections
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CharacterExportOptions {
+    /// Include compact 2-page character sheet
+    #[serde(default = "default_true")]
+    pub include_compact_sheet: bool,
+    /// Include long form character details (personality, background, RP notes)
+    #[serde(default)]
+    pub include_long_form: bool,
+    /// Include spell cards (silently no-op if no spells)
+    #[serde(default = "default_true")]
+    pub include_spell_cards: bool,
+    /// Include detailed equipment list with descriptions
+    #[serde(default)]
+    pub include_equipment_detail: bool,
+}
+
+impl Default for CharacterExportOptions {
+    fn default() -> Self {
+        Self {
+            include_compact_sheet: true,
+            include_long_form: false,
+            include_spell_cards: true,
+            include_equipment_detail: false,
+        }
+    }
+}
+
+/// Export a character to PDF with composable sections.
+///
+/// Allows users to select which sections to include:
+/// - Compact Sheet (2-page WotC-style)
+/// - Long Form (personality, background, RP notes)
+/// - Spell Cards (silently skipped if no spells)
+/// - Equipment Detail (full inventory with descriptions)
+///
+/// Sections appear in a fixed order regardless of selection order.
+#[tauri::command]
+pub async fn export_character(
+    state: State<'_, AppState>,
+    character_id: i32,
+    options: Option<CharacterExportOptions>,
+) -> Result<ApiResponse<PrintResult>, String> {
+    use mimir_dm_core::models::catalog::Spell;
+    use mimir_dm_core::models::catalog::SpellFilters;
+    use mimir_dm_core::services::{CharacterService, SpellService};
+
+    let opts = options.unwrap_or_default();
+    info!(
+        "Exporting character {} with options: compact={}, long_form={}, spells={}, equipment={}",
+        character_id,
+        opts.include_compact_sheet,
+        opts.include_long_form,
+        opts.include_spell_cards,
+        opts.include_equipment_detail
+    );
+
+    // Get character data from database
+    let mut conn = state
+        .db
+        .get_connection()
+        .map_err(|e| format!("Database error: {}", e))?;
+
+    let mut char_service = CharacterService::new(&mut conn);
+    let (_character, character_data) = char_service
+        .get_character(character_id)
+        .map_err(|e| format!("Failed to get character: {}", e))?;
+
+    // Collect spells if spell cards are requested
+    let mut spell_details: Vec<Spell> = Vec::new();
+
+    if opts.include_spell_cards && !character_data.classes.is_empty() {
+        let mut spell_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        // Process each class the character has
+        for class_level in &character_data.classes {
+            let max_spell_level = calculate_max_spell_level(&class_level.class_name, class_level.level);
+
+            if max_spell_level > 0 {
+                let levels: Vec<i32> = (0..=max_spell_level).collect();
+
+                let filters = SpellFilters {
+                    query: None,
+                    levels,
+                    schools: Vec::new(),
+                    sources: Vec::new(),
+                    tags: Vec::new(),
+                    classes: vec![class_level.class_name.clone()],
+                    limit: None,
+                    offset: None,
+                };
+
+                match SpellService::search_spells(&mut spell_conn, filters) {
+                    Ok(summaries) => {
+                        for summary in summaries {
+                            match SpellService::get_spell_details(&mut spell_conn, &summary.name, &summary.source) {
+                                Ok(Some(spell)) => {
+                                    spell_details.push(spell);
+                                }
+                                Ok(None) => {
+                                    debug!("Spell not found in catalog: {} from {}", summary.name, summary.source);
+                                }
+                                Err(e) => {
+                                    error!("Failed to fetch spell {}: {}", summary.name, e);
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        error!("Failed to search spells for class {}: {}", class_level.class_name, e);
+                    }
+                }
+            }
+        }
+
+        // Sort and dedupe spells
+        spell_details.sort_by(|a, b| {
+            a.level.cmp(&b.level).then_with(|| a.name.cmp(&b.name))
+        });
+        spell_details.dedup_by(|a, b| a.name == b.name && a.source == b.source);
+
+        info!(
+            "Fetched {} total spell details for character export",
+            spell_details.len()
+        );
+    }
+
+    // Build PDF using export_character_pdf
+    use mimir_dm_print::{export_character_pdf, CharacterExportOptions as PrintExportOptions};
+
+    let templates_root = get_templates_root();
+    let print_options = PrintExportOptions {
+        include_compact_sheet: opts.include_compact_sheet,
+        include_long_form: opts.include_long_form,
+        include_spell_cards: opts.include_spell_cards,
+        include_equipment_detail: opts.include_equipment_detail,
+    };
+
+    match export_character_pdf(character_data, spell_details, templates_root, print_options) {
+        Ok(pdf_bytes) => {
+            let size_bytes = pdf_bytes.len();
+            let pdf_base64 = base64::Engine::encode(
+                &base64::engine::general_purpose::STANDARD,
+                &pdf_bytes,
+            );
+            info!("Character export generated ({} bytes)", size_bytes);
+            Ok(ApiResponse::success(PrintResult { pdf_base64, size_bytes }))
+        }
+        Err(e) => {
+            error!("Failed to export character: {:?}", e);
+            Ok(ApiResponse::error(format!("Failed to generate PDF: {}", e)))
+        }
+    }
+}
+
 /// Save a PDF to the file system.
 ///
 /// # Parameters

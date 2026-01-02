@@ -45,15 +45,16 @@ pub mod service;
 pub mod world;
 
 pub use campaign::{build_campaign_pdf, build_single_document_pdf, CampaignExportData, ExportOptions};
-pub use character::generate_character_sheet_pdf;
+pub use character::{export_character_pdf, generate_character_sheet_pdf, CharacterExportOptions};
 pub use maps::{generate_map_pdf, slice_map_into_tiles, MapPdfOptions};
 
 pub use builder::{DocumentBuilder, DocumentConfig, RenderContext, Renderable, VirtualFileRegistry};
 pub use error::{PrintError, Result};
 pub use sections::{
-    CharacterSheetSection, CharacterSummarySection, EncounterSection, MapPreview, MarkdownSection,
-    MonsterAppendix, MonsterCardSection, MonsterStatBlockSection, NpcAppendix, NpcIndexCardSection,
-    SpellCardsSection, SpellListSection, TileData, TiledMapSection, TokenCutoutSheet,
+    CharacterLongFormSection, CharacterSheetSection, CharacterSummarySection, CompactSheetSection,
+    EncounterSection, EquipmentDetailSection, MapPreview, MarkdownSection, MonsterAppendix,
+    MonsterCardSection, MonsterStatBlockSection, NpcAppendix, NpcIndexCardSection, SpellCardsSection,
+    SpellListSection, TileData, TiledMapSection, TokenCutoutSheet,
 };
 pub use map_renderer::{
     render_map, render_map_for_print, MapPrintOptions, RenderMap, RenderToken, RenderedMap,
