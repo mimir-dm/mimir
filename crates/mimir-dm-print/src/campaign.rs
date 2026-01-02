@@ -27,25 +27,31 @@ pub struct ExportOptions {
     /// Include NPC appendix
     pub include_npcs: bool,
 
-    // Map Preview options
-    /// Include map previews (fit to single page)
-    pub include_map_previews: bool,
+    // Campaign Maps (overview/world maps)
+    /// Include campaign map previews (fit to single page)
+    pub include_campaign_map_previews: bool,
+    /// Include campaign tiled maps (1"=5ft scale)
+    pub include_campaign_tiled_maps: bool,
+
+    // Module Maps (battle maps with tokens)
+    /// Include module map previews (fit to single page)
+    pub include_module_map_previews: bool,
+    /// Include module tiled maps (1"=5ft scale)
+    pub include_module_tiled_maps: bool,
+    /// Include token cutouts (from module maps)
+    pub include_token_cutouts: bool,
+
+    // Shared rendering options
     /// Show grid overlay on previews
     pub preview_grid: bool,
     /// Show LOS walls on previews
     pub preview_los_walls: bool,
     /// Show starting positions on previews
     pub preview_positions: bool,
-
-    // Map Play options
-    /// Include tiled maps (1"=5ft scale)
-    pub include_tiled_maps: bool,
     /// Show grid overlay on tiles
     pub play_grid: bool,
     /// Show LOS walls on tiles
     pub play_los_walls: bool,
-    /// Include token cutouts
-    pub include_token_cutouts: bool,
 }
 
 impl ExportOptions {
@@ -55,14 +61,16 @@ impl ExportOptions {
             include_toc: true,
             include_monsters: true,
             include_npcs: true,
-            include_map_previews: true,
+            include_campaign_map_previews: true,
+            include_campaign_tiled_maps: false,
+            include_module_map_previews: true,
+            include_module_tiled_maps: false,
+            include_token_cutouts: false,
             preview_grid: true,
             preview_los_walls: false,
             preview_positions: false,
-            include_tiled_maps: false,
             play_grid: true,
             play_los_walls: false,
-            include_token_cutouts: false,
         }
     }
 
@@ -72,14 +80,16 @@ impl ExportOptions {
             include_toc: false,
             include_monsters: false,
             include_npcs: false,
-            include_map_previews: false,
+            include_campaign_map_previews: false,
+            include_campaign_tiled_maps: false,
+            include_module_map_previews: false,
+            include_module_tiled_maps: true,
+            include_token_cutouts: true,
             preview_grid: true,
             preview_los_walls: false,
             preview_positions: false,
-            include_tiled_maps: true,
             play_grid: true,
             play_los_walls: false,
-            include_token_cutouts: true,
         }
     }
 
@@ -89,14 +99,16 @@ impl ExportOptions {
             include_toc: true,
             include_monsters: true,
             include_npcs: true,
-            include_map_previews: true,
+            include_campaign_map_previews: true,
+            include_campaign_tiled_maps: false,
+            include_module_map_previews: true,
+            include_module_tiled_maps: true,
+            include_token_cutouts: true,
             preview_grid: true,
             preview_los_walls: false,
             preview_positions: true,
-            include_tiled_maps: true,
             play_grid: true,
             play_los_walls: false,
-            include_token_cutouts: true,
         }
     }
 }
@@ -111,8 +123,10 @@ pub struct CampaignExportData {
     pub monsters: Option<Value>,
     /// NPC data (JSON array)
     pub npcs: Option<Value>,
-    /// Map data with tokens
-    pub maps: Vec<(RenderMap, Vec<RenderToken>)>,
+    /// Campaign-level maps (overview/world maps, typically no tokens)
+    pub campaign_maps: Vec<(RenderMap, Vec<RenderToken>)>,
+    /// Module maps (battle maps with tokens)
+    pub module_maps: Vec<(RenderMap, Vec<RenderToken>)>,
     /// Base path for resolving files
     pub base_path: PathBuf,
     /// Path to templates directory
@@ -126,9 +140,10 @@ pub struct CampaignExportData {
 #[instrument(skip(data), fields(name = %data.name, doc_count = data.documents.len()))]
 pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> Result<Vec<u8>> {
     info!(
-        "Building campaign PDF: {} documents, {} maps",
+        "Building campaign PDF: {} documents, {} campaign maps, {} module maps",
         data.documents.len(),
-        data.maps.len()
+        data.campaign_maps.len(),
+        data.module_maps.len()
     );
 
     let context = RenderContext::new(std::env::temp_dir().join("mimir-export"))
@@ -155,17 +170,45 @@ pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> R
         }
     }
 
-    // Add map previews
-    if options.include_map_previews {
-        let preview_opts = MapPrintOptions {
-            show_grid: options.preview_grid,
-            show_los_walls: options.preview_los_walls,
-            show_positions: false, // Positions shown on separate page
-            ..Default::default()
-        };
+    // Shared preview options
+    let preview_opts = MapPrintOptions {
+        show_grid: options.preview_grid,
+        show_los_walls: options.preview_los_walls,
+        show_positions: false, // Positions shown on separate page
+        ..Default::default()
+    };
 
-        for (map, tokens) in &data.maps {
-            debug!("Adding map preview: {}", map.name);
+    // Add campaign map previews
+    if options.include_campaign_map_previews {
+        for (map, tokens) in &data.campaign_maps {
+            debug!("Adding campaign map preview: {}", map.name);
+            let section = MapPreview::new(map.clone(), tokens.clone(), data.base_path.clone())
+                .with_options(preview_opts.clone());
+            builder = builder.append(section);
+
+            // Add starting positions map if requested (separate page)
+            if options.preview_positions && !tokens.is_empty() {
+                let positions_opts = MapPrintOptions {
+                    show_grid: options.preview_grid,
+                    show_los_walls: options.preview_los_walls,
+                    show_positions: true,
+                    ..Default::default()
+                };
+
+                debug!("Adding starting positions map: {}", map.name);
+                let mut positions_map = map.clone();
+                positions_map.name = format!("{} - Starting Positions", map.name);
+                let positions_section = MapPreview::new(positions_map, tokens.clone(), data.base_path.clone())
+                    .with_options(positions_opts);
+                builder = builder.append(positions_section);
+            }
+        }
+    }
+
+    // Add module map previews
+    if options.include_module_map_previews {
+        for (map, tokens) in &data.module_maps {
+            debug!("Adding module map preview: {}", map.name);
             let section = MapPreview::new(map.clone(), tokens.clone(), data.base_path.clone())
                 .with_options(preview_opts.clone());
             builder = builder.append(section);
@@ -215,71 +258,35 @@ pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> R
         }
     }
 
-    // Add tiled maps for physical play (using pre-sliced tiles like maps.rs)
-    if options.include_tiled_maps {
-        // Default pixels per grid for letter paper at 1"=1 grid
-        const PIXELS_PER_GRID: u32 = 54;
+    // Default pixels per grid for letter paper at 1"=1 grid
+    const PIXELS_PER_GRID: u32 = 54;
 
-        let play_opts = MapPrintOptions {
-            show_grid: options.play_grid,
-            show_los_walls: options.play_los_walls,
-            show_positions: false, // No position markers on play tiles
-            pixels_per_grid: PIXELS_PER_GRID,
-            ..Default::default()
-        };
+    let play_opts = MapPrintOptions {
+        show_grid: options.play_grid,
+        show_los_walls: options.play_los_walls,
+        show_positions: false, // No position markers on play tiles
+        pixels_per_grid: PIXELS_PER_GRID,
+        ..Default::default()
+    };
 
-        for (map, _tokens) in &data.maps {
-            debug!("Adding tiled map: {}", map.name);
-
-            // Load map image from file path
-            let file_path = PathBuf::from(&map.image_path);
-            let image_bytes = match load_image_from_file(&file_path) {
-                Ok(bytes) => bytes,
-                Err(e) => {
-                    tracing::warn!("Failed to load map image for tiled map: {}", e);
-                    continue;
-                }
-            };
-            let image_base64 = STANDARD.encode(&image_bytes);
-
-            // Render without tokens (physical tokens used during play)
-            let rendered = match render_map_for_print(
-                map,
-                &[], // No tokens on play tiles
-                &data.base_path,
-                &image_base64,
-                &play_opts,
-            ) {
-                Ok(r) => r,
-                Err(e) => {
-                    tracing::warn!("Failed to render map for tiling: {}", e);
-                    continue;
-                }
-            };
-
-            // Slice into tiles
-            let (tiles, tiles_x, tiles_y) = match slice_map_into_tiles(&rendered, PIXELS_PER_GRID) {
-                Ok(t) => t,
-                Err(e) => {
-                    tracing::warn!("Failed to slice map into tiles: {}", e);
-                    continue;
-                }
-            };
-
-            debug!("Sliced map into {}x{} tiles ({} total)", tiles_x, tiles_y, tiles.len());
-            builder = builder.append(TiledMapSection::from_tiles(
-                map.name.clone(),
-                tiles,
-                tiles_x,
-                tiles_y,
-            ));
+    // Add campaign tiled maps
+    if options.include_campaign_tiled_maps {
+        for (map, _tokens) in &data.campaign_maps {
+            builder = add_tiled_map(builder, map, &data.base_path, &play_opts)?;
         }
     }
 
-    // Add token cutouts
+    // Add module tiled maps
+    if options.include_module_tiled_maps {
+        for (map, _tokens) in &data.module_maps {
+            builder = add_tiled_map(builder, map, &data.base_path, &play_opts)?;
+        }
+    }
+
+    // Add token cutouts (only from module maps - they have tokens)
     if options.include_token_cutouts {
         let all_tokens: Vec<RenderToken> = data
-            .maps
+            .module_maps
             .iter()
             .flat_map(|(_, tokens)| tokens.clone())
             .collect();
@@ -292,6 +299,63 @@ pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> R
     }
 
     builder.to_pdf()
+}
+
+/// Helper function to add a tiled map to the document builder
+fn add_tiled_map(
+    mut builder: DocumentBuilder,
+    map: &RenderMap,
+    base_path: &PathBuf,
+    play_opts: &MapPrintOptions,
+) -> Result<DocumentBuilder> {
+    const PIXELS_PER_GRID: u32 = 54;
+
+    debug!("Adding tiled map: {}", map.name);
+
+    // Load map image from file path
+    let file_path = PathBuf::from(&map.image_path);
+    let image_bytes = match load_image_from_file(&file_path) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            tracing::warn!("Failed to load map image for tiled map: {}", e);
+            return Ok(builder);
+        }
+    };
+    let image_base64 = STANDARD.encode(&image_bytes);
+
+    // Render without tokens (physical tokens used during play)
+    let rendered = match render_map_for_print(
+        map,
+        &[], // No tokens on play tiles
+        base_path,
+        &image_base64,
+        play_opts,
+    ) {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::warn!("Failed to render map for tiling: {}", e);
+            return Ok(builder);
+        }
+    };
+
+    // Slice into tiles
+    let (tiles, tiles_x, tiles_y) = match slice_map_into_tiles(&rendered, PIXELS_PER_GRID) {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::warn!("Failed to slice map into tiles: {}", e);
+            return Ok(builder);
+        }
+    };
+
+    debug!("Sliced map into {}x{} tiles ({} total)", tiles_x, tiles_y, tiles.len());
+    builder = builder.append(TiledMapSection::from_tiles(
+        map.name.clone(),
+        tiles,
+        tiles_x,
+        tiles_y,
+    ));
+
+    Ok(builder)
 }
 
 /// Build a single document PDF
@@ -327,6 +391,8 @@ mod tests {
         let opts = ExportOptions::default();
         assert!(!opts.include_toc);
         assert!(!opts.include_monsters);
+        assert!(!opts.include_campaign_map_previews);
+        assert!(!opts.include_module_map_previews);
     }
 
     #[test]
@@ -335,15 +401,32 @@ mod tests {
         assert!(opts.include_toc);
         assert!(opts.include_monsters);
         assert!(opts.include_npcs);
-        assert!(opts.include_map_previews);
-        assert!(!opts.include_tiled_maps);
+        assert!(opts.include_campaign_map_previews);
+        assert!(opts.include_module_map_previews);
+        assert!(!opts.include_campaign_tiled_maps);
+        assert!(!opts.include_module_tiled_maps);
     }
 
     #[test]
     fn test_export_options_physical_play_kit() {
         let opts = ExportOptions::physical_play_kit();
         assert!(!opts.include_toc);
-        assert!(opts.include_tiled_maps);
+        assert!(!opts.include_campaign_map_previews);
+        assert!(!opts.include_module_map_previews);
+        assert!(opts.include_module_tiled_maps);
         assert!(opts.include_token_cutouts);
+    }
+
+    #[test]
+    fn test_export_options_complete() {
+        let opts = ExportOptions::complete();
+        assert!(opts.include_toc);
+        assert!(opts.include_monsters);
+        assert!(opts.include_npcs);
+        assert!(opts.include_campaign_map_previews);
+        assert!(opts.include_module_map_previews);
+        assert!(opts.include_module_tiled_maps);
+        assert!(opts.include_token_cutouts);
+        assert!(opts.preview_positions);
     }
 }

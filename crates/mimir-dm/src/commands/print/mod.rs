@@ -30,40 +30,38 @@ pub struct PrintResult {
     pub size_bytes: usize,
 }
 
-/// Map print mode
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum MapPrintMode {
-    /// Fit map to single page (for preview/reference)
-    Preview,
-    /// Print at true 1"=5ft scale (may tile across multiple pages)
-    Play,
-}
-
-impl Default for MapPrintMode {
-    fn default() -> Self {
-        Self::Preview
-    }
-}
-
 /// Options for printing a map
+///
+/// Both preview and play sections can be included in a single PDF.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapPrintOptions {
-    /// Print mode: preview (fit to page) or play (1"=5ft scale)
-    #[serde(default)]
-    pub mode: MapPrintMode,
-    /// Show grid overlay on the map
+    // Preview section
+    /// Include preview page (fit to single page)
     #[serde(default = "default_true")]
-    pub show_grid: bool,
-    /// Show LOS wall segments as red lines
+    pub include_preview: bool,
+    /// Show grid overlay on preview
     #[serde(default)]
-    pub show_los_walls: bool,
-    /// Show starting positions as numbered circles (instead of tokens)
+    pub preview_grid: bool,
+    /// Show LOS walls on preview
     #[serde(default)]
-    pub show_positions: bool,
-    /// Include token cutout sheets for printing
+    pub preview_los_walls: bool,
+    /// Show starting positions on preview
     #[serde(default)]
-    pub include_cutouts: bool,
+    pub preview_positions: bool,
+
+    // Play section
+    /// Include play tiles (1"=5ft scale)
+    #[serde(default)]
+    pub include_play: bool,
+    /// Show grid overlay on tiles
+    #[serde(default)]
+    pub play_grid: bool,
+    /// Show LOS walls on tiles
+    #[serde(default)]
+    pub play_los_walls: bool,
+    /// Include token cutout sheets
+    #[serde(default)]
+    pub play_cutouts: bool,
 }
 
 fn default_true() -> bool {
@@ -73,12 +71,181 @@ fn default_true() -> bool {
 impl Default for MapPrintOptions {
     fn default() -> Self {
         Self {
-            mode: MapPrintMode::Preview,
-            show_grid: true,
-            show_los_walls: false,
-            show_positions: false,
-            include_cutouts: false,
+            include_preview: true,
+            preview_grid: false,
+            preview_los_walls: false,
+            preview_positions: false,
+            include_play: false,
+            play_grid: false,
+            play_los_walls: false,
+            play_cutouts: false,
         }
+    }
+}
+
+/// Options for exporting a module to PDF
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModuleExportOptions {
+    // Content section
+    /// Include module documents and notes (default: true)
+    #[serde(default = "default_true")]
+    pub include_documents: bool,
+    /// Include monster stat blocks for tagged monsters (default: true)
+    #[serde(default = "default_true")]
+    pub include_monsters: bool,
+    /// Include campaign NPC sheets (default: false)
+    #[serde(default)]
+    pub include_npcs: bool,
+
+    // Map Preview section
+    /// Include map previews (fit to single page) (default: true)
+    #[serde(default = "default_true")]
+    pub include_preview: bool,
+    /// Show grid overlay on preview (default: true)
+    #[serde(default = "default_true")]
+    pub preview_grid: bool,
+    /// Show LOS walls on preview (default: false)
+    #[serde(default)]
+    pub preview_los_walls: bool,
+    /// Show starting positions on preview (default: false)
+    #[serde(default)]
+    pub preview_positions: bool,
+
+    // Map Play section
+    /// Include play tiles (1"=5ft scale) (default: false)
+    #[serde(default)]
+    pub include_play: bool,
+    /// Show grid overlay on tiles (default: true)
+    #[serde(default = "default_true")]
+    pub play_grid: bool,
+    /// Show LOS walls on tiles (default: false)
+    #[serde(default)]
+    pub play_los_walls: bool,
+    /// Include token cutout sheets (default: true when play enabled)
+    #[serde(default = "default_true")]
+    pub play_cutouts: bool,
+}
+
+impl Default for ModuleExportOptions {
+    fn default() -> Self {
+        Self {
+            include_documents: true,
+            include_monsters: true,
+            include_npcs: false,
+            include_preview: true,
+            preview_grid: true,
+            preview_los_walls: false,
+            preview_positions: false,
+            include_play: false,
+            play_grid: true,
+            play_los_walls: false,
+            play_cutouts: true,
+        }
+    }
+}
+
+/// Options for exporting a campaign to PDF
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CampaignExportOptions {
+    // Reference Document options
+    /// Include campaign-level documents (default: true)
+    #[serde(default = "default_true")]
+    pub include_campaign_docs: bool,
+    /// Include module content (documents and monsters) (default: true)
+    #[serde(default = "default_true")]
+    pub include_module_content: bool,
+    /// Include campaign NPC sheets (default: false)
+    #[serde(default)]
+    pub include_npcs: bool,
+
+    // Module Maps options (sub-options for module content)
+    /// Include module map previews scaled to fit one page (default: false)
+    #[serde(default)]
+    pub include_module_map_previews: bool,
+    /// Include module maps at 1"=5ft scale for tabletop play (default: false)
+    #[serde(default)]
+    pub include_module_tiled_maps: bool,
+    /// Include printable paper standees for module tokens (default: false)
+    #[serde(default)]
+    pub include_token_cutouts: bool,
+
+    // Campaign Maps options
+    /// Include campaign map previews scaled to fit one page (default: true)
+    #[serde(default = "default_true")]
+    pub include_campaign_map_previews: bool,
+    /// Include campaign maps at 1"=5ft scale for tabletop play (default: false)
+    #[serde(default)]
+    pub include_campaign_tiled_maps: bool,
+}
+
+impl Default for CampaignExportOptions {
+    fn default() -> Self {
+        Self {
+            include_campaign_docs: true,
+            include_module_content: true,
+            include_npcs: false,
+            include_module_map_previews: false,
+            include_module_tiled_maps: false,
+            include_token_cutouts: false,
+            include_campaign_map_previews: true,
+            include_campaign_tiled_maps: false,
+        }
+    }
+}
+
+/// Convert a database token to a RenderToken, handling WebP to PNG conversion.
+///
+/// Token images stored as WebP need to be converted to PNG for Typst compatibility.
+/// Converted images are cached in a temp directory.
+fn convert_token_to_render_token(
+    token: mimir_dm_core::models::campaign::tokens::Token,
+    books_dir: &std::path::Path,
+    temp_dir: &std::path::Path,
+) -> mimir_dm_print::RenderToken {
+    let resolved_image_path = token.image_path.and_then(|p| {
+        // Extract source from path (e.g., "img/bestiary/tokens/MM/Goblin.webp" -> "MM")
+        let source = p.split('/').nth(3).unwrap_or("MM");
+        let full_path = books_dir.join(source).join(&p);
+        if full_path.exists() {
+            // Check if it's a webp - Typst doesn't support webp, convert to PNG
+            if p.ends_with(".webp") {
+                // Convert webp to png in temp directory
+                let png_name = format!("{}_{}.png", source, p.replace('/', "_").replace(".webp", ""));
+                let png_path = temp_dir.join(&png_name);
+
+                // Only convert if not already cached
+                if !png_path.exists() {
+                    match image::open(&full_path) {
+                        Ok(img) => {
+                            if let Err(e) = img.save_with_format(&png_path, image::ImageFormat::Png) {
+                                debug!("Failed to convert webp to png: {}", e);
+                                return None;
+                            }
+                        }
+                        Err(e) => {
+                            debug!("Failed to open webp image: {}", e);
+                            return None;
+                        }
+                    }
+                }
+                Some(png_path.to_string_lossy().to_string())
+            } else {
+                Some(full_path.to_string_lossy().to_string())
+            }
+        } else {
+            debug!("Token image not found: {:?}", full_path);
+            None
+        }
+    });
+
+    mimir_dm_print::RenderToken {
+        name: token.name,
+        x: token.x,
+        y: token.y,
+        size: token.size,
+        color: token.color,
+        token_type: token.token_type,
+        image_path: resolved_image_path,
     }
 }
 
@@ -146,53 +313,6 @@ pub async fn list_print_templates() -> Result<ApiResponse<Vec<PrintTemplateInfo>
     }
 }
 
-/// Generate a PDF from a template.
-///
-/// # Parameters
-/// - `template_id` - Template identifier (e.g., "character/sheet.typ")
-/// - `data` - JSON data to inject into the template
-///
-/// # Returns
-/// Base64-encoded PDF data
-#[tauri::command]
-pub async fn generate_pdf(
-    template_id: String,
-    data: serde_json::Value,
-) -> Result<ApiResponse<PrintResult>, String> {
-    info!("Generating PDF from template: {}", template_id);
-    debug!("Template data: {:?}", data);
-
-    let service = create_print_service();
-
-    // Ensure template has .typ extension
-    let template_path = if template_id.ends_with(".typ") {
-        template_id
-    } else {
-        format!("{}.typ", template_id)
-    };
-
-    match service.render_to_pdf(&template_path, data) {
-        Ok(pdf_bytes) => {
-            let size_bytes = pdf_bytes.len();
-            let pdf_base64 = base64::Engine::encode(
-                &base64::engine::general_purpose::STANDARD,
-                &pdf_bytes,
-            );
-
-            info!("PDF generated successfully ({} bytes)", size_bytes);
-
-            Ok(ApiResponse::success(PrintResult {
-                pdf_base64,
-                size_bytes,
-            }))
-        }
-        Err(e) => {
-            error!("Failed to generate PDF: {:?}", e);
-            Ok(ApiResponse::error(format!("Failed to generate PDF: {}", e)))
-        }
-    }
-}
-
 /// Calculate the maximum spell level a character can cast based on class and level.
 /// Returns 0 for non-casters or if no spells are available.
 fn calculate_max_spell_level(class_name: &str, class_level: i32) -> i32 {
@@ -256,14 +376,12 @@ fn calculate_max_spell_level(class_name: &str, class_level: i32) -> i32 {
 pub async fn generate_character_sheet(
     state: State<'_, AppState>,
     character_id: i32,
-    template: Option<String>,
+    _template: Option<String>,
     include_spell_cards: Option<bool>,
 ) -> Result<ApiResponse<PrintResult>, String> {
-    use mimir_dm_core::models::catalog::class::{ClassFeature, SubclassFeature};
-    use mimir_dm_core::models::catalog::item::Item;
     use mimir_dm_core::models::catalog::Spell;
     use mimir_dm_core::models::catalog::SpellFilters;
-    use mimir_dm_core::services::{CharacterService, ClassService, ItemService, SpellService};
+    use mimir_dm_core::services::{CharacterService, SpellService};
 
     info!("Generating character sheet for character {}", character_id);
 
@@ -357,341 +475,26 @@ pub async fn generate_character_sheet(
         );
     }
 
-    // Fetch feature details from catalog
-    let mut class_feature_details: Vec<ClassFeature> = Vec::new();
-    let mut subclass_feature_details: Vec<SubclassFeature> = Vec::new();
+    // Build PDF directly using the core function
+    use mimir_dm_print::generate_character_sheet_pdf;
 
-    {
-        let mut feature_conn = state
-            .db
-            .get_connection()
-            .map_err(|e| format!("Database error: {}", e))?;
-        let mut class_service = ClassService::new(&mut feature_conn);
+    let templates_root = get_templates_root();
 
-        for feature_ref in &character_data.class_features {
-            if let Some(ref subclass_name) = feature_ref.subclass_name {
-                // Try to fetch as subclass feature
-                match class_service.get_subclass_feature(
-                    &feature_ref.name,
-                    &feature_ref.class_name,
-                    subclass_name,
-                    &feature_ref.source,
-                ) {
-                    Ok(Some(feature)) => {
-                        debug!(
-                            "Fetched subclass feature details for: {} ({} {})",
-                            feature_ref.name, feature_ref.class_name, subclass_name
-                        );
-                        subclass_feature_details.push(feature);
-                    }
-                    Ok(None) => {
-                        debug!(
-                            "Subclass feature not found in catalog: {} ({} {})",
-                            feature_ref.name, feature_ref.class_name, subclass_name
-                        );
-                    }
-                    Err(e) => {
-                        error!("Failed to fetch subclass feature {}: {}", feature_ref.name, e);
-                    }
-                }
-            } else {
-                // Fetch as class feature
-                match class_service.get_class_feature(
-                    &feature_ref.name,
-                    &feature_ref.class_name,
-                    &feature_ref.source,
-                ) {
-                    Ok(Some(feature)) => {
-                        debug!(
-                            "Fetched class feature details for: {} ({})",
-                            feature_ref.name, feature_ref.class_name
-                        );
-                        class_feature_details.push(feature);
-                    }
-                    Ok(None) => {
-                        debug!(
-                            "Class feature not found in catalog: {} ({})",
-                            feature_ref.name, feature_ref.class_name
-                        );
-                    }
-                    Err(e) => {
-                        error!("Failed to fetch class feature {}: {}", feature_ref.name, e);
-                    }
-                }
-            }
+    match generate_character_sheet_pdf(character_data, spell_details, templates_root) {
+        Ok(pdf_bytes) => {
+            let size_bytes = pdf_bytes.len();
+            let pdf_base64 = base64::Engine::encode(
+                &base64::engine::general_purpose::STANDARD,
+                &pdf_bytes,
+            );
+            info!("Character sheet generated ({} bytes)", size_bytes);
+            Ok(ApiResponse::success(PrintResult { pdf_base64, size_bytes }))
         }
-
-        info!(
-            "Fetched {} class features and {} subclass features for character sheet",
-            class_feature_details.len(),
-            subclass_feature_details.len()
-        );
+        Err(e) => {
+            error!("Failed to generate character sheet: {:?}", e);
+            Ok(ApiResponse::error(format!("Failed to generate PDF: {}", e)))
+        }
     }
-
-    // Fetch item details from catalog for inventory items
-    let mut item_details: Vec<Item> = Vec::new();
-    {
-        let mut item_conn = state
-            .db
-            .get_connection()
-            .map_err(|e| format!("Database error: {}", e))?;
-        let mut item_service = ItemService::new(&mut item_conn);
-
-        for inventory_item in &character_data.inventory {
-            let source = inventory_item.source.as_deref().unwrap_or("PHB");
-            match item_service.get_item_by_name_and_source(&inventory_item.name, source) {
-                Ok(Some(item)) => {
-                    debug!(
-                        "Fetched item details for: {} from {}",
-                        inventory_item.name, source
-                    );
-                    item_details.push(item);
-                }
-                Ok(None) => {
-                    debug!(
-                        "Item not found in catalog: {} from {}",
-                        inventory_item.name, source
-                    );
-                }
-                Err(e) => {
-                    error!("Failed to fetch item {}: {}", inventory_item.name, e);
-                }
-            }
-        }
-
-        info!(
-            "Fetched {} item details for character sheet",
-            item_details.len()
-        );
-    }
-
-    // Convert character to JSON
-    let character_json = serde_json::to_value(&character_data)
-        .map_err(|e| format!("Failed to serialize character: {}", e))?;
-
-    // Convert spells to JSON
-    let spells_json = serde_json::to_value(&spell_details)
-        .map_err(|e| format!("Failed to serialize spells: {}", e))?;
-
-    // Convert features to JSON
-    let class_features_json = serde_json::to_value(&class_feature_details)
-        .map_err(|e| format!("Failed to serialize class features: {}", e))?;
-    let subclass_features_json = serde_json::to_value(&subclass_feature_details)
-        .map_err(|e| format!("Failed to serialize subclass features: {}", e))?;
-
-    // Convert item details to JSON
-    let item_details_json = serde_json::to_value(&item_details)
-        .map_err(|e| format!("Failed to serialize item details: {}", e))?;
-
-    // Build combined data structure
-    let data = serde_json::json!({
-        "character": character_json,
-        "spells": spells_json,
-        "class_features_details": class_features_json,
-        "subclass_features_details": subclass_features_json,
-        "item_details": item_details_json,
-        "include_spell_cards": should_include_spells && !spell_details.is_empty()
-    });
-
-    // Always use the combined template which handles spells, equipment, and features
-    // The template conditionally shows sections based on what data is available
-    let template_id = template.unwrap_or_else(|| "character/sheet-with-spells".to_string());
-
-    generate_pdf(template_id, data).await
-}
-
-/// Generate a spell card or list PDF.
-///
-/// # Parameters
-/// - `template` - Template to use (card, list, cards-multiup)
-/// - `spells` - Array of spell data
-/// - `options` - Additional options (title, show_description, show_cut_lines)
-#[tauri::command]
-pub async fn generate_spell_pdf(
-    template: String,
-    spells: Vec<serde_json::Value>,
-    options: Option<serde_json::Value>,
-) -> Result<ApiResponse<PrintResult>, String> {
-    info!("Generating spell PDF with template: {}", template);
-
-    let template_id = format!("spells/{}", template);
-
-    // Build data structure based on template
-    let data = match template.as_str() {
-        "card" => {
-            // Single spell card - use first spell
-            spells.into_iter().next().unwrap_or(serde_json::json!({}))
-        }
-        "list" => {
-            let mut data = serde_json::json!({
-                "spells": spells
-            });
-            if let Some(serde_json::Value::Object(opts_map)) = options {
-                if let serde_json::Value::Object(ref mut data_map) = data {
-                    for (k, v) in opts_map {
-                        data_map.insert(k, v);
-                    }
-                }
-            }
-            data
-        }
-        "cards-multiup" => {
-            let mut data = serde_json::json!({
-                "spells": spells,
-                "show_cut_lines": true
-            });
-            if let Some(serde_json::Value::Object(opts_map)) = options {
-                if let serde_json::Value::Object(ref mut data_map) = data {
-                    for (k, v) in opts_map {
-                        data_map.insert(k, v);
-                    }
-                }
-            }
-            data
-        }
-        _ => serde_json::json!({ "spells": spells }),
-    };
-
-    generate_pdf(template_id, data).await
-}
-
-/// Generate a spell list PDF for a specific class.
-///
-/// Fetches all spells available to the specified class and generates
-/// a formatted spell list PDF organized by level.
-///
-/// # Parameters
-/// - `class_name` - Name of the class (e.g., "Wizard", "Cleric")
-/// - `include_description` - Whether to include spell descriptions (default: false)
-/// - `levels` - Optional array of levels to include (e.g., [0, 1, 2] for cantrips through 2nd level)
-///
-/// # Returns
-/// PrintResult with base64-encoded PDF
-#[tauri::command]
-pub async fn generate_class_spell_list(
-    state: State<'_, AppState>,
-    class_name: String,
-    include_description: Option<bool>,
-    levels: Option<Vec<i32>>,
-) -> Result<ApiResponse<PrintResult>, String> {
-    use mimir_dm_core::models::catalog::SpellFilters;
-    use mimir_dm_core::services::SpellService;
-
-    info!("Generating spell list PDF for class: {}", class_name);
-
-    // Fetch spells for the class
-    let mut conn = state
-        .db
-        .get_connection()
-        .map_err(|e| format!("Database error: {}", e))?;
-
-    let filters = SpellFilters {
-        query: None,
-        levels: levels.unwrap_or_default(),
-        schools: Vec::new(),
-        sources: Vec::new(),
-        tags: Vec::new(),
-        classes: vec![class_name.clone()],
-        limit: None,
-        offset: None,
-    };
-
-    let spells = SpellService::search_spells(&mut conn, filters)
-        .map_err(|e| format!("Failed to search spells: {}", e))?;
-
-    info!("Found {} spells for class {}", spells.len(), class_name);
-
-    if spells.is_empty() {
-        return Ok(ApiResponse::error(format!(
-            "No spells found for class: {}",
-            class_name
-        )));
-    }
-
-    // Convert SpellSummary to JSON for template
-    let spell_data: Vec<serde_json::Value> = spells
-        .into_iter()
-        .map(|s| {
-            serde_json::json!({
-                "name": s.name,
-                "level": s.level,
-                "school": s.school,
-                "casting_time": s.casting_time,
-                "range": s.range,
-                "components": s.components,
-                "concentration": s.concentration,
-                "ritual": s.ritual,
-                "description": s.description,
-                "source": s.source
-            })
-        })
-        .collect();
-
-    // Build template data
-    let data = serde_json::json!({
-        "title": format!("{} Spells", class_name),
-        "spells": spell_data,
-        "show_description": include_description.unwrap_or(false)
-    });
-
-    generate_pdf("spells/list".to_string(), data).await
-}
-
-/// Generate a monster stat block or card PDF.
-///
-/// # Parameters
-/// - `template` - Template to use (stat-block, card, encounter, cards-multiup)
-/// - `monsters` - Array of monster data
-/// - `options` - Additional options (title, notes, show_cut_lines)
-#[tauri::command]
-pub async fn generate_monster_pdf(
-    template: String,
-    monsters: Vec<serde_json::Value>,
-    options: Option<serde_json::Value>,
-) -> Result<ApiResponse<PrintResult>, String> {
-    info!("Generating monster PDF with template: {}", template);
-
-    let template_id = format!("monsters/{}", template);
-
-    // Build data structure based on template
-    let data = match template.as_str() {
-        "stat-block" | "card" => {
-            // Single monster - use first
-            monsters.into_iter().next().unwrap_or(serde_json::json!({}))
-        }
-        "encounter" | "cards-multiup" => {
-            let mut data = serde_json::json!({
-                "monsters": monsters
-            });
-            if let Some(serde_json::Value::Object(opts_map)) = options {
-                if let serde_json::Value::Object(ref mut data_map) = data {
-                    for (k, v) in opts_map {
-                        data_map.insert(k, v);
-                    }
-                }
-            }
-            data
-        }
-        _ => serde_json::json!({ "monsters": monsters }),
-    };
-
-    generate_pdf(template_id, data).await
-}
-
-/// Generate a session prep sheet or NPC card PDF.
-///
-/// # Parameters
-/// - `template` - Template to use (prep, npc-card, npc-cards-multiup, handout)
-/// - `data` - Session or NPC data
-#[tauri::command]
-pub async fn generate_session_pdf(
-    template: String,
-    data: serde_json::Value,
-) -> Result<ApiResponse<PrintResult>, String> {
-    info!("Generating session PDF with template: {}", template);
-
-    let template_id = format!("session/{}", template);
-    generate_pdf(template_id, data).await
 }
 
 /// Save a PDF to the file system.
@@ -731,13 +534,12 @@ pub async fn print_map(
 ) -> Result<ApiResponse<PrintResult>, String> {
     use crate::commands::campaign::maps::UvttFile;
     use mimir_dm_core::services::{MapService, TokenService};
-    use mimir_dm_print::{RenderMap, RenderToken};
+    use mimir_dm_print::{generate_map_pdf, MapPdfOptions, RenderMap, RenderToken};
 
     let options = options.unwrap_or_default();
     info!(
-        "Printing map {} with options: mode={:?}, grid={}, los={}, positions={}, cutouts={}",
-        map_id, options.mode, options.show_grid, options.show_los_walls,
-        options.show_positions, options.include_cutouts
+        "Printing map {} with options: preview={}, play={}",
+        map_id, options.include_preview, options.include_play
     );
 
     // Get the map from database
@@ -777,63 +579,13 @@ pub async fn print_map(
         .unwrap_or_default();
 
     // Convert to RenderToken format
-    // Resolve image paths to absolute paths for Typst
-    // Token images are stored in books/{source}/{image_path}
-    // WebP images need to be converted to PNG for Typst compatibility
     let books_dir = state.paths.data_dir.join("books");
     let temp_dir = std::env::temp_dir().join("mimir-token-images");
     std::fs::create_dir_all(&temp_dir).ok();
 
     let render_tokens: Vec<RenderToken> = tokens
         .into_iter()
-        .map(|t| {
-            // Resolve image path to absolute if present and file exists
-            // If file doesn't exist, return None to fall back to colored circle
-            let resolved_image_path = t.image_path.and_then(|p| {
-                // Extract source from path (e.g., "img/bestiary/tokens/MM/Goblin.webp" -> "MM")
-                let source = p.split('/').nth(3).unwrap_or("MM");
-                let full_path = books_dir.join(source).join(&p);
-                if full_path.exists() {
-                    // Check if it's a webp - Typst doesn't support webp, convert to PNG
-                    if p.ends_with(".webp") {
-                        // Convert webp to png in temp directory
-                        let png_name = format!("{}_{}.png", source, p.replace('/', "_").replace(".webp", ""));
-                        let png_path = temp_dir.join(&png_name);
-
-                        // Only convert if not already cached
-                        if !png_path.exists() {
-                            match image::open(&full_path) {
-                                Ok(img) => {
-                                    if let Err(e) = img.save_with_format(&png_path, image::ImageFormat::Png) {
-                                        debug!("Failed to convert webp to png: {}", e);
-                                        return None;
-                                    }
-                                }
-                                Err(e) => {
-                                    debug!("Failed to open webp image: {}", e);
-                                    return None;
-                                }
-                            }
-                        }
-                        Some(png_path.to_string_lossy().to_string())
-                    } else {
-                        Some(full_path.to_string_lossy().to_string())
-                    }
-                } else {
-                    debug!("Token image not found: {:?}", full_path);
-                    None
-                }
-            });
-            RenderToken {
-                name: t.name,
-                x: t.x,
-                y: t.y,
-                size: t.size,
-                color: t.color,
-                token_type: t.token_type,
-                image_path: resolved_image_path,
-            }
-        })
+        .map(|t| convert_token_to_render_token(t, &books_dir, &temp_dir))
         .collect();
 
     // Build RenderMap from database map
@@ -848,216 +600,45 @@ pub async fn print_map(
         grid_offset_y: map.grid_offset_y,
     };
 
-    // Build map print options for the renderer
-    let print_options = mimir_dm_print::MapPrintOptions {
-        show_grid: options.show_grid,
-        show_los_walls: options.show_los_walls,
-        show_positions: options.show_positions,
-        los_walls: if options.show_los_walls {
-            uvtt.line_of_sight.iter().map(|wall| {
-                wall.iter().map(|p| (p.x, p.y)).collect()
-            }).collect()
+    // Build options for PDF generation
+    let needs_los_walls = options.preview_los_walls || options.play_los_walls;
+    let pdf_options = MapPdfOptions {
+        include_preview: options.include_preview,
+        preview_grid: options.preview_grid,
+        preview_los_walls: options.preview_los_walls,
+        preview_positions: options.preview_positions,
+        include_play: options.include_play,
+        play_grid: options.play_grid,
+        play_los_walls: options.play_los_walls,
+        play_cutouts: options.play_cutouts,
+        los_walls: if needs_los_walls {
+            uvtt.line_of_sight
+                .iter()
+                .map(|wall| wall.iter().map(|p| (p.x, p.y)).collect())
+                .collect()
         } else {
             Vec::new()
         },
         pixels_per_grid: uvtt.resolution.pixels_per_grid,
     };
 
-    // Render the map
-    // In Play mode, don't render tokens on the map (users will use physical cutouts)
-    // In Preview mode, render tokens or position markers based on options
-    let tokens_for_render: &[RenderToken] = if options.mode == MapPrintMode::Play {
-        &[] // No tokens on play mode tiles
-    } else {
-        &render_tokens
-    };
+    // Generate PDF using core function
+    let templates_root = get_templates_root();
 
-    let rendered = mimir_dm_print::render_map_for_print(
+    match generate_map_pdf(
         &render_map,
-        tokens_for_render,
-        &maps_dir,
+        &render_tokens,
         &uvtt.image,
-        &print_options,
-    ).map_err(|e| format!("Failed to render map: {}", e))?;
-
-    // Create the print service
-    let service = create_print_service();
-
-    // Save rendered map image to temp file
-    let temp_dir = std::env::temp_dir().join("mimir-maps");
-    std::fs::create_dir_all(&temp_dir)
-        .map_err(|e| format!("Failed to create temp directory: {}", e))?;
-
-    let map_image_path = temp_dir.join(format!("{}_print.png", map_id));
-    std::fs::write(&map_image_path, &rendered.image_bytes)
-        .map_err(|e| format!("Failed to write temp map image: {}", e))?;
-
-    // Handle Play mode (tiled output at 1"=5ft scale)
-    let (template, data) = if options.mode == MapPrintMode::Play {
-        // Calculate tile dimensions
-        // At 1"=5ft scale: 1 grid square = 1 inch on paper
-        // Letter size printable area (landscape): ~10" x 7.5"
-        // So each tile can show ~10x7 grid squares
-        let ppg = uvtt.resolution.pixels_per_grid as f64;
-        let grid_width = (rendered.width_px as f64 / ppg).ceil() as u32;
-        let grid_height = (rendered.height_px as f64 / ppg).ceil() as u32;
-
-        // Printable area in grid squares (with some margin)
-        let tile_grid_width: u32 = 9;  // 9 inches = 9 grid squares
-        let tile_grid_height: u32 = 6; // 6 inches = 6 grid squares
-
-        // Calculate number of tiles needed
-        let tiles_x = ((grid_width as f64) / (tile_grid_width as f64)).ceil() as u32;
-        let tiles_y = ((grid_height as f64) / (tile_grid_height as f64)).ceil() as u32;
-
-        // Tile size in pixels
-        let tile_px_width = tile_grid_width * uvtt.resolution.pixels_per_grid;
-        let tile_px_height = tile_grid_height * uvtt.resolution.pixels_per_grid;
-
-        info!(
-            "Play mode: image {}x{} px, ppg={}, grid {}x{}, tile_px {}x{}, tiles {}x{} = {} total",
-            rendered.width_px, rendered.height_px, uvtt.resolution.pixels_per_grid,
-            grid_width, grid_height, tile_px_width, tile_px_height,
-            tiles_x, tiles_y, tiles_x * tiles_y
-        );
-
-        // Slice the rendered image into tiles
-        let img = image::load_from_memory(&rendered.image_bytes)
-            .map_err(|e| format!("Failed to load rendered image: {}", e))?;
-
-        let mut tile_paths: Vec<serde_json::Value> = Vec::new();
-
-        for ty in 0..tiles_y {
-            for tx in 0..tiles_x {
-                let x = tx * tile_px_width;
-                let y = ty * tile_px_height;
-
-                // Calculate actual tile dimensions (may be smaller at edges)
-                let w = std::cmp::min(tile_px_width, rendered.width_px.saturating_sub(x));
-                let h = std::cmp::min(tile_px_height, rendered.height_px.saturating_sub(y));
-
-                if w == 0 || h == 0 {
-                    debug!("Skipping tile ({},{}) - zero size: w={}, h={}", tx, ty, w, h);
-                    continue;
-                }
-
-                debug!("Tile ({},{}) crop: x={}, y={}, w={}, h={}", tx, ty, x, y, w, h);
-
-                // Crop the tile
-                let tile = img.crop_imm(x, y, w, h);
-
-                // Save tile to temp file
-                let tile_path = temp_dir.join(format!("{}_tile_{}_{}.png", map_id, tx, ty));
-                tile.save(&tile_path)
-                    .map_err(|e| format!("Failed to save tile: {}", e))?;
-
-                // Generate tile label (A1, A2, B1, B2, etc.)
-                let row_label = (b'A' + ty as u8) as char;
-                let col_label = tx + 1;
-                let tile_label = format!("{}{}", row_label, col_label);
-
-                // Determine neighbor labels
-                let left_neighbor = if tx > 0 {
-                    Some(format!("{}{}", row_label, tx))
-                } else {
-                    None
-                };
-                let right_neighbor = if tx < tiles_x - 1 {
-                    Some(format!("{}{}", row_label, tx + 2))
-                } else {
-                    None
-                };
-                let top_neighbor = if ty > 0 {
-                    Some(format!("{}{}", (b'A' + ty as u8 - 1) as char, col_label))
-                } else {
-                    None
-                };
-                let bottom_neighbor = if ty < tiles_y - 1 {
-                    Some(format!("{}{}", (b'A' + ty as u8 + 1) as char, col_label))
-                } else {
-                    None
-                };
-
-                tile_paths.push(serde_json::json!({
-                    "path": tile_path.to_string_lossy(),
-                    "label": tile_label,
-                    "row": ty,
-                    "col": tx,
-                    "width_px": w,
-                    "height_px": h,
-                    "left_neighbor": left_neighbor,
-                    "right_neighbor": right_neighbor,
-                    "top_neighbor": top_neighbor,
-                    "bottom_neighbor": bottom_neighbor,
-                }));
-            }
-        }
-
-        info!("Generated {} tile images for template", tile_paths.len());
-
-        let data = serde_json::json!({
-            "name": map.name,
-            "tiles": tile_paths,
-            "tiles_x": tiles_x,
-            "tiles_y": tiles_y,
-            "total_tiles": tile_paths.len(),
-            "grid_width": grid_width,
-            "grid_height": grid_height,
-            "tile_grid_width": tile_grid_width,
-            "tile_grid_height": tile_grid_height,
-            "include_cutouts": options.include_cutouts,
-            "tokens": render_tokens.iter().map(|t| {
-                serde_json::json!({
-                    "name": t.name,
-                    "size": t.size,
-                    "color": t.color,
-                    "token_type": t.token_type,
-                    "image_path": t.image_path,
-                })
-            }).collect::<Vec<_>>(),
-        });
-
-        info!(
-            "Tiled template data: include_cutouts={}, tokens_count={}, token_names={:?}",
-            options.include_cutouts,
-            render_tokens.len(),
-            render_tokens.iter().map(|t| &t.name).collect::<Vec<_>>()
-        );
-
-        ("map/tiled.typ", data)
-    } else {
-        // Preview mode - single page
-        let data = serde_json::json!({
-            "name": map.name,
-            "image_path": map_image_path.to_string_lossy(),
-            "width_px": rendered.width_px,
-            "height_px": rendered.height_px,
-            "mode": "preview",
-            "include_cutouts": options.include_cutouts,
-            "tokens": render_tokens.iter().map(|t| {
-                serde_json::json!({
-                    "name": t.name,
-                    "size": t.size,
-                    "color": t.color,
-                    "token_type": t.token_type,
-                    "image_path": t.image_path,
-                })
-            }).collect::<Vec<_>>(),
-        });
-
-        ("map/single.typ", data)
-    };
-
-    match service.render_to_pdf(template, data) {
+        &pdf_options,
+        temp_dir,
+        templates_root,
+    ) {
         Ok(pdf_bytes) => {
             let size_bytes = pdf_bytes.len();
             let pdf_base64 = base64::Engine::encode(
                 &base64::engine::general_purpose::STANDARD,
                 &pdf_bytes,
             );
-
-            // Clean up temp file
-            let _ = std::fs::remove_file(&map_image_path);
 
             info!("Map PDF generated successfully ({} bytes)", size_bytes);
 
@@ -1067,8 +648,6 @@ pub async fn print_map(
             }))
         }
         Err(e) => {
-            // Clean up temp file on error
-            let _ = std::fs::remove_file(&map_image_path);
             error!("Failed to generate map PDF: {:?}", e);
             Ok(ApiResponse::error(format!("Failed to generate PDF: {}", e)))
         }
@@ -1110,11 +689,13 @@ pub async fn export_campaign_document(
         .map_err(|e| format!("Failed to get campaign: {}", e))?
         .ok_or_else(|| format!("Campaign {} not found", document.campaign_id))?;
 
-    // Create the print service and render
-    let service = create_print_service();
-    let file_path = std::path::PathBuf::from(&document.file_path);
+    // Render single document using new campaign API
+    use mimir_dm_print::build_single_document_pdf;
 
-    match service.render_campaign_document(&file_path, Some(&campaign.name)) {
+    let file_path = std::path::PathBuf::from(&document.file_path);
+    let templates_root = get_templates_root();
+
+    match build_single_document_pdf(&file_path, Some(&campaign.name), templates_root) {
         Ok(pdf_bytes) => {
             let size_bytes = pdf_bytes.len();
             let pdf_base64 = base64::Engine::encode(
@@ -1140,30 +721,6 @@ pub async fn export_campaign_document(
             )))
         }
     }
-}
-
-/// Document data for PDF export (parsed from markdown)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DocumentExportData {
-    /// Document title
-    pub title: String,
-    /// Document type (e.g., "session_outline")
-    pub document_type: String,
-    /// Typst content (converted from markdown)
-    pub content: String,
-}
-
-/// Module data for PDF export
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModuleExportData {
-    /// Module name
-    pub name: String,
-    /// Module number
-    pub module_number: i32,
-    /// Documents belonging to this module
-    pub documents: Vec<DocumentExportData>,
-    /// Monsters in this module (full JSON data)
-    pub monsters: Vec<serde_json::Value>,
 }
 
 /// Strip 5etools tags from text content.
@@ -1311,6 +868,7 @@ fn strip_5etools_tags_from_json(value: &mut serde_json::Value) {
 ///
 /// # Parameters
 /// - `campaign_id` - Database ID of the campaign
+/// - `options` - Export options (optional, uses defaults if not provided)
 ///
 /// # Returns
 /// PrintResult with base64-encoded PDF
@@ -1318,14 +876,15 @@ fn strip_5etools_tags_from_json(value: &mut serde_json::Value) {
 pub async fn export_campaign_documents(
     state: State<'_, AppState>,
     campaign_id: i32,
+    options: Option<CampaignExportOptions>,
 ) -> Result<ApiResponse<PrintResult>, String> {
     use mimir_dm_core::dal::campaign::campaigns::CampaignRepository;
     use mimir_dm_core::dal::campaign::documents::DocumentRepository;
     use mimir_dm_core::models::catalog::class::{ClassFeature, SubclassFeature};
     use mimir_dm_core::services::{CharacterService, ClassService, DocumentService, ModuleMonsterService, ModuleService};
-    use mimir_dm_print::markdown::parse_campaign_document;
 
-    info!("Exporting all campaign {} documents to PDF", campaign_id);
+    let opts = options.unwrap_or_default();
+    info!("Exporting all campaign {} documents to PDF with options: {:?}", campaign_id, opts);
 
     // Get the campaign
     let mut conn = state
@@ -1339,200 +898,143 @@ pub async fn export_campaign_documents(
         .map_err(|e| format!("Failed to get campaign: {}", e))?
         .ok_or_else(|| format!("Campaign {} not found", campaign_id))?;
 
-    // Get all documents for the campaign
-    let mut doc_conn = state
-        .db
-        .get_connection()
-        .map_err(|e| format!("Database error: {}", e))?;
+    // Get campaign-level documents (if requested)
+    let campaign_file_paths: Vec<std::path::PathBuf> = if opts.include_campaign_docs {
+        let mut doc_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
 
-    let mut doc_service = DocumentService::new(&mut doc_conn);
-    let all_documents = doc_service
-        .get_campaign_documents(campaign_id)
-        .map_err(|e| format!("Failed to get documents: {}", e))?;
+        let mut doc_service = DocumentService::new(&mut doc_conn);
+        let all_documents = doc_service
+            .get_campaign_documents(campaign_id)
+            .map_err(|e| format!("Failed to get documents: {}", e))?;
 
-    // Separate campaign-level documents (no module_id) from module documents
-    let campaign_documents: Vec<_> = all_documents
-        .iter()
-        .filter(|d| d.module_id.is_none())
-        .collect();
-
-    // Sort campaign documents according to campaign construction flow
-    // Includes both required and optional documents from all stages
-    let document_order: Vec<&str> = vec![
-        // Concept stage
-        "campaign_pitch",
-        // Session Zero stage (required)
-        "starting_scenario",
-        "world_primer",
-        "character_guidelines",
-        "table_expectations",
-        "character_integration",
-        // Session Zero stage (optional)
-        "safety_tools",
-        "house_rules",
-        // Integration stage (required)
-        "campaign_bible",
-        // Integration stage (optional)
-        "player_secrets",
-        "faction_overview",
-        // Legacy document types
-        "major_npc_tracker",
-    ];
-
-    let get_order = |template_id: &str| -> usize {
-        document_order
+        // Separate campaign-level documents (no module_id) from module documents
+        let campaign_documents: Vec<_> = all_documents
             .iter()
-            .position(|&t| t == template_id)
-            .unwrap_or(usize::MAX)
+            .filter(|d| d.module_id.is_none())
+            .collect();
+
+        // Sort campaign documents according to campaign construction flow
+        // Includes both required and optional documents from all stages
+        let document_order: Vec<&str> = vec![
+            // Concept stage
+            "campaign_pitch",
+            // Session Zero stage (required)
+            "starting_scenario",
+            "world_primer",
+            "character_guidelines",
+            "table_expectations",
+            "character_integration",
+            // Session Zero stage (optional)
+            "safety_tools",
+            "house_rules",
+            // Integration stage (required)
+            "campaign_bible",
+            // Integration stage (optional)
+            "player_secrets",
+            "faction_overview",
+            // Legacy document types
+            "major_npc_tracker",
+        ];
+
+        let get_order = |template_id: &str| -> usize {
+            document_order
+                .iter()
+                .position(|&t| t == template_id)
+                .unwrap_or(usize::MAX)
+        };
+
+        let mut sorted_campaign_docs = campaign_documents.clone();
+        sorted_campaign_docs.sort_by(|a, b| {
+            let a_order = get_order(&a.template_id);
+            let b_order = get_order(&b.template_id);
+            match a_order.cmp(&b_order) {
+                std::cmp::Ordering::Equal => a.created_at.cmp(&b.created_at),
+                other => other,
+            }
+        });
+
+        // Collect file paths for campaign-level documents
+        sorted_campaign_docs
+            .iter()
+            .filter_map(|doc| {
+                let path = std::path::PathBuf::from(&doc.file_path);
+                if path.exists() {
+                    Some(path)
+                } else {
+                    debug!("Skipping non-existent document file: {:?}", path);
+                    None
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
     };
 
-    let mut sorted_campaign_docs = campaign_documents.clone();
-    sorted_campaign_docs.sort_by(|a, b| {
-        let a_order = get_order(&a.template_id);
-        let b_order = get_order(&b.template_id);
-        match a_order.cmp(&b_order) {
-            std::cmp::Ordering::Equal => a.created_at.cmp(&b.created_at),
-            other => other,
-        }
-    });
+    // Get module document file paths and monsters (if requested)
+    let mut module_file_paths: Vec<std::path::PathBuf> = Vec::new();
+    let mut all_monsters: Vec<serde_json::Value> = Vec::new();
 
-    // Collect file paths for campaign-level documents
-    let campaign_file_paths: Vec<std::path::PathBuf> = sorted_campaign_docs
-        .iter()
-        .filter_map(|doc| {
-            let path = std::path::PathBuf::from(&doc.file_path);
-            if path.exists() {
-                Some(path)
-            } else {
-                debug!("Skipping non-existent document file: {:?}", path);
-                None
-            }
-        })
-        .collect();
-
-    // Get modules with their documents and monsters
-    let mut module_conn = state
-        .db
-        .get_connection()
-        .map_err(|e| format!("Database error: {}", e))?;
-
-    let mut module_service = ModuleService::new(&mut module_conn);
-    let modules = module_service
-        .list_campaign_modules(campaign_id)
-        .map_err(|e| format!("Failed to get modules: {}", e))?;
-
-    let mut module_export_data: Vec<ModuleExportData> = Vec::new();
-
-    for module in modules {
-        // Get module documents
-        let mut module_doc_conn = state
+    if opts.include_module_content {
+        let mut module_conn = state
             .db
             .get_connection()
             .map_err(|e| format!("Database error: {}", e))?;
 
-        let module_docs = DocumentRepository::find_by_module(&mut module_doc_conn, module.id)
-            .map_err(|e| format!("Failed to get documents for module {}: {}", module.id, e))?;
+        let mut module_service = ModuleService::new(&mut module_conn);
+        let mut modules = module_service
+            .list_campaign_modules(campaign_id)
+            .map_err(|e| format!("Failed to get modules: {}", e))?;
 
-        // Parse module documents
-        let mut parsed_module_docs: Vec<DocumentExportData> = Vec::new();
-        for doc in module_docs {
-            let path = std::path::PathBuf::from(&doc.file_path);
-            if path.exists() {
-                match std::fs::read_to_string(&path) {
-                    Ok(markdown) => {
-                        match parse_campaign_document(&markdown) {
-                            Ok(parsed) => {
-                                let title = parsed
-                                    .frontmatter
-                                    .get("title")
-                                    .and_then(|v| v.as_str())
-                                    .unwrap_or(&doc.title)
-                                    .to_string();
+        // Sort modules by module_number
+        modules.sort_by_key(|m| m.module_number);
 
-                                let document_type = parsed
-                                    .frontmatter
-                                    .get("type")
-                                    .and_then(|v| v.as_str())
-                                    .unwrap_or(&doc.document_type)
-                                    .to_string();
+        for module in modules {
+            // Get module documents
+            let mut module_doc_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
 
-                                parsed_module_docs.push(DocumentExportData {
-                                    title,
-                                    document_type,
-                                    content: parsed.typst_content,
-                                });
-                            }
-                            Err(e) => {
-                                debug!("Failed to parse document {}: {}", doc.title, e);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        debug!("Failed to read document file {:?}: {}", path, e);
-                    }
+            let module_docs = DocumentRepository::find_by_module(&mut module_doc_conn, module.id)
+                .map_err(|e| format!("Failed to get documents for module {}: {}", module.id, e))?;
+
+            // Collect document file paths
+            for doc in module_docs {
+                let path = std::path::PathBuf::from(&doc.file_path);
+                if path.exists() {
+                    module_file_paths.push(path);
+                } else {
+                    debug!("Skipping non-existent document file: {:?}", path);
                 }
             }
-        }
 
-        // Check for play-notes.md file (created during play mode)
-        let play_notes_path = std::path::PathBuf::from(&campaign.directory_path)
-            .join("modules")
-            .join(format!("module_{:02}", module.module_number))
-            .join("play-notes.md");
+            // Check for play-notes.md file (created during play mode)
+            let play_notes_path = std::path::PathBuf::from(&campaign.directory_path)
+                .join("modules")
+                .join(format!("module_{:02}", module.module_number))
+                .join("play-notes.md");
 
-        if play_notes_path.exists() {
-            match std::fs::read_to_string(&play_notes_path) {
-                Ok(markdown) => {
-                    // Try to parse as a document with frontmatter
-                    match parse_campaign_document(&markdown) {
-                        Ok(parsed) => {
-                            let title = parsed
-                                .frontmatter
-                                .get("title")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("Play Notes")
-                                .to_string();
-
-                            parsed_module_docs.push(DocumentExportData {
-                                title,
-                                document_type: "session_notes".to_string(),
-                                content: parsed.typst_content,
-                            });
-                            debug!("Added play-notes.md for module {}", module.module_number);
-                        }
-                        Err(_) => {
-                            // If no frontmatter, treat as raw markdown
-                            let typst_content = mimir_dm_print::markdown::markdown_to_typst(&markdown);
-                            parsed_module_docs.push(DocumentExportData {
-                                title: "Play Notes".to_string(),
-                                document_type: "session_notes".to_string(),
-                                content: typst_content,
-                            });
-                            debug!("Added raw play-notes.md for module {}", module.module_number);
-                        }
-                    }
-                }
-                Err(e) => {
-                    debug!("Failed to read play-notes.md: {}", e);
-                }
+            if play_notes_path.exists() {
+                module_file_paths.push(play_notes_path);
+                debug!("Added play-notes.md for module {}", module.module_number);
             }
-        }
 
-        // Get module monsters
-        let mut monster_conn = state
-            .db
-            .get_connection()
-            .map_err(|e| format!("Database error: {}", e))?;
+            // Get module monsters
+            let mut monster_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
 
-        let mut monster_service = ModuleMonsterService::new(&mut monster_conn);
-        let monsters_with_data = monster_service
-            .get_monsters_with_data(module.id)
-            .map_err(|e| format!("Failed to get monsters for module {}: {}", module.id, e))?;
+            let mut monster_service = ModuleMonsterService::new(&mut monster_conn);
+            let monsters_with_data = monster_service
+                .get_monsters_with_data(module.id)
+                .map_err(|e| format!("Failed to get monsters for module {}: {}", module.id, e))?;
 
-        // Convert to JSON values
-        let monster_json: Vec<serde_json::Value> = monsters_with_data
-            .into_iter()
-            .map(|m| {
+            // Convert to JSON values and add to combined list
+            for m in monsters_with_data {
                 if let Some(data) = m.monster_data {
                     let mut monster = data;
                     if let serde_json::Value::Object(ref mut obj) = monster {
@@ -1548,51 +1050,40 @@ pub async fn export_campaign_documents(
                         }
                     }
                     strip_5etools_tags_from_json(&mut monster);
-                    monster
+                    all_monsters.push(monster);
                 } else {
-                    serde_json::json!({
+                    all_monsters.push(serde_json::json!({
                         "name": m.monster_name,
                         "source": m.monster_source,
                         "quantity": m.quantity,
                         "encounter_tag": m.encounter_tag
-                    })
+                    }));
                 }
-            })
-            .collect();
-
-        // Only include modules that have documents or monsters
-        if !parsed_module_docs.is_empty() || !monster_json.is_empty() {
-            module_export_data.push(ModuleExportData {
-                name: module.name.clone(),
-                module_number: module.module_number,
-                documents: parsed_module_docs,
-                monsters: monster_json,
-            });
+            }
         }
     }
 
-    // Sort modules by module_number
-    module_export_data.sort_by_key(|m| m.module_number);
-
-    // Fetch NPCs for the campaign
-    let mut npc_conn = state
-        .db
-        .get_connection()
-        .map_err(|e| format!("Database error: {}", e))?;
-
-    let mut char_service = CharacterService::new(&mut npc_conn);
-    let campaign_characters = char_service
-        .list_characters_for_campaign(campaign_id)
-        .map_err(|e| format!("Failed to get characters: {}", e))?;
-
-    // Filter to only NPCs and fetch their data
-    let npc_characters: Vec<_> = campaign_characters
-        .into_iter()
-        .filter(|c| c.is_npc())
-        .collect();
-
-    // Fetch character data for each NPC and convert to JSON
+    // Fetch NPCs for the campaign (if requested)
     let mut npcs_json: Vec<serde_json::Value> = Vec::new();
+
+    if opts.include_npcs {
+        let mut npc_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut char_service = CharacterService::new(&mut npc_conn);
+        let campaign_characters = char_service
+            .list_characters_for_campaign(campaign_id)
+            .map_err(|e| format!("Failed to get characters: {}", e))?;
+
+        // Filter to only NPCs and fetch their data
+        let npc_characters: Vec<_> = campaign_characters
+            .into_iter()
+            .filter(|c| c.is_npc())
+            .collect();
+
+        // Fetch character data for each NPC and convert to JSON
     for npc in npc_characters {
         let mut npc_data_conn = state
             .db
@@ -1659,12 +1150,16 @@ pub async fn export_campaign_documents(
                 debug!("Failed to get NPC data for {}: {}", npc.character_name, e);
             }
         }
+        }
     }
 
-    // Fetch maps and tokens for the campaign
-    let mut maps_data: Vec<(mimir_dm_print::RenderMap, Vec<mimir_dm_print::RenderToken>)> = Vec::new();
-    {
-        use mimir_dm_core::services::{MapService, TokenService};
+    // ==========================================================================
+    // CAMPAIGN MAPS (regional/world maps - no tokens)
+    // ==========================================================================
+    let mut campaign_maps_data: Vec<(mimir_dm_print::RenderMap, Vec<mimir_dm_print::RenderToken>)> = Vec::new();
+
+    if opts.include_campaign_map_previews || opts.include_campaign_tiled_maps {
+        use mimir_dm_core::services::MapService;
 
         let mut map_conn = state
             .db
@@ -1674,10 +1169,9 @@ pub async fn export_campaign_documents(
         let mut map_service = MapService::new(&mut map_conn);
         let maps = map_service
             .list_campaign_maps(campaign_id)
-            .map_err(|e| format!("Failed to get maps: {}", e))?;
+            .map_err(|e| format!("Failed to get campaign maps: {}", e))?;
 
         for map_summary in maps {
-            // Get full map details
             let mut detail_conn = state
                 .db
                 .get_connection()
@@ -1685,21 +1179,20 @@ pub async fn export_campaign_documents(
 
             let mut detail_service = MapService::new(&mut detail_conn);
             if let Ok(Some(map)) = detail_service.get_map(map_summary.id) {
-                // Get tokens for this map
-                let mut token_conn = state
-                    .db
-                    .get_connection()
-                    .map_err(|e| format!("Database error: {}", e))?;
+                // Resolve full path to map image
+                let map_image_full_path = if map.image_path.ends_with(".dd2vtt") || map.image_path.ends_with(".uvtt") {
+                    state.paths.data_dir
+                        .join("campaigns")
+                        .join(campaign_id.to_string())
+                        .join("maps")
+                        .join(&map.image_path)
+                } else {
+                    state.paths.data_dir.join("maps").join(&map.image_path)
+                };
 
-                let mut token_service = TokenService::new(&mut token_conn);
-                let tokens = token_service
-                    .list_tokens_for_map(map.id)
-                    .unwrap_or_default();
-
-                // Convert to RenderMap
                 let render_map = mimir_dm_print::RenderMap {
                     name: map.name.clone(),
-                    image_path: map.image_path.clone(),
+                    image_path: map_image_full_path.to_string_lossy().to_string(),
                     width_px: map.width_px,
                     height_px: map.height_px,
                     grid_type: map.grid_type.clone(),
@@ -1708,61 +1201,158 @@ pub async fn export_campaign_documents(
                     grid_offset_y: map.grid_offset_y,
                 };
 
-                // Convert tokens to RenderToken
-                // Token images are stored in books/{source}/{image_path}
-                let books_dir = state.paths.data_dir.join("books");
-                let render_tokens: Vec<mimir_dm_print::RenderToken> = tokens
-                    .into_iter()
-                    .map(|t| {
-                        let resolved_image_path = t.image_path.and_then(|p| {
-                            let source = p.split('/').nth(3).unwrap_or("MM");
-                            let full_path = books_dir.join(source).join(&p);
-                            if full_path.exists() {
-                                Some(full_path.to_string_lossy().to_string())
-                            } else {
-                                None
-                            }
-                        });
-                        mimir_dm_print::RenderToken {
-                            name: t.name,
-                            x: t.x,
-                            y: t.y,
-                            size: t.size,
-                            color: t.color,
-                            token_type: t.token_type,
-                            image_path: resolved_image_path,
-                        }
-                    })
-                    .collect();
-
-                maps_data.push((render_map, render_tokens));
+                // Campaign maps don't have tokens - pass empty vec
+                campaign_maps_data.push((render_map, Vec::new()));
             }
         }
     }
 
+    // ==========================================================================
+    // MODULE MAPS (dungeon/encounter maps - with tokens)
+    // ==========================================================================
+    let mut module_maps_data: Vec<(mimir_dm_print::RenderMap, Vec<mimir_dm_print::RenderToken>)> = Vec::new();
+
+    if opts.include_module_map_previews || opts.include_module_tiled_maps {
+        use mimir_dm_core::services::{MapService, TokenService};
+
+        // Get all modules for this campaign
+        let mut mod_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut mod_service = mimir_dm_core::services::ModuleService::new(&mut mod_conn);
+        let modules = mod_service
+            .list_campaign_modules(campaign_id)
+            .map_err(|e| format!("Failed to get modules: {}", e))?;
+
+        for module in modules {
+            let mut map_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
+
+            let mut map_service = MapService::new(&mut map_conn);
+            let maps = map_service
+                .list_module_maps(module.id)
+                .map_err(|e| format!("Failed to get module maps: {}", e))?;
+
+            for map_summary in maps {
+                let mut detail_conn = state
+                    .db
+                    .get_connection()
+                    .map_err(|e| format!("Database error: {}", e))?;
+
+                let mut detail_service = MapService::new(&mut detail_conn);
+                if let Ok(Some(map)) = detail_service.get_map(map_summary.id) {
+                    // Get tokens for this map
+                    let mut token_conn = state
+                        .db
+                        .get_connection()
+                        .map_err(|e| format!("Database error: {}", e))?;
+
+                    let mut token_service = TokenService::new(&mut token_conn);
+                    let tokens = token_service
+                        .list_tokens_for_map(map.id)
+                        .unwrap_or_default();
+
+                    // Resolve full path to map image
+                    let map_image_full_path = if map.image_path.ends_with(".dd2vtt") || map.image_path.ends_with(".uvtt") {
+                        state.paths.data_dir
+                            .join("modules")
+                            .join(module.id.to_string())
+                            .join("maps")
+                            .join(&map.image_path)
+                    } else {
+                        state.paths.data_dir.join("maps").join(&map.image_path)
+                    };
+
+                    let render_map = mimir_dm_print::RenderMap {
+                        name: map.name.clone(),
+                        image_path: map_image_full_path.to_string_lossy().to_string(),
+                        width_px: map.width_px,
+                        height_px: map.height_px,
+                        grid_type: map.grid_type.clone(),
+                        grid_size_px: map.grid_size_px,
+                        grid_offset_x: map.grid_offset_x,
+                        grid_offset_y: map.grid_offset_y,
+                    };
+
+                    // Convert tokens to RenderToken using shared helper
+                    let books_dir = state.paths.data_dir.join("books");
+                    let temp_dir = std::env::temp_dir().join("mimir-token-images");
+                    std::fs::create_dir_all(&temp_dir).ok();
+
+                    let render_tokens: Vec<mimir_dm_print::RenderToken> = tokens
+                        .into_iter()
+                        .map(|t| convert_token_to_render_token(t, &books_dir, &temp_dir))
+                        .collect();
+
+                    module_maps_data.push((render_map, render_tokens));
+                }
+            }
+        }
+    }
+
+    // Combine all documents in order: campaign docs first, then module docs
+    let mut all_documents: Vec<std::path::PathBuf> = campaign_file_paths;
+    all_documents.extend(module_file_paths);
+
     info!(
-        "Rendering {} campaign documents, {} modules, {} NPCs, and {} maps for campaign '{}'",
-        campaign_file_paths.len(),
-        module_export_data.len(),
+        "Rendering {} documents, {} monsters, {} NPCs, {} campaign maps, {} module maps for campaign '{}'",
+        all_documents.len(),
+        all_monsters.len(),
         npcs_json.len(),
-        maps_data.len(),
+        campaign_maps_data.len(),
+        module_maps_data.len(),
         campaign.name
     );
 
-    // Create the print service and render combined PDF
-    let service = create_print_service();
+    // Build PDF using new DocumentBuilder API
+    use mimir_dm_print::{build_campaign_pdf, CampaignExportData, ExportOptions};
 
-    // Convert module data to JSON
-    let modules_json = serde_json::to_value(&module_export_data)
-        .map_err(|e| format!("Failed to serialize module data: {}", e))?;
-
-    // Convert NPCs to JSON value
-    let npcs_value = serde_json::Value::Array(npcs_json);
-
-    // Get the campaign base path for resolving map images
     let campaign_base_path = std::path::PathBuf::from(&campaign.directory_path);
+    let templates_root = get_templates_root();
 
-    match service.render_campaign_combined_with_all(&campaign_file_paths, &campaign.name, modules_json, npcs_value, maps_data, &campaign_base_path) {
+    let export_data = CampaignExportData {
+        name: campaign.name.clone(),
+        documents: all_documents.clone(),
+        monsters: if all_monsters.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Array(all_monsters))
+        },
+        npcs: if npcs_json.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Array(npcs_json))
+        },
+        campaign_maps: campaign_maps_data,
+        module_maps: module_maps_data,
+        base_path: campaign_base_path,
+        templates_root,
+    };
+
+    let export_options = ExportOptions {
+        include_toc: true,
+        include_monsters: opts.include_module_content, // Monsters come from modules
+        include_npcs: opts.include_npcs,
+        // Campaign map options
+        include_campaign_map_previews: opts.include_campaign_map_previews,
+        include_campaign_tiled_maps: opts.include_campaign_tiled_maps,
+        // Module map options
+        include_module_map_previews: opts.include_module_map_previews,
+        include_module_tiled_maps: opts.include_module_tiled_maps,
+        include_token_cutouts: opts.include_token_cutouts,
+        // Shared rendering options
+        preview_grid: true,
+        preview_los_walls: false,
+        preview_positions: false,
+        play_grid: true,
+        play_los_walls: false,
+    };
+
+    match build_campaign_pdf(export_data, export_options) {
         Ok(pdf_bytes) => {
             let size_bytes = pdf_bytes.len();
             let pdf_base64 = base64::Engine::encode(
@@ -1771,10 +1361,9 @@ pub async fn export_campaign_documents(
             );
 
             info!(
-                "Combined campaign PDF generated successfully ({} bytes, {} campaign docs, {} modules)",
+                "Combined campaign PDF generated successfully ({} bytes, {} docs)",
                 size_bytes,
-                campaign_file_paths.len(),
-                module_export_data.len()
+                all_documents.len()
             );
 
             Ok(ApiResponse::success(PrintResult {
@@ -1796,6 +1385,7 @@ pub async fn export_campaign_documents(
 ///
 /// # Parameters
 /// - `module_id` - Database ID of the module
+/// - `options` - Export options (optional, uses defaults if not provided)
 ///
 /// # Returns
 /// PrintResult with base64-encoded PDF
@@ -1803,13 +1393,14 @@ pub async fn export_campaign_documents(
 pub async fn export_module_documents(
     state: State<'_, AppState>,
     module_id: i32,
+    options: Option<ModuleExportOptions>,
 ) -> Result<ApiResponse<PrintResult>, String> {
     use mimir_dm_core::dal::campaign::campaigns::CampaignRepository;
     use mimir_dm_core::dal::campaign::documents::DocumentRepository;
     use mimir_dm_core::services::{ModuleMonsterService, ModuleService};
-    use mimir_dm_print::markdown::parse_campaign_document;
 
-    info!("Exporting module {} documents to PDF", module_id);
+    let opts = options.unwrap_or_default();
+    info!("Exporting module {} documents to PDF with options: {:?}", module_id, opts);
 
     // Get the module
     let mut conn = state
@@ -1835,166 +1426,206 @@ pub async fn export_module_documents(
         .map_err(|e| format!("Failed to get campaign: {}", e))?
         .ok_or_else(|| format!("Campaign {} not found", module.campaign_id))?;
 
-    // Get module documents
-    let mut doc_conn = state
-        .db
-        .get_connection()
-        .map_err(|e| format!("Database error: {}", e))?;
+    // Get module document file paths (if requested)
+    let mut document_paths: Vec<std::path::PathBuf> = Vec::new();
 
-    let module_docs = DocumentRepository::find_by_module(&mut doc_conn, module_id)
-        .map_err(|e| format!("Failed to get documents for module {}: {}", module_id, e))?;
+    if opts.include_documents {
+        let mut doc_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
 
-    // Parse module documents
-    let mut parsed_module_docs: Vec<DocumentExportData> = Vec::new();
-    for doc in module_docs {
-        let path = std::path::PathBuf::from(&doc.file_path);
-        if path.exists() {
-            match std::fs::read_to_string(&path) {
-                Ok(markdown) => {
-                    match parse_campaign_document(&markdown) {
-                        Ok(parsed) => {
-                            let title = parsed
-                                .frontmatter
-                                .get("title")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or(&doc.title)
-                                .to_string();
+        let module_docs = DocumentRepository::find_by_module(&mut doc_conn, module_id)
+            .map_err(|e| format!("Failed to get documents for module {}: {}", module_id, e))?;
 
-                            let document_type = parsed
-                                .frontmatter
-                                .get("type")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or(&doc.document_type)
-                                .to_string();
-
-                            parsed_module_docs.push(DocumentExportData {
-                                title,
-                                document_type,
-                                content: parsed.typst_content,
-                            });
-                        }
-                        Err(e) => {
-                            debug!("Failed to parse document {}: {}", doc.title, e);
-                        }
-                    }
-                }
-                Err(e) => {
-                    debug!("Failed to read document file {:?}: {}", path, e);
-                }
-            }
-        }
-    }
-
-    // Check for play-notes.md file (created during play mode)
-    let play_notes_path = std::path::PathBuf::from(&campaign.directory_path)
-        .join("modules")
-        .join(format!("module_{:02}", module.module_number))
-        .join("play-notes.md");
-
-    if play_notes_path.exists() {
-        match std::fs::read_to_string(&play_notes_path) {
-            Ok(markdown) => {
-                // Try to parse as a document with frontmatter
-                match parse_campaign_document(&markdown) {
-                    Ok(parsed) => {
-                        let title = parsed
-                            .frontmatter
-                            .get("title")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("Play Notes")
-                            .to_string();
-
-                        parsed_module_docs.push(DocumentExportData {
-                            title,
-                            document_type: "session_notes".to_string(),
-                            content: parsed.typst_content,
-                        });
-                        debug!("Added play-notes.md for module {}", module.module_number);
-                    }
-                    Err(_) => {
-                        // If no frontmatter, treat as raw markdown
-                        let typst_content = mimir_dm_print::markdown::markdown_to_typst(&markdown);
-                        parsed_module_docs.push(DocumentExportData {
-                            title: "Play Notes".to_string(),
-                            document_type: "session_notes".to_string(),
-                            content: typst_content,
-                        });
-                        debug!("Added raw play-notes.md for module {}", module.module_number);
-                    }
-                }
-            }
-            Err(e) => {
-                debug!("Failed to read play-notes.md: {}", e);
-            }
-        }
-    }
-
-    // Get module monsters
-    let mut monster_conn = state
-        .db
-        .get_connection()
-        .map_err(|e| format!("Database error: {}", e))?;
-
-    let mut monster_service = ModuleMonsterService::new(&mut monster_conn);
-    let monsters_with_data = monster_service
-        .get_monsters_with_data(module_id)
-        .map_err(|e| format!("Failed to get monsters for module {}: {}", module_id, e))?;
-
-    // Convert to JSON values
-    let monster_json: Vec<serde_json::Value> = monsters_with_data
-        .into_iter()
-        .map(|m| {
-            if let Some(data) = m.monster_data {
-                let mut monster = data;
-                if let serde_json::Value::Object(ref mut obj) = monster {
-                    obj.insert(
-                        "quantity".to_string(),
-                        serde_json::Value::Number(m.quantity.into()),
-                    );
-                    if let Some(tag) = &m.encounter_tag {
-                        obj.insert(
-                            "encounter_tag".to_string(),
-                            serde_json::Value::String(tag.clone()),
-                        );
-                    }
-                }
-                strip_5etools_tags_from_json(&mut monster);
-                monster
+        // Collect document file paths
+        for doc in module_docs {
+            let path = std::path::PathBuf::from(&doc.file_path);
+            if path.exists() {
+                document_paths.push(path);
             } else {
-                serde_json::json!({
-                    "name": m.monster_name,
-                    "source": m.monster_source,
-                    "quantity": m.quantity,
-                    "encounter_tag": m.encounter_tag
-                })
+                debug!("Skipping non-existent document file: {:?}", path);
             }
-        })
-        .collect();
+        }
 
-    // Build module export data
-    let module_export = ModuleExportData {
-        name: module.name.clone(),
-        module_number: module.module_number,
-        documents: parsed_module_docs,
-        monsters: monster_json,
+        // Check for play-notes.md file (created during play mode)
+        let play_notes_path = std::path::PathBuf::from(&campaign.directory_path)
+            .join("modules")
+            .join(format!("module_{:02}", module.module_number))
+            .join("play-notes.md");
+
+        if play_notes_path.exists() {
+            document_paths.push(play_notes_path);
+            debug!("Added play-notes.md for module {}", module.module_number);
+        }
+    }
+
+    // Get module monsters (if requested)
+    let monster_json: Vec<serde_json::Value> = if opts.include_monsters {
+        let mut monster_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut monster_service = ModuleMonsterService::new(&mut monster_conn);
+        let monsters_with_data = monster_service
+            .get_monsters_with_data(module_id)
+            .map_err(|e| format!("Failed to get monsters for module {}: {}", module_id, e))?;
+
+        // Convert to JSON values
+        monsters_with_data
+            .into_iter()
+            .map(|m| {
+                if let Some(data) = m.monster_data {
+                    let mut monster = data;
+                    if let serde_json::Value::Object(ref mut obj) = monster {
+                        obj.insert(
+                            "quantity".to_string(),
+                            serde_json::Value::Number(m.quantity.into()),
+                        );
+                        if let Some(tag) = &m.encounter_tag {
+                            obj.insert(
+                                "encounter_tag".to_string(),
+                                serde_json::Value::String(tag.clone()),
+                            );
+                        }
+                    }
+                    strip_5etools_tags_from_json(&mut monster);
+                    monster
+                } else {
+                    serde_json::json!({
+                        "name": m.monster_name,
+                        "source": m.monster_source,
+                        "quantity": m.quantity,
+                        "encounter_tag": m.encounter_tag
+                    })
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
     };
 
+    // Fetch maps for this module (if map previews or play tiles are requested)
+    let mut maps_data: Vec<(mimir_dm_print::RenderMap, Vec<mimir_dm_print::RenderToken>)> = Vec::new();
+
+    if opts.include_preview || opts.include_play {
+        use mimir_dm_core::services::{MapService, TokenService};
+
+        let mut map_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut map_service = MapService::new(&mut map_conn);
+        let maps = map_service
+            .list_module_maps(module_id)
+            .map_err(|e| format!("Failed to get maps for module {}: {}", module_id, e))?;
+
+        for map in maps {
+            // Get tokens for this map
+            let mut token_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
+
+            let mut token_service = TokenService::new(&mut token_conn);
+            let tokens = token_service
+                .list_tokens_for_map(map.id)
+                .unwrap_or_default();
+
+            // Resolve full path to map image
+            let map_image_full_path = if map.image_path.ends_with(".dd2vtt") || map.image_path.ends_with(".uvtt") {
+                state.paths.data_dir
+                    .join("modules")
+                    .join(module_id.to_string())
+                    .join("maps")
+                    .join(&map.image_path)
+            } else {
+                state.paths.data_dir.join("maps").join(&map.image_path)
+            };
+
+            let render_map = mimir_dm_print::RenderMap {
+                name: map.name.clone(),
+                image_path: map_image_full_path.to_string_lossy().to_string(),
+                width_px: map.width_px,
+                height_px: map.height_px,
+                grid_type: map.grid_type.clone(),
+                grid_size_px: map.grid_size_px,
+                grid_offset_x: map.grid_offset_x,
+                grid_offset_y: map.grid_offset_y,
+            };
+
+            // Convert tokens to RenderToken using shared helper
+            let books_dir = state.paths.data_dir.join("books");
+            let temp_dir = std::env::temp_dir().join("mimir-token-images");
+            std::fs::create_dir_all(&temp_dir).ok();
+
+            let render_tokens: Vec<mimir_dm_print::RenderToken> = tokens
+                .into_iter()
+                .map(|t| convert_token_to_render_token(t, &books_dir, &temp_dir))
+                .collect();
+
+            maps_data.push((render_map, render_tokens));
+        }
+    }
+
     info!(
-        "Rendering module '{}' with {} documents and {} monsters",
+        "Rendering module '{}' with {} documents, {} monsters, {} maps",
         module.name,
-        module_export.documents.len(),
-        module_export.monsters.len()
+        document_paths.len(),
+        monster_json.len(),
+        maps_data.len()
     );
 
-    // Create the print service and render PDF
-    let service = create_print_service();
+    // Build PDF using new DocumentBuilder API
+    use mimir_dm_print::{build_campaign_pdf, CampaignExportData, ExportOptions};
 
-    // Convert module data to JSON - pass as single-element array so template can reuse same logic
-    let modules_json = serde_json::to_value(vec![module_export])
-        .map_err(|e| format!("Failed to serialize module data: {}", e))?;
+    let campaign_base_path = std::path::PathBuf::from(&campaign.directory_path);
+    let templates_root = get_templates_root();
 
-    // Use the combined template with no campaign docs, just the module
-    match service.render_campaign_combined_with_monsters(&[], &module.name, modules_json) {
+    let export_data = CampaignExportData {
+        name: module.name.clone(),
+        documents: document_paths.clone(),
+        monsters: if monster_json.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Array(monster_json))
+        },
+        npcs: None, // NPCs not yet implemented for module export
+        campaign_maps: Vec::new(), // Module export has no campaign-level maps
+        module_maps: maps_data,    // All maps are module maps
+        base_path: campaign_base_path,
+        templates_root,
+    };
+
+    if opts.include_npcs {
+        tracing::warn!(
+            "include_npcs was requested but is not yet implemented for module export. \
+            NPCs are campaign-scoped and will be added in a future update."
+        );
+    }
+
+    let export_options = ExportOptions {
+        include_toc: true,
+        include_monsters: opts.include_monsters,
+        include_npcs: false, // NPCs not yet implemented for module export
+        // Campaign map options (none for module export)
+        include_campaign_map_previews: false,
+        include_campaign_tiled_maps: false,
+        // Module map options
+        include_module_map_previews: opts.include_preview,
+        include_module_tiled_maps: opts.include_play,
+        include_token_cutouts: opts.include_play && opts.play_cutouts,
+        // Shared rendering options
+        preview_grid: opts.preview_grid,
+        preview_los_walls: opts.preview_los_walls,
+        preview_positions: opts.preview_positions,
+        play_grid: opts.play_grid,
+        play_los_walls: opts.play_los_walls,
+    };
+
+    match build_campaign_pdf(export_data, export_options) {
         Ok(pdf_bytes) => {
             let size_bytes = pdf_bytes.len();
             let pdf_base64 = base64::Engine::encode(
@@ -2003,8 +1634,9 @@ pub async fn export_module_documents(
             );
 
             info!(
-                "Module PDF generated successfully ({} bytes)",
-                size_bytes
+                "Module PDF generated successfully ({} bytes, {} docs)",
+                size_bytes,
+                document_paths.len()
             );
 
             Ok(ApiResponse::success(PrintResult {
