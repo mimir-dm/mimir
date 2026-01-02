@@ -277,6 +277,10 @@ impl Renderable for SpellCardsSection {
         let cards_per_page = 9;
         let total_pages = (self.spells.len() + cards_per_page - 1) / cards_per_page;
 
+        // Set tight margins to fit 3x3 grid of 2.5in x 3.5in cards
+        // 3 × 3.5in = 10.5in height, so need 0.25in top/bottom margins
+        typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
+
         for page_num in 0..total_pages {
             let start_idx = page_num * cards_per_page;
             let end_idx = std::cmp::min(start_idx + cards_per_page, self.spells.len());
@@ -343,6 +347,12 @@ fn escape_typst(s: &str) -> String {
         .replace('#', "\\#")
         .replace('$', "\\$")
         .replace('"', "\\\"")
+        .replace('_', "\\_")
+        .replace('<', "\\<")
+        .replace('>', "\\>")
+        .replace('{', "\\{")
+        .replace('}', "\\}")
+        .replace('@', "\\@")
 }
 
 #[cfg(test)]
@@ -374,5 +384,51 @@ mod tests {
         assert_eq!(SpellCardsSection::level_str(2), "2nd-level");
         assert_eq!(SpellCardsSection::level_str(3), "3rd-level");
         assert_eq!(SpellCardsSection::level_str(4), "4th-level");
+    }
+
+    #[test]
+    fn test_escape_typst_special_chars() {
+        // Angle brackets (some renderers convert 5etools tags to <damage>, etc.)
+        assert_eq!(escape_typst("<damage>"), "\\<damage\\>");
+        assert_eq!(escape_typst("<condition>blinded</condition>"), "\\<condition\\>blinded\\</condition\\>");
+
+        // Underscores (subscript markers)
+        assert_eq!(escape_typst("fire_damage"), "fire\\_damage");
+
+        // Brackets
+        assert_eq!(escape_typst("[test]"), "\\[test\\]");
+
+        // Hash (Typst code mode)
+        assert_eq!(escape_typst("#test"), "\\#test");
+
+        // 5etools tags with curly braces and @ symbol
+        assert_eq!(escape_typst("{@damage 1d6}"), "\\{\\@damage 1d6\\}");
+        assert_eq!(escape_typst("{@condition charmed}"), "\\{\\@condition charmed\\}");
+
+        // Combined with 5etools format
+        assert_eq!(
+            escape_typst("Deal {@damage 2d6} fire_damage"),
+            "Deal \\{\\@damage 2d6\\} fire\\_damage"
+        );
+    }
+
+    #[test]
+    fn test_spell_card_with_5etools_tags() {
+        let spells = vec![json!({
+            "name": "Acid Splash",
+            "level": 0,
+            "school": "Conjuration",
+            "description": "You hurl a bubble of acid. A target must succeed on a Dexterity saving throw or take {@damage 1d6} acid damage. The {@condition blinded} condition applies on a critical."
+        })];
+
+        let section = SpellCardsSection::new(spells);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // Verify 5etools tags are escaped
+        assert!(typst.contains("\\{\\@damage 1d6\\}"));
+        assert!(typst.contains("\\{\\@condition blinded\\}"));
+        // Should not contain unescaped curly braces/@ in description
+        assert!(!typst.contains("{@damage"));
     }
 }

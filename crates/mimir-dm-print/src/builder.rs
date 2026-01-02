@@ -138,6 +138,8 @@ pub trait Renderable: Send + Sync {
 pub struct DocumentConfig {
     /// Include table of contents
     pub include_toc: bool,
+    /// Include title page
+    pub include_title_page: bool,
     /// Include page numbers
     pub page_numbers: bool,
     /// Page margin in inches
@@ -150,6 +152,7 @@ impl Default for DocumentConfig {
     fn default() -> Self {
         Self {
             include_toc: false,
+            include_title_page: true,
             page_numbers: true,
             margin: 0.5, // Reduced for more drawing area
             font_size: 10.0,
@@ -198,6 +201,12 @@ impl DocumentBuilder {
     /// Enable or disable table of contents generation
     pub fn with_toc(mut self, include: bool) -> Self {
         self.config.include_toc = include;
+        self
+    }
+
+    /// Enable or disable title page
+    pub fn with_title_page(mut self, include: bool) -> Self {
+        self.config.include_title_page = include;
         self
     }
 
@@ -268,8 +277,10 @@ impl DocumentBuilder {
         // Document preamble with settings
         output.push_str(&self.build_preamble());
 
-        // Title page
-        output.push_str(&self.build_title_page());
+        // Title page (if enabled)
+        if self.config.include_title_page {
+            output.push_str(&self.build_title_page());
+        }
 
         // Table of contents (if enabled)
         if self.config.include_toc {
@@ -279,10 +290,13 @@ impl DocumentBuilder {
         // Track current margin to avoid redundant set commands
         let mut current_margin = self.config.margin;
 
+        // Determine if we need a page break before the first section
+        let has_preceding_content = self.config.include_title_page || self.config.include_toc;
+
         // Render each section
         for (i, section) in self.sections.iter().enumerate() {
-            // Page break before section (except first if no TOC)
-            if section.page_break_before() && (i > 0 || self.config.include_toc) {
+            // Page break before section (except first if no preceding content)
+            if section.page_break_before() && (i > 0 || has_preceding_content) {
                 output.push_str("\n#pagebreak()\n\n");
             }
 
@@ -296,13 +310,16 @@ impl DocumentBuilder {
                 current_margin = section_margin;
             }
 
-            // Add TOC anchor if section has a title
-            if let Some(title) = section.toc_title() {
-                // Create a heading that will appear in the outline
-                output.push_str(&format!(
-                    "\n#heading(level: 1, outlined: true)[{}]\n\n",
-                    escape_typst_string(&title)
-                ));
+            // Add TOC anchor if section has a title AND TOC is enabled
+            // (otherwise the heading just wastes space)
+            if self.config.include_toc {
+                if let Some(title) = section.toc_title() {
+                    // Create a heading that will appear in the outline
+                    output.push_str(&format!(
+                        "\n#heading(level: 1, outlined: true)[{}]\n\n",
+                        escape_typst_string(&title)
+                    ));
+                }
             }
 
             // Render section content
@@ -329,9 +346,9 @@ impl DocumentBuilder {
             self.config.margin
         ));
 
-        // Page numbers in footer
+        // Page numbers in footer (bottom right)
         if self.config.page_numbers {
-            preamble.push_str(", footer: context [#h(1fr) #counter(page).display() #h(1fr)]");
+            preamble.push_str(", footer: context [#h(1fr) #text(size: 9pt, fill: luma(100))[#counter(page).display()]]");
         }
 
         preamble.push_str(")\n");

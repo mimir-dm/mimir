@@ -908,6 +908,15 @@
       @close="showPdfPreview = false"
       @retry="printCharacter"
     />
+
+    <!-- Character Print Dialog -->
+    <CharacterPrintDialog
+      v-if="data"
+      :visible="showPrintDialog"
+      :character-id="characterId"
+      :character-name="data.character_name"
+      @close="showPrintDialog = false"
+    />
   </MainLayout>
 </template>
 
@@ -918,7 +927,7 @@ import { invoke } from '@tauri-apps/api/core'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
 import LevelUpDialog from '../components/LevelUpDialog.vue'
 import InventoryManager from '../components/InventoryManager.vue'
-import { PdfPreviewModal } from '../../../components/print'
+import { PdfPreviewModal, CharacterPrintDialog } from '../../../components/print'
 import { PrintService } from '../../../services/PrintService'
 import { useCharacterStore } from '../../../stores/characters'
 import type { CharacterData, FeatureDetail, FeatureReference } from '../../../types/character'
@@ -2145,6 +2154,7 @@ const handleInventoryUpdated = async () => {
 
 // PDF printing
 const showPdfPreview = ref(false)
+const showPrintDialog = ref(false)
 const isPrintingPdf = ref(false)
 const pdfPreviewRef = ref<InstanceType<typeof PdfPreviewModal> | null>(null)
 
@@ -2162,22 +2172,9 @@ const pdfFileName = computed(() => {
   return `${charName}_${classStr}.pdf`
 })
 
-const printCharacter = async () => {
+const printCharacter = () => {
   if (!data.value) return
-
-  isPrintingPdf.value = true
-  showPdfPreview.value = true
-  pdfPreviewRef.value?.setLoading(true)
-
-  try {
-    const result = await PrintService.generateCharacterSheet(characterId.value, 'sheet')
-    pdfPreviewRef.value?.setPdfResult(result)
-  } catch (e) {
-    console.error('Failed to generate character PDF:', e)
-    pdfPreviewRef.value?.setError(e instanceof Error ? e.message : 'Failed to generate PDF')
-  } finally {
-    isPrintingPdf.value = false
-  }
+  showPrintDialog.value = true
 }
 
 // Edit mode functions
