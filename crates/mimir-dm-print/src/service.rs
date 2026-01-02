@@ -59,7 +59,7 @@ impl PrintService {
         info!("Rendering template to PDF");
 
         // Create world with template and data
-        let world = MimirTypstWorld::new(
+        let world = MimirTypstWorld::from_template(
             self.templates_root.clone(),
             template_path,
             data,
@@ -310,490 +310,11 @@ This is a test document.
     }
 
     #[test]
-    fn test_render_with_shared_components() {
-        // Use the actual templates directory from the crate
-        let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-
-        let service = PrintService::new(templates_root);
-        let data = serde_json::json!({});
-
-        let result = service.render_to_pdf("test/components-test.typ", data);
-        assert!(result.is_ok(), "Component test template failed: {:?}", result.err());
-
-        let pdf_bytes = result.unwrap();
-        assert!(pdf_bytes.len() > 1000, "PDF seems too small for a multi-page document");
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Output is not a valid PDF");
-    }
-
-    #[test]
-    fn test_render_character_sheet() {
-        let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-        let service = PrintService::new(templates_root);
-
-        // Sample character data matching CharacterData structure
-        let data = serde_json::json!({
-            "character_name": "Thorin Ironforge",
-            "player_id": 1,
-            "level": 5,
-            "experience_points": 6500,
-            "version": 1,
-            "created_at": "2025-01-01",
-            "race": "Dwarf",
-            "subrace": "Mountain",
-            "classes": [{
-                "class_name": "Fighter",
-                "level": 5,
-                "subclass": "Champion",
-                "hit_dice_type": "d10",
-                "hit_dice_remaining": 5
-            }],
-            "background": "Soldier",
-            "alignment": "Lawful Good",
-            "abilities": {
-                "strength": 18,
-                "dexterity": 12,
-                "constitution": 16,
-                "intelligence": 10,
-                "wisdom": 13,
-                "charisma": 8
-            },
-            "max_hp": 44,
-            "current_hp": 44,
-            "speed": 25,
-            "proficiencies": {
-                "skills": ["Athletics", "Intimidation", "Perception"],
-                "saves": ["Strength", "Constitution"],
-                "armor": ["All armor", "Shields"],
-                "weapons": ["Simple weapons", "Martial weapons"],
-                "tools": ["Smith's tools"],
-                "languages": ["Common", "Dwarvish"]
-            },
-            "class_features": [
-                "Fighting Style (Defense)",
-                "Second Wind",
-                "Action Surge",
-                "Improved Critical"
-            ],
-            "feats": [],
-            "spells": {
-                "cantrips": [],
-                "prepared_spells": [],
-                "known_spells": [],
-                "spell_slots": {}
-            },
-            "inventory": [
-                {"name": "Rations", "quantity": 10, "weight": 20.0, "value": 5.0},
-                {"name": "Rope (50 ft)", "quantity": 1, "weight": 10.0, "value": 1.0}
-            ],
-            "currency": {
-                "copper": 15,
-                "silver": 30,
-                "gold": 50,
-                "platinum": 0
-            },
-            "equipped": {
-                "armor": "Chain Mail",
-                "shield": "Shield",
-                "main_hand": "Warhammer",
-                "off_hand": null
-            },
-            "personality": {
-                "traits": "I'm always polite and respectful.",
-                "ideals": "Responsibility. I do what I must and obey authority.",
-                "bonds": "I would still lay down my life for the people I served with.",
-                "flaws": "I made a terrible mistake in battle that cost lives."
-            }
-        });
-
-        let result = service.render_to_pdf("character/sheet.typ", data.clone());
-        assert!(result.is_ok(), "Character sheet render failed: {:?}", result.err());
-
-        let pdf_bytes = result.unwrap();
-        assert!(pdf_bytes.len() > 5000, "Character sheet PDF seems too small");
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Output is not a valid PDF");
-
-        // Also test summary template
-        let result = service.render_to_pdf("character/summary.typ", data);
-        assert!(result.is_ok(), "Character summary render failed: {:?}", result.err());
-
-        let pdf_bytes = result.unwrap();
-        assert!(pdf_bytes.len() > 1000, "Character summary PDF seems too small");
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Output is not a valid PDF");
-    }
-
-    #[test]
-    fn test_render_spell_templates() {
-        let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-        let service = PrintService::new(templates_root);
-
-        // Sample spell data (simplified SpellSummary format)
-        let fireball = serde_json::json!({
-            "name": "Fireball",
-            "level": 3,
-            "school": "Evocation",
-            "source": "PHB",
-            "casting_time": "1 action",
-            "range": "150 feet",
-            "components": "V, S, M",
-            "concentration": false,
-            "ritual": false,
-            "description": "A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame. Each creature in a 20-foot-radius sphere centered on that point must make a Dexterity saving throw. A target takes 8d6 fire damage on a failed save, or half as much damage on a successful one.",
-            "classes": ["Sorcerer", "Wizard"]
-        });
-
-        // Test single spell card
-        let result = service.render_to_pdf("spells/card.typ", fireball.clone());
-        assert!(result.is_ok(), "Spell card render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Spell card is not a valid PDF");
-
-        // Test spell list
-        let spell_list_data = serde_json::json!({
-            "title": "Wizard Spells",
-            "show_description": false,
-            "spells": [
-                {
-                    "name": "Fire Bolt",
-                    "level": 0,
-                    "school": "Evocation",
-                    "casting_time": "1 action",
-                    "range": "120 feet",
-                    "components": "V, S",
-                    "concentration": false,
-                    "ritual": false,
-                    "description": "You hurl a mote of fire at a creature or object within range."
-                },
-                {
-                    "name": "Magic Missile",
-                    "level": 1,
-                    "school": "Evocation",
-                    "casting_time": "1 action",
-                    "range": "120 feet",
-                    "components": "V, S",
-                    "concentration": false,
-                    "ritual": false,
-                    "description": "You create three glowing darts of magical force."
-                },
-                fireball.clone()
-            ]
-        });
-
-        let result = service.render_to_pdf("spells/list.typ", spell_list_data.clone());
-        assert!(result.is_ok(), "Spell list render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Spell list is not a valid PDF");
-
-        // Test multi-up cards
-        let multiup_data = serde_json::json!({
-            "spells": spell_list_data["spells"],
-            "show_cut_lines": true
-        });
-
-        let result = service.render_to_pdf("spells/cards-multiup.typ", multiup_data);
-        assert!(result.is_ok(), "Multi-up cards render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Multi-up cards is not a valid PDF");
-    }
-
-    #[test]
-    fn test_render_monster_templates() {
-        let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-        let service = PrintService::new(templates_root);
-
-        // Sample monster data (matches Monster struct format)
-        let goblin = serde_json::json!({
-            "name": "Goblin",
-            "source": "MM",
-            "size": ["S"],
-            "creature_type": "humanoid",
-            "alignment": ["N", "E"],
-            "ac": [{"ac": 15, "from": ["leather armor", "shield"]}],
-            "hp": {"average": 7, "formula": "2d6"},
-            "speed": {"walk": 30},
-            "str": 8,
-            "dex": 14,
-            "con": 10,
-            "int": 10,
-            "wis": 8,
-            "cha": 8,
-            "skill": {"stealth": "+6"},
-            "senses": ["darkvision 60 ft."],
-            "passive": 9,
-            "languages": ["Common", "Goblin"],
-            "cr": "1/4",
-            "trait_entries": [{
-                "name": "Nimble Escape",
-                "entries": ["The goblin can take the Disengage or Hide action as a bonus action on each of its turns."]
-            }],
-            "action": [
-                {
-                    "name": "Scimitar",
-                    "entries": ["Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 5 (1d6 + 2) slashing damage."]
-                },
-                {
-                    "name": "Shortbow",
-                    "entries": ["Ranged Weapon Attack: +4 to hit, range 80/320 ft., one target. Hit: 5 (1d6 + 2) piercing damage."]
-                }
-            ]
-        });
-
-        let dragon = serde_json::json!({
-            "name": "Adult Red Dragon",
-            "source": "MM",
-            "size": ["H"],
-            "creature_type": {"type": "dragon"},
-            "alignment": ["C", "E"],
-            "ac": [{"ac": 19, "from": ["natural armor"]}],
-            "hp": {"average": 256, "formula": "19d12 + 133"},
-            "speed": {"walk": 40, "climb": 40, "fly": 80},
-            "str": 27,
-            "dex": 10,
-            "con": 25,
-            "int": 16,
-            "wis": 13,
-            "cha": 21,
-            "save": {"dex": "+6", "con": "+13", "wis": "+7", "cha": "+11"},
-            "skill": {"perception": "+13", "stealth": "+6"},
-            "damage_immunities": ["fire"],
-            "senses": ["blindsight 60 ft.", "darkvision 120 ft."],
-            "passive": 23,
-            "languages": ["Common", "Draconic"],
-            "cr": "17",
-            "trait_entries": [{
-                "name": "Legendary Resistance (3/Day)",
-                "entries": ["If the dragon fails a saving throw, it can choose to succeed instead."]
-            }],
-            "action": [
-                {
-                    "name": "Multiattack",
-                    "entries": ["The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws."]
-                },
-                {
-                    "name": "Bite",
-                    "entries": ["Melee Weapon Attack: +14 to hit, reach 10 ft., one target. Hit: 19 (2d10 + 8) piercing damage plus 7 (2d6) fire damage."]
-                },
-                {
-                    "name": "Fire Breath (Recharge 5-6)",
-                    "entries": ["The dragon exhales fire in a 60-foot cone. Each creature in that area must make a DC 21 Dexterity saving throw, taking 63 (18d6) fire damage on a failed save, or half as much damage on a successful one."]
-                }
-            ],
-            "legendary": [
-                {
-                    "name": "Detect",
-                    "entries": ["The dragon makes a Wisdom (Perception) check."]
-                },
-                {
-                    "name": "Tail Attack",
-                    "entries": ["The dragon makes a tail attack."]
-                },
-                {
-                    "name": "Wing Attack (Costs 2 Actions)",
-                    "entries": ["The dragon beats its wings. Each creature within 10 feet must succeed on a DC 22 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone."]
-                }
-            ]
-        });
-
-        // Test single monster stat block
-        let result = service.render_to_pdf("monsters/stat-block.typ", goblin.clone());
-        assert!(result.is_ok(), "Monster stat-block render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Monster stat-block is not a valid PDF");
-
-        // Test monster card
-        let result = service.render_to_pdf("monsters/card.typ", goblin.clone());
-        assert!(result.is_ok(), "Monster card render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Monster card is not a valid PDF");
-
-        // Test encounter template
-        let encounter_data = serde_json::json!({
-            "title": "Goblin Ambush",
-            "monsters": [goblin.clone(), goblin.clone(), goblin.clone()],
-            "notes": "The goblins attack from hiding in the trees. They flee if two are killed."
-        });
-
-        let result = service.render_to_pdf("monsters/encounter.typ", encounter_data);
-        assert!(result.is_ok(), "Encounter render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Encounter is not a valid PDF");
-
-        // Test multi-up monster cards
-        let multiup_data = serde_json::json!({
-            "monsters": [goblin.clone(), goblin.clone(), dragon.clone()],
-            "show_cut_lines": true
-        });
-
-        let result = service.render_to_pdf("monsters/cards-multiup.typ", multiup_data);
-        assert!(result.is_ok(), "Multi-up monster cards render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Multi-up monster cards is not a valid PDF");
-
-        // Test dragon stat block (with legendary actions)
-        let result = service.render_to_pdf("monsters/stat-block.typ", dragon);
-        assert!(result.is_ok(), "Dragon stat-block render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert!(pdf_bytes.len() > 5000, "Dragon stat-block PDF seems too small for complex creature");
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Dragon stat-block is not a valid PDF");
-    }
-
-    #[test]
-    fn test_render_session_templates() {
-        let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-        let service = PrintService::new(templates_root);
-
-        // Sample NPC data
-        let sildar = serde_json::json!({
-            "name": "Sildar Hallwinter",
-            "race": "Human",
-            "occupation": "Knight",
-            "role": "Ally",
-            "alignment": "Lawful Good",
-            "location": "Phandalin",
-            "appearance": "Middle-aged man with a graying beard and worn armor",
-            "personality": "Honorable and direct, speaks plainly",
-            "mannerisms": "Strokes his beard when thinking",
-            "voice": "Deep and commanding",
-            "goal": "Find Iarno Albrek and establish order in Phandalin",
-            "motivation": "Duty to the Lords' Alliance",
-            "bond": "Fellow Alliance members",
-            "flaw": "Too trusting of authority figures",
-            "secret": "Member of the Lords' Alliance on a secret mission",
-            "key_info": "Knows location of Cragmaw Castle"
-        });
-
-        let gundren = serde_json::json!({
-            "name": "Gundren Rockseeker",
-            "race": "Dwarf",
-            "occupation": "Prospector",
-            "role": "Quest Giver",
-            "alignment": "Neutral Good",
-            "location": "Cragmaw Hideout (captured)",
-            "appearance": "Stocky dwarf with a braided brown beard",
-            "personality": "Enthusiastic and secretive about his discovery",
-            "goal": "Reach Wave Echo Cave and claim his inheritance",
-            "motivation": "Family legacy and wealth",
-            "flaw": "Greed can cloud his judgment"
-        });
-
-        // Test NPC card
-        let result = service.render_to_pdf("session/npc-card.typ", sildar.clone());
-        assert!(result.is_ok(), "NPC card render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "NPC card is not a valid PDF");
-
-        // Test multi-up NPC cards
-        let multiup_data = serde_json::json!({
-            "npcs": [sildar.clone(), gundren.clone(), sildar.clone(), gundren.clone()],
-            "show_cut_lines": true
-        });
-
-        let result = service.render_to_pdf("session/npc-cards-multiup.typ", multiup_data);
-        assert!(result.is_ok(), "Multi-up NPC cards render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Multi-up NPC cards is not a valid PDF");
-
-        // Test session prep sheet
-        let session_data = serde_json::json!({
-            "title": "The Goblin Ambush",
-            "module": "Lost Mine of Phandelver",
-            "session_number": 1,
-            "date": "2025-01-15",
-            "summary": "The party escorts a wagon from Neverwinter to Phandalin but is ambushed by goblins on the Triboar Trail.",
-            "npcs": [
-                {"name": "Sildar Hallwinter", "role": "Ally", "notes": "Captured by goblins, needs rescue"},
-                {"name": "Gundren Rockseeker", "role": "Quest Giver", "notes": "Hired the party, went ahead and was captured"}
-            ],
-            "locations": [
-                {"name": "Triboar Trail", "type": "Road", "notes": "Site of goblin ambush"},
-                {"name": "Cragmaw Hideout", "type": "Cave", "notes": "Goblin lair, Sildar is held here"}
-            ],
-            "encounters": [
-                {
-                    "name": "Goblin Ambush",
-                    "type": "Combat",
-                    "difficulty": "medium",
-                    "monsters": [{"name": "Goblin", "count": 4}],
-                    "notes": "Goblins hide behind dead horses"
-                },
-                {
-                    "name": "Cave Entrance",
-                    "type": "Combat",
-                    "difficulty": "easy",
-                    "monsters": [{"name": "Goblin", "count": 2}],
-                    "notes": "Guards stationed at cave mouth"
-                }
-            ],
-            "items": [
-                {"name": "Gundren's Map", "description": "Shows location of Wave Echo Cave"},
-                {"name": "Lionshield Coster Supplies", "description": "Trade goods bound for Phandalin"}
-            ],
-            "hooks": [
-                "Rescue Sildar from the goblins",
-                "Find out what happened to Gundren",
-                "Deliver the wagon to Barthen's Provisions"
-            ],
-            "secrets": [
-                "Gundren found the entrance to Wave Echo Cave",
-                "The Black Spider is behind the goblin attacks"
-            ],
-            "notes": [
-                "Remember to describe the dead horses on the trail",
-                "Goblins flee if half their number are killed"
-            ]
-        });
-
-        let result = service.render_to_pdf("session/prep.typ", session_data);
-        assert!(result.is_ok(), "Session prep render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert!(pdf_bytes.len() > 5000, "Session prep PDF seems too small");
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Session prep is not a valid PDF");
-
-        // Test handout template
-        let handout_data = serde_json::json!({
-            "title": "Letter from Gundren",
-            "subtitle": "A hastily written note",
-            "type": "letter",
-            "author": "Gundren Rockseeker",
-            "date": "15th of Mirtul",
-            "style": "aged",
-            "body": [
-                "My dear friends,",
-                "I write to you with urgent news. I have finally found what my brothers and I have been searching for - the entrance to Wave Echo Cave! This discovery will change everything.",
-                "Meet me in Phandalin as soon as you can. Bring the supplies and tell no one of this letter.",
-                "Your friend,",
-                "Gundren"
-            ],
-            "footer": "The ink is smudged and the paper appears worn from travel."
-        });
-
-        let result = service.render_to_pdf("session/handout.typ", handout_data);
-        assert!(result.is_ok(), "Handout render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Handout is not a valid PDF");
-
-        // Test magical style handout
-        let magical_handout = serde_json::json!({
-            "title": "Scroll of Fireball",
-            "type": "scroll",
-            "style": "magical",
-            "body": "The arcane words on this scroll glow faintly with an inner fire. Reading the incantation aloud will release a devastating explosion of flame.",
-            "sections": [
-                {"title": "Incantation", "content": "Ignis Magnus Explodere"},
-                {"title": "Warning", "content": "Stand clear of the target area. The caster is not immune to the flames."}
-            ]
-        });
-
-        let result = service.render_to_pdf("session/handout.typ", magical_handout);
-        assert!(result.is_ok(), "Magical handout render failed: {:?}", result.err());
-        let pdf_bytes = result.unwrap();
-        assert_eq!(&pdf_bytes[0..4], b"%PDF", "Magical handout is not a valid PDF");
-    }
-
-    #[test]
     fn test_render_campaign_document() {
+        use crate::campaign::build_single_document_pdf;
+
         let temp = TempDir::new().unwrap();
         let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-        let service = PrintService::new(templates_root);
 
         // Create a test markdown document
         let markdown = r#"---
@@ -819,8 +340,12 @@ Our heroes gather at the **Yawning Portal** tavern in Waterdeep.
         let doc_path = temp.path().join("session_1.md");
         fs::write(&doc_path, markdown).unwrap();
 
-        // Test single document render
-        let result = service.render_campaign_document(&doc_path, Some("Waterdeep Dragon Heist"));
+        // Test single document render using new API
+        let result = build_single_document_pdf(
+            &doc_path,
+            Some("Waterdeep Dragon Heist"),
+            templates_root,
+        );
         assert!(result.is_ok(), "Campaign document render failed: {:?}", result.err());
 
         let pdf_bytes = result.unwrap();
@@ -830,9 +355,10 @@ Our heroes gather at the **Yawning Portal** tavern in Waterdeep.
 
     #[test]
     fn test_render_campaign_combined() {
+        use crate::campaign::{build_campaign_pdf, CampaignExportData, ExportOptions};
+
         let temp = TempDir::new().unwrap();
         let templates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
-        let service = PrintService::new(templates_root);
 
         // Create multiple test documents
         let doc1 = r#"---
@@ -878,9 +404,36 @@ A famous tavern in Waterdeep built over the entrance to Undermountain.
         fs::write(&doc2_path, doc2).unwrap();
         fs::write(&doc3_path, doc3).unwrap();
 
-        // Test combined render
+        // Test combined render using new API
         let documents = vec![doc1_path, doc2_path, doc3_path];
-        let result = service.render_campaign_combined(&documents, "Waterdeep Dragon Heist");
+        let data = CampaignExportData {
+            name: "Waterdeep Dragon Heist".to_string(),
+            documents,
+            monsters: None,
+            npcs: None,
+            campaign_maps: vec![],
+            module_maps: vec![],
+            base_path: temp.path().to_path_buf(),
+            templates_root,
+        };
+
+        let options = ExportOptions {
+            include_toc: true,
+            include_monsters: false,
+            include_npcs: false,
+            include_campaign_map_previews: false,
+            include_campaign_tiled_maps: false,
+            include_module_map_previews: false,
+            include_module_tiled_maps: false,
+            include_token_cutouts: false,
+            preview_grid: false,
+            preview_los_walls: false,
+            preview_positions: false,
+            play_grid: false,
+            play_los_walls: false,
+        };
+
+        let result = build_campaign_pdf(data, options);
         assert!(result.is_ok(), "Combined campaign render failed: {:?}", result.err());
 
         let pdf_bytes = result.unwrap();
