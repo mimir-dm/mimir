@@ -1,542 +1,321 @@
-//! Campaign document rendering
+//! Campaign document rendering using DocumentBuilder
 //!
-//! This module provides campaign-specific PDF rendering functionality,
-//! including single documents, combined documents, and documents with
-//! module monsters and NPCs.
+//! This module provides campaign-specific PDF rendering functionality
+//! using the composable DocumentBuilder pattern.
 
 use std::path::PathBuf;
 
-use tracing::{debug, error, info, instrument};
+use base64::{engine::general_purpose::STANDARD, Engine};
+use serde_json::Value;
+use tracing::{debug, info, instrument};
 
+use crate::builder::{DocumentBuilder, RenderContext, Renderable};
 use crate::error::Result;
-use crate::markdown::{parse_campaign_document, ParsedDocument};
-use crate::service::PrintService;
+use crate::map_renderer::{load_image_from_file, render_map_for_print, MapPrintOptions, RenderMap, RenderToken};
+use crate::maps::slice_map_into_tiles;
+use crate::sections::{
+    MapPreview, MarkdownSection, MonsterAppendix, NpcAppendix, TiledMapSection, TokenCutoutSheet,
+};
 
-impl PrintService {
-    /// Render a campaign document (markdown with YAML frontmatter) to PDF
-    ///
-    /// # Arguments
-    /// * `file_path` - Path to the markdown document file
-    /// * `campaign_name` - Name of the campaign (optional, used in header)
-    ///
-    /// # Returns
-    /// PDF file contents as bytes
-    #[instrument(skip(self), fields(file = %file_path.display()))]
-    pub fn render_campaign_document(
-        &self,
-        file_path: &PathBuf,
-        campaign_name: Option<&str>,
-    ) -> Result<Vec<u8>> {
-        info!("Rendering campaign document to PDF");
+/// Options for campaign/module PDF export
+#[derive(Debug, Clone, Default)]
+pub struct ExportOptions {
+    /// Include table of contents
+    pub include_toc: bool,
+    /// Include monster appendix
+    pub include_monsters: bool,
+    /// Include NPC appendix
+    pub include_npcs: bool,
 
-        // Read the markdown file
-        let markdown = std::fs::read_to_string(file_path)?;
+    // Map Preview options
+    /// Include map previews (fit to single page)
+    pub include_map_previews: bool,
+    /// Show grid overlay on previews
+    pub preview_grid: bool,
+    /// Show LOS walls on previews
+    pub preview_los_walls: bool,
+    /// Show starting positions on previews
+    pub preview_positions: bool,
 
-        // Parse the document
-        let parsed = parse_campaign_document(&markdown)?;
+    // Map Play options
+    /// Include tiled maps (1"=5ft scale)
+    pub include_tiled_maps: bool,
+    /// Show grid overlay on tiles
+    pub play_grid: bool,
+    /// Show LOS walls on tiles
+    pub play_los_walls: bool,
+    /// Include token cutouts
+    pub include_token_cutouts: bool,
+}
 
-        // Build the data structure for the template
-        let data = self.build_campaign_document_data(&parsed, campaign_name)?;
-
-        // Render using the campaign document template
-        self.render_to_pdf("campaign/document.typ", data)
-    }
-
-    /// Render multiple campaign documents as a single combined PDF
-    ///
-    /// # Arguments
-    /// * `documents` - List of document file paths
-    /// * `campaign_name` - Name of the campaign
-    ///
-    /// # Returns
-    /// PDF file contents as bytes
-    #[instrument(skip(self, documents), fields(count = documents.len()))]
-    pub fn render_campaign_combined(
-        &self,
-        documents: &[PathBuf],
-        campaign_name: &str,
-    ) -> Result<Vec<u8>> {
-        info!("Rendering {} campaign documents to combined PDF", documents.len());
-
-        // Parse all documents (title/type come from YAML frontmatter)
-        let mut parsed_docs = Vec::new();
-        for file_path in documents {
-            debug!("Reading document: {:?}", file_path);
-            let markdown = std::fs::read_to_string(file_path)?;
-            let parsed = parse_campaign_document(&markdown)?;
-            parsed_docs.push(parsed);
+impl ExportOptions {
+    /// Create options for a reference document (docs, monsters, npcs, map previews)
+    pub fn reference_doc() -> Self {
+        Self {
+            include_toc: true,
+            include_monsters: true,
+            include_npcs: true,
+            include_map_previews: true,
+            preview_grid: true,
+            preview_los_walls: false,
+            preview_positions: false,
+            include_tiled_maps: false,
+            play_grid: true,
+            play_los_walls: false,
+            include_token_cutouts: false,
         }
-
-        // Build the combined data structure
-        let data = self.build_campaign_combined_data(&parsed_docs, campaign_name)?;
-
-        // Render using the combined campaign template
-        self.render_to_pdf("campaign/combined.typ", data)
     }
 
-    /// Render multiple campaign documents with module monsters as a single combined PDF
-    ///
-    /// # Arguments
-    /// * `documents` - List of document file paths
-    /// * `campaign_name` - Name of the campaign
-    /// * `modules` - JSON array of module data with monsters
-    ///
-    /// # Returns
-    /// PDF file contents as bytes
-    #[instrument(skip(self, documents, modules), fields(count = documents.len()))]
-    pub fn render_campaign_combined_with_monsters(
-        &self,
-        documents: &[PathBuf],
-        campaign_name: &str,
-        modules: serde_json::Value,
-    ) -> Result<Vec<u8>> {
-        info!(
-            "Rendering {} campaign documents with modules to combined PDF",
-            documents.len()
-        );
-
-        // Parse all documents (title/type come from YAML frontmatter)
-        let mut parsed_docs = Vec::new();
-        for file_path in documents {
-            debug!("Reading document: {:?}", file_path);
-            let markdown = std::fs::read_to_string(file_path)?;
-            let parsed = parse_campaign_document(&markdown)?;
-            parsed_docs.push(parsed);
+    /// Create options for a physical play kit (tiled maps, token cutouts)
+    pub fn physical_play_kit() -> Self {
+        Self {
+            include_toc: false,
+            include_monsters: false,
+            include_npcs: false,
+            include_map_previews: false,
+            preview_grid: true,
+            preview_los_walls: false,
+            preview_positions: false,
+            include_tiled_maps: true,
+            play_grid: true,
+            play_los_walls: false,
+            include_token_cutouts: true,
         }
-
-        // Build the combined data structure with modules
-        let data = self.build_campaign_combined_data_with_monsters(&parsed_docs, campaign_name, modules)?;
-
-        // Render using the combined campaign template
-        self.render_to_pdf("campaign/combined.typ", data)
     }
 
-    /// Render multiple campaign documents with module monsters and NPCs as a single combined PDF
-    ///
-    /// # Arguments
-    /// * `documents` - List of document file paths
-    /// * `campaign_name` - Name of the campaign
-    /// * `modules` - JSON array of module data with monsters
-    /// * `npcs` - JSON array of NPC character data
-    ///
-    /// # Returns
-    /// PDF file contents as bytes
-    #[instrument(skip(self, documents, modules, npcs), fields(count = documents.len()))]
-    pub fn render_campaign_combined_with_monsters_and_npcs(
-        &self,
-        documents: &[PathBuf],
-        campaign_name: &str,
-        modules: serde_json::Value,
-        npcs: serde_json::Value,
-    ) -> Result<Vec<u8>> {
-        info!(
-            "Rendering {} campaign documents with modules and {} NPCs to combined PDF",
-            documents.len(),
-            npcs.as_array().map(|a| a.len()).unwrap_or(0)
-        );
-
-        // Parse all documents (title/type come from YAML frontmatter)
-        let mut parsed_docs = Vec::new();
-        for file_path in documents {
-            debug!("Reading document: {:?}", file_path);
-            let markdown = std::fs::read_to_string(file_path)?;
-            let parsed = parse_campaign_document(&markdown)?;
-            parsed_docs.push(parsed);
+    /// Create options for a complete export
+    pub fn complete() -> Self {
+        Self {
+            include_toc: true,
+            include_monsters: true,
+            include_npcs: true,
+            include_map_previews: true,
+            preview_grid: true,
+            preview_los_walls: false,
+            preview_positions: true,
+            include_tiled_maps: true,
+            play_grid: true,
+            play_los_walls: false,
+            include_token_cutouts: true,
         }
-
-        // Build the combined data structure with modules and NPCs
-        let data = self.build_campaign_combined_data_with_monsters_and_npcs(
-            &parsed_docs,
-            campaign_name,
-            modules,
-            npcs,
-        )?;
-
-        // Render using the combined campaign template
-        self.render_to_pdf("campaign/combined.typ", data)
-    }
-
-    /// Render multiple campaign documents with module monsters, NPCs, and maps as a single combined PDF
-    ///
-    /// # Arguments
-    /// * `documents` - List of document file paths
-    /// * `campaign_name` - Name of the campaign
-    /// * `modules` - JSON array of module data with monsters
-    /// * `npcs` - JSON array of NPC character data
-    /// * `maps` - Map data with tokens for each map
-    /// * `campaign_base_path` - Base path for resolving map image files
-    ///
-    /// # Returns
-    /// PDF file contents as bytes
-    #[instrument(skip(self, documents, modules, npcs, maps), fields(count = documents.len()))]
-    pub fn render_campaign_combined_with_all(
-        &self,
-        documents: &[PathBuf],
-        campaign_name: &str,
-        modules: serde_json::Value,
-        npcs: serde_json::Value,
-        maps: Vec<(crate::map_renderer::RenderMap, Vec<crate::map_renderer::RenderToken>)>,
-        campaign_base_path: &PathBuf,
-    ) -> Result<Vec<u8>> {
-        info!(
-            "Rendering {} campaign documents with modules, {} NPCs, and {} maps to combined PDF",
-            documents.len(),
-            npcs.as_array().map(|a| a.len()).unwrap_or(0),
-            maps.len()
-        );
-
-        // Parse all documents (title/type come from YAML frontmatter)
-        let mut parsed_docs = Vec::new();
-        for file_path in documents {
-            debug!("Reading document: {:?}", file_path);
-            let markdown = std::fs::read_to_string(file_path)?;
-            let parsed = parse_campaign_document(&markdown)?;
-            parsed_docs.push(parsed);
-        }
-
-        // Render all maps
-        let mut rendered_maps = Vec::new();
-        for (map, tokens) in &maps {
-            debug!("Rendering map: {}", map.name);
-            let rendered = crate::map_renderer::render_map(map, tokens, campaign_base_path)?;
-            rendered_maps.push(rendered);
-        }
-
-        // Build the combined data structure with modules, NPCs, and maps
-        let data = self.build_campaign_combined_data_with_all(
-            &parsed_docs,
-            campaign_name,
-            modules,
-            npcs,
-            &rendered_maps,
-        )?;
-
-        // Render using the combined campaign template
-        self.render_to_pdf("campaign/combined.typ", data)
-    }
-
-    /// Build the data structure for a single campaign document template
-    fn build_campaign_document_data(
-        &self,
-        parsed: &ParsedDocument,
-        campaign_name: Option<&str>,
-    ) -> Result<serde_json::Value> {
-        // Extract title from frontmatter or use default
-        let title = parsed
-            .frontmatter
-            .get("title")
-            .and_then(|v| v.as_str())
-            .unwrap_or("Untitled Document");
-
-        // Extract document type from frontmatter or use default
-        let document_type = parsed
-            .frontmatter
-            .get("type")
-            .and_then(|v| v.as_str())
-            .unwrap_or("document");
-
-        let mut data = serde_json::json!({
-            "title": title,
-            "document_type": document_type,
-            "content": parsed.typst_content,
-        });
-
-        if let Some(name) = campaign_name {
-            data["campaign_name"] = serde_json::Value::String(name.to_string());
-        }
-
-        Ok(data)
-    }
-
-    /// Build the data structure for the combined campaign template
-    fn build_campaign_combined_data(
-        &self,
-        documents: &[ParsedDocument],
-        campaign_name: &str,
-    ) -> Result<serde_json::Value> {
-        let docs: Vec<serde_json::Value> = documents
-            .iter()
-            .enumerate()
-            .map(|(idx, parsed)| {
-                // Extract title and type from YAML frontmatter
-                let title = parsed
-                    .frontmatter
-                    .get("title")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("Untitled Document");
-
-                let document_type = parsed
-                    .frontmatter
-                    .get("type")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("document");
-
-                // Sanitize content to remove any dangerous Typst commands
-                let safe_content = sanitize_typst_content(&parsed.typst_content);
-
-                // Debug: log first 500 chars of first document's content
-                if idx == 0 {
-                    debug!(
-                        "First document '{}' typst content (first 500 chars): {}",
-                        title,
-                        &safe_content.chars().take(500).collect::<String>()
-                    );
-                }
-
-                // Debug: check if content contains any suspicious patterns
-                if safe_content.contains("#set") || safe_content.contains("#page") {
-                    tracing::warn!(
-                        "Document '{}' still contains #set or #page after sanitization!",
-                        title
-                    );
-                }
-
-                serde_json::json!({
-                    "title": title,
-                    "document_type": document_type,
-                    "content": safe_content,
-                })
-            })
-            .collect();
-
-        Ok(serde_json::json!({
-            "campaign_name": campaign_name,
-            "documents": docs,
-        }))
-    }
-
-    /// Build the data structure for the combined campaign template with module monsters
-    fn build_campaign_combined_data_with_monsters(
-        &self,
-        documents: &[ParsedDocument],
-        campaign_name: &str,
-        modules: serde_json::Value,
-    ) -> Result<serde_json::Value> {
-        self.build_campaign_combined_data_with_monsters_and_npcs(
-            documents,
-            campaign_name,
-            modules,
-            serde_json::Value::Array(vec![]),
-        )
-    }
-
-    /// Build the data structure for the combined campaign template with module monsters and NPCs
-    fn build_campaign_combined_data_with_monsters_and_npcs(
-        &self,
-        documents: &[ParsedDocument],
-        campaign_name: &str,
-        modules: serde_json::Value,
-        npcs: serde_json::Value,
-    ) -> Result<serde_json::Value> {
-        let docs: Vec<serde_json::Value> = documents
-            .iter()
-            .enumerate()
-            .map(|(idx, parsed)| {
-                // Extract title and type from YAML frontmatter
-                let title = parsed
-                    .frontmatter
-                    .get("title")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("Untitled Document");
-
-                let document_type = parsed
-                    .frontmatter
-                    .get("type")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("document");
-
-                // Sanitize content to remove any dangerous Typst commands
-                let safe_content = sanitize_typst_content(&parsed.typst_content);
-
-                // Debug: log first 500 chars of first document's content
-                if idx == 0 {
-                    debug!(
-                        "First document '{}' typst content (first 500 chars): {}",
-                        title,
-                        &safe_content.chars().take(500).collect::<String>()
-                    );
-                }
-
-                serde_json::json!({
-                    "title": title,
-                    "document_type": document_type,
-                    "content": safe_content,
-                })
-            })
-            .collect();
-
-        Ok(serde_json::json!({
-            "campaign_name": campaign_name,
-            "documents": docs,
-            "modules": modules,
-            "npcs": npcs,
-        }))
-    }
-
-    /// Build the data structure for the combined campaign template with all data including maps
-    ///
-    /// Maps are saved as temporary files and paths are passed to the template.
-    fn build_campaign_combined_data_with_all(
-        &self,
-        documents: &[ParsedDocument],
-        campaign_name: &str,
-        modules: serde_json::Value,
-        npcs: serde_json::Value,
-        rendered_maps: &[crate::map_renderer::RenderedMap],
-    ) -> Result<serde_json::Value> {
-        let docs: Vec<serde_json::Value> = documents
-            .iter()
-            .enumerate()
-            .map(|(idx, parsed)| {
-                // Extract title and type from YAML frontmatter
-                let title = parsed
-                    .frontmatter
-                    .get("title")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("Untitled Document");
-
-                let document_type = parsed
-                    .frontmatter
-                    .get("type")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("document");
-
-                // Sanitize content to remove any dangerous Typst commands
-                let safe_content = sanitize_typst_content(&parsed.typst_content);
-
-                // Debug: log first 500 chars of first document's content
-                if idx == 0 {
-                    debug!(
-                        "First document '{}' typst content (first 500 chars): {}",
-                        title,
-                        &safe_content.chars().take(500).collect::<String>()
-                    );
-                }
-
-                serde_json::json!({
-                    "title": title,
-                    "document_type": document_type,
-                    "content": safe_content,
-                })
-            })
-            .collect();
-
-        // Save rendered maps as temp files and collect paths
-        let temp_dir = std::env::temp_dir().join("mimir-maps");
-        std::fs::create_dir_all(&temp_dir)?;
-
-        let maps_json: Vec<serde_json::Value> = rendered_maps
-            .iter()
-            .enumerate()
-            .map(|(idx, rendered)| {
-                // Generate unique filenames
-                let sanitized_name = rendered.name.replace(' ', "_").replace('/', "_");
-                let grid_path = temp_dir.join(format!("{}_{}_grid.png", idx, sanitized_name));
-                let tokens_path = temp_dir.join(format!("{}_{}_tokens.png", idx, sanitized_name));
-
-                // Write grid image
-                if let Err(e) = std::fs::write(&grid_path, &rendered.with_grid) {
-                    error!("Failed to write map grid image: {}", e);
-                }
-
-                let mut map_data = serde_json::json!({
-                    "name": rendered.name,
-                    "grid_path": grid_path.to_string_lossy(),
-                    "has_tokens": rendered.with_tokens.is_some(),
-                });
-
-                // Write tokens image if exists
-                if let Some(ref tokens_bytes) = rendered.with_tokens {
-                    if let Err(e) = std::fs::write(&tokens_path, tokens_bytes) {
-                        error!("Failed to write map tokens image: {}", e);
-                    }
-                    map_data["tokens_path"] = serde_json::Value::String(tokens_path.to_string_lossy().to_string());
-                }
-
-                map_data
-            })
-            .collect();
-
-        Ok(serde_json::json!({
-            "campaign_name": campaign_name,
-            "documents": docs,
-            "modules": modules,
-            "npcs": npcs,
-            "maps": maps_json,
-        }))
     }
 }
 
-/// Sanitize Typst content to remove dangerous commands that could affect page layout
+/// Data for campaign export
+pub struct CampaignExportData {
+    /// Campaign or module name
+    pub name: String,
+    /// Document file paths
+    pub documents: Vec<PathBuf>,
+    /// Monster data (JSON array)
+    pub monsters: Option<Value>,
+    /// NPC data (JSON array)
+    pub npcs: Option<Value>,
+    /// Map data with tokens
+    pub maps: Vec<(RenderMap, Vec<RenderToken>)>,
+    /// Base path for resolving files
+    pub base_path: PathBuf,
+    /// Path to templates directory
+    pub templates_root: PathBuf,
+}
+
+/// Build a campaign/module PDF using DocumentBuilder
 ///
-/// This removes commands like `#set page(...)` that could cause conflicts when
-/// the content is eval'd within a template.
-fn sanitize_typst_content(content: &str) -> String {
-    let mut result = String::with_capacity(content.len());
-    let chars: Vec<char> = content.chars().collect();
-    let len = chars.len();
-    let mut i = 0;
+/// This is the unified entry point for all campaign/module exports.
+/// Use `ExportOptions` to control what content is included.
+#[instrument(skip(data), fields(name = %data.name, doc_count = data.documents.len()))]
+pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> Result<Vec<u8>> {
+    info!(
+        "Building campaign PDF: {} documents, {} maps",
+        data.documents.len(),
+        data.maps.len()
+    );
 
-    while i < len {
-        // Check for #set page( or #page( patterns
-        if chars[i] == '#' {
-            // Look ahead for "set page(" or "page("
-            let remaining: String = chars[i..].iter().collect();
+    let context = RenderContext::new(std::env::temp_dir().join("mimir-export"))
+        .with_base_path(data.base_path.clone());
 
-            if remaining.starts_with("#set page(") || remaining.starts_with("#set  page(") {
-                // Skip "#set page" and find the opening paren
-                let paren_start = remaining.find('(').unwrap();
-                i += paren_start;
-                // Skip the balanced parentheses
-                i += skip_balanced(&chars[i..], '(', ')');
-                continue;
-            } else if remaining.starts_with("#page(") {
-                // Skip "#page" and find the opening paren
-                let paren_start = remaining.find('(').unwrap();
-                i += paren_start;
-                // Skip the balanced parentheses
-                i += skip_balanced(&chars[i..], '(', ')');
-                // Also skip following bracket if present (for #page(...)[...])
-                if i < len && chars[i] == '[' {
-                    i += skip_balanced(&chars[i..], '[', ']');
-                }
-                continue;
-            } else if remaining.starts_with("#pagebreak(") {
-                // Allow #pagebreak() - it's safe and commonly used
-                // Just output as-is
+    // Create temp directory if needed
+    std::fs::create_dir_all(&context.temp_dir)?;
+
+    let mut builder = DocumentBuilder::new(&data.name)
+        .with_templates_root(data.templates_root)
+        .with_toc(options.include_toc)
+        .with_context(context);
+
+    // Add markdown documents
+    for doc_path in &data.documents {
+        debug!("Adding document: {:?}", doc_path);
+        match MarkdownSection::from_file(doc_path) {
+            Ok(section) => {
+                builder = builder.append(section);
+            }
+            Err(e) => {
+                tracing::warn!("Failed to read document {:?}: {}", doc_path, e);
             }
         }
-
-        result.push(chars[i]);
-        i += 1;
     }
 
-    result
+    // Add map previews
+    if options.include_map_previews {
+        let preview_opts = MapPrintOptions {
+            show_grid: options.preview_grid,
+            show_los_walls: options.preview_los_walls,
+            show_positions: false, // Positions shown on separate page
+            ..Default::default()
+        };
+
+        for (map, tokens) in &data.maps {
+            debug!("Adding map preview: {}", map.name);
+            let section = MapPreview::new(map.clone(), tokens.clone(), data.base_path.clone())
+                .with_options(preview_opts.clone());
+            builder = builder.append(section);
+
+            // Add starting positions map if requested (separate page)
+            if options.preview_positions && !tokens.is_empty() {
+                let positions_opts = MapPrintOptions {
+                    show_grid: options.preview_grid,
+                    show_los_walls: options.preview_los_walls,
+                    show_positions: true,
+                    ..Default::default()
+                };
+
+                debug!("Adding starting positions map: {}", map.name);
+                let mut positions_map = map.clone();
+                positions_map.name = format!("{} - Starting Positions", map.name);
+                let positions_section = MapPreview::new(positions_map, tokens.clone(), data.base_path.clone())
+                    .with_options(positions_opts);
+                builder = builder.append(positions_section);
+            }
+        }
+    }
+
+    // Add monster appendix
+    if options.include_monsters {
+        if let Some(ref monsters) = data.monsters {
+            if let Some(arr) = monsters.as_array() {
+                if !arr.is_empty() {
+                    debug!("Adding monster appendix with {} monsters", arr.len());
+                    let section = MonsterAppendix::new(monsters.clone());
+                    builder = builder.append(section);
+                }
+            }
+        }
+    }
+
+    // Add NPC appendix
+    if options.include_npcs {
+        if let Some(ref npcs) = data.npcs {
+            if let Some(arr) = npcs.as_array() {
+                if !arr.is_empty() {
+                    debug!("Adding NPC appendix with {} NPCs", arr.len());
+                    let section = NpcAppendix::new(npcs.clone());
+                    builder = builder.append(section);
+                }
+            }
+        }
+    }
+
+    // Add tiled maps for physical play (using pre-sliced tiles like maps.rs)
+    if options.include_tiled_maps {
+        // Default pixels per grid for letter paper at 1"=1 grid
+        const PIXELS_PER_GRID: u32 = 54;
+
+        let play_opts = MapPrintOptions {
+            show_grid: options.play_grid,
+            show_los_walls: options.play_los_walls,
+            show_positions: false, // No position markers on play tiles
+            pixels_per_grid: PIXELS_PER_GRID,
+            ..Default::default()
+        };
+
+        for (map, _tokens) in &data.maps {
+            debug!("Adding tiled map: {}", map.name);
+
+            // Load map image from file path
+            let file_path = PathBuf::from(&map.image_path);
+            let image_bytes = match load_image_from_file(&file_path) {
+                Ok(bytes) => bytes,
+                Err(e) => {
+                    tracing::warn!("Failed to load map image for tiled map: {}", e);
+                    continue;
+                }
+            };
+            let image_base64 = STANDARD.encode(&image_bytes);
+
+            // Render without tokens (physical tokens used during play)
+            let rendered = match render_map_for_print(
+                map,
+                &[], // No tokens on play tiles
+                &data.base_path,
+                &image_base64,
+                &play_opts,
+            ) {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::warn!("Failed to render map for tiling: {}", e);
+                    continue;
+                }
+            };
+
+            // Slice into tiles
+            let (tiles, tiles_x, tiles_y) = match slice_map_into_tiles(&rendered, PIXELS_PER_GRID) {
+                Ok(t) => t,
+                Err(e) => {
+                    tracing::warn!("Failed to slice map into tiles: {}", e);
+                    continue;
+                }
+            };
+
+            debug!("Sliced map into {}x{} tiles ({} total)", tiles_x, tiles_y, tiles.len());
+            builder = builder.append(TiledMapSection::from_tiles(
+                map.name.clone(),
+                tiles,
+                tiles_x,
+                tiles_y,
+            ));
+        }
+    }
+
+    // Add token cutouts
+    if options.include_token_cutouts {
+        let all_tokens: Vec<RenderToken> = data
+            .maps
+            .iter()
+            .flat_map(|(_, tokens)| tokens.clone())
+            .collect();
+
+        if !all_tokens.is_empty() {
+            debug!("Adding token cutouts for {} tokens", all_tokens.len());
+            let section = TokenCutoutSheet::new(all_tokens, data.base_path.clone());
+            builder = builder.append(section);
+        }
+    }
+
+    builder.to_pdf()
 }
 
-/// Skip balanced brackets/parens, returning the number of characters consumed
-fn skip_balanced(chars: &[char], open: char, close: char) -> usize {
-    if chars.is_empty() || chars[0] != open {
-        return 0;
-    }
+/// Build a single document PDF
+///
+/// Convenience function for exporting a single markdown document.
+#[instrument(skip_all, fields(path = %file_path.display()))]
+pub fn build_single_document_pdf(
+    file_path: &PathBuf,
+    title: Option<&str>,
+    templates_root: PathBuf,
+) -> Result<Vec<u8>> {
+    info!("Building single document PDF");
 
-    let mut depth = 0;
-    let mut i = 0;
+    let section = MarkdownSection::from_file(file_path)?;
+    let doc_title = title
+        .map(|s| s.to_string())
+        .or_else(|| section.toc_title())
+        .unwrap_or_else(|| "Document".to_string());
 
-    while i < chars.len() {
-        if chars[i] == open {
-            depth += 1;
-        } else if chars[i] == close {
-            depth -= 1;
-            if depth == 0 {
-                return i + 1;
-            }
-        }
-        i += 1;
-    }
-
-    // Unbalanced - return whole remaining content
-    chars.len()
+    DocumentBuilder::new(doc_title)
+        .with_templates_root(templates_root)
+        .with_toc(false)
+        .append(section)
+        .to_pdf()
 }
 
 #[cfg(test)]
@@ -544,58 +323,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_sanitize_typst_content() {
-        // Test removing #set page commands
-        let content_with_set_page = r#"= Hello World
+    fn test_export_options_defaults() {
+        let opts = ExportOptions::default();
+        assert!(!opts.include_toc);
+        assert!(!opts.include_monsters);
+    }
 
-#set page(header: [My Header])
+    #[test]
+    fn test_export_options_reference_doc() {
+        let opts = ExportOptions::reference_doc();
+        assert!(opts.include_toc);
+        assert!(opts.include_monsters);
+        assert!(opts.include_npcs);
+        assert!(opts.include_map_previews);
+        assert!(!opts.include_tiled_maps);
+    }
 
-Some content here.
-
-#set page(footer: [My Footer], margin: 1in)
-
-More content."#;
-        let sanitized = sanitize_typst_content(content_with_set_page);
-        assert!(!sanitized.contains("#set page"), "Should remove #set page");
-        assert!(sanitized.contains("= Hello World"));
-        assert!(sanitized.contains("Some content here."));
-        assert!(sanitized.contains("More content."));
-
-        // Test content without page commands passes through unchanged
-        let clean_content = "= Normal Content\n\nJust text here.";
-        let sanitized_clean = sanitize_typst_content(clean_content);
-        assert_eq!(sanitized_clean, clean_content);
-
-        // Test removing #page function calls
-        let content_with_page_fn = r#"= Title
-
-#page(header: [Test])[
-  Some content in a page block
-]
-
-After the page."#;
-        let sanitized_fn = sanitize_typst_content(content_with_page_fn);
-        assert!(!sanitized_fn.contains("#page("), "Should remove #page function");
-
-        // Test nested brackets/parens are handled correctly
-        let content_with_nested = r#"= Title
-
-#set page(header: [text(fill: red)[Hello]], footer: [page #context counter(page).display()])
-
-After nested."#;
-        let sanitized_nested = sanitize_typst_content(content_with_nested);
-        assert!(!sanitized_nested.contains("#set page"), "Should handle nested brackets");
-        assert!(sanitized_nested.contains("After nested."));
-
-        // Test #pagebreak is preserved
-        let content_with_pagebreak = "= Title\n\n#pagebreak()\n\n= Next Section";
-        let sanitized_pagebreak = sanitize_typst_content(content_with_pagebreak);
-        assert!(sanitized_pagebreak.contains("#pagebreak()"), "Should preserve #pagebreak");
-
-        // Test other safe # commands are preserved
-        let content_with_safe = "= Title\n\n#table(columns: 2)[A][B]\n\n#link(\"url\")[text]";
-        let sanitized_safe = sanitize_typst_content(content_with_safe);
-        assert!(sanitized_safe.contains("#table"), "Should preserve #table");
-        assert!(sanitized_safe.contains("#link"), "Should preserve #link");
+    #[test]
+    fn test_export_options_physical_play_kit() {
+        let opts = ExportOptions::physical_play_kit();
+        assert!(!opts.include_toc);
+        assert!(opts.include_tiled_maps);
+        assert!(opts.include_token_cutouts);
     }
 }

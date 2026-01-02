@@ -1,10 +1,8 @@
 //! Custom Typst World implementation for Mimir
 //!
-//! The World trait is how Typst resolves files, fonts, and other resources.
-//! This implementation provides:
-//! - Template file resolution from our templates directory
-//! - System font loading
-//! - Data injection via JSON
+//! A Typst "World" is the compiler's environment - it tells Typst where to find
+//! source files, fonts, and images. Our implementation supports in-memory content
+//! for the main document while resolving other resources from the filesystem.
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -64,26 +62,76 @@ fn get_fonts() -> &'static (LazyHash<FontBook>, Vec<Font>) {
 
 /// Mimir's custom Typst World implementation
 pub struct MimirTypstWorld {
-    /// Root directory for templates
-    templates_root: PathBuf,
-    /// The main template file being compiled
+    /// Root directory for file resolution (templates, images, etc.)
+    root_dir: PathBuf,
+    /// The main file being compiled
     main_file: FileId,
+    /// In-memory content for the main file (if provided)
+    main_content: Option<String>,
     /// Cache of loaded source files
     sources: RwLock<HashMap<FileId, TypstSource>>,
+    /// In-memory files (images, etc.) accessible via virtual paths
+    virtual_files: RwLock<HashMap<String, Bytes>>,
     /// Library with standard functions
     library: LazyHash<Library>,
-    /// Data to inject into templates (as JSON string)
-    data_json: String,
 }
 
 impl MimirTypstWorld {
-    /// Create a new MimirTypstWorld
+    /// Create a world from in-memory Typst content
     ///
-    /// # Arguments
-    /// * `templates_root` - Root directory containing templates
-    /// * `template_path` - Path to the main template file (relative to templates_root)
-    /// * `data` - JSON data to inject into the template
-    pub fn new(
+    /// Used by DocumentBuilder to compile generated Typst without writing to disk.
+    /// The root_dir is still needed to resolve image/file references.
+    pub fn from_content(content: String, root_dir: PathBuf) -> Self {
+        let main_file = FileId::new(None, VirtualPath::new("main.typ"));
+        Self {
+            root_dir,
+            main_file,
+            main_content: Some(content),
+            sources: RwLock::new(HashMap::new()),
+            virtual_files: RwLock::new(HashMap::new()),
+            library: LazyHash::new(Library::default()),
+        }
+    }
+
+    /// Create a world from in-memory Typst content with pre-registered virtual files
+    ///
+    /// Virtual files can be referenced in Typst source using their registered paths.
+    pub fn from_content_with_files(
+        content: String,
+        root_dir: PathBuf,
+        files: HashMap<String, Vec<u8>>,
+    ) -> Self {
+        let main_file = FileId::new(None, VirtualPath::new("main.typ"));
+        let virtual_files: HashMap<String, Bytes> = files
+            .into_iter()
+            .map(|(k, v)| (k, Bytes::from(v)))
+            .collect();
+        Self {
+            root_dir,
+            main_file,
+            main_content: Some(content),
+            sources: RwLock::new(HashMap::new()),
+            virtual_files: RwLock::new(virtual_files),
+            library: LazyHash::new(Library::default()),
+        }
+    }
+
+    /// Register an in-memory file that can be accessed via a virtual path
+    ///
+    /// The path should be a simple name like "map_preview.png" which will be
+    /// accessible as "/_virtual/map_preview.png" in Typst source.
+    pub fn register_file(&self, name: &str, data: Vec<u8>) -> String {
+        let virtual_path = format!("/_virtual/{}", name);
+        if let Ok(mut files) = self.virtual_files.write() {
+            files.insert(virtual_path.clone(), Bytes::from(data));
+        }
+        virtual_path
+    }
+
+    /// Create a world from a template file with JSON data injection
+    ///
+    /// The data is injected as `#let data = ...` at the top of the template.
+    pub fn from_template(
         templates_root: PathBuf,
         template_path: &str,
         data: serde_json::Value,
@@ -93,15 +141,25 @@ impl MimirTypstWorld {
             return Err(PrintError::TemplateNotFound(template_path.to_string()));
         }
 
-        let main_file = FileId::new(None, VirtualPath::new(template_path));
-        let data_json = serde_json::to_string(&data)?;
+        // Read template and inject data
+        let template_content = std::fs::read_to_string(&full_path)
+            .map_err(|_| PrintError::TemplateReadError(template_path.to_string()))?;
 
+        let data_json = serde_json::to_string(&data)?;
+        let content = format!(
+            "#let data = json.decode(\"{}\")\n\n{}",
+            data_json.replace('\\', "\\\\").replace('"', "\\\""),
+            template_content
+        );
+
+        let main_file = FileId::new(None, VirtualPath::new(template_path));
         Ok(Self {
-            templates_root,
+            root_dir: templates_root,
             main_file,
+            main_content: Some(content),
             sources: RwLock::new(HashMap::new()),
+            virtual_files: RwLock::new(HashMap::new()),
             library: LazyHash::new(Library::default()),
-            data_json,
         })
     }
 
@@ -110,21 +168,19 @@ impl MimirTypstWorld {
         let vpath = id.vpath();
         let rooted = vpath.as_rooted_path();
 
-        // Check if this looks like an absolute filesystem path (e.g., /var/folders/...)
-        // If so, and it exists, return it directly without joining to templates_root
+        // Check if this looks like an absolute filesystem path
         let stripped = rooted.strip_prefix("/").unwrap_or(rooted);
         let as_absolute = PathBuf::from("/").join(stripped);
         if as_absolute.exists() {
             return as_absolute;
         }
 
-        // Otherwise, resolve relative to templates root
-        self.templates_root.join(stripped)
+        self.root_dir.join(stripped)
     }
 
-    /// Read and cache a source file
-    fn read_source(&self, id: FileId) -> FileResult<TypstSource> {
-        // Check if already cached (read lock)
+    /// Read and cache a source file from disk
+    fn read_source_from_disk(&self, id: FileId) -> FileResult<TypstSource> {
+        // Check cache first
         if let Ok(sources) = self.sources.read() {
             if let Some(source) = sources.get(&id) {
                 return Ok(source.clone());
@@ -132,32 +188,15 @@ impl MimirTypstWorld {
         }
 
         let path = self.resolve_path(id);
-        let content =
-            std::fs::read_to_string(&path).map_err(|e| FileError::from_io(e, &path))?;
-
-        // If this is the main file, inject data
-        let content = if id == self.main_file {
-            self.inject_data(&content)
-        } else {
-            content
-        };
+        let content = std::fs::read_to_string(&path)
+            .map_err(|e| FileError::from_io(e, &path))?;
 
         let source = TypstSource::new(id, content);
 
-        // Cache the source (write lock)
         if let Ok(mut sources) = self.sources.write() {
             sources.insert(id, source.clone());
         }
         Ok(source)
-    }
-
-    /// Inject JSON data into template by prepending a data variable
-    fn inject_data(&self, content: &str) -> String {
-        format!(
-            "#let data = json.decode(\"{}\")\n\n{}",
-            self.data_json.replace('\\', "\\\\").replace('"', "\\\""),
-            content
-        )
     }
 }
 
@@ -176,12 +215,39 @@ impl typst::World for MimirTypstWorld {
     }
 
     fn source(&self, id: FileId) -> FileResult<TypstSource> {
-        self.read_source(id)
+        // Return in-memory content for main file
+        if id == self.main_file {
+            if let Some(ref content) = self.main_content {
+                return Ok(TypstSource::new(id, content.clone()));
+            }
+        }
+        // Fall back to disk for other files
+        self.read_source_from_disk(id)
     }
 
     fn file(&self, id: FileId) -> FileResult<Bytes> {
+        // Check for virtual files first
+        let vpath = id.vpath().as_rooted_path();
+        let vpath_str = vpath.to_string_lossy();
+
+        tracing::debug!("Typst requesting file: {:?}", vpath_str);
+
+        if let Ok(files) = self.virtual_files.read() {
+            if let Some(data) = files.get(vpath_str.as_ref()) {
+                tracing::debug!("Found in virtual files: {} bytes", data.len());
+                return Ok(data.clone());
+            }
+        }
+
+        // Fall back to filesystem
         let path = self.resolve_path(id);
-        let data = std::fs::read(&path).map_err(|e| FileError::from_io(e, &path))?;
+        tracing::debug!("Resolved to filesystem path: {:?}", path);
+
+        let data = std::fs::read(&path).map_err(|e| {
+            tracing::warn!("Failed to read file {:?}: {}", path, e);
+            FileError::from_io(e, &path)
+        })?;
+        tracing::debug!("Read {} bytes from filesystem", data.len());
         Ok(Bytes::from(data))
     }
 
@@ -216,25 +282,40 @@ mod tests {
     use tempfile::TempDir;
 
     #[test]
-    fn test_world_creation() {
+    fn test_from_content() {
+        let temp = TempDir::new().unwrap();
+        let world = MimirTypstWorld::from_content(
+            "= Hello World".to_string(),
+            temp.path().to_path_buf(),
+        );
+
+        assert!(world.main_content.is_some());
+        assert_eq!(world.main_content.unwrap(), "= Hello World");
+    }
+
+    #[test]
+    fn test_from_template() {
         let temp = TempDir::new().unwrap();
         let template_path = temp.path().join("test.typ");
-        fs::write(&template_path, "Hello").unwrap();
+        fs::write(&template_path, "= Hello #data.name").unwrap();
 
-        let world = MimirTypstWorld::new(
+        let world = MimirTypstWorld::from_template(
             temp.path().to_path_buf(),
             "test.typ",
-            serde_json::json!({}),
+            serde_json::json!({"name": "World"}),
         );
 
         assert!(world.is_ok());
+        let world = world.unwrap();
+        assert!(world.main_content.is_some());
+        assert!(world.main_content.unwrap().contains("json.decode"));
     }
 
     #[test]
     fn test_template_not_found() {
         let temp = TempDir::new().unwrap();
 
-        let world = MimirTypstWorld::new(
+        let world = MimirTypstWorld::from_template(
             temp.path().to_path_buf(),
             "nonexistent.typ",
             serde_json::json!({}),

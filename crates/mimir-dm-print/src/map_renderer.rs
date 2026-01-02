@@ -12,6 +12,54 @@ use std::path::Path;
 
 use crate::error::{PrintError, Result};
 
+/// Simple UVTT file structure for extracting image data
+/// This is a minimal version - full UVTT parsing is in mimir-dm
+#[derive(Deserialize)]
+struct UvttImageExtractor {
+    image: String,
+}
+
+/// Load image bytes from a file, handling UVTT files by extracting their embedded image
+pub fn load_image_from_file(path: &Path) -> Result<Vec<u8>> {
+    let extension = path.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("");
+
+    let is_uvtt = extension == "dd2vtt" || extension == "uvtt";
+
+    if is_uvtt {
+        // Read and parse UVTT file to extract base64 image
+        let bytes = std::fs::read(path).map_err(|e| {
+            PrintError::IoError(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Failed to read UVTT file {:?}: {}", path, e),
+            ))
+        })?;
+
+        let uvtt: UvttImageExtractor = serde_json::from_slice(&bytes).map_err(|e| {
+            PrintError::IoError(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Failed to parse UVTT file {:?}: {}", path, e),
+            ))
+        })?;
+
+        STANDARD.decode(&uvtt.image).map_err(|e| {
+            PrintError::IoError(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Failed to decode base64 image from UVTT {:?}: {}", path, e),
+            ))
+        })
+    } else {
+        // Regular image file - read directly
+        std::fs::read(path).map_err(|e| {
+            PrintError::IoError(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Failed to read image file {:?}: {}", path, e),
+            ))
+        })
+    }
+}
+
 /// Token data for rendering on maps
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RenderToken {
@@ -135,12 +183,14 @@ pub fn render_map_with_grid(
     map: &RenderMap,
     base_path: &Path,
 ) -> Result<RgbaImage> {
-    // Load the base image
+    // Load the base image (handles both regular images and UVTT files)
     let image_path = base_path.join(&map.image_path);
-    let img = image::open(&image_path).map_err(|e| {
+    let image_bytes = load_image_from_file(&image_path)?;
+
+    let img = image::load_from_memory(&image_bytes).map_err(|e| {
         PrintError::IoError(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            format!("Failed to load map image {:?}: {}", image_path, e),
+            std::io::ErrorKind::InvalidData,
+            format!("Failed to decode map image {:?}: {}", image_path, e),
         ))
     })?;
 
@@ -323,44 +373,6 @@ fn draw_los_walls(img: &mut RgbaImage, walls: &[Vec<(f64, f64)>], pixels_per_gri
     }
 }
 
-/// Draw position markers on an image
-///
-/// Position markers are colored circles at token positions, used for
-/// printed maps where tokens will be placed during play.
-/// Colors alternate between a few distinct colors for easier identification.
-fn draw_position_markers(
-    img: &mut RgbaImage,
-    tokens: &[RenderToken],
-    grid_size_px: i32,
-) {
-    // Alternating colors for position markers
-    let marker_colors = [
-        Rgba([30, 60, 120, 255]),   // Dark blue
-        Rgba([120, 30, 60, 255]),   // Dark red
-        Rgba([30, 120, 60, 255]),   // Dark green
-        Rgba([100, 60, 120, 255]),  // Purple
-        Rgba([120, 100, 30, 255]),  // Olive
-        Rgba([60, 100, 120, 255]),  // Teal
-    ];
-
-    let grid_size = grid_size_px as f32;
-    let marker_radius = (grid_size * 0.4) as i32;
-    let border_color = Rgba([255, 255, 255, 255]);
-
-    for (idx, token) in tokens.iter().enumerate() {
-        let center_x = token.x as i32;
-        let center_y = token.y as i32;
-        let color = marker_colors[idx % marker_colors.len()];
-
-        // Draw filled circle for marker
-        draw_filled_circle_mut(img, (center_x, center_y), marker_radius, color);
-
-        // Draw white border ring
-        draw_filled_circle_mut(img, (center_x, center_y), marker_radius + 2, border_color);
-        draw_filled_circle_mut(img, (center_x, center_y), marker_radius, color);
-    }
-}
-
 /// Render a map for print output with configurable options
 ///
 /// This function loads the map image from base64 (UVTT format), applies
@@ -403,11 +415,9 @@ pub fn render_map_for_print(
         draw_los_walls(&mut img, &options.los_walls, options.pixels_per_grid);
     }
 
-    // Draw either position markers or tokens
-    if options.show_positions && !tokens.is_empty() {
-        draw_position_markers(&mut img, tokens, map.grid_size_px.unwrap_or(50));
-    } else if !tokens.is_empty() && map.grid_size_px.is_some() {
-        // Draw full tokens
+    // Only draw tokens when show_positions is explicitly enabled
+    // (clean map preview when not selected, tokens shown when starting positions requested)
+    if options.show_positions && !tokens.is_empty() && map.grid_size_px.is_some() {
         draw_tokens(&mut img, tokens, map.grid_size_px.unwrap_or(50));
     }
 
@@ -431,6 +441,58 @@ pub fn render_map_for_print(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::{engine::general_purpose::STANDARD, Engine};
+
+    /// Create a minimal valid PNG image for testing
+    fn create_test_image_bytes(width: u32, height: u32) -> Vec<u8> {
+        let mut img = RgbaImage::new(width, height);
+
+        // Fill with a simple solid color
+        for y in 0..height {
+            for x in 0..width {
+                img.put_pixel(x, y, Rgba([100, 100, 100, 255]));
+            }
+        }
+
+        // Encode to PNG
+        let mut png_bytes: Vec<u8> = Vec::new();
+        img.write_to(
+            &mut std::io::Cursor::new(&mut png_bytes),
+            image::ImageFormat::Png,
+        )
+        .expect("Failed to encode test image");
+
+        png_bytes
+    }
+
+    fn create_test_image_base64(width: u32, height: u32) -> String {
+        STANDARD.encode(create_test_image_bytes(width, height))
+    }
+
+    fn sample_map() -> RenderMap {
+        RenderMap {
+            name: "Test Dungeon".to_string(),
+            image_path: "test.png".to_string(),
+            width_px: 540,
+            height_px: 324,
+            grid_type: "square".to_string(),
+            grid_size_px: Some(54),
+            grid_offset_x: 0,
+            grid_offset_y: 0,
+        }
+    }
+
+    fn sample_token(name: &str, x: f32, y: f32, size: &str, token_type: &str) -> RenderToken {
+        RenderToken {
+            name: name.to_string(),
+            x,
+            y,
+            size: size.to_string(),
+            color: None,
+            token_type: token_type.to_string(),
+            image_path: None,
+        }
+    }
 
     #[test]
     fn test_parse_hex_color() {
@@ -441,22 +503,305 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_hex_color_edge_cases() {
+        // Without hash
+        assert_eq!(parse_hex_color("ffffff"), Some(Rgba([255, 255, 255, 255])));
+        assert_eq!(parse_hex_color("000000"), Some(Rgba([0, 0, 0, 255])));
+
+        // Invalid lengths
+        assert_eq!(parse_hex_color("fff"), None);
+        assert_eq!(parse_hex_color("#fff"), None);
+        assert_eq!(parse_hex_color("ff00ff00"), None);
+
+        // Invalid characters
+        assert_eq!(parse_hex_color("gggggg"), None);
+    }
+
+    #[test]
     fn test_token_grid_squares() {
-        let token = RenderToken {
-            name: "Test".to_string(),
-            x: 0.0,
-            y: 0.0,
-            size: "medium".to_string(),
-            color: None,
-            token_type: "monster".to_string(),
-            image_path: None,
-        };
+        let token = sample_token("Test", 0.0, 0.0, "medium", "monster");
         assert_eq!(token.grid_squares(), 1.0);
 
-        let large = RenderToken {
-            size: "large".to_string(),
-            ..token.clone()
+        // Test all size variants
+        assert_eq!(sample_token("T", 0.0, 0.0, "tiny", "monster").grid_squares(), 0.5);
+        assert_eq!(sample_token("T", 0.0, 0.0, "t", "monster").grid_squares(), 0.5);
+        assert_eq!(sample_token("S", 0.0, 0.0, "small", "monster").grid_squares(), 1.0);
+        assert_eq!(sample_token("S", 0.0, 0.0, "s", "monster").grid_squares(), 1.0);
+        assert_eq!(sample_token("M", 0.0, 0.0, "medium", "monster").grid_squares(), 1.0);
+        assert_eq!(sample_token("M", 0.0, 0.0, "m", "monster").grid_squares(), 1.0);
+        assert_eq!(sample_token("L", 0.0, 0.0, "large", "monster").grid_squares(), 2.0);
+        assert_eq!(sample_token("L", 0.0, 0.0, "l", "monster").grid_squares(), 2.0);
+        assert_eq!(sample_token("H", 0.0, 0.0, "huge", "monster").grid_squares(), 3.0);
+        assert_eq!(sample_token("H", 0.0, 0.0, "h", "monster").grid_squares(), 3.0);
+        assert_eq!(sample_token("G", 0.0, 0.0, "gargantuan", "monster").grid_squares(), 4.0);
+        assert_eq!(sample_token("G", 0.0, 0.0, "g", "monster").grid_squares(), 4.0);
+
+        // Unknown size defaults to 1.0
+        assert_eq!(sample_token("?", 0.0, 0.0, "colossal", "monster").grid_squares(), 1.0);
+    }
+
+    #[test]
+    fn test_token_default_colors() {
+        // Monster - red
+        let monster = sample_token("Goblin", 0.0, 0.0, "medium", "monster");
+        assert_eq!(monster.default_color(), Rgba([220, 53, 69, 255]));
+
+        // PC - green
+        let pc = sample_token("Hero", 0.0, 0.0, "medium", "pc");
+        assert_eq!(pc.default_color(), Rgba([40, 167, 69, 255]));
+
+        // NPC - blue
+        let npc = sample_token("Merchant", 0.0, 0.0, "medium", "npc");
+        assert_eq!(npc.default_color(), Rgba([0, 123, 255, 255]));
+
+        // Trap - yellow
+        let trap = sample_token("Pit", 0.0, 0.0, "medium", "trap");
+        assert_eq!(trap.default_color(), Rgba([255, 193, 7, 255]));
+
+        // Marker - gray
+        let marker = sample_token("X", 0.0, 0.0, "medium", "marker");
+        assert_eq!(marker.default_color(), Rgba([108, 117, 125, 255]));
+
+        // Unknown type - gray
+        let unknown = sample_token("?", 0.0, 0.0, "medium", "unknown");
+        assert_eq!(unknown.default_color(), Rgba([128, 128, 128, 255]));
+    }
+
+    #[test]
+    fn test_token_get_color_with_custom() {
+        let mut token = sample_token("Test", 0.0, 0.0, "medium", "monster");
+        token.color = Some("#ff00ff".to_string());
+
+        assert_eq!(token.get_color(), Rgba([255, 0, 255, 255]));
+    }
+
+    #[test]
+    fn test_token_get_color_falls_back_to_default() {
+        let mut token = sample_token("Test", 0.0, 0.0, "medium", "pc");
+        token.color = Some("invalid".to_string());
+
+        // Should fall back to PC default (green)
+        assert_eq!(token.get_color(), Rgba([40, 167, 69, 255]));
+    }
+
+    #[test]
+    fn test_render_map_has_grid() {
+        let mut map = sample_map();
+        assert!(map.has_grid());
+
+        // No grid when grid_size_px is None
+        map.grid_size_px = None;
+        assert!(!map.has_grid());
+
+        // No grid when grid_type is "none"
+        map.grid_size_px = Some(50);
+        map.grid_type = "none".to_string();
+        assert!(!map.has_grid());
+    }
+
+    #[test]
+    fn test_render_map_for_print_basic() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+        let options = MapPrintOptions::default();
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+        let rendered = result.unwrap();
+        assert_eq!(rendered.width_px, 540);
+        assert_eq!(rendered.height_px, 324);
+        assert!(!rendered.image_bytes.is_empty());
+
+        // Verify it's a valid PNG
+        let img = image::load_from_memory(&rendered.image_bytes);
+        assert!(img.is_ok());
+    }
+
+    #[test]
+    fn test_render_map_for_print_with_grid() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+        let options = MapPrintOptions {
+            show_grid: true,
+            ..Default::default()
         };
-        assert_eq!(large.grid_squares(), 2.0);
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+        // Grid is drawn but we can't easily verify visually in a unit test
+        // Just verify it doesn't error
+    }
+
+    #[test]
+    fn test_render_map_for_print_with_tokens() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+        let tokens = vec![
+            sample_token("Goblin", 100.0, 100.0, "small", "monster"),
+            sample_token("Hero", 200.0, 150.0, "medium", "pc"),
+        ];
+        let options = MapPrintOptions::default();
+
+        let result = render_map_for_print(&map, &tokens, &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_map_for_print_with_los_walls() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+
+        // L-shaped wall in grid coordinates
+        let los_walls = vec![vec![
+            (1.0, 1.0),
+            (1.0, 3.0),
+            (4.0, 3.0),
+        ]];
+
+        let options = MapPrintOptions {
+            show_los_walls: true,
+            los_walls,
+            pixels_per_grid: 54,
+            ..Default::default()
+        };
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_map_for_print_with_position_markers() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+        let tokens = vec![
+            sample_token("Pos1", 100.0, 100.0, "medium", "monster"),
+            sample_token("Pos2", 200.0, 200.0, "medium", "monster"),
+        ];
+
+        let options = MapPrintOptions {
+            show_positions: true,
+            ..Default::default()
+        };
+
+        let result = render_map_for_print(&map, &tokens, &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_map_for_print_all_overlays() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+        let tokens = vec![
+            sample_token("Goblin", 81.0, 81.0, "small", "monster"),
+            sample_token("Hero", 270.0, 162.0, "medium", "pc"),
+        ];
+
+        let los_walls = vec![
+            vec![(0.0, 0.0), (0.0, 6.0)],  // Left wall
+            vec![(0.0, 0.0), (10.0, 0.0)], // Top wall
+        ];
+
+        let options = MapPrintOptions {
+            show_grid: true,
+            show_los_walls: true,
+            show_positions: false, // Show actual tokens
+            los_walls,
+            pixels_per_grid: 54,
+        };
+
+        let result = render_map_for_print(&map, &tokens, &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+        let rendered = result.unwrap();
+        assert!(!rendered.image_bytes.is_empty());
+
+        // Verify the output is a valid PNG
+        let img = image::load_from_memory(&rendered.image_bytes);
+        assert!(img.is_ok());
+    }
+
+    #[test]
+    fn test_render_map_for_print_invalid_base64() {
+        let map = sample_map();
+        let options = MapPrintOptions::default();
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), "not-valid-base64!", &options);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_render_map_for_print_invalid_image_data() {
+        let map = sample_map();
+        let options = MapPrintOptions::default();
+
+        // Valid base64 but not a valid image
+        let invalid_image = STANDARD.encode(b"not an image");
+        let result = render_map_for_print(&map, &[], &Path::new(""), &invalid_image, &options);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_render_map_for_print_no_grid_when_not_configured() {
+        let mut map = sample_map();
+        map.grid_size_px = None; // No grid configured
+
+        let image_base64 = create_test_image_base64(540, 324);
+        let options = MapPrintOptions {
+            show_grid: true, // Requested but won't render
+            ..Default::default()
+        };
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+
+        // Should succeed - just won't draw grid
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_los_walls_empty_segment_skipped() {
+        let map = sample_map();
+        let image_base64 = create_test_image_base64(540, 324);
+
+        // Include an empty wall and a single-point wall (both should be skipped)
+        let los_walls = vec![
+            vec![],                         // Empty
+            vec![(1.0, 1.0)],               // Single point (needs at least 2)
+            vec![(2.0, 2.0), (4.0, 4.0)],   // Valid segment
+        ];
+
+        let options = MapPrintOptions {
+            show_los_walls: true,
+            los_walls,
+            pixels_per_grid: 54,
+            ..Default::default()
+        };
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_map_dimensions_preserved() {
+        let mut map = sample_map();
+        map.width_px = 800;
+        map.height_px = 600;
+
+        let image_base64 = create_test_image_base64(800, 600);
+        let options = MapPrintOptions::default();
+
+        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+
+        assert!(result.is_ok());
+        let rendered = result.unwrap();
+        assert_eq!(rendered.width_px, 800);
+        assert_eq!(rendered.height_px, 600);
     }
 }

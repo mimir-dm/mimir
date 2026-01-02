@@ -1,48 +1,60 @@
 //! mimir-dm-print - PDF generation for Mimir using Typst
 //!
 //! This crate provides print and PDF generation capabilities for Mimir,
-//! using the Typst document compiler. It supports:
+//! using the Typst document compiler.
 //!
-//! - Template-based document generation
-//! - Data injection from JSON
-//! - System font support
-//! - Multiple output formats (PDF)
+//! # Two Rendering Approaches
 //!
-//! # Architecture
+//! ## 1. Standalone Template Rendering
 //!
-//! The crate is organized around a few key components:
-//!
-//! - [`PrintService`] - Main service for rendering templates to PDF
-//! - [`MimirTypstWorld`] - Custom Typst World implementation for Mimir
-//! - [`commands`] - Tauri commands (when `tauri-commands` feature enabled)
-//!
-//! # Example
+//! For high-fidelity single documents (character sheets, spell cards, etc.):
 //!
 //! ```ignore
 //! use mimir_dm_print::PrintService;
 //! use serde_json::json;
 //!
 //! let service = PrintService::new("/path/to/templates".into());
-//!
-//! let data = json!({
-//!     "character_name": "Gandalf",
-//!     "level": 20,
-//!     "class": "Wizard"
-//! });
-//!
+//! let data = json!({"character_name": "Gandalf", "level": 20});
 //! let pdf_bytes = service.render_to_pdf("character/sheet.typ", data)?;
-//! std::fs::write("character_sheet.pdf", pdf_bytes)?;
+//! ```
+//!
+//! ## 2. Composed Document Building
+//!
+//! For combining multiple content types (campaign exports, module references):
+//!
+//! ```ignore
+//! use mimir_dm_print::{DocumentBuilder, MarkdownSection, MonsterAppendix};
+//!
+//! let pdf = DocumentBuilder::new("Campaign Guide")
+//!     .with_toc(true)
+//!     .append(MarkdownSection::from_file(&doc_path)?)
+//!     .append(MonsterAppendix::new(monsters_json))
+//!     .to_pdf()?;
 //! ```
 
-mod campaign;
+pub mod builder;
+pub mod campaign;
+pub mod character;
 pub mod commands;
 pub mod error;
 pub mod map_renderer;
+pub mod maps;
 pub mod markdown;
+pub mod sections;
 pub mod service;
 pub mod world;
 
+pub use campaign::{build_campaign_pdf, build_single_document_pdf, CampaignExportData, ExportOptions};
+pub use character::generate_character_sheet_pdf;
+pub use maps::{generate_map_pdf, slice_map_into_tiles, MapPdfOptions};
+
+pub use builder::{DocumentBuilder, DocumentConfig, RenderContext, Renderable, VirtualFileRegistry};
 pub use error::{PrintError, Result};
+pub use sections::{
+    CharacterSheetSection, CharacterSummarySection, EncounterSection, MapPreview, MarkdownSection,
+    MonsterAppendix, MonsterCardSection, MonsterStatBlockSection, NpcAppendix, NpcIndexCardSection,
+    SpellCardsSection, SpellListSection, TileData, TiledMapSection, TokenCutoutSheet,
+};
 pub use map_renderer::{
     render_map, render_map_for_print, MapPrintOptions, RenderMap, RenderToken, RenderedMap,
     RenderedMapForPrint,
