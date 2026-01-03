@@ -11,10 +11,12 @@
       Loading NPCs...
     </div>
 
-    <div v-else-if="npcs.length === 0" class="empty-state">
-      <p>No NPCs in this campaign yet.</p>
-      <p class="empty-hint">Create NPCs with full character sheets for your adventure.</p>
-    </div>
+    <EmptyState
+      v-else-if="npcs.length === 0"
+      variant="characters"
+      title="No NPCs in this campaign yet"
+      description="Create NPCs with full character sheets for your adventure."
+    />
 
     <div v-else class="npc-grid">
       <div
@@ -51,6 +53,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharacterStore } from '@/stores/characters'
 import CharacterCreationWizard from '@/features/characters/components/CharacterCreationWizard.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Character } from '@/types/character'
 
 const props = defineProps<{
@@ -148,16 +151,10 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--spacing-lg);
   color: var(--color-text-secondary);
-}
-
-.empty-hint {
-  font-size: 0.875rem;
-  margin-top: var(--spacing-xs);
 }
 
 .npc-grid {

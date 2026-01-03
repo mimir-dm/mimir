@@ -153,10 +153,12 @@
         Loading map...
       </div>
 
-      <div v-else-if="!mapImageUrl" class="empty-state">
-        <p>No map selected</p>
-        <p class="empty-hint">Select a map from the sidebar to view and control it</p>
-      </div>
+      <EmptyState
+        v-else-if="!mapImageUrl"
+        variant="campaigns"
+        title="No map selected"
+        description="Select a map from the sidebar to view and control it"
+      />
 
       <div
         v-else
@@ -426,6 +428,7 @@ import LosDebugOverlay from '@/components/los/LosDebugOverlay.vue'
 import DoorInteractionOverlay from '@/components/los/DoorInteractionOverlay.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Token, CreateTokenRequest } from '@/types/api'
 
 // Throttle helper for smooth updates
@@ -1777,8 +1780,7 @@ onUnmounted(() => {
   cursor: grabbing;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1786,12 +1788,6 @@ onUnmounted(() => {
   height: 100%;
   color: var(--color-text-muted);
   font-size: 0.875rem;
-}
-
-.empty-hint {
-  font-size: 0.75rem;
-  margin-top: var(--spacing-xs);
-  opacity: 0.7;
 }
 
 .map-container {

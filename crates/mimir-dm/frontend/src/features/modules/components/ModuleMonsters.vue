@@ -103,9 +103,12 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="empty-state">
-      <p>No monsters tagged yet. Search above to add monsters to this module.</p>
-    </div>
+    <EmptyState
+      v-else
+      variant="search"
+      title="No monsters tagged yet"
+      description="Search above to add monsters to this module."
+    />
   </div>
 </template>
 
@@ -113,6 +116,7 @@
 import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMonsters, type MonsterSummary } from '@/features/sources/composables/catalog/useMonsters'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface ModuleMonster {
   id: number
@@ -535,15 +539,4 @@ onMounted(() => {
   color: var(--color-error-dark);
 }
 
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 1.5rem;
-  color: var(--color-text-muted);
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 0.875rem;
-}
 </style>

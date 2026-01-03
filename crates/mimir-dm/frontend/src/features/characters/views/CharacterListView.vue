@@ -3,7 +3,7 @@
     <div class="character-list-view">
       <div class="header">
         <h1 class="page-title">Characters</h1>
-        <button @click="createCharacter" class="btn-primary">
+        <button @click="createCharacter" class="btn btn-primary">
           Create Character
         </button>
       </div>
@@ -11,22 +11,22 @@
       <!-- Filter Tabs -->
       <div class="filter-tabs">
         <button
-          class="filter-tab"
-          :class="{ active: characterFilter === 'all' }"
+          class="btn-tab"
+          :class="{ 'btn-tab--active': characterFilter === 'all' }"
           @click="characterFilter = 'all'"
         >
           All ({{ allCharactersCount }})
         </button>
         <button
-          class="filter-tab"
-          :class="{ active: characterFilter === 'pc' }"
+          class="btn-tab"
+          :class="{ 'btn-tab--active': characterFilter === 'pc' }"
           @click="characterFilter = 'pc'"
         >
           Player Characters ({{ pcCount }})
         </button>
         <button
-          class="filter-tab"
-          :class="{ active: characterFilter === 'npc' }"
+          class="btn-tab"
+          :class="{ 'btn-tab--active': characterFilter === 'npc' }"
           @click="characterFilter = 'npc'"
         >
           NPCs ({{ npcCount }})
@@ -48,7 +48,7 @@
         description="Create your first character to get started on your adventure"
       >
         <template #action>
-          <button @click="createCharacter" class="btn-primary">
+          <button @click="createCharacter" class="btn btn-primary">
             Create Character
           </button>
         </template>
@@ -62,7 +62,7 @@
             <div
               v-for="character in unassignedCharacters"
               :key="character.id"
-              class="character-card"
+              class="card-interactive character-card"
               :class="{ 'is-npc': character.is_npc }"
               @click="viewCharacter(character)"
             >
@@ -78,16 +78,16 @@
               </div>
               <div class="character-actions" @click.stop>
                 <div class="action-buttons">
-                  <button @click="editCharacter(character)" class="btn-action" title="Edit">
+                  <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Edit">
                     Edit
                   </button>
-                  <button @click="printCharacter(character)" class="btn-action" title="Print PDF">
+                  <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Print PDF">
                     Print
                   </button>
-                  <button @click="levelUpCharacter(character)" class="btn-action" title="Level Up">
+                  <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Level Up">
                     Level Up
                   </button>
-                  <button @click="deleteCharacter(character)" class="btn-action btn-action-danger" title="Delete">
+                  <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs" title="Delete">
                     Delete
                   </button>
                 </div>
@@ -116,7 +116,7 @@
             <div
               v-for="character in chars"
               :key="character.id"
-              class="character-card"
+              class="card-interactive character-card"
               :class="{ 'is-npc': character.is_npc }"
               @click="viewCharacter(character)"
             >
@@ -132,16 +132,16 @@
               </div>
               <div class="character-actions" @click.stop>
                 <div class="action-buttons">
-                  <button @click="editCharacter(character)" class="btn-action" title="Edit">
+                  <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Edit">
                     Edit
                   </button>
-                  <button @click="printCharacter(character)" class="btn-action" title="Print PDF">
+                  <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Print PDF">
                     Print
                   </button>
-                  <button @click="levelUpCharacter(character)" class="btn-action" title="Level Up">
+                  <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Level Up">
                     Level Up
                   </button>
-                  <button @click="deleteCharacter(character)" class="btn-action btn-action-danger" title="Delete">
+                  <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs" title="Delete">
                     Delete
                   </button>
                 </div>
@@ -492,20 +492,7 @@ const confirmDelete = async () => {
   gap: var(--spacing-lg);
 }
 
-.character-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.character-card:hover {
-  border-color: var(--color-primary-500);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
+/* Character card content styles - base styling from .card-interactive */
 
 .character-name {
   font-size: 1.25rem;
@@ -558,22 +545,6 @@ const confirmDelete = async () => {
   box-shadow: 0 0 0 2px var(--color-primary-500) / 0.2;
 }
 
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--color-primary-500);
-  color: var(--color-background);
-  border-radius: var(--radius-md);
-  border: none;
-  font-weight: 500;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  background-color: var(--color-primary-600);
-  transform: translateY(-1px);
-}
-
 .error-message {
   padding: var(--spacing-md);
   background-color: var(--color-error) / 0.1;
@@ -586,32 +557,7 @@ const confirmDelete = async () => {
 .filter-tabs {
   display: flex;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-}
-
-.filter-tab {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.filter-tab:hover {
-  background-color: var(--color-background);
-  color: var(--color-text);
-}
-
-.filter-tab.active {
-  background-color: var(--color-primary-500);
-  color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
 }
 
 /* Character Card Header */
@@ -652,29 +598,8 @@ const confirmDelete = async () => {
   margin-bottom: var(--spacing-sm);
 }
 
-.btn-action {
+.action-buttons .btn {
   flex: 1;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.btn-action:hover {
-  background-color: var(--color-surface);
-  border-color: var(--color-primary-500);
-  color: var(--color-primary-500);
-}
-
-.btn-action-danger:hover {
-  background-color: var(--color-error);
-  border-color: var(--color-error);
-  color: white;
 }
 
 /* Delete dialog */

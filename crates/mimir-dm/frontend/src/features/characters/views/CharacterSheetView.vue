@@ -58,7 +58,6 @@
               <button @click="printCharacter" class="btn-secondary" :disabled="isPrintingPdf">
                 {{ isPrintingPdf ? 'Generating...' : 'Print PDF' }}
               </button>
-              <button @click="exportCharacter" class="btn-secondary">Export</button>
               <button @click="levelUp" class="btn-secondary">Level Up</button>
               <button @click="deleteCharacter" class="btn-danger">Delete</button>
             </template>
@@ -85,6 +84,12 @@
             :class="['tab-button', { active: activeTab === 'spells' }]"
           >
             Spells
+          </button>
+          <button
+            @click="activeTab = 'details'"
+            :class="['tab-button', { active: activeTab === 'details' }]"
+          >
+            Details
           </button>
         </div>
 
@@ -797,9 +802,12 @@
               </div>
 
               <!-- Inventory List -->
-              <div v-if="data.inventory.length === 0 && !showAddItem" class="empty-state">
-                No items in inventory. Click "+ Add Item" to add some.
-              </div>
+              <EmptyState
+                v-if="data.inventory.length === 0 && !showAddItem"
+                variant="generic"
+                title="No items in inventory"
+                description="Click '+ Add Item' to add some"
+              />
 
               <div v-else class="inventory-list">
                 <div
@@ -876,6 +884,265 @@
             </section>
           </div>
         </div>
+
+        <!-- Details Tab Content -->
+        <div v-else-if="activeTab === 'details'" class="details-sheet">
+          <div class="details-content">
+            <!-- Player Info Section -->
+            <section class="details-section">
+              <h2 class="section-title">Player Info</h2>
+              <div class="player-info-row">
+                <template v-if="isEditing && editData">
+                  <label class="field-label">Player:</label>
+                  <select
+                    v-model="editData.player_id"
+                    class="edit-select"
+                  >
+                    <option :value="null">— No Player —</option>
+                    <option
+                      v-for="player in playerStore.players"
+                      :key="player.id"
+                      :value="player.id"
+                    >
+                      {{ player.name }}
+                    </option>
+                  </select>
+                </template>
+                <template v-else>
+                  <span class="field-label">Player:</span>
+                  <span class="field-value">{{ currentPlayerName }}</span>
+                </template>
+              </div>
+            </section>
+
+            <!-- Appearance Section -->
+            <section class="details-section">
+              <h2 class="section-title">Appearance</h2>
+              <!-- Edit mode -->
+              <template v-if="isEditing && editData">
+                <div class="appearance-grid">
+                  <div class="appearance-field">
+                    <label>Age</label>
+                    <input v-model="editData.appearance.age" class="edit-input" placeholder="Age..." />
+                  </div>
+                  <div class="appearance-field">
+                    <label>Height</label>
+                    <input v-model="editData.appearance.height" class="edit-input" placeholder="Height..." />
+                  </div>
+                  <div class="appearance-field">
+                    <label>Weight</label>
+                    <input v-model="editData.appearance.weight" class="edit-input" placeholder="Weight..." />
+                  </div>
+                  <div class="appearance-field">
+                    <label>Eyes</label>
+                    <input v-model="editData.appearance.eyes" class="edit-input" placeholder="Eye color..." />
+                  </div>
+                  <div class="appearance-field">
+                    <label>Hair</label>
+                    <input v-model="editData.appearance.hair" class="edit-input" placeholder="Hair color/style..." />
+                  </div>
+                  <div class="appearance-field">
+                    <label>Skin</label>
+                    <input v-model="editData.appearance.skin" class="edit-input" placeholder="Skin tone..." />
+                  </div>
+                </div>
+                <div class="appearance-textarea-section">
+                  <label>Physical Description</label>
+                  <textarea
+                    v-model="editData.appearance.physical_description"
+                    class="edit-textarea"
+                    placeholder="Describe your character's physical appearance..."
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div class="appearance-textarea-section">
+                  <label>Distinctive Features</label>
+                  <textarea
+                    v-model="editData.appearance.distinctive_features"
+                    class="edit-textarea"
+                    placeholder="Scars, tattoos, birthmarks, unusual features..."
+                    rows="2"
+                  ></textarea>
+                </div>
+              </template>
+              <!-- View mode -->
+              <template v-else>
+                <div class="appearance-grid-view">
+                  <div v-if="data.appearance?.age" class="appearance-item">
+                    <strong>Age:</strong> {{ data.appearance.age }}
+                  </div>
+                  <div v-if="data.appearance?.height" class="appearance-item">
+                    <strong>Height:</strong> {{ data.appearance.height }}
+                  </div>
+                  <div v-if="data.appearance?.weight" class="appearance-item">
+                    <strong>Weight:</strong> {{ data.appearance.weight }}
+                  </div>
+                  <div v-if="data.appearance?.eyes" class="appearance-item">
+                    <strong>Eyes:</strong> {{ data.appearance.eyes }}
+                  </div>
+                  <div v-if="data.appearance?.hair" class="appearance-item">
+                    <strong>Hair:</strong> {{ data.appearance.hair }}
+                  </div>
+                  <div v-if="data.appearance?.skin" class="appearance-item">
+                    <strong>Skin:</strong> {{ data.appearance.skin }}
+                  </div>
+                </div>
+                <div v-if="data.appearance?.physical_description" class="appearance-text">
+                  <strong>Physical Description:</strong>
+                  <p>{{ data.appearance.physical_description }}</p>
+                </div>
+                <div v-if="data.appearance?.distinctive_features" class="appearance-text">
+                  <strong>Distinctive Features:</strong>
+                  <p>{{ data.appearance.distinctive_features }}</p>
+                </div>
+                <EmptyState
+                  v-if="!hasAppearanceData"
+                  variant="generic"
+                  title="No appearance details"
+                  description="Click 'Edit' to add"
+                />
+              </template>
+            </section>
+
+            <!-- Background Section -->
+            <section class="details-section">
+              <h2 class="section-title">Background</h2>
+              <!-- Edit mode -->
+              <template v-if="isEditing && editData">
+                <div class="background-field">
+                  <label>Background Feature</label>
+                  <textarea
+                    v-model="editData.background_feature"
+                    class="edit-textarea"
+                    placeholder="Your background feature..."
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div class="background-field">
+                  <label>Backstory</label>
+                  <textarea
+                    v-model="editData.backstory"
+                    class="edit-textarea"
+                    placeholder="Your character's history and origins..."
+                    rows="8"
+                  ></textarea>
+                </div>
+              </template>
+              <!-- View mode -->
+              <template v-else>
+                <div v-if="data.background_feature" class="background-text">
+                  <strong>Background Feature:</strong>
+                  <p>{{ data.background_feature }}</p>
+                </div>
+                <div v-if="data.backstory" class="background-text">
+                  <strong>Backstory:</strong>
+                  <p class="backstory-text">{{ data.backstory }}</p>
+                </div>
+                <EmptyState
+                  v-if="!data.background_feature && !data.backstory"
+                  variant="generic"
+                  title="No background details"
+                  description="Click 'Edit' to add"
+                />
+              </template>
+            </section>
+
+            <!-- Roleplay Notes Section -->
+            <section class="details-section">
+              <h2 class="section-title">Roleplay Notes</h2>
+              <!-- Edit mode -->
+              <template v-if="isEditing && editData">
+                <div class="roleplay-field">
+                  <label>Voice & Mannerisms</label>
+                  <textarea
+                    v-model="editData.roleplay_notes.voice_and_mannerisms"
+                    class="edit-textarea"
+                    placeholder="How does your character speak? Accent, catchphrases, gestures..."
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="roleplay-field">
+                  <label>Key Relationships</label>
+                  <textarea
+                    v-model="editData.roleplay_notes.key_relationships"
+                    class="edit-textarea"
+                    placeholder="Important NPCs, family, rivals, mentors..."
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="roleplay-field">
+                  <label>Character Goals</label>
+                  <textarea
+                    v-model="editData.roleplay_notes.character_goals"
+                    class="edit-textarea"
+                    placeholder="What does your character want to achieve?"
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="roleplay-field">
+                  <label>Play Reminders</label>
+                  <textarea
+                    v-model="editData.roleplay_notes.play_reminders"
+                    class="edit-textarea"
+                    placeholder="Notes to yourself about how to play this character..."
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="roleplay-field">
+                  <label>Allies & Organizations</label>
+                  <textarea
+                    v-model="editData.roleplay_notes.allies_and_organizations"
+                    class="edit-textarea"
+                    placeholder="Factions, guilds, orders your character belongs to or is allied with..."
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="roleplay-field">
+                  <label>Additional Treasure Notes</label>
+                  <textarea
+                    v-model="editData.roleplay_notes.additional_treasure_notes"
+                    class="edit-textarea"
+                    placeholder="Notes about special items, hidden stashes, debts owed..."
+                    rows="2"
+                  ></textarea>
+                </div>
+              </template>
+              <!-- View mode -->
+              <template v-else>
+                <div v-if="data.roleplay_notes?.voice_and_mannerisms" class="roleplay-item">
+                  <strong>Voice & Mannerisms:</strong>
+                  <p>{{ data.roleplay_notes.voice_and_mannerisms }}</p>
+                </div>
+                <div v-if="data.roleplay_notes?.key_relationships" class="roleplay-item">
+                  <strong>Key Relationships:</strong>
+                  <p>{{ data.roleplay_notes.key_relationships }}</p>
+                </div>
+                <div v-if="data.roleplay_notes?.character_goals" class="roleplay-item">
+                  <strong>Character Goals:</strong>
+                  <p>{{ data.roleplay_notes.character_goals }}</p>
+                </div>
+                <div v-if="data.roleplay_notes?.play_reminders" class="roleplay-item">
+                  <strong>Play Reminders:</strong>
+                  <p>{{ data.roleplay_notes.play_reminders }}</p>
+                </div>
+                <div v-if="data.roleplay_notes?.allies_and_organizations" class="roleplay-item">
+                  <strong>Allies & Organizations:</strong>
+                  <p>{{ data.roleplay_notes.allies_and_organizations }}</p>
+                </div>
+                <div v-if="data.roleplay_notes?.additional_treasure_notes" class="roleplay-item">
+                  <strong>Additional Treasure Notes:</strong>
+                  <p>{{ data.roleplay_notes.additional_treasure_notes }}</p>
+                </div>
+                <EmptyState
+                  v-if="!hasRoleplayNotes"
+                  variant="generic"
+                  title="No roleplay notes"
+                  description="Click 'Edit' to add"
+                />
+              </template>
+            </section>
+          </div>
+        </div>
       </template>
     </div>
 
@@ -929,7 +1196,9 @@ import LevelUpDialog from '../components/LevelUpDialog.vue'
 import InventoryManager from '../components/InventoryManager.vue'
 import { PdfPreviewModal, CharacterPrintDialog } from '../../../components/print'
 import { PrintService } from '../../../services/PrintService'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '../../../stores/characters'
+import { usePlayerStore } from '../../../stores/players'
 import type { CharacterData, FeatureDetail, FeatureReference } from '../../../types/character'
 
 // Spell summary from catalog
@@ -990,9 +1259,10 @@ interface CatalogClass {
 const route = useRoute()
 const router = useRouter()
 const characterStore = useCharacterStore()
+const playerStore = usePlayerStore()
 
 // Tab navigation
-const activeTab = ref<'character' | 'spells' | 'equipment'>('character')
+const activeTab = ref<'character' | 'spells' | 'equipment' | 'details'>('character')
 
 // Spell details cache and loading state
 const spellDetails = ref<Record<string, Spell>>({})
@@ -1027,6 +1297,28 @@ const editData = ref<{
     description: string
   }>
   legendary_action_count: number
+  // Extended character details
+  player_id: number | null
+  appearance: {
+    age: string
+    height: string
+    weight: string
+    eyes: string
+    hair: string
+    skin: string
+    physical_description: string
+    distinctive_features: string
+  }
+  backstory: string
+  background_feature: string
+  roleplay_notes: {
+    voice_and_mannerisms: string
+    key_relationships: string
+    character_goals: string
+    play_reminders: string
+    allies_and_organizations: string
+    additional_treasure_notes: string
+  }
 } | null>(null)
 
 // Catalog class details (for spell progression from rules)
@@ -1038,6 +1330,8 @@ const data = computed(() => character.value?.data as CharacterData)
 
 onMounted(async () => {
   await characterStore.getCharacter(characterId.value)
+  // Fetch players for the player selector
+  await playerStore.fetchPlayers()
 })
 
 // Fetch feature details when character data is available
@@ -1670,6 +1964,32 @@ const hasPersonality = computed(() => {
   return p.traits || p.ideals || p.bonds || p.flaws
 })
 
+// Extended character details
+const hasAppearanceData = computed(() => {
+  if (!data.value?.appearance) return false
+  const a = data.value.appearance
+  return a.age || a.height || a.weight || a.eyes || a.hair || a.skin ||
+         a.physical_description || a.distinctive_features
+})
+
+const hasRoleplayNotes = computed(() => {
+  if (!data.value?.roleplay_notes) return false
+  const r = data.value.roleplay_notes
+  return r.voice_and_mannerisms || r.key_relationships || r.character_goals ||
+         r.play_reminders || r.allies_and_organizations || r.additional_treasure_notes
+})
+
+// Get player name from store or fall back to stored player_name
+const currentPlayerName = computed(() => {
+  if (!data.value) return '—'
+  if (data.value.player_id) {
+    const player = playerStore.getPlayerById(data.value.player_id)
+    if (player) return player.name
+  }
+  // Fall back to stored player_name for backwards compatibility
+  return data.value.player_name || '—'
+})
+
 const isNpc = computed(() => {
   if (!data.value) return false
   return data.value.npc_role != null ||
@@ -2193,7 +2513,29 @@ const startEditing = () => {
     legendary_actions: data.value.legendary_actions
       ? data.value.legendary_actions.map(a => ({ ...a }))
       : [],
-    legendary_action_count: data.value.legendary_action_count || 3
+    legendary_action_count: data.value.legendary_action_count || 3,
+    // Extended character details
+    player_id: data.value.player_id,
+    appearance: {
+      age: data.value.appearance?.age || '',
+      height: data.value.appearance?.height || '',
+      weight: data.value.appearance?.weight || '',
+      eyes: data.value.appearance?.eyes || '',
+      hair: data.value.appearance?.hair || '',
+      skin: data.value.appearance?.skin || '',
+      physical_description: data.value.appearance?.physical_description || '',
+      distinctive_features: data.value.appearance?.distinctive_features || ''
+    },
+    backstory: data.value.backstory || '',
+    background_feature: data.value.background_feature || '',
+    roleplay_notes: {
+      voice_and_mannerisms: data.value.roleplay_notes?.voice_and_mannerisms || '',
+      key_relationships: data.value.roleplay_notes?.key_relationships || '',
+      character_goals: data.value.roleplay_notes?.character_goals || '',
+      play_reminders: data.value.roleplay_notes?.play_reminders || '',
+      allies_and_organizations: data.value.roleplay_notes?.allies_and_organizations || '',
+      additional_treasure_notes: data.value.roleplay_notes?.additional_treasure_notes || ''
+    }
   }
   isEditing.value = true
 }
@@ -2237,7 +2579,33 @@ const saveEdits = async () => {
       legendary_actions: editData.value.legendary_actions.filter(a => a.name.trim() !== ''),
       legendary_action_count: editData.value.legendary_actions.length > 0
         ? editData.value.legendary_action_count
-        : null
+        : null,
+      // Extended character details
+      player_id: editData.value.player_id,
+      // Derive player_name from selected player for PDF export
+      player_name: editData.value.player_id
+        ? playerStore.getPlayerById(editData.value.player_id)?.name || null
+        : null,
+      appearance: {
+        age: editData.value.appearance.age || null,
+        height: editData.value.appearance.height || null,
+        weight: editData.value.appearance.weight || null,
+        eyes: editData.value.appearance.eyes || null,
+        hair: editData.value.appearance.hair || null,
+        skin: editData.value.appearance.skin || null,
+        physical_description: editData.value.appearance.physical_description || null,
+        distinctive_features: editData.value.appearance.distinctive_features || null
+      },
+      backstory: editData.value.backstory || null,
+      background_feature: editData.value.background_feature || null,
+      roleplay_notes: {
+        voice_and_mannerisms: editData.value.roleplay_notes.voice_and_mannerisms || null,
+        key_relationships: editData.value.roleplay_notes.key_relationships || null,
+        character_goals: editData.value.roleplay_notes.character_goals || null,
+        play_reminders: editData.value.roleplay_notes.play_reminders || null,
+        allies_and_organizations: editData.value.roleplay_notes.allies_and_organizations || null,
+        additional_treasure_notes: editData.value.roleplay_notes.additional_treasure_notes || null
+      }
     }
 
     await invoke('update_character', {
@@ -4082,13 +4450,6 @@ const spellsForPicker = computed(() => {
   font-size: 0.875rem;
 }
 
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
 .inventory-list {
   display: flex;
   flex-direction: column;
@@ -4235,5 +4596,231 @@ const spellsForPicker = computed(() => {
 .total-weight {
   display: flex;
   gap: var(--spacing-xs);
+}
+
+/* Details Tab */
+.details-sheet {
+  padding: var(--spacing-lg);
+}
+
+.details-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  max-width: 800px;
+}
+
+.details-section {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+}
+
+.details-section .section-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 1.125rem;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-sm);
+}
+
+/* Player Info */
+.player-info-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.player-info-row .field-label {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 100px;
+}
+
+.player-info-row .field-value {
+  color: var(--color-text);
+}
+
+.player-info-row .edit-input,
+.player-info-row .edit-select {
+  flex: 1;
+  max-width: 300px;
+}
+
+.player-info-row .edit-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.player-info-row .edit-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-alpha);
+}
+
+/* Appearance Section */
+.appearance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.appearance-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.appearance-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.appearance-field .edit-input {
+  width: 100%;
+}
+
+.appearance-textarea-section {
+  margin-top: var(--spacing-md);
+}
+
+.appearance-textarea-section label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+.appearance-grid-view {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.appearance-item {
+  font-size: 0.875rem;
+}
+
+.appearance-item strong {
+  color: var(--color-text-secondary);
+}
+
+.appearance-text {
+  margin-top: var(--spacing-md);
+}
+
+.appearance-text strong {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+.appearance-text p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Background Section */
+.background-field {
+  margin-bottom: var(--spacing-md);
+}
+
+.background-field:last-child {
+  margin-bottom: 0;
+}
+
+.background-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+.background-text {
+  margin-bottom: var(--spacing-md);
+}
+
+.background-text:last-child {
+  margin-bottom: 0;
+}
+
+.background-text strong {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+.background-text p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.backstory-text {
+  white-space: pre-wrap;
+}
+
+/* Roleplay Notes Section */
+.roleplay-field {
+  margin-bottom: var(--spacing-md);
+}
+
+.roleplay-field:last-child {
+  margin-bottom: 0;
+}
+
+.roleplay-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+.roleplay-item {
+  margin-bottom: var(--spacing-md);
+}
+
+.roleplay-item:last-child {
+  margin-bottom: 0;
+}
+
+.roleplay-item strong {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+.roleplay-item p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive adjustments for appearance grid */
+@media (max-width: 600px) {
+  .appearance-grid,
+  .appearance-grid-view {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

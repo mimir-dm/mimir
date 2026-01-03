@@ -31,9 +31,12 @@
         Loading variant rules...
       </div>
       
-      <div v-else-if="rules.length === 0" class="empty-state">
-        <p>No variant rules found matching your criteria.</p>
-      </div>
+      <EmptyState
+        v-else-if="rules.length === 0"
+        variant="search"
+        title="No variant rules found"
+        description="No variant rules found matching your criteria."
+      />
       
       <div v-else class="rules-list">
         <table class="rules-table">
@@ -82,6 +85,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useVariantRules, type VariantRuleSummary } from '../../composables/catalog'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 const emit = defineEmits<{
   select: [rule: VariantRuleSummary]
@@ -248,7 +252,7 @@ onMounted(() => {
   overflow-y: auto;
 }
 
-.loading-state, .empty-state {
+.loading-state {
   display: flex;
   align-items: center;
   justify-content: center;

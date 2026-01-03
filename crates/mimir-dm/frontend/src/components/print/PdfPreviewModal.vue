@@ -32,9 +32,12 @@
         ></iframe>
       </div>
 
-      <div v-else class="empty-state">
-        <p>No PDF to display</p>
-      </div>
+      <EmptyState
+        v-else
+        variant="generic"
+        title="No PDF to display"
+        description="Generate a PDF to preview it here"
+      />
     </div>
 
     <template #footer>
@@ -63,6 +66,7 @@
 import { ref, watch, onUnmounted } from 'vue'
 import { PrintService, type PrintResult } from '../../services/PrintService'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface Props {
   visible: boolean
@@ -247,11 +251,6 @@ defineExpose({
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   margin: 0 0 var(--spacing-lg);
-}
-
-.empty-state p {
-  color: var(--color-text-secondary);
-  margin: 0;
 }
 
 .pdf-container {

@@ -38,9 +38,12 @@
             <button @click="showAddItemModal = true" class="btn-add">+ Add Item</button>
           </div>
 
-          <div v-if="characterData.inventory.length === 0" class="empty-state">
-            No items in inventory
-          </div>
+          <EmptyState
+            v-if="characterData.inventory.length === 0"
+            variant="generic"
+            title="No items in inventory"
+            description="Add items using the button above"
+          />
 
           <div v-else class="inventory-list">
             <div
@@ -126,9 +129,12 @@
           <!-- Attunement -->
           <div class="attunement-section">
             <h4>Attuned Items ({{ attunedCount }}/3)</h4>
-            <div v-if="magicItems.length === 0" class="empty-state">
-              No magic items requiring attunement
-            </div>
+            <EmptyState
+              v-if="magicItems.length === 0"
+              variant="generic"
+              title="No magic items"
+              description="No items requiring attunement"
+            />
             <div v-else class="attunement-list">
               <label
                 v-for="item in magicItems"
@@ -261,6 +267,7 @@
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '../../../stores/characters'
 import type { CharacterData, InventoryItem } from '../../../types/character'
 
@@ -597,14 +604,6 @@ watch(() => props.visible, (visible) => {
 
 .btn-add:hover {
   background: var(--color-primary-600);
-}
-
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-secondary);
-  font-style: italic;
 }
 
 /* Inventory list */

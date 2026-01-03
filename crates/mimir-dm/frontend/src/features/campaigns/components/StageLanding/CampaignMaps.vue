@@ -11,10 +11,12 @@
       Loading maps...
     </div>
 
-    <div v-else-if="maps.length === 0" class="empty-state">
-      <p>No maps in this campaign yet.</p>
-      <p class="empty-hint">Upload battle maps, dungeon layouts, or regional maps to use with the player display.</p>
-    </div>
+    <EmptyState
+      v-else-if="maps.length === 0"
+      variant="campaigns"
+      title="No maps in this campaign yet"
+      description="Upload battle maps, dungeon layouts, or regional maps to use with the player display."
+    />
 
     <div v-else class="map-grid">
       <div
@@ -92,6 +94,7 @@ import { ref, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import MapUploadModal from './MapUploadModal.vue'
 import MapGridConfigModal from './MapGridConfigModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface Map {
   id: number
@@ -259,17 +262,10 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   padding: var(--spacing-xl);
   text-align: center;
   color: var(--color-text-muted);
-}
-
-.empty-hint {
-  font-size: 0.875rem;
-  margin-top: var(--spacing-xs);
-  opacity: 0.7;
 }
 
 .map-grid {

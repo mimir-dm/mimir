@@ -11,10 +11,12 @@
       Loading maps...
     </div>
 
-    <div v-else-if="maps.length === 0" class="empty-state">
-      <p>No maps for this module yet.</p>
-      <p class="empty-hint">Upload encounter maps, battle grids, or location maps specific to this module.</p>
-    </div>
+    <EmptyState
+      v-else-if="maps.length === 0"
+      variant="campaigns"
+      title="No maps for this module yet"
+      description="Upload encounter maps, battle grids, or location maps specific to this module."
+    />
 
     <div v-else class="map-grid">
       <div
@@ -131,6 +133,7 @@ import MapUploadModal from '@/features/campaigns/components/StageLanding/MapUplo
 import MapGridConfigModal from '@/features/campaigns/components/StageLanding/MapGridConfigModal.vue'
 import MapTokenSetupModal from '@/components/tokens/MapTokenSetupModal.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface Map {
   id: number
@@ -323,17 +326,10 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   padding: var(--spacing-xl);
   text-align: center;
   color: var(--color-text-muted);
-}
-
-.empty-hint {
-  font-size: 0.875rem;
-  margin-top: var(--spacing-xs);
-  opacity: 0.7;
 }
 
 .map-grid {

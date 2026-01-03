@@ -12,10 +12,12 @@
       Loading books...
     </div>
 
-    <div v-else-if="books.length === 0" class="empty-state">
-      <p>No books imported yet</p>
-      <p class="empty-subtitle">Import book archives to start building your reference library</p>
-    </div>
+    <EmptyState
+      v-else-if="books.length === 0"
+      variant="books"
+      title="No books imported yet"
+      description="Import book archives to start building your reference library"
+    />
 
     <div v-else class="book-list">
       <div v-for="book in books" :key="book.id" class="book-item">
@@ -77,6 +79,7 @@ import { ref, watch } from 'vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { BookInfo } from '../types/book'
 
 interface Props {
@@ -237,17 +240,6 @@ function closeModal() {
   text-align: center;
   color: var(--color-text-secondary);
   padding: var(--spacing-xl) 0;
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: var(--spacing-xl) 0;
-}
-
-.empty-subtitle {
-  font-size: 0.875rem;
-  margin-top: var(--spacing-sm);
 }
 
 .book-list {
