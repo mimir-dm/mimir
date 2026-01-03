@@ -254,7 +254,8 @@ async function handleExport() {
   background: var(--color-primary-50);
 }
 
-.theme-dark .mode-card.active {
+.theme-dark .mode-card.active,
+.theme-hyper .mode-card.active {
   background: var(--color-primary-900);
 }
 

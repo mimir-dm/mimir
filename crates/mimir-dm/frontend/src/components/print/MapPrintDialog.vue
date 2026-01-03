@@ -14,71 +14,64 @@
         </p>
       </div>
 
-      <!-- Print Mode -->
-      <div class="option-section">
-        <label class="section-label">Print Mode</label>
-        <div class="mode-selector">
-          <button
-            type="button"
-            class="mode-btn"
-            :class="{ active: options.mode === 'preview' }"
-            @click="options.mode = 'preview'"
-          >
+      <!-- Print Sections -->
+      <div class="mode-options">
+        <!-- Preview Section -->
+        <div class="mode-card" :class="{ active: options.include_preview }">
+          <label class="mode-header" @click.prevent="options.include_preview = !options.include_preview">
+            <input type="checkbox" v-model="options.include_preview" @click.stop />
             <span class="mode-icon">&#128196;</span>
-            <span class="mode-label">Preview</span>
-            <span class="mode-desc">Fit to single page</span>
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            :class="{ active: options.mode === 'play' }"
-            @click="options.mode = 'play'"
-          >
+            <div class="mode-info">
+              <span class="mode-label">Preview</span>
+              <span class="mode-desc">Fit to single page</span>
+            </div>
+          </label>
+          <div class="mode-checkboxes" v-if="options.include_preview">
+            <label class="checkbox-option">
+              <input type="checkbox" v-model="options.preview_grid" />
+              <span class="checkbox-label">Grid</span>
+            </label>
+            <label class="checkbox-option">
+              <input type="checkbox" v-model="options.preview_los_walls" />
+              <span class="checkbox-label">LOS Walls</span>
+            </label>
+            <label class="checkbox-option">
+              <input type="checkbox" v-model="options.preview_positions" />
+              <span class="checkbox-label">Starting Positions</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Play Section -->
+        <div class="mode-card" :class="{ active: options.include_play }">
+          <label class="mode-header" @click.prevent="options.include_play = !options.include_play">
+            <input type="checkbox" v-model="options.include_play" @click.stop />
             <span class="mode-icon">&#127922;</span>
-            <span class="mode-label">Play</span>
-            <span class="mode-desc">1" = 5ft scale (tiled)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Overlay Options (both modes) -->
-      <div class="option-section">
-        <label class="section-label">Overlays</label>
-        <div class="checkbox-group">
-          <label class="checkbox-option">
-            <input type="checkbox" v-model="options.show_grid" />
-            <span class="checkbox-label">Grid Overlay</span>
-            <span class="checkbox-desc">Show grid lines on the map</span>
+            <div class="mode-info">
+              <span class="mode-label">Play</span>
+              <span class="mode-desc">1" = 5ft scale (tiled)</span>
+            </div>
           </label>
-          <label class="checkbox-option">
-            <input type="checkbox" v-model="options.show_los_walls" />
-            <span class="checkbox-label">LOS Walls</span>
-            <span class="checkbox-desc">Show line-of-sight blocking walls</span>
-          </label>
-          <!-- Starting Positions: Preview mode only -->
-          <label v-if="options.mode === 'preview'" class="checkbox-option">
-            <input type="checkbox" v-model="options.show_positions" />
-            <span class="checkbox-label">Starting Positions</span>
-            <span class="checkbox-desc">Show numbered position markers for tokens</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Token Cutouts: Play mode only -->
-      <div v-if="options.mode === 'play'" class="option-section">
-        <label class="section-label">Extras</label>
-        <div class="checkbox-group">
-          <label class="checkbox-option">
-            <input type="checkbox" v-model="options.include_cutouts" />
-            <span class="checkbox-label">Token Cutouts</span>
-            <span class="checkbox-desc">Include printable paper standee cutouts</span>
-          </label>
+          <div class="mode-checkboxes" v-if="options.include_play">
+            <label class="checkbox-option">
+              <input type="checkbox" v-model="options.play_grid" />
+              <span class="checkbox-label">Grid</span>
+            </label>
+            <label class="checkbox-option">
+              <input type="checkbox" v-model="options.play_los_walls" />
+              <span class="checkbox-label">LOS Walls</span>
+            </label>
+            <label class="checkbox-option">
+              <input type="checkbox" v-model="options.play_cutouts" />
+              <span class="checkbox-label">Token Cutouts</span>
+            </label>
+          </div>
         </div>
       </div>
 
       <!-- Page Count Estimate (for Play mode) -->
-      <div v-if="options.mode === 'play' && estimatedPages > 1" class="page-estimate">
-        <span class="estimate-label">Estimated pages:</span>
+      <div v-if="options.include_play && estimatedPages > 1" class="page-estimate">
+        <span class="estimate-label">Estimated tile pages:</span>
         <span class="estimate-value">{{ estimatedPages }}</span>
       </div>
 
@@ -99,7 +92,7 @@
       <button
         @click="handlePrint"
         class="btn btn-primary"
-        :disabled="isLoading || !mapId"
+        :disabled="isLoading || !mapId || !canGenerate"
       >
         <span v-if="isLoading" class="spinner-sm"></span>
         {{ isLoading ? 'Generating...' : 'Generate PDF' }}
@@ -122,7 +115,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import AppModal from '@/components/shared/AppModal.vue'
 import PdfPreviewModal from './PdfPreviewModal.vue'
-import { PrintService, type MapPrintOptions as PrintOptions } from '../../services/PrintService'
+import { PrintService, type MapPrintOptions } from '../../services/PrintService'
 
 interface Props {
   visible: boolean
@@ -147,19 +140,24 @@ const error = ref<string | null>(null)
 const showPreview = ref(false)
 const pdfPreviewRef = ref<InstanceType<typeof PdfPreviewModal> | null>(null)
 
-// Options
-const options = reactive<PrintOptions>({
-  mode: 'preview',
-  show_grid: true,
-  show_los_walls: false,
-  show_positions: false,
-  include_cutouts: false
+// Options - both sections can be included
+const options = reactive({
+  // Preview section
+  include_preview: true,
+  preview_grid: true,
+  preview_los_walls: false,
+  preview_positions: false,
+  // Play section
+  include_play: false,
+  play_grid: true,
+  play_los_walls: false,
+  play_cutouts: true,
 })
 
 // Estimated page count for Play mode (1" = 5ft = 70px typical)
 const estimatedPages = computed(() => {
-  if (options.mode !== 'play' || !props.mapDimensions || !props.gridSizePx) {
-    return 1
+  if (!options.include_play || !props.mapDimensions || !props.gridSizePx) {
+    return 0
   }
 
   // Letter size printable area: ~7.5" x 10" (landscape)
@@ -179,15 +177,23 @@ const estimatedPages = computed(() => {
   return pagesWide * pagesHigh
 })
 
+// Can generate if at least one section is selected
+const canGenerate = computed(() => options.include_preview || options.include_play)
+
 // Reset options when dialog opens
 watch(() => props.visible, (newVisible) => {
   if (newVisible) {
     error.value = null
-    options.mode = 'preview'
-    options.show_grid = true
-    options.show_los_walls = false
-    options.show_positions = false
-    options.include_cutouts = false
+    // Preview section
+    options.include_preview = true
+    options.preview_grid = true
+    options.preview_los_walls = false
+    options.preview_positions = false
+    // Play section
+    options.include_play = false
+    options.play_grid = true
+    options.play_los_walls = false
+    options.play_cutouts = true
   }
 })
 
@@ -203,6 +209,11 @@ async function handlePrint() {
     return
   }
 
+  if (!canGenerate.value) {
+    error.value = 'Select at least one section to include'
+    return
+  }
+
   isLoading.value = true
   error.value = null
 
@@ -211,8 +222,20 @@ async function handlePrint() {
     showPreview.value = true
     pdfPreviewRef.value?.setLoading(true)
 
+    // Build options for backend
+    const printOptions: MapPrintOptions = {
+      include_preview: options.include_preview,
+      preview_grid: options.preview_grid,
+      preview_los_walls: options.preview_los_walls,
+      preview_positions: options.preview_positions,
+      include_play: options.include_play,
+      play_grid: options.play_grid,
+      play_los_walls: options.play_los_walls,
+      play_cutouts: options.play_cutouts,
+    }
+
     // Generate PDF
-    const result = await PrintService.printMap(props.mapId, options)
+    const result = await PrintService.printMap(props.mapId, printOptions)
 
     // Display result
     pdfPreviewRef.value?.setPdfResult(result)
@@ -255,60 +278,50 @@ async function handlePrint() {
   color: var(--color-text-secondary);
 }
 
-.option-section {
+.mode-options {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.section-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.mode-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
 }
 
-.mode-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md);
+.mode-card {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   cursor: pointer;
   transition: all 0.2s ease;
+  overflow: hidden;
 }
 
-.mode-btn:hover:not(.disabled) {
+.mode-card:hover:not(.active) {
   border-color: var(--color-primary-400);
   background: var(--color-surface-variant);
 }
 
-.mode-btn.active {
+.mode-card.active {
   border-color: var(--color-primary-500);
   background: var(--color-primary-50);
 }
 
-.theme-dark .mode-btn.active {
+.theme-dark .mode-card.active,
+.theme-hyper .mode-card.active {
   background: var(--color-primary-900);
 }
 
-.mode-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.mode-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
 }
 
 .mode-icon {
   font-size: 1.5rem;
+}
+
+.mode-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .mode-label {
@@ -319,52 +332,41 @@ async function handlePrint() {
 .mode-desc {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
-  text-align: center;
 }
 
-.checkbox-group {
+.mode-checkboxes {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .checkbox-option {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  gap: 0 var(--spacing-sm);
-  align-items: start;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   cursor: pointer;
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
 }
 
-.checkbox-option:hover:not(.disabled) {
+.checkbox-option:hover {
   background: var(--color-surface-variant);
 }
 
-.checkbox-option.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .checkbox-option input[type="checkbox"] {
-  grid-row: span 2;
-  margin-top: 2px;
   width: 16px;
   height: 16px;
   cursor: inherit;
 }
 
 .checkbox-label {
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text);
-}
-
-.checkbox-desc {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
 }
 
 .page-estimate {
