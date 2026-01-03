@@ -20,7 +20,7 @@
 ## Foundations
 
 - [Framework Philosophy](./campaign-framework/01-foundations/README.md)
-- [The Three-Board System](./campaign-framework/01-foundations/three-board-system.md)
+- [The Two-Board System](./campaign-framework/01-foundations/three-board-system.md)
 
 ## Campaign Genesis
 
@@ -38,9 +38,9 @@
   - [Running Your Module](./campaign-framework/03-module-creation/module-running.md)
   - [Your First Module](./campaign-framework/03-module-creation/module-first.md)
 
-## Session Management
+## Running the Game
 
-- [Session Management](./campaign-framework/04-session-management/README.md)
+- [Running the Game](./campaign-framework/04-session-management/README.md)
   - [Interlude: Session 1 Play-Through](./campaign-framework/04-session-management/session-interlude.md)
   - [Pre-Session Preparation](./campaign-framework/04-session-management/session-before.md)
   - [Running the Session](./campaign-framework/04-session-management/session-during.md)

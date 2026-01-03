@@ -161,7 +161,7 @@ How do you know the framework is working?
 
 The framework's modular nature means you can adopt it gradually:
 
-1. **Start small**: Implement just the Three-Board System
+1. **Start small**: Implement just the Two-Board System
 2. **Build habits**: Establish your weekly workflow
 3. **Add tools**: Introduce templates as needed
 4. **Refine process**: Adjust to your table's needs

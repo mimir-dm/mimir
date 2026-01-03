@@ -8,6 +8,7 @@ pub mod documents;
 pub mod fog;
 pub mod light_sources;
 pub mod maps;
+pub mod module_frontmatter;
 pub mod module_monsters;
 pub mod modules;
 pub mod template_documents;
@@ -21,6 +22,9 @@ pub use documents::{Document, NewDocument};
 pub use fog::{FogRevealedArea, FogRevealedAreaSummary, NewFogRevealedArea};
 pub use light_sources::{LightSource, LightSourceSummary, LightType, NewLightSource, UpdateLightSource};
 pub use maps::{AmbientLight, GridType, Map, MapSummary, NewMap, UpdateMap};
+pub use module_frontmatter::{
+    ItemReference, ModuleFrontmatter, ModuleVariable, MonsterReference, NpcReference,
+};
 pub use module_monsters::{
     EncounterGroup, ModuleMonster, ModuleMonsterWithData, NewModuleMonster, UpdateModuleMonster,
 };
