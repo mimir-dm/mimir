@@ -369,7 +369,8 @@ const printCharacter = (character: Character) => {
 
 const closePrintDialog = () => {
   showPrintDialog.value = false
-  selectedCharacterForPrint.value = null
+  // Don't null selectedCharacterForPrint here - it would unmount the component
+  // and destroy the PdfPreviewModal before it can show the result
 }
 
 // Level up dialog state

@@ -43,224 +43,96 @@ impl Renderable for EquipmentDetailSection {
 
         // ==== HEADER ====
         typst.push_str(&format!(
-            r#"#align(center)[
-  #text(size: 14pt, weight: "bold", fill: colors.accent)[EQUIPMENT & INVENTORY]
-]
+            r#"#text(size: 14pt, weight: "bold")[{} - Inventory]
 
 #v(8pt)
-
-#grid(
-  columns: (1fr, auto),
-  column-gutter: 16pt,
-  [#text(size: 12pt, weight: "bold")[{}]],
-  [#text(size: 10pt)[Carry Capacity: STR {} × 15 = {} lbs]],
-)
-
-#line(length: 100%, stroke: 1pt + colors.border)
-#v(16pt)
+#line(length: 100%, stroke: 0.5pt + luma(200))
+#v(12pt)
 
 "#,
             escape_typst(&c.character_name),
-            c.abilities.strength,
-            self.carry_capacity()
         ));
 
-        // ==== CURRENCY ====
+        // ==== CURRENCY (inline) ====
         let currency = &c.currency;
-        typst.push_str(r#"#box(
-  width: 100%,
-  stroke: 1pt + colors.border,
-  radius: 4pt,
-  inset: 12pt,
-)[
-  #text(size: 10pt, weight: "bold")[CURRENCY]
-  #v(8pt)
-  #grid(
-    columns: (1fr, 1fr, 1fr, 1fr, 1fr),
-    column-gutter: 8pt,
-"#);
+        let mut coin_parts = Vec::new();
+        if currency.platinum > 0 { coin_parts.push(format!("{} pp", currency.platinum)); }
+        if currency.gold > 0 { coin_parts.push(format!("{} gp", currency.gold)); }
+        if currency.electrum > 0 { coin_parts.push(format!("{} ep", currency.electrum)); }
+        if currency.silver > 0 { coin_parts.push(format!("{} sp", currency.silver)); }
+        if currency.copper > 0 { coin_parts.push(format!("{} cp", currency.copper)); }
 
-        for (label, value) in [
-            ("CP", currency.copper),
-            ("SP", currency.silver),
-            ("EP", currency.electrum),
-            ("GP", currency.gold),
-            ("PP", currency.platinum),
-        ] {
+        if !coin_parts.is_empty() {
             typst.push_str(&format!(
-                r#"    box(
-      stroke: 0.5pt + luma(200),
-      radius: 2pt,
-      inset: 8pt,
-      width: 100%,
-      align(center)[
-        #text(size: 8pt, fill: luma(100))[{}]
-        #v(2pt)
-        #text(size: 14pt, weight: "bold")[{}]
-      ]
-    ),
-"#,
-                label, value
+                "#text(weight: \"bold\")[Currency:] {}\n\n#v(8pt)\n\n",
+                coin_parts.join(", ")
             ));
         }
 
-        typst.push_str("  )\n]\n\n#v(16pt)\n\n");
+        // ==== EQUIPPED (inline) ====
+        let equipped = &c.equipped;
+        let mut equipped_parts = Vec::new();
+        if let Some(ref armor) = equipped.armor {
+            equipped_parts.push(format!("Armor: {}", escape_typst(armor)));
+        }
+        if let Some(ref shield) = equipped.shield {
+            equipped_parts.push(format!("Shield: {}", escape_typst(shield)));
+        }
+        if let Some(ref main_hand) = equipped.main_hand {
+            equipped_parts.push(format!("Main: {}", escape_typst(main_hand)));
+        }
+        if let Some(ref off_hand) = equipped.off_hand {
+            equipped_parts.push(format!("Off-hand: {}", escape_typst(off_hand)));
+        }
 
-        // ==== EQUIPMENT LIST ====
-        typst.push_str(r#"#box(
-  width: 100%,
-  stroke: 1pt + colors.border,
-  radius: 4pt,
-  inset: 12pt,
-)[
-  #text(size: 10pt, weight: "bold")[EQUIPMENT]
-  #v(8pt)
+        if !equipped_parts.is_empty() {
+            typst.push_str(&format!(
+                "#text(weight: \"bold\")[Equipped:] {}\n\n#v(8pt)\n\n",
+                equipped_parts.join(" | ")
+            ));
+        }
 
-"#);
+        // ==== SIMPLE INVENTORY LIST ====
+        typst.push_str("#text(weight: \"bold\")[Inventory:]\n#v(4pt)\n\n");
 
         if c.inventory.is_empty() {
-            // Empty inventory placeholder
-            typst.push_str(r#"  #align(center)[
-    #text(size: 10pt, fill: luma(150))[No items in inventory]
-  ]
-  #v(40pt)
-"#);
+            typst.push_str("#text(fill: luma(150))[No items]\n");
         } else {
-            // Table header
-            typst.push_str(r#"  #table(
-    columns: (1fr, auto, 1fr),
-    stroke: none,
-    inset: 6pt,
-    fill: (_, row) => if row == 0 { luma(240) } else { none },
-    align: (left, center, left),
-
-    // Header
-    [#text(size: 9pt, weight: "bold")[Item]],
-    [#text(size: 9pt, weight: "bold")[Weight]],
-    [#text(size: 9pt, weight: "bold")[Properties / Notes]],
-
-"#);
+            typst.push_str("#table(\n  columns: (auto, 1fr, auto),\n  stroke: none,\n  inset: (x: 8pt, y: 4pt),\n  align: (right, left, right),\n\n");
 
             for item in &c.inventory {
+                let qty = if item.quantity > 1 {
+                    format!("{}×", item.quantity)
+                } else {
+                    String::new()
+                };
+
                 let weight_str = if item.weight > 0.0 {
-                    format!("{} lbs", item.weight * item.quantity as f64)
+                    format!("{:.1} lb", item.weight * item.quantity as f64)
                 } else {
-                    "—".to_string()
+                    String::new()
                 };
 
-                let name_with_qty = if item.quantity > 1 {
-                    format!("{} (×{})", item.name, item.quantity)
-                } else {
-                    item.name.clone()
-                };
-
-                // Standard row
                 typst.push_str(&format!(
-                    "    [{}],\n    [{}],\n    [],\n",
-                    escape_typst(&name_with_qty),
+                    "  [{}], [{}], [{}],\n",
+                    qty,
+                    escape_typst(&item.name),
                     weight_str
                 ));
-
-                // If item has notes, add a full-width description row
-                if let Some(ref notes) = item.notes {
-                    if !notes.is_empty() {
-                        typst.push_str(&format!(
-                            r#"    // Description for {}
-    table.cell(colspan: 3)[
-      #box(
-        width: 100%,
-        fill: luma(250),
-        inset: 8pt,
-        radius: 2pt,
-      )[
-        #text(size: 8pt, style: "italic")[{}]
-      ]
-    ],
-"#,
-                            escape_typst(&item.name),
-                            escape_typst(notes)
-                        ));
-                    }
-                }
             }
 
-            typst.push_str("  )\n");
+            typst.push_str(")\n\n");
         }
 
-        typst.push_str("]\n\n");
-
-        // ==== EQUIPPED ITEMS ====
-        let equipped = &c.equipped;
-        let has_equipped = equipped.armor.is_some()
-            || equipped.shield.is_some()
-            || equipped.main_hand.is_some()
-            || equipped.off_hand.is_some();
-
-        if has_equipped {
-            typst.push_str(r#"#v(16pt)
-
-#box(
-  width: 100%,
-  stroke: 1pt + colors.border,
-  radius: 4pt,
-  inset: 12pt,
-)[
-  #text(size: 10pt, weight: "bold")[EQUIPPED]
-  #v(8pt)
-
-  #grid(
-    columns: (auto, 1fr),
-    column-gutter: 16pt,
-    row-gutter: 4pt,
-"#);
-
-            if let Some(ref armor) = equipped.armor {
-                typst.push_str(&format!(
-                    "    [#text(size: 9pt, fill: luma(100))[Armor:]], [#text(size: 9pt)[{}]],\n",
-                    escape_typst(armor)
-                ));
-            }
-            if let Some(ref shield) = equipped.shield {
-                typst.push_str(&format!(
-                    "    [#text(size: 9pt, fill: luma(100))[Shield:]], [#text(size: 9pt)[{}]],\n",
-                    escape_typst(shield)
-                ));
-            }
-            if let Some(ref main_hand) = equipped.main_hand {
-                typst.push_str(&format!(
-                    "    [#text(size: 9pt, fill: luma(100))[Main Hand:]], [#text(size: 9pt)[{}]],\n",
-                    escape_typst(main_hand)
-                ));
-            }
-            if let Some(ref off_hand) = equipped.off_hand {
-                typst.push_str(&format!(
-                    "    [#text(size: 9pt, fill: luma(100))[Off Hand:]], [#text(size: 9pt)[{}]],\n",
-                    escape_typst(off_hand)
-                ));
-            }
-
-            typst.push_str("  )\n]\n\n");
-        }
-
-        // ==== TOTAL WEIGHT ====
+        // ==== FOOTER ====
         typst.push_str(&format!(
             r#"#v(1fr)
-
-#line(length: 100%, stroke: 1pt + colors.border)
-#v(8pt)
-
-#grid(
-  columns: (1fr, auto),
-  [#text(size: 10pt, fill: luma(100))[Total Weight]],
-  [#text(size: 12pt, weight: "bold")[{:.1} lbs]],
-)
-
-#v(8pt)
-#align(center)[
-  #text(size: 8pt, fill: luma(150))[Generated by Mimir]
-]
+#line(length: 100%, stroke: 0.5pt + luma(200))
+#v(4pt)
+#text(size: 9pt)[Total: {:.1} lbs / {} lbs capacity]
 "#,
-            self.total_weight()
+            self.total_weight(),
+            self.carry_capacity()
         ));
 
         Ok(typst)
@@ -289,8 +161,8 @@ fn escape_typst(s: &str) -> String {
 mod tests {
     use super::*;
     use mimir_dm_core::models::character::data::{
-        AbilityScores, ClassLevel, Currency, EquippedItems, InventoryItem, Personality,
-        Proficiencies, SpellData as CharacterSpellData,
+        AbilityScores, Appearance, ClassLevel, Currency, EquippedItems, InventoryItem, Personality,
+        Proficiencies, RoleplayNotes, SpellData as CharacterSpellData,
     };
 
     fn sample_character() -> CharacterData {
@@ -376,6 +248,11 @@ mod tests {
                 off_hand: None,
             },
             personality: Personality::default(),
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,
@@ -404,15 +281,12 @@ mod tests {
 
         // Check for character name
         assert!(typst.contains("Thorin Ironforge"));
-        // Check for section headers
-        assert!(typst.contains("EQUIPMENT & INVENTORY"));
-        assert!(typst.contains("CURRENCY"));
         // Check for items
         assert!(typst.contains("Frostbite Blade"));
-        assert!(typst.contains("frozen peaks"));
         // Check for currency
-        assert!(typst.contains("GP"));
-        assert!(typst.contains("250"));
+        assert!(typst.contains("250 gp"));
+        // Check for capacity
+        assert!(typst.contains("270 lbs capacity"));
     }
 
     #[test]

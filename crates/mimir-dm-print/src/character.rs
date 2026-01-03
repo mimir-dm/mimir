@@ -12,8 +12,8 @@ use serde::Deserialize;
 use crate::builder::DocumentBuilder;
 use crate::error::Result;
 use crate::sections::{
-    CharacterLongFormSection, CharacterSheetSection, CompactSheetSection, EquipmentDetailSection,
-    SpellCardsSection,
+    is_card_worthy, CharacterLongFormSection, CharacterSheetSection, CompactSheetSection,
+    EquipmentCardsSection, EquipmentDetailSection, SpellCardsSection,
 };
 
 /// Options for composable character export
@@ -28,6 +28,8 @@ pub struct CharacterExportOptions {
     pub include_spell_cards: bool,
     /// Include detailed equipment list with descriptions
     pub include_equipment_detail: bool,
+    /// Include equipment cards (weapons, magic items, special ammo)
+    pub include_equipment_cards: bool,
 }
 
 /// Generate a character sheet PDF from character data
@@ -63,12 +65,26 @@ pub fn generate_character_sheet_pdf(
 /// - Compact sheet (2-page WotC-style)
 /// - Long form (personality, background, RP notes)
 /// - Spell cards (silently skipped if no spells)
+/// - Equipment cards (weapons, magic items, special ammo)
 /// - Equipment detail (full inventory with descriptions)
 ///
 /// Sections appear in a fixed order regardless of selection order.
 pub fn export_character_pdf(
     character: CharacterData,
     spells: Vec<Spell>,
+    templates_root: PathBuf,
+    options: CharacterExportOptions,
+) -> Result<Vec<u8>> {
+    export_character_pdf_with_equipment(character, spells, vec![], templates_root, options)
+}
+
+/// Export character to PDF with composable sections and catalog equipment data
+///
+/// Same as `export_character_pdf` but accepts full catalog data for equipment cards.
+pub fn export_character_pdf_with_equipment(
+    character: CharacterData,
+    spells: Vec<Spell>,
+    equipment: Vec<serde_json::Value>,
     templates_root: PathBuf,
     options: CharacterExportOptions,
 ) -> Result<Vec<u8>> {
@@ -79,11 +95,13 @@ pub fn export_character_pdf(
         .with_toc(false)
         .with_title_page(false);
 
-    // Sections appear in fixed order: Compact Sheet, Long Form, Spell Cards, Equipment Detail
+    // Sections appear in fixed order: Compact Sheet, Long Form, Spell Cards, Equipment Cards, Equipment Detail
 
     // 1. Compact Sheet (2-page WotC-style)
     if options.include_compact_sheet {
-        let section = CompactSheetSection::new(character.clone()).with_spells(spells.clone());
+        let section = CompactSheetSection::new(character.clone())
+            .with_spells(spells.clone())
+            .with_equipment(equipment.clone());
         builder = builder.append(section);
     }
 
@@ -107,7 +125,21 @@ pub fn export_character_pdf(
         }
     }
 
-    // 4. Equipment Detail
+    // 4. Equipment Cards (weapons, magic items, special ammo)
+    if options.include_equipment_cards && !equipment.is_empty() {
+        // Filter to only card-worthy items
+        let card_worthy: Vec<serde_json::Value> = equipment
+            .into_iter()
+            .filter(|item| is_card_worthy(item))
+            .collect();
+
+        if !card_worthy.is_empty() {
+            let section = EquipmentCardsSection::new(card_worthy);
+            builder = builder.append(section);
+        }
+    }
+
+    // 5. Equipment Detail
     if options.include_equipment_detail {
         let section = EquipmentDetailSection::new(character.clone());
         builder = builder.append(section);
@@ -120,8 +152,8 @@ pub fn export_character_pdf(
 mod tests {
     use super::*;
     use mimir_dm_core::models::character::data::{
-        AbilityScores, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
-        SpellData as CharacterSpellData,
+        AbilityScores, Appearance, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
+        RoleplayNotes, SpellData as CharacterSpellData,
     };
 
     fn sample_character() -> CharacterData {
@@ -175,6 +207,11 @@ mod tests {
                 off_hand: None,
             },
             personality: Personality::default(),
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,
@@ -224,6 +261,7 @@ mod tests {
             include_compact_sheet: true,
             include_long_form: false,
             include_spell_cards: false,
+            include_equipment_cards: false,
             include_equipment_detail: false,
         };
 
@@ -240,6 +278,7 @@ mod tests {
             include_compact_sheet: false,
             include_long_form: true,
             include_spell_cards: false,
+            include_equipment_cards: false,
             include_equipment_detail: false,
         };
 
@@ -277,6 +316,7 @@ mod tests {
             include_compact_sheet: false,
             include_long_form: false,
             include_spell_cards: false,
+            include_equipment_cards: false,
             include_equipment_detail: true,
         };
 
@@ -306,6 +346,7 @@ mod tests {
             include_compact_sheet: true,
             include_long_form: true,
             include_spell_cards: true,  // No spells, so silently skipped
+            include_equipment_cards: true,
             include_equipment_detail: true,
         };
 
@@ -370,6 +411,7 @@ mod tests {
             include_compact_sheet: false,
             include_long_form: false,
             include_spell_cards: true,
+            include_equipment_cards: false,
             include_equipment_detail: false,
         };
 

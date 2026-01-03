@@ -29,99 +29,92 @@ export interface ApiResponse<T> {
   error?: string
 }
 
-export interface SpellPrintOptions {
-  title?: string
-  show_description?: boolean
-  show_cut_lines?: boolean
-}
-
-export interface MonsterPrintOptions {
-  title?: string
-  notes?: string
-  show_cut_lines?: boolean
-}
-
-export interface SessionPrintData {
-  title?: string
-  module?: string
-  session_number?: number
-  date?: string
-  summary?: string
-  npcs?: Array<{
-    name: string
-    role?: string
-    notes?: string
-  }>
-  locations?: Array<{
-    name: string
-    type?: string
-    notes?: string
-  }>
-  encounters?: Array<{
-    name: string
-    type?: string
-    difficulty?: 'easy' | 'medium' | 'hard' | 'deadly'
-    monsters?: Array<{ name: string; count: number }>
-    notes?: string
-  }>
-  items?: Array<{
-    name: string
-    description?: string
-  }>
-  hooks?: string[]
-  secrets?: string[]
-  notes?: string[]
-}
-
-export interface NpcData {
-  name: string
-  race?: string
-  occupation?: string
-  role?: string
-  alignment?: string
-  location?: string
-  appearance?: string
-  personality?: string
-  mannerisms?: string
-  voice?: string
-  goal?: string
-  motivation?: string
-  bond?: string
-  flaw?: string
-  secret?: string
-  key_info?: string
-}
-
-export interface HandoutData {
-  title: string
-  subtitle?: string
-  type?: string
-  author?: string
-  date?: string
-  style?: 'default' | 'aged' | 'formal' | 'magical'
-  body?: string | string[]
-  sections?: Array<{
-    title?: string
-    content: string
-  }>
-  footer?: string
-}
-
-/** Map print mode */
-export type MapPrintMode = 'preview' | 'play'
-
 /** Options for printing a map */
 export interface MapPrintOptions {
-  /** Print mode: preview (fit to page) or play (1"=5ft scale) */
-  mode?: MapPrintMode
-  /** Show grid overlay on the map */
-  show_grid?: boolean
-  /** Show LOS wall segments as red lines */
-  show_los_walls?: boolean
-  /** Show starting positions as numbered circles (instead of tokens) */
-  show_positions?: boolean
-  /** Include token cutout sheets for printing */
-  include_cutouts?: boolean
+  // Preview section
+  /** Include preview page (fit to single page) */
+  include_preview?: boolean
+  /** Show grid overlay on preview */
+  preview_grid?: boolean
+  /** Show LOS walls on preview */
+  preview_los_walls?: boolean
+  /** Show starting positions on preview */
+  preview_positions?: boolean
+  // Play section
+  /** Include play tiles (1"=5ft scale) */
+  include_play?: boolean
+  /** Show grid overlay on tiles */
+  play_grid?: boolean
+  /** Show LOS walls on tiles */
+  play_los_walls?: boolean
+  /** Include token cutout sheets */
+  play_cutouts?: boolean
+}
+
+/** Options for exporting a module to PDF */
+export interface ModuleExportOptions {
+  // Content section
+  /** Include module documents and notes */
+  include_documents?: boolean
+  /** Include monster stat blocks for tagged monsters */
+  include_monsters?: boolean
+  /** Include campaign NPC sheets */
+  include_npcs?: boolean
+  // Map Preview section
+  /** Include map previews (fit to single page) */
+  include_preview?: boolean
+  /** Show grid overlay on preview */
+  preview_grid?: boolean
+  /** Show LOS walls on preview */
+  preview_los_walls?: boolean
+  /** Show starting positions on preview */
+  preview_positions?: boolean
+  // Map Play section
+  /** Include play tiles (1"=5ft scale) */
+  include_play?: boolean
+  /** Show grid overlay on tiles */
+  play_grid?: boolean
+  /** Show LOS walls on tiles */
+  play_los_walls?: boolean
+  /** Include token cutout sheets */
+  play_cutouts?: boolean
+}
+
+/** Options for exporting a character to PDF */
+export interface CharacterExportOptions {
+  /** Include compact 2-page character sheet */
+  include_compact_sheet?: boolean
+  /** Include long form character details (personality, background, RP notes) */
+  include_long_form?: boolean
+  /** Include spell cards (silently no-op if no spells) */
+  include_spell_cards?: boolean
+  /** Include equipment cards (weapons, magic items, special ammo) */
+  include_equipment_cards?: boolean
+  /** Include detailed equipment list with descriptions */
+  include_equipment_detail?: boolean
+}
+
+/** Options for exporting a campaign to PDF */
+export interface CampaignExportOptions {
+  // Reference Document options
+  /** Include campaign-level documents */
+  include_campaign_docs?: boolean
+  /** Include module content (documents and monsters) */
+  include_module_content?: boolean
+  /** Include campaign NPC sheets */
+  include_npcs?: boolean
+  // Module Maps options (sub-options for module content)
+  /** Include module map previews scaled to fit one page */
+  include_module_map_previews?: boolean
+  /** Include module maps at 1"=5ft scale for tabletop play */
+  include_module_tiled_maps?: boolean
+  /** Include printable paper standees for module tokens */
+  include_token_cutouts?: boolean
+  // Campaign Maps options
+  /** Include campaign map previews scaled to fit one page */
+  include_campaign_map_previews?: boolean
+  /** Include campaign maps at 1"=5ft scale for tabletop play */
+  include_campaign_tiled_maps?: boolean
 }
 
 class PrintServiceClass {
@@ -139,26 +132,11 @@ class PrintServiceClass {
   }
 
   /**
-   * Generate a PDF from any template with custom data
-   */
-  async generatePdf(templateId: string, data: Record<string, unknown>): Promise<PrintResult> {
-    const response = await invoke<ApiResponse<PrintResult>>('generate_pdf', {
-      templateId,
-      data
-    })
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to generate PDF')
-    }
-
-    return response.data
-  }
-
-  /**
    * Generate a character sheet PDF
    * @param characterId - The ID of the character
    * @param template - Template variant to use ('sheet' or 'summary')
    * @param includeSpellCards - Whether to include spell cards in the PDF (default: true)
+   * @deprecated Use generateCharacterExport instead for composable sections
    */
   async generateCharacterSheet(
     characterId: number,
@@ -179,96 +157,18 @@ class PrintServiceClass {
   }
 
   /**
-   * Generate spell PDF (card, list, or multi-up cards)
+   * Export character to PDF with composable sections
+   * @param characterId - The ID of the character
+   * @param options - Export options for section selection
    */
-  async generateSpellPdf(
-    template: 'card' | 'list' | 'cards-multiup',
-    spells: Record<string, unknown>[],
-    options?: SpellPrintOptions
-  ): Promise<PrintResult> {
-    const response = await invoke<ApiResponse<PrintResult>>('generate_spell_pdf', {
-      template,
-      spells,
+  async generateCharacterExport(characterId: number, options?: CharacterExportOptions): Promise<PrintResult> {
+    const response = await invoke<ApiResponse<PrintResult>>('export_character', {
+      characterId,
       options
     })
 
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to generate spell PDF')
-    }
-
-    return response.data
-  }
-
-  /**
-   * Generate monster PDF (stat-block, card, encounter, or multi-up cards)
-   */
-  async generateMonsterPdf(
-    template: 'stat-block' | 'card' | 'encounter' | 'cards-multiup',
-    monsters: Record<string, unknown>[],
-    options?: MonsterPrintOptions
-  ): Promise<PrintResult> {
-    const response = await invoke<ApiResponse<PrintResult>>('generate_monster_pdf', {
-      template,
-      monsters,
-      options
-    })
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to generate monster PDF')
-    }
-
-    return response.data
-  }
-
-  /**
-   * Generate session prep sheet
-   */
-  async generateSessionPrep(data: SessionPrintData): Promise<PrintResult> {
-    const response = await invoke<ApiResponse<PrintResult>>('generate_session_pdf', {
-      template: 'prep',
-      data
-    })
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to generate session prep sheet')
-    }
-
-    return response.data
-  }
-
-  /**
-   * Generate NPC card(s)
-   */
-  async generateNpcCards(
-    npcs: NpcData[],
-    multiUp: boolean = false
-  ): Promise<PrintResult> {
-    const template = multiUp ? 'npc-cards-multiup' : 'npc-card'
-    const data = multiUp ? { npcs, show_cut_lines: true } : npcs[0]
-
-    const response = await invoke<ApiResponse<PrintResult>>('generate_session_pdf', {
-      template,
-      data
-    })
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to generate NPC cards')
-    }
-
-    return response.data
-  }
-
-  /**
-   * Generate a player handout
-   */
-  async generateHandout(data: HandoutData): Promise<PrintResult> {
-    const response = await invoke<ApiResponse<PrintResult>>('generate_session_pdf', {
-      template: 'handout',
-      data
-    })
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to generate handout')
+      throw new Error(response.error || 'Failed to export character')
     }
 
     return response.data
@@ -293,10 +193,12 @@ class PrintServiceClass {
   /**
    * Export all campaign documents as a combined PDF
    * @param campaignId - The ID of the campaign
+   * @param options - Export options for content selection
    */
-  async exportCampaignDocuments(campaignId: number): Promise<PrintResult> {
+  async exportCampaignDocuments(campaignId: number, options?: CampaignExportOptions): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('export_campaign_documents', {
-      campaignId
+      campaignId,
+      options
     })
 
     if (!response.success || !response.data) {
@@ -309,10 +211,12 @@ class PrintServiceClass {
   /**
    * Export a single module's documents and monsters as PDF
    * @param moduleId - The ID of the module
+   * @param options - Export options for content selection
    */
-  async exportModuleDocuments(moduleId: number): Promise<PrintResult> {
+  async exportModuleDocuments(moduleId: number, options?: ModuleExportOptions): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('export_module_documents', {
-      moduleId
+      moduleId,
+      options
     })
 
     if (!response.success || !response.data) {

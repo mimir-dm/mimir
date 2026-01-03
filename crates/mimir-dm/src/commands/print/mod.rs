@@ -509,6 +509,9 @@ pub struct CharacterExportOptions {
     /// Include spell cards (silently no-op if no spells)
     #[serde(default = "default_true")]
     pub include_spell_cards: bool,
+    /// Include equipment cards (weapons, magic items, special ammo)
+    #[serde(default)]
+    pub include_equipment_cards: bool,
     /// Include detailed equipment list with descriptions
     #[serde(default)]
     pub include_equipment_detail: bool,
@@ -520,6 +523,7 @@ impl Default for CharacterExportOptions {
             include_compact_sheet: true,
             include_long_form: false,
             include_spell_cards: true,
+            include_equipment_cards: false,
             include_equipment_detail: false,
         }
     }
@@ -546,11 +550,12 @@ pub async fn export_character(
 
     let opts = options.unwrap_or_default();
     info!(
-        "Exporting character {} with options: compact={}, long_form={}, spells={}, equipment={}",
+        "Exporting character {} with options: compact={}, long_form={}, spells={}, equipment_cards={}, equipment_detail={}",
         character_id,
         opts.include_compact_sheet,
         opts.include_long_form,
         opts.include_spell_cards,
+        opts.include_equipment_cards,
         opts.include_equipment_detail
     );
 
@@ -627,18 +632,79 @@ pub async fn export_character(
         );
     }
 
-    // Build PDF using export_character_pdf
-    use mimir_dm_print::{export_character_pdf, CharacterExportOptions as PrintExportOptions};
+    // Fetch equipment catalog data if equipment cards are requested
+    let equipment_data: Vec<serde_json::Value> = if opts.include_equipment_cards && !character_data.inventory.is_empty() {
+        use mimir_dm_core::services::ItemService;
+
+        let mut item_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut item_service = ItemService::new(&mut item_conn);
+
+        // Look up each inventory item in the catalog
+        character_data
+            .inventory
+            .iter()
+            .filter_map(|inv_item| {
+                // Try to get full item details from catalog
+                let source = inv_item.source.as_deref().unwrap_or("PHB");
+                match item_service.get_item_by_name_and_source(&inv_item.name, source) {
+                    Ok(Some(catalog_item)) => {
+                        // Serialize the Item struct to JSON
+                        if let Ok(mut item_json) = serde_json::to_value(&catalog_item) {
+                            // Add user notes if present
+                            if let (Some(notes), serde_json::Value::Object(ref mut obj)) = (&inv_item.notes, &mut item_json) {
+                                obj.insert("notes".to_string(), serde_json::Value::String(notes.clone()));
+                            }
+                            Some(item_json)
+                        } else {
+                            // Create minimal JSON from inventory data
+                            Some(serde_json::json!({
+                                "name": inv_item.name,
+                                "source": source,
+                                "notes": inv_item.notes
+                            }))
+                        }
+                    }
+                    Ok(None) => {
+                        // Item not in catalog - create minimal entry with notes
+                        if inv_item.notes.is_some() {
+                            Some(serde_json::json!({
+                                "name": inv_item.name,
+                                "notes": inv_item.notes
+                            }))
+                        } else {
+                            None
+                        }
+                    }
+                    Err(e) => {
+                        debug!("Failed to fetch item {}: {}", inv_item.name, e);
+                        None
+                    }
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    info!("Found {} equipment items for cards", equipment_data.len());
+
+    // Build PDF using export_character_pdf_with_equipment
+    use mimir_dm_print::{export_character_pdf_with_equipment, CharacterExportOptions as PrintExportOptions};
 
     let templates_root = get_templates_root();
     let print_options = PrintExportOptions {
         include_compact_sheet: opts.include_compact_sheet,
         include_long_form: opts.include_long_form,
         include_spell_cards: opts.include_spell_cards,
+        include_equipment_cards: opts.include_equipment_cards,
         include_equipment_detail: opts.include_equipment_detail,
     };
 
-    match export_character_pdf(character_data, spell_details, templates_root, print_options) {
+    match export_character_pdf_with_equipment(character_data, spell_details, equipment_data, templates_root, print_options) {
         Ok(pdf_bytes) => {
             let size_bytes = pdf_bytes.len();
             let pdf_base64 = base64::Engine::encode(

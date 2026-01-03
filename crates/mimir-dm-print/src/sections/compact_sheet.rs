@@ -13,6 +13,8 @@ use crate::error::Result;
 pub struct CompactSheetSection {
     character: CharacterData,
     spell_details: Vec<Spell>,
+    /// Equipment catalog data for auto-populating attacks
+    equipment: Vec<serde_json::Value>,
 }
 
 impl CompactSheetSection {
@@ -20,11 +22,18 @@ impl CompactSheetSection {
         Self {
             character,
             spell_details: Vec::new(),
+            equipment: Vec::new(),
         }
     }
 
     pub fn with_spells(mut self, spells: Vec<Spell>) -> Self {
         self.spell_details = spells;
+        self
+    }
+
+    /// Add equipment catalog data for auto-populating the attacks section
+    pub fn with_equipment(mut self, equipment: Vec<serde_json::Value>) -> Self {
+        self.equipment = equipment;
         self
     }
 
@@ -83,6 +92,84 @@ impl CompactSheetSection {
             || !self.character.spells.known_spells.is_empty()
     }
 
+    /// Get attack data from equipment (weapons only)
+    fn get_weapon_attacks(&self) -> Vec<(String, String, String)> {
+        let abilities = &self.character.abilities;
+        let str_mod = AbilityScores::modifier(abilities.strength);
+        let dex_mod = AbilityScores::modifier(abilities.dexterity);
+        let prof_bonus = self.character.proficiency_bonus();
+
+        self.equipment
+            .iter()
+            .filter_map(|item| {
+                let item_type = item
+                    .get("type")
+                    .or_else(|| item.get("item_type"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+
+                // Extract base type before any | separator
+                let base_type = if let Some(pipe_pos) = item_type.find('|') {
+                    &item_type[..pipe_pos]
+                } else {
+                    item_type
+                };
+
+                // Only include melee (M) and ranged (R) weapons
+                if base_type != "M" && base_type != "R" {
+                    return None;
+                }
+
+                let name = item
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Unknown");
+
+                // Check for finesse property
+                let properties = item.get("property").and_then(|v| v.as_array());
+                let has_finesse = properties
+                    .map(|arr| arr.iter().any(|p| p.as_str() == Some("F")))
+                    .unwrap_or(false);
+
+                // Calculate attack modifier
+                // Ranged weapons use DEX, melee use STR (finesse: higher of STR/DEX)
+                let base_mod = if base_type == "R" {
+                    dex_mod
+                } else if has_finesse {
+                    std::cmp::max(str_mod, dex_mod)
+                } else {
+                    str_mod
+                };
+
+                // TODO: Check weapon proficiency to add prof_bonus correctly
+                // For now, assume proficient with all weapons
+                let atk_bonus = base_mod + prof_bonus;
+                let atk_str = if atk_bonus >= 0 {
+                    format!("+{}", atk_bonus)
+                } else {
+                    format!("{}", atk_bonus)
+                };
+
+                // Get damage
+                let dmg1 = item.get("dmg1").and_then(|v| v.as_str()).unwrap_or("—");
+                let dmg_type = item.get("dmg_type").or_else(|| item.get("dmgType")).and_then(|v| v.as_str());
+                let dmg_mod = if base_mod >= 0 {
+                    format!("+{}", base_mod)
+                } else {
+                    format!("{}", base_mod)
+                };
+
+                let damage_str = if let Some(dt) = dmg_type {
+                    format!("{}{} {}", dmg1, dmg_mod, format_damage_type_abbrev(dt))
+                } else {
+                    format!("{}{}", dmg1, dmg_mod)
+                };
+
+                Some((name.to_string(), atk_str, damage_str))
+            })
+            .collect()
+    }
+
     fn render_page1(&self) -> String {
         let c = &self.character;
         let abilities = &c.abilities;
@@ -126,7 +213,7 @@ impl CompactSheetSection {
 #grid(
   columns: (1fr, auto, auto, auto),
   column-gutter: 12pt,
-  [#text(size: 9pt, fill: luma(100))[Player: \_\_\_\_\_\_\_\_\_\_\_\_\_]],
+  [#text(size: 9pt, fill: luma(100))[Player: {}]],
   [#text(size: 9pt)[Race: {}]],
   [#text(size: 9pt)[Alignment: {}]],
   [#text(size: 9pt)[XP: {}]],
@@ -139,6 +226,7 @@ impl CompactSheetSection {
             escape_typst(&c.character_name),
             escape_typst(&class_str),
             escape_typst(&c.background),
+            c.player_name.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_".to_string()),
             escape_typst(&race_str),
             c.alignment.as_deref().unwrap_or("—"),
             c.experience_points
@@ -392,18 +480,40 @@ impl CompactSheetSection {
             self.character.classes.iter().map(|cl| format!("{}d{}", cl.level, cl.hit_dice_type.trim_start_matches('d'))).collect::<Vec<_>>().join(" + ")
         ));
 
-        // Add equipped weapon as attack
-        if let Some(ref weapon) = c.equipped.main_hand {
-            let atk_bonus = str_mod + prof_bonus; // simplified
+        // Add weapon attacks from inventory (auto-populated)
+        let weapon_attacks = self.get_weapon_attacks();
+        let mut attack_count = 0;
+
+        for (name, atk, damage) in weapon_attacks.iter().take(5) {
             typst.push_str(&format!(
-                "        [{}], [+{}], [1d8+{}],\n",
-                escape_typst(weapon),
-                atk_bonus,
-                str_mod
+                "        [{}], [{}], [{}],\n",
+                escape_typst(name),
+                atk,
+                damage
             ));
+            attack_count += 1;
         }
 
-        typst.push_str("        [], [], [],\n        [], [], [],\n      )\n    ]\n");
+        // If no weapons from equipment, fall back to equipped main_hand
+        if attack_count == 0 {
+            if let Some(ref weapon) = c.equipped.main_hand {
+                let atk_bonus = str_mod + prof_bonus;
+                typst.push_str(&format!(
+                    "        [{}], [+{}], [1d8+{}],\n",
+                    escape_typst(weapon),
+                    atk_bonus,
+                    str_mod
+                ));
+                attack_count += 1;
+            }
+        }
+
+        // Add empty rows to fill to 3 rows minimum
+        for _ in attack_count..3 {
+            typst.push_str("        [], [], [],\n");
+        }
+
+        typst.push_str("      )\n    ]\n");
 
         // Spell slots (if caster)
         if self.has_spellcasting() {
@@ -537,20 +647,34 @@ impl CompactSheetSection {
         typst.push_str("#pagebreak()\n\n");
 
         // ==== HEADER ====
+        // Helper for appearance fields - show value or blank line
+        let age = c.appearance.age.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_".to_string());
+        let height = c.appearance.height.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_".to_string());
+        let weight = c.appearance.weight.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_".to_string());
+        let eyes = c.appearance.eyes.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let skin = c.appearance.skin.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let hair = c.appearance.hair.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+
         typst.push_str(&format!(
             r#"#grid(
   columns: (1fr, auto),
   column-gutter: 12pt,
   [#text(size: 18pt, weight: "bold")[{}]],
-  [#text(size: 9pt)[Age: \_\_\_\_\_  Height: \_\_\_\_\_  Weight: \_\_\_\_\_]],
+  [#text(size: 9pt)[Age: {}  Height: {}  Weight: {}]],
 )
 #v(4pt)
-#text(size: 9pt)[Eyes: \_\_\_\_\_\_\_  Skin: \_\_\_\_\_\_\_  Hair: \_\_\_\_\_\_\_]
+#text(size: 9pt)[Eyes: {}  Skin: {}  Hair: {}]
 #line(length: 100%, stroke: 1pt + colors.border)
 #v(8pt)
 
 "#,
-            escape_typst(&c.character_name)
+            escape_typst(&c.character_name),
+            age,
+            height,
+            weight,
+            eyes,
+            skin,
+            hair
         ));
 
         // ==== MAIN CONTENT: 2-column layout ====
@@ -585,8 +709,15 @@ impl CompactSheetSection {
       #v(4pt)
 "#);
 
-        // Backstory is a placeholder - character data doesn't include backstory
-        typst.push_str("      #v(80pt)\n");
+        // Backstory content or empty space for writing
+        if let Some(ref backstory) = c.backstory {
+            typst.push_str(&format!(
+                "      #text(size: 8pt)[{}]\n",
+                escape_typst(backstory)
+            ));
+        } else {
+            typst.push_str("      #v(80pt)\n");
+        }
 
         typst.push_str(r#"    ]
   },
@@ -697,8 +828,19 @@ impl CompactSheetSection {
   )[
     #text(size: 9pt, weight: "bold")[ALLIES & ORGANIZATIONS]
     #v(4pt)
-    #v(60pt)
-  ],
+"#);
+
+        // Allies & Organizations content or empty space
+        if let Some(ref allies) = c.roleplay_notes.allies_and_organizations {
+            typst.push_str(&format!(
+                "    #text(size: 8pt)[{}]\n",
+                escape_typst(allies)
+            ));
+        } else {
+            typst.push_str("    #v(60pt)\n");
+        }
+
+        typst.push_str(r#"  ],
 
   // Features & Traits
   box(
@@ -736,8 +878,19 @@ impl CompactSheetSection {
 )[
   #text(size: 9pt, weight: "bold")[ADDITIONAL TREASURE]
   #v(4pt)
-  #v(40pt)
-]
+"#);
+
+        // Additional Treasure content or empty space
+        if let Some(ref treasure) = c.roleplay_notes.additional_treasure_notes {
+            typst.push_str(&format!(
+                "  #text(size: 8pt)[{}]\n",
+                escape_typst(treasure)
+            ));
+        } else {
+            typst.push_str("  #v(40pt)\n");
+        }
+
+        typst.push_str(r#"]
 
 #v(1fr)
 #align(center)[
@@ -781,12 +934,32 @@ fn escape_typst(s: &str) -> String {
         .replace('_', "\\_")
 }
 
+/// Format damage type abbreviation to short form
+fn format_damage_type_abbrev(dt: &str) -> &str {
+    match dt.to_uppercase().as_str() {
+        "S" => "slash",
+        "P" => "pierce",
+        "B" => "bludg",
+        "F" => "fire",
+        "C" => "cold",
+        "L" => "light",
+        "A" => "acid",
+        "T" => "thund",
+        "N" => "necro",
+        "R" => "rad",
+        "O" => "force",
+        "Y" => "psych",
+        "I" => "pois",
+        _ => dt,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use mimir_dm_core::models::character::data::{
-        AbilityScores, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
-        SpellData as CharacterSpellData,
+        AbilityScores, Appearance, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
+        RoleplayNotes, SpellData as CharacterSpellData,
     };
 
     fn sample_character() -> CharacterData {
@@ -845,6 +1018,11 @@ mod tests {
                 bonds: Some("I have an ancient text that holds terrible secrets.".to_string()),
                 flaws: Some("I overlook obvious solutions in favor of complicated ones.".to_string()),
             },
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,
