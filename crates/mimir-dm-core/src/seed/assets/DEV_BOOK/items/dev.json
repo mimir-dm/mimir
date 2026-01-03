@@ -1,0 +1,725 @@
+{
+  "item": [
+    {
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "name": "Longsword",
+      "page": 149,
+      "property": [
+        "V"
+      ],
+      "rarity": "none",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "entries": [
+        "You regain {@dice 2d4 + 2} hit points when you drink this potion. The potion's red liquid glimmers when agitated."
+      ],
+      "lootTables": [
+        "Magic Item Table A"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Potion of Healing",
+      "otherSources": [
+        {
+          "page": 153,
+          "source": "PHB"
+        }
+      ],
+      "page": 187,
+      "rarity": "common",
+      "source": "DEV",
+      "srd": true,
+      "tier": "minor",
+      "type": "P",
+      "value": 5000,
+      "weight": 0.5
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 11. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 13 and an attack bonus of {@hit 5}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 11} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table A"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (1st Level)",
+      "page": 200,
+      "rarity": "common",
+      "source": "DEV",
+      "spellScrollLevel": 1,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 12. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 13 and an attack bonus of {@hit 5}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 12} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table A",
+        "Magic Item Table B"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (2nd Level)",
+      "page": 201,
+      "rarity": "uncommon",
+      "source": "DEV",
+      "spellScrollLevel": 2,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 13. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 15 and an attack bonus of {@hit 7}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 13} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table B"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (3rd Level)",
+      "page": 202,
+      "rarity": "uncommon",
+      "source": "DEV",
+      "spellScrollLevel": 3,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 14. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 15 and an attack bonus of {@hit 7}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 14} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table C"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (4th Level)",
+      "page": 203,
+      "rarity": "rare",
+      "source": "DEV",
+      "spellScrollLevel": 4,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 15. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 17 and an attack bonus of {@hit 9}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 15} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table C"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (5th Level)",
+      "page": 204,
+      "rarity": "rare",
+      "source": "DEV",
+      "spellScrollLevel": 5,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 16. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 17 and an attack bonus of {@hit 9}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 16} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table D"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (6th Level)",
+      "page": 205,
+      "rarity": "very rare",
+      "source": "DEV",
+      "spellScrollLevel": 6,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 17. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 18 and an attack bonus of {@hit 10}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 17} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table D"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (7th Level)",
+      "page": 206,
+      "rarity": "very rare",
+      "source": "DEV",
+      "spellScrollLevel": 7,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 18. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 18 and an attack bonus of {@hit 10}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 18} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table D",
+        "Magic Item Table E"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (8th Level)",
+      "page": 207,
+      "rarity": "very rare",
+      "source": "DEV",
+      "spellScrollLevel": 8,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 19. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 19 and an attack bonus of {@hit 11}.",
+        "A wizard spell on a spell scroll can be copied just as spells in spellbooks can be copied. When a spell is copied from a spell scroll, the copier must succeed on a {@dc 19} Intelligence ({@skill Arcana}) check. If the check succeeds, the spell is successfully copied. Whether the check succeeds or fails, the spell scroll is destroyed."
+      ],
+      "lootTables": [
+        "Magic Item Table E"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (9th Level)",
+      "page": 208,
+      "rarity": "legendary",
+      "source": "DEV",
+      "spellScrollLevel": 9,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "basicRules": true,
+      "entries": [
+        "A spell scroll bears the words of a single spell, written as a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.",
+        "If the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 10. On a failed check, the spell disappears from the scroll with no other effect.",
+        "Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+        "A spell cast from this scroll has a save DC of 13 and an attack bonus of {@hit 5}."
+      ],
+      "lootTables": [
+        "Magic Item Table A"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll (Cantrip)",
+      "page": 199,
+      "rarity": "common",
+      "source": "DEV",
+      "spellScrollLevel": 0,
+      "srd": true,
+      "tier": "minor",
+      "type": "SC|DMG"
+    },
+    {
+      "_isItemGroup": true,
+      "entries": [
+        "{@note * This item group has the same name and source as the item {@item potion of healing}}."
+      ],
+      "items": [
+        "Potion of Healing",
+        "Potion of Greater Healing",
+        "Potion of Superior Healing",
+        "Potion of Supreme Healing"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Potion of Healing (*)",
+      "page": 187,
+      "rarity": "varies",
+      "source": "DEV",
+      "srd": true,
+      "type": "P"
+    },
+    {
+      "_isItemGroup": true,
+      "items": [
+        "Spell Scroll (Cantrip)",
+        "Spell Scroll (1st Level)",
+        "Spell Scroll (2nd Level)",
+        "Spell Scroll (3rd Level)",
+        "Spell Scroll (4th Level)",
+        "Spell Scroll (5th Level)",
+        "Spell Scroll (6th Level)",
+        "Spell Scroll (7th Level)",
+        "Spell Scroll (8th Level)",
+        "Spell Scroll (9th Level)"
+      ],
+      "miscTags": [
+        "CNS"
+      ],
+      "name": "Spell Scroll",
+      "page": 200,
+      "rarity": "varies",
+      "source": "DEV",
+      "type": "SC|DMG"
+    },
+    {
+      "_category": "Generic Variant",
+      "_isGenericVariant": true,
+      "bonusWeapon": "+1",
+      "entries": [
+        "You have a +1 bonus to attack and damage rolls made with this magic weapon."
+      ],
+      "name": "+1 Weapon",
+      "page": 213,
+      "rarity": "uncommon",
+      "source": "DEV",
+      "tier": "major",
+      "type": "GV|DMG"
+    },
+    {
+      "_category": "Generic Variant",
+      "_isGenericVariant": true,
+      "bonusWeaponAttack": "+1",
+      "entries": [
+        "You have a +1 bonus to attack rolls made with this weapon."
+      ],
+      "name": "+1 Weapon (no damage)",
+      "page": 213,
+      "rarity": "uncommon",
+      "source": "DEV",
+      "tier": "major",
+      "type": "GV|DMG"
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "An armblade is a magic weapon that attaches to your arm, becoming inseparable from you as long as you're attuned to it. To attune to this item, you must hold it against your forearm for the entire attunement period.",
+        "As a bonus action, you can retract the armblade into your forearm or extend it from there. While it is extended, you can use the weapon as if you were holding it, and you can't use that hand for other purposes."
+      ],
+      "name": "Longsword Armblade",
+      "page": 276,
+      "property": [
+        "V"
+      ],
+      "rarity": "common",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "When you attack a creature with this magic weapon and roll a 20 on the attack roll, the creature must make a {@dc 15} Constitution saving throw in addition to suffering the attack's normal effects. On a failed save, the creature is restrained and must make another Constitution saving throw at the end of each of its turns. If it successfully saves against this effect three times, the effect ends. If it fails its saves three times, it is turned to stone and subjected to the {@condition petrified} condition for 1 hour.",
+        "A creature is immune to this effect if it is immune to damage of the weapon's type, does not have a body made of flesh, or has legendary actions.",
+        {
+          "entries": [
+            "This weapon is cursed, and becoming attuned to it extends the curse to you. Until the curse is broken with a {@spell remove curse} spell or similar magic, you are unwilling to part with the weapon. Whenever you attack a creature with this weapon and roll a 1 on the attack roll, you must succeed on a {@dc 15} Constitution saving throw or be {@condition restrained} and forced to make additional saves against being {@condition petrified}, as above."
+          ],
+          "name": "Curse",
+          "type": "entries"
+        }
+      ],
+      "name": "Longsword of the Medusa",
+      "page": 53,
+      "property": [
+        "V"
+      ],
+      "rarity": "very rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "When you attack a creature with this magic weapon and roll a 20 on the attack roll, that target takes an extra 10 necrotic damage if it isn't a construct or an undead. You also gain 10 temporary hit points.",
+        "{@note Note: According to the SRD, it is an extra {@damage 3d6} necrotic damage, although {@link this is incorrect|https://rpg.stackexchange.com/a/174522/53884}.}"
+      ],
+      "lootTables": [
+        "Magic Item Table G"
+      ],
+      "name": "Longsword of Life Stealing",
+      "page": 206,
+      "property": [
+        "V"
+      ],
+      "rarity": "rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "tier": "major",
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "bonusWeapon": "+3",
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "You gain a +3 bonus to attack and damage rolls made with this sword. Hit points lost to this weapon's damage can be regained only through a short or long rest, rather than by regeneration, magic, or any other means.",
+        {
+          "entries": [
+            "You're unwilling to part with this weapon while attuned to it. While attuned to this weapon, you also have disadvantage on attack rolls made with weapons other than this one.",
+            "The vengeful spirit possessing the sword shares its history and lust for vengeance with the wielder. After each successful long rest, you experience nightmares of the spirit's past, culminating in its death. When you wake, you must make a {@dc 11} Constitution saving throw. On a failed save, you only gain the benefits of a short rest. Only the {@spell Remove Curse} spell allows you to end attunement to this item."
+          ],
+          "name": "Curse",
+          "type": "entries"
+        },
+        {
+          "entries": [
+            "This item corrupts. See the \"{@adventure Infernal Item Corruption|CoA|16|Infernal Item Corruption}\" section."
+          ],
+          "name": "Corrupting",
+          "type": "entries"
+        }
+      ],
+      "name": "Longsword of Retribution",
+      "page": 270,
+      "property": [
+        "V"
+      ],
+      "rarity": "very rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "When you attack an object with this magic sword and hit, maximize your weapon damage dice against the target.",
+        "When you attack a creature with this weapon and roll a 20 on the attack roll, that target takes an extra 14 slashing damage. Then roll another {@dice d20}. If you roll a 20, you lop off one of the target's limbs, with the effect of such loss determined by the DM. If the creature has no limb to sever, you lop off a portion of its body instead.",
+        "{@note Note: According to the SRD, it is an extra {@damage 4d6} slashing damage, although {@link this is incorrect|https://rpg.stackexchange.com/a/174522/53884}}.",
+        "In addition, you can speak the sword's command to cause the blade to shed bright light in a 10-foot radius and dim light for an additional 10 feet. Speaking the command word again or sheathing the sword puts out the light."
+      ],
+      "lootTables": [
+        "Magic Item Table H"
+      ],
+      "name": "Longsword of Sharpness",
+      "page": 206,
+      "property": [
+        "V"
+      ],
+      "rarity": "very rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "tier": "major",
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "bonusWeapon": "+3",
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "You gain a +3 bonus to attack and damage rolls made with this magic sword.",
+        "This sword can tear the fabric of reality, creating a temporary rift between planes. You can use your action to choose a different plane of existence from the one you're on and slice through an unoccupied space within 5 feet of yourself, creating a rift to that other plane. The rift can be up to 10 feet high and 10 feet wide, and it lasts for 1 minute. Once this property is used, it can't be used again until the next dawn.",
+        "You can specify a target destination, such as the City of Brass on the Elemental Plane of Fire or the palace of Dispater on the second layer of the Nine Hells, and the rift opens in or near that destination (DM's discretion). If you are trying to reach the City of Brass, for example, the rift might appear on the Street of Steel, before the Gate of Ashes, or facing the city from across the Sea of Fire, at the DM's discretion.",
+        "Anything that enters the rift is instantly transported to the other plane, appearing in the unoccupied space nearest to the rift."
+      ],
+      "name": "Longsword of the Planes",
+      "page": 68,
+      "property": [
+        "V"
+      ],
+      "rarity": "legendary",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "bonusWeapon": "+1",
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "You gain a +1 bonus to attack and damage rolls made with this magic weapon.",
+        {
+          "entries": [
+            "This sword is cursed and possessed by a vengeful spirit. Becoming attuned to it extends the curse to you. As long as you remain cursed, you are unwilling to part with the sword, keeping it on your person at all times. While attuned to this weapon, you have disadvantage on attack rolls made with weapons other than this one.",
+            "In addition, while the sword is on your person, you must succeed on a {@dc 15} Wisdom saving throw whenever you take damage in combat. On a failed save you must attack the creature that damaged you until you drop to 0 hit points or it does, or until you can't reach the creature to make a melee attack against it.",
+            "You can break the curse in the usual ways. Alternatively, casting {@spell banishment} on the sword forces the vengeful spirit to leave it. The sword then becomes a +1 weapon with no other properties."
+          ],
+          "name": "Curse",
+          "type": "entries"
+        }
+      ],
+      "lootTables": [
+        "Magic Item Table F"
+      ],
+      "name": "Longsword of Vengeance",
+      "page": 206,
+      "property": [
+        "V"
+      ],
+      "rarity": "uncommon",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "tier": "major",
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "Hit points lost to this weapon's damage can be regained only through a short or long rest, rather than by regeneration, magic, or any other means.",
+        "Once per turn, when you hit a creature with an attack using this magic weapon, you can wound the target. At the start of each of the wounded creature's turns, it takes {@damage 1d4} necrotic damage for each time you've wounded it, and it can then make a {@dc 15} Constitution saving throw, ending the effect of all such wounds on itself on a success. Alternatively, the wounded creature, or a creature within 5 feet of it, can use an action to make a {@dc 15} Wisdom ({@skill Medicine}) check, ending the effect of such wounds on it on a success."
+      ],
+      "lootTables": [
+        "Magic Item Table G"
+      ],
+      "name": "Longsword of Wounding",
+      "page": 207,
+      "property": [
+        "V"
+      ],
+      "rarity": "rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "tier": "major",
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "bonusWeapon": "+3",
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "You have a +3 bonus to attack and damage rolls made with this magic weapon. When this weapon reduces a creature to 0 hit points, the creature doesn't die. Instead, infernal runes appear as if carved into their flesh and they're healed to 1 hit point. They now have the {@condition paralyzed} condition until the condition is removed by a {@spell Lesser Restoration} spell or similar magic. When the condition is removed, the runes disappear. At the start of each of their turns while they're {@condition paralyzed}, the creature suffers immense pain and gains a level of {@condition exhaustion}."
+      ],
+      "name": "Longsword of Agonizing Paralysis",
+      "page": 271,
+      "property": [
+        "V"
+      ],
+      "rarity": "very rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "When you damage a creature with an attack using this magic weapon, the target can't regain hit points until the start of your next turn."
+      ],
+      "name": "Longsword of Certain Death",
+      "page": 270,
+      "property": [
+        "V"
+      ],
+      "rarity": "rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "bonusWeapon": "+1",
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "This weapon is bedecked in ornate gold filigree and deep-blue and maroon jewels. You gain a +1 bonus to attack and damage rolls made with this weapon. Additionally, you gain proficiency in the {@skill Intimidation} and {@skill Persuasion} skills if you don't already have it.",
+        {
+          "entries": [
+            "The weapon has 5 charges. You can use a bonus action and expend 1 or more of its charges to cast one of the following spells (save {@dc 16}): {@spell Command} (1 charge), {@spell Zone of Truth} (2 charges), {@spell Compulsion} (4 charges), {@spell Banishment} (4 charges), or {@spell Dominate Person} (5 charges).",
+            "The weapon regains {@dice 1d4} expended charges daily at dawn."
+          ],
+          "name": "Spellcasting",
+          "type": "entries"
+        }
+      ],
+      "name": "Longsword of Throne's Command",
+      "page": 39,
+      "property": [
+        "V"
+      ],
+      "rarity": "very rare",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    },
+    {
+      "baseItem": "longsword|phb",
+      "basicRules": true,
+      "dmg1": "1d8",
+      "dmg2": "1d10",
+      "dmgType": "S",
+      "entries": [
+        "This magic weapon warns you of danger. While the weapon is on your person, you have advantage on initiative rolls. In addition, you and any of your companions within 30 feet of you can't be {@status surprised}, except when {@condition incapacitated} by something other than nonmagical sleep. The weapon magically awakens you and your companions within range if any of you are sleeping naturally when combat begins."
+      ],
+      "lootTables": [
+        "Magic Item Table F"
+      ],
+      "name": "Longsword of Warning",
+      "page": 213,
+      "property": [
+        "V"
+      ],
+      "rarity": "uncommon",
+      "source": "DEV",
+      "srd": true,
+      "sword": true,
+      "tier": "major",
+      "type": "M",
+      "value": 1500,
+      "weapon": true,
+      "weaponCategory": "martial",
+      "weight": 3
+    }
+  ]
+}

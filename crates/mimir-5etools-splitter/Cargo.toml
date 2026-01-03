@@ -14,6 +14,10 @@ path = "src/main.rs"
 name = "mimir-5etest"
 path = "src/bin/load_test.rs"
 
+[[bin]]
+name = "gen-dev-book"
+path = "src/bin/gen_dev_book.rs"
+
 [dependencies]
 anyhow = { workspace = true }
 chrono = { workspace = true }
