@@ -1,35 +1,36 @@
 ---
-id: update-campaign-export-with-map
+id: standardize-button-usage-across
 level: task
-title: "Update campaign export with map previews and positions"
-short_code: "MIMIR-T-0260"
-created_at: 2025-12-29T16:21:10.485214+00:00
-updated_at: 2025-12-29T20:20:05.652030+00:00
-parent: MIMIR-I-0027
+title: "Standardize button usage across views"
+short_code: "MIMIR-T-0273"
+created_at: 2026-01-03T02:58:32.206350+00:00
+updated_at: 2026-01-03T03:08:47.704668+00:00
+parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
+  - "#tech-debt"
   - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0027
+initiative_id: NULL
 ---
 
-# Update campaign export with map previews and positions
+# Standardize button usage across views
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0027]]
+[[Parent Initiative]]
 
-## Objective
+## Objective **[REQUIRED]**
 
-Update the existing campaign/module export to include map preview pages (fit to page) with starting position markers for the Reference Document output.
+Replace custom scoped button styles with global `.btn` classes from `buttons.css` for UI consistency.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -38,12 +39,12 @@ Update the existing campaign/module export to include map preview pages (fit to 
 ### Type
 - [ ] Bug - Production issue that needs fixing
 - [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
+- [x] Tech Debt - Code improvement or refactoring
 - [ ] Chore - Maintenance or setup work
 
 ### Priority
 - [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
+- [x] P1 - High (important for user experience)
 - [ ] P2 - Medium (nice to have)
 - [ ] P3 - Low (when time permits)
 
@@ -61,9 +62,9 @@ Update the existing campaign/module export to include map preview pages (fit to 
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Views define custom `.btn-action`, `.btn-pdf`, `.btn-play` in scoped styles instead of using global button system. Creates visual inconsistency and duplicated CSS.
+- **Benefits of Fixing**: Unified button appearance, easier theme updates, reduced CSS duplication
+- **Risk Assessment**: Low risk - no new functionality, visual refinement only
 
 ## Acceptance Criteria
 
@@ -71,21 +72,13 @@ Update the existing campaign/module export to include map preview pages (fit to 
 
 ## Acceptance Criteria
 
-### Map Preview Rendering
-- [ ] Maps rendered as single-page previews (scaled to fit)
-- [ ] Grid overlay included on previews
-- [ ] Starting positions shown as numbered markers (reuse `show_positions` logic from print_map)
-- [ ] Use existing `render_map_for_print` with preview mode options
+## Acceptance Criteria **[REQUIRED]**
 
-### Integration with Export
-- [ ] Map previews appear in "Reference Document" section when `include_map_previews` is true
-- [ ] Module export: includes module's maps only
-- [ ] Campaign export: includes all campaign maps (across all modules)
-- [ ] Maps ordered by module, then by name
-
-### Template Updates
-- [ ] Update `campaign/combined.typ` template to include map preview section
-- [ ] Create or update map preview template for embedding in combined exports
+- [ ] `CharacterListView.vue` uses global `.btn` classes instead of `.btn-action`
+- [ ] `ModulesTable.vue` uses global `.btn` classes instead of `.btn-play`, `.btn-pdf`
+- [ ] `ModuleListView.vue` uses global `.btn` classes
+- [ ] All buttons have consistent hover/active states across views
+- [ ] Scoped button CSS removed from affected views
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -140,13 +133,19 @@ Update the existing campaign/module export to include map preview pages (fit to 
 {Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
 
 ### Technical Approach
-{How this will be implemented}
+1. Replace `<button class="btn-action">` with `<button class="btn btn-ghost btn-sm">`
+2. Replace custom color buttons with appropriate variants (`.btn-primary`, `.btn-danger`, etc.)
+3. Remove scoped `.btn-action`, `.btn-play`, `.btn-pdf` styles from components
 
-### Dependencies
-{Other tasks or systems this depends on}
+### Files to Modify
+- `crates/mimir-dm/frontend/src/features/characters/views/CharacterListView.vue`
+- `crates/mimir-dm/frontend/src/features/campaigns/components/StageLanding/ModulesTable.vue`
+- `crates/mimir-dm/frontend/src/features/modules/views/ModuleListView.vue`
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
+### Reference
+Global button system: `src/assets/styles/components/buttons.css`
+- Variants: `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`, `.btn-warning`
+- Sizes: `.btn-xs`, `.btn-sm`, `.btn-lg`, `.btn-xl`
 
 ## Status Updates **[REQUIRED]**
 

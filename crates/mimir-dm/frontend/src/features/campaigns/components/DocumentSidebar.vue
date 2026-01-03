@@ -6,11 +6,10 @@
       <button
         v-if="documents.length > 0"
         class="export-btn"
-        @click="exportAllDocuments"
-        :disabled="exportingAll"
-        title="Export all documents as PDF"
+        @click="openExportDialog"
+        title="Export campaign as PDF"
       >
-        {{ exportingAll ? '...' : 'PDF' }}
+        PDF
       </button>
     </div>
 
@@ -132,6 +131,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Campaign Export Dialog -->
+    <CampaignExportDialog
+      :visible="showExportDialog"
+      :campaign-id="campaignId"
+      :campaign-name="campaignName"
+      @close="showExportDialog = false"
+    />
   </div>
 </template>
 
@@ -139,9 +146,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { DocumentService, type Document } from '@/services/DocumentService'
-import { PrintService } from '../../../services/PrintService'
 import { useThemeStore } from '../../../stores/theme'
 import { debugDocument } from '../../../shared/utils/debug'
+import CampaignExportDialog from '../../../components/print/CampaignExportDialog.vue'
 
 // Import icon images
 import lightEditIcon from '../../../assets/images/light-edit.png'
@@ -197,7 +204,7 @@ const documents = ref<Document[]>([])
 const selectedDocument = ref<Document | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
-const exportingAll = ref(false)
+const showExportDialog = ref(false)
 
 // Theme store for icon selection
 const themeStore = useThemeStore()
@@ -428,26 +435,9 @@ const toggleDocumentCompletion = async (doc: any) => {
   }
 }
 
-// Export all documents as combined PDF
-const exportAllDocuments = async () => {
-  if (!props.campaignId) return
-
-  exportingAll.value = true
-
-  try {
-    const result = await PrintService.exportCampaignDocuments(props.campaignId)
-
-    // Generate filename from campaign name
-    const filename = `${props.campaignName || 'campaign'}_documents.pdf`
-      .replace(/[^a-z0-9\s\-_.]/gi, '')
-      .replace(/\s+/g, '_')
-
-    await PrintService.savePdf(result, filename)
-  } catch (e) {
-    console.error('Failed to export campaign documents:', e)
-  } finally {
-    exportingAll.value = false
-  }
+// Open export dialog
+const openExportDialog = () => {
+  showExportDialog.value = true
 }
 
 // Watch for campaign or stage changes

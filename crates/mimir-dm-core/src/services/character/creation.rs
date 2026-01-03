@@ -9,8 +9,8 @@ use crate::connection::DbConnection;
 use crate::error::{DbError, Result};
 use crate::models::catalog::{Background, Race};
 use crate::models::character::data::{
-    AbilityScores, CharacterData, ClassLevel, Currency, EquippedItems, FeatureReference,
-    InventoryItem, Personality, Proficiencies, SpellData,
+    AbilityScores, Appearance, CharacterData, ClassLevel, Currency, EquippedItems, FeatureReference,
+    InventoryItem, Personality, Proficiencies, RoleplayNotes, SpellData,
 };
 use crate::services::{BackgroundService, ClassService, RaceService};
 use serde::{Deserialize, Serialize};
@@ -443,6 +443,12 @@ impl<'a> CharacterBuilder<'a> {
             currency: Currency::default(),
             equipped: EquippedItems::default(),
             personality: self.personality,
+            // New character data fields
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             // NPC fields default to None
             npc_role: None,
             npc_location: None,

@@ -4,14 +4,14 @@ level: task
 title: "Add module/campaign export options dialog"
 short_code: "MIMIR-T-0258"
 created_at: 2025-12-29T16:21:10.218837+00:00
-updated_at: 2025-12-29T16:21:10.218837+00:00
+updated_at: 2025-12-29T20:20:05.516581+00:00
 parent: MIMIR-I-0027
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -67,12 +67,38 @@ Create an export options dialog for module/campaign views that offers Reference 
 
 ## Acceptance Criteria
 
-- [ ] New `ExportOptionsDialog.vue` component
-- [ ] Checkbox for Reference Document (default on)
-- [ ] Checkbox for Physical Play Kit (default off)
-- [ ] Shows estimated page counts for each option
-- [ ] Available from Module and Campaign views
-- [ ] Generates separate PDFs when both selected
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+### Module Export Dialog (`ModuleExportDialog.vue`)
+- [ ] Reference Document section with checkboxes:
+  - [ ] Documents (default: on)
+  - [ ] Monsters (default: on)
+  - [ ] NPCs (default: off) - pulls from campaign's NPC list
+  - [ ] Map Previews (default: on)
+- [ ] Physical Play Kit section with checkboxes:
+  - [ ] Tiled Maps at 1"=5ft scale (default: off)
+  - [ ] Token Cutouts (default: off)
+- [ ] Shows estimated page count
+- [ ] Outputs single combined PDF
+
+### Campaign Export Dialog (`CampaignExportDialog.vue`)  
+- [ ] Reference Document section with checkboxes:
+  - [ ] Campaign Documents (default: on)
+  - [ ] Module Content - docs + monsters only (default: on)
+  - [ ] NPCs (default: off) - all campaign NPCs, printed once
+  - [ ] Map Previews (default: on)
+- [ ] Physical Play Kit section with checkboxes:
+  - [ ] Tiled Maps at 1"=5ft scale (default: off)
+  - [ ] Token Cutouts (default: off)
+- [ ] Shows estimated page count
+- [ ] Outputs single combined PDF
+
+### Integration
+- [ ] Update `ModulesTable.vue` PDF button to open ModuleExportDialog
+- [ ] Update `DocumentSidebar.vue` Export button to open CampaignExportDialog
+- [ ] NPCs checkbox independent at each level (campaign selection doesn't affect module defaults)
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

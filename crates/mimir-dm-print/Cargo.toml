@@ -14,6 +14,9 @@ typst = "0.12"
 typst-pdf = "0.12"
 ecow = "0.2"
 
+# Mimir core types
+mimir-dm-core = { path = "../mimir-dm-core" }
+
 # Core dependencies
 thiserror = { workspace = true }
 tracing = { workspace = true }

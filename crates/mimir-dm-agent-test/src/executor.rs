@@ -33,8 +33,8 @@ fn create_test_character_data(
     max_hp: i32,
 ) -> mimir_dm_core::models::character::CharacterData {
     use mimir_dm_core::models::character::{
-        AbilityScores, CharacterData, ClassLevel, Currency, EquippedItems, Personality,
-        Proficiencies, SpellData,
+        AbilityScores, Appearance, CharacterData, ClassLevel, Currency, EquippedItems, Personality,
+        Proficiencies, RoleplayNotes, SpellData,
     };
 
     CharacterData {
@@ -82,6 +82,11 @@ fn create_test_character_data(
         currency: Currency::default(),
         equipped: EquippedItems::default(),
         personality: Personality::default(),
+        player_name: None,
+        appearance: Appearance::default(),
+        backstory: None,
+        background_feature: None,
+        roleplay_notes: RoleplayNotes::default(),
         npc_role: None,
         npc_location: None,
         npc_faction: None,

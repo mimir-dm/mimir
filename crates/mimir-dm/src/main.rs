@@ -518,12 +518,8 @@ fn main() {
             get_feature_details,
             // Print commands
             list_print_templates,
-            generate_pdf,
             generate_character_sheet,
-            generate_spell_pdf,
-            generate_class_spell_list,
-            generate_monster_pdf,
-            generate_session_pdf,
+            export_character,
             save_pdf,
             print_map,
             export_campaign_document,

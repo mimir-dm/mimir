@@ -125,6 +125,16 @@
   background: var(--color-surface-variant);
 }
 
+.btn-outline.btn-danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.btn-outline.btn-danger:hover:not(:disabled) {
+  background: var(--color-error);
+  color: white;
+}
+
 /* Button Sizes */
 .btn-xs {
   padding: var(--spacing-xs) var(--spacing-sm);
