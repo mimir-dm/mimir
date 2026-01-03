@@ -1,0 +1,43 @@
+{
+  "book": [
+    {
+      "name": "Dev Seeder Assets",
+      "id": "DEV",
+      "source": "DEV",
+      "group": "Development",
+      "published": "2024-01-01",
+      "author": "Mimir Dev Team",
+      "contents": [
+        {
+          "name": "Introduction",
+          "headers": ["About This Book"]
+        }
+      ]
+    }
+  ],
+  "bookData": [
+    {
+      "id": "DEV",
+      "source": "DEV",
+      "data": [
+        {
+          "type": "section",
+          "name": "Introduction",
+          "entries": [
+            "This is a development book containing test data for the Mimir dev seeder.",
+            {
+              "type": "entries",
+              "name": "About This Book",
+              "entries": [
+                "Contains 7 monsters (Goblin, Goblin Boss, Wolf, Bugbear, Mage, Adult Black Dragon, Bugbear Chief)",
+                "Contains 28 items (Potions, Weapons, Spell Scrolls)",
+                "Contains 15 spells (cantrips and 1st-2nd level spells)",
+                "Used for development and UAT testing of 'The Lost Mine of Phandelver' campaign."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,866 @@
+{
+  "spell": [
+    {
+      "areaTags": [
+        "MT"
+      ],
+      "basicRules": true,
+      "components": {
+        "m": "a sprinkling of holy water",
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "concentration": true,
+          "duration": {
+            "amount": 1,
+            "type": "minute"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "You bless up to three creatures of your choice within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a {@dice d4} and add the number rolled to the attack roll or saving throw."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "level": 1,
+      "miscTags": [
+        "SCT"
+      ],
+      "name": "Bless",
+      "otherSources": [
+        {
+          "page": 50,
+          "source": "RMR"
+        }
+      ],
+      "page": 219,
+      "range": {
+        "distance": {
+          "amount": 30,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "E",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "affectsCreatureType": [
+        "aberration",
+        "beast",
+        "celestial",
+        "dragon",
+        "elemental",
+        "fey",
+        "fiend",
+        "giant",
+        "humanoid",
+        "monstrosity",
+        "ooze",
+        "plant"
+      ],
+      "areaTags": [
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "A creature you touch regains a number of hit points equal to {@dice 1d8} + your spellcasting ability modifier. This spell has no effect on undead or constructs."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 2nd level or higher, the healing increases by {@scaledice 1d8|1-9|1d8} for each slot level above 1st."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "level": 1,
+      "miscTags": [
+        "HL"
+      ],
+      "name": "Cure Wounds",
+      "otherSources": [
+        {
+          "page": 52,
+          "source": "RMR"
+        }
+      ],
+      "page": 230,
+      "range": {
+        "distance": {
+          "type": "touch"
+        },
+        "type": "point"
+      },
+      "school": "V",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "concentration": true,
+          "duration": {
+            "amount": 10,
+            "type": "minute"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "For the duration, you sense the presence of magic within 30 feet of you. If you sense magic in this way, you can use your action to see a faint aura around any visible creature or object in the area that bears magic, and you learn its {@book school of magic|PHB|10|The Schools of Magic}, if any.",
+        "The spell can penetrate most barriers, but it is blocked by 1 foot of stone, 1 inch of common metal, a thin sheet of lead, or 3 feet of wood or dirt."
+      ],
+      "level": 1,
+      "meta": {
+        "ritual": true
+      },
+      "name": "Detect Magic",
+      "otherSources": [
+        {
+          "page": 52,
+          "source": "RMR"
+        }
+      ],
+      "page": 231,
+      "range": {
+        "distance": {
+          "type": "self"
+        },
+        "type": "point"
+      },
+      "school": "D",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "alias": [
+        "Firebolt"
+      ],
+      "areaTags": [
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "damageInflict": [
+        "fire"
+      ],
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes {@damage 1d10} fire damage. A flammable object hit by this spell ignites if it isn't being worn or carried.",
+        "This spell's damage increases by {@damage 1d10} when you reach 5th level ({@damage 2d10}), 11th level ({@damage 3d10}), and 17th level ({@damage 4d10})."
+      ],
+      "level": 0,
+      "miscTags": [
+        "OBJ",
+        "SCL"
+      ],
+      "name": "Fire Bolt",
+      "page": 242,
+      "range": {
+        "distance": {
+          "amount": 120,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "scalingLevelDice": {
+        "label": "fire damage",
+        "scaling": {
+          "1": "1d10",
+          "11": "3d10",
+          "17": "4d10",
+          "5": "2d10"
+        }
+      },
+      "school": "V",
+      "source": "DEV",
+      "spellAttack": [
+        "R"
+      ],
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "areaTags": [
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "damageInflict": [
+        "radiant"
+      ],
+      "duration": [
+        {
+          "duration": {
+            "amount": 1,
+            "type": "round"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target. On a hit, the target takes {@damage 4d6} radiant damage, and the next attack roll made against this target before the end of your next turn has advantage, thanks to the mystical dim light glittering on the target until then."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by {@scaledamage 4d6|1-9|1d6} for each slot level above 1st."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "level": 1,
+      "miscTags": [
+        "ADV"
+      ],
+      "name": "Guiding Bolt",
+      "otherSources": [
+        {
+          "page": 54,
+          "source": "RMR"
+        }
+      ],
+      "page": 248,
+      "range": {
+        "distance": {
+          "amount": 120,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "V",
+      "source": "DEV",
+      "spellAttack": [
+        "R"
+      ],
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "affectsCreatureType": [
+        "aberration",
+        "beast",
+        "celestial",
+        "dragon",
+        "elemental",
+        "fey",
+        "fiend",
+        "giant",
+        "humanoid",
+        "monstrosity",
+        "ooze",
+        "plant"
+      ],
+      "areaTags": [
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "v": true
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "A creature of your choice that you can see within range regains hit points equal to {@dice 1d4} + your spellcasting ability modifier. This spell has no effect on undead or constructs."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 2nd level or higher, the healing increases by {@scaledice 1d4|1-9|1d4} for each slot level above 1st."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "level": 1,
+      "miscTags": [
+        "HL",
+        "SGT"
+      ],
+      "name": "Healing Word",
+      "otherSources": [
+        {
+          "page": 54,
+          "source": "RMR"
+        }
+      ],
+      "page": 250,
+      "range": {
+        "distance": {
+          "amount": 60,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "V",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "bonus"
+        }
+      ]
+    },
+    {
+      "areaTags": [
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "m": {
+          "cost": 10000,
+          "text": "a pearl worth at least 100 gp and an owl feather"
+        },
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "You choose one object that you must touch throughout the casting of the spell. If it is a magic item or some other magic-imbued object, you learn its properties and how to use them, whether it requires attunement to use, and how many charges it has, if any. You learn whether any spells are affecting the item and what they are. If the item was created by a spell, you learn which spell created it.",
+        "If you instead touch a creature throughout the casting, you learn what spells, if any, are currently affecting it."
+      ],
+      "level": 1,
+      "meta": {
+        "ritual": true
+      },
+      "miscTags": [
+        "OBJ"
+      ],
+      "name": "Identify",
+      "otherSources": [
+        {
+          "page": 54,
+          "source": "RMR"
+        }
+      ],
+      "page": 252,
+      "range": {
+        "distance": {
+          "type": "touch"
+        },
+        "type": "point"
+      },
+      "school": "D",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "minute"
+        }
+      ]
+    },
+    {
+      "basicRules": true,
+      "components": {
+        "m": "a firefly or phosphorescent moss",
+        "v": true
+      },
+      "duration": [
+        {
+          "duration": {
+            "amount": 1,
+            "type": "hour"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "You touch one object that is no larger than 10 feet in any dimension. Until the spell ends, the object sheds bright light in a 20-foot radius and dim light for an additional 20 feet. The light can be colored as you like. Completely covering the object with something opaque blocks the light. The spell ends if you cast it again or dismiss it as an action.",
+        "If you target an object held or worn by a hostile creature, that creature must succeed on a Dexterity saving throw to avoid the spell."
+      ],
+      "level": 0,
+      "miscTags": [
+        "LGT",
+        "OBJ"
+      ],
+      "name": "Light",
+      "otherSources": [
+        {
+          "page": 55,
+          "source": "RMR"
+        }
+      ],
+      "page": 255,
+      "range": {
+        "distance": {
+          "type": "touch"
+        },
+        "type": "point"
+      },
+      "savingThrow": [
+        "dexterity"
+      ],
+      "school": "V",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "areaTags": [
+        "S"
+      ],
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "damageInflict": [
+        "lightning"
+      ],
+      "duration": [
+        {
+          "concentration": true,
+          "duration": {
+            "amount": 1,
+            "type": "minute"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "The next time you make a ranged weapon attack during the spell's duration, the weapon's ammunition, or the weapon itself if it's a thrown weapon, transforms into a bolt of lightning. Make the attack roll as normal. The target takes {@damage 4d8} lightning damage on a hit, or half as much damage on a miss, instead of the weapon's normal damage.",
+        "Whether you hit or miss, each creature within 10 feet of the target must make a Dexterity saving throw. Each of these creatures takes {@damage 2d8} lightning damage on a failed save, or half as much damage on a successful one.",
+        "The piece of ammunition or weapon then returns to its normal form."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 4th level or higher, the damage for both effects of the spell increases by {@scaledamage 4d8;2d8|3-9|1d8} for each slot level above 3rd."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "level": 3,
+      "name": "Lightning Arrow",
+      "page": 255,
+      "range": {
+        "distance": {
+          "type": "self"
+        },
+        "type": "point"
+      },
+      "savingThrow": [
+        "dexterity"
+      ],
+      "school": "T",
+      "source": "DEV",
+      "time": [
+        {
+          "number": 1,
+          "unit": "bonus"
+        }
+      ]
+    },
+    {
+      "areaTags": [
+        "L"
+      ],
+      "basicRules": true,
+      "components": {
+        "m": "a bit of fur and a rod of amber, crystal, or glass",
+        "s": true,
+        "v": true
+      },
+      "damageInflict": [
+        "lightning"
+      ],
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "A stroke of lightning forming a line 100 feet long and 5 feet wide blasts out from you in a direction you choose. Each creature in the line must make a Dexterity saving throw. A creature takes {@damage 8d6} lightning damage on a failed save, or half as much damage on a successful one.",
+        "The lightning ignites flammable objects in the area that aren't being worn or carried."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by {@scaledamage 8d6|3-9|1d6} for each slot level above 3rd."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "level": 3,
+      "miscTags": [
+        "OBJ"
+      ],
+      "name": "Lightning Bolt",
+      "otherSources": [
+        {
+          "page": 56,
+          "source": "RMR"
+        }
+      ],
+      "page": 255,
+      "range": {
+        "distance": {
+          "amount": 100,
+          "type": "feet"
+        },
+        "type": "line"
+      },
+      "savingThrow": [
+        "dexterity"
+      ],
+      "school": "V",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "duration": {
+            "amount": 1,
+            "type": "minute"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again.",
+        "You can use your action to control the hand. You can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. You can move the hand up to 30 feet each time you use it.",
+        "The hand can't attack, activate magic items, or carry more than 10 pounds."
+      ],
+      "level": 0,
+      "miscTags": [
+        "OBJ"
+      ],
+      "name": "Mage Hand",
+      "otherSources": [
+        {
+          "page": 56,
+          "source": "RMR"
+        }
+      ],
+      "page": 256,
+      "range": {
+        "distance": {
+          "amount": 30,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "C",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "areaTags": [
+        "MT",
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "damageInflict": [
+        "force"
+      ],
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range. A dart deals {@damage 1d4 + 1} force damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature or several."
+      ],
+      "entriesHigherLevel": [
+        {
+          "entries": [
+            "When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st."
+          ],
+          "name": "At Higher Levels",
+          "type": "entries"
+        }
+      ],
+      "hasFluffImages": true,
+      "level": 1,
+      "miscTags": [
+        "SGT"
+      ],
+      "name": "Magic Missile",
+      "otherSources": [
+        {
+          "page": 57,
+          "source": "RMR"
+        }
+      ],
+      "page": 257,
+      "range": {
+        "distance": {
+          "amount": 120,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "V",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "duration": {
+            "amount": 1,
+            "type": "hour",
+            "upTo": true
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "This spell is a minor magical trick that novice spellcasters use for practice. You create one of the following magical effects within range:",
+        {
+          "items": [
+            "You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor.",
+            "You instantaneously light or snuff out a candle, a torch, or a small campfire.",
+            "You instantaneously clean or soil an object no larger than 1 cubic foot.",
+            "You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour.",
+            "You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour.",
+            "You create a nonmagical trinket or an illusory image that can fit in your hand and that lasts until the end of your next turn."
+          ],
+          "type": "list"
+        },
+        "If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time, and you can dismiss such an effect as an action."
+      ],
+      "level": 0,
+      "miscTags": [
+        "OBJ"
+      ],
+      "name": "Prestidigitation",
+      "otherSources": [
+        {
+          "page": 57,
+          "source": "RMR"
+        }
+      ],
+      "page": 267,
+      "range": {
+        "distance": {
+          "amount": 10,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "T",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ]
+    },
+    {
+      "basicRules": true,
+      "components": {
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "duration": {
+            "amount": 1,
+            "type": "round"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "An invisible barrier of magical force appears and protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from {@spell magic missile}."
+      ],
+      "level": 1,
+      "miscTags": [
+        "MAC"
+      ],
+      "name": "Shield",
+      "otherSources": [
+        {
+          "page": 59,
+          "source": "RMR"
+        }
+      ],
+      "page": 275,
+      "range": {
+        "distance": {
+          "type": "self"
+        },
+        "type": "point"
+      },
+      "school": "A",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "condition": "which you take when you are hit by an attack or targeted by the {@spell magic missile} spell",
+          "number": 1,
+          "unit": "reaction"
+        }
+      ]
+    },
+    {
+      "areaTags": [
+        "ST"
+      ],
+      "basicRules": true,
+      "components": {
+        "m": "a small parchment with a bit of holy text written on it",
+        "s": true,
+        "v": true
+      },
+      "duration": [
+        {
+          "concentration": true,
+          "duration": {
+            "amount": 10,
+            "type": "minute"
+          },
+          "type": "timed"
+        }
+      ],
+      "entries": [
+        "A shimmering field appears and surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration."
+      ],
+      "level": 1,
+      "miscTags": [
+        "MAC"
+      ],
+      "name": "Shield of Faith",
+      "otherSources": [
+        {
+          "page": 59,
+          "source": "RMR"
+        }
+      ],
+      "page": 275,
+      "range": {
+        "distance": {
+          "amount": 60,
+          "type": "feet"
+        },
+        "type": "point"
+      },
+      "school": "A",
+      "source": "DEV",
+      "srd": true,
+      "time": [
+        {
+          "number": 1,
+          "unit": "bonus"
+        }
+      ]
+    }
+  ]
+}

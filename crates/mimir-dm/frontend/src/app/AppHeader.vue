@@ -36,6 +36,20 @@
       </nav>
 
       <div class="header-right">
+        <button
+          v-if="isDevMode"
+          @click="showReseedConfirm"
+          class="dev-button"
+          :disabled="isReseeding"
+          title="Reset test data (dev only)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>{{ isReseeding ? 'Reseeding...' : 'Reseed' }}</span>
+        </button>
         <button @click="handleOpenChat" class="chat-button" title="Open Chat (new window)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -48,13 +62,39 @@
       </div>
     </div>
   </header>
+
+  <!-- Reseed Confirmation Modal -->
+  <AppModal
+    :visible="showConfirmModal"
+    title="Reset Test Data"
+    size="sm"
+    @close="cancelReseed"
+  >
+    <p>This will delete and recreate all test data for "The Lost Mine of Phandelver" campaign.</p>
+    <p class="warning-text">This action cannot be undone.</p>
+
+    <div v-if="reseedError" class="error-message">
+      {{ reseedError }}
+    </div>
+
+    <template #footer>
+      <div class="modal-actions">
+        <button @click="cancelReseed" class="btn btn-secondary">Cancel</button>
+        <button @click="confirmReseed" class="btn btn-warning" :disabled="isReseeding">
+          {{ isReseeding ? 'Reseeding...' : 'Reset Data' }}
+        </button>
+      </div>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useThemeStore } from '../stores/theme'
 import { invoke } from '@tauri-apps/api/core'
+import type { ApiResponse } from '../types/api'
 import CampaignSelector from '../features/campaigns/components/CampaignSelector.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 import { openSourcesReference } from '../shared/utils/windows'
 // Gear icons
 import lightGear from '../assets/images/themes/light/gear.png'
@@ -66,6 +106,53 @@ import darkMimir from '../assets/images/themes/dark/mimir.png'
 import hyperMimir from '../assets/images/themes/hyper/mimir.png'
 
 const themeStore = useThemeStore()
+
+// Dev mode state
+const isDevMode = ref(false)
+const isReseeding = ref(false)
+const showConfirmModal = ref(false)
+const reseedError = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    isDevMode.value = await invoke<boolean>('is_dev_mode')
+  } catch (error) {
+    console.error('Failed to check dev mode:', error)
+  }
+})
+
+// Show reseed confirmation modal
+const showReseedConfirm = () => {
+  reseedError.value = null
+  showConfirmModal.value = true
+}
+
+// Cancel reseed
+const cancelReseed = () => {
+  showConfirmModal.value = false
+  reseedError.value = null
+}
+
+// Confirm and perform reseed
+const confirmReseed = async () => {
+  isReseeding.value = true
+  reseedError.value = null
+
+  try {
+    const response = await invoke<ApiResponse<null>>('reseed_dev_data')
+    if (response.success) {
+      showConfirmModal.value = false
+      window.location.reload()
+    } else {
+      reseedError.value = response.error || 'Failed to reset test data'
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+    reseedError.value = `Failed to reset test data: ${errorMsg}`
+  } finally {
+    isReseeding.value = false
+  }
+}
 
 // Handle opening the rules reference window
 const handleOpenRules = async () => {
@@ -289,6 +376,109 @@ const skullIcon = computed(() => {
 
 .chat-button svg {
   opacity: 0.9;
+}
+
+/* Dev-only button */
+.dev-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--color-warning-500, #f59e0b);
+  color: white;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.dev-button:hover:not(:disabled) {
+  background-color: var(--color-warning-600, #d97706);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.dev-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+.dev-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dev-button svg {
+  opacity: 0.9;
+}
+
+/* Modal styles */
+.warning-text {
+  color: var(--color-warning-600, #d97706);
+  font-size: 0.875rem;
+  margin-top: var(--spacing-sm);
+}
+
+.error-message {
+  background-color: var(--color-error-100);
+  color: var(--color-error-700);
+  border: 1px solid var(--color-error-300);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  font-size: 0.875rem;
+}
+
+.theme-dark .error-message {
+  background-color: var(--color-error-900);
+  color: var(--color-error-300);
+  border-color: var(--color-error-700);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.btn-secondary {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-gray-200);
+}
+
+.theme-dark .btn-secondary:hover {
+  background-color: var(--color-gray-700);
+}
+
+.btn-warning {
+  background-color: var(--color-warning-500, #f59e0b);
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: var(--color-warning-600, #d97706);
+}
+
+.btn-warning:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 </style>

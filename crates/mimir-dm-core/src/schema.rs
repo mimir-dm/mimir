@@ -597,9 +597,39 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    module_npcs (id) {
+        id -> Integer,
+        module_id -> Integer,
+        character_id -> Integer,
+        role -> Nullable<Text>,
+        encounter_tag -> Nullable<Text>,
+        notes -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    module_items (id) {
+        id -> Integer,
+        module_id -> Integer,
+        location -> Nullable<Text>,
+        name -> Text,
+        source -> Text,
+        quantity -> Integer,
+        notes -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
 diesel::joinable!(maps -> campaigns (campaign_id));
 diesel::joinable!(modules -> campaigns (campaign_id));
 diesel::joinable!(module_monsters -> modules (module_id));
+diesel::joinable!(module_npcs -> modules (module_id));
+diesel::joinable!(module_npcs -> characters (character_id));
+diesel::joinable!(module_items -> modules (module_id));
 diesel::joinable!(tokens -> maps (map_id));
 diesel::joinable!(tokens -> catalog_monsters (monster_id));
 diesel::joinable!(tokens -> characters (character_id));
@@ -627,6 +657,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     maps,
     modules,
     module_monsters,
+    module_npcs,
+    module_items,
     sessions,
     tokens,
     fog_revealed_areas,

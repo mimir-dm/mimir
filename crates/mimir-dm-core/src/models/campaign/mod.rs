@@ -9,7 +9,9 @@ pub mod fog;
 pub mod light_sources;
 pub mod maps;
 pub mod module_frontmatter;
+pub mod module_items;
 pub mod module_monsters;
+pub mod module_npcs;
 pub mod modules;
 pub mod template_documents;
 pub mod template_frontmatter;
@@ -25,8 +27,14 @@ pub use maps::{AmbientLight, GridType, Map, MapSummary, NewMap, UpdateMap};
 pub use module_frontmatter::{
     ItemReference, ModuleFrontmatter, ModuleVariable, MonsterReference, NpcReference,
 };
+pub use module_items::{
+    LocationGroup, ModuleItem, ModuleItemWithData, NewModuleItem, UpdateModuleItem,
+};
 pub use module_monsters::{
     EncounterGroup, ModuleMonster, ModuleMonsterWithData, NewModuleMonster, UpdateModuleMonster,
+};
+pub use module_npcs::{
+    ModuleNpc, ModuleNpcWithCharacter, NewModuleNpc, RoleGroup, UpdateModuleNpc,
 };
 pub use modules::{Module, NewModule};
 pub use template_documents::TemplateDocument;

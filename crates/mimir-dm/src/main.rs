@@ -251,6 +251,28 @@ fn main() {
             get_module_encounter_tags,
             clear_module_monsters,
             sync_module_monsters_to_file,
+            // Module NPC commands
+            add_module_npc,
+            add_module_npc_by_name,
+            remove_module_npc,
+            update_module_npc,
+            list_module_npcs,
+            list_module_npcs_with_data,
+            list_module_npcs_by_role,
+            get_module_npc_roles,
+            clear_module_npcs,
+            // Module item commands
+            add_module_item,
+            remove_module_item,
+            update_module_item,
+            list_module_items,
+            list_module_items_with_data,
+            list_module_items_by_location,
+            get_module_item_locations,
+            clear_module_items,
+            // Module frontmatter sync commands
+            sync_module_from_document,
+            sync_module_to_document,
             // Map commands
             upload_map,
             get_map,
@@ -312,6 +334,7 @@ fn main() {
             // Dev tools
             is_dev_mode,
             remove_dev_test_book,
+            reseed_dev_data,
             // Catalog commands
             search_spells,
             get_spell_details,
