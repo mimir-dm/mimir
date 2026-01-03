@@ -41,6 +41,13 @@ macro_rules! include_test_books {
             data: include_bytes!("../assets/dev/dmg.tar.gz"),
         });
 
+        // Dev tokens - minimal token images for seeder
+        #[cfg(has_dev_tokens)]
+        books.push(EmbeddedTestBook {
+            name: "DEV_TOKENS".to_string(),
+            data: include_bytes!("../assets/dev/dev-tokens.tar.gz"),
+        });
+
         books
     }};
 }

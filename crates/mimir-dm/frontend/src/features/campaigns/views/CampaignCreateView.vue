@@ -88,9 +88,17 @@ const form = reactive({
   directoryLocation: ''
 })
 
+// Convert to kebab-case for directory naming
+const toKebabCase = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 const directoryPreview = computed(() => {
   if (form.directoryLocation && form.name) {
-    return `${form.directoryLocation}/${form.name}`
+    return `${form.directoryLocation}/${toKebabCase(form.name)}`
   }
   return ''
 })

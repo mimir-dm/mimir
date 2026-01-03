@@ -164,8 +164,10 @@ pub struct MonsterReference {
     pub notes: Option<String>,
 }
 
-/// Reference to an NPC (from catalog or campaign-specific).
+/// Reference to an NPC character in the campaign.
 ///
+/// NPCs are characters with `is_npc = true` in the characters table.
+/// The `name` field is used to look up the character record.
 /// The `role` field categorizes NPCs by their narrative function
 /// (e.g., "quest_giver", "antagonist", "ally", "informant").
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -174,15 +176,12 @@ pub struct NpcReference {
     #[serde(default)]
     pub role: Option<String>,
 
-    /// NPC name
+    /// NPC name - must match a character with is_npc=true in the campaign
     pub name: String,
 
-    /// Source: "campaign" for custom NPCs, or source book abbreviation
-    pub source: String,
-
-    /// Where this NPC is typically found
+    /// Encounter tag for grouping NPCs by scene (e.g., "tavern_scene", "boss_fight")
     #[serde(default)]
-    pub location: Option<String>,
+    pub encounter_tag: Option<String>,
 
     /// Notes about this NPC's role in the module
     #[serde(default)]
@@ -372,13 +371,11 @@ monsters:
 npcs:
   - role: quest_giver
     name: Elder Miriam
-    source: campaign
-    location: Village Square
+    encounter_tag: opening_scene
     notes: "Provides the hook"
   - role: antagonist
     name: Grimnar Goldbeard
-    source: campaign
-    location: Goldbeard Manor
+    encounter_tag: finale
     notes: "Secret villain"
 
 items:
@@ -439,7 +436,7 @@ This is the adventure content after the frontmatter.
         let quest_giver = &fm.npcs[0];
         assert_eq!(quest_giver.role, Some("quest_giver".to_string()));
         assert_eq!(quest_giver.name, "Elder Miriam");
-        assert_eq!(quest_giver.source, "campaign");
+        assert_eq!(quest_giver.encounter_tag, Some("opening_scene".to_string()));
     }
 
     #[test]
