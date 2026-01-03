@@ -42,13 +42,19 @@
             </button>
           </div>
 
-          <div v-else-if="searchQuery.length >= 2 && !loading" class="empty-state">
-            No monsters found matching "{{ searchQuery }}"
-          </div>
+          <EmptyState
+            v-else-if="searchQuery.length >= 2 && !loading"
+            variant="search"
+            title="No monsters found"
+            :description="`No monsters found matching '${searchQuery}'`"
+          />
 
-          <div v-else class="empty-state">
-            Type at least 2 characters to search
-          </div>
+          <EmptyState
+            v-else
+            variant="search"
+            title="Search for monsters"
+            description="Type at least 2 characters to search"
+          />
 
           <!-- Token Options (shown when monster selected) -->
           <div v-if="selectedMonster" class="token-options">
@@ -139,6 +145,7 @@ import { invoke } from '@tauri-apps/api/core'
 import type { TokenSize, CreateTokenRequest, VisionType } from '@/types/api'
 import { VISION_PRESETS } from '@/types/api'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface MonsterResult {
   id: number
@@ -309,8 +316,7 @@ function handleAdd() {
   border-color: var(--color-primary-500);
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--spacing-lg);
   color: var(--color-text-muted);

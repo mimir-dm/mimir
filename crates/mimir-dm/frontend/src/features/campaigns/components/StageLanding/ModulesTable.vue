@@ -11,11 +11,14 @@
       Loading modules...
     </div>
 
-    <div v-else-if="modules.length === 0" class="empty-state">
-      <p>{{ emptyMessage }}</p>
-    </div>
+    <EmptyState
+      v-else-if="modules.length === 0"
+      variant="campaigns"
+      title="No modules yet"
+      :description="emptyMessage"
+    />
 
-    <table v-else class="modules-table">
+    <table v-else class="table table-rounded table-hover modules-table">
       <thead>
         <tr>
           <th>Module</th>
@@ -36,38 +39,56 @@
           <td class="actions-cell">
             <router-link
               :to="`/modules/${module.id}/play`"
-              class="btn btn-play btn-small"
+              class="btn btn-warning btn-sm"
               :class="{ disabled: module.status !== 'ready' && module.status !== 'active' }"
             >
               Play
             </router-link>
-            <router-link :to="`/modules/${module.id}/board`" class="btn btn-ghost btn-small">
+            <router-link :to="`/modules/${module.id}/board`" class="btn btn-ghost btn-sm">
               Open
             </router-link>
             <button
-              class="btn btn-pdf btn-small"
-              @click="exportModule(module)"
-              :disabled="exportingModuleId === module.id"
+              class="btn btn-secondary btn-sm"
+              @click="openExportDialog(module)"
               title="Export module as PDF"
             >
-              {{ exportingModuleId === module.id ? '...' : 'PDF' }}
+              PDF
             </button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Module Export Dialog -->
+    <ModuleExportDialog
+      :visible="showExportDialog"
+      :module-id="selectedModule?.id ?? null"
+      :module-name="selectedModule?.name"
+      :module-number="selectedModule?.module_number"
+      :campaign-id="campaignId"
+      @close="closeExportDialog"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { PrintService } from '../../../../services/PrintService'
+import ModuleExportDialog from '../../../../components/print/ModuleExportDialog.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
+
+interface ModuleData {
+  id: number
+  name: string
+  module_number: number
+  status: string
+}
 
 const props = withDefaults(defineProps<{
-  modules: any[]
+  modules: ModuleData[]
   loading: boolean
   title?: string
   emptyMessage?: string
+  campaignId?: number
 }>(), {
   title: 'Modules',
   emptyMessage: 'No modules yet. Create your first module to get started!'
@@ -77,43 +98,30 @@ defineEmits<{
   createModule: []
 }>()
 
-const exportingModuleId = ref<number | null>(null)
+// Export dialog state
+const showExportDialog = ref(false)
+const selectedModule = ref<ModuleData | null>(null)
 
-const exportModule = async (module: any) => {
-  if (!module?.id) return
+function openExportDialog(module: ModuleData) {
+  selectedModule.value = module
+  showExportDialog.value = true
+}
 
-  exportingModuleId.value = module.id
-
-  try {
-    const result = await PrintService.exportModuleDocuments(module.id)
-
-    const filename = `Module_${module.module_number}_${module.name || 'module'}.pdf`
-      .replace(/[^a-z0-9\s\-_.]/gi, '')
-      .replace(/\s+/g, '_')
-
-    await PrintService.savePdf(result, filename)
-  } catch (e) {
-    console.error('Failed to export module:', e)
-  } finally {
-    exportingModuleId.value = null
-  }
+function closeExportDialog() {
+  showExportDialog.value = false
+  selectedModule.value = null
 }
 </script>
 
 <style scoped>
+/* Layout-specific: column widths for this table */
 .modules-table {
-  width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
 }
 
-.modules-table th:nth-child(1) { width: 55%; } /* Module name */
-.modules-table th:nth-child(2) { width: 15%; } /* Status */
-.modules-table th:last-child { width: 30%; }   /* Actions */
-
-.modules-table td {
-  vertical-align: middle;
-}
+.modules-table th:nth-child(1) { width: 55%; }
+.modules-table th:nth-child(2) { width: 15%; }
+.modules-table th:last-child { width: 30%; }
 
 .actions-cell {
   display: flex;
@@ -124,43 +132,12 @@ const exportModule = async (module: any) => {
 
 .actions-cell .btn {
   min-width: 4rem;
-  height: 2rem;
-  line-height: 2rem;
-  padding: 0 0.75rem;
-  text-align: center;
-  box-sizing: border-box;
 }
 
-.btn-play {
-  background: var(--color-accent, #e67e22);
-  color: white;
-  border: none;
-  font-weight: 600;
-}
-
-.btn-play:hover:not(.disabled) {
-  background: var(--color-accent-dark, #d35400);
-}
-
-.btn-play.disabled {
-  background: var(--color-border, #ddd);
-  color: var(--color-text-secondary, #999);
+/* Disabled state for Play button when module not ready */
+.btn.disabled {
+  opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
-}
-
-.btn-pdf {
-  background: var(--color-secondary, #95a5a6);
-  color: white;
-  border: none;
-}
-
-.btn-pdf:hover {
-  background: var(--color-secondary-dark, #7f8c8d);
-}
-
-.btn-pdf:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 </style>

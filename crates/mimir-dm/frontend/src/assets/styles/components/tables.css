@@ -124,6 +124,19 @@
   font-style: italic;
 }
 
+/* Rounded Table Variant */
+.table.table-rounded {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.table.table-rounded tbody tr:last-child td {
+  border-bottom: none;
+}
+
 /* Responsive Tables */
 .table-container {
   width: 100%;

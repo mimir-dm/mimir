@@ -80,12 +80,18 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="!sessionsLoading && sessions.length === 0" class="empty-state">
-      <p class="empty-message">No chat sessions yet</p>
-      <button @click="createNewChat" class="btn btn-primary">
-        Start your first chat
-      </button>
-    </div>
+    <EmptyState
+      v-if="!sessionsLoading && sessions.length === 0"
+      variant="generic"
+      title="No chat sessions yet"
+      description="Start your first chat to begin a conversation"
+    >
+      <template #action>
+        <button @click="createNewChat" class="btn btn-primary">
+          Start your first chat
+        </button>
+      </template>
+    </EmptyState>
   </div>
 
   <!-- Delete Session Confirmation Modal -->
@@ -117,6 +123,7 @@
 import { computed, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { useChatStore } from '@/stores/chat'
 
 const chatStore = useChatStore()

@@ -43,11 +43,12 @@
     </div>
     
     <div class="messages-container">
-      <div v-if="messages.length === 0" class="empty-state">
-        <p class="text-gray-400 text-center">
-          Start a conversation by typing a message below
-        </p>
-      </div>
+      <EmptyState
+        v-if="messages.length === 0"
+        variant="generic"
+        title="No messages yet"
+        description="Start a conversation by typing a message below"
+      />
       <div v-else class="messages-content">
         <ChatMessage
           v-for="(message, index) in messages"
@@ -72,6 +73,7 @@ import { ref, nextTick, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { ChatMessage as ChatMessageType } from '@/stores/chat'
 import ChatMessage from './ChatMessage.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 const props = defineProps<{
   messages: ChatMessageType[]
@@ -247,10 +249,6 @@ const toggleInfoBar = () => {
 
 .btn-collapse, .btn-expand {
   padding: 4px;
-}
-
-.empty-state {
-  @apply flex items-center justify-center h-full p-4;
 }
 
 .messages-content {

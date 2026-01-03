@@ -16,13 +16,18 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="players.length === 0" class="empty-state">
-      <p>No players yet</p>
-      <p class="empty-subtitle">Add your first player to get started</p>
-      <button @click="showAddPlayerDialog" class="btn btn-primary">
-        Add Player
-      </button>
-    </div>
+    <EmptyState
+      v-else-if="players.length === 0"
+      variant="users"
+      title="No players yet"
+      description="Add your first player to get started"
+    >
+      <template #action>
+        <button @click="showAddPlayerDialog" class="btn btn-primary">
+          Add Player
+        </button>
+      </template>
+    </EmptyState>
 
     <!-- Player List -->
     <div v-else class="player-container">
@@ -182,6 +187,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePlayerStore } from '../stores/players'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Player } from '../types/character'
 
 const props = defineProps<{
@@ -357,23 +363,6 @@ onMounted(async () => {
 
 .error-message {
   color: var(--error);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-state p {
-  margin: 0 0 8px;
-  font-size: 18px;
-  color: var(--text);
-}
-
-.empty-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 24px !important;
 }
 
 /* Player Container */

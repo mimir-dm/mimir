@@ -62,11 +62,20 @@
         Loading modules...
       </div>
 
-      <div v-else-if="modules.length === 0" class="empty-state">
-        <p>No modules yet. Create your first module to get started!</p>
-      </div>
+      <EmptyState
+        v-else-if="modules.length === 0"
+        variant="campaigns"
+        title="No modules yet"
+        description="Create your first module to get started"
+      >
+        <template #action>
+          <button @click="showCreateModal = true" class="btn btn-primary">
+            + New Module
+          </button>
+        </template>
+      </EmptyState>
 
-      <table v-else class="modules-table">
+      <table v-else class="table table-rounded table-hover">
         <thead>
           <tr>
             <th>Module</th>
@@ -85,10 +94,10 @@
               </span>
             </td>
             <td class="actions-cell">
-              <router-link :to="`/modules/${module.id}/board`" class="btn btn-primary btn-small">
+              <router-link :to="`/modules/${module.id}/board`" class="btn btn-primary btn-sm">
                 Open Board
               </router-link>
-              <button @click="deleteModule(module.id)" class="btn btn-danger btn-small">
+              <button @click="deleteModule(module.id)" class="btn btn-danger btn-sm">
                 Delete
               </button>
             </td>
@@ -106,6 +115,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '../../../shared/components/ui/EmptyState.vue'
 
 const route = useRoute()
 const campaignId = parseInt(route.params.id as string)
@@ -224,60 +234,13 @@ onMounted(() => {
   margin: 0;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--spacing-xl);
   color: var(--color-text-secondary);
 }
 
-/* Table Styles */
-.modules-table {
-  width: 100%;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  border-collapse: separate;
-  border-spacing: 0;
-  overflow: hidden;
-}
-
-.modules-table thead {
-  background-color: var(--color-surface-variant);
-}
-
-.modules-table th {
-  padding: var(--spacing-md) var(--spacing-lg);
-  text-align: left;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 2px solid var(--color-border);
-}
-
-.modules-table tbody tr {
-  transition: background-color var(--transition-base);
-}
-
-.modules-table tbody tr:hover {
-  background-color: var(--color-surface-variant);
-}
-
-.modules-table tbody tr:not(:last-child) {
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modules-table td {
-  padding: var(--spacing-md) var(--spacing-lg);
-  vertical-align: middle;
-}
-
-.module-name {
-  font-size: 1rem;
-}
-
+/* Table-specific styles */
 .module-name strong {
   color: var(--color-text);
 }
@@ -336,52 +299,5 @@ onMounted(() => {
   height: 100%;
   background-color: var(--color-primary-400);
   transition: width var(--transition-base);
-}
-
-.btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-base);
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn-small {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.8rem;
-}
-
-.btn-primary {
-  background-color: var(--color-primary-500);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: var(--color-primary-600);
-}
-
-.btn-danger {
-  background-color: var(--color-error);
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: var(--color-error-dark);
-}
-
-/* Button secondary variant */
-.btn-secondary {
-  background-color: var(--color-surface-variant);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-surface);
-  border-color: var(--color-primary-300);
 }
 </style>

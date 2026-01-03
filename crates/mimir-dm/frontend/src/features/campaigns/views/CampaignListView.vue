@@ -3,7 +3,7 @@
     <div class="campaign-list-view">
       <div class="header">
         <h1 class="page-title">Campaigns</h1>
-        <router-link to="/campaigns/new" class="btn-primary">
+        <router-link to="/campaigns/new" class="btn btn-primary">
           New Campaign
         </router-link>
       </div>
@@ -16,18 +16,24 @@
         {{ campaignStore.error }}
       </div>
 
-      <div v-else-if="campaignStore.campaigns.length === 0" class="empty-state">
-        <p>No campaigns found.</p>
-        <router-link to="/campaigns/new" class="btn-primary">
-          Create your first campaign
-        </router-link>
-      </div>
+      <EmptyState
+        v-else-if="campaignStore.campaigns.length === 0"
+        variant="campaigns"
+        title="No campaigns yet"
+        description="Create your first campaign to start your adventure"
+      >
+        <template #action>
+          <router-link to="/campaigns/new" class="btn btn-primary">
+            Create Campaign
+          </router-link>
+        </template>
+      </EmptyState>
 
       <div v-else class="campaign-grid">
         <div
           v-for="campaign in campaignStore.campaigns"
           :key="campaign.id"
-          class="campaign-card"
+          class="card-interactive campaign-card"
           @click="selectCampaign(campaign.id)"
         >
           <h3 class="campaign-name">{{ campaign.name }}</h3>
@@ -50,6 +56,7 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
+import EmptyState from '../../../shared/components/ui/EmptyState.vue'
 import { useCampaignStore } from '../../../stores/campaigns'
 
 const router = useRouter()
@@ -86,15 +93,10 @@ const formatDate = (dateString: string) => {
   color: var(--color-text);
 }
 
-.loading,
-.empty-state {
+.loading {
   text-align: center;
   padding: var(--spacing-xl) 0;
   color: var(--color-text-secondary);
-}
-
-.empty-state {
-  @apply space-y-4;
 }
 
 .campaign-grid {
@@ -103,20 +105,7 @@ const formatDate = (dateString: string) => {
   gap: var(--spacing-lg);
 }
 
-.campaign-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.campaign-card:hover {
-  border-color: var(--color-primary-500);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
+/* Campaign card content styles - base styling from .card-interactive */
 
 .campaign-name {
   font-size: 1.25rem;
@@ -168,22 +157,6 @@ const formatDate = (dateString: string) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--color-primary-500);
-  color: var(--color-background);
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  font-weight: 500;
-  transition: all var(--transition-fast);
-  display: inline-block;
-}
-
-.btn-primary:hover {
-  background-color: var(--color-primary-600);
-  transform: translateY(-1px);
 }
 
 .error-message {

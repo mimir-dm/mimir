@@ -5,6 +5,7 @@ import { listen, emit, type UnlistenFn } from '@tauri-apps/api/event'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Token } from '@/types/api'
 import type { LightSourceSummary } from '@/composables/useLightSources'
 import type { Light, Wall } from '@/composables/useVisibilityPolygon'
@@ -528,15 +529,12 @@ function handleResize() {
       </div>
 
       <!-- No map selected -->
-      <div v-else-if="!mapState.imageUrl" class="empty-state">
-        <div class="empty-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
-            <path fill-rule="evenodd" d="M8.161 2.58a1.875 1.875 0 011.678 0l4.993 2.498c.106.052.23.052.336 0l3.869-1.935A1.875 1.875 0 0121.75 4.82v12.485c0 .71-.401 1.36-1.037 1.677l-4.875 2.437a1.875 1.875 0 01-1.676 0l-4.994-2.497a.375.375 0 00-.336 0l-3.868 1.935A1.875 1.875 0 012.25 19.18V6.695c0-.71.401-1.36 1.036-1.677l4.875-2.437zM9 6a.75.75 0 01.75.75V15a.75.75 0 01-1.5 0V6.75A.75.75 0 019 6zm6.75 3a.75.75 0 00-1.5 0v8.25a.75.75 0 001.5 0V9z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="empty-text">Waiting for map selection...</div>
-        <div class="empty-hint">Select a map from the DM window to display</div>
-      </div>
+      <EmptyState
+        v-else-if="!mapState.imageUrl"
+        variant="campaigns"
+        title="Waiting for map selection..."
+        description="Select a map from the DM window to display"
+      />
 
       <!-- Map with grid overlay - synced with DM viewport -->
       <div
@@ -904,34 +902,6 @@ function handleResize() {
   font-family: system-ui, sans-serif;
   max-width: 400px;
   text-align: center;
-}
-
-/* Empty state */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  color: #444;
-}
-
-.empty-icon {
-  opacity: 0.5;
-}
-
-.empty-icon svg {
-  width: 96px;
-  height: 96px;
-}
-
-.empty-text {
-  font-size: 1.25rem;
-  font-family: system-ui, sans-serif;
-}
-
-.empty-hint {
-  font-size: 0.875rem;
-  opacity: 0.7;
 }
 
 /* Status bar */

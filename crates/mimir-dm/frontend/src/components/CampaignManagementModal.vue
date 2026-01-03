@@ -9,13 +9,15 @@
       <h2>Manage Campaigns</h2>
       <div class="modal-tabs">
         <button
-          :class="['tab-button', { active: activeTab === 'active' }]"
+          class="btn-tab"
+          :class="{ 'btn-tab--active': activeTab === 'active' }"
           @click="activeTab = 'active'"
         >
           Active Campaigns
         </button>
         <button
-          :class="['tab-button', { active: activeTab === 'archived' }]"
+          class="btn-tab"
+          :class="{ 'btn-tab--active': activeTab === 'archived' }"
           @click="activeTab = 'archived'"
         >
           Archived Campaigns
@@ -29,10 +31,12 @@
         Loading campaigns...
       </div>
 
-      <div v-else-if="activeCampaigns.length === 0" class="empty-state">
-        <p>No active campaigns</p>
-        <p class="empty-subtitle">Create a new campaign to get started</p>
-      </div>
+      <EmptyState
+        v-else-if="activeCampaigns.length === 0"
+        variant="campaigns"
+        title="No active campaigns"
+        description="Create a new campaign to get started"
+      />
 
       <div v-else class="campaign-list">
         <div v-for="campaign in activeCampaigns" :key="campaign.id" class="campaign-item">
@@ -62,10 +66,12 @@
         Loading archived campaigns...
       </div>
 
-      <div v-else-if="archivedCampaigns.length === 0" class="empty-state">
-        <p>No archived campaigns</p>
-        <p class="empty-subtitle">Archived campaigns will appear here</p>
-      </div>
+      <EmptyState
+        v-else-if="archivedCampaigns.length === 0"
+        variant="campaigns"
+        title="No archived campaigns"
+        description="Archived campaigns will appear here"
+      />
 
       <div v-else class="campaign-list">
         <div v-for="campaign in archivedCampaigns" :key="campaign.id" class="campaign-item archived">
@@ -139,6 +145,7 @@
 import { ref, computed, watch } from 'vue'
 import { useCampaignStore } from '@/stores/campaigns'
 import AppModal from '@/components/shared/AppModal.vue'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Campaign } from '@/types/api'
 
 interface Props {
@@ -260,44 +267,14 @@ function formatDate(dateString: string): string {
   border-bottom: 1px solid var(--color-border);
 }
 
-.tab-button {
+.modal-tabs .btn-tab {
   flex: 1;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: none;
-  border: none;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  border-bottom: 2px solid transparent;
-}
-
-.tab-button:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover);
-}
-
-.tab-button.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  background: var(--color-surface-hover);
 }
 
 .loading-message {
   text-align: center;
   color: var(--color-text-secondary);
   padding: var(--spacing-xl) 0;
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: var(--spacing-xl) 0;
-}
-
-.empty-subtitle {
-  font-size: 0.875rem;
-  margin-top: var(--spacing-sm);
 }
 
 .campaign-list {
