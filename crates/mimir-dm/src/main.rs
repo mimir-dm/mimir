@@ -114,7 +114,7 @@ fn main() {
                     let campaigns_dir = user_dirs
                         .document_dir()
                         .unwrap_or_else(|| user_dirs.home_dir())
-                        .join("Mimir Campaigns");
+                        .join(app_init::AppPaths::campaigns_folder_name());
 
                     // Ensure campaigns directory exists
                     if let Err(e) = std::fs::create_dir_all(&campaigns_dir) {

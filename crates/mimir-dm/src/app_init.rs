@@ -17,6 +17,16 @@ pub struct AppPaths {
 }
 
 impl AppPaths {
+    /// Get the campaigns folder name based on dev/release mode
+    pub fn campaigns_folder_name() -> &'static str {
+        let is_dev = cfg!(debug_assertions) || std::env::var("MIMIR_DEV").is_ok();
+        if is_dev {
+            "DevMimirCampaigns"
+        } else {
+            "MimirCampaigns"
+        }
+    }
+
     /// Get application directories, creating them if they don't exist (without logging)
     pub fn init_directories() -> Result<Self> {
         // Check if we're in development mode
