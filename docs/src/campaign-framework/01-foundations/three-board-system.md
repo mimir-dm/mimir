@@ -1,20 +1,24 @@
-# The Three-Board System
+# The Two-Board System
 
 ## Overview: Organizing Creative Chaos
 
-The Three-Board System transforms campaign management from mental juggling to physical organization. Inspired by agile project management and kanban workflows, it creates a visual, tactile system for tracking your campaign's past, present, and future.
+The Two-Board System transforms campaign management from mental juggling to physical organization. Inspired by agile project management and kanban workflows, it creates a visual, tactile system for tracking your campaign's past, present, and future.
 
 Whether implemented physically with actual boards and index cards or digitally with folders and files, the system provides clear information architecture that reduces cognitive load and improves creative flow.
 
-## The Three Organizational Levels
+## The Two Organizational Levels
 
-The system uses three distinct levels—Campaign, Module, and Session—each serving a specific purpose in your workflow. Think of it simply: big picture, current arc, and next game.
+The system uses two distinct levels—Campaign and Module—each serving a specific purpose in your workflow.
 
+- **Campaign Board**: Tracks the big picture (entire campaign arc)
+- **Module Board**: Tracks adventure content (runnable modules)
 
-## Campaign Board 
+**Sessions are play time, not planning**. A module might take 1 session or 6 sessions to complete—that's determined by your players at the table, not your planning ahead of time. You run modules; sessions happen.
+
+## Campaign Board
 ---
-**Time Horizon**: Entire campaign arc  
-**Review Cycle**: Monthly  
+**Time Horizon**: Entire campaign arc
+**Review Cycle**: Monthly
 **Purpose**: Track overarching narrative and long-term developments
 
 This board tracks the readiness and lifecycle of campaign-level elements. The Campaign board manages:
@@ -46,88 +50,75 @@ The Campaign board tracks the health and development of your **Campaign Binder**
 | **Concluding** | Wrapping up threads | • Resolution achieved<br>• Consequences determined | • Document outcomes<br>• Archive materials<br>• Plan transitions |
 
 
-
-## Module Board 
+## Module Board
 ---
-**Time Horizon**: Current 3-6 session arc  
-**Review Cycle**: Weekly (post-session)  
-**Purpose**: Manage active story elements and immediate plot developments
+**Time Horizon**: Current adventure arc
+**Review Cycle**: Weekly (post-session)
+**Purpose**: Manage runnable adventure content
 
-This board manages the development lifecycle of your 3-6 session story arcs. The Module board tracks:
+This board manages the development lifecycle of your modules—complete, runnable adventures. The Module board tracks:
 
 - Module development stages
-- Component readiness (NPCs, locations, maps)
-- Plot thread documentation
-- Session-to-session continuity
+- Component readiness (encounters, NPCs, locations)
+- Adventure content completion
+- Current module progress
 - Module completion status
 
 #### The Module Binder
 
 The Module board tracks the health and development of your **Module Binder**, which contains:
 
-- **Section 1**: Module Overview (Concept, Objectives, Timeline)
-- **Section 2**: Active NPCs (Stats, Motivations, Relationships)
-- **Section 3**: Locations (Maps, Descriptions, Encounters)
-- **Section 4**: Clues & Information (What Players Know/Don't Know)
-- **Section 5**: Resources (Treasure, Magic Items, Special Rewards)
+- **Section 1**: Module Overview (Front matter, hooks, structure)
+- **Section 2**: Adventure Content (Read-aloud text, encounters, scenes)
+- **Section 3**: NPCs (Synced from front matter references)
+- **Section 4**: Locations (Maps, descriptions, environmental details)
+- **Section 5**: DM Notes (Pacing, scaling, troubleshooting)
 
 #### Workflow Stages
 
 | Stage | Purpose | Exit Criteria | Activities/Artifacts |
 |-------|---------|---------------|---------------|
-| **Backlog** | Future possibilities | • Concept clear<br>• Rough session count | • Sketch module concepts<br>• Identify potential hooks |
-| **Planning** | Active development | • Hook established<br>• Key NPCs identified | • Write Module Overview<br>• Design critical path<br>• List needed components |
-| **Development** | Detailed creation | • Scenes outlined<br>• Locations mapped | • Create NPC stats<br>• Draw maps<br>• Write location descriptions |
-| **Ready** | Prepared components | • Stats complete<br>• Handouts printed | • Review completed materials<br>• Print handouts<br>• Organize for play |
-| **Active** | Currently running | • In play now<br>• 3-6 sessions underway | • Run sessions<br>• Track thread progress<br>• Note player decisions |
-| **Completed** | Finished modules | • Resolution reached<br>• Outcomes recorded | • Document outcomes<br>• Update Campaign documents<br>• Archive materials |
+| **Backlog** | Future possibilities | • Concept clear<br>• General scope known | • Sketch module concepts<br>• Identify potential hooks |
+| **Planning** | Active development | • Hook established<br>• Front matter complete | • Write Module Overview<br>• Add catalog references<br>• Design critical path |
+| **Development** | Detailed creation | • Adventure content written<br>• Encounters detailed | • Create adventure scenes<br>• Write read-aloud text<br>• Add DM notes |
+| **Ready** | Prepared to run | • Complete and runnable<br>• Materials synced | • Final review<br>• Sync front matter to files<br>• Prepare handouts |
+| **Active** | Currently running | • In play now<br>• Tracking progress | • Run the module<br>• Capture play notes<br>• Track consequences |
+| **Completed** | Finished modules | • Resolution reached<br>• Outcomes recorded | • Document outcomes<br>• Update Campaign docs<br>• Archive materials |
 
-
-## Session Board 
 ---
-**Time Horizon**: Next 1-2 sessions  
-**Review Cycle**: Pre-session prep  
-**Purpose**: Execute immediate game needs
 
-This board manages your weekly session preparation workflow. The Session board tracks:
+## Running Sessions
 
-- Session prep stages
-- Material readiness
-- One-page plan development
-- Pre-game checklist items
-- Post-session capture status
+Sessions aren't planned on a board—they happen when you sit down to play. Here's how sessions fit into the system:
 
-#### The Session Binder
+### Before Each Session
 
-The Session board tracks the health and development of your **Session Binder**, which contains:
+1. Review where you are in the active module
+2. Note which scenes/encounters are likely next
+3. Pull NPC information from your synced files
+4. Gather materials (maps, handouts, stat blocks)
 
-- **Section 1**: Tonight's Plan (Scene List, Pacing Guide)
-- **Section 2**: Immediate NPCs (Quick Stats, Dialogue Notes)
-- **Section 3**: Encounters (Combat Stats, Environmental Details)
-- **Section 4**: Handouts (Maps, Letters, Clues)
-- **Section 5**: Running Aids (Initiative Trackers, Quick Rules)
+### During the Session
 
-**Plus Player-Facing Folders** containing:
-- Maps players can reference
-- Handouts, letters, and clues to distribute
-- Reference sheets and house rules
-- Character materials and party contracts
+Run the module content, adapting to player choices. The module provides structure; your DM skills provide energy.
 
-#### Workflow Stages
+### After Each Session
 
-| Stage | Purpose | Exit Criteria | Activities/Artifacts |
-|-------|---------|---------------|---------------|
-| **Next Week** | Upcoming session | • Date confirmed<br>• Players notified | • Schedule next session<br>• Send reminders |
-| **Prep Needed** | Required materials | • List created<br>• Time allocated | • List needed stats/maps<br>• Pull from Module board |
-| **In Prep** | Active preparation | • 8-step process done<br>• Notes complete | • Execute 8-step process<br>• Create session outline |
-| **Ready** | Table-ready materials | • Printed/organized<br>• One-page plan done | • Transform to one-page plan<br>• Print handouts<br>• Set up space |
-| **Complete** | Finished sessions | • Notes captured<br>• Boards updated | • Capture post-session notes<br>• Update Module documents<br>• Bring thread progress to Module level |
+Capture **Play Notes**:
+- What happened (key events, decisions)
+- Player reactions and theories
+- Dangling threads
+- DM notes for next time
+
+These notes flow back up to update your Module and Campaign documentation.
+
+For detailed guidance on running sessions, see [Running the Game](../04-session-management/README.md).
 
 ---
 
 ## How the Boards Work Together
 
-The three boards create a natural workflow that pulls information where it's needed, when it's needed. Here's how it works in practice:
+The two boards create a natural workflow that pulls information where it's needed, when it's needed. Here's how it works in practice:
 
 ### Starting from Zero
 
@@ -143,48 +134,44 @@ You grab a card and write "The Brittle Steel Mystery." This opening module needs
 
 Opening your Campaign Binder, you pull what you need: the corruption theme, the sealed evil that mustn't escape, the promise of heroes preventing catastrophe. These Campaign-level truths shape your module planning—the players will discover a local mystery that's actually the first symptom of something vast.
 
-Through the week, you develop the module. By week's end, when you move it to Ready on your Module board, your Module Binder contains everything needed to run "The Brittle Steel Mystery." The important part isn't the creation process—it's that your Module board shows you exactly when to start the next one.
+Through the week, you develop the module. You write the YAML front matter referencing monsters from your catalog. You draft read-aloud text for key scenes. You detail the encounters and DM notes. By week's end, when you move it to Ready on your Module board, your module is complete and runnable.
 
-This is how campaigns maintain momentum: When your current module has two sessions left, that's your trigger. You'll move a new idea from Backlog to Planning, opening your Campaign Binder again to ensure the next arc connects to your larger story. The boards create a natural rhythm where you're always developing tomorrow's content while running today's game.
+The important part isn't the creation process—it's that your Module board shows you exactly when to start the next one. When your current module is nearly complete, that's your trigger. You'll move a new idea from Backlog to Planning, opening your Campaign Binder again to ensure the next arc connects to your larger story.
 
-But where do those Backlog ideas come from? Everywhere. During play, Marcus makes an offhand comment about his sister—card goes in Backlog: "The Paladin's Lost Sister." Sarah theorizes the Goldbeards are working for dragons—another card: "Dragon Conspiracy?" You have a nightmare about clockwork horrors—card: "The Brass Automation." Player interests, genre inspiration, shower thoughts—capture them all. These half-formed ideas don't need to be perfect. When you need a new module, you'll have a rich collection to choose from, each one already sparked by something that excited you or your players.
+### Module to Play
 
-### Module to Session Pull
+Your first module is ready. "The Brittle Steel Mystery" sits in the Ready column of your Module board, complete with all the content needed to run. Time for game night.
 
-Your first module is ready. "The Brittle Steel Mystery" sits in the Ready column of your Module board, your Module Binder contains four sessions worth of content, and your players are arriving tomorrow for Session 1. Time to see how the system handles actual play.
+You don't need a separate session board. The module itself contains everything: the opening scene in the Rusty Anvil tavern, three ways the characters might meet, the panicked smith who bursts in with broken tools. Before each session, you review where you are in the module, note what's likely to happen next, and gather your materials.
 
-It's T-3 days before game night. Your Session board shows a card in Next Week: "Session 1: The Gathering Storm." You move it to Prep Needed—this triggers your weekly session prep ritual. But here's the beautiful part: you're not creating anything new. You're pulling from work already done.
+As you prep, you realize Torin's player mentioned wanting family in town. Nothing in your module prevents this—in fact, it's perfect. You make a note: the panicked smith is Torin's cousin. This session-level detail enriches the module content without requiring any board updates.
 
-You open your Module Binder to the Brittle Steel Mystery section. Everything for Session 1 is there: the opening scene in the Rusty Anvil tavern, three ways the characters might meet, the panicked smith who bursts in with broken tools. Your 8-step prep process isn't about creation—it's about selection and customization. Which opening best fits your group? How will you voice the panicked smith? What if they ignore the obvious hook?
+Game night unfolds beautifully—the party investigates, theorizes, and decides to check the Deepguard Archive. Perfect. This is exactly one of the paths your module anticipated. The next morning, you capture play notes: what happened, player theories (Tom thinks it's sabotage, Sarah suspects magic), and threads to follow up.
 
-As you prep, you realize Torin's player mentioned wanting family in town. Nothing in your module prevents this—in fact, it's perfect. You make a note: the panicked smith is Torin's cousin. This doesn't require reaching up to Campaign level; it's a session-level detail that enriches the module content. You jot it on an index card for your Session Binder.
-
-Game night arrives. Session 1 unfolds beautifully—the party investigates, theorizes, and decides to check the Deepguard Archive. Perfect. This is exactly one of the three paths your module anticipated. The next morning (T+1), you update your Session board: move Session 1 to Complete, capture notes about player theories (Tom thinks it's sabotage, Sarah suspects magic). 
-
-T-3 days comes again. Time to prep Session 2. The card moves from Next Week to Prep Needed, you open your Module Binder, and there it is—the Deepguard Archive section, ready to go. The system keeps you ahead of your players while leaving room for their choices to matter.
+The module continues over subsequent sessions. It takes as many sessions as it takes—the players' pace determines the timeline, not your planning.
 
 ### The Complete Circuit
 
-Game night generates new information. The party saved Morak but couldn't prevent the seal from cracking. Sara's character revealed she can read ancient dwarven—a surprise that needs tracking. The party decided to seek out the remaining seals immediately rather than returning to town. 
+Game night generates new information. The party saved Morak but couldn't prevent the seal from cracking. Sarah's character revealed she can read ancient dwarven—a surprise that needs tracking. The party decided to seek out the remaining seals immediately rather than returning to town.
 
-The next morning (T+1), these session outcomes flow back up. You update your Module documentation with the seal's status and the party's chosen direction. This module will likely wrap next session—earlier than expected. At the Module level, you move "The Second Seal" from Ready to Active, knowing you need to accelerate that prep.
+These outcomes flow back up. You update your Module with the seal's status and the party's chosen direction. This module will likely wrap next session—earlier than expected. At the Module level, you move "The Second Seal" from Backlog to Planning.
 
-When month's end comes, your Campaign review shows the pattern. The Imprisoned Corruption arc has driven three successful modules. Marcus's player specifically mentioned how the corruption theme resonates with his redemption arc. You update your Campaign documentation, adding notes about how each seal's breaking should escalate the visible effects. The circuit is complete: Campaign priorities shaped Module selection, Modules provided Session content, Sessions generated outcomes that updated Modules, and Module completions informed Campaign evolution.
+When month's end comes, your Campaign review shows the pattern. The Imprisoned Corruption arc has driven three successful modules. Marcus's player specifically mentioned how the corruption theme resonates with his redemption arc. You update your Campaign documentation, adding notes about how each seal's breaking should escalate the visible effects.
 
-When everything clicks, the system becomes invisible. You're not managing boards—you're running a living campaign where every level supports the others.
+The circuit is complete: Campaign priorities shaped Module selection, Modules provided adventure content, play generated outcomes that updated Modules, and Module completions informed Campaign evolution.
 
 ### Feedback Loops: Information Flowing Back Up
 
-The Three-Board System isn't just about pulling content down—it's about pushing discoveries back up. Every session generates information that needs to flow upward through your system.
+The Two-Board System isn't just about pulling content down—it's about pushing discoveries back up. Every session generates information that needs to flow upward through your system.
 
-**Session → Module Flow** (What happened affects the current arc):
-During Session 3, the players completely ignored the merchant quarter and spent two hours investigating the abandoned mine instead. They're convinced the corruption originates underground. This session-level discovery flows up to your Module board: add a card to Development for "The Forgotten Shafts" location. Their interest just wrote your Session 5.
+**Play → Module Flow** (What happened affects the current arc):
+During Session 3, the players completely ignored the merchant quarter and spent two hours investigating the abandoned mine instead. They're convinced the corruption originates underground. This discovery flows up to your Module board: add a card to Backlog for "The Forgotten Shafts" location.
 
-**Session → Campaign Flow** (What happened affects everything):
-Tom's wizard just used a spell in a creative way that shattered your assumptions about magic in this world. This isn't just a session note—it flows all the way up to Campaign. You update your magic system notes in the Campaign Binder. Every future module will incorporate this new understanding. Player creativity just enriched your entire world.
+**Play → Campaign Flow** (What happened affects everything):
+Tom's wizard just used a spell in a creative way that shattered your assumptions about magic in this world. This flows all the way up to Campaign. You update your magic system notes in the Campaign Binder. Every future module will incorporate this new understanding.
 
 **Module → Campaign Flow** (Completed arcs shape the future):
-"The Brittle Steel Mystery" is complete. The party saved Ironhold but made enemies of the Goldbeard clan in the process. This module outcome flows up to Campaign level: move "Goldbeard Revenge" from Concept to Active. Create a new card: "Merchant Guild Politics." What started as a local mystery has reshaped your campaign's political landscape.
+"The Brittle Steel Mystery" is complete. The party saved Ironhold but made enemies of the Goldbeard clan in the process. This module outcome flows up to Campaign level: move "Goldbeard Revenge" from Concept to Active.
 
 **Player Interest Signals** (The most important feedback):
 Session 2: Sarah mentions her merchant character should have contacts in other cities.
@@ -193,87 +180,33 @@ Session 6: She wants to send a message to her factor there.
 
 This pattern flows up through every level. At Module: your next arc features Ironpeak. At Campaign: you develop the Merchant Guild as a major faction. Sarah's interests are writing your campaign.
 
-**The Extreme Pivots** (When players change everything):
-Your grimdark political intrigue suddenly becomes a comedy of errors when the players adopt a goblin and open a restaurant. This isn't a failure—it's feedback. The signal flows up instantly:
-- Session level: Add cooking mechanics to tomorrow's prep
-- Module level: Scrap "The Duke's Assassination," develop "The Grand Opening"
-- Campaign level: Archive political intrigue notes, expand the merchant/craft guild systems
-
-The boards don't lock you into a path—they help you pivot gracefully when your players show you what game they want to play.
-
-**Natural Selection for Modules**:
-Your Backlog has fifteen module ideas. Which ones get developed? The ones your players lean toward:
-- They loved investigating? "The Brass Automation Mystery" moves to Planning
-- They avoided all combat? "The Gladiator Uprising" stays in Backlog forever
-- They befriended the villain? "Redemption of the Whisper Cult" just got created
-
-Player engagement naturally selects which modules get made. Your campaign evolves to match what excites your table.
-
-**Weekly Upward Flow Checklist**:
-T+1 post-session:
-- What surprised me? → Update Module assumptions
-- What excited them? → Add to Module Backlog
-- What changed permanently? → Update Campaign docs
-
-This upward flow ensures your campaign remains alive and responsive. The players aren't just experiencing your world—they're creating it with you.
-
 ---
 
 ## Review Cadences
 
 The system works because you touch it regularly. Not lengthy planning sessions—quick, focused check-ins that keep everything flowing.
 
-**T+1 Morning** (20 minutes post-session):
-The morning after game night, while it's fresh. Move cards on your Session board to Complete. Capture what happened, what surprised you, what the players loved. These notes feed everything else. Don't analyze yet—just record.
+**Post-Session** (20 minutes):
+The morning after game night, while it's fresh. Capture what happened in your play notes, what surprised you, what the players loved. These notes feed everything else. Don't analyze yet—just record.
 
-**T-3 Days** (60-90 minutes):
-Session prep time. Move next session from Next Week to Prep Needed. Pull from your Module and Campaign binders as needed. This isn't creation time—it's assembly and customization. By the end, move your session to Ready.
+**Pre-Session** (60-90 minutes):
+Before each game. Review where you are in the active module. Pull the information you need. Prep NPCs who might appear. This isn't creation time—it's assembly and customization.
 
 **Weekly Module Check** (10 minutes):
-Usually T+1 evening. Quick glance: How many sessions left in current module? Anything need to bubble up to Campaign level? Any Backlog ideas ready to move to Planning? This prevents the "Oh no, my module ends next week and I have nothing planned" panic.
+Usually the day after a session. Quick glance: How far through the current module? Anything need to bubble up to Campaign level? Any Backlog ideas ready to move to Planning? This prevents the "Oh no, my module ends next session and I have nothing planned" panic.
 
 **Monthly Campaign Review** (30 minutes):
 Once per month. Are player arcs getting spotlight time? Has the campaign drifted from its core themes? What Background elements should activate? This is when you zoom out and see the forest, not just the trees.
 
 ## Success Indicators
 
-You know the Three-Board System is working when:
+You know the Two-Board System is working when:
 
-- **Prep flows smoothly**: Pull from Module board, populate Session board
+- **Prep flows smoothly**: Module content is ready; you just review and gather
 - **Sessions feel connected**: Clear throughlines between games
 - **Players notice continuity**: Their actions have visible consequences
 - **Cognitive load drops**: Less mental juggling during sessions
 - **Creativity increases**: More mental space for improvisation
-
-
-
-### The Weekly Pull Cycle
-
-**T+30m ** (Post-Session):
-- Session ends with cliffhanger: "The seal is cracking!"
-- Capture in Session board: Player choices, NPC reactions
-- This naturally **pulls** you to check: What's on the Module board about seals?
-
-**T+1** (Module Review):
-- Module board shows: "Ancient seals" thread is now active
-- Check Campaign board: "The Imprisoned Corruption" is a major arc
-- **Pull** Campaign info down → Update Module board with seal consequences
-
-**T-3** (Session Prep):
-- Need to prep for game night
-- **Pull** from Module board: Active threads, NPC motivations
-- **Pull** specific details: Morak's stats, seal mechanics, countdown timer
-- Everything flows naturally to your Session board
-
-### The Natural Rhythm
-
-After 3-4 weeks, the pull mechanics become automatic:
-
-1. **Session Prep pulls from Module**: "I need NPCs and locations for game night"
-2. **Module Review pulls from Campaign**: "How does this fit the bigger picture?"
-3. **Campaign Review pulls from everything**: "What patterns are emerging?"
-
-You stop asking "What should I prep?" and start asking "What do I need for this specific situation?"—the boards have the answer.
 
 ### Signs It's Working
 
@@ -283,13 +216,13 @@ You stop asking "What should I prep?" and start asking "What do I need for this 
 - You can explain any NPC's motivation instantly
 - Campaign events feel inevitable, not forced
 
-
+---
 
 ## Next Steps
 
-With the Three-Board System as your organizational foundation, you're ready to:
+With the Two-Board System as your organizational foundation, you're ready to:
 - **Start a new campaign**: Follow the [Campaign Genesis Process](../02-campaign-genesis/README.md) to build from spark to first session
 - **Create your first module**: Use the [Module Creation Workflow](../03-module-creation/README.md) to design sustainable story arcs
-- **Master weekly prep**: Apply [Session Management](../04-session-management/README.md) techniques for consistent quality
+- **Master running the game**: Apply [Running the Game](../04-session-management/README.md) techniques for consistent quality
 
 Remember: The goal isn't perfect documentation but sustainable organization. When you spend less mental energy tracking information, you have more available for creating memorable experiences.

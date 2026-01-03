@@ -448,7 +448,7 @@ Notice how the raw notes transform into the polished plan:
 
 **From Step 8 Notes**: "Letter, potions" → Becomes integrated rewards within scene flow
 
-The transformation from notes to one-page plan is what makes your prep usable at the table. The [Session Outline template](../06-templates/templates/session-outline.md) guides both the note-taking and final formatting.
+The transformation from notes to one-page plan is what makes your prep usable at the table. Your module provides the content foundation; this process creates your session-specific action plan.
 
 ## Weekly Time Investment Summary
 

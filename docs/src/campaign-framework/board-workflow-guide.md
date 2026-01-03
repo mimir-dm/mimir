@@ -1,5 +1,16 @@
 # How to Use the Boards - Plain Instructions
 
+## The Two-Board System
+
+Campaign management uses two boards:
+
+1. **Campaign Board** - Tracks the big picture (whole campaign lifecycle)
+2. **Module Board** - Tracks adventure content (runnable modules)
+
+Sessions are when you actually play—they're not a planning layer. A module might take 1 session or 6 sessions to complete; that's determined by your players, not your planning.
+
+---
+
 ## Starting a Campaign
 
 **You start with the CAMPAIGN BOARD in Concept stage.**
@@ -8,7 +19,7 @@ During Concept stage, you create:
 - Campaign spark ideas (on index cards)
 - **Campaign Pitch** (1 page)
 - **Big Three Document** (1 page)
-- **First Adventure Outline** (1-2 pages)
+- **First Module Outline** (1-2 pages)
 
 You're ready to move to Session Zero stage when:
 - Players read Campaign Pitch and show interest
@@ -16,7 +27,7 @@ You're ready to move to Session Zero stage when:
 ---
 
 **In CAMPAIGN BOARD Session Zero stage**, you create:
-- **Starting Scenario** (1-2 pages) 
+- **Starting Scenario** (1-2 pages)
 - **World Primer** (2-3 pages)
 - **Character Guidelines** (1 page)
 - **Table Expectations** (1 page)
@@ -41,96 +52,97 @@ You're ready to move Campaign Board to Active stage when:
 
 ---
 
+## Managing Modules
+
 **In MODULE BOARD Backlog stage** (starts after Session Zero), you create:
 - Module concept cards (based on PC interests)
 
 You're ready to move a module to Planning stage when:
-- Current module has 2 sessions left (or immediately after Session Zero for first module)
+- Current module is nearly complete (or immediately after Session Zero for first module)
 
 ---
 
 **In MODULE BOARD Planning stage**, you create:
-- **Module Overview** (concept, objectives, timeline)
+- **Module Overview** with front matter (monsters, NPCs, items references)
 
 You're ready to move to Development stage when:
-- Module Overview is complete
+- Module Overview is complete with all catalog references
 
 ---
 
 **In MODULE BOARD Development stage**, you create:
-- **Active NPCs** (stats, motivations, relationships)
-- **Locations** (maps, descriptions, encounters)
-- **Clues & Information** (what players know/don't know)
-- **Resources** (treasure, magic items, special rewards)
+- **Adventure Content** (read-aloud text, encounter details)
+- **Locations** (maps, descriptions)
+- **Clues & Information** (what players can discover)
+- **DM Notes** (pacing, scaling, troubleshooting)
 
 You're ready to move to Ready stage when:
-- All components are created and organized in **Module Binder**
+- Module is complete and runnable
 
 ---
 
 **In MODULE BOARD Ready stage**, you:
-- Final review of **Module Binder**
-- Ensure all materials are print-ready
-
-**NOW you start using the SESSION BOARD for the first time.**
+- Final review of module content
+- Ensure all materials are ready (handouts, maps, stat blocks)
+- System syncs front matter to separate monsters.md, npcs.md, items.md files
 
 You're ready to move Module to Active stage when:
-- First session of the module runs
+- You begin running the module
 
 ---
 
-**In SESSION BOARD Next Week stage**, you create:
-- Session date/time confirmation
+**In MODULE BOARD Active stage**, you:
+- Run the module over however many sessions it takes
+- Capture **Play Notes** after each session
+- Track what happened for continuity
 
-You're ready to move to Prep Needed stage when:
-- It's 3 days before the session (T-3)
-
----
-
-**In SESSION BOARD Prep Needed stage**, you create:
-- List of required materials from Module Binder
-
-You're ready to move to In Prep stage when:
-- You begin the 8-step prep process
+You're ready to move Module to Complete stage when:
+- The module's story is resolved (however that happens)
 
 ---
 
-**In SESSION BOARD In Prep stage**, you create:
-- **8-Step Prep Notes** (working document with all 8 steps completed)
-
-You're ready to move to Ready stage when:
-- 8-step process is complete
-
----
-
-**In SESSION BOARD Ready stage**, you create:
-- **One-Page Session Plan** (transformed from 8-step notes)
-- **Handouts** (maps, letters, clues - printed)
-- **Running Aids** (initiative trackers, quick rules)
-- **Session Binder** (tonight's materials organized)
-
-You're ready to move to Complete stage when:
-- Session ends
+**In MODULE BOARD Complete stage**, you create:
+- **Post-Module Notes** (what happened, consequences, threads for next module)
+- Update **Campaign Bible** with new established facts
+- Archive the module
 
 ---
 
-**In SESSION BOARD Complete stage**, you create:
-- **Post-Session Notes** (what happened, player reactions, dangling threads)
+## Running Sessions
+
+Sessions aren't planned—they happen. Here's the workflow:
+
+### Before Each Session (1-2 hours prep)
+1. Review where you are in the active module
+2. Note which scenes/encounters are likely next
+3. Prep NPCs who might appear
+4. Gather materials (maps, handouts, stat blocks)
+
+### During the Session
+Run the module content, adapting to player choices.
+
+### After Each Session (10-15 minutes)
+Create **Play Notes** capturing:
+- What happened
+- Player reactions
+- Dangling threads
+- DM notes for next time
+
+For detailed guidance on running sessions, see [Running the Game](./04-session-management/README.md).
 
 ---
 
-## The Three Binders Pattern
+## The Two Binders Pattern
 
 1. **Campaign Binder** - Created during Integration stage
-2. **Module Binder** - Created during Development stage  
-3. **Session Binder** - Created during Ready stage
+2. **Module Binder** - Created during Development stage
 
 Each binder contains the documents created at that board level.
 
 ## Key Rules
 
 - You don't touch Module Board until after Session Zero
-- You don't touch Session Board until you have a module Ready
 - Campaign Board tracks big picture (whole campaign)
-- Module Board tracks story arcs (3-6 sessions)
-- Session Board tracks individual games
+- Module Board tracks adventure content (runnable modules)
+- Sessions are play time, not planning units
+- A module takes as many sessions as it takes

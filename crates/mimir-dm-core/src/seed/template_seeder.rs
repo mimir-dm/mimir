@@ -65,9 +65,8 @@ define_templates! {
     MODULE_MYSTERY => "module_mystery.md",
     MODULE_POLITICAL => "module_political.md",
 
-    // Session Board Documents - Session management
-    SESSION_OUTLINE => "session_outline.md",
-    SESSION_NOTES => "session_notes.md",
+    // Play Documents - Capture session outcomes
+    PLAY_NOTES => "play_notes.md",
     CLUE_TRACKER => "clue_tracker.md",
     DOCUMENT_TRACKER => "document_tracker.md",
 }
@@ -154,7 +153,7 @@ mod tests {
 
         // Seed templates
         let count = seed_templates(&mut conn).unwrap();
-        assert_eq!(count, 23); // We have 23 templates
+        assert_eq!(count, 22); // We have 22 templates
 
         // Verify a few templates exist
         let campaign_pitch = TemplateRepository::get_latest(&mut conn, "campaign_pitch").unwrap();
