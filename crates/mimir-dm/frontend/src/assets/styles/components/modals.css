@@ -117,6 +117,16 @@
   padding: var(--spacing-lg);
   overflow-y: auto;
   flex: 1;
+  color: var(--color-text);
+}
+
+.modal-body p {
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.modal-body p:last-child {
+  margin-bottom: 0;
 }
 
 .modal-body.no-padding {
