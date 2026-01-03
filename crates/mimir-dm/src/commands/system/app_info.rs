@@ -70,7 +70,7 @@ pub async fn get_default_campaigns_directory() -> Result<ApiResponse<String>, St
             let documents_dir = user_dirs
                 .document_dir()
                 .unwrap_or_else(|| user_dirs.home_dir())
-                .join("Mimir Campaigns");
+                .join(crate::app_init::AppPaths::campaigns_folder_name());
 
             Ok(ApiResponse::success(
                 documents_dir.to_string_lossy().to_string(),
