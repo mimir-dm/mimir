@@ -9,6 +9,7 @@
 //! - `CharacterSheetSection` - Full character sheet (single page)
 //! - `CompactSheetSection` - 2-page WotC-style character sheet
 //! - `CharacterLongFormSection` - Extended character details (personality, background, RP notes)
+//! - `EquipmentCardsSection` - Printable equipment cards (2.5in x 3.5in)
 //! - `EquipmentDetailSection` - Detailed inventory list
 //! - `NpcAppendix` - NPC reference cards
 //!
@@ -26,6 +27,7 @@ mod character_longform;
 mod character_summary;
 mod compact_sheet;
 mod encounter;
+mod equipment;
 mod equipment_detail;
 mod map;
 mod markdown;
@@ -43,6 +45,7 @@ pub use character_longform::CharacterLongFormSection;
 pub use character_summary::CharacterSummarySection;
 pub use compact_sheet::CompactSheetSection;
 pub use encounter::EncounterSection;
+pub use equipment::{is_card_worthy, EquipmentCardsSection};
 pub use equipment_detail::EquipmentDetailSection;
 pub use map::{MapPreview, TileData, TiledMapSection};
 pub use markdown::MarkdownSection;

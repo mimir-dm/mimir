@@ -45,7 +45,7 @@ pub mod service;
 pub mod world;
 
 pub use campaign::{build_campaign_pdf, build_single_document_pdf, CampaignExportData, ExportOptions};
-pub use character::{export_character_pdf, generate_character_sheet_pdf, CharacterExportOptions};
+pub use character::{export_character_pdf, export_character_pdf_with_equipment, generate_character_sheet_pdf, CharacterExportOptions};
 pub use maps::{generate_map_pdf, slice_map_into_tiles, MapPdfOptions};
 
 pub use builder::{DocumentBuilder, DocumentConfig, RenderContext, Renderable, VirtualFileRegistry};

@@ -48,6 +48,17 @@
           </label>
         </div>
 
+        <!-- Equipment Cards -->
+        <div class="mode-card" :class="{ active: options.includeEquipmentCards }">
+          <label class="mode-header" @click.prevent="options.includeEquipmentCards = !options.includeEquipmentCards">
+            <input type="checkbox" v-model="options.includeEquipmentCards" @click.stop />
+            <div class="mode-info">
+              <span class="mode-label">Equipment Cards</span>
+              <span class="mode-desc">Printable cards for weapons, magic items, special ammo</span>
+            </div>
+          </label>
+        </div>
+
         <!-- Equipment Detail -->
         <div class="mode-card" :class="{ active: options.includeEquipmentDetail }">
           <label class="mode-header" @click.prevent="options.includeEquipmentDetail = !options.includeEquipmentDetail">
@@ -132,13 +143,15 @@ const options = reactive({
   includeCompactSheet: true,
   includeLongForm: false,
   includeSpellCards: true,
+  includeEquipmentCards: false,
   includeEquipmentDetail: false,
 })
 
 // Computed
 const hasAnySelection = computed(() => {
   return options.includeCompactSheet || options.includeLongForm ||
-         options.includeSpellCards || options.includeEquipmentDetail
+         options.includeSpellCards || options.includeEquipmentCards ||
+         options.includeEquipmentDetail
 })
 
 const defaultFileName = computed(() => {
@@ -155,6 +168,7 @@ watch(() => props.visible, (newVisible) => {
     options.includeCompactSheet = true
     options.includeLongForm = false
     options.includeSpellCards = true
+    options.includeEquipmentCards = false
     options.includeEquipmentDetail = false
   }
 })
@@ -184,6 +198,7 @@ async function handleExport() {
       include_compact_sheet: options.includeCompactSheet,
       include_long_form: options.includeLongForm,
       include_spell_cards: options.includeSpellCards,
+      include_equipment_cards: options.includeEquipmentCards,
       include_equipment_detail: options.includeEquipmentDetail,
     })
 
