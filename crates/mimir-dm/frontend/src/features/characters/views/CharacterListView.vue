@@ -77,6 +77,20 @@
                 <span class="character-player">{{ getPlayerName(character.player_id) }}</span>
               </div>
               <div class="character-actions" @click.stop>
+                <div class="action-buttons">
+                  <button @click="editCharacter(character)" class="btn-action" title="Edit">
+                    Edit
+                  </button>
+                  <button @click="printCharacter(character)" class="btn-action" title="Print PDF">
+                    Print
+                  </button>
+                  <button @click="levelUpCharacter(character)" class="btn-action" title="Level Up">
+                    Level Up
+                  </button>
+                  <button @click="deleteCharacter(character)" class="btn-action btn-action-danger" title="Delete">
+                    Delete
+                  </button>
+                </div>
                 <select
                   class="campaign-select"
                   @change="assignToCampaign(character.id, $event)"
@@ -116,6 +130,22 @@
               <div class="character-meta">
                 <span class="character-player">{{ getPlayerName(character.player_id) }}</span>
               </div>
+              <div class="character-actions" @click.stop>
+                <div class="action-buttons">
+                  <button @click="editCharacter(character)" class="btn-action" title="Edit">
+                    Edit
+                  </button>
+                  <button @click="printCharacter(character)" class="btn-action" title="Print PDF">
+                    Print
+                  </button>
+                  <button @click="levelUpCharacter(character)" class="btn-action" title="Level Up">
+                    Level Up
+                  </button>
+                  <button @click="deleteCharacter(character)" class="btn-action btn-action-danger" title="Delete">
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -128,6 +158,54 @@
       @close="handleWizardClose"
       @created="handleCharacterCreated"
     />
+
+    <!-- Character Print Dialog -->
+    <CharacterPrintDialog
+      v-if="selectedCharacterForPrint"
+      :visible="showPrintDialog"
+      :character-id="selectedCharacterForPrint.id"
+      :character-name="selectedCharacterForPrint.character_name"
+      @close="closePrintDialog"
+    />
+
+    <!-- Level Up Dialog -->
+    <LevelUpDialog
+      v-if="selectedCharacterForLevelUp && selectedCharacterData"
+      :visible="showLevelUpDialog"
+      :character-id="selectedCharacterForLevelUp.id"
+      :character-data="selectedCharacterData"
+      @close="closeLevelUpDialog"
+      @completed="handleLevelUpCompleted"
+    />
+
+    <!-- Delete Confirmation Dialog -->
+    <AppModal
+      :visible="showDeleteDialog"
+      title="Confirm Delete"
+      size="sm"
+      @close="closeDeleteDialog"
+    >
+      <p>
+        Are you sure you want to delete
+        <strong>{{ characterToDelete?.character_name }}</strong>?
+      </p>
+      <p class="warning-text">
+        This action cannot be undone.
+      </p>
+
+      <template #footer>
+        <button type="button" @click="closeDeleteDialog" class="btn btn-secondary">
+          Cancel
+        </button>
+        <button
+          @click="confirmDelete"
+          class="btn btn-danger"
+          :disabled="deleting"
+        >
+          {{ deleting ? 'Deleting...' : 'Delete Character' }}
+        </button>
+      </template>
+    </AppModal>
   </MainLayout>
 </template>
 
@@ -137,11 +215,14 @@ import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
 import CharacterCreationWizard from '../components/CharacterCreationWizard.vue'
+import LevelUpDialog from '../components/LevelUpDialog.vue'
+import { CharacterPrintDialog } from '../../../components/print'
+import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '../../../shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '../../../stores/characters'
 import { usePlayerStore } from '../../../stores/players'
 import { useCampaignStore } from '../../../stores/campaigns'
-import type { Character } from '../../../types/character'
+import type { Character, CharacterData } from '../../../types/character'
 
 const router = useRouter()
 const characterStore = useCharacterStore()
@@ -179,8 +260,20 @@ const characters = computed(() => {
   }
 })
 
+// Sort characters: PCs first, then NPCs, then alphabetically
+const sortCharacters = (chars: Character[]) => {
+  return [...chars].sort((a, b) => {
+    // PCs (is_npc = 0/false) come before NPCs (is_npc = 1/true)
+    if (a.is_npc !== b.is_npc) {
+      return a.is_npc ? 1 : -1
+    }
+    // Then sort alphabetically by name
+    return a.character_name.localeCompare(b.character_name)
+  })
+}
+
 const unassignedCharacters = computed(() =>
-  characters.value.filter(c => c.campaign_id === null)
+  sortCharacters(characters.value.filter(c => c.campaign_id === null))
 )
 
 const charactersByCampaign = computed(() => {
@@ -195,6 +288,11 @@ const charactersByCampaign = computed(() => {
       }
       grouped[campaignId].push(character)
     })
+
+  // Sort each campaign's characters
+  for (const campaignId in grouped) {
+    grouped[campaignId] = sortCharacters(grouped[campaignId])
+  }
 
   return grouped
 })
@@ -252,6 +350,89 @@ const assignToCampaign = async (characterId: number, event: Event) => {
 
   // Reset select
   select.value = ''
+}
+
+// Character action handlers
+const editCharacter = (character: Character) => {
+  // Navigate to character sheet in edit mode
+  router.push(`/characters/${character.id}?edit=true`)
+}
+
+// Print dialog state
+const showPrintDialog = ref(false)
+const selectedCharacterForPrint = ref<Character | null>(null)
+
+const printCharacter = (character: Character) => {
+  selectedCharacterForPrint.value = character
+  showPrintDialog.value = true
+}
+
+const closePrintDialog = () => {
+  showPrintDialog.value = false
+  selectedCharacterForPrint.value = null
+}
+
+// Level up dialog state
+const showLevelUpDialog = ref(false)
+const selectedCharacterForLevelUp = ref<Character | null>(null)
+const selectedCharacterData = ref<CharacterData | null>(null)
+
+const levelUpCharacter = async (character: Character) => {
+  try {
+    // Fetch full character data for the level up dialog
+    const result = await invoke<{ character: Character; data: CharacterData }>('get_character', {
+      characterId: character.id
+    })
+    selectedCharacterForLevelUp.value = character
+    selectedCharacterData.value = result.data
+    showLevelUpDialog.value = true
+  } catch (error) {
+    console.error('Failed to load character data:', error)
+    characterStore.error = `Failed to load character: ${error}`
+  }
+}
+
+const closeLevelUpDialog = () => {
+  showLevelUpDialog.value = false
+  selectedCharacterForLevelUp.value = null
+  selectedCharacterData.value = null
+}
+
+const handleLevelUpCompleted = async () => {
+  closeLevelUpDialog()
+  // Reload characters to show updated level
+  await characterStore.fetchAllCharacters()
+}
+
+// Delete dialog state
+const showDeleteDialog = ref(false)
+const characterToDelete = ref<Character | null>(null)
+const deleting = ref(false)
+
+const deleteCharacter = (character: Character) => {
+  characterToDelete.value = character
+  showDeleteDialog.value = true
+}
+
+const closeDeleteDialog = () => {
+  showDeleteDialog.value = false
+  characterToDelete.value = null
+}
+
+const confirmDelete = async () => {
+  if (!characterToDelete.value) return
+
+  deleting.value = true
+  try {
+    await characterStore.deleteCharacter(characterToDelete.value.id)
+    await characterStore.fetchAllCharacters()
+    closeDeleteDialog()
+  } catch (error) {
+    console.error('Failed to delete character:', error)
+    characterStore.error = `Failed to delete character: ${error}`
+  } finally {
+    deleting.value = false
+  }
 }
 </script>
 
@@ -461,5 +642,49 @@ const assignToCampaign = async (characterId: number, event: Event) => {
 /* NPC card styling */
 .character-card.is-npc {
   border-left: 3px solid var(--color-warning, #f59e0b);
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.btn-action {
+  flex: 1;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-action:hover {
+  background-color: var(--color-surface);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-500);
+}
+
+.btn-action-danger:hover {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
+}
+
+/* Delete dialog */
+.warning-text {
+  margin-top: var(--spacing-md);
+  color: var(--color-warning-600);
+  font-size: 0.875rem;
+}
+
+.theme-dark .warning-text,
+.theme-hyper .warning-text {
+  color: var(--color-warning-400);
 }
 </style>
