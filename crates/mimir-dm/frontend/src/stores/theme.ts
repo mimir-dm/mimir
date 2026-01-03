@@ -35,12 +35,22 @@ export const useThemeStore = defineStore('theme', () => {
   const applyTheme = () => {
     const savedTheme = getSavedTheme()
     currentTheme.value = savedTheme
+    applyThemeToBody(savedTheme)
+  }
+
+  // Apply theme class to body element for teleported components (modals)
+  const applyThemeToBody = (theme: string) => {
+    // Remove existing theme classes
+    document.body.classList.remove('theme-light', 'theme-dark', 'theme-hyper')
+    // Add new theme class
+    document.body.classList.add(`theme-${theme}`)
   }
   
   // Change theme and broadcast to other windows
   const setTheme = async (theme: string, broadcast = true) => {
     currentTheme.value = theme
     saveTheme(theme)
+    applyThemeToBody(theme)
     
     // Broadcast theme change to all windows
     if (broadcast) {

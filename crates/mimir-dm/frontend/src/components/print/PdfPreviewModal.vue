@@ -184,12 +184,8 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-gray-100);
+  background: var(--color-background);
   min-height: 60vh;
-}
-
-.theme-dark .pdf-body {
-  background: var(--color-gray-900);
 }
 
 .header-actions {
