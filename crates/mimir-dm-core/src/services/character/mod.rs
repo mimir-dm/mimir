@@ -786,6 +786,15 @@ impl<'a> CharacterService<'a> {
         let weight = item.weight.map(|w| w as f64).unwrap_or(0.0);
         let value = item.value.unwrap_or(0.0);
 
+        // Build notes from item properties/entries, combined with user notes
+        let item_description = build_item_description(&item);
+        let final_notes = match (notes, item_description) {
+            (Some(user_notes), Some(item_desc)) => Some(format!("{}\n\n{}", item_desc, user_notes)),
+            (Some(user_notes), None) => Some(user_notes),
+            (None, Some(item_desc)) => Some(item_desc),
+            (None, None) => None,
+        };
+
         // Check if item already exists in inventory
         let existing_item = char_data.inventory.iter_mut().find(|i| i.name == item_name);
 
@@ -802,7 +811,7 @@ impl<'a> CharacterService<'a> {
                     quantity,
                     weight,
                     value,
-                    notes,
+                    notes: final_notes,
                 });
         }
 
@@ -963,6 +972,124 @@ impl<'a> CharacterService<'a> {
     }
 }
 
+/// Build a description string from an item's properties and entries
+fn build_item_description(item: &crate::models::catalog::item::Item) -> Option<String> {
+    let mut parts = Vec::new();
+
+    // Add weapon properties if present
+    if let Some(ref props) = item.property {
+        let prop_names: Vec<&str> = props
+            .iter()
+            .filter_map(|p| match p.as_str() {
+                "A" => Some("Ammunition"),
+                "F" => Some("Finesse"),
+                "H" => Some("Heavy"),
+                "L" => Some("Light"),
+                "LD" => Some("Loading"),
+                "R" => Some("Reach"),
+                "S" => Some("Special"),
+                "T" => Some("Thrown"),
+                "2H" => Some("Two-Handed"),
+                "V" => Some("Versatile"),
+                "M" => Some("Martial"),
+                "AF" => Some("Ammunition (Firearm)"),
+                "RLD" => Some("Reload"),
+                "BF" => Some("Burst Fire"),
+                _ => None,
+            })
+            .collect();
+        if !prop_names.is_empty() {
+            parts.push(format!("Properties: {}", prop_names.join(", ")));
+        }
+    }
+
+    // Add damage info if present
+    if let Some(ref dmg) = item.dmg1 {
+        let dmg_type = item.dmg_type.as_deref().unwrap_or("");
+        parts.push(format!("Damage: {} {}", dmg, dmg_type));
+    }
+
+    // Add range if present
+    if let Some(ref range) = item.range {
+        parts.push(format!("Range: {}", range));
+    }
+
+    // Add entries/description if present
+    if let Some(ref entries) = item.entries {
+        let text = extract_entries_text(entries);
+        if !text.is_empty() {
+            parts.push(text);
+        }
+    }
+
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join(". "))
+    }
+}
+
+/// Extract plain text from 5etools entries array
+fn extract_entries_text(entries: &[serde_json::Value]) -> String {
+    let raw = entries
+        .iter()
+        .filter_map(|entry| {
+            match entry {
+                serde_json::Value::String(s) => Some(s.clone()),
+                serde_json::Value::Object(obj) => {
+                    // Handle entry objects with "entries" field
+                    if let Some(serde_json::Value::Array(sub_entries)) = obj.get("entries") {
+                        Some(extract_entries_text(sub_entries))
+                    } else if let Some(serde_json::Value::String(s)) = obj.get("entry") {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    // Clean 5etools tags like {@damage 1d6}, {@dice 2d6}, {@hit 5}, etc.
+    clean_5etools_tags(&raw)
+}
+
+/// Remove 5etools formatting tags and extract just the content
+fn clean_5etools_tags(text: &str) -> String {
+    let mut result = text.to_string();
+
+    // Pattern: {@tagname content} or {@tagname content|display}
+    // We want to extract either 'display' if present, otherwise 'content'
+    loop {
+        if let Some(start) = result.find("{@") {
+            if let Some(end) = result[start..].find('}') {
+                let tag_content = &result[start + 2..start + end];
+                // Find the tag name (first word)
+                let replacement = if let Some(space_pos) = tag_content.find(' ') {
+                    let content = &tag_content[space_pos + 1..];
+                    // Check for pipe - if present, use text after pipe
+                    if let Some(pipe_pos) = content.find('|') {
+                        content[pipe_pos + 1..].to_string()
+                    } else {
+                        content.to_string()
+                    }
+                } else {
+                    String::new()
+                };
+                result = format!("{}{}{}", &result[..start], replacement, &result[start + end + 1..]);
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1120,6 +1247,11 @@ mod tests {
                 bonds: None,
                 flaws: None,
             },
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,

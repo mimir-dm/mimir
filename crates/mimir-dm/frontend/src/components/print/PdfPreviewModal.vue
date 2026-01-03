@@ -2,7 +2,7 @@
   <AppModal
     :visible="visible"
     :title="title"
-    size="lg"
+    size="full"
     @close="closeModal"
   >
     <template #header>
@@ -185,7 +185,8 @@ defineExpose({
   align-items: center;
   justify-content: center;
   background: var(--color-background);
-  min-height: 60vh;
+  height: calc(100vh - 200px); /* Account for header + footer */
+  min-height: 400px;
 }
 
 .header-actions {
@@ -256,11 +257,13 @@ defineExpose({
 .pdf-container {
   width: 100%;
   height: 100%;
+  display: flex;
 }
 
 .pdf-frame {
   width: 100%;
   height: 100%;
   border: none;
+  flex: 1;
 }
 </style>
