@@ -98,6 +98,35 @@ impl<'a> CharacterRepository<'a> {
             .load(self.conn)
             .map_err(Into::into)
     }
+
+    /// Find a character by name in a campaign
+    pub fn find_by_name_in_campaign(
+        &mut self,
+        campaign_id: i32,
+        name: &str,
+    ) -> Result<Option<Character>> {
+        characters::table
+            .filter(characters::campaign_id.eq(campaign_id))
+            .filter(characters::character_name.eq(name))
+            .first(self.conn)
+            .optional()
+            .map_err(Into::into)
+    }
+
+    /// Find an NPC by name in a campaign
+    pub fn find_npc_by_name_in_campaign(
+        &mut self,
+        campaign_id: i32,
+        name: &str,
+    ) -> Result<Option<Character>> {
+        characters::table
+            .filter(characters::campaign_id.eq(campaign_id))
+            .filter(characters::character_name.eq(name))
+            .filter(characters::is_npc.eq(1))
+            .first(self.conn)
+            .optional()
+            .map_err(Into::into)
+    }
 }
 
 /// Repository for character version operations

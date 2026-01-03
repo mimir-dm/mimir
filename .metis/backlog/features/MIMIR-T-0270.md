@@ -4,7 +4,7 @@ level: task
 title: "Composable Character Sheet Printing"
 short_code: "MIMIR-T-0270"
 created_at: 2026-01-02T14:51:48.615420+00:00
-updated_at: 2026-01-02T19:55:03.851045+00:00
+updated_at: 2026-01-03T13:51:41.530553+00:00
 parent: 
 blocked_by: []
 archived: false
@@ -12,7 +12,7 @@ archived: false
 tags:
   - "#task"
   - "#feature"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -190,6 +190,8 @@ See `docs/uat/print-character-dialog.md` for wireframe.
 - Spell Cards always visible - silently no-op if no spells
 - Export button disabled if nothing selected
 - PDF sections appear in fixed order regardless of selection order
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

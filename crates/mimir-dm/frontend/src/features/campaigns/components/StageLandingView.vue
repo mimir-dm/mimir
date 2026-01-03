@@ -98,15 +98,6 @@
       />
     </div>
 
-    <!-- Stage Guidance Content (fallback for stages without backend content) -->
-    <StageGuidance
-      v-else
-      :stage="stage"
-      :total-modules="modules.length || 0"
-      :total-sessions="getTotalSessions()"
-      :total-documents="getTotalDocuments()"
-    />
-
     <!-- Create Module Modal -->
     <CreateModuleModal
       :show="showCreateModal"
@@ -126,7 +117,6 @@ import StageHeader from './StageLanding/StageHeader.vue'
 import StageTransitionCard from './StageLanding/StageTransitionCard.vue'
 import ModulesTable from './StageLanding/ModulesTable.vue'
 import CreateModuleModal from './StageLanding/CreateModuleModal.vue'
-import StageGuidance from './StageLanding/StageGuidance.vue'
 import CampaignNPCs from './StageLanding/CampaignNPCs.vue'
 import CampaignMaps from './StageLanding/CampaignMaps.vue'
 
