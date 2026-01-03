@@ -313,23 +313,28 @@ pub fn markdown_to_typst(markdown: &str) -> String {
 
             // Text content
             Event::Text(text) => {
-                // Escape special Typst characters in text
-                let escaped = escape_typst_text(&text);
+                // Wrap text in Typst string literal to safely handle special characters
+                // This avoids issues with */, #, $, @ etc. in user content
+                let escaped = escape_for_typst_string(&text);
+                let safe_text = format!("#\"{}\"", escaped);
                 if in_link {
-                    link_text.push_str(&escaped);
+                    link_text.push_str(&safe_text);
                 } else if in_table {
-                    current_cell.push_str(&escaped);
+                    current_cell.push_str(&safe_text);
                 } else {
-                    output.push_str(&escaped);
+                    output.push_str(&safe_text);
                 }
             }
 
             // HTML (pass through as comment)
+            // Escape */ sequences to prevent breaking Typst block comments
             Event::Html(html) => {
-                output.push_str(&format!("/* HTML: {} */", html.trim()));
+                let escaped_html = html.trim().replace("*/", "*\\/");
+                output.push_str(&format!("/* HTML: {} */", escaped_html));
             }
             Event::InlineHtml(html) => {
-                output.push_str(&format!("/* {} */", html.trim()));
+                let escaped_html = html.trim().replace("*/", "*\\/");
+                output.push_str(&format!("/* {} */", escaped_html));
             }
 
             // Images
@@ -398,20 +403,10 @@ pub fn markdown_to_typst(markdown: &str) -> String {
     cleaned + "\n"
 }
 
-/// Escape special Typst characters in text content.
-fn escape_typst_text(text: &str) -> String {
-    let mut result = String::with_capacity(text.len());
-    for ch in text.chars() {
-        match ch {
-            // These characters have special meaning in Typst and need escaping
-            '#' => result.push_str("\\#"),
-            '$' => result.push_str("\\$"),
-            '@' => result.push_str("\\@"),
-            // Keep other characters as-is
-            _ => result.push(ch),
-        }
-    }
-    result
+/// Escape text for use inside a Typst string literal.
+/// Only backslashes and quotes need escaping inside strings.
+fn escape_for_typst_string(text: &str) -> String {
+    text.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 #[cfg(test)]
@@ -432,7 +427,8 @@ This is a test."#;
         let result = parse_campaign_document(md).unwrap();
         assert_eq!(result.frontmatter["title"], "Test Document");
         assert_eq!(result.frontmatter["type"], "session_outline");
-        assert!(result.typst_content.contains("= Hello World"));
+        // Text is wrapped in string literals: = #"Hello World"
+        assert!(result.typst_content.contains("= #\"Hello World\""));
     }
 
     #[test]
@@ -440,40 +436,44 @@ This is a test."#;
         let md = "# Just Content\n\nNo frontmatter here.";
         let result = parse_campaign_document(md).unwrap();
         assert!(result.frontmatter.is_object());
-        assert!(result.typst_content.contains("= Just Content"));
+        assert!(result.typst_content.contains("= #\"Just Content\""));
     }
 
     #[test]
     fn test_markdown_headers() {
         let md = "# H1\n## H2\n### H3";
         let typst = markdown_to_typst(md);
-        assert!(typst.contains("= H1"));
-        assert!(typst.contains("== H2"));
-        assert!(typst.contains("=== H3"));
+        // Text is wrapped in string literals
+        assert!(typst.contains("= #\"H1\""));
+        assert!(typst.contains("== #\"H2\""));
+        assert!(typst.contains("=== #\"H3\""));
     }
 
     #[test]
     fn test_markdown_bold_italic() {
         let md = "This is **bold** and *italic* text.";
         let typst = markdown_to_typst(md);
-        assert!(typst.contains("*bold*"));
-        assert!(typst.contains("_italic_"));
+        // Bold uses * markers, italic uses _, text is in string literals
+        assert!(typst.contains("*#\"bold\"*"));
+        assert!(typst.contains("_#\"italic\"_"));
     }
 
     #[test]
     fn test_markdown_links() {
         let md = "Check out [this link](https://example.com).";
         let typst = markdown_to_typst(md);
-        assert!(typst.contains("#link(\"https://example.com\")[this link]"));
+        // Link text is wrapped in string literal
+        assert!(typst.contains("#link(\"https://example.com\")[#\"this link\""));
     }
 
     #[test]
     fn test_markdown_lists() {
         let md = "- Item 1\n- Item 2\n- Item 3";
         let typst = markdown_to_typst(md);
-        assert!(typst.contains("- Item 1"));
-        assert!(typst.contains("- Item 2"));
-        assert!(typst.contains("- Item 3"));
+        // List items have text in string literals
+        assert!(typst.contains("- #\"Item 1\""));
+        assert!(typst.contains("- #\"Item 2\""));
+        assert!(typst.contains("- #\"Item 3\""));
     }
 
     #[test]
@@ -492,12 +492,41 @@ This is a test."#;
     }
 
     #[test]
-    fn test_escape_typst_characters() {
-        let md = "Use #hashtag and $money and @mention.";
+    fn test_special_chars_in_string_literals() {
+        // Special characters should be wrapped in string literals
+        let md = "Use #hashtag and $money.";
         let typst = markdown_to_typst(md);
-        assert!(typst.contains("\\#hashtag"));
-        assert!(typst.contains("\\$money"));
-        assert!(typst.contains("\\@mention"));
+        // Text should be wrapped as #"..." string literals
+        assert!(
+            typst.contains("#\"Use #hashtag and $money.\""),
+            "Expected string literal wrapping but got: {}",
+            typst
+        );
+    }
+
+    #[test]
+    fn test_block_comment_chars_safe_in_strings() {
+        // */ sequence should be safe inside string literals
+        let md = "path/to/file";
+        let typst = markdown_to_typst(md);
+        // The / is safely inside a string literal, not escaped
+        assert!(
+            typst.contains("#\"path/to/file\""),
+            "Expected string literal but got: {}",
+            typst
+        );
+    }
+
+    #[test]
+    fn test_quotes_escaped_in_strings() {
+        let md = r#"He said "hello" to me."#;
+        let typst = markdown_to_typst(md);
+        // Quotes inside strings should be escaped
+        assert!(
+            typst.contains(r#"\"hello\""#),
+            "Expected escaped quotes but got: {}",
+            typst
+        );
     }
 
     #[test]

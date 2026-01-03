@@ -371,6 +371,44 @@ pub struct Personality {
     pub flaws: Option<String>,
 }
 
+/// Character appearance details
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct Appearance {
+    #[serde(default)]
+    pub age: Option<String>,
+    #[serde(default)]
+    pub height: Option<String>,
+    #[serde(default)]
+    pub weight: Option<String>,
+    #[serde(default)]
+    pub eyes: Option<String>,
+    #[serde(default)]
+    pub hair: Option<String>,
+    #[serde(default)]
+    pub skin: Option<String>,
+    #[serde(default)]
+    pub physical_description: Option<String>,
+    #[serde(default)]
+    pub distinctive_features: Option<String>,
+}
+
+/// Roleplay notes for character portrayal
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct RoleplayNotes {
+    #[serde(default)]
+    pub voice_and_mannerisms: Option<String>,
+    #[serde(default)]
+    pub key_relationships: Option<String>,
+    #[serde(default)]
+    pub character_goals: Option<String>,
+    #[serde(default)]
+    pub play_reminders: Option<String>,
+    #[serde(default)]
+    pub allies_and_organizations: Option<String>,
+    #[serde(default)]
+    pub additional_treasure_notes: Option<String>,
+}
+
 /// Legendary action for boss NPCs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct LegendaryAction {
@@ -403,6 +441,8 @@ pub struct ClassLevel {
 pub struct CharacterData {
     // Metadata
     pub character_name: String,
+    #[serde(default)]
+    pub player_name: Option<String>,
     pub player_id: Option<i32>,
     pub level: i32,
     #[serde(default)]
@@ -459,6 +499,20 @@ pub struct CharacterData {
     // Personality
     #[serde(default)]
     pub personality: Personality,
+
+    // Appearance
+    #[serde(default)]
+    pub appearance: Appearance,
+
+    // History/Backstory
+    #[serde(default)]
+    pub backstory: Option<String>,
+    #[serde(default)]
+    pub background_feature: Option<String>,
+
+    // Roleplay Notes
+    #[serde(default)]
+    pub roleplay_notes: RoleplayNotes,
 
     // NPC-specific fields
     #[serde(default)]
@@ -581,6 +635,7 @@ mod tests {
     fn test_proficiency_bonus_by_level() {
         let mut character = CharacterData {
             character_name: "Test".to_string(),
+            player_name: None,
             player_id: Some(1),
             level: 1,
             experience_points: 0,
@@ -617,6 +672,10 @@ mod tests {
             currency: Currency::default(),
             equipped: EquippedItems::default(),
             personality: Personality::default(),
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,
@@ -668,6 +727,7 @@ mod tests {
     fn test_yaml_serialization() {
         let character = CharacterData {
             character_name: "Thorin".to_string(),
+            player_name: Some("Dave".to_string()),
             player_id: Some(1),
             level: 3,
             experience_points: 900,
@@ -745,6 +805,19 @@ mod tests {
                 ),
                 flaws: Some("I obey authority without question.".to_string()),
             },
+            appearance: Appearance {
+                age: Some("195".to_string()),
+                height: Some("4'5\"".to_string()),
+                weight: Some("180 lbs".to_string()),
+                eyes: Some("Brown".to_string()),
+                hair: Some("Black, braided beard".to_string()),
+                skin: Some("Weathered tan".to_string()),
+                physical_description: None,
+                distinctive_features: Some("Battle scar across left cheek".to_string()),
+            },
+            backstory: Some("A veteran of the clan wars.".to_string()),
+            background_feature: Some("Military Rank".to_string()),
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,

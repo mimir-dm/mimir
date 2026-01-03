@@ -468,8 +468,8 @@ fn escape_typst(s: &str) -> String {
 mod tests {
     use super::*;
     use mimir_dm_core::models::character::data::{
-        AbilityScores, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
-        SpellData as CharacterSpellData,
+        AbilityScores, Appearance, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
+        RoleplayNotes, SpellData as CharacterSpellData,
     };
 
     fn sample_character() -> CharacterData {
@@ -523,6 +523,11 @@ mod tests {
                 off_hand: None,
             },
             personality: Personality::default(),
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,

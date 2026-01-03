@@ -60,8 +60,8 @@ pub async fn create_minimal_character(
 ) -> Result<Character, String> {
     use chrono::Utc;
     use mimir_dm_core::models::character::data::{
-        AbilityScores, CharacterData, Currency, EquippedItems, Personality, Proficiencies,
-        SpellData,
+        AbilityScores, Appearance, CharacterData, Currency, EquippedItems, Personality, Proficiencies,
+        RoleplayNotes, SpellData,
     };
 
     let mut conn = state.db.get_connection().map_err(|e| {
@@ -115,6 +115,11 @@ pub async fn create_minimal_character(
         currency: Currency::default(),
         equipped: EquippedItems::default(),
         personality: Personality::default(),
+        player_name: None,
+        appearance: Appearance::default(),
+        backstory: None,
+        background_feature: None,
+        roleplay_notes: RoleplayNotes::default(),
         npc_role: None,
         npc_location: None,
         npc_faction: None,

@@ -1,35 +1,36 @@
 ---
-id: implement-physical-play-kit-pdf
+id: unify-card-hover-behaviors
 level: task
-title: "Implement Physical Play Kit PDF generation"
-short_code: "MIMIR-T-0259"
-created_at: 2025-12-29T16:21:10.348854+00:00
-updated_at: 2025-12-29T19:06:10.295009+00:00
-parent: MIMIR-I-0027
+title: "Unify card hover behaviors"
+short_code: "MIMIR-T-0277"
+created_at: 2026-01-03T02:58:32.713166+00:00
+updated_at: 2026-01-03T03:40:31.569889+00:00
+parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
+  - "#tech-debt"
   - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0027
+initiative_id: NULL
 ---
 
-# Implement Physical Play Kit PDF generation
+# Unify card hover behaviors
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0027]]
+[[Parent Initiative]]
 
-## Objective
+## Objective **[REQUIRED]**
 
-Implement the Physical Play Kit PDF generation that produces tiled maps at true scale plus token cutout sheets for all maps in a module or campaign.
+Create a shared `.card-interactive` class and unify hover behaviors across all clickable cards.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -38,14 +39,14 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 ### Type
 - [ ] Bug - Production issue that needs fixing
 - [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
+- [x] Tech Debt - Code improvement or refactoring
 - [ ] Chore - Maintenance or setup work
 
 ### Priority
 - [ ] P0 - Critical (blocks users/revenue)
 - [ ] P1 - High (important for user experience)
 - [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
+- [x] P3 - Low (when time permits)
 
 ### Impact Assessment **[CONDITIONAL: Bug]**
 - **Affected Users**: {Number/percentage of users affected}
@@ -61,9 +62,11 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Interactive cards have different hover behaviors:
+  - `CampaignListView.vue`: Transform + shadow
+  - `CharacterListView.vue`: Border color change + shadow
+- **Benefits of Fixing**: Consistent interactive feedback, unified card styling
+- **Risk Assessment**: Very low risk - minor visual refinement
 
 ## Acceptance Criteria
 
@@ -71,40 +74,17 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 
 ## Acceptance Criteria
 
-### Backend Implementation
-- [x] Add `ModuleExportOptions` struct with granular flags:
-  - `include_documents`, `include_monsters`, `include_npcs`, `include_map_previews`
-  - `include_tiled_maps`, `include_token_cutouts`
-- [x] Add `CampaignExportOptions` struct with granular flags:
-  - `include_campaign_docs`, `include_module_content`, `include_npcs`, `include_map_previews`
-  - `include_tiled_maps`, `include_token_cutouts`
-- [x] Update `export_module_documents` to accept options parameter
-- [x] Update `export_campaign_documents` to accept options parameter
+## Acceptance Criteria **[REQUIRED]**
 
-### Play Kit Generation
-- [x] Iterate all maps in module/campaign scope
-- [x] Reuse existing map tiling logic from `print_map` (extracted to `generate_tiled_map_data()`)
-- [x] Generate per-map: Assembly Guide → Tiles → Token Cutouts (if enabled)
-- [x] Combine all maps into single PDF with section breaks
+- [ ] `.card-interactive` class added to global CSS with consistent hover behavior
+- [ ] All clickable cards use the shared class
+- [ ] Hover includes: transform, shadow enhancement, border color change
+- [ ] Transition timing uses `var(--transition-base)`
 
-### PDF Structure (when both Reference + Play Kit selected)
-```
-1. Title Page
-2. Table of Contents  
-3. --- REFERENCE SECTION ---
-   - Documents
-   - Monsters (stat blocks)
-   - NPCs (if selected)
-   - Map Previews (1 page each)
-4. --- PHYSICAL PLAY KIT ---
-   - Map 1: Assembly Guide + Tiles + Cutouts
-   - Map 2: Assembly Guide + Tiles + Cutouts
-   - ...
-```
-
-### UX
-- [x] Loading state during generation (PdfPreviewModal with setLoading)
-- [ ] Progress indication for large exports (optional, nice-to-have - deferred)
+### Files to Modify
+- `crates/mimir-dm/frontend/src/assets/styles/components.css` (or create `cards.css`)
+- `crates/mimir-dm/frontend/src/features/campaigns/views/CampaignListView.vue`
+- `crates/mimir-dm/frontend/src/features/characters/views/CharacterListView.vue`
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -169,26 +149,4 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 
 ## Status Updates **[REQUIRED]**
 
-### 2025-12-29: Implementation Complete
-
-**Backend Changes:**
-- Added `ModuleExportOptions` and `CampaignExportOptions` structs with granular flags
-- Created `TiledMapData` struct for tiled map output
-- Extracted tiling logic into reusable `generate_tiled_map_data()` function
-- Updated `export_campaign_documents` to generate tiled maps when `include_tiled_maps` is true
-- Updated `export_module_documents` to support maps and tiled maps (was missing before)
-
-**Print Service Changes:**
-- Added `render_campaign_combined_with_all_extended()` method accepting tiled_maps data
-- Updated `build_campaign_combined_data_with_all_extended()` to include tiled_maps in JSON output
-
-**Template Changes:**
-- Physical Play Kit section added to `campaign/combined.typ`
-- Assembly guide page with grid visualization
-- Individual tile pages with neighbor indicators
-- Token cutouts integration via shared `cutouts.typ`
-
-**Files Modified:**
-- `crates/mimir-dm/src/commands/print/mod.rs`
-- `crates/mimir-dm-print/src/campaign.rs`
-- `crates/mimir-dm-print/templates/campaign/combined.typ`
+*To be added during implementation*

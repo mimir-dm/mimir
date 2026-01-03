@@ -1,35 +1,36 @@
 ---
-id: implement-physical-play-kit-pdf
+id: consolidate-empty-state
 level: task
-title: "Implement Physical Play Kit PDF generation"
-short_code: "MIMIR-T-0259"
-created_at: 2025-12-29T16:21:10.348854+00:00
-updated_at: 2025-12-29T19:06:10.295009+00:00
-parent: MIMIR-I-0027
+title: "Consolidate empty state implementations"
+short_code: "MIMIR-T-0274"
+created_at: 2026-01-03T02:58:32.328114+00:00
+updated_at: 2026-01-03T03:15:00.817366+00:00
+parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
+  - "#tech-debt"
   - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0027
+initiative_id: NULL
 ---
 
-# Implement Physical Play Kit PDF generation
+# Consolidate empty state implementations
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0027]]
+[[Parent Initiative]]
 
-## Objective
+## Objective **[REQUIRED]**
 
-Implement the Physical Play Kit PDF generation that produces tiled maps at true scale plus token cutout sheets for all maps in a module or campaign.
+Replace inline `.empty-state` divs with the reusable `<EmptyState>` component for consistent empty state messaging.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -38,13 +39,13 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 ### Type
 - [ ] Bug - Production issue that needs fixing
 - [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
+- [x] Tech Debt - Code improvement or refactoring
 - [ ] Chore - Maintenance or setup work
 
 ### Priority
 - [ ] P0 - Critical (blocks users/revenue)
 - [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
+- [x] P2 - Medium (nice to have)
 - [ ] P3 - Low (when time permits)
 
 ### Impact Assessment **[CONDITIONAL: Bug]**
@@ -61,9 +62,9 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Two different empty state patterns - `<EmptyState>` component vs custom inline divs with `.empty-state` class
+- **Benefits of Fixing**: Consistent empty state appearance, centralized styling, easier to update icons/messaging
+- **Risk Assessment**: Very low risk - simple component replacement
 
 ## Acceptance Criteria
 
@@ -71,40 +72,17 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 
 ## Acceptance Criteria
 
-### Backend Implementation
-- [x] Add `ModuleExportOptions` struct with granular flags:
-  - `include_documents`, `include_monsters`, `include_npcs`, `include_map_previews`
-  - `include_tiled_maps`, `include_token_cutouts`
-- [x] Add `CampaignExportOptions` struct with granular flags:
-  - `include_campaign_docs`, `include_module_content`, `include_npcs`, `include_map_previews`
-  - `include_tiled_maps`, `include_token_cutouts`
-- [x] Update `export_module_documents` to accept options parameter
-- [x] Update `export_campaign_documents` to accept options parameter
+## Acceptance Criteria **[REQUIRED]**
 
-### Play Kit Generation
-- [x] Iterate all maps in module/campaign scope
-- [x] Reuse existing map tiling logic from `print_map` (extracted to `generate_tiled_map_data()`)
-- [x] Generate per-map: Assembly Guide → Tiles → Token Cutouts (if enabled)
-- [x] Combine all maps into single PDF with section breaks
+- [ ] `CampaignListView.vue` uses `<EmptyState>` component
+- [ ] All views use `<EmptyState>` component instead of inline divs
+- [ ] Empty states have consistent styling across all list views
 
-### PDF Structure (when both Reference + Play Kit selected)
-```
-1. Title Page
-2. Table of Contents  
-3. --- REFERENCE SECTION ---
-   - Documents
-   - Monsters (stat blocks)
-   - NPCs (if selected)
-   - Map Previews (1 page each)
-4. --- PHYSICAL PLAY KIT ---
-   - Map 1: Assembly Guide + Tiles + Cutouts
-   - Map 2: Assembly Guide + Tiles + Cutouts
-   - ...
-```
+### Files to Modify
+- `crates/mimir-dm/frontend/src/features/campaigns/views/CampaignListView.vue`
 
-### UX
-- [x] Loading state during generation (PdfPreviewModal with setLoading)
-- [ ] Progress indication for large exports (optional, nice-to-have - deferred)
+### Reference
+EmptyState component: `src/shared/components/ui/EmptyState.vue`
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -169,26 +147,4 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 
 ## Status Updates **[REQUIRED]**
 
-### 2025-12-29: Implementation Complete
-
-**Backend Changes:**
-- Added `ModuleExportOptions` and `CampaignExportOptions` structs with granular flags
-- Created `TiledMapData` struct for tiled map output
-- Extracted tiling logic into reusable `generate_tiled_map_data()` function
-- Updated `export_campaign_documents` to generate tiled maps when `include_tiled_maps` is true
-- Updated `export_module_documents` to support maps and tiled maps (was missing before)
-
-**Print Service Changes:**
-- Added `render_campaign_combined_with_all_extended()` method accepting tiled_maps data
-- Updated `build_campaign_combined_data_with_all_extended()` to include tiled_maps in JSON output
-
-**Template Changes:**
-- Physical Play Kit section added to `campaign/combined.typ`
-- Assembly guide page with grid visualization
-- Individual tile pages with neighbor indicators
-- Token cutouts integration via shared `cutouts.typ`
-
-**Files Modified:**
-- `crates/mimir-dm/src/commands/print/mod.rs`
-- `crates/mimir-dm-print/src/campaign.rs`
-- `crates/mimir-dm-print/templates/campaign/combined.typ`
+*To be added during implementation*

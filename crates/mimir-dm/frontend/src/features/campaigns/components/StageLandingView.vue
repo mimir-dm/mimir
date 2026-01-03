@@ -54,6 +54,7 @@
         v-if="stage === 'active'"
         :modules="modules"
         :loading="modulesLoading"
+        :campaign-id="campaign?.id"
         title="Modules"
         @create-module="showCreateModal = true"
       />
@@ -62,6 +63,7 @@
         v-else-if="stage === 'concluding'"
         :modules="modules"
         :loading="modulesLoading"
+        :campaign-id="campaign?.id"
         title="Active Modules"
         empty-message="No active modules."
         @create-module="showCreateModal = true"

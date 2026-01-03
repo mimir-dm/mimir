@@ -68,7 +68,15 @@ impl Renderable for CharacterLongFormSection {
         ));
 
         // ==== APPEARANCE SECTION ====
-        typst.push_str(r#"#box(
+        // Helper for appearance fields
+        let height = c.appearance.height.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let weight = c.appearance.weight.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let age = c.appearance.age.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let eyes = c.appearance.eyes.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let hair = c.appearance.hair.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+        let skin = c.appearance.skin.as_deref().map(escape_typst).unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_".to_string());
+
+        typst.push_str(&format!(r#"#box(
   width: 100%,
   stroke: 1pt + colors.border,
   radius: 4pt,
@@ -84,32 +92,32 @@ impl Renderable for CharacterLongFormSection {
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 6pt)[
       #text(size: 8pt, fill: luma(100))[HEIGHT]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 6pt)[
       #text(size: 8pt, fill: luma(100))[WEIGHT]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 6pt)[
       #text(size: 8pt, fill: luma(100))[AGE]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 6pt)[
       #text(size: 8pt, fill: luma(100))[EYES]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 6pt)[
       #text(size: 8pt, fill: luma(100))[HAIR]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 6pt)[
       #text(size: 8pt, fill: luma(100))[SKIN]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
   )
 
@@ -124,8 +132,16 @@ impl Renderable for CharacterLongFormSection {
     radius: 2pt,
     inset: 8pt,
   )[
-    #v(40pt)
-  ]
+"#, height, weight, age, eyes, hair, skin));
+
+        // Physical description content or empty space
+        if let Some(ref desc) = c.appearance.physical_description {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(desc)));
+        } else {
+            typst.push_str("    #v(40pt)\n");
+        }
+
+        typst.push_str(r#"  ]
 
   #v(12pt)
 
@@ -138,8 +154,16 @@ impl Renderable for CharacterLongFormSection {
     radius: 2pt,
     inset: 8pt,
   )[
-    #v(24pt)
-  ]
+"#);
+
+        // Distinctive features content or empty space
+        if let Some(ref features) = c.appearance.distinctive_features {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(features)));
+        } else {
+            typst.push_str("    #v(24pt)\n");
+        }
+
+        typst.push_str(r#"  ]
 ]
 
 #v(16pt)
@@ -250,6 +274,9 @@ impl Renderable for CharacterLongFormSection {
         typst.push_str("    ],\n  )\n]\n\n#v(16pt)\n\n");
 
         // ==== BACKGROUND SECTION ====
+        let background_feature = c.background_feature.as_deref().map(escape_typst)
+            .unwrap_or_else(|| "\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_".to_string());
+
         typst.push_str(&format!(
             r#"#box(
   width: 100%,
@@ -271,7 +298,7 @@ impl Renderable for CharacterLongFormSection {
     box(stroke: 0.5pt + luma(200), radius: 2pt, inset: 8pt)[
       #text(size: 8pt, fill: luma(100))[FEATURE]
       #v(2pt)
-      #text(size: 10pt)[\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_]
+      #text(size: 10pt)[{}]
     ],
   )
 
@@ -287,11 +314,16 @@ impl Renderable for CharacterLongFormSection {
     inset: 8pt,
   )[
 "#,
-            escape_typst(&c.background)
+            escape_typst(&c.background),
+            background_feature
         ));
 
-        // Backstory is a placeholder - character data doesn't include backstory
-        typst.push_str("    #v(80pt)\n");
+        // Backstory content or empty space
+        if let Some(ref backstory) = c.backstory {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(backstory)));
+        } else {
+            typst.push_str("    #v(80pt)\n");
+        }
 
         typst.push_str("  ]\n]\n\n#v(16pt)\n\n");
 
@@ -314,8 +346,16 @@ impl Renderable for CharacterLongFormSection {
     radius: 2pt,
     inset: 8pt,
   )[
-    #v(24pt)
-  ]
+"#);
+
+        // Voice & Mannerisms content or empty space
+        if let Some(ref voice) = c.roleplay_notes.voice_and_mannerisms {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(voice)));
+        } else {
+            typst.push_str("    #v(24pt)\n");
+        }
+
+        typst.push_str(r#"  ]
 
   #v(12pt)
 
@@ -328,8 +368,16 @@ impl Renderable for CharacterLongFormSection {
     radius: 2pt,
     inset: 8pt,
   )[
-    #v(24pt)
-  ]
+"#);
+
+        // Key Relationships content or empty space
+        if let Some(ref relationships) = c.roleplay_notes.key_relationships {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(relationships)));
+        } else {
+            typst.push_str("    #v(24pt)\n");
+        }
+
+        typst.push_str(r#"  ]
 
   #v(12pt)
 
@@ -342,8 +390,16 @@ impl Renderable for CharacterLongFormSection {
     radius: 2pt,
     inset: 8pt,
   )[
-    #v(24pt)
-  ]
+"#);
+
+        // Character Goals content or empty space
+        if let Some(ref goals) = c.roleplay_notes.character_goals {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(goals)));
+        } else {
+            typst.push_str("    #v(24pt)\n");
+        }
+
+        typst.push_str(r#"  ]
 
   #v(12pt)
 
@@ -356,7 +412,13 @@ impl Renderable for CharacterLongFormSection {
     radius: 2pt,
     inset: 8pt,
   )[
-    #text(size: 9pt)[
+"#);
+
+        // Play Reminders content or empty bullet points
+        if let Some(ref reminders) = c.roleplay_notes.play_reminders {
+            typst.push_str(&format!("    #text(size: 9pt)[{}]\n", escape_typst(reminders)));
+        } else {
+            typst.push_str(r#"    #text(size: 9pt)[
       - \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
       #linebreak()
       - \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
@@ -367,7 +429,10 @@ impl Renderable for CharacterLongFormSection {
       #linebreak()
       - \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
     ]
-  ]
+"#);
+        }
+
+        typst.push_str(r#"  ]
 ]
 
 #v(1fr)
@@ -402,8 +467,8 @@ fn escape_typst(s: &str) -> String {
 mod tests {
     use super::*;
     use mimir_dm_core::models::character::data::{
-        AbilityScores, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
-        SpellData as CharacterSpellData,
+        AbilityScores, Appearance, ClassLevel, Currency, EquippedItems, Personality, Proficiencies,
+        RoleplayNotes, SpellData as CharacterSpellData,
     };
 
     fn sample_character() -> CharacterData {
@@ -450,6 +515,11 @@ mod tests {
                 bonds: Some("I owe everything to my mentor - a horrible person who's probably rotting in jail somewhere.".to_string()),
                 flaws: Some("I can't resist a pretty face or a game of chance.".to_string()),
             },
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,

@@ -290,6 +290,11 @@ mod tests {
             speed: 30, // Human speed
             equipped: EquippedItems::default(),
             personality: Personality::default(),
+            player_name: None,
+            appearance: Appearance::default(),
+            backstory: None,
+            background_feature: None,
+            roleplay_notes: RoleplayNotes::default(),
             npc_role: None,
             npc_location: None,
             npc_faction: None,

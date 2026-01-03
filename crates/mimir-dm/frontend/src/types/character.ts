@@ -84,6 +84,12 @@ export interface CharacterData {
   currency: Currency
   equipped: EquippedItems
   personality: Personality
+  // Extended character details
+  player_name: string | null
+  appearance: Appearance
+  backstory: string | null
+  background_feature: string | null
+  roleplay_notes: RoleplayNotes
   // NPC-specific fields
   npc_role: string | null
   npc_location: string | null
@@ -180,6 +186,26 @@ export interface Personality {
   ideals: string | null
   bonds: string | null
   flaws: string | null
+}
+
+export interface Appearance {
+  age: string | null
+  height: string | null
+  weight: string | null
+  eyes: string | null
+  hair: string | null
+  skin: string | null
+  physical_description: string | null
+  distinctive_features: string | null
+}
+
+export interface RoleplayNotes {
+  voice_and_mannerisms: string | null
+  key_relationships: string | null
+  character_goals: string | null
+  play_reminders: string | null
+  allies_and_organizations: string | null
+  additional_treasure_notes: string | null
 }
 
 export interface LegendaryAction {

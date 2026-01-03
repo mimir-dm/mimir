@@ -1,35 +1,37 @@
 ---
-id: implement-physical-play-kit-pdf
+id: session-cleanup
 level: task
-title: "Implement Physical Play Kit PDF generation"
-short_code: "MIMIR-T-0259"
-created_at: 2025-12-29T16:21:10.348854+00:00
-updated_at: 2025-12-29T19:06:10.295009+00:00
-parent: MIMIR-I-0027
+title: "Session Cleanup"
+short_code: "MIMIR-T-0268"
+created_at: 2026-01-01T20:36:38.388328+00:00
+updated_at: 2026-01-01T20:36:38.388328+00:00
+parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
-  - "#phase/completed"
+  - "#phase/backlog"
+  - "#tech-debt"
+  - "#tech-debt"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0027
+initiative_id: NULL
 ---
 
-# Implement Physical Play Kit PDF generation
+# Session Cleanup
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0027]]
+[[Parent Initiative]]
 
-## Objective
+## Objective **[REQUIRED]**
 
-Implement the Physical Play Kit PDF generation that produces tiled maps at true scale plus token cutout sheets for all maps in a module or campaign.
+{Clear statement of what this task accomplishes}
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -67,44 +69,11 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 
 ## Acceptance Criteria
 
-## Acceptance Criteria
+## Acceptance Criteria **[REQUIRED]**
 
-## Acceptance Criteria
-
-### Backend Implementation
-- [x] Add `ModuleExportOptions` struct with granular flags:
-  - `include_documents`, `include_monsters`, `include_npcs`, `include_map_previews`
-  - `include_tiled_maps`, `include_token_cutouts`
-- [x] Add `CampaignExportOptions` struct with granular flags:
-  - `include_campaign_docs`, `include_module_content`, `include_npcs`, `include_map_previews`
-  - `include_tiled_maps`, `include_token_cutouts`
-- [x] Update `export_module_documents` to accept options parameter
-- [x] Update `export_campaign_documents` to accept options parameter
-
-### Play Kit Generation
-- [x] Iterate all maps in module/campaign scope
-- [x] Reuse existing map tiling logic from `print_map` (extracted to `generate_tiled_map_data()`)
-- [x] Generate per-map: Assembly Guide → Tiles → Token Cutouts (if enabled)
-- [x] Combine all maps into single PDF with section breaks
-
-### PDF Structure (when both Reference + Play Kit selected)
-```
-1. Title Page
-2. Table of Contents  
-3. --- REFERENCE SECTION ---
-   - Documents
-   - Monsters (stat blocks)
-   - NPCs (if selected)
-   - Map Previews (1 page each)
-4. --- PHYSICAL PLAY KIT ---
-   - Map 1: Assembly Guide + Tiles + Cutouts
-   - Map 2: Assembly Guide + Tiles + Cutouts
-   - ...
-```
-
-### UX
-- [x] Loading state during generation (PdfPreviewModal with setLoading)
-- [ ] Progress indication for large exports (optional, nice-to-have - deferred)
+- [ ] {Specific, testable requirement 1}
+- [ ] {Specific, testable requirement 2}
+- [ ] {Specific, testable requirement 3}
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -169,26 +138,4 @@ Implement the Physical Play Kit PDF generation that produces tiled maps at true 
 
 ## Status Updates **[REQUIRED]**
 
-### 2025-12-29: Implementation Complete
-
-**Backend Changes:**
-- Added `ModuleExportOptions` and `CampaignExportOptions` structs with granular flags
-- Created `TiledMapData` struct for tiled map output
-- Extracted tiling logic into reusable `generate_tiled_map_data()` function
-- Updated `export_campaign_documents` to generate tiled maps when `include_tiled_maps` is true
-- Updated `export_module_documents` to support maps and tiled maps (was missing before)
-
-**Print Service Changes:**
-- Added `render_campaign_combined_with_all_extended()` method accepting tiled_maps data
-- Updated `build_campaign_combined_data_with_all_extended()` to include tiled_maps in JSON output
-
-**Template Changes:**
-- Physical Play Kit section added to `campaign/combined.typ`
-- Assembly guide page with grid visualization
-- Individual tile pages with neighbor indicators
-- Token cutouts integration via shared `cutouts.typ`
-
-**Files Modified:**
-- `crates/mimir-dm/src/commands/print/mod.rs`
-- `crates/mimir-dm-print/src/campaign.rs`
-- `crates/mimir-dm-print/templates/campaign/combined.typ`
+*To be added during implementation*
