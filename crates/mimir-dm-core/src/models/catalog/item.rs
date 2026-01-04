@@ -1,5 +1,6 @@
 //! Item catalog models
 
+use super::types::Entry;
 use crate::schema::catalog_items;
 use diesel::prelude::*;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -35,7 +36,7 @@ pub struct Item {
     #[serde(default, deserialize_with = "deserialize_attunement")]
     pub requires_attunement: Option<String>,
     #[serde(default)]
-    pub entries: Option<Vec<serde_json::Value>>,
+    pub entries: Vec<Entry>,
     #[serde(default, deserialize_with = "deserialize_srd")]
     pub srd: Option<String>,
 }
@@ -77,9 +78,11 @@ impl From<&Item> for ItemSummary {
         // Get first line of description for summary
         let description = item
             .entries
-            .as_ref()
-            .and_then(|entries| entries.first())
-            .and_then(|e| e.as_str())
+            .first()
+            .and_then(|e| match e {
+                Entry::Text(s) => Some(s.as_str()),
+                Entry::Object(_) => None,
+            })
             .unwrap_or("")
             .chars()
             .take(200)
@@ -423,9 +426,7 @@ mod tests {
             range: None,
             reload: None,
             requires_attunement: None,
-            entries: Some(vec![serde_json::Value::String(
-                "A versatile weapon".to_string(),
-            )]),
+            entries: vec![Entry::Text("A versatile weapon".to_string())],
             srd: Some("true".to_string()),
         };
 
@@ -460,7 +461,7 @@ mod tests {
             range: None,
             reload: None,
             requires_attunement: Some("true".to_string()),
-            entries: None,
+            entries: vec![],
             srd: Some("false".to_string()),
         };
 

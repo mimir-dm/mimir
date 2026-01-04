@@ -1,3 +1,4 @@
+use super::types::{Entry, Image, ProficiencyItem};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -6,15 +7,15 @@ pub struct Background {
     pub source: String,
     pub page: Option<i32>,
     #[serde(rename = "skillProficiencies", default)]
-    pub skill_proficiencies: Vec<serde_json::Value>,
+    pub skill_proficiencies: Vec<ProficiencyItem>,
     #[serde(rename = "languageProficiencies", default)]
-    pub language_proficiencies: Vec<serde_json::Value>,
+    pub language_proficiencies: Vec<ProficiencyItem>,
     #[serde(rename = "toolProficiencies", default)]
-    pub tool_proficiencies: Vec<serde_json::Value>,
+    pub tool_proficiencies: Vec<ProficiencyItem>,
     #[serde(rename = "startingEquipment", default)]
     pub starting_equipment: Vec<serde_json::Value>,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(rename = "hasFluff")]
     pub has_fluff: Option<bool>,
     #[serde(rename = "basicRules")]
@@ -26,9 +27,9 @@ pub struct BackgroundFluff {
     pub name: String,
     pub source: String,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(default)]
-    pub images: Vec<serde_json::Value>,
+    pub images: Vec<Image>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -61,105 +62,82 @@ pub struct BackgroundWithDetails {
 
 impl From<&Background> for BackgroundSummary {
     fn from(bg: &Background) -> Self {
-        // Extract skills
-        let skills = if !bg.skill_proficiencies.is_empty() {
-            bg.skill_proficiencies
+        // Helper to extract proficiency names from ProficiencyItem
+        fn extract_proficiency_names(items: &[ProficiencyItem], skip_keys: &[&str]) -> String {
+            if items.is_empty() {
+                return "None".to_string();
+            }
+
+            items
                 .iter()
-                .filter_map(|s| {
-                    if let Some(obj) = s.as_object() {
-                        let skill_names: Vec<String> = obj
+                .filter_map(|item| match item {
+                    ProficiencyItem::Simple(name) => Some(titlecase(name)),
+                    ProficiencyItem::Flag(_) => None,
+                    ProficiencyItem::Choice(choice) => {
+                        if let Some(any) = choice.any {
+                            Some(format!("Any {}", any))
+                        } else if let Some(choose) = &choice.choose {
+                            let count = choose.count.unwrap_or(1);
+                            if let Some(from) = &choose.from {
+                                Some(format!(
+                                    "Choose {} from {}",
+                                    count,
+                                    from.iter().map(|s| titlecase(s)).collect::<Vec<_>>().join(", ")
+                                ))
+                            } else {
+                                Some(format!("Choose {}", count))
+                            }
+                        } else {
+                            None
+                        }
+                    }
+                    ProficiencyItem::Keyed(map) => {
+                        let names: Vec<String> = map
                             .keys()
-                            .filter(|k| *k != "any" && *k != "choose")
+                            .filter(|k| !skip_keys.contains(&k.as_str()))
                             .map(|k| titlecase(k))
                             .collect();
-                        if !skill_names.is_empty() {
-                            Some(skill_names.join(", "))
+                        if !names.is_empty() {
+                            Some(names.join(", "))
                         } else {
-                            obj.get("any")
-                                .and_then(|v| v.as_i64())
-                                .map(|any| format!("Any {}", any))
+                            // Check for 'any' or 'anyStandard' keys
+                            if let Some(any_val) = map.get("any").or(map.get("anyStandard")) {
+                                any_val.as_i64().map(|n| format!("Any {}", n))
+                            } else {
+                                None
+                            }
                         }
-                    } else {
-                        None
                     }
                 })
                 .collect::<Vec<String>>()
                 .join(", ")
-        } else {
-            "None".to_string()
-        };
+        }
 
-        // Extract languages
-        let languages = if !bg.language_proficiencies.is_empty() {
-            bg.language_proficiencies
-                .iter()
-                .filter_map(|l| {
-                    if let Some(obj) = l.as_object() {
-                        let lang_names: Vec<String> = obj
-                            .keys()
-                            .filter(|k| *k != "anyStandard" && *k != "choose" && *k != "any")
-                            .map(|k| titlecase(k))
-                            .collect();
-                        if !lang_names.is_empty() {
-                            Some(lang_names.join(", "))
-                        } else if let Some(any) = obj.get("anyStandard").and_then(|v| v.as_i64()) {
-                            Some(format!("Any {} standard", any))
-                        } else {
-                            obj.get("any")
-                                .and_then(|v| v.as_i64())
-                                .map(|any| format!("Any {}", any))
-                        }
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<String>>()
-                .join(", ")
-        } else {
-            "None".to_string()
-        };
+        let skills = extract_proficiency_names(&bg.skill_proficiencies, &["any", "choose"]);
+        let languages = extract_proficiency_names(&bg.language_proficiencies, &["anyStandard", "choose", "any"]);
+        let tools = extract_proficiency_names(&bg.tool_proficiencies, &["any", "choose"]);
 
-        // Extract tools
-        let tools = if !bg.tool_proficiencies.is_empty() {
-            bg.tool_proficiencies
-                .iter()
-                .filter_map(|t| {
-                    if let Some(obj) = t.as_object() {
-                        let tool_names: Vec<String> = obj
-                            .keys()
-                            .filter(|k| *k != "any" && *k != "choose")
-                            .map(|k| titlecase(k))
-                            .collect();
-                        if !tool_names.is_empty() {
-                            Some(tool_names.join(", "))
-                        } else {
-                            obj.get("any")
-                                .and_then(|v| v.as_i64())
-                                .map(|any| format!("Any {}", any))
-                        }
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<String>>()
-                .join(", ")
-        } else {
-            "None".to_string()
-        };
-
-        // Extract feature name
+        // Extract feature name from entries
+        use super::types::EntryObject;
         let feature = bg
             .entries
             .iter()
-            .filter_map(|e| {
-                if let Some(obj) = e.as_object() {
-                    if let Some(name) = obj.get("name").and_then(|n| n.as_str()) {
-                        if name.starts_with("Feature:") {
-                            return Some(name.replace("Feature: ", ""));
-                        }
+            .filter_map(|e| match e {
+                Entry::Object(EntryObject::Entries { name, .. }) => name.as_ref().and_then(|n| {
+                    if n.starts_with("Feature:") {
+                        Some(n.replace("Feature: ", ""))
+                    } else {
+                        None
+                    }
+                }),
+                Entry::Object(EntryObject::Item { name, .. }) => {
+                    if name.starts_with("Feature:") {
+                        Some(name.replace("Feature: ", ""))
+                    } else {
+                        None
                     }
                 }
-                None
+                _ => None,
             })
             .next()
             .unwrap_or_else(|| "Special Feature".to_string());

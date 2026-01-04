@@ -1,3 +1,4 @@
+use super::types::{Entry, Image};
 use crate::schema::catalog_languages;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -16,7 +17,8 @@ pub struct Language {
     #[serde(rename = "typicalSpeakers")]
     pub typical_speakers: Option<Vec<String>>,
 
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 
     #[serde(rename = "basicRules")]
     pub basic_rules: Option<bool>,
@@ -133,8 +135,10 @@ pub struct LanguageData {
 pub struct LanguageFluff {
     pub name: String,
     pub source: String,
-    pub entries: Option<Vec<serde_json::Value>>,
-    pub images: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
+    #[serde(default)]
+    pub images: Vec<Image>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

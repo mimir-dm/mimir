@@ -202,11 +202,11 @@ impl ReferenceService {
         if let Some(condition) = service.get_condition_by_name_and_source(name, source)? {
             let (cond_name, preview, data) = match &condition {
                 crate::models::catalog::ConditionOrDisease::Condition(c) => {
-                    let preview = Self::extract_preview_from_slice(&c.entries, "Condition");
+                    let preview = Self::extract_preview_from_entries(&c.entries, "Condition");
                     (c.name.clone(), preview, serde_json::to_value(c)?)
                 }
                 crate::models::catalog::ConditionOrDisease::Disease(d) => {
-                    let preview = Self::extract_preview_from_slice(&d.entries, "Disease");
+                    let preview = Self::extract_preview_from_entries(&d.entries, "Disease");
                     (d.name.clone(), preview, serde_json::to_value(d)?)
                 }
             };
@@ -230,7 +230,7 @@ impl ReferenceService {
     ) -> Result<Option<ReferenceData>> {
         let mut service = ActionService::new(conn);
         if let Some(action) = service.get_action_by_name_and_source(name, source)? {
-            let preview = Self::extract_preview_from_slice(&action.entries, "Action");
+            let preview = Self::extract_preview_from_entries(&action.entries, "Action");
 
             let data = serde_json::to_value(&action)?;
 
@@ -320,7 +320,7 @@ impl ReferenceService {
     ) -> Result<Option<ReferenceData>> {
         let mut service = FeatService::new(conn);
         if let Some(feat) = service.get_feat_by_name_and_source(name, source)? {
-            let preview = Self::extract_preview_from_slice(&feat.entries, "Feat");
+            let preview = Self::extract_preview_from_entries(&feat.entries, "Feat");
 
             let data = serde_json::to_value(&feat)?;
 
@@ -359,11 +359,19 @@ impl ReferenceService {
         Ok(None)
     }
 
-    /// Extract a preview string from a slice of Value entries
-    fn extract_preview_from_slice(entries: &[Value], fallback: &str) -> String {
+    /// Extract a preview string from a slice of typed Entry values
+    fn extract_preview_from_entries(
+        entries: &[crate::models::catalog::types::Entry],
+        fallback: &str,
+    ) -> String {
+        use crate::models::catalog::types::Entry;
+
         entries
             .first()
-            .and_then(|e| e.as_str())
+            .and_then(|e| match e {
+                Entry::Text(s) => Some(s.as_str()),
+                Entry::Object(_) => None,
+            })
             .map(|s| {
                 if s.len() > 100 {
                     format!("{}...", &s[..100])

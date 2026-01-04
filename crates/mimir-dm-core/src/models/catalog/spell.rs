@@ -1,5 +1,6 @@
 //! Spell catalog models
 
+use super::types::Entry;
 use crate::schema::catalog_spells;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -17,7 +18,7 @@ pub struct Spell {
     pub range: SpellRange,
     pub components: Components,
     pub duration: Vec<Duration>,
-    pub entries: Vec<serde_json::Value>, // Can be strings or objects
+    pub entries: Vec<Entry>,
     #[serde(default)]
     pub classes: Option<Classes>,
     #[serde(default)]
@@ -270,7 +271,10 @@ impl From<&Spell> for SpellSummary {
         let description = spell
             .entries
             .first()
-            .and_then(|e| e.as_str())
+            .and_then(|e| match e {
+                Entry::Text(s) => Some(s.as_str()),
+                Entry::Object(_) => None,
+            })
             .unwrap_or("")
             .chars()
             .take(200)
@@ -446,29 +450,8 @@ impl NewCatalogSpell {
             tags.push("Ritual".to_string());
         }
 
-        // Check for SRD
-        if let Some(srd_value) = spell
-            .entries
-            .iter()
-            .find_map(|entry| entry.get("srd"))
-            .and_then(|v| v.as_bool())
-        {
-            if srd_value {
-                tags.push("SRD".to_string());
-            }
-        }
-
-        // Check for Basic Rules
-        if let Some(basic_rules) = spell
-            .entries
-            .iter()
-            .find_map(|entry| entry.get("basicRules"))
-            .and_then(|v| v.as_bool())
-        {
-            if basic_rules {
-                tags.push("Basic Rules".to_string());
-            }
-        }
+        // Note: SRD and Basic Rules metadata would be found at spell root level,
+        // not in entries. Entries contain descriptive text only.
 
         Self {
             name: spell.name.clone(),

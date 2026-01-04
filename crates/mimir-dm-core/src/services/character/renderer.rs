@@ -627,18 +627,33 @@ impl MarkdownRenderer {
 
         // Description
         for entry in &spell.entries {
-            if let Some(text) = entry.as_str() {
-                output.push_str(text);
-                output.push_str("\n\n");
-            } else if let Some(obj) = entry.as_object() {
-                // Handle structured entries like lists
-                if let Some(entries) = obj.get("entries").and_then(|e| e.as_array()) {
-                    for e in entries {
-                        if let Some(text) = e.as_str() {
-                            output.push_str(&format!("- {}\n", text));
+            use crate::models::catalog::types::{Entry, EntryObject};
+            match entry {
+                Entry::Text(text) => {
+                    output.push_str(text);
+                    output.push_str("\n\n");
+                }
+                Entry::Object(obj) => {
+                    // Handle structured entries like lists
+                    match obj {
+                        EntryObject::List { items, .. } => {
+                            for item in items {
+                                if let Entry::Text(text) = item {
+                                    output.push_str(&format!("- {}\n", text));
+                                }
+                            }
+                            output.push('\n');
                         }
+                        EntryObject::Entries { entries, .. } => {
+                            for e in entries {
+                                if let Entry::Text(text) = e {
+                                    output.push_str(text);
+                                    output.push_str("\n\n");
+                                }
+                            }
+                        }
+                        _ => {}
                     }
-                    output.push('\n');
                 }
             }
         }
@@ -764,9 +779,9 @@ impl MarkdownRenderer {
                 }
 
                 // Description entries
-                if let Some(entries) = &details.entries {
-                    for entry in entries {
-                        output.push_str(&format!("{}\n\n", self.format_entry(entry)));
+                if !details.entries.is_empty() {
+                    for entry in &details.entries {
+                        output.push_str(&format!("{}\n\n", self.format_entry_typed(entry)));
                     }
                 }
             } else {
@@ -781,28 +796,39 @@ impl MarkdownRenderer {
         output
     }
 
-    #[allow(clippy::only_used_in_recursion)]
-    fn format_entry(&self, entry: &serde_json::Value) -> String {
+    /// Format a typed Entry value to a string
+    fn format_entry_typed(&self, entry: &crate::models::catalog::types::Entry) -> String {
+        use crate::models::catalog::types::{Entry, EntryObject};
         match entry {
-            serde_json::Value::String(s) => s.clone(),
-            serde_json::Value::Object(obj) => {
-                if let Some(entries) = obj.get("entries").and_then(|e| e.as_array()) {
-                    entries
-                        .iter()
-                        .map(|e| self.format_entry(e))
-                        .collect::<Vec<_>>()
-                        .join("\n")
-                } else if let Some(items) = obj.get("items").and_then(|i| i.as_array()) {
-                    items
-                        .iter()
-                        .map(|i| format!("- {}", self.format_entry(i)))
-                        .collect::<Vec<_>>()
-                        .join("\n")
-                } else {
-                    String::new()
+            Entry::Text(s) => s.clone(),
+            Entry::Object(obj) => match obj {
+                EntryObject::Entries { entries, .. } => entries
+                    .iter()
+                    .map(|e| self.format_entry_typed(e))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+                EntryObject::List { items, .. } => items
+                    .iter()
+                    .map(|i| format!("- {}", self.format_entry_typed(i)))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+                EntryObject::Item { name, entries, .. } => {
+                    if let Some(entries) = entries {
+                        format!(
+                            "**{}:** {}",
+                            name,
+                            entries
+                                .iter()
+                                .map(|e| self.format_entry_typed(e))
+                                .collect::<Vec<_>>()
+                                .join(" ")
+                        )
+                    } else {
+                        format!("**{}**", name)
+                    }
                 }
-            }
-            _ => String::new(),
+                _ => String::new(),
+            },
         }
     }
 

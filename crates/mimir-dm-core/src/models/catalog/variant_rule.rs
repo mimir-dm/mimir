@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_variant_rules;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -13,7 +14,7 @@ pub struct VariantRule {
     pub page: Option<i32>,
 
     #[serde(default)]
-    pub entries: Option<Vec<serde_json::Value>>,
+    pub entries: Vec<Entry>,
 
     #[serde(flatten)]
     pub other_fields: std::collections::HashMap<String, serde_json::Value>,

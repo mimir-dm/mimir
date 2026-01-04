@@ -1,3 +1,4 @@
+use super::types::{Entry, Image, TableCell};
 use crate::schema::catalog_tables;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -17,17 +18,20 @@ pub struct Table {
     #[serde(rename = "colStyles")]
     pub col_styles: Option<Vec<String>>,
 
-    pub rows: Vec<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub rows: Vec<Vec<TableCell>>,
 
     // Optional fields
-    pub intro: Option<Vec<serde_json::Value>>,
-    pub outro: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub intro: Vec<Entry>,
+    #[serde(default)]
+    pub outro: Vec<Entry>,
 
     #[serde(rename = "tableInclude")]
     pub table_include: Option<serde_json::Value>,
 
-    #[serde(rename = "footnotes")]
-    pub footnotes: Option<Vec<serde_json::Value>>,
+    #[serde(rename = "footnotes", default)]
+    pub footnotes: Vec<Entry>,
 
     pub srd: Option<bool>,
 
@@ -115,8 +119,10 @@ pub struct TableData {
 pub struct TableFluff {
     pub name: String,
     pub source: String,
-    pub entries: Option<Vec<serde_json::Value>>,
-    pub images: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
+    #[serde(default)]
+    pub images: Vec<Image>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

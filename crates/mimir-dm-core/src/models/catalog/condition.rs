@@ -1,3 +1,4 @@
+use super::types::{Entry, Image};
 use crate::schema::catalog_conditions;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,7 @@ pub struct Condition {
     pub source: String,
     pub page: Option<i32>,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(rename = "basicRules")]
     pub basic_rules: Option<bool>,
     #[serde(rename = "hasFluffImages")]
@@ -23,7 +24,7 @@ pub struct Disease {
     pub source: String,
     pub page: Option<i32>,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,9 +44,9 @@ pub struct ConditionFluff {
     pub name: String,
     pub source: String,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(default)]
-    pub images: Vec<serde_json::Value>,
+    pub images: Vec<Image>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -98,21 +99,22 @@ impl From<&Disease> for ConditionSummary {
     }
 }
 
-fn extract_description(entries: &[serde_json::Value]) -> String {
+fn extract_description(entries: &[Entry]) -> String {
+    use super::types::EntryObject;
+
     entries
         .first()
-        .and_then(|entry| {
-            if let Some(s) = entry.as_str() {
-                Some(s.to_string())
-            } else if let Some(obj) = entry.as_object() {
-                obj.get("items")
-                    .and_then(|items| items.as_array())
-                    .and_then(|arr| arr.first())
-                    .and_then(|item| item.as_str())
-                    .map(|s| s.to_string())
-            } else {
-                None
-            }
+        .and_then(|entry| match entry {
+            Entry::Text(s) => Some(s.clone()),
+            Entry::Object(obj) => match obj {
+                EntryObject::List { items, .. } => items
+                    .first()
+                    .and_then(|item| match item {
+                        Entry::Text(s) => Some(s.clone()),
+                        _ => None,
+                    }),
+                _ => None,
+            },
         })
         .unwrap_or_default()
 }

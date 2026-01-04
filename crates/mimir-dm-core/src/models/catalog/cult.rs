@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_cults;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -13,7 +14,7 @@ pub struct Cult {
     pub page: Option<i32>,
 
     #[serde(default)]
-    pub entries: Option<Vec<serde_json::Value>>,
+    pub entries: Vec<Entry>,
 
     // Cult-specific fields
     pub cultists: Option<CultistInfo>,
@@ -61,7 +62,7 @@ pub struct Boon {
     pub page: Option<i32>,
 
     #[serde(default)]
-    pub entries: Option<Vec<serde_json::Value>>,
+    pub entries: Vec<Entry>,
 
     // Boon-specific fields
     pub ability: Option<AbilityInfo>,

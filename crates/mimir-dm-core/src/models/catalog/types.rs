@@ -257,10 +257,11 @@ pub struct ArmorClassEntry {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum HitPointsValue {
-    /// Standard HP with average and formula
+    /// Standard HP with average and optional formula
     Standard {
         average: i32,
-        formula: String,
+        #[serde(default)]
+        formula: Option<String>,
     },
     /// Special HP description
     Special { special: String },
@@ -311,8 +312,8 @@ pub enum CreatureTypeValue {
         base_type: String,
         #[serde(default)]
         tags: Option<Vec<CreatureTag>>,
-        #[serde(default)]
-        swarmSize: Option<String>,
+        #[serde(default, rename = "swarmSize")]
+        swarm_size: Option<String>,
     },
 }
 
@@ -399,8 +400,8 @@ pub enum DamageModifier {
         note: Option<String>,
         #[serde(default)]
         cond: Option<bool>,
-        #[serde(default)]
-        preNote: Option<String>,
+        #[serde(default, rename = "preNote")]
+        pre_note: Option<String>,
     },
 }
 

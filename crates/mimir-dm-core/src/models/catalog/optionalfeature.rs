@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_optional_features;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,7 @@ pub struct OptionalFeature {
     pub feature_type: Vec<String>, // EI, MM, FS:F, etc.
 
     pub prerequisite: Option<Vec<Prerequisite>>,
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
 
     #[serde(rename = "isClassFeatureVariant")]
     pub is_class_feature_variant: Option<bool>,

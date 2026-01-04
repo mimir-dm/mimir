@@ -1,5 +1,6 @@
 //! Action catalog models
 
+use super::types::Entry;
 use crate::schema::catalog_actions;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -13,7 +14,7 @@ pub struct Action {
     #[serde(default)]
     pub page: Option<u32>,
     pub time: Vec<ActionTime>,
-    pub entries: Vec<serde_json::Value>, // Can be strings or objects
+    pub entries: Vec<Entry>,
     #[serde(default, rename = "seeAlsoAction")]
     pub see_also: Option<Vec<String>>,
 }
@@ -136,15 +137,8 @@ impl From<Action> for NewCatalogAction {
             "No description available".to_string()
         } else {
             match &action.entries[0] {
-                serde_json::Value::String(s) => s.clone(),
-                serde_json::Value::Object(obj) => {
-                    // Handle complex entry objects if needed
-                    obj.get("entries")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("Complex entry")
-                        .to_string()
-                }
-                _ => "Complex entry".to_string(),
+                Entry::Text(s) => s.clone(),
+                Entry::Object(_) => "Complex entry".to_string(),
             }
         };
 

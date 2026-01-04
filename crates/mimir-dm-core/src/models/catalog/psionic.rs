@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_psionics;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -20,7 +21,8 @@ pub struct Psionic {
     pub psionic_type: String,
     pub order: Option<String>,
     pub page: Option<i32>,
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
     pub focus: Option<String>,           // Focus benefit for disciplines
     pub modes: Option<Vec<PsionicMode>>, // Modes for disciplines
 }
@@ -29,7 +31,8 @@ pub struct Psionic {
 pub struct PsionicMode {
     pub name: String,
     pub cost: PsionicCost,
-    pub entries: Vec<serde_json::Value>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
     pub concentration: Option<ConcentrationDuration>,
 }
 

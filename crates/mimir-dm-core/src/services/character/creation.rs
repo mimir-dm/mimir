@@ -198,33 +198,46 @@ impl<'a> CharacterBuilder<'a> {
 
         // Extract skill proficiencies from background
         for skill_value in &background.skill_proficiencies {
-            if let Some(obj) = skill_value.as_object() {
-                for (skill, _) in obj.iter() {
-                    if skill != "any" && skill != "choose" {
-                        let skill_name = titlecase(skill);
-                        if !self.proficiencies.skills.contains(&skill_name) {
-                            self.proficiencies.skills.push(skill_name);
+            match skill_value {
+                crate::models::catalog::types::ProficiencyItem::Simple(skill) => {
+                    let skill_name = titlecase(skill);
+                    if !self.proficiencies.skills.contains(&skill_name) {
+                        self.proficiencies.skills.push(skill_name);
+                    }
+                }
+                crate::models::catalog::types::ProficiencyItem::Keyed(obj) => {
+                    for (skill, _) in obj.iter() {
+                        if skill != "any" && skill != "choose" {
+                            let skill_name = titlecase(skill);
+                            if !self.proficiencies.skills.contains(&skill_name) {
+                                self.proficiencies.skills.push(skill_name);
+                            }
                         }
                     }
                 }
+                _ => {} // Skip Flag and Choice variants for now
             }
         }
 
         // Extract tool proficiencies
         for tool_value in &background.tool_proficiencies {
-            if let Some(tool_str) = tool_value.as_str() {
-                if !self.proficiencies.tools.contains(&tool_str.to_string()) {
-                    self.proficiencies.tools.push(tool_str.to_string());
+            match tool_value {
+                crate::models::catalog::types::ProficiencyItem::Simple(tool_str) => {
+                    if !self.proficiencies.tools.contains(tool_str) {
+                        self.proficiencies.tools.push(tool_str.clone());
+                    }
                 }
-            } else if let Some(obj) = tool_value.as_object() {
-                for (tool, _) in obj.iter() {
-                    if tool != "choose" {
-                        let tool_name = titlecase(tool);
-                        if !self.proficiencies.tools.contains(&tool_name) {
-                            self.proficiencies.tools.push(tool_name);
+                crate::models::catalog::types::ProficiencyItem::Keyed(obj) => {
+                    for (tool, _) in obj.iter() {
+                        if tool != "choose" {
+                            let tool_name = titlecase(tool);
+                            if !self.proficiencies.tools.contains(&tool_name) {
+                                self.proficiencies.tools.push(tool_name);
+                            }
                         }
                     }
                 }
+                _ => {} // Skip Flag and Choice variants
             }
         }
 
@@ -299,26 +312,28 @@ impl<'a> CharacterBuilder<'a> {
         if let Some(ref race) = race_opt {
             if let Some(abilities) = &race.ability {
                 for ability_value in abilities {
-                    if let Some(obj) = ability_value.as_object() {
-                        if let Some(str_val) = obj.get("str").and_then(|v| v.as_i64()) {
-                            base_abilities.strength += str_val as i32;
+                    if let crate::models::catalog::types::AbilityBonus::Fixed(bonuses) = ability_value
+                    {
+                        if let Some(str_val) = bonuses.get("str") {
+                            base_abilities.strength += *str_val;
                         }
-                        if let Some(dex_val) = obj.get("dex").and_then(|v| v.as_i64()) {
-                            base_abilities.dexterity += dex_val as i32;
+                        if let Some(dex_val) = bonuses.get("dex") {
+                            base_abilities.dexterity += *dex_val;
                         }
-                        if let Some(con_val) = obj.get("con").and_then(|v| v.as_i64()) {
-                            base_abilities.constitution += con_val as i32;
+                        if let Some(con_val) = bonuses.get("con") {
+                            base_abilities.constitution += *con_val;
                         }
-                        if let Some(int_val) = obj.get("int").and_then(|v| v.as_i64()) {
-                            base_abilities.intelligence += int_val as i32;
+                        if let Some(int_val) = bonuses.get("int") {
+                            base_abilities.intelligence += *int_val;
                         }
-                        if let Some(wis_val) = obj.get("wis").and_then(|v| v.as_i64()) {
-                            base_abilities.wisdom += wis_val as i32;
+                        if let Some(wis_val) = bonuses.get("wis") {
+                            base_abilities.wisdom += *wis_val;
                         }
-                        if let Some(cha_val) = obj.get("cha").and_then(|v| v.as_i64()) {
-                            base_abilities.charisma += cha_val as i32;
+                        if let Some(cha_val) = bonuses.get("cha") {
+                            base_abilities.charisma += *cha_val;
                         }
                     }
+                    // Choice variants are handled during character creation UI
                 }
             }
         }
@@ -344,15 +359,24 @@ impl<'a> CharacterBuilder<'a> {
         if let Some(ref race) = race_opt {
             if let Some(lang_profs) = &race.language_proficiencies {
                 for lang_value in lang_profs {
-                    if let Some(obj) = lang_value.as_object() {
-                        for (lang, _) in obj.iter() {
-                            if lang != "anyStandard" && lang != "choose" && lang != "any" {
-                                let lang_name = titlecase(lang);
-                                if !self.proficiencies.languages.contains(&lang_name) {
-                                    self.proficiencies.languages.push(lang_name);
+                    match lang_value {
+                        crate::models::catalog::types::ProficiencyItem::Simple(lang) => {
+                            let lang_name = titlecase(lang);
+                            if !self.proficiencies.languages.contains(&lang_name) {
+                                self.proficiencies.languages.push(lang_name);
+                            }
+                        }
+                        crate::models::catalog::types::ProficiencyItem::Keyed(obj) => {
+                            for (lang, _) in obj.iter() {
+                                if lang != "anyStandard" && lang != "choose" && lang != "any" {
+                                    let lang_name = titlecase(lang);
+                                    if !self.proficiencies.languages.contains(&lang_name) {
+                                        self.proficiencies.languages.push(lang_name);
+                                    }
                                 }
                             }
                         }
+                        _ => {} // Skip Flag and Choice variants
                     }
                 }
             }

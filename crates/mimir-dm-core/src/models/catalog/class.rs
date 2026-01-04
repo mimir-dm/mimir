@@ -1,5 +1,6 @@
 //! Class catalog models
 
+use super::types::{Entry, Image, ProficiencyItem};
 use serde::{Deserialize, Serialize};
 
 /// A D&D 5e character class
@@ -64,7 +65,7 @@ pub struct StartingProficiencies {
     #[serde(default)]
     pub tools: Option<Vec<String>>,
     #[serde(default)]
-    pub skills: Option<Vec<serde_json::Value>>, // Can be strings or choice objects
+    pub skills: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
     pub saving_throws: Option<Vec<String>>,
 }
@@ -90,7 +91,7 @@ pub struct MulticlassingProficiencies {
     #[serde(default)]
     pub tools: Option<Vec<String>>,
     #[serde(default)]
-    pub skills: Option<Vec<serde_json::Value>>,
+    pub skills: Option<Vec<ProficiencyItem>>,
 }
 
 /// Starting equipment options
@@ -161,7 +162,7 @@ pub struct ClassFeature {
     pub class_source: String,
     pub level: u8,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     pub page: Option<u32>,
     #[serde(default)]
     pub srd: Option<bool>,
@@ -180,7 +181,7 @@ pub struct SubclassFeature {
     pub subclass_source: String,
     pub level: u8,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     pub page: Option<u32>,
 }
 
@@ -200,9 +201,9 @@ pub struct ClassFeatureData {
 pub struct ClassFluff {
     pub name: String,
     pub source: String,
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(default)]
-    pub images: Option<Vec<serde_json::Value>>,
+    pub images: Vec<Image>,
 }
 
 /// Subclass fluff (descriptive text)
@@ -215,9 +216,9 @@ pub struct SubclassFluff {
     pub source: String,
     pub class_name: String,
     pub class_source: String,
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(default)]
-    pub images: Option<Vec<serde_json::Value>>,
+    pub images: Vec<Image>,
 }
 
 /// Container for class fluff data
