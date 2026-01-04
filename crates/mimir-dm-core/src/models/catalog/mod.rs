@@ -3,6 +3,7 @@
 //! This module contains all the data structures for static game content
 //! like spells, items, monsters, classes, and more.
 
+pub mod types;
 pub mod action;
 pub mod background;
 pub mod book;
@@ -107,4 +108,24 @@ pub use cult::{Boon, BoonData, Cult, CultBoonSummary, CultData};
 pub use psionic::{
     CatalogPsionic, ConcentrationDuration, NewCatalogPsionic, Psionic, PsionicCost, PsionicFilters,
     PsionicMode, PsionicSummary,
+};
+
+// Shared types for 5etools data
+pub use types::{
+    // Entry system
+    Entry, EntryObject, Image, ImageHref, RollSpec, TableCell, TableCellObject,
+    // Proficiency/choice types
+    AbilityBonus, AbilityChoice, ChooseSpec, ProficiencyChoice, ProficiencyItem,
+    // Monster types
+    AlignmentComponent, AlignmentValue, ArmorClassEntry, ArmorClassValue, ChallengeRatingValue,
+    CreatureTag, CreatureTypeValue, HitPointsValue, SpeedValue,
+    // Damage modifier types
+    DamageModifier, DamageModifierChoice,
+    // Prerequisite types
+    Prerequisite, PrerequisiteClass, PrerequisiteLevel, PrerequisiteObject, PrerequisiteOther,
+    PrerequisiteRace,
+    // Spell types
+    AdditionalSpellEntry, AdditionalSpellList, AdditionalSpells, SpellcastingAbility,
+    // Source types
+    OtherSource,
 };

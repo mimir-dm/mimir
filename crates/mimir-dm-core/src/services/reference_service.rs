@@ -160,24 +160,22 @@ impl ReferenceService {
         name: &str,
         source: &str,
     ) -> Result<Option<ReferenceData>> {
+        use crate::models::catalog::types::{ChallengeRatingValue, CreatureTypeValue};
+
         let mut service = MonsterService::new(conn);
         if let Some(monster) = service.get_monster_by_name_and_source(name, source)? {
-            let cr_str = monster
-                .cr
-                .as_ref()
-                .map(|cr| format!("CR {}", cr))
-                .unwrap_or_else(|| "CR ?".to_string());
+            let cr_str = match &monster.cr {
+                Some(ChallengeRatingValue::Simple(s)) => format!("CR {}", s),
+                Some(ChallengeRatingValue::Complex { cr, .. }) => format!("CR {}", cr),
+                None => "CR ?".to_string(),
+            };
 
-            // Extract creature type from Value (can be string or object with "type" field)
-            let creature_type_str = monster
-                .creature_type
-                .as_ref()
-                .and_then(|v| {
-                    v.as_str()
-                        .map(|s| s.to_string())
-                        .or_else(|| v.get("type").and_then(|t| t.as_str()).map(|s| s.to_string()))
-                })
-                .unwrap_or_else(|| "creature".to_string());
+            // Extract creature type
+            let creature_type_str = match &monster.creature_type {
+                Some(CreatureTypeValue::Simple(s)) => s.clone(),
+                Some(CreatureTypeValue::Complex { base_type, .. }) => base_type.clone(),
+                None => "creature".to_string(),
+            };
 
             let preview = format!("{} • {}", creature_type_str, cr_str);
 
