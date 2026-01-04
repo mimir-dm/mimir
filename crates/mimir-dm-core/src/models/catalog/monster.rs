@@ -1,5 +1,9 @@
 //! Monster catalog models
 
+use super::types::{
+    AlignmentValue, ArmorClassValue, ChallengeRatingValue, CreatureTypeValue, Entry,
+    HitPointsValue, Image, SpeedValue,
+};
 use crate::schema::catalog_monsters;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -13,10 +17,10 @@ pub struct Monster {
     pub page: Option<u32>,
     pub size: Option<Vec<String>>, // S, M, L, etc.
     #[serde(rename = "type")]
-    pub creature_type: Option<serde_json::Value>, // Can be string or object
-    pub alignment: Option<serde_json::Value>, // Can be array of strings or array of objects
-    pub ac: Option<serde_json::Value>, // Can be number or array of AC objects
-    pub hp: Option<serde_json::Value>, // Can be object or number
+    pub creature_type: Option<CreatureTypeValue>,
+    pub alignment: Option<AlignmentValue>,
+    pub ac: Option<ArmorClassValue>,
+    pub hp: Option<HitPointsValue>,
     pub speed: Option<Speed>,
 
     // Ability scores
@@ -43,22 +47,22 @@ pub struct Monster {
     pub languages: Option<Vec<String>>,
 
     // Challenge rating
-    pub cr: Option<serde_json::Value>, // Can be string or object
+    pub cr: Option<ChallengeRatingValue>,
 
     // Traits, actions, etc.
-    pub trait_entries: Option<Vec<serde_json::Value>>,
-    pub action: Option<Vec<serde_json::Value>>,
-    pub bonus: Option<Vec<serde_json::Value>>,
-    pub reaction: Option<Vec<serde_json::Value>>,
-    pub legendary: Option<Vec<serde_json::Value>>,
-    pub legendary_group: Option<serde_json::Value>,
-    pub mythic: Option<Vec<serde_json::Value>>,
+    pub trait_entries: Option<Vec<Entry>>,
+    pub action: Option<Vec<Entry>>,
+    pub bonus: Option<Vec<Entry>>,
+    pub reaction: Option<Vec<Entry>>,
+    pub legendary: Option<Vec<Entry>>,
+    pub legendary_group: Option<serde_json::Value>, // Keep as Value - complex structure
+    pub mythic: Option<Vec<Entry>>,
 
     // Environment
     pub environment: Option<Vec<String>>,
 
     // Flags
-    pub srd: Option<serde_json::Value>,
+    pub srd: Option<serde_json::Value>, // Can be true or "..."
     pub basic_rules: Option<bool>,
 
     // Token image
@@ -66,33 +70,20 @@ pub struct Monster {
     pub has_token: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreatureType {
-    #[serde(rename = "type")]
-    pub base_type: String,
-    pub tags: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ArmorClass {
-    pub ac: u8,
-    pub from: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HitPoints {
-    pub average: u32,
-    pub formula: Option<String>,
-}
+// Note: CreatureType, ArmorClass, HitPoints types are now in types.rs
+// These local type aliases are kept for backwards compatibility in re-exports
+pub type CreatureType = CreatureTypeValue;
+pub type ArmorClass = ArmorClassValue;
+pub type HitPoints = HitPointsValue;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Speed {
-    pub walk: Option<serde_json::Value>, // Can be number or object
-    pub burrow: Option<serde_json::Value>,
-    pub climb: Option<serde_json::Value>,
-    pub fly: Option<serde_json::Value>, // Can be number or object with condition
+    pub walk: Option<SpeedValue>,
+    pub burrow: Option<SpeedValue>,
+    pub climb: Option<SpeedValue>,
+    pub fly: Option<SpeedValue>,
     pub hover: Option<bool>,
-    pub swim: Option<serde_json::Value>,
+    pub swim: Option<SpeedValue>,
     #[serde(rename = "canHover")]
     pub can_hover: Option<bool>,
 }
@@ -138,8 +129,8 @@ pub struct MonsterData {
 pub struct MonsterFluff {
     pub name: String,
     pub source: String,
-    pub entries: Option<Vec<serde_json::Value>>,
-    pub images: Option<Vec<serde_json::Value>>,
+    pub entries: Option<Vec<Entry>>,
+    pub images: Option<Vec<Image>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -166,6 +157,8 @@ pub struct MonsterSummary {
 
 impl From<&Monster> for MonsterSummary {
     fn from(monster: &Monster) -> Self {
+        use super::types::{AlignmentComponent, AlignmentValue, ChallengeRatingValue};
+
         // Extract size
         let size = monster
             .size
@@ -175,92 +168,68 @@ impl From<&Monster> for MonsterSummary {
             .unwrap_or_else(|| "Medium".to_string());
 
         // Extract creature type
-        let creature_type = if let Some(ct) = &monster.creature_type {
-            match ct {
-                serde_json::Value::String(s) => s.clone(),
-                serde_json::Value::Object(obj) => obj
-                    .get("type")
-                    .and_then(|t| t.as_str())
-                    .unwrap_or("Unknown")
-                    .to_string(),
-                _ => "Unknown".to_string(),
-            }
-        } else {
-            "Unknown".to_string()
+        let creature_type = match &monster.creature_type {
+            Some(CreatureTypeValue::Simple(s)) => s.clone(),
+            Some(CreatureTypeValue::Complex { base_type, .. }) => base_type.clone(),
+            None => "Unknown".to_string(),
         };
 
         // Extract alignment
-        let alignment = if let Some(al) = &monster.alignment {
-            match al {
-                serde_json::Value::Array(arr) => arr
-                    .first()
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unaligned")
-                    .to_string(),
-                _ => "unaligned".to_string(),
+        let alignment = match &monster.alignment {
+            Some(AlignmentValue::Array(arr)) => {
+                arr.first()
+                    .map(|c| match c {
+                        AlignmentComponent::Abbr(s) => s.clone(),
+                        AlignmentComponent::Special { special } => special.clone(),
+                        AlignmentComponent::Choice { alignment } => {
+                            alignment.first().cloned().unwrap_or_else(|| "N".to_string())
+                        }
+                    })
+                    .unwrap_or_else(|| "unaligned".to_string())
             }
-        } else {
-            "unaligned".to_string()
+            Some(AlignmentValue::Single(c)) => match c {
+                AlignmentComponent::Abbr(s) => s.clone(),
+                AlignmentComponent::Special { special } => special.clone(),
+                AlignmentComponent::Choice { alignment } => {
+                    alignment.first().cloned().unwrap_or_else(|| "N".to_string())
+                }
+            },
+            None => "unaligned".to_string(),
         };
 
-        // Extract CR
-        let (cr, cr_numeric) = if let Some(cr_val) = &monster.cr {
-            match cr_val {
-                serde_json::Value::String(s) => {
-                    let numeric = match s.as_str() {
-                        "1/8" => 0.125,
-                        "1/4" => 0.25,
-                        "1/2" => 0.5,
-                        _ => s.parse().unwrap_or(0.0),
-                    };
-                    (s.clone(), numeric as f32)
-                }
-                serde_json::Value::Object(obj) => {
-                    let cr_str = obj
-                        .get("cr")
-                        .and_then(|c| c.as_str())
-                        .unwrap_or("0")
-                        .to_string();
-                    let numeric = match cr_str.as_str() {
-                        "1/8" => 0.125,
-                        "1/4" => 0.25,
-                        "1/2" => 0.5,
-                        _ => cr_str.parse().unwrap_or(0.0),
-                    };
-                    (cr_str, numeric as f32)
-                }
-                _ => ("0".to_string(), 0.0),
+        // Helper to parse CR string to numeric
+        fn cr_to_numeric(cr_str: &str) -> f32 {
+            match cr_str {
+                "1/8" => 0.125,
+                "1/4" => 0.25,
+                "1/2" => 0.5,
+                _ => cr_str.parse().unwrap_or(0.0),
             }
-        } else {
-            ("0".to_string(), 0.0)
+        }
+
+        // Extract CR
+        let (cr, cr_numeric) = match &monster.cr {
+            Some(ChallengeRatingValue::Simple(s)) => (s.clone(), cr_to_numeric(s)),
+            Some(ChallengeRatingValue::Complex { cr, .. }) => (cr.clone(), cr_to_numeric(cr)),
+            None => ("0".to_string(), 0.0),
         };
 
         // Extract HP
-        let hp = if let Some(hp_val) = &monster.hp {
-            match hp_val {
-                serde_json::Value::Number(n) => n.as_u64().unwrap_or(1) as u32,
-                serde_json::Value::Object(obj) => {
-                    obj.get("average").and_then(|a| a.as_u64()).unwrap_or(1) as u32
-                }
-                _ => 1,
-            }
-        } else {
-            1
+        let hp = match &monster.hp {
+            Some(HitPointsValue::Standard { average, .. }) => *average as u32,
+            Some(HitPointsValue::Number(n)) => *n as u32,
+            Some(HitPointsValue::Special { .. }) => 1, // Special HP like "see entry"
+            None => 1,
         };
 
         // Extract AC
-        let ac = if let Some(ac_val) = &monster.ac {
-            match ac_val {
-                serde_json::Value::Number(n) => n.as_u64().unwrap_or(10) as u8,
-                serde_json::Value::Array(arr) => arr
-                    .first()
-                    .and_then(|v| v.get("ac"))
-                    .and_then(|a| a.as_u64())
-                    .unwrap_or(10) as u8,
-                _ => 10,
-            }
-        } else {
-            10
+        let ac = match &monster.ac {
+            Some(ArmorClassValue::Number(n)) => *n as u8,
+            Some(ArmorClassValue::Array(arr)) => arr
+                .first()
+                .and_then(|entry| entry.ac)
+                .unwrap_or(10) as u8,
+            None => 10,
         };
 
         // Extract environment
@@ -271,13 +240,11 @@ impl From<&Monster> for MonsterSummary {
             .trait_entries
             .as_ref()
             .and_then(|t| t.first())
-            .and_then(|e| e.get("entries"))
-            .and_then(|entries| entries.get(0))
-            .and_then(|e| e.as_str())
-            .unwrap_or("")
-            .chars()
-            .take(200)
-            .collect::<String>();
+            .map(|e| match e {
+                Entry::Text(s) => s.chars().take(200).collect(),
+                Entry::Object(_) => String::new(), // Complex entry - skip for now
+            })
+            .unwrap_or_default();
 
         MonsterSummary {
             name: monster.name.clone(),
@@ -374,94 +341,69 @@ impl From<&CatalogMonster> for MonsterSummary {
 
 impl From<&Monster> for NewCatalogMonster {
     fn from(monster: &Monster) -> Self {
+        use super::types::{AlignmentComponent, AlignmentValue, ChallengeRatingValue};
+
         // Extract simplified size (first one)
         let size = monster.size.as_ref().and_then(|s| s.first()).cloned();
 
         // Extract simplified creature type
-        let creature_type = if let Some(ct) = &monster.creature_type {
-            match ct {
-                serde_json::Value::String(s) => Some(s.clone()),
-                serde_json::Value::Object(obj) => obj
-                    .get("type")
-                    .and_then(|t| t.as_str())
-                    .map(|s| s.to_string()),
-                _ => None,
-            }
-        } else {
-            None
+        let creature_type = match &monster.creature_type {
+            Some(CreatureTypeValue::Simple(s)) => Some(s.clone()),
+            Some(CreatureTypeValue::Complex { base_type, .. }) => Some(base_type.clone()),
+            None => None,
         };
 
         // Extract simplified alignment (first one)
-        let alignment = if let Some(al) = &monster.alignment {
-            match al {
-                serde_json::Value::Array(arr) => {
-                    arr.first().and_then(|v| v.as_str()).map(|s| s.to_string())
+        let alignment = match &monster.alignment {
+            Some(AlignmentValue::Array(arr)) => arr.first().map(|c| match c {
+                AlignmentComponent::Abbr(s) => s.clone(),
+                AlignmentComponent::Special { special } => special.clone(),
+                AlignmentComponent::Choice { alignment } => {
+                    alignment.first().cloned().unwrap_or_else(|| "N".to_string())
                 }
-                serde_json::Value::String(s) => Some(s.clone()),
-                _ => None,
-            }
-        } else {
-            None
+            }),
+            Some(AlignmentValue::Single(c)) => Some(match c {
+                AlignmentComponent::Abbr(s) => s.clone(),
+                AlignmentComponent::Special { special } => special.clone(),
+                AlignmentComponent::Choice { alignment } => {
+                    alignment.first().cloned().unwrap_or_else(|| "N".to_string())
+                }
+            }),
+            None => None,
         };
 
-        // Extract CR and CR numeric
-        let (cr, cr_numeric) = if let Some(cr_val) = &monster.cr {
-            match cr_val {
-                serde_json::Value::String(s) => {
-                    let numeric = match s.as_str() {
-                        "1/8" => 0.125,
-                        "1/4" => 0.25,
-                        "1/2" => 0.5,
-                        _ => s.parse().unwrap_or(0.0),
-                    };
-                    (Some(s.clone()), Some(numeric))
-                }
-                serde_json::Value::Object(obj) => {
-                    let cr_str = obj
-                        .get("cr")
-                        .and_then(|c| c.as_str())
-                        .map(|s| s.to_string());
-                    let numeric = cr_str.as_ref().and_then(|s| match s.as_str() {
-                        "1/8" => Some(0.125),
-                        "1/4" => Some(0.25),
-                        "1/2" => Some(0.5),
-                        _ => s.parse().ok(),
-                    });
-                    (cr_str, numeric)
-                }
-                _ => (None, None),
+        // Helper to parse CR string to numeric
+        fn cr_to_numeric(cr_str: &str) -> f64 {
+            match cr_str {
+                "1/8" => 0.125,
+                "1/4" => 0.25,
+                "1/2" => 0.5,
+                _ => cr_str.parse().unwrap_or(0.0),
             }
-        } else {
-            (None, None)
+        }
+
+        // Extract CR and CR numeric
+        let (cr, cr_numeric) = match &monster.cr {
+            Some(ChallengeRatingValue::Simple(s)) => (Some(s.clone()), Some(cr_to_numeric(s))),
+            Some(ChallengeRatingValue::Complex { cr, .. }) => {
+                (Some(cr.clone()), Some(cr_to_numeric(cr)))
+            }
+            None => (None, None),
         };
 
         // Extract HP
-        let hp = if let Some(hp_val) = &monster.hp {
-            match hp_val {
-                serde_json::Value::Number(n) => n.as_u64().map(|h| h as i32),
-                serde_json::Value::Object(obj) => obj
-                    .get("average")
-                    .and_then(|a| a.as_u64())
-                    .map(|h| h as i32),
-                _ => None,
-            }
-        } else {
-            None
+        let hp = match &monster.hp {
+            Some(HitPointsValue::Standard { average, .. }) => Some(*average),
+            Some(HitPointsValue::Number(n)) => Some(*n),
+            Some(HitPointsValue::Special { .. }) => None,
+            None => None,
         };
 
         // Extract AC
-        let ac = if let Some(ac_val) = &monster.ac {
-            match ac_val {
-                serde_json::Value::Number(n) => n.as_u64().map(|a| a as i32),
-                serde_json::Value::Array(arr) => arr
-                    .first()
-                    .and_then(|v| v.get("ac"))
-                    .and_then(|a| a.as_u64())
-                    .map(|a| a as i32),
-                _ => None,
-            }
-        } else {
-            None
+        let ac = match &monster.ac {
+            Some(ArmorClassValue::Number(n)) => Some(*n),
+            Some(ArmorClassValue::Array(arr)) => arr.first().and_then(|entry| entry.ac),
+            None => None,
         };
 
         // Build token image path if monster has a token
