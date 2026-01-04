@@ -7,7 +7,7 @@ created_at: 2026-01-03T21:05:45.244862+00:00
 updated_at: 2026-01-03T21:05:45.244862+00:00
 parent: MIMIR-I-0035
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0035
 ## Objective
 
 Integrate the full-screen play mode (ModulePlayView) within the dashboard flow, hiding tabs during play and providing "End Session" to return.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

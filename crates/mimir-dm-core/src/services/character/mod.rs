@@ -105,7 +105,7 @@ impl<'a> CharacterService<'a> {
                 campaign_id,
                 player_id,
                 character_name: character_data.character_name.clone(),
-                is_npc: Some(if is_npc { 1 } else { 0 }),
+                is_npc: Some(is_npc),
                 directory_path,
                 class: Some(character_data.primary_class_name().to_string()),
                 race: Some(character_data.race.clone()),
@@ -135,7 +135,7 @@ impl<'a> CharacterService<'a> {
                 is_npc: None,
                 current_level: Some(character_data.level),
                 current_version: None,
-                last_updated_at: None,
+                updated_at: None,
                 campaign_id: None,
                 directory_path: None,
             };
@@ -247,7 +247,7 @@ impl<'a> CharacterService<'a> {
             is_npc: None,
             current_level: Some(character_data.level),
             current_version: Some(version_number),
-            last_updated_at: Some(chrono::Utc::now().to_rfc3339()),
+            updated_at: Some(chrono::Utc::now().to_rfc3339()),
             campaign_id: None,
             directory_path: None,
         };
@@ -348,7 +348,7 @@ impl<'a> CharacterService<'a> {
             is_npc: None,
             current_level: None,
             current_version: None,
-            last_updated_at: Some(chrono::Utc::now().to_rfc3339()),
+            updated_at: Some(chrono::Utc::now().to_rfc3339()),
             campaign_id: Some(Some(campaign_id)),
             directory_path: Some(directory_path),
         };
@@ -1281,7 +1281,7 @@ mod tests {
         assert_eq!(character.character_name, "Test Character");
         assert_eq!(character.campaign_id, Some(campaign_id));
         assert_eq!(character.player_id, Some(player_id));
-        assert_eq!(character.is_npc, 0);
+        assert_eq!(character.is_npc, false);
         assert_eq!(character.current_level, 1);
         assert_eq!(character.current_version, 1);
 

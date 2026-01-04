@@ -7,7 +7,7 @@ created_at: 2026-01-03T21:05:59.790248+00:00
 updated_at: 2026-01-03T21:05:59.790248+00:00
 parent: MIMIR-I-0035
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0035
 ## Objective
 
 Add redirects from old routes to new dashboard routes, ensuring existing bookmarks and links continue to work.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

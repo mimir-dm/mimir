@@ -45,7 +45,7 @@ pub struct CampaignPlayer {
     pub campaign_id: i32,
     pub player_id: i32,
     pub joined_at: String,
-    pub active: i32,
+    pub active: bool,
 }
 
 /// New campaign-player association for insertion
@@ -60,5 +60,5 @@ pub struct NewCampaignPlayer {
 #[derive(Debug, Clone, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = campaign_players)]
 pub struct UpdateCampaignPlayer {
-    pub active: Option<i32>,
+    pub active: Option<bool>,
 }

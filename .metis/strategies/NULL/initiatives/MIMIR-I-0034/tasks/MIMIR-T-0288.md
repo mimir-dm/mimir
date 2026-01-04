@@ -4,14 +4,14 @@ level: task
 title: "ModulePlayView Prep/Play Mode Split"
 short_code: "MIMIR-T-0288"
 created_at: 2026-01-03T13:57:42.828692+00:00
-updated_at: 2026-01-03T13:57:42.828692+00:00
+updated_at: 2026-01-04T14:18:09.885749+00:00
 parent: MIMIR-I-0034
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -86,6 +86,10 @@ Add "Start Session" button to launch play mode.
 | `composables/useSessionNotes.ts` | Create |
 | `views/ModulePlayView.vue` | Refactor (reduce ~50%) |
 | `views/ModuleBoardView.vue` | Add "Start Session" button |
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
