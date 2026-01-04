@@ -1198,33 +1198,40 @@ pub async fn write_text_file(path: String, contents: String) -> Result<(), Strin
     std::fs::write(&path, contents).map_err(|e| format!("Failed to write file: {}", e))
 }
 
-/// Helper to extract description text from entries array
-fn extract_description_from_entries(entries: &[serde_json::Value]) -> String {
+/// Helper to extract description text from typed entries array
+fn extract_description_from_entries(entries: &[mimir_dm_core::models::catalog::types::Entry]) -> String {
+    use mimir_dm_core::models::catalog::types::{Entry, EntryObject};
     let mut descriptions: Vec<String> = Vec::new();
 
     for entry in entries {
         match entry {
-            serde_json::Value::String(s) => {
+            Entry::Text(s) => {
                 descriptions.push(s.clone());
             }
-            serde_json::Value::Object(obj) => {
-                // Handle structured entries like {"type": "entries", "entries": [...]}
-                if let Some(serde_json::Value::Array(sub_entries)) = obj.get("entries") {
-                    let sub_desc = extract_description_from_entries(sub_entries);
+            Entry::Object(obj) => match obj {
+                EntryObject::Entries { entries, .. } => {
+                    let sub_desc = extract_description_from_entries(entries);
                     if !sub_desc.is_empty() {
                         descriptions.push(sub_desc);
                     }
                 }
-                // Handle list entries
-                if let Some(serde_json::Value::Array(items)) = obj.get("items") {
+                EntryObject::List { items, .. } => {
                     for item in items {
-                        if let serde_json::Value::String(s) = item {
+                        if let Entry::Text(s) = item {
                             descriptions.push(format!("- {}", s));
                         }
                     }
                 }
-            }
-            _ => {}
+                EntryObject::Item { name, entries, .. } => {
+                    if let Some(entries) = entries {
+                        let sub_desc = extract_description_from_entries(entries);
+                        if !sub_desc.is_empty() {
+                            descriptions.push(format!("**{}:** {}", name, sub_desc));
+                        }
+                    }
+                }
+                _ => {}
+            },
         }
     }
 
