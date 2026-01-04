@@ -4,15 +4,15 @@ level: task
 title: "Standardize timestamp field naming (last_updated_at → updated_at)"
 short_code: "MIMIR-T-0300"
 created_at: 2026-01-03T15:08:54.163413+00:00
-updated_at: 2026-01-03T15:08:54.163413+00:00
+updated_at: 2026-01-04T14:51:16.754004+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -44,6 +44,12 @@ Rename `last_updated_at` to `updated_at` in the characters table for consistency
 - **Current Problems**: All tables use `updated_at` except characters which uses `last_updated_at`. Inconsistent naming requires remembering which table uses which convention.
 - **Benefits of Fixing**: Consistent naming across all tables, simpler mental model.
 - **Risk Assessment**: Low - requires migration but straightforward rename.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

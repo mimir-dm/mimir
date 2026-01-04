@@ -125,7 +125,7 @@ impl<'a> CampaignPlayerRepository<'a> {
         campaign_players::table
             .inner_join(players::table)
             .filter(campaign_players::campaign_id.eq(campaign_id))
-            .filter(campaign_players::active.eq(1))
+            .filter(campaign_players::active.eq(true))
             .select(Player::as_select())
             .load(self.conn)
             .map_err(Into::into)

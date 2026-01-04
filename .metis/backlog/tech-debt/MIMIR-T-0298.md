@@ -4,15 +4,15 @@ level: task
 title: "Convert boolean-as-integer fields to proper bool types"
 short_code: "MIMIR-T-0298"
 created_at: 2026-01-03T15:08:53.922108+00:00
-updated_at: 2026-01-03T15:08:53.922108+00:00
+updated_at: 2026-01-04T14:35:30.135778+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -44,6 +44,12 @@ Convert boolean fields stored as `i32` to proper `bool` types in Diesel models f
 - **Current Problems**: SQLite stores booleans as integers, but Diesel supports `bool` mapping. Current code requires helper methods like `is_npc()` to convert. Inconsistent - `maps.fog_enabled` is already `bool`.
 - **Benefits of Fixing**: Direct boolean semantics, remove helper methods, consistent typing across models.
 - **Risk Assessment**: Low risk - straightforward refactor with good test coverage.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

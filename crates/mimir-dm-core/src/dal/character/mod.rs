@@ -83,7 +83,7 @@ impl<'a> CharacterRepository<'a> {
     pub fn list_npcs(&mut self, campaign_id: i32) -> Result<Vec<Character>> {
         characters::table
             .filter(characters::campaign_id.eq(campaign_id))
-            .filter(characters::is_npc.eq(1))
+            .filter(characters::is_npc.eq(true))
             .order_by(characters::character_name)
             .load(self.conn)
             .map_err(Into::into)
@@ -93,7 +93,7 @@ impl<'a> CharacterRepository<'a> {
     pub fn list_pcs(&mut self, campaign_id: i32) -> Result<Vec<Character>> {
         characters::table
             .filter(characters::campaign_id.eq(campaign_id))
-            .filter(characters::is_npc.eq(0))
+            .filter(characters::is_npc.eq(false))
             .order_by(characters::character_name)
             .load(self.conn)
             .map_err(Into::into)
@@ -122,7 +122,7 @@ impl<'a> CharacterRepository<'a> {
         characters::table
             .filter(characters::campaign_id.eq(campaign_id))
             .filter(characters::character_name.eq(name))
-            .filter(characters::is_npc.eq(1))
+            .filter(characters::is_npc.eq(true))
             .first(self.conn)
             .optional()
             .map_err(Into::into)

@@ -131,11 +131,10 @@ fn verify_character_exists(
                 let mut failures = Vec::new();
 
                 if let Some(expected_is_npc) = exp.is_npc {
-                    let actual_is_npc = character.is_npc != 0;
-                    if actual_is_npc != expected_is_npc {
+                    if character.is_npc != expected_is_npc {
                         failures.push(format!(
                             "is_npc: expected {}, got {}",
-                            expected_is_npc, actual_is_npc
+                            expected_is_npc, character.is_npc
                         ));
                     }
                 }

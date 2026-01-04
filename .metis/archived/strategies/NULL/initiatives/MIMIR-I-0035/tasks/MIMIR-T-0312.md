@@ -7,7 +7,7 @@ created_at: 2026-01-03T21:05:59.950083+00:00
 updated_at: 2026-01-04T02:14:33.575684+00:00
 parent: MIMIR-I-0035
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0035
 ## Objective
 
 Remove deprecated view files that are no longer used after the dashboard migration is complete.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

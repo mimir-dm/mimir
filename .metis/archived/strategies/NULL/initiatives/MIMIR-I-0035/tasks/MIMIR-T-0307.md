@@ -7,7 +7,7 @@ created_at: 2026-01-03T21:05:44.612498+00:00
 updated_at: 2026-01-03T21:05:44.612498+00:00
 parent: MIMIR-I-0035
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0035
 ## Objective
 
 Create the full-width module detail pane that shows when a module is selected, providing complete module management within the dashboard context.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -7,7 +7,7 @@ use mimir_dm::commands::content::books::catalog_import::import_all_catalogs_from
 use mimir_dm::services::llm::chat_processor::{ChatProcessor, ToolCallRecord};
 use mimir_dm::services::llm::{ConfirmationReceivers, LlmService};
 use mimir_dm::services::provider_settings::{GroqConfig, OllamaConfig, ProviderSettings, ProviderType};
-use mimir_dm_core::seed::dev_seeder::seed_dev_data;
+use mimir_dm_core::seed::seed_dev_data;
 use mimir_dm_core::services::CharacterService;
 use mimir_dm_core::DatabaseService;
 use mimir_dm_llm::Message;

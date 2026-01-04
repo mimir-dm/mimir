@@ -145,7 +145,7 @@ diesel::table! {
         campaign_id -> Integer,
         player_id -> Integer,
         joined_at -> Text,
-        active -> Integer,
+        active -> Bool,
     }
 }
 
@@ -155,12 +155,12 @@ diesel::table! {
         campaign_id -> Nullable<Integer>,
         player_id -> Nullable<Integer>,
         character_name -> Text,
-        is_npc -> Integer,
+        is_npc -> Bool,
         current_level -> Integer,
         current_version -> Integer,
         directory_path -> Text,
         created_at -> Text,
-        last_updated_at -> Text,
+        updated_at -> Text,
         class -> Nullable<Text>,
         race -> Nullable<Text>,
     }

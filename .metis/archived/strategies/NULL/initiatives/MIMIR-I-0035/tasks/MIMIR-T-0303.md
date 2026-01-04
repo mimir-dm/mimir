@@ -7,7 +7,7 @@ created_at: 2026-01-03T21:05:32.730831+00:00
 updated_at: 2026-01-03T21:18:24.045333+00:00
 parent: MIMIR-I-0035
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0035
 ## Objective
 
 Create the foundation for the unified campaign dashboard: routing structure, tab navigation component, and state management composable.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

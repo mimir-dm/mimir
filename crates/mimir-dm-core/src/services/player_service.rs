@@ -134,7 +134,7 @@ impl<'a> PlayerService<'a> {
     ) -> Result<()> {
         let mut cp_repo = CampaignPlayerRepository::new(self.conn);
         let update = crate::models::player::UpdateCampaignPlayer {
-            active: Some(if active { 1 } else { 0 }),
+            active: Some(active),
         };
         cp_repo.update(campaign_id, player_id, update)?;
         Ok(())

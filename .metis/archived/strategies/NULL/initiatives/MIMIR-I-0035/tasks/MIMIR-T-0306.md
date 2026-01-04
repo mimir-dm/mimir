@@ -7,7 +7,7 @@ created_at: 2026-01-03T21:05:33.260671+00:00
 updated_at: 2026-01-03T21:05:33.260671+00:00
 parent: MIMIR-I-0035
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0035
 ## Objective
 
 Create the Modules tab list view showing all campaign modules with selection handling that triggers the detail pane.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

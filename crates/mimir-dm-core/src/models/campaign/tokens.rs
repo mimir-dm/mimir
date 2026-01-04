@@ -388,7 +388,12 @@ impl NewToken {
     }
 }
 
-/// Token update structure
+/// Token update structure.
+///
+/// Uses the `Option<Option<T>>` pattern for nullable fields. See [`crate::models`] for details.
+///
+/// - `Option<T>` fields (non-nullable columns): `None` = don't update, `Some(v)` = set to v
+/// - `Option<Option<T>>` fields (nullable columns): `None` = don't update, `Some(None)` = set NULL, `Some(Some(v))` = set to v
 #[derive(Debug, Clone, Default, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = tokens)]
 pub struct UpdateToken {
@@ -398,11 +403,15 @@ pub struct UpdateToken {
     pub x: Option<f32>,
     pub y: Option<f32>,
     pub visible_to_players: Option<bool>,
+    /// Nullable: `None` = keep, `Some(None)` = clear, `Some(Some(c))` = set color
     pub color: Option<Option<String>>,
+    /// Nullable: `None` = keep, `Some(None)` = clear, `Some(Some(p))` = set path
     pub image_path: Option<Option<String>>,
+    /// Nullable: `None` = keep, `Some(None)` = clear, `Some(Some(n))` = set notes
     pub notes: Option<Option<String>>,
     pub updated_at: Option<String>,
     pub vision_type: Option<String>,
+    /// Nullable: `None` = keep, `Some(None)` = clear, `Some(Some(r))` = set range
     pub vision_range_ft: Option<Option<f32>>,
 }
 

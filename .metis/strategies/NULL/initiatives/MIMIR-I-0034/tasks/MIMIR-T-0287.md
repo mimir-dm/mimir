@@ -4,14 +4,14 @@ level: task
 title: "Unified Campaign Dashboard Architecture"
 short_code: "MIMIR-T-0287"
 created_at: 2026-01-03T13:57:42.696438+00:00
-updated_at: 2026-01-03T13:57:42.696438+00:00
+updated_at: 2026-01-04T14:18:03.809994+00:00
 parent: MIMIR-I-0034
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -185,6 +185,10 @@ Remove: CampaignBoardView.vue, ModuleBoardView.vue, ModuleListView.vue
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

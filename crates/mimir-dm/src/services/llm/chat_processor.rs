@@ -149,7 +149,7 @@ fn build_campaign_context(db_service: &Arc<DatabaseService>, campaign_id: i32) -
                 .map(|cl| cl.class_name.clone())
                 .unwrap_or_else(|| "Unknown".to_string());
 
-            if c.is_npc == 0 {
+            if !c.is_npc {
                 // Player character
                 party_members.push(CharacterContext {
                     id: c.id,

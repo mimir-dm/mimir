@@ -4,14 +4,14 @@ level: initiative
 title: "Unified Campaign Dashboard"
 short_code: "MIMIR-I-0035"
 created_at: 2026-01-03T21:03:54.020132+00:00
-updated_at: 2026-01-03T21:14:23.292873+00:00
+updated_at: 2026-01-04T03:54:26.919532+00:00
 parent: MIMIR-V-0001
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false

@@ -1304,7 +1304,7 @@ pub async fn export_campaign_documents(
         // Filter to only NPCs and fetch their data
         let npc_characters: Vec<_> = campaign_characters
             .into_iter()
-            .filter(|c| c.is_npc())
+            .filter(|c| c.is_npc)
             .collect();
 
         // Fetch character data for each NPC and convert to JSON

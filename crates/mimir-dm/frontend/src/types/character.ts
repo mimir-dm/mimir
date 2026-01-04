@@ -26,12 +26,12 @@ export interface Character {
   campaign_id: number | null
   player_id: number | null  // Nullable for NPCs
   character_name: string
-  is_npc: number
+  is_npc: boolean
   directory_path: string
   current_level: number
   current_version: number
   created_at: string
-  last_updated_at: string
+  updated_at: string
   class: string | null
   race: string | null
 }
