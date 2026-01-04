@@ -1,6 +1,6 @@
 <template>
   <div class="back-button-container" v-if="campaignId">
-    <router-link :to="`/campaigns/${campaignId}/board`" class="back-to-campaign">
+    <router-link :to="`/campaigns/${campaignId}/dashboard`" class="back-to-campaign">
       ← Back to Campaign
     </router-link>
   </div>

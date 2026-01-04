@@ -400,6 +400,9 @@ impl<'a> CampaignService<'a> {
     }
 
     /// Create initial documents for a new campaign
+    ///
+    /// Creates ALL campaign documents upfront (both required and optional from all stages).
+    /// Users can delete documents they don't need.
     fn create_initial_documents(&mut self, campaign: &Campaign) -> Result<()> {
         // Get the board definition to know what documents are needed
         let board_registry = BoardRegistry::new();
@@ -407,9 +410,22 @@ impl<'a> CampaignService<'a> {
             DbError::InvalidData("Campaign board definition not found".to_string())
         })?;
 
-        let required_docs = board.required_documents(&campaign.status);
+        // Collect ALL documents from ALL stages (both required and optional)
+        let mut all_docs: Vec<&str> = Vec::new();
+        for stage in board.stages() {
+            for doc in board.required_documents(stage) {
+                if !all_docs.contains(&doc) {
+                    all_docs.push(doc);
+                }
+            }
+            for doc in board.optional_documents(stage) {
+                if !all_docs.contains(&doc) {
+                    all_docs.push(doc);
+                }
+            }
+        }
 
-        for doc_type in required_docs {
+        for doc_type in all_docs {
             // Use doc_type directly as template_id (both use snake_case now)
             let template_id = doc_type.to_string();
             let file_path = format!("{}/{}.md", campaign.directory_path, template_id);

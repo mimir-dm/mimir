@@ -119,8 +119,8 @@ async function selectCampaign(campaignId: number) {
   // Persist selection to localStorage
   localStorage.setItem('selectedCampaignId', campaignId.toString())
   
-  // Navigate to the campaign board
-  router.push(`/campaigns/${campaignId}/board`)
+  // Navigate to the campaign dashboard
+  router.push(`/campaigns/${campaignId}/dashboard`)
 }
 
 // Close dropdown when clicking outside

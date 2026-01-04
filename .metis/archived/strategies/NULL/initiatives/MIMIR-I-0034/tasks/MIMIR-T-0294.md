@@ -1,13 +1,13 @@
 ---
-id: kebab-case-campaign-directory
+id: collapse-stage-guidance-after
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
+title: "Collapse stage guidance after first visit"
+short_code: "MIMIR-T-0294"
+created_at: 2026-01-03T14:19:06.760479+00:00
+updated_at: 2026-01-03T14:19:06.760479+00:00
 parent: MIMIR-I-0034
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -19,42 +19,36 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0034
 ---
 
-# Kebab-case campaign directory defaults
+# Collapse stage guidance after first visit
 
 ## Problem
 
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
+Stage landing pages always show full guidance text, creating cognitive overload for users who have already read it.
 
 ## Solution
 
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
+- Track which stages the user has visited (localStorage or user preferences)
+- On subsequent visits, show collapsed summary with "Show full guidance" toggle
+- First visit shows full guidance expanded
 
 ## Files to Modify
 
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
+- `frontend/src/features/campaigns/components/StageLanding/StageGuidance.vue`
+- `frontend/src/features/campaigns/components/StageLandingView.vue`
+- Possibly add to `sharedContext.ts` or new localStorage helper
 
 ## Effort
 
-30 minutes
+2-3 hours
 
 ## Acceptance Criteria
 
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+## Acceptance Criteria
+
+- [ ] First visit to a stage shows full guidance
+- [ ] Subsequent visits show collapsed summary
+- [ ] User can expand/collapse guidance manually
+- [ ] State persists across sessions
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

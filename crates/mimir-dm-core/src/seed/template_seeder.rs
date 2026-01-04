@@ -50,6 +50,10 @@ define_templates! {
     CHARACTER_INTEGRATION => "character_integration.md",
     CHARACTER_GUIDELINES => "character_guidelines.md",
     TABLE_EXPECTATIONS => "table_expectations.md",
+    SAFETY_TOOLS => "safety_tools.md",
+    HOUSE_RULES => "house_rules.md",
+    PLAYER_SECRETS => "player_secrets.md",
+    FACTION_OVERVIEW => "faction_overview.md",
     MAJOR_NPC_TRACKER => "major_npc_tracker.md",
     QUICK_NPC_REFERENCE => "quick_npc_reference.md",
     PC_ARC_TRACKER => "pc_arc_tracker.md",
@@ -153,7 +157,7 @@ mod tests {
 
         // Seed templates
         let count = seed_templates(&mut conn).unwrap();
-        assert_eq!(count, 22); // We have 22 templates
+        assert_eq!(count, 26); // We have 26 templates
 
         // Verify a few templates exist
         let campaign_pitch = TemplateRepository::get_latest(&mut conn, "campaign_pitch").unwrap();

@@ -345,15 +345,36 @@ async function loadModule() {
   }
 }
 
+// Check if we're in dashboard context
+const isInDashboard = computed(() => {
+  return route.path.includes('/dashboard/')
+})
+
 // Navigation
 function handleBackToPrep() {
-  // Navigate to module board (prep) view
-  router.push({ name: 'module-board', params: { id: moduleId.value } })
+  // Navigate back to module prep view
+  if (isInDashboard.value && campaign.value?.id) {
+    // Dashboard context: go to modules tab (with query param to auto-select)
+    router.push({
+      path: `/campaigns/${campaign.value.id}/dashboard/modules`,
+      query: { select: moduleId.value }
+    })
+  } else {
+    // Legacy: go to standalone module board
+    router.push({ name: 'module-board', params: { id: moduleId.value } })
+  }
 }
 
 function handleEndSession() {
-  // Navigate to campaign board view
-  if (campaign.value?.id) {
+  // Navigate back to modules tab or campaign board
+  if (isInDashboard.value && campaign.value?.id) {
+    // Dashboard context: go back to modules tab
+    router.push({
+      path: `/campaigns/${campaign.value.id}/dashboard/modules`,
+      query: { select: moduleId.value }
+    })
+  } else if (campaign.value?.id) {
+    // Legacy: go to campaign board
     router.push({ name: 'campaign-board', params: { id: campaign.value.id } })
   } else {
     // Fallback to campaigns list

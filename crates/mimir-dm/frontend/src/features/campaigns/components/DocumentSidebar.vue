@@ -1,8 +1,7 @@
 <template>
   <div class="document-sidebar">
     <div class="sidebar-header">
-      <h3 v-if="['active', 'concluding', 'completed'].includes(campaignStage)">Campaign Documents</h3>
-      <h3 v-else>Documents</h3>
+      <h3>Documents</h3>
       <button
         v-if="documents.length > 0"
         class="export-btn"
@@ -19,116 +18,36 @@
         Loading documents...
       </div>
       
-      <div v-else-if="['active', 'concluding', 'completed'].includes(campaignStage)" class="active-documents">
-        <!-- Simple list for active/concluding/completed campaigns -->
-        <div class="document-items">
-          <div 
-            v-for="doc in getAllDocumentsForActive()" 
-            :key="doc.templateId"
-            class="document-item"
-            :class="{ 
-              selected: selectedDocument?.template_id === doc.templateId
-            }"
-          >
-            <!-- Edit icon on the left -->
-            <img 
-              :src="getEditIcon()" 
-              alt="Edit"
-              class="document-icon"
-              @click="handleDocumentClick(doc)"
-              title="Edit document"
-            />
-            
-            <!-- Document title -->
-            <span 
-              class="document-title"
-              @click="handleDocumentClick(doc)"
-            >
-              {{ doc.title }}
-            </span>
-            
-            <!-- Checkmark on the right for completion -->
-            <button 
-              v-if="doc.instance"
-              class="completion-checkbox"
-              :class="{ checked: doc.instance?.completed_at }"
-              @click.stop="toggleDocumentCompletion(doc)"
-              :title="doc.instance?.completed_at ? 'Mark as incomplete' : 'Mark as complete'"
-            >
-              <span v-if="doc.instance?.completed_at">✓</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      
+      <!-- Document list grouped by stage with dividers -->
       <div v-else class="stage-groups">
-        <!-- Dynamic Stage Documents from Board Configuration -->
-        <div 
-          v-for="stage in boardConfig?.stages || []" 
-          :key="stage.key"
-          v-show="isStageAccessible(stage.key) || stage.key === 'concept'"
-          class="stage-group"
-        >
-          <div class="stage-header">
-            <h4>{{ stage.display_name }} ({{ getStageDocuments(stage.key).completed }}/{{ getStageDocuments(stage.key).total }})</h4>
-            <div class="progress-bar">
-              <div 
-                class="progress-fill" 
-                :style="{ width: getStageDocuments(stage.key).percentage + '%' }"
-              ></div>
+        <template v-for="(stage, index) in stagesWithDocuments" :key="stage.key">
+          <div class="stage-group">
+            <div class="stage-header">
+              <h4>{{ stage.display_name }}</h4>
             </div>
-          </div>
-          <div class="document-items">
-            <div 
-              v-for="doc in getStageDocuments(stage.key).documents" 
-              :key="doc.templateId"
-              class="document-item"
-              :class="{ 
-                selected: selectedDocument?.template_id === doc.templateId,
-                completed: doc.instance?.completed_at,
-                locked: !isStageAccessible(stage.key)
-              }"
-            >
-              <!-- Edit icon on the left (always visible, clickable) -->
-              <img 
-                v-if="!isStageAccessible(stage.key)"
-                :src="getLockedIcon()" 
-                alt="Locked"
-                class="document-icon locked"
-                title="Stage not yet accessible"
-              />
-              <img 
-                v-else
-                :src="getEditIcon()" 
-                alt="Edit"
-                class="document-icon"
-                @click="handleDocumentClick(doc)"
-                title="Edit document"
-              />
-              
-              <!-- Document title (also clickable) -->
-              <span 
-                class="document-title" 
-                :class="{ optional: !doc.required }"
+            <div class="document-items">
+              <div
+                v-for="doc in getStageDocuments(stage.key).documents"
+                :key="doc.templateId"
+                class="document-item"
+                :class="{ selected: selectedDocument?.template_id === doc.templateId }"
                 @click="handleDocumentClick(doc)"
               >
-                {{ doc.title }}
-                <span v-if="!doc.required" class="optional-label">(Optional)</span>
-              </span>
-              
-              <!-- Checkmark on the right for completion -->
-              <button 
-                v-if="doc.instance && isStageAccessible(stage.key)"
-                class="completion-checkbox"
-                :class="{ checked: doc.instance?.completed_at }"
-                @click.stop="toggleDocumentCompletion(doc)"
-                :title="doc.instance?.completed_at ? 'Mark as incomplete' : 'Mark as complete'"
-              >
-                <span v-if="doc.instance?.completed_at">✓</span>
-              </button>
+                <img
+                  :src="getEditIcon()"
+                  alt="Edit"
+                  class="document-icon"
+                />
+                <span class="document-title">
+                  {{ doc.title }}
+                  <span v-if="!doc.required" class="optional-label">(Optional)</span>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+          <!-- Divider between stage groups -->
+          <hr v-if="index < stagesWithDocuments.length - 1" class="stage-divider" />
+        </template>
       </div>
     </div>
 
@@ -152,11 +71,8 @@ import CampaignExportDialog from '../../../components/print/CampaignExportDialog
 
 // Import icon images
 import lightEditIcon from '../../../assets/images/light-edit.png'
-import lightLockedIcon from '../../../assets/images/light-locked.png'
 import darkEditIcon from '../../../assets/images/dark-edit.png'
-import darkLockedIcon from '../../../assets/images/dark-locked.png'
 import hyperEditIcon from '../../../assets/images/hyper-edit.png'
-import hyperLockedIcon from '../../../assets/images/hyper-locked.png'
 
 const props = defineProps<{
   campaignId: number
@@ -211,21 +127,20 @@ const themeStore = useThemeStore()
 
 // Icon mapping
 const iconMap = {
-  light: {
-    edit: lightEditIcon,
-    locked: lightLockedIcon
-  },
-  dark: {
-    edit: darkEditIcon,
-    locked: darkLockedIcon
-  },
-  hyper: {
-    edit: hyperEditIcon,
-    locked: hyperLockedIcon
-  }
+  light: { edit: lightEditIcon },
+  dark: { edit: darkEditIcon },
+  hyper: { edit: hyperEditIcon }
 }
 
 // Stage documents are now computed dynamically from board configuration
+
+// Filter stages to only those with documents
+const stagesWithDocuments = computed(() => {
+  if (!props.boardConfig?.stages) return []
+  return props.boardConfig.stages.filter((stage: any) =>
+    stage.required_documents.length > 0 || stage.optional_documents.length > 0
+  )
+})
 
 // Get documents for a specific stage
 const getStageDocuments = (stage: string) => {
@@ -255,25 +170,10 @@ const getStageDocuments = (stage: string) => {
   }
 }
 
-// Check if a stage is accessible based on campaign progress
-const isStageAccessible = (stage: string) => {
-  if (!props.boardConfig) return false
-  const stageOrder = props.boardConfig.stages.map((s: any) => s.key)
-  const currentIndex = stageOrder.indexOf(props.campaignStage)
-  const checkIndex = stageOrder.indexOf(stage)
-  return checkIndex <= currentIndex
-}
-
 // Get edit icon for current theme
 const getEditIcon = (): string => {
   const theme = themeStore.currentTheme as 'light' | 'dark' | 'hyper'
   return iconMap[theme]?.edit || lightEditIcon
-}
-
-// Get locked icon for current theme
-const getLockedIcon = (): string => {
-  const theme = themeStore.currentTheme as 'light' | 'dark' | 'hyper'
-  return iconMap[theme]?.locked || lightLockedIcon
 }
 
 // Get which stage a template belongs to
@@ -329,20 +229,9 @@ const loadDocuments = async () => {
 // Handle document click
 const handleDocumentClick = async (doc: any) => {
   debugDocument('click', { doc, stage: getDocumentStage(doc.templateId) })
-  const stage = getDocumentStage(doc.templateId)
-  
-  // Check if stage is accessible
-  if (!isStageAccessible(stage)) {
-    debugDocument('stage-locked', { stage })
-    return
-  }
-  
+
   // If document doesn't exist in database, just create a simple object pointing to the file
   if (!doc.instance) {
-    // The file already exists on disk, just point to it
-    const filePath = `${props.boardConfig.stages[0].key === 'concept' ? 
-      props.campaignId : props.campaignId}/${doc.templateId.replace(/_/g, '-')}.md`
-    
     // Get campaign info to build the full path
     const campaignResponse = await invoke<{ success: boolean; data: any }>('get_campaign', {
       id: props.campaignId
@@ -355,7 +244,7 @@ const handleDocumentClick = async (doc: any) => {
         template_id: doc.templateId,
         document_type: doc.templateId.replace(/-/g, '_'),
         title: doc.title,
-        file_path: `${campaignResponse.data.directory_path}/${doc.templateId.replace(/_/g, '-')}.md`,
+        file_path: `${campaignResponse.data.directory_path}/${doc.templateId}.md`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         completed_at: null,
@@ -486,5 +375,110 @@ onMounted(() => {
 .export-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Document content area */
+.document-content {
+  padding: var(--spacing-sm, 8px);
+}
+
+/* Stage groups with dividers */
+.stage-groups {
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-group {
+  padding-bottom: var(--spacing-sm, 8px);
+}
+
+.stage-group:last-of-type {
+  padding-bottom: 0;
+}
+
+.stage-header {
+  margin-bottom: var(--spacing-xs, 4px);
+}
+
+.stage-header h4 {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Subtle divider between stage groups */
+.stage-divider {
+  border: none;
+  border-top: 1px solid var(--color-border, #333);
+  margin: var(--spacing-sm, 8px) 0;
+  opacity: 0.5;
+}
+
+/* Document items */
+.document-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.document-item:hover {
+  background: var(--color-surface-variant, #252525);
+}
+
+.document-item.selected {
+  background: var(--color-primary-900, #1e3a5f);
+}
+
+.document-item.completed .document-title {
+  color: var(--color-text-muted, #888);
+}
+
+.document-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.document-title {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--color-text, #e0e0e0);
+}
+
+.document-title.optional {
+  font-style: italic;
+}
+
+.optional-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #888);
+  margin-left: var(--spacing-xs, 4px);
+}
+
+/* Loading state */
+.loading-state {
+  padding: var(--spacing-lg, 16px);
+  text-align: center;
+  color: var(--color-text-muted, #888);
+  font-size: 0.875rem;
+}
+
+/* Active documents (simplified list) */
+.active-documents .document-items {
+  gap: var(--spacing-xs, 4px);
 }
 </style>

@@ -1,13 +1,13 @@
 ---
-id: ux-quick-wins-reduce-friction-in
+id: kebab-case-campaign-directory
 level: task
-title: "UX Quick Wins: Reduce Friction in Common Actions"
-short_code: "MIMIR-T-0285"
-created_at: 2026-01-03T13:57:42.447798+00:00
-updated_at: 2026-01-03T13:57:42.447798+00:00
+title: "Kebab-case campaign directory defaults"
+short_code: "MIMIR-T-0295"
+created_at: 2026-01-03T14:19:06.896117+00:00
+updated_at: 2026-01-03T14:19:06.896117+00:00
 parent: MIMIR-I-0034
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -19,46 +19,50 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0034
 ---
 
-# UX Quick Wins: Reduce Friction in Common Actions
+# Kebab-case campaign directory defaults
 
-## Overview
+## Problem
 
-Low-effort, high-impact improvements to reduce friction in routine tasks.
+Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
 
-## Items
+## Solution
 
-### 1. Kebab-case campaign directory default
-- **Current:** Auto-generated directory uses exact campaign name
-- **Fix:** Convert to kebab-case (e.g., "The Dragon's Lair" → "the-dragons-lair")
-- **File:** `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-- **Effort:** 30 minutes
+Convert campaign name to kebab-case for directory default:
+- "The Dragon's Lair" → "the-dragons-lair"
+- "Rise of Tiamat" → "rise-of-tiamat"
 
-### 2. Collapse stage guidance after first visit
-- **Current:** Stage landing always shows full guidance text
-- **Fix:** Collapse guidance to summary after user has seen it; expand on click
-- **Files:** `StageLandingView.vue`, `StageGuidance.vue`
-- **Effort:** 2-3 hours
-- **Priority:** HIGH - this is a big friction point
+## Files to Modify
 
-## Design Principle
+- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
 
-**Ceremony for milestones, efficiency for routine.**
+## Implementation
 
-## Priority
+```javascript
+function toKebabCase(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+```
 
-High - these are quick wins that compound into significant friction reduction
+## Effort
 
-## Removed Items (already implemented or user declined)
+30 minutes
 
-- Auto-generate directory: Already implemented
-- Auto-close modals: Already navigates to landing page on success
-- Remember last campaign: User prefers explicit campaign selection
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [ ] Directory name is kebab-cased from campaign name
+- [ ] Special characters removed
+- [ ] Leading/trailing hyphens stripped
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[Parent Initiative]]
+[[MIMIR-I-0034]]
 
 ## Objective **[REQUIRED]**
 
@@ -167,8 +171,4 @@ High - these are quick wins that compound into significant friction reduction
 
 ## Status Updates **[REQUIRED]**
 
-**2026-01-03**: Items split into separate tasks:
-- Item 1 (Kebab-case) → T-0295
-- Item 2 (Collapse guidance) → T-0294
-
-Marking as completed - work tracked in child tasks.
+*To be added during implementation*

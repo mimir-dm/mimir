@@ -23,17 +23,44 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../../features/campaigns/views/CampaignDetailView.vue'),
     props: true
   },
+  // Dashboard Routes
   {
-    path: '/campaigns/:id/board',
-    name: 'campaign-board',
-    component: () => import('../../features/campaigns/views/CampaignBoardView.vue'),
-    props: true
-  },
-  {
-    path: '/campaigns/:id/modules',
-    name: 'campaign-modules',
-    component: () => import('../../features/modules/views/ModuleListView.vue'),
-    props: true
+    path: '/campaigns/:id/dashboard',
+    component: () => import('../../features/campaigns/views/CampaignDashboardView.vue'),
+    props: true,
+    children: [
+      {
+        path: '',
+        redirect: to => `/campaigns/${to.params.id}/dashboard/campaign`
+      },
+      {
+        path: 'campaign',
+        name: 'dashboard-campaign',
+        component: () => import('../../features/campaigns/components/dashboard/WorldTab.vue')
+      },
+      {
+        path: 'modules',
+        name: 'dashboard-modules',
+        component: () => import('../../features/campaigns/components/dashboard/ModulesTab.vue')
+      },
+      {
+        path: 'npcs',
+        name: 'dashboard-npcs',
+        component: () => import('../../features/campaigns/components/dashboard/NPCsTab.vue')
+      },
+      {
+        path: 'pcs',
+        name: 'dashboard-pcs',
+        component: () => import('../../features/campaigns/components/dashboard/PCsTab.vue')
+      },
+      {
+        path: 'modules/:moduleId/play',
+        name: 'dashboard-play',
+        component: () => import('../../features/modules/views/ModulePlayView.vue'),
+        props: true,
+        meta: { hideTabBar: true, fullScreen: true }
+      },
+    ]
   },
   {
     path: '/modules/:id',

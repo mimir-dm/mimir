@@ -11,7 +11,7 @@ archived: false
 
 tags:
   - "#task"
-  - "#phase/pending"
+  - "#phase/completed"
 
 status: pending
 estimated_complexity: M

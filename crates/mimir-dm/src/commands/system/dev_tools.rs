@@ -3,6 +3,7 @@
 //! Provides Tauri commands for development-only functionality such as
 //! test data management and debugging features.
 
+use crate::app_init::AppPaths;
 use crate::state::AppState;
 use crate::types::ApiError;
 use crate::{
@@ -60,24 +61,24 @@ pub async fn remove_dev_test_book(
 
 /// Reseed development test data.
 ///
-/// Deletes DB, re-runs migrations, and seeds fresh.
+/// Truncates all tables and reseeds fresh data using the existing connection pool.
 /// Only works in development mode.
 #[tauri::command]
 pub async fn reseed_dev_data(state: State<'_, AppState>) -> Result<ApiResponse<()>, ApiError> {
-    use diesel::{prelude::*, SqliteConnection};
+    use diesel::prelude::*;
     use directories::UserDirs;
-    use mimir_dm_core::{run_migrations, seed::seed_dev_data};
+    use mimir_dm_core::seed::seed_dev_data;
 
     if !is_dev_build() {
         return Ok(ApiResponse::error("Not in development mode".to_string()));
     }
 
-    // Get paths
+    // Get paths - use correct folder name based on dev/release mode
     let user_dirs = UserDirs::new().ok_or_else(|| ApiError::BadRequest("Cannot get user dirs".into()))?;
     let campaigns_dir = user_dirs
         .document_dir()
         .unwrap_or_else(|| user_dirs.home_dir())
-        .join("Mimir Campaigns");
+        .join(AppPaths::campaigns_folder_name());
 
     let campaigns_path = campaigns_dir
         .to_str()
@@ -89,41 +90,49 @@ pub async fn reseed_dev_data(state: State<'_, AppState>) -> Result<ApiResponse<(
         .to_str()
         .ok_or_else(|| ApiError::BadRequest("Invalid data path".into()))?
         .to_string();
-    let db_path = state.paths.data_dir.join("mimir.db");
-    let db_url = format!("sqlite://{}", db_path.display());
 
-    // 1. Delete campaigns directory
+    // 1. Delete campaigns directory on disk
     if campaigns_dir.exists() {
         fs::remove_dir_all(&campaigns_dir)
             .map_err(|e| ApiError::Database(format!("Failed to remove campaigns dir: {}", e)))?;
         info!("Removed campaigns directory");
     }
 
-    // 2. Delete database file
-    if db_path.exists() {
-        fs::remove_file(&db_path)
-            .map_err(|e| ApiError::Database(format!("Failed to remove database: {}", e)))?;
-        info!("Removed database file");
+    // 2. Use the existing connection pool to truncate and reseed
+    let mut conn = state.db.get_connection()
+        .map_err(|e| ApiError::Database(format!("Failed to get connection: {}", e)))?;
+
+    // Truncate all data tables (in reverse dependency order to avoid FK violations)
+    // Note: We don't touch __diesel_schema_migrations or template_documents
+    let tables_to_truncate = [
+        "session_notes",
+        "session_encounters",
+        "sessions",
+        "documents",
+        "workflow_cards",
+        "modules",
+        "campaign_characters",
+        "campaigns",
+        "characters",
+        "players",
+    ];
+
+    for table in tables_to_truncate {
+        // Ignore errors for tables that don't exist
+        if let Err(e) = diesel::sql_query(format!("DELETE FROM {}", table)).execute(&mut *conn) {
+            info!("Skipping table {} (may not exist): {}", table, e);
+        }
+        // Reset auto-increment counter
+        diesel::sql_query(format!("DELETE FROM sqlite_sequence WHERE name='{}'", table))
+            .execute(&mut *conn)
+            .ok(); // Ignore errors - table might not have auto-increment
     }
+    info!("Truncated data tables");
 
-    // 3. Create fresh connection, run migrations, seed templates, and seed dev data
-    {
-        let mut conn = SqliteConnection::establish(&db_url)
-            .map_err(|e| ApiError::Database(format!("Failed to connect: {}", e)))?;
-
-        run_migrations(&mut conn)
-            .map_err(|e| ApiError::Database(format!("Failed to migrate: {}", e)))?;
-        info!("Ran migrations");
-
-        // Seed templates (required for campaign/module document creation)
-        mimir_dm_core::seed::template_seeder::seed_templates(&mut conn)
-            .map_err(|e| ApiError::Database(format!("Failed to seed templates: {}", e)))?;
-        info!("Seeded templates");
-
-        seed_dev_data(&mut conn, &campaigns_path, &data_path)
-            .map_err(|e| ApiError::Database(format!("Failed to seed: {}", e)))?;
-        info!("Reseeded dev data");
-    }
+    // 3. Reseed dev data
+    seed_dev_data(&mut conn, &campaigns_path, &data_path)
+        .map_err(|e| ApiError::Database(format!("Failed to seed: {}", e)))?;
+    info!("Reseeded dev data");
 
     Ok(ApiResponse::success(()))
 }
