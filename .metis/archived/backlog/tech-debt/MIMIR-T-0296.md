@@ -7,7 +7,7 @@ created_at: 2026-01-03T14:55:41.247966+00:00
 updated_at: 2026-01-03T18:57:42.835274+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -46,6 +46,8 @@ Rather than patching the existing seeder, consider:
 3. **Decouple from specific templates** - Make seeder resilient to template changes
 4. **Add module NPCs** - Create NPC characters and link them to modules
 5. **Add module items** - Add sample items to modules
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

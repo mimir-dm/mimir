@@ -1,13 +1,13 @@
 ---
-id: collapse-stage-guidance-after
+id: ux-quick-wins-reduce-friction-in
 level: task
-title: "Collapse stage guidance after first visit"
-short_code: "MIMIR-T-0294"
-created_at: 2026-01-03T14:19:06.760479+00:00
-updated_at: 2026-01-03T14:19:06.760479+00:00
+title: "UX Quick Wins: Reduce Friction in Common Actions"
+short_code: "MIMIR-T-0285"
+created_at: 2026-01-03T13:57:42.447798+00:00
+updated_at: 2026-01-03T13:57:42.447798+00:00
 parent: MIMIR-I-0034
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -19,40 +19,46 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0034
 ---
 
-# Collapse stage guidance after first visit
+# UX Quick Wins: Reduce Friction in Common Actions
 
-## Problem
+## Overview
 
-Stage landing pages always show full guidance text, creating cognitive overload for users who have already read it.
+Low-effort, high-impact improvements to reduce friction in routine tasks.
 
-## Solution
+## Items
 
-- Track which stages the user has visited (localStorage or user preferences)
-- On subsequent visits, show collapsed summary with "Show full guidance" toggle
-- First visit shows full guidance expanded
+### 1. Kebab-case campaign directory default
+- **Current:** Auto-generated directory uses exact campaign name
+- **Fix:** Convert to kebab-case (e.g., "The Dragon's Lair" → "the-dragons-lair")
+- **File:** `frontend/src/features/campaigns/views/CampaignCreateView.vue`
+- **Effort:** 30 minutes
 
-## Files to Modify
+### 2. Collapse stage guidance after first visit
+- **Current:** Stage landing always shows full guidance text
+- **Fix:** Collapse guidance to summary after user has seen it; expand on click
+- **Files:** `StageLandingView.vue`, `StageGuidance.vue`
+- **Effort:** 2-3 hours
+- **Priority:** HIGH - this is a big friction point
 
-- `frontend/src/features/campaigns/components/StageLanding/StageGuidance.vue`
-- `frontend/src/features/campaigns/components/StageLandingView.vue`
-- Possibly add to `sharedContext.ts` or new localStorage helper
+## Design Principle
 
-## Effort
+**Ceremony for milestones, efficiency for routine.**
 
-2-3 hours
+## Priority
 
-## Acceptance Criteria
+High - these are quick wins that compound into significant friction reduction
 
-- [ ] First visit to a stage shows full guidance
-- [ ] Subsequent visits show collapsed summary
-- [ ] User can expand/collapse guidance manually
-- [ ] State persists across sessions
+## Removed Items (already implemented or user declined)
+
+- Auto-generate directory: Already implemented
+- Auto-close modals: Already navigates to landing page on success
+- Remember last campaign: User prefers explicit campaign selection
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
@@ -91,6 +97,8 @@ Stage landing pages always show full guidance text, creating cognitive overload 
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
@@ -161,4 +169,8 @@ Stage landing pages always show full guidance text, creating cognitive overload 
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+**2026-01-03**: Items split into separate tasks:
+- Item 1 (Kebab-case) → T-0295
+- Item 2 (Collapse guidance) → T-0294
+
+Marking as completed - work tracked in child tasks.

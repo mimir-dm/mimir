@@ -82,6 +82,7 @@
   overflow-y: auto;
   padding: var(--spacing-xl);
   background-color: var(--color-surface);
+  text-align: left;
 }
 
 /* ProseMirror Editor Styles */

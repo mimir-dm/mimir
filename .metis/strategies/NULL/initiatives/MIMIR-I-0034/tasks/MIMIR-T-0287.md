@@ -23,51 +23,124 @@ initiative_id: MIMIR-I-0034
 
 ## Overview
 
-Flatten the navigation hierarchy by unifying campaign and module views into a single dashboard.
+Flatten navigation by creating a unified tabbed dashboard that replaces the current multi-route campaign/module architecture.
 
-## Current Structure (Deep)
+**Current Flow:** Home → Campaigns → Campaign Board → Modules → Module Board → Play
+**Target Flow:** Home → Campaign Dashboard (with tabs: Overview, Modules, Characters, World, Session)
+
+## User Decisions
+- **Approach**: Full redesign (build new, then swap routes)
+- **Module detail**: Full-width takeover (replaces tab content area)
+- **MVP scope**: Full tab structure (all 5 tabs)
+
+---
+
+## File Structure
+
 ```
-Home → Campaigns → Campaign → Board → Modules → Module → Board → Play
+frontend/src/features/campaigns/
+├── views/
+│   └── CampaignDashboardView.vue       # New main dashboard
+├── components/dashboard/
+│   ├── DashboardTabs.vue               # Tab navigation
+│   ├── OverviewTab.vue                 # Stage info, quick stats
+│   ├── ModulesTab.vue                  # Module list
+│   ├── ModuleDetailPane.vue            # Full-width module takeover
+│   ├── CharactersTab.vue               # Campaign characters
+│   ├── WorldTab.vue                    # Documents (reuses DocumentSidebar)
+│   └── SessionTab.vue                  # Play mode launcher
+└── composables/
+    └── useDashboardState.ts            # Tab/selection state
 ```
 
-## Proposed Structure (Flat)
+---
+
+## Implementation Phases
+
+### Phase 1: Foundation (2-3 days)
+Create dashboard shell with tab navigation.
+
+**Files:**
+- `composables/useDashboardState.ts` - State management
+- `components/dashboard/DashboardTabs.vue` - Tab bar component
+- `views/CampaignDashboardView.vue` - Main view with router-view
+- `app/router/index.ts` - Add new routes
+
+**Routes to add:**
 ```
-Home → Campaign Dashboard (auto-redirect to last used)
-
-Campaign Dashboard
-├── [Tab] Overview (current stage, recent activity)
-├── [Tab] Modules (inline list + slide-over detail)
-├── [Tab] Characters (inline management)
-├── [Tab] World (documents, factions, regions)
-└── [Tab] Session (play mode - full screen takeover)
+/campaigns/:id/dashboard           -> CampaignDashboardView
+/campaigns/:id/dashboard/overview  -> OverviewTab
+/campaigns/:id/dashboard/modules   -> ModulesTab
+/campaigns/:id/dashboard/modules/:moduleId -> ModuleDetailPane
+/campaigns/:id/dashboard/characters -> CharactersTab
+/campaigns/:id/dashboard/world     -> WorldTab
+/campaigns/:id/dashboard/session   -> SessionTab
+/campaigns/:id/dashboard/session/:moduleId/play -> ModulePlayView (full-screen)
 ```
 
-## Key Changes
+### Phase 2: Overview Tab (1-2 days)
+**Reuses:** StageHeader, StageTransitionCard
+**Shows:** Current stage, quick stats, recent activity, campaign summary
 
-1. **Eliminate intermediate list views** - go directly to dashboards
-2. **Slide-over panels** instead of route changes for detail views
-3. **Full-screen takeover** only for Play Mode (actual game session)
-4. **Persistent sidebar** showing campaign structure (collapsible)
+### Phase 3: World Tab (1 day)
+**Reuses:** DocumentSidebar, DocumentEditor
+**Layout:** Two-panel (sidebar + editor)
 
-## Benefits
+### Phase 4: Modules Tab - List (1-2 days)
+**Reuses:** ModulesTable, CreateModuleModal
+**Behavior:** Click module → show ModuleDetailPane
 
-- User stays in campaign context
-- Modules feel like "drilling in" not "going somewhere else"
-- Reduces two-board confusion (campaign vs module)
+### Phase 5: Modules Tab - Detail (2-3 days) ⚠️ Highest complexity
+**Reuses:** ModuleStageLandingView, ModuleDocumentSidebar, DocumentEditor
+**Behavior:** Full-width takeover, back button returns to list
 
-## Files to Modify
+### Phase 6: Characters Tab (1-2 days)
+**Reuses:** Character components from features/characters/
+**Shows:** PCs/NPCs filtered by campaign, inline creation
 
-- `frontend/src/features/campaigns/views/CampaignBoardView.vue`
-- `frontend/src/app/router/index.ts`
-- New slide-over panel components
+### Phase 7: Session Launcher (1 day)
+**Shows:** Ready/active modules, "Start Session" button
 
-## Effort
+### Phase 8: Play Mode Integration (2 days)
+**Reuses:** ModulePlayView
+**Behavior:** Hides tabs, "End Session" returns to dashboard
 
-3-4 weeks - significant architecture change
+### Phase 9: Route Migration (1 day)
+```
+/campaigns/:id/board → /campaigns/:id/dashboard/world
+/campaigns/:id/modules → /campaigns/:id/dashboard/modules
+/modules/:id/board → /campaigns/:campaignId/dashboard/modules/:id
+```
 
-## Priority
+### Phase 10: Cleanup (1 day)
+Remove: CampaignBoardView.vue, ModuleBoardView.vue, ModuleListView.vue
 
-Low - high impact but high effort; consider after quick wins prove value
+---
+
+## Key Architecture Decisions
+
+1. **Nested routes** for URL state and browser history
+2. **Full-width takeover** via CSS (tabs remain visible, content expands)
+3. **Component reuse** - wrap existing components, don't copy
+4. **localStorage** for tab state per campaign
+5. **Phased rollout** - new routes first, redirects second, cleanup last
+
+---
+
+## Estimated Timeline: 13-18 days
+
+| Phase | Days | Complexity |
+|-------|------|------------|
+| 1. Foundation | 2-3 | Medium |
+| 2. Overview | 1-2 | Low-Medium |
+| 3. World | 1 | Low |
+| 4. Modules List | 1-2 | Medium |
+| 5. Module Detail | 2-3 | **High** |
+| 6. Characters | 1-2 | Medium |
+| 7. Session Launcher | 1 | Low |
+| 8. Play Mode | 2 | Medium-High |
+| 9. Migration | 1 | Low |
+| 10. Cleanup | 1 | Low |
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 

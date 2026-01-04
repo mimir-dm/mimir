@@ -201,14 +201,17 @@ const saveStatusText = computed(() => {
 
 // Load document content
 const loadDocument = async () => {
-  if (!props.document?.file_path) return
-  
+  if (!props.document?.file_path) {
+    console.warn('No file_path for document:', props.document)
+    return
+  }
+
   try {
-    const response = await invoke<{ data: string }>('read_document_file', {
+    const response = await invoke<{ success: boolean; data?: string; error?: string }>('read_document_file', {
       filePath: props.document.file_path
     })
-    
-    if (response.data) {
+
+    if (response.success && response.data) {
       // Set markdown content - Tiptap will parse it
       if (editor.value) {
         editor.value.commands.setContent(response.data, { contentType: 'markdown' })
@@ -216,8 +219,11 @@ const loadDocument = async () => {
         // Store content to set later
         pendingContent.value = response.data
       }
+    } else {
+      console.error('Failed to load document:', response.error || 'Unknown error', 'Path:', props.document.file_path)
     }
   } catch (e) {
+    console.error('Error loading document:', e, 'Path:', props.document.file_path)
   }
 }
 
