@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_vehicles;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -42,7 +43,8 @@ pub struct Vehicle {
     pub weapon: Option<Vec<VehicleWeapon>>,
 
     // Description entries
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 
     // SRD name
     pub srd: Option<String>,
@@ -73,7 +75,8 @@ pub struct Speed {
 pub struct VehicleWeapon {
     pub name: String,
     pub count: Option<i32>,
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

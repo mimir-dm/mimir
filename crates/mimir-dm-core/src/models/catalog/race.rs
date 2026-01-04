@@ -1,9 +1,9 @@
 //! D&D 5e Race models for catalog
 
+use super::types::{AbilityBonus, DamageModifier, Entry, Image, ProficiencyItem};
 use crate::schema::catalog_races;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 /// A player character race
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +18,7 @@ pub struct Race {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub speed: Option<serde_json::Value>, // Can be number or Speed object
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ability: Option<Vec<serde_json::Value>>, // Can be various formats
+    pub ability: Option<Vec<AbilityBonus>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub age: Option<Age>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -26,25 +26,25 @@ pub struct Race {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trait_tags: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub language_proficiencies: Option<Vec<serde_json::Value>>,
+    pub language_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub skill_proficiencies: Option<Vec<serde_json::Value>>,
+    pub skill_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub weapon_proficiencies: Option<Vec<serde_json::Value>>,
+    pub weapon_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub armor_proficiencies: Option<Vec<serde_json::Value>>,
+    pub armor_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tool_proficiencies: Option<Vec<serde_json::Value>>,
+    pub tool_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub resist: Option<Vec<serde_json::Value>>, // Can be string or object with choose
+    pub resist: Option<Vec<DamageModifier>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub immune: Option<Vec<serde_json::Value>>, // Can be string or object with choose
+    pub immune: Option<Vec<DamageModifier>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vulnerable: Option<Vec<serde_json::Value>>, // Can be string or object with choose
+    pub vulnerable: Option<Vec<DamageModifier>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub condition_immune: Option<Vec<String>>,
     #[serde(default)]
-    pub entries: Vec<Value>,
+    pub entries: Vec<Entry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "soundClip")]
     pub sound_clip: Option<SoundClip>,
@@ -79,27 +79,27 @@ pub struct Subrace {
     pub race_name: String,
     pub race_source: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ability: Option<Vec<serde_json::Value>>, // Can be various formats
+    pub ability: Option<Vec<AbilityBonus>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub speed: Option<serde_json::Value>, // Can be number or Speed object
     #[serde(skip_serializing_if = "Option::is_none")]
     pub darkvision: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub resist: Option<Vec<serde_json::Value>>, // Can be string or object with choose
+    pub resist: Option<Vec<DamageModifier>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trait_tags: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub language_proficiencies: Option<Vec<serde_json::Value>>,
+    pub language_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub skill_proficiencies: Option<Vec<serde_json::Value>>,
+    pub skill_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub weapon_proficiencies: Option<Vec<serde_json::Value>>,
+    pub weapon_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub armor_proficiencies: Option<Vec<serde_json::Value>>,
+    pub armor_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tool_proficiencies: Option<Vec<serde_json::Value>>,
+    pub tool_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub entries: Vec<Value>,
+    pub entries: Vec<Entry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub overwrite: Option<Overwrite>,
 }
@@ -194,9 +194,9 @@ pub struct RaceFluff {
     pub name: String,
     pub source: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub entries: Option<Vec<Value>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub images: Option<Vec<Value>>,
+    pub entries: Option<Vec<Entry>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub images: Vec<Image>,
 }
 
 /// Container for race fluff data
@@ -296,63 +296,59 @@ impl From<&Subrace> for RaceSummary {
     }
 }
 
-fn format_ability_bonuses(ability: Option<&Vec<serde_json::Value>>) -> String {
+fn format_ability_bonuses(ability: Option<&Vec<AbilityBonus>>) -> String {
+    use super::types::AbilityBonus;
+
     match ability {
         Some(scores) => {
             scores
                 .iter()
                 .filter_map(|val| {
-                    if let serde_json::Value::Object(obj) = val {
-                        let mut parts = Vec::new();
+                    match val {
+                        AbilityBonus::Fixed(bonuses) => {
+                            let mut parts = Vec::new();
 
-                        // Check each ability score
-                        if let Some(v) = obj.get("str").and_then(|v| v.as_i64()) {
-                            parts.push(format!("STR +{}", v));
-                        }
-                        if let Some(v) = obj.get("dex").and_then(|v| v.as_i64()) {
-                            parts.push(format!("DEX +{}", v));
-                        }
-                        if let Some(v) = obj.get("con").and_then(|v| v.as_i64()) {
-                            parts.push(format!("CON +{}", v));
-                        }
-                        if let Some(v) = obj.get("int").and_then(|v| v.as_i64()) {
-                            parts.push(format!("INT +{}", v));
-                        }
-                        if let Some(v) = obj.get("wis").and_then(|v| v.as_i64()) {
-                            parts.push(format!("WIS +{}", v));
-                        }
-                        if let Some(v) = obj.get("cha").and_then(|v| v.as_i64()) {
-                            parts.push(format!("CHA +{}", v));
-                        }
+                            // Check each ability score
+                            if let Some(v) = bonuses.get("str") {
+                                parts.push(format!("STR +{}", v));
+                            }
+                            if let Some(v) = bonuses.get("dex") {
+                                parts.push(format!("DEX +{}", v));
+                            }
+                            if let Some(v) = bonuses.get("con") {
+                                parts.push(format!("CON +{}", v));
+                            }
+                            if let Some(v) = bonuses.get("int") {
+                                parts.push(format!("INT +{}", v));
+                            }
+                            if let Some(v) = bonuses.get("wis") {
+                                parts.push(format!("WIS +{}", v));
+                            }
+                            if let Some(v) = bonuses.get("cha") {
+                                parts.push(format!("CHA +{}", v));
+                            }
 
-                        // Handle choose option
-                        if let Some(choose) = obj.get("choose") {
-                            if let Some(choose_obj) = choose.as_object() {
-                                let count = choose_obj
-                                    .get("count")
-                                    .and_then(|v| v.as_i64())
-                                    .unwrap_or(1);
-                                let from = choose_obj
-                                    .get("from")
-                                    .and_then(|v| v.as_array())
-                                    .map(|arr| {
-                                        arr.iter()
-                                            .filter_map(|v| v.as_str())
-                                            .collect::<Vec<_>>()
-                                            .join("/")
-                                    })
-                                    .unwrap_or_default();
-                                parts.push(format!("Choose {} from {}", count, from));
+                            if !parts.is_empty() {
+                                Some(parts.join(", "))
+                            } else {
+                                None
                             }
                         }
-
-                        if !parts.is_empty() {
-                            Some(parts.join(", "))
-                        } else {
-                            None
+                        AbilityBonus::Choice(choice) => {
+                            // Handle choose option
+                            let count = choice.count.unwrap_or(1);
+                            let from = choice
+                                .from
+                                .as_ref()
+                                .map(|arr| arr.join("/"))
+                                .or_else(|| {
+                                    choice.choose.as_ref().and_then(|c| {
+                                        c.from.as_ref().map(|arr| arr.join("/"))
+                                    })
+                                })
+                                .unwrap_or_default();
+                            Some(format!("Choose {} from {}", count, from))
                         }
-                    } else {
-                        None
                     }
                 })
                 .collect::<Vec<_>>()

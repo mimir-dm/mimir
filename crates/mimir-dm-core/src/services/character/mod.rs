@@ -1015,8 +1015,8 @@ fn build_item_description(item: &crate::models::catalog::item::Item) -> Option<S
     }
 
     // Add entries/description if present
-    if let Some(ref entries) = item.entries {
-        let text = extract_entries_text(entries);
+    if !item.entries.is_empty() {
+        let text = extract_entries_text_typed(&item.entries);
         if !text.is_empty() {
             parts.push(text);
         }
@@ -1029,25 +1029,25 @@ fn build_item_description(item: &crate::models::catalog::item::Item) -> Option<S
     }
 }
 
-/// Extract plain text from 5etools entries array
-fn extract_entries_text(entries: &[serde_json::Value]) -> String {
+/// Extract plain text from 5etools entries array (typed Entry version)
+fn extract_entries_text_typed(entries: &[crate::models::catalog::types::Entry]) -> String {
+    use crate::models::catalog::types::{Entry, EntryObject};
     let raw = entries
         .iter()
-        .filter_map(|entry| {
-            match entry {
-                serde_json::Value::String(s) => Some(s.clone()),
-                serde_json::Value::Object(obj) => {
-                    // Handle entry objects with "entries" field
-                    if let Some(serde_json::Value::Array(sub_entries)) = obj.get("entries") {
-                        Some(extract_entries_text(sub_entries))
-                    } else if let Some(serde_json::Value::String(s)) = obj.get("entry") {
-                        Some(s.clone())
+        .filter_map(|entry| match entry {
+            Entry::Text(s) => Some(s.clone()),
+            Entry::Object(obj) => match obj {
+                EntryObject::Entries { entries, .. } => Some(extract_entries_text_typed(entries)),
+                EntryObject::List { items, .. } => Some(extract_entries_text_typed(items)),
+                EntryObject::Item { name, entries, .. } => {
+                    if let Some(entries) = entries {
+                        Some(format!("{}: {}", name, extract_entries_text_typed(entries)))
                     } else {
-                        None
+                        Some(name.clone())
                     }
                 }
                 _ => None,
-            }
+            },
         })
         .collect::<Vec<_>>()
         .join(" ");

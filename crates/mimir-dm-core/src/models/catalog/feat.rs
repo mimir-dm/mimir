@@ -1,3 +1,7 @@
+use super::types::{
+    AbilityBonus, AdditionalSpells, DamageModifier, Entry, OtherSource, Prerequisite,
+    ProficiencyItem,
+};
 use crate::schema::catalog_feats;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -11,35 +15,35 @@ pub struct Feat {
     #[serde(default)]
     pub page: Option<u32>,
     #[serde(default)]
-    pub entries: Vec<serde_json::Value>,
+    pub entries: Vec<Entry>,
     #[serde(default)]
-    pub prerequisite: Option<Vec<serde_json::Value>>,
+    pub prerequisite: Option<Vec<Prerequisite>>,
     #[serde(default)]
-    pub ability: Option<Vec<serde_json::Value>>,
+    pub ability: Option<Vec<AbilityBonus>>,
     #[serde(default)]
-    pub skill_proficiencies: Option<Vec<serde_json::Value>>,
+    pub skill_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub language_proficiencies: Option<Vec<serde_json::Value>>,
+    pub language_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub tool_proficiencies: Option<Vec<serde_json::Value>>,
+    pub tool_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub weapon_proficiencies: Option<Vec<serde_json::Value>>,
+    pub weapon_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub armor_proficiencies: Option<Vec<serde_json::Value>>,
+    pub armor_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub saving_throw_proficiencies: Option<Vec<serde_json::Value>>,
+    pub saving_throw_proficiencies: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub expertise: Option<Vec<serde_json::Value>>,
+    pub expertise: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub resist: Option<Vec<serde_json::Value>>,
+    pub resist: Option<Vec<DamageModifier>>,
     #[serde(default)]
-    pub immune: Option<Vec<serde_json::Value>>,
+    pub immune: Option<Vec<DamageModifier>>,
     #[serde(default)]
-    pub senses: Option<Vec<serde_json::Value>>,
+    pub senses: Option<Vec<ProficiencyItem>>,
     #[serde(default)]
-    pub additional_spells: Option<Vec<serde_json::Value>>,
+    pub additional_spells: Option<Vec<AdditionalSpells>>,
     #[serde(default)]
-    pub other_sources: Option<Vec<serde_json::Value>>,
+    pub other_sources: Option<Vec<OtherSource>>,
 }
 
 /// Container for feat data from JSON files
@@ -63,54 +67,52 @@ pub struct FeatSummary {
 
 impl From<&Feat> for FeatSummary {
     fn from(feat: &Feat) -> Self {
+        use super::types::{Prerequisite, PrerequisiteLevel};
+
         // Extract prerequisites as a simple string
         let prerequisites = feat.prerequisite.as_ref().and_then(|prereqs| {
             if prereqs.is_empty() {
                 None
             } else {
-                // Try to format prerequisites in a readable way
                 let mut prereq_parts = Vec::new();
                 for prereq in prereqs {
-                    if let Some(obj) = prereq.as_object() {
-                        // Check for ability requirements
-                        if let Some(ability) = obj.get("ability") {
-                            if let Some(ability_arr) = ability.as_array() {
-                                for ab in ability_arr {
-                                    if let Some(ab_obj) = ab.as_object() {
-                                        for (stat, value) in ab_obj {
-                                            if let Some(val) = value.as_u64() {
-                                                prereq_parts.push(format!(
-                                                    "{} {}",
-                                                    stat.to_uppercase(),
-                                                    val
-                                                ));
-                                            }
+                    match prereq {
+                        Prerequisite::Text(s) => prereq_parts.push(s.clone()),
+                        Prerequisite::Object(obj) => {
+                            // Extract ability requirements
+                            if let Some(abilities) = &obj.ability {
+                                for ab in abilities {
+                                    for (stat, val) in ab {
+                                        prereq_parts
+                                            .push(format!("{} {}", stat.to_uppercase(), val));
+                                    }
+                                }
+                            }
+                            // Extract race requirements
+                            if let Some(races) = &obj.race {
+                                for r in races {
+                                    prereq_parts.push(r.name.clone());
+                                }
+                            }
+                            // Extract level requirements
+                            if let Some(level) = &obj.level {
+                                match level {
+                                    PrerequisiteLevel::Number(n) => {
+                                        prereq_parts.push(format!("Level {}", n))
+                                    }
+                                    PrerequisiteLevel::WithClass { level, class } => {
+                                        if let Some(c) = class {
+                                            prereq_parts.push(format!("{} {}", c.name, level));
+                                        } else {
+                                            prereq_parts.push(format!("Level {}", level));
                                         }
                                     }
                                 }
                             }
-                        }
-                        // Check for race requirements
-                        if let Some(race) = obj.get("race") {
-                            if let Some(race_arr) = race.as_array() {
-                                for r in race_arr {
-                                    if let Some(name) = r.get("name").and_then(|n| n.as_str()) {
-                                        prereq_parts.push(name.to_string());
-                                    }
-                                }
+                            // Extract spellcasting requirement
+                            if obj.spellcasting == Some(true) {
+                                prereq_parts.push("Spellcasting".to_string());
                             }
-                        }
-                        // Check for level requirements
-                        if let Some(level) = obj.get("level").and_then(|l| l.as_u64()) {
-                            prereq_parts.push(format!("Level {}", level));
-                        }
-                        // Check for spellcasting
-                        if obj
-                            .get("spellcasting")
-                            .and_then(|s| s.as_bool())
-                            .unwrap_or(false)
-                        {
-                            prereq_parts.push("Spellcasting".to_string());
                         }
                     }
                 }
@@ -123,9 +125,8 @@ impl From<&Feat> for FeatSummary {
         });
 
         // Extract a brief description from the first entry
-        let brief = feat.entries.first().and_then(|entry| {
-            if let Some(text) = entry.as_str() {
-                // Take first sentence or first 100 chars
+        let brief = feat.entries.first().and_then(|entry| match entry {
+            Entry::Text(text) => {
                 let truncated = if text.len() > 100 {
                     let end = text
                         .char_indices()
@@ -135,12 +136,11 @@ impl From<&Feat> for FeatSummary {
                         .unwrap_or(100);
                     format!("{}...", &text[..end])
                 } else {
-                    text.to_string()
+                    text.clone()
                 };
                 Some(truncated)
-            } else {
-                None
             }
+            Entry::Object(_) => None, // Complex entry - skip
         });
 
         FeatSummary {

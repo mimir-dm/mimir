@@ -1,3 +1,4 @@
+use super::types::Entry;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +11,8 @@ pub struct Trap {
     #[serde(rename = "trapHazType")]
     pub trap_haz_type: Option<String>, // MECH, MAG, WLD, WTH, ENV
 
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 
     pub srd: Option<bool>,
 
@@ -30,7 +32,8 @@ pub struct Hazard {
     #[serde(rename = "trapHazType")]
     pub trap_haz_type: Option<String>, // MECH, MAG, WLD, WTH, ENV
 
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 
     pub srd: Option<bool>,
 

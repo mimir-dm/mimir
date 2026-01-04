@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_objects;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -57,7 +58,8 @@ pub struct ActionEntry {
     #[serde(rename = "type")]
     pub action_type: Option<String>,
 
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,7 +83,8 @@ pub struct DndObject {
     #[serde(rename = "actionEntries")]
     pub action_entries: Option<Vec<ActionEntry>>,
 
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 
     #[serde(rename = "hasToken")]
     pub has_token: Option<bool>,

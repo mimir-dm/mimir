@@ -1,3 +1,4 @@
+use super::types::Entry;
 use crate::schema::catalog_deities;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -17,7 +18,8 @@ pub struct Deity {
     #[serde(rename = "additionalSources")]
     pub additional_sources: Option<Vec<SourceReference>>,
 
-    pub entries: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub entries: Vec<Entry>,
 
     #[serde(rename = "hasFluff")]
     pub has_fluff: Option<bool>,
