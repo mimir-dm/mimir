@@ -78,7 +78,7 @@ pub fn seed_dev_data(conn: &mut DbConnection, campaigns_dir: &str, data_dir: &st
     module_data::seed_items(conn, &modules)?;
 
     // 7. Maps and tokens
-    maps::seed(conn, campaign.id, &modules, data_dir)?;
+    maps::seed(conn, campaign.id, &modules, &characters, data_dir)?;
 
     info!("Dev seed data created successfully");
     Ok(true)

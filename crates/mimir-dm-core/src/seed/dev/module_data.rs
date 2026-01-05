@@ -24,6 +24,7 @@ pub fn seed_monsters(conn: &mut DbConnection, modules: &[Module]) -> Result<()> 
             ("Wolf", "MM", 2, Some("Kennel")),
             ("Goblin Boss", "MM", 1, Some("Boss Chamber")),
             ("Goblin", "MM", 2, Some("Boss Chamber")),
+            ("Adult Black Dragon", "MM", 1, Some("Dragon Lair")),
         ];
 
         for (name, source, qty, tag) in monsters {
