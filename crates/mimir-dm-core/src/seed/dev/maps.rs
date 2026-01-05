@@ -3,7 +3,7 @@
 use crate::connection::DbConnection;
 use crate::error::Result;
 use crate::models::campaign::modules::Module;
-use crate::models::campaign::{GridType, NewMap, NewToken, TokenSize, TokenType, VisionType};
+use crate::models::campaign::{GridType, NewMap, NewToken, TokenSize, TokenType};
 use crate::services::{MapService, TokenService};
 use std::path::PathBuf;
 use tracing::info;
@@ -59,11 +59,10 @@ fn seed_battle_map(conn: &mut DbConnection, campaign_id: i32, modules: &[Module]
     let mut service = MapService::new(conn);
     let map = service.create_map(new_map)?;
 
-    // Add tokens
+    // Add monster tokens (PCs can be added via UI "Add PCs" button)
     seed_monster_tokens(conn, map.id)?;
-    seed_pc_tokens(conn, map.id)?;
 
-    info!("Created battle map with tokens");
+    info!("Created battle map with monster tokens");
     Ok(())
 }
 
@@ -91,26 +90,6 @@ fn seed_monster_tokens(conn: &mut DbConnection, map_id: i32) -> Result<()> {
             .with_size(*size)
             .with_visibility(true);
         token.image_path = Some(format!("img/bestiary/tokens/MM/{}.webp", name));
-        service.create_token(token)?;
-    }
-    Ok(())
-}
-
-fn seed_pc_tokens(conn: &mut DbConnection, map_id: i32) -> Result<()> {
-    let tokens: &[(&str, f32, f32, TokenSize, VisionType, Option<f32>)] = &[
-        ("Thorin Ironforge", 2187.0, 1431.0, TokenSize::Medium, VisionType::Darkvision, Some(60.0)),
-        ("Elara Moonwhisper", 2187.0, 1377.0, TokenSize::Medium, VisionType::Darkvision, Some(60.0)),
-        ("Finn Lightfoot", 2241.0, 1431.0, TokenSize::Small, VisionType::Normal, None),
-        ("Sister Helena", 2241.0, 1377.0, TokenSize::Medium, VisionType::Normal, None),
-    ];
-
-    let mut service = TokenService::new(conn);
-    for (name, x, y, size, vision, range) in tokens {
-        let token = NewToken::new(map_id, name.to_string(), *x, *y)
-            .with_type(TokenType::PC)
-            .with_size(*size)
-            .with_visibility(true)
-            .with_vision(*vision, *range);
         service.create_token(token)?;
     }
     Ok(())
