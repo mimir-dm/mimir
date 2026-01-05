@@ -7,75 +7,50 @@ use crate::error::Result;
 
 /// Monster appendix section - renders monster stat blocks
 pub struct MonsterAppendix {
-    /// Module data with monsters (JSON from frontend)
-    modules: Value,
+    /// Monster data (JSON array of monsters)
+    monsters: Value,
 }
 
 impl MonsterAppendix {
-    /// Create from module JSON data
+    /// Create from monster JSON data
     ///
-    /// Expected format:
+    /// Expected format - flat array of monsters:
     /// ```json
     /// [
-    ///   {
-    ///     "name": "Module Name",
-    ///     "monsters": [{ monster data... }]
-    ///   }
+    ///   { "name": "Goblin", "cr": "1/4", ... },
+    ///   { "name": "Orc", "cr": "1/2", ... }
     /// ]
     /// ```
-    pub fn new(modules: Value) -> Self {
-        Self { modules }
+    pub fn new(monsters: Value) -> Self {
+        Self { monsters }
     }
 
     /// Check if there are any monsters to render
     pub fn is_empty(&self) -> bool {
-        self.modules
+        self.monsters
             .as_array()
-            .map(|arr| {
-                arr.iter().all(|m| {
-                    m.get("monsters")
-                        .and_then(|v| v.as_array())
-                        .map(|a| a.is_empty())
-                        .unwrap_or(true)
-                })
-            })
+            .map(|arr| arr.is_empty())
             .unwrap_or(true)
     }
 }
 
 impl Renderable for MonsterAppendix {
     fn to_typst(&self, _ctx: &RenderContext) -> Result<String> {
-        let modules = match self.modules.as_array() {
-            Some(arr) => arr,
-            None => return Ok("// No monster data\n".to_string()),
+        let monsters = match self.monsters.as_array() {
+            Some(arr) if !arr.is_empty() => arr,
+            _ => return Ok("// No monster data\n".to_string()),
         };
 
         let mut typst = String::new();
 
-        for module in modules {
-            let module_name = module
-                .get("name")
-                .and_then(|v| v.as_str())
-                .unwrap_or("Unknown Module");
+        // Section header
+        typst.push_str("#pagebreak()\n");
+        typst.push_str("#text(size: 16pt, weight: \"bold\")[Monster Reference]\n");
+        typst.push_str("#v(1em)\n\n");
 
-            let monsters = match module.get("monsters").and_then(|v| v.as_array()) {
-                Some(arr) if !arr.is_empty() => arr,
-                _ => continue,
-            };
-
-            typst.push_str(&format!(
-                "#text(size: 14pt, weight: \"bold\")[Monsters: {}]\n#v(0.5em)\n\n",
-                escape_typst(module_name)
-            ));
-
-            for monster in monsters {
-                typst.push_str(&render_monster_stat_block(monster));
-                typst.push_str("\n#v(1em)\n");
-            }
-        }
-
-        if typst.is_empty() {
-            return Ok("// No monsters to render\n".to_string());
+        for monster in monsters {
+            typst.push_str(&render_monster_stat_block(monster));
+            typst.push_str("\n#v(1em)\n");
         }
 
         Ok(typst)
@@ -227,7 +202,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn test_empty_modules() {
+    fn test_empty_monsters() {
         let appendix = MonsterAppendix::new(json!([]));
         assert!(appendix.is_empty());
     }
@@ -235,10 +210,8 @@ mod tests {
     #[test]
     fn test_with_monsters() {
         let appendix = MonsterAppendix::new(json!([
-            {
-                "name": "Test Module",
-                "monsters": [{"name": "Goblin", "cr": "1/4"}]
-            }
+            {"name": "Goblin", "cr": "1/4"},
+            {"name": "Orc", "cr": "1/2"}
         ]));
         assert!(!appendix.is_empty());
     }

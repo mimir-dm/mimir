@@ -188,9 +188,9 @@ export const useCampaignStore = defineStore('campaigns', () => {
   const deleteCampaign = async (id: number, deleteFiles = false) => {
     loading.value = true
     error.value = null
-    
+
     try {
-      const response = await invoke<ApiResponse<void>>('delete_campaign', { 
+      const response = await invoke<ApiResponse<void>>('delete_campaign', {
         request: { campaign_id: id, delete_files: deleteFiles }
       })
       if (response.success) {
@@ -211,7 +211,101 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
+
+  // Export campaign to archive
+  const exportCampaign = async (campaignId: number, outputDirectory: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await invoke<ApiResponse<{ archive_path: string; file_name: string }>>('export_campaign_archive', {
+        campaignId,
+        outputDirectory
+      })
+      if (response.success && response.data) {
+        return response.data
+      } else {
+        error.value = response.error || 'Failed to export campaign'
+        return null
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Preview an archive before importing
+  const previewArchive = async (archivePath: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await invoke<ApiResponse<{
+        campaign_name: string
+        file_count: number
+        asset_count: number
+        catalog_references: Array<{ type: string; name: string; source: string }>
+        mimir_version: string
+        created_at: string
+      }>>('preview_campaign_archive', { archivePath })
+      if (response.success && response.data) {
+        return response.data
+      } else {
+        error.value = response.error || 'Failed to preview archive'
+        return null
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Import campaign from archive
+  const importCampaign = async (archivePath: string, campaignName: string, campaignsDirectory: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await invoke<ApiResponse<Campaign>>('import_campaign_archive', {
+        request: {
+          archive_path: archivePath,
+          campaign_name: campaignName,
+          campaigns_directory: campaignsDirectory
+        }
+      })
+      if (response.success && response.data) {
+        // Add the new campaign to the list
+        campaigns.value.push(response.data)
+        return response.data
+      } else {
+        error.value = response.error || 'Failed to import campaign'
+        return null
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Get the archive file extension
+  const getArchiveExtension = async (): Promise<string> => {
+    try {
+      const response = await invoke<ApiResponse<string>>('get_campaign_archive_extension')
+      if (response.success && response.data) {
+        return response.data
+      }
+      return '.mimir-campaign.tar.gz'
+    } catch {
+      return '.mimir-campaign.tar.gz'
+    }
+  }
+
   return {
     campaigns,
     archivedCampaigns,
@@ -225,6 +319,10 @@ export const useCampaignStore = defineStore('campaigns', () => {
     updateCampaignStatus,
     archiveCampaign,
     unarchiveCampaign,
-    deleteCampaign
+    deleteCampaign,
+    exportCampaign,
+    previewArchive,
+    importCampaign,
+    getArchiveExtension
   }
 })

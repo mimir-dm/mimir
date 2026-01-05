@@ -14,7 +14,8 @@ use crate::error::Result;
 use crate::map_renderer::{load_image_from_file, render_map_for_print, MapPrintOptions, RenderMap, RenderToken};
 use crate::maps::slice_map_into_tiles;
 use crate::sections::{
-    MapPreview, MarkdownSection, MonsterAppendix, NpcAppendix, TiledMapSection, TokenCutoutSheet,
+    CharacterBattleCardSection, MapPreview, MarkdownSection, MonsterCardSection, TiledMapSection,
+    TokenCutoutSheet, TrapCardSection,
 };
 
 /// Options for campaign/module PDF export
@@ -24,6 +25,8 @@ pub struct ExportOptions {
     pub include_toc: bool,
     /// Include monster appendix
     pub include_monsters: bool,
+    /// Include trap/hazard appendix
+    pub include_traps: bool,
     /// Include NPC appendix
     pub include_npcs: bool,
 
@@ -60,6 +63,7 @@ impl ExportOptions {
         Self {
             include_toc: true,
             include_monsters: true,
+            include_traps: true,
             include_npcs: true,
             include_campaign_map_previews: true,
             include_campaign_tiled_maps: false,
@@ -79,6 +83,7 @@ impl ExportOptions {
         Self {
             include_toc: false,
             include_monsters: false,
+            include_traps: false,
             include_npcs: false,
             include_campaign_map_previews: false,
             include_campaign_tiled_maps: false,
@@ -98,6 +103,7 @@ impl ExportOptions {
         Self {
             include_toc: true,
             include_monsters: true,
+            include_traps: true,
             include_npcs: true,
             include_campaign_map_previews: true,
             include_campaign_tiled_maps: false,
@@ -121,6 +127,8 @@ pub struct CampaignExportData {
     pub documents: Vec<PathBuf>,
     /// Monster data (JSON array)
     pub monsters: Option<Value>,
+    /// Trap/Hazard data (JSON array)
+    pub traps: Option<Value>,
     /// NPC data (JSON array)
     pub npcs: Option<Value>,
     /// Campaign-level maps (overview/world maps, typically no tokens)
@@ -155,6 +163,7 @@ pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> R
     let mut builder = DocumentBuilder::new(&data.name)
         .with_templates_root(data.templates_root)
         .with_toc(options.include_toc)
+        .with_title_page(options.include_toc) // Title page follows TOC setting
         .with_context(context);
 
     // Add markdown documents
@@ -232,26 +241,39 @@ pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> R
         }
     }
 
-    // Add monster appendix
+    // Add monster cards (3x3 poker-sized cards)
     if options.include_monsters {
         if let Some(ref monsters) = data.monsters {
             if let Some(arr) = monsters.as_array() {
                 if !arr.is_empty() {
-                    debug!("Adding monster appendix with {} monsters", arr.len());
-                    let section = MonsterAppendix::new(monsters.clone());
+                    debug!("Adding monster cards with {} monsters", arr.len());
+                    let section = MonsterCardSection::from_json(monsters.clone());
                     builder = builder.append(section);
                 }
             }
         }
     }
 
-    // Add NPC appendix
+    // Add trap cards (3x3 poker-sized cards)
+    if options.include_traps {
+        if let Some(ref traps) = data.traps {
+            if let Some(arr) = traps.as_array() {
+                if !arr.is_empty() {
+                    debug!("Adding trap cards with {} traps", arr.len());
+                    let section = TrapCardSection::from_json(traps.clone());
+                    builder = builder.append(section);
+                }
+            }
+        }
+    }
+
+    // Add NPC/Character battle cards (3x3 poker-sized cards)
     if options.include_npcs {
         if let Some(ref npcs) = data.npcs {
             if let Some(arr) = npcs.as_array() {
                 if !arr.is_empty() {
-                    debug!("Adding NPC appendix with {} NPCs", arr.len());
-                    let section = NpcAppendix::new(npcs.clone());
+                    debug!("Adding character battle cards with {} NPCs", arr.len());
+                    let section = CharacterBattleCardSection::from_json(npcs.clone());
                     builder = builder.append(section);
                 }
             }

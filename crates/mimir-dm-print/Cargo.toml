@@ -43,6 +43,9 @@ rusttype = "0.9"
 # Base64 encoding for Tauri commands
 base64 = { workspace = true }
 
+# Regex for 5etools tag stripping
+regex = { workspace = true }
+
 # Tauri integration
 tauri = { workspace = true, optional = true }
 

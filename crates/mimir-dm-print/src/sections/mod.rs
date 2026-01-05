@@ -23,6 +23,7 @@
 //! - `TokenCutoutSheet` - Token standees for cutting
 
 mod character;
+mod character_battle_card;
 mod character_longform;
 mod character_summary;
 mod compact_sheet;
@@ -39,8 +40,11 @@ mod npcs;
 mod spell_list;
 mod spells;
 mod tokens;
+mod trap_cards;
+mod traps;
 
 pub use character::CharacterSheetSection;
+pub use character_battle_card::CharacterBattleCardSection;
 pub use character_longform::CharacterLongFormSection;
 pub use character_summary::CharacterSummarySection;
 pub use compact_sheet::CompactSheetSection;
@@ -57,3 +61,5 @@ pub use npcs::NpcAppendix;
 pub use spell_list::SpellListSection;
 pub use spells::SpellCardsSection;
 pub use tokens::TokenCutoutSheet;
+pub use trap_cards::TrapCardSection;
+pub use traps::TrapAppendix;

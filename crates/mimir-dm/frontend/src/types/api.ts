@@ -139,6 +139,15 @@ export interface CreateTokenRequest {
   vision_range_ft?: number | null
 }
 
+/**
+ * Extended token config used by frontend for tracking monster info.
+ * The monster_name/monster_source fields are used to auto-add to module_monsters.
+ */
+export interface TokenConfigWithMonster extends CreateTokenRequest {
+  monster_name?: string
+  monster_source?: string
+}
+
 export interface UpdateTokenRequest {
   name?: string
   token_type?: string

@@ -104,7 +104,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   // Ability scores
   if (fullMonster.str) {
     html += '<div class="ability-scores" style="margin-bottom: 1rem;">'
-    html += '<table style="width: 100%; text-align: center; border-collapse: collapse;">'
+    html += '<table style="width: 100%; text-align: left; border-collapse: collapse;">'
     html += '<tr style="border-bottom: 1px solid #333;">'
     html += '<th style="padding: 0.5rem; font-weight: bold;">STR</th>'
     html += '<th style="padding: 0.5rem; font-weight: bold;">DEX</th>'

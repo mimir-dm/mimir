@@ -14,6 +14,7 @@ use crate::services::monster_renderer::{render_monsters_file, MonsterData};
 use crate::services::MonsterService;
 use std::fs;
 use std::path::PathBuf;
+use tracing::{debug, warn};
 
 /// Service for managing monster associations with modules.
 pub struct ModuleMonsterService<'a> {
@@ -102,6 +103,12 @@ impl<'a> ModuleMonsterService<'a> {
         let mut repo = ModuleMonsterRepository::new(self.conn);
         let monsters = repo.list_by_module(module_id)?;
 
+        debug!(
+            "Loading monster data for {} monsters in module {}",
+            monsters.len(),
+            module_id
+        );
+
         let mut result = Vec::with_capacity(monsters.len());
 
         for monster in monsters {
@@ -109,12 +116,38 @@ impl<'a> ModuleMonsterService<'a> {
 
             // Look up full monster data from catalog
             let mut monster_svc = MonsterService::new(self.conn);
-            if let Ok(Some(full_monster)) = monster_svc
+            match monster_svc
                 .get_monster_by_name_and_source(&with_data.monster_name, &with_data.monster_source)
             {
-                // Convert the monster to a JSON Value
-                if let Ok(json_value) = serde_json::to_value(&full_monster) {
-                    with_data.monster_data = Some(json_value);
+                Ok(Some(full_monster)) => {
+                    // Convert the monster to a JSON Value
+                    match serde_json::to_value(&full_monster) {
+                        Ok(json_value) => {
+                            debug!(
+                                "Found catalog data for {} ({})",
+                                with_data.monster_name, with_data.monster_source
+                            );
+                            with_data.monster_data = Some(json_value);
+                        }
+                        Err(e) => {
+                            warn!(
+                                "Failed to serialize monster {} ({}): {}",
+                                with_data.monster_name, with_data.monster_source, e
+                            );
+                        }
+                    }
+                }
+                Ok(None) => {
+                    warn!(
+                        "Monster not found in catalog: {} (source: {})",
+                        with_data.monster_name, with_data.monster_source
+                    );
+                }
+                Err(e) => {
+                    warn!(
+                        "Error looking up monster {} ({}): {}",
+                        with_data.monster_name, with_data.monster_source, e
+                    );
                 }
             }
 
@@ -142,13 +175,26 @@ impl<'a> ModuleMonsterService<'a> {
 
                 // Look up full monster data
                 let mut monster_svc = MonsterService::new(self.conn);
-                if let Ok(Some(full_monster)) = monster_svc.get_monster_by_name_and_source(
+                match monster_svc.get_monster_by_name_and_source(
                     &with_data.monster_name,
                     &with_data.monster_source,
                 ) {
-                    // Convert the monster to a JSON Value
-                    if let Ok(json_value) = serde_json::to_value(&full_monster) {
-                        with_data.monster_data = Some(json_value);
+                    Ok(Some(full_monster)) => {
+                        if let Ok(json_value) = serde_json::to_value(&full_monster) {
+                            with_data.monster_data = Some(json_value);
+                        }
+                    }
+                    Ok(None) => {
+                        warn!(
+                            "Monster not found in catalog: {} (source: {})",
+                            with_data.monster_name, with_data.monster_source
+                        );
+                    }
+                    Err(e) => {
+                        warn!(
+                            "Error looking up monster {} ({}): {}",
+                            with_data.monster_name, with_data.monster_source, e
+                        );
                     }
                 }
 

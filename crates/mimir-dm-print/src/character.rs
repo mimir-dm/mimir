@@ -397,8 +397,8 @@ mod tests {
             }],
             // Entry with 5etools-style tags that previously caused compilation errors
             // Tags like {@damage}, {@condition}, {@creature} must be escaped
-            entries: vec![serde_json::json!(
-                "You hurl a 4-inch-diameter sphere of energy at a creature. Deal {@damage 3d8} acid, cold, fire, lightning, poison, or thunder damage. The {@creature target} becomes {@condition blinded} on a critical hit."
+            entries: vec![mimir_dm_core::models::catalog::types::Entry::Text(
+                "You hurl a 4-inch-diameter sphere of energy at a creature. Deal {@damage 3d8} acid, cold, fire, lightning, poison, or thunder damage. The {@creature target} becomes {@condition blinded} on a critical hit.".to_string()
             )],
             classes: None,
             scaling_level_dice: None,

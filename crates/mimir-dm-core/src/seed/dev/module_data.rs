@@ -8,18 +8,22 @@ use crate::services::{ModuleItemService, ModuleMonsterService, ModuleNpcService}
 use tracing::info;
 
 /// Seed monsters for modules.
+///
+/// Uses monsters from MM (Monster Manual). Make sure MM is imported
+/// via Library for monster details to display correctly.
 pub fn seed_monsters(conn: &mut DbConnection, modules: &[Module]) -> Result<()> {
     let hideout = modules.iter().find(|m| m.name == "Cragmaw Hideout");
 
     if let Some(module) = hideout {
+        // Monsters from Monster Manual (MM)
         let monsters: &[(&str, &str, i32, Option<&str>)] = &[
-            ("Goblin", "DEV", 6, Some("Cave Entrance")),
-            ("Goblin", "DEV", 3, Some("Guard Post")),
-            ("Goblin", "DEV", 5, Some("Main Chamber")),
-            ("Mage", "DEV", 1, Some("Main Chamber")),
-            ("Wolf", "DEV", 2, Some("Kennel")),
-            ("Adult Black Dragon", "DEV", 1, Some("Boss Chamber")),
-            ("Goblin", "DEV", 2, Some("Boss Chamber")),
+            ("Goblin", "MM", 6, Some("Cave Entrance")),
+            ("Goblin", "MM", 3, Some("Guard Post")),
+            ("Goblin", "MM", 5, Some("Main Chamber")),
+            ("Bugbear", "MM", 1, Some("Main Chamber")), // Klarg
+            ("Wolf", "MM", 2, Some("Kennel")),
+            ("Goblin Boss", "MM", 1, Some("Boss Chamber")),
+            ("Goblin", "MM", 2, Some("Boss Chamber")),
         ];
 
         for (name, source, qty, tag) in monsters {

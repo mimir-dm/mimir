@@ -3,6 +3,7 @@
 //! Contains commands for managing campaigns, modules,
 //! and stage transitions in the campaign workflow.
 
+pub mod archive;
 pub mod campaigns;
 pub mod display_control;
 pub mod fog;
@@ -16,6 +17,7 @@ pub mod modules;
 pub mod stage_transitions;
 pub mod tokens;
 
+pub use archive::*;
 pub use campaigns::*;
 pub use display_control::*;
 pub use fog::*;

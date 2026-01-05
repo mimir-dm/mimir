@@ -5,6 +5,9 @@
         <h2>{{ module?.name || 'Module' }}</h2>
         <p class="stage-subtitle">{{ stageInfo.subtitle }}</p>
       </div>
+      <div class="header-actions">
+        <slot name="actions" />
+      </div>
     </div>
   </div>
 </template>
@@ -50,5 +53,11 @@ defineProps<Props>()
 .stage-subtitle {
   margin: 0.25rem 0 0 0;
   color: var(--color-text-muted);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 </style>

@@ -547,7 +547,12 @@ fn main() {
             print_map,
             export_campaign_document,
             export_campaign_documents,
-            export_module_documents
+            export_module_documents,
+            // Campaign archive commands
+            export_campaign_archive,
+            preview_campaign_archive,
+            import_campaign_archive,
+            get_campaign_archive_extension
         ])
         .run(tauri::generate_context!())
         .unwrap_or_else(|e| {

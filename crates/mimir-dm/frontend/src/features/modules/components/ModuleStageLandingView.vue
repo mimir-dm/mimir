@@ -6,6 +6,16 @@
       :stage-info="stageInfo"
     />
 
+    <!-- Module Export Dialog -->
+    <ModuleExportDialog
+      :visible="showExportDialog"
+      :module-id="module.id"
+      :module-name="module.name"
+      :module-number="module.module_number"
+      :campaign-id="module.campaign_id"
+      @close="showExportDialog = false"
+    />
+
     <!-- Next Steps (for planning/prep stages) -->
     <StageTransitionCard
       v-if="stage !== 'ready' && stage !== 'active' && stage !== 'completed'"
@@ -22,9 +32,14 @@
           <h2>Ready to Play</h2>
           <p>Your module is prepped and ready. Enter Play Mode to run your session with quick access to documents, monsters, and notes.</p>
         </div>
-        <button class="play-mode-button" @click="enterPlayMode">
-          Enter Play Mode
-        </button>
+        <div class="play-mode-actions">
+          <button class="play-mode-button" @click="enterPlayMode">
+            Enter Play Mode
+          </button>
+          <button class="print-button" @click="showExportDialog = true">
+            Print
+          </button>
+        </div>
       </div>
 
       <!-- Option to mark complete without playing -->
@@ -42,9 +57,14 @@
           <h2>Module In Progress</h2>
           <p>This module is currently being run. Continue in Play Mode or mark it complete when finished.</p>
         </div>
-        <button class="play-mode-button" @click="enterPlayMode">
-          Continue Playing
-        </button>
+        <div class="play-mode-actions">
+          <button class="play-mode-button" @click="enterPlayMode">
+            Continue Playing
+          </button>
+          <button class="print-button" @click="showExportDialog = true">
+            Print
+          </button>
+        </div>
       </div>
 
       <div class="complete-option mt-4">
@@ -119,6 +139,7 @@ import StageTransitionCard from './stage/StageTransitionCard.vue'
 import ModuleMonsters from './ModuleMonsters.vue'
 import ModuleMaps from './ModuleMaps.vue'
 import ModuleNPCs from './ModuleNPCs.vue'
+import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import { useModuleStage } from '../composables/useModuleStage'
 
 interface Props {
@@ -150,6 +171,7 @@ const {
 // Stage content from backend configuration
 const stageContent = ref<string>('')
 const showMonsters = computed(() => props.stage !== 'completed')
+const showExportDialog = ref(false)
 
 // Navigate to Play Mode
 function enterPlayMode() {
@@ -245,6 +267,29 @@ onMounted(async () => {
   background: var(--color-primary-dark, #2563eb);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.play-mode-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.print-button {
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.print-button:hover {
+  background: var(--color-surface-variant);
+  border-color: var(--color-text-muted);
 }
 
 .complete-option {
