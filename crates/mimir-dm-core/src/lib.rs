@@ -12,6 +12,7 @@ pub mod db;
 pub mod domain;
 pub mod error;
 pub mod models;
+pub mod paths;
 pub mod schema;
 pub mod seed;
 pub mod services;
@@ -22,6 +23,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub use connection::establish_connection;
 pub use db::{DatabaseService, DbConnection, DbPool};
 pub use error::{BoxedError, DbError, MimirError, MimirResult, Result};
+pub use paths::AppPaths;
 
 // Re-export campaign models
 pub use models::campaign::{Campaign, Document, Module, TemplateDocument, WorkflowCard};

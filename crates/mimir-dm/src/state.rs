@@ -8,6 +8,7 @@ use crate::app_init::AppPaths;
 use crate::commands::chat_sessions::SessionManager;
 use crate::services::context_service::ContextState;
 use crate::services::llm::{CancellationTokens, ConfirmationReceivers, LlmService};
+use crate::services::mcp_server_manager::McpServerManager;
 use diesel::SqliteConnection;
 use mimir_dm_core::DatabaseService;
 use std::ops::DerefMut;
@@ -51,6 +52,9 @@ pub struct AppState {
 
     /// LLM service (initialized asynchronously)
     pub llm: Arc<tokio::sync::Mutex<Option<LlmService>>>,
+
+    /// MCP server process manager
+    pub mcp: Arc<McpServerManager>,
 }
 
 impl AppState {
@@ -63,6 +67,7 @@ impl AppState {
         confirmations: ConfirmationReceivers,
         cancellations: CancellationTokens,
         llm: Arc<tokio::sync::Mutex<Option<LlmService>>>,
+        mcp: Arc<McpServerManager>,
     ) -> Self {
         Self {
             db,
@@ -72,6 +77,7 @@ impl AppState {
             confirmations,
             cancellations,
             llm,
+            mcp,
         }
     }
 

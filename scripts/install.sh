@@ -161,10 +161,62 @@ install_macos() {
     rm -rf "$tmp_dir"
 
     success "Mimir v${version} installed to ${install_dir}/${app_name}"
+
+    # Install mimir-mcp CLI tool
+    install_mcp_cli "${install_dir}/${app_name}" "$version" "$arch"
+
     echo ""
     info "You can now open Mimir from:"
     info "  - Finder: ~/Applications/Mimir.app"
     info "  - Terminal: open ~/Applications/Mimir.app"
+}
+
+# Install mimir-mcp CLI for Claude Code/Desktop integration
+install_mcp_cli() {
+    local app_path="$1"
+    local version="$2"
+    local arch="$3"
+    local bin_dir="$HOME/.local/bin"
+    local mcp_binary="${app_path}/Contents/MacOS/mimir-mcp"
+    local skills_source="${app_path}/Contents/Resources/skills"
+    local skills_dest="$HOME/.claude/skills"
+
+    # Check if mimir-mcp is bundled with the app
+    if [ -f "$mcp_binary" ]; then
+        info "Installing mimir-mcp CLI..."
+        mkdir -p "$bin_dir"
+
+        # Create symlink to the bundled binary
+        ln -sf "$mcp_binary" "${bin_dir}/mimir-mcp"
+        success "mimir-mcp installed to ${bin_dir}/mimir-mcp"
+
+        # Check if bin_dir is in PATH
+        case ":$PATH:" in
+            *":$bin_dir:"*)
+                ;;
+            *)
+                echo ""
+                warn "${bin_dir} is not in your PATH"
+                info "Add it to enable Claude Code integration:"
+                info "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
+                info "  source ~/.zshrc"
+                ;;
+        esac
+
+        # Install Mimir skill for Claude Code
+        if [ -d "$skills_source" ]; then
+            info "Installing Mimir skill for Claude Code..."
+            mkdir -p "$skills_dest"
+            cp -r "$skills_source/mimir-campaign" "$skills_dest/"
+            success "Mimir skill installed to ${skills_dest}/mimir-campaign"
+        fi
+
+        echo ""
+        info "To connect Claude Code to Mimir, run:"
+        info "  claude mcp add mimir -- mimir-mcp"
+    else
+        warn "mimir-mcp CLI not found in app bundle (optional feature)"
+    fi
 }
 
 # Install on Linux

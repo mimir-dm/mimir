@@ -7,6 +7,7 @@ use mimir_dm::app_init::AppPaths;
 use mimir_dm::commands::chat::chat_sessions::SessionManager;
 use mimir_dm::services::context_service::ContextState;
 use mimir_dm::services::llm::{CancellationTokens, ConfirmationReceivers, LlmService};
+use mimir_dm::services::mcp_server_manager::McpServerManager;
 use mimir_dm::state::AppState;
 use mimir_dm_core::DatabaseService;
 use std::collections::HashMap;
@@ -71,6 +72,7 @@ impl TestEnv {
         let confirmations: ConfirmationReceivers = Arc::new(Mutex::new(HashMap::new()));
         let cancellations: CancellationTokens = Arc::new(Mutex::new(HashMap::new()));
         let llm: Arc<Mutex<Option<LlmService>>> = Arc::new(Mutex::new(None));
+        let mcp = McpServerManager::new(paths.database_path.to_string_lossy().to_string());
 
         // Construct AppState
         let state = AppState::new(
@@ -81,6 +83,7 @@ impl TestEnv {
             confirmations,
             cancellations,
             llm,
+            mcp,
         );
 
         Ok(Self {

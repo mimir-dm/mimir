@@ -6,7 +6,7 @@
 use crate::state::AppState;
 use crate::types::ApiResponse;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 /// Application configuration and path information.
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,6 +19,8 @@ pub struct AppInfo {
     pub config_dir: String,
     /// Data directory for user content.
     pub data_dir: String,
+    /// Path to bundled resources (skills, plugins, etc.).
+    pub resources_dir: Option<String>,
 }
 
 /// Get application path and configuration information.
@@ -29,13 +31,22 @@ pub struct AppInfo {
 /// `ApiResponse` containing `AppInfo` with all relevant paths.
 #[tauri::command]
 pub async fn get_app_info(
+    app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<ApiResponse<AppInfo>, String> {
+    // Get the bundled resources directory (for skills, etc.)
+    let resources_dir = app
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|p| p.to_string_lossy().to_string());
+
     let app_info = AppInfo {
         database_path: state.paths.database_path_str(),
         app_dir: state.paths.app_dir.to_string_lossy().to_string(),
         config_dir: state.paths.config_dir.to_string_lossy().to_string(),
         data_dir: state.paths.data_dir.to_string_lossy().to_string(),
+        resources_dir,
     };
     Ok(ApiResponse::success(app_info))
 }

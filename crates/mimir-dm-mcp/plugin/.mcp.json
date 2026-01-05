@@ -1,0 +1,9 @@
+{
+  "mimir": {
+    "command": "mimir-mcp",
+    "args": [],
+    "env": {
+      "MIMIR_DATABASE_PATH": "${MIMIR_DATABASE_PATH}"
+    }
+  }
+}

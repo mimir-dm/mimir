@@ -3,6 +3,7 @@ members = [
     "crates/mimir-dm",
     "crates/mimir-dm-core",
     "crates/mimir-dm-llm",
+    "crates/mimir-dm-mcp",
     "crates/mimir-dm-print",
     "crates/mimir-dm-agent-test",
     "crates/mimir-5etools-splitter",
@@ -33,7 +34,7 @@ reqwest = { version = "0.12", features = ["json", "stream"] }
 futures = "0.3"
 async-trait = "0.1"
 serde_yaml = "0.9"
-url = "2.5"
+url = { version = "2.5", features = ["serde"] }
 
 # Time handling
 chrono = { version = "0.4", features = ["serde"] }
@@ -73,6 +74,9 @@ paste = "1.0"
 
 # Testing
 tempfile = "3.10"
+
+# Binary lookup
+which = "6.0"
 
 # Tauri
 tauri = { version = "2" }

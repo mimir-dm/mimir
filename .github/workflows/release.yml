@@ -15,13 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
             args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest' # for Intel based macs.
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
             args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04' # for Tauri v1 you could use ubuntu-20.04.
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
             args: ''
           - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
             args: ''
 
     runs-on: ${{ matrix.platform }}
@@ -37,13 +41,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up the linux/windows builds.
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.target }}
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './crates/mimir-dm/src-tauri -> target'
+          workspaces: '. -> target'
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -59,9 +62,10 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAURI_ENV_TARGET_TRIPLE: ${{ matrix.target }}
         with:
           projectPath: ./crates/mimir-dm
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          tagName: app-v__VERSION__
           releaseName: 'Mimir v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
