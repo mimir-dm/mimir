@@ -1,6 +1,6 @@
 [package]
 name = "mimir-dm-llm"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 description = "LLM provider abstraction layer for Mimir"
 authors = ["Your Name <your.email@example.com>"]
