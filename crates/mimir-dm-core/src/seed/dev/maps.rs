@@ -4,6 +4,7 @@ use crate::connection::DbConnection;
 use crate::error::Result;
 use crate::models::campaign::modules::Module;
 use crate::models::campaign::{GridType, NewMap, NewToken, TokenSize, TokenType};
+use crate::models::character::Character;
 use crate::services::{MapService, TokenService};
 use std::path::PathBuf;
 use tracing::info;
@@ -19,13 +20,25 @@ const GOBLIN_REGION_WIDTH: i32 = 1792;
 const GOBLIN_REGION_HEIGHT: i32 = 1024;
 
 /// Seed maps and tokens.
-pub fn seed(conn: &mut DbConnection, campaign_id: i32, modules: &[Module], data_dir: &str) -> Result<()> {
-    seed_battle_map(conn, campaign_id, modules, data_dir)?;
+pub fn seed(
+    conn: &mut DbConnection,
+    campaign_id: i32,
+    modules: &[Module],
+    characters: &[Character],
+    data_dir: &str,
+) -> Result<()> {
+    seed_battle_map(conn, campaign_id, modules, characters, data_dir)?;
     seed_region_map(conn, campaign_id, data_dir)?;
     Ok(())
 }
 
-fn seed_battle_map(conn: &mut DbConnection, campaign_id: i32, modules: &[Module], data_dir: &str) -> Result<()> {
+fn seed_battle_map(
+    conn: &mut DbConnection,
+    campaign_id: i32,
+    modules: &[Module],
+    characters: &[Character],
+    data_dir: &str,
+) -> Result<()> {
     let module = modules.iter().find(|m| m.name == "Cragmaw Hideout");
     let module_id = module.map(|m| m.id);
 
@@ -62,7 +75,10 @@ fn seed_battle_map(conn: &mut DbConnection, campaign_id: i32, modules: &[Module]
     // Add monster tokens (PCs can be added via UI "Add PCs" button)
     seed_monster_tokens(conn, map.id)?;
 
-    info!("Created battle map with monster tokens");
+    // Add special tokens: trap, NPC, point of interest
+    seed_special_tokens(conn, map.id, characters)?;
+
+    info!("Created battle map with tokens");
     Ok(())
 }
 
@@ -92,6 +108,35 @@ fn seed_monster_tokens(conn: &mut DbConnection, map_id: i32) -> Result<()> {
         token.image_path = Some(format!("img/bestiary/tokens/MM/{}.webp", name));
         service.create_token(token)?;
     }
+    Ok(())
+}
+
+fn seed_special_tokens(conn: &mut DbConnection, map_id: i32, characters: &[Character]) -> Result<()> {
+    let mut service = TokenService::new(conn);
+
+    // Trap - pit trap in the cave entrance area
+    let trap = NewToken::trap(map_id, "Hidden Pit Trap".into(), 1100.0, 700.0);
+    service.create_token(trap)?;
+
+    // NPC - Sildar Hallwinter as captive
+    if let Some(sildar) = characters.iter().find(|c| c.character_name == "Sildar Hallwinter") {
+        let npc = NewToken::character(
+            map_id,
+            sildar.character_name.clone(),
+            sildar.id,
+            false, // is_pc = false for NPC
+            TokenSize::Medium,
+            1900.0,
+            400.0,
+        );
+        service.create_token(npc)?;
+    }
+
+    // Point of interest marker - treasure cache
+    let poi = NewToken::marker(map_id, "Hidden Treasure Cache".into(), 2200.0, 900.0);
+    service.create_token(poi)?;
+
+    info!("Created special tokens (trap, NPC, POI)");
     Ok(())
 }
 
