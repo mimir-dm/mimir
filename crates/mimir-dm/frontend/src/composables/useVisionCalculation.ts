@@ -232,10 +232,10 @@ export function useVisionCalculation(config: VisionCalculationConfig) {
     )
   })
 
-  /** Visible areas for each token */
+  /** Visible areas for each token (only PC tokens create player vision) */
   const tokenVisibleAreas = computed<VisibleArea[]>(() => {
     return tokens.value
-      .filter(t => t.visible_to_players)
+      .filter(t => t.visible_to_players && t.token_type === 'pc')
       .map(token => calculateTokenVision(
         token,
         ambientLight.value,

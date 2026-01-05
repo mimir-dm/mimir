@@ -65,10 +65,12 @@
         :class="{ 'light-inactive': !light.is_active }"
         :cx="getLightX(light)"
         :cy="getLightY(light)"
-        r="4"
+        r="6"
         :fill="getLightColor(light)"
         stroke="white"
-        stroke-width="1"
+        stroke-width="2"
+        :title="`${light.name} - Right-click to toggle`"
+        @contextmenu.prevent.stop="$emit('light-context', $event, light)"
       />
 
       <!-- Light name label (DM only) -->
@@ -112,6 +114,10 @@ const props = withDefaults(defineProps<Props>(), {
   showCenterDot: true,
   showLabels: false
 })
+
+defineEmits<{
+  'light-context': [event: MouseEvent, light: LightSourceSummary]
+}>()
 
 // Default light color (warm white)
 const DEFAULT_LIGHT_COLOR = '#ffcc66'
