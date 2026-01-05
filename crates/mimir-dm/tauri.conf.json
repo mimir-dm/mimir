@@ -5,7 +5,7 @@
   "identifier": "com.mimir.app",
   "mainBinaryName": "mimir",
   "build": {
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "node ../../../scripts/build-sidecar.mjs && npm run build",
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
     "frontendDist": "frontend/dist"
@@ -41,7 +41,8 @@
             "dialog:allow-open",
             "dialog:allow-save",
             "dialog:allow-message",
-            "dialog:allow-confirm"
+            "dialog:allow-confirm",
+            "core:app:allow-version"
           ]
         }
       ]
@@ -56,6 +57,14 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "externalBin": [
+      "binaries/mimir-mcp"
+    ],
+    "resources": {
+      "../mimir-dm-mcp/plugin/skills": "skills",
+      "../mimir-dm-mcp/plugin/plugin.json": "plugin/plugin.json",
+      "../mimir-dm-mcp/plugin/.mcp.json": "plugin/.mcp.json"
+    }
   }
 }

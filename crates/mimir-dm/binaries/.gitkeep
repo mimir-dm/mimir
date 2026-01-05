@@ -1,0 +1,2 @@
+# Binaries are built at compile time
+# Tauri externalBin expects: mimir-mcp-{target-triple}

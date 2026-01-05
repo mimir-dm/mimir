@@ -1,0 +1,50 @@
+[package]
+name = "mimir-dm-mcp"
+version = "0.1.0"
+edition = "2021"
+description = "MCP server for Mimir campaign management"
+authors = ["Colliery <hello@colliery.io>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/colliery-io/mimir"
+readme = "README.md"
+
+[[bin]]
+name = "mimir-mcp"
+path = "src/main.rs"
+
+[dependencies]
+# Internal crates
+mimir-dm-core = { path = "../mimir-dm-core" }
+
+# MCP SDK
+rust-mcp-sdk = { version = "0.8", features = ["server"] }
+
+# URL with serde support (needed to fix rust-mcp-sdk dependency issue)
+url = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# CLI argument parsing
+clap = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Database
+diesel = { workspace = true }
+
+# Utilities
+chrono = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

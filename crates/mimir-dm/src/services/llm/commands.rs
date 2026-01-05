@@ -3,6 +3,7 @@
 //! This module contains all Tauri commands that expose LLM functionality
 //! to the frontend application.
 
+use crate::services::app_settings::AppSettings;
 use crate::services::llm::chat_processor::ChatProcessor;
 use crate::services::provider_settings::ProviderSettings;
 use crate::state::AppState;
@@ -324,5 +325,33 @@ pub async fn reload_llm_service(
     *service_guard = Some(new_service);
 
     info!("LLM service reloaded successfully");
+    Ok(())
+}
+
+/// Tauri command to get app settings
+#[tauri::command]
+pub async fn get_app_settings(state: State<'_, AppState>) -> Result<AppSettings, String> {
+    info!("Loading app settings");
+
+    AppSettings::load(&state.paths.config_dir).map_err(|e| {
+        error!("Failed to load app settings: {}", e);
+        format!("Failed to load app settings: {}", e)
+    })
+}
+
+/// Tauri command to save app settings
+#[tauri::command]
+pub async fn save_app_settings(
+    state: State<'_, AppState>,
+    settings: AppSettings,
+) -> Result<(), String> {
+    info!("Saving app settings: ai_assistant_enabled={}", settings.ai_assistant_enabled);
+
+    settings.save(&state.paths.config_dir).map_err(|e| {
+        error!("Failed to save app settings: {}", e);
+        format!("Failed to save app settings: {}", e)
+    })?;
+
+    info!("App settings saved successfully");
     Ok(())
 }

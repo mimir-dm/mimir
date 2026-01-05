@@ -37,8 +37,10 @@ use commands::catalog::vehicle::{
 };
 use commands::{system::logs, *};
 use mimir_dm_core::{run_migrations, DatabaseService};
+use services::app_settings::AppSettings;
 use services::context_service::ContextState;
 use services::llm::{self, CancellationTokens, ConfirmationReceivers, LlmService};
+use services::mcp_server_manager::McpServerManager;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::Manager;
@@ -152,6 +154,9 @@ fn main() {
                 Arc::new(tokio::sync::Mutex::new(HashMap::new()));
             let llm_service = Arc::new(tokio::sync::Mutex::new(None::<LlmService>));
 
+            // Create MCP server manager
+            let mcp_server = McpServerManager::new(app_paths_state.database_path_str());
+
             // Clone references needed for async LLM initialization
             let db_service_clone = Arc::clone(&db_service);
             let app_paths_clone = Arc::clone(&app_paths_state);
@@ -161,12 +166,13 @@ fn main() {
             // Create consolidated AppState
             let app_state = state::AppState::new(
                 db_service,
-                app_paths_state,
+                app_paths_state.clone(),
                 context_state,
                 session_manager,
                 confirmation_receivers,
                 cancellation_tokens,
                 llm_service,
+                Arc::clone(&mcp_server),
             );
 
             // Single state registration
@@ -193,6 +199,21 @@ fn main() {
                         error!("Failed to initialize LLM service: {}", e);
                         warn!("Application will continue without LLM functionality");
                     }
+                }
+            });
+
+            // Auto-start MCP server if enabled in settings
+            let mcp_server_clone = mcp_server;
+            let config_dir = app_paths_state.config_dir.clone();
+            tauri::async_runtime::spawn(async move {
+                let settings = AppSettings::load(&config_dir).unwrap_or_default();
+                if settings.mcp_server_enabled {
+                    info!("MCP server auto-start enabled, starting server...");
+                    if let Err(e) = mcp_server_clone.start().await {
+                        error!("Failed to auto-start MCP server: {}", e);
+                    }
+                } else {
+                    info!("MCP server auto-start disabled");
                 }
             });
 
@@ -491,6 +512,8 @@ fn main() {
             llm::commands::get_provider_settings,
             llm::commands::save_provider_settings,
             llm::commands::reload_llm_service,
+            llm::commands::get_app_settings,
+            llm::commands::save_app_settings,
             // Chat session commands
             list_chat_sessions,
             load_chat_session,
@@ -505,6 +528,11 @@ fn main() {
             logs::read_log_file,
             logs::tail_log_file,
             logs::open_logs_folder,
+            // MCP server commands
+            get_mcp_server_status,
+            start_mcp_server,
+            stop_mcp_server,
+            restart_mcp_server,
             // Player management commands
             create_player,
             get_player,

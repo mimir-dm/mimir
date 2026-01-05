@@ -50,7 +50,12 @@
           </svg>
           <span>{{ isReseeding ? 'Reseeding...' : 'Reseed' }}</span>
         </button>
-        <button @click="handleOpenChat" class="chat-button" title="Open Chat (new window)">
+        <button
+          v-if="appSettingsStore.aiAssistantEnabled"
+          @click="handleOpenChat"
+          class="chat-button"
+          title="Open Chat (new window)"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
@@ -91,6 +96,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useThemeStore } from '../stores/theme'
+import { useAppSettingsStore } from '../stores/appSettings'
 import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse } from '../types/api'
 import CampaignSelector from '../features/campaigns/components/CampaignSelector.vue'
@@ -106,6 +112,7 @@ import darkMimir from '../assets/images/themes/dark/mimir.png'
 import hyperMimir from '../assets/images/themes/hyper/mimir.png'
 
 const themeStore = useThemeStore()
+const appSettingsStore = useAppSettingsStore()
 
 // Dev mode state
 const isDevMode = ref(false)
@@ -119,6 +126,9 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to check dev mode:', error)
   }
+
+  // Load app settings for AI assistant visibility
+  await appSettingsStore.loadSettings()
 })
 
 // Show reseed confirmation modal
