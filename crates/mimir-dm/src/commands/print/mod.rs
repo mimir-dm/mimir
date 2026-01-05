@@ -93,9 +93,15 @@ pub struct ModuleExportOptions {
     /// Include monster stat blocks for tagged monsters (default: true)
     #[serde(default = "default_true")]
     pub include_monsters: bool,
+    /// Include trap/hazard cards (default: true)
+    #[serde(default = "default_true")]
+    pub include_traps: bool,
     /// Include campaign NPC sheets (default: false)
     #[serde(default)]
     pub include_npcs: bool,
+    /// Include session notes (play-notes.md) (default: false)
+    #[serde(default)]
+    pub include_session_notes: bool,
 
     // Map Preview section
     /// Include map previews (fit to single page) (default: true)
@@ -131,7 +137,9 @@ impl Default for ModuleExportOptions {
         Self {
             include_documents: true,
             include_monsters: true,
+            include_traps: true,
             include_npcs: false,
+            include_session_notes: false,
             include_preview: true,
             preview_grid: true,
             preview_los_walls: false,
@@ -1546,6 +1554,7 @@ pub async fn export_campaign_documents(
         } else {
             Some(serde_json::Value::Array(all_monsters))
         },
+        traps: None, // TODO: Aggregate traps from module maps
         npcs: if npcs_json.is_empty() {
             None
         } else {
@@ -1560,6 +1569,7 @@ pub async fn export_campaign_documents(
     let export_options = ExportOptions {
         include_toc: true,
         include_monsters: opts.include_module_content, // Monsters come from modules
+        include_traps: false, // TODO: Add campaign-level trap aggregation
         include_npcs: opts.include_npcs,
         // Campaign map options
         include_campaign_map_previews: opts.include_campaign_map_previews,
@@ -1672,7 +1682,10 @@ pub async fn export_module_documents(
             }
         }
 
-        // Check for play-notes.md file (created during play mode)
+    }
+
+    // Check for play-notes.md file (created during play mode) - separate from documents
+    if opts.include_session_notes {
         let play_notes_path = std::path::PathBuf::from(&campaign.directory_path)
             .join("modules")
             .join(format!("module_{:02}", module.module_number))
@@ -1726,6 +1739,72 @@ pub async fn export_module_documents(
                 }
             })
             .collect()
+    } else {
+        Vec::new()
+    };
+
+    // Get module traps (if requested) - traps are placed on maps as tokens
+    let trap_json: Vec<serde_json::Value> = if opts.include_traps {
+        use mimir_dm_core::services::{MapService, TokenService, TrapService};
+        use std::collections::HashMap;
+
+        let mut trap_map: HashMap<(String, String), serde_json::Value> = HashMap::new();
+
+        // Get all maps for this module
+        let mut map_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut map_service = MapService::new(&mut map_conn);
+        let maps = map_service
+            .list_module_maps(module_id)
+            .unwrap_or_default();
+
+        for map in maps {
+            // Get tokens for this map
+            let mut token_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
+
+            let mut token_service = TokenService::new(&mut token_conn);
+            let tokens = token_service
+                .list_tokens_for_map(map.id)
+                .unwrap_or_default();
+
+            // Filter for trap tokens and get their details
+            for token in tokens {
+                if token.token_type == "trap" {
+                    // Parse source from token notes or default to DMG
+                    let source = token.notes.as_deref().unwrap_or("DMG").to_string();
+                    let trap_key = (token.name.clone(), source.clone());
+
+                    // Only fetch if we haven't already
+                    if !trap_map.contains_key(&trap_key) {
+                        let mut trap_conn = state
+                            .db
+                            .get_connection()
+                            .map_err(|e| format!("Database error: {}", e))?;
+
+                        let trap_service = TrapService;
+                        if let Ok(Some(catalog_trap)) = trap_service.get_trap_details(
+                            &mut trap_conn,
+                            token.name.clone(),
+                            source.clone(),
+                        ) {
+                            // Parse the full trap JSON
+                            if let Ok(mut trap_data) = serde_json::from_str::<serde_json::Value>(&catalog_trap.full_trap_json) {
+                                strip_5etools_tags_from_json(&mut trap_data);
+                                trap_map.insert(trap_key, trap_data);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        trap_map.into_values().collect()
     } else {
         Vec::new()
     };
@@ -1795,10 +1874,11 @@ pub async fn export_module_documents(
     }
 
     info!(
-        "Rendering module '{}' with {} documents, {} monsters, {} maps",
+        "Rendering module '{}' with {} documents, {} monsters, {} traps, {} maps",
         module.name,
         document_paths.len(),
         monster_json.len(),
+        trap_json.len(),
         maps_data.len()
     );
 
@@ -1815,6 +1895,11 @@ pub async fn export_module_documents(
             None
         } else {
             Some(serde_json::Value::Array(monster_json))
+        },
+        traps: if trap_json.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Array(trap_json))
         },
         npcs: None, // NPCs not yet implemented for module export
         campaign_maps: Vec::new(), // Module export has no campaign-level maps
@@ -1833,6 +1918,7 @@ pub async fn export_module_documents(
     let export_options = ExportOptions {
         include_toc: true,
         include_monsters: opts.include_monsters,
+        include_traps: opts.include_traps,
         include_npcs: false, // NPCs not yet implemented for module export
         // Campaign map options (none for module export)
         include_campaign_map_previews: false,

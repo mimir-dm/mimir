@@ -25,6 +25,7 @@
                 <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
                 <button class="ctrl-btn" @click="zoomIn" :disabled="zoom >= 4">+</button>
                 <button class="ctrl-btn" @click="resetView">Fit</button>
+                <button class="ctrl-btn" @click="showGridConfigModal = true">Grid</button>
               </div>
               <div class="token-count">
                 {{ tokens.length }} tokens
@@ -177,6 +178,14 @@
       <button class="btn btn-secondary" @click="handleClose">Close</button>
     </template>
   </AppModal>
+
+  <!-- Grid Configuration Modal -->
+  <MapGridConfigModal
+    :visible="showGridConfigModal"
+    :map="map"
+    @close="showGridConfigModal = false"
+    @saved="handleGridSaved"
+  />
 </template>
 
 <script setup lang="ts">
@@ -184,7 +193,8 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import TokenPalette from './TokenPalette.vue'
-import type { Token, CreateTokenRequest, TokenSize } from '@/types/api'
+import MapGridConfigModal from '@/features/campaigns/components/StageLanding/MapGridConfigModal.vue'
+import type { Token, CreateTokenRequest, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
 import { useTokens } from '@/composables/useTokens'
 
@@ -200,6 +210,8 @@ interface Map {
   grid_offset_y: number
   campaign_id: number
   module_id?: number | null
+  original_width_px: number | null
+  original_height_px: number | null
 }
 
 const props = defineProps<{
@@ -244,7 +256,7 @@ const dragStartPanX = ref(0)
 const dragStartPanY = ref(0)
 
 // Token placement state
-const pendingTokenConfig = ref<CreateTokenRequest | null>(null)
+const pendingTokenConfig = ref<TokenConfigWithMonster | null>(null)
 const mousePosition = ref<{ x: number; y: number } | null>(null)
 const selectedTokenId = ref<number | null>(null)
 
@@ -255,6 +267,9 @@ const contextMenu = ref({
   y: 0,
   token: null as Token | null
 })
+
+// Grid config modal
+const showGridConfigModal = ref(false)
 
 // Container dimensions
 const containerWidth = 700
@@ -419,7 +434,7 @@ function onMouseUp() {
 }
 
 // Token config from palette
-function handleTokenConfigChange(config: CreateTokenRequest | null) {
+function handleTokenConfigChange(config: TokenConfigWithMonster | null) {
   pendingTokenConfig.value = config
 }
 
@@ -456,9 +471,14 @@ async function handleCanvasClick(event: MouseEvent) {
   finalX = Math.round((imageX - offsetX) / gridSize) * gridSize + offsetX + gridSize / 2
   finalY = Math.round((imageY - offsetY) / gridSize) * gridSize + offsetY + gridSize / 2
 
-  // Create the token
+  // Extract monster info before stripping it for the token request
+  const monsterName = pendingTokenConfig.value.monster_name
+  const monsterSource = pendingTokenConfig.value.monster_source
+
+  // Create the token (strip monster_name/monster_source as they're frontend-only)
+  const { monster_name, monster_source, ...tokenRequest } = pendingTokenConfig.value
   const request: CreateTokenRequest = {
-    ...pendingTokenConfig.value,
+    ...tokenRequest,
     map_id: props.map.id,
     x: finalX,
     y: finalY
@@ -466,8 +486,32 @@ async function handleCanvasClick(event: MouseEvent) {
 
   const token = await createToken(request)
   if (token) {
-    // Optionally clear selection after placing
-    // paletteRef.value?.clearSelection()
+    // Auto-add monster to module_monsters if this is a monster token with info
+    if (token.token_type === 'monster' && monsterName && monsterSource && props.map.module_id) {
+      await addMonsterToModule(monsterName, monsterSource, props.map.module_id)
+    }
+  }
+}
+
+// Add monster to module_monsters if not already present
+async function addMonsterToModule(monsterName: string, monsterSource: string, moduleId: number) {
+  try {
+    // Check if already in module_monsters by checking the palette's current list
+    const existingMonsters = paletteRef.value?.currentConfig
+    // Actually, we need to check the moduleMonsters from the palette
+    // For now, just try to add - the backend handles duplicates by incrementing quantity
+    await invoke('add_module_monster', {
+      request: {
+        module_id: moduleId,
+        monster_name: monsterName,
+        monster_source: monsterSource,
+        quantity: 1
+      }
+    })
+    // Refresh the palette's module monsters list
+    paletteRef.value?.loadModuleMonsters()
+  } catch (e) {
+    console.error('Failed to add monster to module:', e)
   }
 }
 
@@ -564,6 +608,13 @@ function getPlacementPreviewStyle() {
 function handleClose() {
   contextMenu.value.visible = false
   emit('close')
+}
+
+// Handle grid config saved - refresh grid data
+async function handleGridSaved() {
+  showGridConfigModal.value = false
+  // Reload UVTT data to get updated grid settings
+  await loadUvttData()
 }
 
 // Close context menu on click outside

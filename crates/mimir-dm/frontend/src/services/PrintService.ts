@@ -58,8 +58,12 @@ export interface ModuleExportOptions {
   include_documents?: boolean
   /** Include monster stat blocks for tagged monsters */
   include_monsters?: boolean
+  /** Include trap/hazard cards */
+  include_traps?: boolean
   /** Include campaign NPC sheets */
   include_npcs?: boolean
+  /** Include session notes (play-notes.md) */
+  include_session_notes?: boolean
   // Map Preview section
   /** Include map previews (fit to single page) */
   include_preview?: boolean

@@ -1,8 +1,8 @@
 <template>
   <div class="module-npcs">
     <div class="section-header">
-      <h3 class="section-title">Campaign NPCs</h3>
-      <button class="btn-secondary btn-sm" @click="createNpc">
+      <h3 class="section-title">Module NPCs</h3>
+      <button class="btn-secondary btn-sm" @click="openSelector">
         + Add NPC
       </button>
     </div>
@@ -12,38 +12,43 @@
     </div>
 
     <EmptyState
-      v-else-if="npcs.length === 0"
+      v-else-if="moduleNpcs.length === 0"
       variant="characters"
-      title="No NPCs in this campaign yet"
-      description="Create NPCs with full character sheets for your adventure."
+      title="No NPCs in this module"
+      description="Add existing campaign NPCs to this module."
     />
 
     <div v-else class="npc-grid">
       <div
-        v-for="npc in npcs"
+        v-for="npc in moduleNpcs"
         :key="npc.id"
         class="npc-card"
         @click="viewNpc(npc)"
       >
         <div class="npc-header">
           <h4 class="npc-name">{{ npc.character_name }}</h4>
-          <span class="npc-badge">NPC</span>
+          <button
+            class="remove-npc"
+            title="Remove from module"
+            @click.stop="removeNpc(npc)"
+          >
+            &times;
+          </button>
         </div>
         <div class="npc-details">
-          <span class="npc-class">
-            Level {{ npc.current_level }} {{ npc.race || '' }} {{ npc.class || '' }}
-          </span>
+          <span v-if="npc.role" class="npc-role">{{ npc.role }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Character Creation Wizard Modal -->
-    <CharacterCreationWizard
-      :visible="showWizard"
+    <!-- NPC Selector Modal -->
+    <NpcSelectorModal
+      :visible="showSelector"
+      :module-id="moduleId"
       :campaign-id="campaignId"
-      :start-as-npc="true"
-      @close="showWizard = false"
-      @created="handleNpcCreated"
+      :existing-npc-ids="existingCharacterIds"
+      @close="showSelector = false"
+      @added="handleNpcsAdded"
     />
   </div>
 </template>
@@ -51,10 +56,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCharacterStore } from '@/stores/characters'
-import CharacterCreationWizard from '@/features/characters/components/CharacterCreationWizard.vue'
+import { invoke } from '@tauri-apps/api/core'
+import NpcSelectorModal from './NpcSelectorModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import type { Character } from '@/types/character'
+import type { ApiResponse } from '@/types/api'
+
+interface ModuleNpcWithCharacter {
+  id: number
+  module_id: number
+  character_id: number
+  role: string | null
+  encounter_tag: string | null
+  notes: string | null
+  character_name: string
+}
 
 const props = defineProps<{
   moduleId: number
@@ -62,43 +77,58 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const characterStore = useCharacterStore()
 
-const showWizard = ref(false)
+const showSelector = ref(false)
 const loading = ref(false)
-const allCharacters = ref<Character[]>([])
+const moduleNpcs = ref<ModuleNpcWithCharacter[]>([])
 
-// Filter to only NPCs
-const npcs = computed(() => {
-  return allCharacters.value.filter(c => c.is_npc)
+// Get character IDs that are already in the module
+const existingCharacterIds = computed(() => {
+  return moduleNpcs.value.map(npc => npc.character_id)
 })
 
 const loadNpcs = async () => {
   loading.value = true
   try {
-    allCharacters.value = await characterStore.fetchCharactersForCampaign(props.campaignId)
+    const response = await invoke<ApiResponse<ModuleNpcWithCharacter[]>>('list_module_npcs_with_data', {
+      moduleId: props.moduleId
+    })
+    if (response.success && response.data) {
+      moduleNpcs.value = response.data
+    }
   } catch (e) {
-    console.error('Failed to load NPCs:', e)
+    console.error('Failed to load module NPCs:', e)
   } finally {
     loading.value = false
   }
 }
 
-const createNpc = () => {
-  showWizard.value = true
+const openSelector = () => {
+  showSelector.value = true
 }
 
-const viewNpc = (npc: Character) => {
-  router.push(`/characters/${npc.id}`)
+const viewNpc = (npc: ModuleNpcWithCharacter) => {
+  router.push(`/characters/${npc.character_id}`)
 }
 
-const handleNpcCreated = () => {
-  showWizard.value = false
+const removeNpc = async (npc: ModuleNpcWithCharacter) => {
+  try {
+    await invoke<ApiResponse<void>>('remove_module_npc', {
+      npcId: npc.id
+    })
+    loadNpcs()
+  } catch (e) {
+    console.error('Failed to remove NPC:', e)
+  }
+}
+
+const handleNpcsAdded = () => {
+  showSelector.value = false
   loadNpcs()
 }
 
-// Watch for campaign changes
-watch(() => props.campaignId, () => {
+// Watch for module changes
+watch(() => props.moduleId, () => {
   loadNpcs()
 })
 
@@ -193,21 +223,45 @@ onMounted(() => {
   margin: 0;
 }
 
-.npc-badge {
+.remove-npc {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.npc-card:hover .remove-npc {
+  opacity: 1;
+}
+
+.remove-npc:hover {
+  color: var(--color-error, #ef4444);
+}
+
+.npc-details {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.npc-role {
   display: inline-block;
   padding: 2px 6px;
   font-size: 0.625rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background-color: var(--color-warning, #f59e0b);
-  color: white;
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
   border-radius: var(--radius-sm);
-  flex-shrink: 0;
 }
 
-.npc-details {
-  font-size: 0.8125rem;
-  color: var(--color-text-secondary);
+.theme-dark .npc-role {
+  background-color: var(--color-primary-900);
+  color: var(--color-primary-300);
 }
 </style>

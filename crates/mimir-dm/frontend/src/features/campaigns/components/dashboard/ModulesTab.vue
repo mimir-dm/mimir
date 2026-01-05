@@ -48,6 +48,9 @@
               <button class="btn btn-primary" @click="handlePlayModule">
                 Play
               </button>
+              <button class="btn btn-secondary" @click="showExportDialog = true">
+                Print
+              </button>
             </div>
           </div>
 
@@ -80,7 +83,7 @@
               <section class="dashboard-section npcs-section">
                 <div class="section-header">
                   <h3>NPCs</h3>
-                  <button class="btn-add" @click="showCreateNpcWizard = true" title="Add NPC">+</button>
+                  <button class="btn-add" @click="showNpcSelector = true" title="Add NPC">+</button>
                 </div>
                 <div v-if="moduleNpcs.length === 0" class="section-empty">
                   No NPCs assigned
@@ -90,10 +93,10 @@
                     v-for="npc in moduleNpcs"
                     :key="npc.id"
                     class="npc-card"
-                    @click="viewCharacter(npc)"
+                    @click="viewModuleNpc(npc)"
                   >
                     <span class="npc-name">{{ npc.character_name }}</span>
-                    <span class="npc-role">{{ npc.class || 'NPC' }}</span>
+                    <span class="npc-role">{{ npc.role || 'NPC' }}</span>
                   </div>
                 </div>
               </section>
@@ -122,40 +125,60 @@
               </section>
             </div>
 
-            <!-- Right Column: Monsters (grouped by encounter tag) -->
+            <!-- Right Column: Dangers (monsters + traps/hazards) -->
             <div class="dashboard-right">
-              <section class="dashboard-section monsters-section">
+              <section class="dashboard-section dangers-section">
                 <div class="section-header">
-                  <h3>Monsters</h3>
-                  <button class="btn-add" @click="openMonsterReference" title="Add Monster">+</button>
+                  <h3>Dangers</h3>
                 </div>
-                <div v-if="loadingMonsters" class="section-loading">Loading...</div>
-                <div v-else-if="moduleMonsters.length === 0" class="section-empty">
-                  No monsters added
+                <div v-if="loadingMonsters || loadingTraps" class="section-loading">Loading...</div>
+                <div v-else-if="moduleMonsters.length === 0 && moduleTraps.length === 0" class="section-empty">
+                  No dangers added
                 </div>
-                <div v-else class="monster-list">
-                  <!-- Grouped by encounter tag -->
-                  <div
-                    v-for="group in encounterGroups"
-                    :key="group.encounter_tag || 'untagged'"
-                    class="monster-group"
-                  >
-                    <div v-if="group.encounter_tag" class="monster-group-header">
-                      {{ group.encounter_tag }}
+                <div v-else class="dangers-list">
+                  <!-- Monsters Section -->
+                  <div v-if="moduleMonsters.length > 0" class="danger-category">
+                    <div class="danger-category-header">Monsters</div>
+                    <!-- Grouped by encounter tag -->
+                    <div
+                      v-for="group in encounterGroups"
+                      :key="group.encounter_tag || 'untagged'"
+                      class="monster-group"
+                    >
+                      <div v-if="group.encounter_tag" class="monster-group-header">
+                        {{ group.encounter_tag }}
+                      </div>
+                      <div v-else-if="encounterGroups.length > 1" class="monster-group-header untagged">
+                        Other
+                      </div>
+                      <div class="monster-group-items">
+                        <div
+                          v-for="monster in group.monsters"
+                          :key="monster.id"
+                          class="monster-row"
+                          :class="{ active: selectedMonster?.id === monster.id }"
+                          @click="handleSelectMonster(monster)"
+                        >
+                          <span class="monster-qty">{{ monster.quantity }}×</span>
+                          <span class="monster-name">{{ monster.monster_name }}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div v-else-if="encounterGroups.length > 1" class="monster-group-header untagged">
-                      Other
-                    </div>
-                    <div class="monster-group-items">
+                  </div>
+
+                  <!-- Traps/Hazards Section -->
+                  <div v-if="moduleTraps.length > 0" class="danger-category">
+                    <div class="danger-category-header">Traps & Hazards</div>
+                    <div class="trap-list">
                       <div
-                        v-for="monster in group.monsters"
-                        :key="monster.id"
-                        class="monster-row"
-                        :class="{ active: selectedMonster?.id === monster.id }"
-                        @click="selectMonster(monster)"
+                        v-for="trap in moduleTraps"
+                        :key="trap.name"
+                        class="trap-row"
+                        :class="{ active: selectedTrap?.name === trap.name }"
+                        @click="selectTrapForDetails(trap)"
                       >
-                        <span class="monster-qty">{{ monster.quantity }}×</span>
-                        <span class="monster-name">{{ monster.monster_name }}</span>
+                        <span class="trap-qty" v-if="trap.count > 1">{{ trap.count }}×</span>
+                        <span class="trap-name">{{ trap.name }}</span>
                       </div>
                     </div>
                   </div>
@@ -169,6 +192,15 @@
                 v-model:panelOpen="monsterPanelOpen"
                 @close="clearSelectedMonster"
                 class="module-monster-panel"
+              />
+
+              <!-- Trap Details Panel -->
+              <TrapDetailsPanel
+                v-if="selectedTrap"
+                :trap="selectedTrap"
+                v-model:panelOpen="trapPanelOpen"
+                @close="clearSelectedTrap"
+                class="module-trap-panel"
               />
             </div>
           </div>
@@ -221,6 +253,16 @@
       @uploaded="handleMapUploaded"
     />
 
+    <!-- Module Export Dialog -->
+    <ModuleExportDialog
+      :visible="showExportDialog"
+      :module-id="selectedModule?.id || null"
+      :module-name="selectedModule?.name"
+      :module-number="selectedModule?.module_number"
+      :campaign-id="campaign?.id"
+      @close="showExportDialog = false"
+    />
+
     <!-- Token Setup Modal -->
     <MapTokenSetupModal
       v-if="selectedMapForTokens"
@@ -229,13 +271,14 @@
       @close="closeTokenSetup"
     />
 
-    <!-- NPC Creation Wizard -->
-    <CharacterCreationWizard
-      :visible="showCreateNpcWizard"
-      :campaign-id="campaign?.id"
-      :start-as-npc="true"
-      @close="showCreateNpcWizard = false"
-      @created="handleNpcCreated"
+    <!-- NPC Selector Modal -->
+    <NpcSelectorModal
+      :visible="showNpcSelector"
+      :module-id="selectedModule?.id || 0"
+      :campaign-id="campaign?.id || 0"
+      :existing-npc-ids="existingNpcCharacterIds"
+      @close="showNpcSelector = false"
+      @added="handleNpcsAdded"
     />
   </div>
 </template>
@@ -246,7 +289,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import { DocumentService } from '@/services/DocumentService'
-import { useCharacterStore } from '@/stores/characters'
 import { useModuleMonsters } from '@/features/modules/composables/useModuleMonsters'
 import { useSessionNotes, buildNotesFilePath } from '@/features/modules/composables/useSessionNotes'
 import { openSourcesReference } from '@/shared/utils/windows'
@@ -254,10 +296,11 @@ import CreateModuleModal from '../StageLanding/CreateModuleModal.vue'
 import MapUploadModal from '../StageLanding/MapUploadModal.vue'
 import MapTokenSetupModal from '@/components/tokens/MapTokenSetupModal.vue'
 import DocumentEditor from '../DocumentEditor.vue'
-import CharacterCreationWizard from '@/features/characters/components/CharacterCreationWizard.vue'
+import NpcSelectorModal from '@/features/modules/components/NpcSelectorModal.vue'
 import MonsterStatsPanel from '@/features/modules/components/MonsterStatsPanel.vue'
+import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue'
+import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import type { Campaign, BoardConfig, Module, Document } from '@/types'
-import type { Character } from '@/types/character'
 
 interface MapData {
   id: number
@@ -283,7 +326,6 @@ const props = defineProps<{
 
 const router = useRouter()
 const route = useRoute()
-const characterStore = useCharacterStore()
 
 // Module state
 const modules = ref<Module[]>([])
@@ -307,6 +349,17 @@ const {
 
 // Monster panel state
 const monsterPanelOpen = ref(true)
+
+// Trap state
+interface ModuleTrap {
+  name: string
+  source: string
+  count: number
+}
+const moduleTraps = ref<ModuleTrap[]>([])
+const loadingTraps = ref(false)
+const selectedTrap = ref<ModuleTrap | null>(null)
+const trapPanelOpen = ref(true)
 
 // Session notes (from composable)
 const {
@@ -332,14 +385,23 @@ const showTokenSetupModal = ref(false)
 const selectedMapForTokens = ref<MapData | null>(null)
 
 // NPC state
-const showCreateNpcWizard = ref(false)
+interface ModuleNpcWithCharacter {
+  id: number
+  module_id: number
+  character_id: number
+  role: string | null
+  encounter_tag: string | null
+  notes: string | null
+  character_name: string
+}
+const showNpcSelector = ref(false)
+const showExportDialog = ref(false)
+const moduleNpcs = ref<ModuleNpcWithCharacter[]>([])
+const loadingNpcs = ref(false)
 
-// NPCs for the current campaign (filter to show relevant ones)
-const moduleNpcs = computed(() => {
-  if (!props.campaign?.id) return []
-  return characterStore.characters.filter(c =>
-    c.campaign_id === props.campaign!.id && c.is_npc === 1
-  )
+// Get character IDs that are already in the module
+const existingNpcCharacterIds = computed(() => {
+  return moduleNpcs.value.map(npc => npc.character_id)
 })
 
 // Load modules
@@ -360,6 +422,7 @@ async function loadModules() {
 async function selectModule(mod: Module) {
   selectedModule.value = mod
   selectedDocument.value = null
+  selectedTrap.value = null
 
   // Set up session notes path
   if (props.campaign?.directory_path && mod.module_number) {
@@ -370,9 +433,80 @@ async function selectModule(mod: Module) {
     loadModuleDocuments(),
     loadModuleMaps(),
     loadModuleMonsters(),
+    loadModuleTraps(),
     loadNpcs(),
     loadNotes()
   ])
+}
+
+// Load traps from module maps (trap tokens)
+async function loadModuleTraps() {
+  if (!selectedModule.value || !props.campaign) return
+
+  loadingTraps.value = true
+  try {
+    // Get all maps for this module
+    const mapsResponse = await invoke<{ success: boolean; data?: MapData[] }>('list_maps', {
+      request: { campaign_id: props.campaign.id, module_id: selectedModule.value.id }
+    })
+
+    if (!mapsResponse.success || !mapsResponse.data) {
+      moduleTraps.value = []
+      return
+    }
+
+    // Get tokens from all maps and filter for traps
+    const trapCounts = new Map<string, ModuleTrap>()
+
+    for (const map of mapsResponse.data) {
+      const tokensResponse = await invoke<{ success: boolean; data?: any[] }>('list_tokens', {
+        mapId: map.id
+      })
+
+      if (tokensResponse.success && tokensResponse.data) {
+        for (const token of tokensResponse.data) {
+          if (token.token_type === 'trap' && token.name) {
+            const existing = trapCounts.get(token.name)
+            if (existing) {
+              existing.count++
+            } else {
+              trapCounts.set(token.name, {
+                name: token.name,
+                source: 'DMG', // Default source for trap tokens
+                count: 1
+              })
+            }
+          }
+        }
+      }
+    }
+
+    moduleTraps.value = Array.from(trapCounts.values()).sort((a, b) => a.name.localeCompare(b.name))
+  } catch (e) {
+    console.error('Failed to load module traps:', e)
+    moduleTraps.value = []
+  } finally {
+    loadingTraps.value = false
+  }
+}
+
+// Select trap for details view
+function selectTrapForDetails(trap: ModuleTrap) {
+  // Clear monster selection when selecting a trap
+  clearSelectedMonster()
+  selectedTrap.value = trap
+  trapPanelOpen.value = true
+}
+
+// Clear selected trap
+function clearSelectedTrap() {
+  selectedTrap.value = null
+}
+
+// Wrapper to clear trap when selecting monster
+function handleSelectMonster(monster: any) {
+  clearSelectedTrap()
+  selectMonster(monster)
 }
 
 // Load documents for selected module
@@ -477,20 +611,37 @@ async function openMonsterReference() {
   }
 }
 
-// View character detail
-function viewCharacter(character: Character) {
-  router.push(`/characters/${character.id}`)
+// View module NPC detail
+function viewModuleNpc(npc: ModuleNpcWithCharacter) {
+  router.push(`/characters/${npc.character_id}`)
 }
 
-// Handle NPC created
-async function handleNpcCreated() {
-  showCreateNpcWizard.value = false
-  await characterStore.fetchAllCharacters()
+// Handle NPCs added from selector
+async function handleNpcsAdded() {
+  showNpcSelector.value = false
+  await loadNpcs()
 }
 
-// Load NPCs when selecting module
+// Load NPCs for the selected module
 async function loadNpcs() {
-  await characterStore.fetchAllCharacters()
+  if (!selectedModule.value) return
+
+  loadingNpcs.value = true
+  try {
+    const response = await invoke<{ success: boolean; data?: ModuleNpcWithCharacter[] }>('list_module_npcs_with_data', {
+      moduleId: selectedModule.value.id
+    })
+    if (response.success && response.data) {
+      moduleNpcs.value = response.data
+    } else {
+      moduleNpcs.value = []
+    }
+  } catch (e) {
+    console.error('Failed to load module NPCs:', e)
+    moduleNpcs.value = []
+  } finally {
+    loadingNpcs.value = false
+  }
 }
 
 // Watch for campaign changes
@@ -969,6 +1120,88 @@ onMounted(async () => {
   bottom: 0;
   z-index: 10;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Trap Details Panel in Module Dashboard */
+.module-trap-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Dangers Section (combined monsters + traps) */
+.dangers-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dangers-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 12px);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.danger-category {
+  display: flex;
+  flex-direction: column;
+}
+
+.danger-category-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted, #888);
+  padding: var(--spacing-xs, 4px) 0;
+  margin-bottom: var(--spacing-xs, 4px);
+}
+
+/* Trap List */
+.trap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trap-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  background: var(--color-surface-variant, #252525);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.trap-row:hover {
+  background: var(--color-primary-900, #1e3a5f);
+}
+
+.trap-row.active {
+  background: var(--color-primary-900, #1e3a5f);
+  border-left: 3px solid var(--color-warning, #f59e0b);
+  padding-left: calc(var(--spacing-sm, 8px) - 3px);
+}
+
+.trap-qty {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-warning, #f59e0b);
+  min-width: 24px;
+}
+
+.trap-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text, #e0e0e0);
 }
 
 /* Map Cards */
