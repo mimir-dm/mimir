@@ -34,6 +34,17 @@
           </svg>
           <span>Add Token</span>
         </button>
+        <button
+          class="toolbar-btn add-pcs-btn"
+          @click="addAllPCsToMap"
+          :disabled="!mapImageUrl || !props.campaignId || addingPCs"
+          title="Add all player characters to map"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.357-.442 3 3 0 00-4.308-3.517 6.484 6.484 0 011.907 3.96 2.32 2.32 0 01-.026.654zM18 8a2 2 0 11-4 0 2 2 0 014 0zM5.304 16.19a.844.844 0 01-.277-.71 5 5 0 019.947 0 .843.843 0 01-.277.71A6.975 6.975 0 0110 18a6.974 6.974 0 01-4.696-1.81z" />
+          </svg>
+          <span>{{ addingPCs ? 'Adding...' : 'Add PCs' }}</span>
+        </button>
       </div>
 
       <!-- Reveal Map Toggle (danger style - always visible as warning) -->
@@ -430,6 +441,7 @@ import LightOverlay from '@/components/los/LightOverlay.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Token, CreateTokenRequest } from '@/types/api'
+import { useCharacterStore } from '@/stores/characters'
 
 // Throttle helper for smooth updates
 function throttle<T extends (...args: any[]) => void>(fn: T, limit: number): T {
@@ -516,6 +528,10 @@ const contextMenu = ref<{
 
 // Quick add modal state
 const showQuickAddModal = ref(false)
+
+// Add PCs state
+const characterStore = useCharacterStore()
+const addingPCs = ref(false)
 
 // Print dialog state
 const showPrintDialog = ref(false)
@@ -994,6 +1010,93 @@ async function handleQuickAddToken(request: CreateTokenRequest) {
     }
   } catch (e) {
     console.error('Failed to create token:', e)
+  }
+}
+
+// Add all player characters to map
+async function addAllPCsToMap() {
+  if (!props.mapId || !props.campaignId) return
+
+  addingPCs.value = true
+
+  try {
+    // Fetch all characters for the campaign
+    const characters = await characterStore.fetchCharactersForCampaign(props.campaignId)
+
+    // Filter to only PCs (not NPCs)
+    const pcs = characters.filter(c => !c.is_npc)
+
+    if (pcs.length === 0) {
+      console.log('No player characters found for campaign')
+      return
+    }
+
+    // Calculate starting position (center of viewport)
+    const viewportRect = viewport.value?.getBoundingClientRect()
+    if (!viewportRect) return
+
+    const viewportCenterX = viewportRect.width / 2
+    const viewportCenterY = viewportRect.height / 2
+
+    // Convert to map coordinates
+    const mapCenterX = (viewportCenterX - panX.value) / zoom.value
+    const mapCenterY = (viewportCenterY - panY.value) / zoom.value
+
+    // Get grid size for spacing (default to 70px if not set)
+    const gridSize = props.gridSizePx || 70
+
+    // Arrange PCs in a row, spaced by grid size
+    const startX = mapCenterX - ((pcs.length - 1) * gridSize) / 2
+
+    for (let i = 0; i < pcs.length; i++) {
+      const pc = pcs[i]
+      const tokenX = startX + i * gridSize
+      const tokenY = mapCenterY
+
+      // Snap to grid
+      const { x: snappedX, y: snappedY } = snapToGrid(tokenX, tokenY)
+
+      try {
+        const response = await invoke<{ success: boolean; data?: Token; error?: string }>('create_token', {
+          request: {
+            map_id: props.mapId,
+            name: pc.character_name,
+            token_type: 'pc',
+            size: 'medium',
+            x: snappedX,
+            y: snappedY,
+            visible_to_players: true,
+            character_id: pc.id,
+            color: '#4CAF50' // Green for PCs
+          }
+        })
+
+        if (response.success && response.data) {
+          tokens.value.push(response.data)
+
+          // Load token image if available
+          if (response.data.image_path) {
+            try {
+              const imgResponse = await invoke<{ success: boolean; data?: string }>('serve_token_image', { tokenId: response.data.id })
+              if (imgResponse.success && imgResponse.data) {
+                tokenImages.value.set(response.data.id, imgResponse.data)
+              }
+            } catch (e) {
+              console.error('Failed to load token image:', e)
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`Failed to create token for ${pc.character_name}:`, e)
+      }
+    }
+
+    // Sync all tokens to player display
+    sendTokensToDisplay()
+  } catch (e) {
+    console.error('Failed to add PCs to map:', e)
+  } finally {
+    addingPCs.value = false
   }
 }
 
