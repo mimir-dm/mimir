@@ -4,15 +4,15 @@ level: task
 title: "Configurable AI Assistant Visibility"
 short_code: "MIMIR-T-0301"
 created_at: 2026-01-03T15:18:16.761846+00:00
-updated_at: 2026-01-03T15:18:16.761846+00:00
+updated_at: 2026-01-05T17:22:27.622247+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#feature"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -46,6 +46,12 @@ Make the AI assistant / chat functionality fully configurable for visibility, al
 - **User Value**: Users who don't want or need AI assistance can declutter their interface and avoid accidental interactions with the chat feature
 - **Business Value**: Improves customization options and respects user preferences for AI tooling
 - **Effort Estimate**: S
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
