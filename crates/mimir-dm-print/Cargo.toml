@@ -1,6 +1,6 @@
 [package]
 name = "mimir-dm-print"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 description = "Print and PDF generation for Mimir using Typst"
 authors = ["Your Name <your.email@example.com>"]

@@ -1,6 +1,6 @@
 [package]
 name = "mimir-dm-core"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 description = "Core business logic, domain models, and data persistence for Mimir"
 authors = ["Your Name <your.email@example.com>"]
