@@ -107,6 +107,35 @@
         </div>
       </div>
 
+      <!-- Trap Search (for trap type) -->
+      <div v-if="selectedType === 'trap'" class="form-group">
+        <label>Link Trap (optional)</label>
+        <div class="search-input-wrapper">
+          <input
+            v-model="trapSearch"
+            type="text"
+            class="form-input"
+            placeholder="Search traps..."
+            @input="searchTraps"
+          />
+          <div v-if="trapResults.length > 0" class="search-results">
+            <button
+              v-for="trap in trapResults"
+              :key="`${trap.name}-${trap.source}`"
+              class="search-result-item"
+              @click="selectTrap(trap)"
+            >
+              {{ trap.name }}
+              <span class="trap-type">{{ trap.trap_type !== 'Unknown' ? trap.trap_type : trap.category }}</span>
+            </button>
+          </div>
+        </div>
+        <div v-if="selectedTrap" class="selected-entity">
+          <span>{{ selectedTrap.name }}</span>
+          <button class="remove-entity-btn" @click="clearTrap">×</button>
+        </div>
+      </div>
+
       <!-- Visibility Toggle -->
       <div class="form-group">
         <label class="checkbox-label">
@@ -126,13 +155,22 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { TokenType, TokenSize, CreateTokenRequest } from '@/types/api'
+import type { TokenType, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_TYPE_COLORS } from '@/types/api'
 
 interface Monster {
   id: number
   name: string
+  source: string
+  size: string
   cr: string
+}
+
+interface Trap {
+  name: string
+  source: string
+  trap_type: string
+  category: string
 }
 
 interface ModuleMonsterWithData {
@@ -159,17 +197,16 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'token-config-change': [config: CreateTokenRequest | null]
+  'token-config-change': [config: TokenConfigWithMonster | null]
 }>()
 
 // Module monsters state
 const moduleMonsters = ref<ModuleMonsterWithData[]>([])
 const selectedModuleMonster = ref<ModuleMonsterWithData | null>(null)
 
-// Token type options
+// Token type options (PC tokens are added at play time, not during map setup)
 const tokenTypes = [
   { value: 'monster' as TokenType, label: 'Monster', icon: '👹', color: TOKEN_TYPE_COLORS.monster },
-  { value: 'pc' as TokenType, label: 'PC', icon: '⚔️', color: TOKEN_TYPE_COLORS.pc },
   { value: 'npc' as TokenType, label: 'NPC', icon: '👤', color: TOKEN_TYPE_COLORS.npc },
   { value: 'trap' as TokenType, label: 'Trap', icon: '⚠️', color: TOKEN_TYPE_COLORS.trap },
   { value: 'marker' as TokenType, label: 'Marker', icon: '📍', color: TOKEN_TYPE_COLORS.marker }
@@ -196,6 +233,11 @@ const monsterResults = ref<Monster[]>([])
 const selectedMonster = ref<Monster | null>(null)
 const selectedMonsterSource = ref<string | null>(null)  // e.g., 'MM' for Monster Manual
 
+// Trap search state
+const trapSearch = ref('')
+const trapResults = ref<Trap[]>([])
+const selectedTrap = ref<Trap | null>(null)
+
 // Update color when type changes
 watch(selectedType, (type) => {
   if (type) {
@@ -204,7 +246,7 @@ watch(selectedType, (type) => {
   emitConfig()
 })
 
-watch([selectedSize, selectedColor, tokenName, visibleToPlayers, selectedMonster], () => {
+watch([selectedSize, selectedColor, tokenName, visibleToPlayers, selectedMonster, selectedTrap], () => {
   emitConfig()
 })
 
@@ -217,6 +259,9 @@ function selectType(type: TokenType) {
     selectedMonster.value = null
     monsterSearch.value = ''
     monsterResults.value = []
+    selectedTrap.value = null
+    trapSearch.value = ''
+    trapResults.value = []
   }
 }
 
@@ -228,6 +273,9 @@ function clearSelection() {
   monsterSearch.value = ''
   monsterResults.value = []
   selectedModuleMonster.value = null
+  selectedTrap.value = null
+  trapSearch.value = ''
+  trapResults.value = []
   emit('token-config-change', null)
 }
 
@@ -265,23 +313,34 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
   selectedType.value = 'monster'
   tokenName.value = mm.monster_name
 
-  // Get monster size from data
+  // Get monster size from data (handles both full names and abbreviations)
   if (mm.monster_data?.size) {
     const sizeMap: Record<string, TokenSize> = {
-      'Tiny': 'tiny',
-      'Small': 'small',
-      'Medium': 'medium',
-      'Large': 'large',
-      'Huge': 'huge',
-      'Gargantuan': 'gargantuan'
+      // Abbreviated (5etools format)
+      't': 'tiny',
+      's': 'small',
+      'm': 'medium',
+      'l': 'large',
+      'h': 'huge',
+      'g': 'gargantuan',
+      // Full names
+      'tiny': 'tiny',
+      'small': 'small',
+      'medium': 'medium',
+      'large': 'large',
+      'huge': 'huge',
+      'gargantuan': 'gargantuan'
     }
-    selectedSize.value = sizeMap[mm.monster_data.size] || 'medium'
+    const normalizedSize = mm.monster_data.size.toLowerCase()
+    selectedSize.value = sizeMap[normalizedSize] || 'medium'
   }
 
   // Set linked monster info (for display, not for DB linking)
   selectedMonster.value = {
     id: 0,  // Not used - monster_id is not stable
     name: mm.monster_name,
+    source: mm.monster_source,
+    size: mm.monster_data?.size || 'Medium',
     cr: mm.monster_data?.cr || 'N/A'
   }
   selectedMonsterSource.value = mm.monster_source
@@ -318,14 +377,29 @@ async function searchMonsters() {
 
   searchTimeout = setTimeout(async () => {
     try {
-      const response = await invoke<{ success: boolean; data?: any[] }>('search_monsters', {
-        request: { query: monsterSearch.value, limit: 10 }
+      // Backend expects 'filters' with 'name' field for text search
+      const response = await invoke<any[]>('search_monsters', {
+        filters: {
+          name: monsterSearch.value,
+          sources: null,
+          creature_types: null,
+          sizes: null,
+          alignments: null,
+          min_cr: null,
+          max_cr: null,
+          min_hp: null,
+          max_hp: null,
+          environments: null,
+          limit: 10
+        }
       })
-      if (response.success && response.data) {
-        monsterResults.value = response.data.map(m => ({
-          id: m.id,
+      if (response && Array.isArray(response)) {
+        monsterResults.value = response.map(m => ({
+          id: m.id || 0,
           name: m.name,
-          cr: m.challenge_rating || 'N/A'
+          source: m.source || 'MM',
+          size: m.size || 'Medium',
+          cr: m.cr || 'N/A'
         }))
       }
     } catch (e) {
@@ -336,7 +410,29 @@ async function searchMonsters() {
 
 function selectMonster(monster: Monster) {
   selectedMonster.value = monster
+  selectedMonsterSource.value = monster.source
   tokenName.value = monster.name
+
+  // Set token size based on monster size (handles both full names and abbreviations)
+  const sizeMap: Record<string, TokenSize> = {
+    // Abbreviated (5etools format)
+    't': 'tiny',
+    's': 'small',
+    'm': 'medium',
+    'l': 'large',
+    'h': 'huge',
+    'g': 'gargantuan',
+    // Full names
+    'tiny': 'tiny',
+    'small': 'small',
+    'medium': 'medium',
+    'large': 'large',
+    'huge': 'huge',
+    'gargantuan': 'gargantuan'
+  }
+  const normalizedSize = monster.size?.toLowerCase() || 'm'
+  selectedSize.value = sizeMap[normalizedSize] || 'medium'
+
   monsterSearch.value = ''
   monsterResults.value = []
 }
@@ -347,13 +443,49 @@ function clearMonster() {
   tokenName.value = ''
 }
 
+// Trap search
+let trapSearchTimeout: ReturnType<typeof setTimeout> | null = null
+async function searchTraps() {
+  if (trapSearchTimeout) clearTimeout(trapSearchTimeout)
+
+  if (trapSearch.value.length < 2) {
+    trapResults.value = []
+    return
+  }
+
+  trapSearchTimeout = setTimeout(async () => {
+    try {
+      const response = await invoke<Trap[]>('search_traps', {
+        search: trapSearch.value
+      })
+      if (response && Array.isArray(response)) {
+        trapResults.value = response
+      }
+    } catch (e) {
+      console.error('Failed to search traps:', e)
+    }
+  }, 300)
+}
+
+function selectTrap(trap: Trap) {
+  selectedTrap.value = trap
+  tokenName.value = trap.name
+  trapSearch.value = ''
+  trapResults.value = []
+}
+
+function clearTrap() {
+  selectedTrap.value = null
+  tokenName.value = ''
+}
+
 function emitConfig() {
   if (!selectedType.value) {
     emit('token-config-change', null)
     return
   }
 
-  const config: Partial<CreateTokenRequest> = {
+  const config: Partial<TokenConfigWithMonster> = {
     name: tokenName.value || getPlaceholderName(),
     token_type: selectedType.value,
     size: selectedSize.value,
@@ -364,13 +496,15 @@ function emitConfig() {
     map_id: 0 // Will be set by parent
   }
 
-  // Set image_path based on monster name/source (like dev seeder does)
+  // Set image_path and monster info for module_monsters auto-add
   // Don't use monster_id - it's not stable across reimports
   if (selectedMonster.value && selectedMonsterSource.value) {
     config.image_path = `img/bestiary/tokens/${selectedMonsterSource.value}/${selectedMonster.value.name}.webp`
+    config.monster_name = selectedMonster.value.name
+    config.monster_source = selectedMonsterSource.value
   }
 
-  emit('token-config-change', config as CreateTokenRequest)
+  emit('token-config-change', config as TokenConfigWithMonster)
 }
 
 // Expose current config for parent to use
@@ -385,7 +519,7 @@ const currentConfig = computed(() => {
   }
 })
 
-defineExpose({ currentConfig, clearSelection })
+defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 </script>
 
 <style scoped>
@@ -615,7 +749,8 @@ defineExpose({ currentConfig, clearSelection })
   background: var(--color-base-200);
 }
 
-.monster-cr {
+.monster-cr,
+.trap-type {
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }

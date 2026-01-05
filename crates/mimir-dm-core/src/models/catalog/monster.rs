@@ -49,14 +49,15 @@ pub struct Monster {
     // Challenge rating
     pub cr: Option<ChallengeRatingValue>,
 
-    // Traits, actions, etc.
-    pub trait_entries: Option<Vec<Entry>>,
-    pub action: Option<Vec<Entry>>,
-    pub bonus: Option<Vec<Entry>>,
-    pub reaction: Option<Vec<Entry>>,
-    pub legendary: Option<Vec<Entry>>,
-    pub legendary_group: Option<serde_json::Value>, // Keep as Value - complex structure
-    pub mythic: Option<Vec<Entry>>,
+    // Traits, actions, etc. - These are {name, entries} objects (not general Entry objects)
+    #[serde(rename = "trait")]
+    pub trait_entries: Option<Vec<MonsterAction>>,
+    pub action: Option<Vec<MonsterAction>>,
+    pub bonus: Option<Vec<MonsterAction>>,
+    pub reaction: Option<Vec<MonsterAction>>,
+    pub legendary: Option<Vec<MonsterAction>>,
+    pub legendary_group: Option<serde_json::Value>, // Complex structure, keep as Value
+    pub mythic: Option<Vec<MonsterAction>>,
 
     // Environment
     pub environment: Option<Vec<String>>,
@@ -75,6 +76,17 @@ pub struct Monster {
 pub type CreatureType = CreatureTypeValue;
 pub type ArmorClass = ArmorClassValue;
 pub type HitPoints = HitPointsValue;
+
+/// A monster action, trait, reaction, or legendary action.
+///
+/// These are `{name, entries}` objects distinct from the general Entry system.
+/// We use `serde_json::Value` for entries to handle the full variety of 5etools
+/// entry formats without strict typing - these get passed through to the frontend.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MonsterAction {
+    pub name: Option<String>,
+    pub entries: Option<Vec<serde_json::Value>>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Speed {
@@ -227,7 +239,7 @@ impl From<&Monster> for MonsterSummary {
             Some(ArmorClassValue::Number(n)) => *n as u8,
             Some(ArmorClassValue::Array(arr)) => arr
                 .first()
-                .and_then(|entry| entry.ac)
+                .and_then(|entry| entry.ac())
                 .unwrap_or(10) as u8,
             None => 10,
         };
@@ -235,15 +247,15 @@ impl From<&Monster> for MonsterSummary {
         // Extract environment
         let environment = monster.environment.clone().unwrap_or_default();
 
-        // Get first trait or action for description
+        // Get first trait's first entry for description
         let description = monster
             .trait_entries
             .as_ref()
-            .and_then(|t| t.first())
-            .map(|e| match e {
-                Entry::Text(s) => s.chars().take(200).collect(),
-                Entry::Object(_) => String::new(), // Complex entry - skip for now
-            })
+            .and_then(|traits| traits.first())
+            .and_then(|action| action.entries.as_ref())
+            .and_then(|entries| entries.first())
+            .and_then(|e| e.as_str())
+            .map(|s| s.chars().take(200).collect())
             .unwrap_or_default();
 
         MonsterSummary {
@@ -402,7 +414,7 @@ impl From<&Monster> for NewCatalogMonster {
         // Extract AC
         let ac = match &monster.ac {
             Some(ArmorClassValue::Number(n)) => Some(*n),
-            Some(ArmorClassValue::Array(arr)) => arr.first().and_then(|entry| entry.ac),
+            Some(ArmorClassValue::Array(arr)) => arr.first().and_then(|entry| entry.ac()),
             None => None,
         };
 

@@ -20,6 +20,11 @@
           <div class="header-info">
             <h1>{{ campaign.name }}</h1>
           </div>
+          <div class="header-actions">
+            <button @click="showExportDialog = true" class="btn btn-secondary btn-sm">
+              Export Archive
+            </button>
+          </div>
         </header>
 
         <!-- Tab Navigation -->
@@ -35,6 +40,13 @@
           />
         </main>
       </template>
+
+      <!-- Export Dialog -->
+      <CampaignArchiveExportDialog
+        :visible="showExportDialog"
+        :campaign="campaign"
+        @close="showExportDialog = false"
+      />
     </div>
   </MainLayout>
 </template>
@@ -46,6 +58,7 @@ import { DocumentService } from '@/services/DocumentService'
 import { useApiCall } from '@/shared/composables/useApiCall'
 import MainLayout from '@/shared/components/layout/MainLayout.vue'
 import DashboardTabs from '../components/dashboard/DashboardTabs.vue'
+import CampaignArchiveExportDialog from '@/components/campaigns/CampaignArchiveExportDialog.vue'
 import type { Campaign, BoardConfig } from '@/types'
 
 const props = defineProps<{
@@ -60,6 +73,7 @@ const documents = ref<any[]>([])
 const boardConfig = ref<BoardConfig | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const showExportDialog = ref(false)
 
 // API call helpers
 const { execute: loadBoardApi } = useApiCall<BoardConfig>()
@@ -203,6 +217,16 @@ onMounted(() => {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-text, #e0e0e0);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+}
+
+.btn-sm {
+  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  font-size: 0.875rem;
 }
 
 .dashboard-content {

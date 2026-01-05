@@ -90,7 +90,7 @@ fn seed_monster_tokens(conn: &mut DbConnection, map_id: i32) -> Result<()> {
             .with_type(TokenType::Monster)
             .with_size(*size)
             .with_visibility(true);
-        token.image_path = Some(format!("img/bestiary/tokens/DEV/{}.webp", name));
+        token.image_path = Some(format!("img/bestiary/tokens/MM/{}.webp", name));
         service.create_token(token)?;
     }
     Ok(())

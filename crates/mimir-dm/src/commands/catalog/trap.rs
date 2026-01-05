@@ -4,10 +4,10 @@
 //! from the 5e catalog database. Used for dungeon design and encounter building.
 
 use crate::state::AppState;
-use mimir_dm_core::models::catalog::{CatalogTrap, TrapFilters, TrapSummary};
+use mimir_dm_core::models::catalog::{CatalogTrap, TrapFilters, TrapOrHazard, TrapSummary};
 use mimir_dm_core::services::TrapService;
 use tauri::State;
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 
 /// Search the trap catalog with optional filters.
 ///
@@ -63,7 +63,7 @@ pub async fn search_traps(
 /// - `source` - Source book abbreviation (e.g., "DMG", "XGE")
 ///
 /// # Returns
-/// The complete `CatalogTrap` object if found, or `None` if no match.
+/// The complete `TrapOrHazard` object if found, or `None` if no match.
 ///
 /// # Errors
 /// Returns an error string if the database connection or query fails.
@@ -72,7 +72,7 @@ pub async fn get_trap_details(
     name: String,
     source: String,
     state: State<'_, AppState>,
-) -> Result<Option<CatalogTrap>, String> {
+) -> Result<Option<TrapOrHazard>, String> {
     debug!("get_trap_details called for: {} from {}", name, source);
 
     let mut conn = state.db.get_connection().map_err(|e| {
@@ -81,12 +81,24 @@ pub async fn get_trap_details(
     })?;
 
     let service = TrapService;
-    service
+    let catalog_trap = service
         .get_trap_details(&mut conn, name, source)
         .map_err(|e| {
             error!("Failed to get trap details: {}", e);
             format!("Database error: {}", e)
-        })
+        })?;
+
+    // Parse the full_trap_json to get the actual trap data with entries
+    match catalog_trap {
+        Some(trap) => {
+            let parsed: TrapOrHazard = serde_json::from_str(&trap.full_trap_json).map_err(|e| {
+                warn!("Failed to parse trap JSON for {}: {}", trap.name, e);
+                format!("Failed to parse trap data: {}", e)
+            })?;
+            Ok(Some(parsed))
+        }
+        None => Ok(None),
+    }
 }
 
 /// Get all unique source books containing traps.

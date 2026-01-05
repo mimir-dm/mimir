@@ -10,7 +10,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/campaigns',
     name: 'campaigns',
-    component: () => import('../../features/campaigns/views/CampaignListView.vue')
+    redirect: '/'
   },
   {
     path: '/campaigns/new',

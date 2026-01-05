@@ -48,8 +48,8 @@
           
           <div class="dropdown-divider"></div>
           
-          <router-link 
-            to="/campaigns/new" 
+          <router-link
+            to="/campaigns/new"
             class="dropdown-action"
             @click="closeDropdown"
           >
@@ -59,9 +59,28 @@
             </svg>
             Create New Campaign
           </router-link>
+
+          <button
+            class="dropdown-action"
+            @click="openImportDialog"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Import Campaign
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- Import Dialog -->
+    <CampaignArchiveImportDialog
+      :visible="showImportDialog"
+      @close="showImportDialog = false"
+      @imported="handleCampaignImported"
+    />
   </div>
 </template>
 
@@ -71,15 +90,18 @@ import { useRouter } from 'vue-router'
 import { useCampaignStore } from '../../../stores/campaigns'
 import { useSharedContextStore } from '../../../stores/sharedContext'
 import { storeToRefs } from 'pinia'
+import CampaignArchiveImportDialog from '../../../components/campaigns/CampaignArchiveImportDialog.vue'
+import type { Campaign } from '../../../types/api'
 
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const contextStore = useSharedContextStore()
-const { campaigns, currentCampaign, loading, error } = storeToRefs(campaignStore)
+const { campaigns, loading, error } = storeToRefs(campaignStore)
 
 // Local state for dropdown and selection
 const selectedCampaignId = ref<number | null>(null)
 const isOpen = ref(false)
+const showImportDialog = ref(false)
 
 // Computed properties
 const isLoading = computed(() => loading.value)
@@ -98,6 +120,17 @@ function toggleDropdown() {
 
 function closeDropdown() {
   isOpen.value = false
+}
+
+function openImportDialog() {
+  closeDropdown()
+  showImportDialog.value = true
+}
+
+function handleCampaignImported(campaign: Campaign) {
+  // Refresh the campaign list and select the imported campaign
+  campaignStore.fetchCampaigns()
+  selectCampaign(campaign.id)
 }
 
 async function selectCampaign(campaignId: number) {
@@ -351,6 +384,12 @@ watch(() => router.currentRoute.value, (route) => {
   text-decoration: none;
   font-weight: 500;
   transition: background-color var(--transition-fast);
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  text-align: left;
 }
 
 .dropdown-action:hover {

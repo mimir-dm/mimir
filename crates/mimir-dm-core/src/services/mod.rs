@@ -8,6 +8,7 @@ pub const DEFAULT_QUERY_LIMIT: i64 = 1000;
 
 pub mod action_service;
 pub mod background_service;
+pub mod campaign_archive_service;
 pub mod campaign_service;
 pub mod campaign_summary_service;
 pub mod catalog_trait;
@@ -88,3 +89,6 @@ pub use trap_service::TrapService;
 pub use variant_rule_service::VariantRuleService;
 pub use vehicle_service::VehicleService;
 pub use reference_service::{ReferenceData, ReferenceService};
+pub use campaign_archive_service::{
+    ArchiveManifest, ArchivePreview, CampaignArchiveService, CatalogReference, ARCHIVE_EXTENSION,
+};

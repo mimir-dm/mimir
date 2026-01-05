@@ -267,7 +267,7 @@
 
 .creature-details .ability-scores table {
   width: 100%;
-  text-align: center;
+  text-align: left;
   border-collapse: collapse;
 }
 

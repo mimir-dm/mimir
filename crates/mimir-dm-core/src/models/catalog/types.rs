@@ -240,9 +240,42 @@ pub enum ArmorClassValue {
     Array(Vec<ArmorClassEntry>),
 }
 
-/// An AC entry with optional source and condition.
+/// An AC entry - can be a plain number or an object with details.
+///
+/// 5etools uses various formats:
+/// - Plain number: `[12]`
+/// - Object: `[{"ac": 15, "from": ["natural armor"]}]`
+/// - Mixed: `[15, {"ac": 17, "from": ["shield"], "condition": "with shield"}]`
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ArmorClassEntry {
+#[serde(untagged)]
+pub enum ArmorClassEntry {
+    /// Just a number (e.g., `12` in `"ac": [12]`)
+    Number(i32),
+    /// Full AC entry with optional details
+    Object(ArmorClassEntryObject),
+}
+
+impl ArmorClassEntry {
+    /// Get the AC value from this entry
+    pub fn ac(&self) -> Option<i32> {
+        match self {
+            ArmorClassEntry::Number(n) => Some(*n),
+            ArmorClassEntry::Object(obj) => obj.ac,
+        }
+    }
+
+    /// Get the "from" sources if this is an object entry
+    pub fn from(&self) -> Option<&Vec<String>> {
+        match self {
+            ArmorClassEntry::Number(_) => None,
+            ArmorClassEntry::Object(obj) => obj.from.as_ref(),
+        }
+    }
+}
+
+/// An AC entry object with optional source and condition.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ArmorClassEntryObject {
     #[serde(default)]
     pub ac: Option<i32>,
     #[serde(default)]

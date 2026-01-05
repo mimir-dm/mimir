@@ -273,7 +273,7 @@ defineEmits<{
 
 .quick-stat {
   flex: 1;
-  text-align: center;
+  text-align: left;
   padding: 0.5rem;
   background: var(--color-base-200);
   border-radius: 0.375rem;
@@ -309,7 +309,7 @@ defineEmits<{
 
 .ability-item {
   flex: 1;
-  text-align: center;
+  text-align: left;
 }
 
 .ability-item .ability-name {
@@ -340,6 +340,7 @@ defineEmits<{
   border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   overflow: hidden;
+  text-align: left;
 }
 
 .stat-section summary {
@@ -352,6 +353,7 @@ defineEmits<{
   color: var(--color-text);
   cursor: pointer;
   user-select: none;
+  text-align: left;
 }
 
 .stat-section summary:hover {
@@ -369,6 +371,7 @@ defineEmits<{
 /* Properties List */
 .properties-list {
   padding: 0.5rem 0.75rem;
+  text-align: left;
 }
 
 .prop-line {
@@ -393,6 +396,7 @@ defineEmits<{
 /* Action List */
 .action-list {
   padding: 0.5rem 0.75rem;
+  text-align: left;
 }
 
 .action-item {

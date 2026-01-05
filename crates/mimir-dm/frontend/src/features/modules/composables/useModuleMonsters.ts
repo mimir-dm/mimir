@@ -30,20 +30,27 @@ export function useModuleMonsters(moduleId: Ref<number>) {
   const selectedMonster = ref<MonsterWithData | null>(null)
   const encountersLoading = ref(true)
 
-  // Load encounters/monsters for this module
-  async function loadEncounters() {
+  // Load encounters/monsters for this module (including monster tokens from maps)
+  async function loadEncounters(campaignId?: number) {
     encountersLoading.value = true
     try {
+      // Load module monsters
       const response = await invoke<{ data: MonsterWithData[] }>('list_module_monsters_with_data', {
         moduleId: moduleId.value
       })
 
       const monsters = response.data || []
-      allMonsters.value = monsters
+
+      // Also load monster tokens from module maps
+      const mapMonsters = await loadMapMonsterTokens(campaignId)
+
+      // Combine both sources
+      const allMonstersData = [...monsters, ...mapMonsters]
+      allMonsters.value = allMonstersData
 
       // Group monsters by encounter_tag
       const groups = new Map<string | null, MonsterWithData[]>()
-      for (const monster of monsters) {
+      for (const monster of allMonstersData) {
         const tag = monster.encounter_tag
         if (!groups.has(tag)) {
           groups.set(tag, [])
@@ -70,6 +77,56 @@ export function useModuleMonsters(moduleId: Ref<number>) {
       allMonsters.value = []
     } finally {
       encountersLoading.value = false
+    }
+  }
+
+  // Load monster tokens from all maps in this module
+  async function loadMapMonsterTokens(campaignId?: number): Promise<MonsterWithData[]> {
+    if (!campaignId) return []
+
+    try {
+      // Get maps for this module
+      const mapsResponse = await invoke<{ success: boolean; data?: any[] }>('list_maps', {
+        request: { campaign_id: campaignId, module_id: moduleId.value }
+      })
+
+      if (!mapsResponse.success || !mapsResponse.data) return []
+
+      const mapMonsters: MonsterWithData[] = []
+      const seenMonsters = new Set<string>() // Track unique monsters by name
+
+      for (const map of mapsResponse.data) {
+        // Get tokens for this map
+        const tokensResponse = await invoke<{ success: boolean; data?: any[] }>('list_tokens', {
+          mapId: map.id
+        })
+
+        if (!tokensResponse.success || !tokensResponse.data) continue
+
+        // Filter for monster tokens and convert to MonsterWithData format
+        for (const token of tokensResponse.data) {
+          if (token.token_type === 'monster') {
+            const key = `${token.name}-${token.monster_source || 'MM'}`
+            if (!seenMonsters.has(key)) {
+              seenMonsters.add(key)
+              mapMonsters.push({
+                id: -token.id, // Negative ID to distinguish from module_monsters
+                module_id: moduleId.value,
+                monster_name: token.name,
+                monster_source: token.monster_source || 'MM',
+                quantity: 1,
+                encounter_tag: 'On Map',
+                monster_data: null // Will be looked up separately if needed
+              })
+            }
+          }
+        }
+      }
+
+      return mapMonsters
+    } catch (error) {
+      console.error('Failed to load map monster tokens:', error)
+      return []
     }
   }
 

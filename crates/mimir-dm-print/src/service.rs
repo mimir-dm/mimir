@@ -410,6 +410,7 @@ A famous tavern in Waterdeep built over the entrance to Undermountain.
             name: "Waterdeep Dragon Heist".to_string(),
             documents,
             monsters: None,
+            traps: None,
             npcs: None,
             campaign_maps: vec![],
             module_maps: vec![],
@@ -420,6 +421,7 @@ A famous tavern in Waterdeep built over the entrance to Undermountain.
         let options = ExportOptions {
             include_toc: true,
             include_monsters: false,
+            include_traps: false,
             include_npcs: false,
             include_campaign_map_previews: false,
             include_campaign_tiled_maps: false,
