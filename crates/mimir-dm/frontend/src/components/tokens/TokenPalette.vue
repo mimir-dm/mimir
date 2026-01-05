@@ -33,13 +33,33 @@
         v-for="type in tokenTypes"
         :key="type.value"
         class="type-btn"
-        :class="{ active: selectedType === type.value }"
+        :class="{ active: selectedType === type.value && !selectedLightType }"
         :style="{ '--type-color': type.color }"
         @click="selectType(type.value)"
       >
         <span class="type-icon">{{ type.icon }}</span>
         <span class="type-label">{{ type.label }}</span>
       </button>
+    </div>
+
+    <!-- Light Sources -->
+    <div class="light-section">
+      <div class="section-label">Light Sources</div>
+      <div class="light-grid">
+        <button
+          v-for="light in lightTypes"
+          :key="light.value"
+          class="light-btn"
+          :class="{ active: selectedLightType === light.value }"
+          @click="selectLightType(light.value)"
+        >
+          <span class="light-icon">{{ light.icon }}</span>
+          <span class="light-label">{{ light.label }}</span>
+        </button>
+      </div>
+      <div v-if="selectedLightType" class="placement-hint light-hint">
+        Click on the map to place a {{ selectedLightType }}.
+      </div>
     </div>
 
     <!-- Configuration (when type selected) -->
@@ -196,8 +216,11 @@ const props = withDefaults(defineProps<Props>(), {
   moduleId: null
 })
 
+export type LightType = 'torch' | 'lantern' | 'candle'
+
 const emit = defineEmits<{
   'token-config-change': [config: TokenConfigWithMonster | null]
+  'light-config-change': [lightType: LightType | null]
 }>()
 
 // Module monsters state
@@ -212,6 +235,13 @@ const tokenTypes = [
   { value: 'marker' as TokenType, label: 'Marker', icon: '📍', color: TOKEN_TYPE_COLORS.marker }
 ]
 
+// Light source options
+const lightTypes = [
+  { value: 'torch' as LightType, label: 'Torch', icon: '🔥' },
+  { value: 'lantern' as LightType, label: 'Lantern', icon: '🏮' },
+  { value: 'candle' as LightType, label: 'Candle', icon: '🕯️' }
+]
+
 // Size options
 const sizes = [
   { value: 'tiny' as TokenSize, label: 'Tiny', squares: 0.5 },
@@ -224,6 +254,7 @@ const sizes = [
 
 // State
 const selectedType = ref<TokenType | null>(null)
+const selectedLightType = ref<LightType | null>(null)
 const selectedSize = ref<TokenSize>('medium')
 const selectedColor = ref(TOKEN_TYPE_COLORS.monster)
 const tokenName = ref('')
@@ -251,6 +282,12 @@ watch([selectedSize, selectedColor, tokenName, visibleToPlayers, selectedMonster
 })
 
 function selectType(type: TokenType) {
+  // Clear light selection when selecting token type
+  if (selectedLightType.value) {
+    selectedLightType.value = null
+    emit('light-config-change', null)
+  }
+
   if (selectedType.value === type) {
     clearSelection()
   } else {
@@ -265,8 +302,25 @@ function selectType(type: TokenType) {
   }
 }
 
+function selectLightType(type: LightType) {
+  // Clear token selection when selecting light type
+  if (selectedType.value) {
+    selectedType.value = null
+    emit('token-config-change', null)
+  }
+
+  if (selectedLightType.value === type) {
+    selectedLightType.value = null
+    emit('light-config-change', null)
+  } else {
+    selectedLightType.value = type
+    emit('light-config-change', type)
+  }
+}
+
 function clearSelection() {
   selectedType.value = null
+  selectedLightType.value = null
   tokenName.value = ''
   selectedMonster.value = null
   selectedMonsterSource.value = null
@@ -276,6 +330,7 @@ function clearSelection() {
   selectedTrap.value = null
   trapSearch.value = ''
   trapResults.value = []
+  emit('light-config-change', null)
   emit('token-config-change', null)
 }
 
@@ -633,7 +688,57 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Light Sources Section */
+.light-section {
   margin-bottom: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.light-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.light-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--spacing-xs);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.light-btn:hover {
+  border-color: #ffcc00;
+  background: rgba(255, 204, 0, 0.1);
+}
+
+.light-btn.active {
+  border-color: #ffcc00;
+  background: rgba(255, 204, 0, 0.2);
+}
+
+.light-icon {
+  font-size: 1.25rem;
+}
+
+.light-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+.light-hint {
+  background: rgba(255, 204, 0, 0.15);
+  color: #b38600;
 }
 
 .type-btn {

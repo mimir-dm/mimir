@@ -320,6 +320,7 @@
           :show-bright-border="true"
           :show-center-dot="true"
           :show-labels="false"
+          @light-context="handleLightContext"
         />
 
         <!-- Token Layer -->
@@ -396,10 +397,22 @@
 
     <!-- Click outside to close context menu -->
     <div
-      v-if="contextMenu.visible"
+      v-if="contextMenu.visible || lightContextMenu.visible"
       class="context-menu-backdrop"
       @click="closeContextMenu"
     ></div>
+
+    <!-- Light Source Context Menu -->
+    <div
+      v-if="lightContextMenu.visible"
+      class="context-menu"
+      :style="{ left: lightContextMenu.x + 'px', top: lightContextMenu.y + 'px' }"
+      @click.stop
+    >
+      <button @click="toggleLightFromContext" class="light-option">
+        {{ lightContextMenu.light?.is_active ? 'Extinguish' : 'Ignite' }}
+      </button>
+    </div>
 
     <!-- Quick Add Token Modal -->
     <QuickAddTokenModal
@@ -526,6 +539,19 @@ const contextMenu = ref<{
   token: null
 })
 
+// Light source context menu state
+const lightContextMenu = ref<{
+  visible: boolean
+  x: number
+  y: number
+  light: LightSourceSummary | null
+}>({
+  visible: false,
+  x: 0,
+  y: 0,
+  light: null
+})
+
 // Quick add modal state
 const showQuickAddModal = ref(false)
 
@@ -607,13 +633,14 @@ watch([tokenOnlyLos, revealMap], () => {
 
 // Tokens with vision for visibility polygon calculation
 // Depends on: tokens, lightSources, currentAmbientLight for reactivity
+// Only PCs create vision - NPCs do not reveal fog of war
 const tokensWithVision = computed(() => {
   // Access lightSources to ensure reactivity when lights change
   const lights = lightSources.value
   const ambient = currentAmbientLight.value
 
   return tokens.value
-    .filter(t => t.visible_to_players && (t.token_type === 'pc' || t.token_type === 'npc'))
+    .filter(t => t.visible_to_players && t.token_type === 'pc')
     .map(t => ({
       id: t.id,
       x: t.x,
@@ -825,6 +852,51 @@ function handleTokenContext(event: MouseEvent, token: Token) {
 // Close context menu
 function closeContextMenu() {
   contextMenu.value.visible = false
+  lightContextMenu.value.visible = false
+}
+
+// Handle light source context menu (right-click on light dot)
+function handleLightContext(event: MouseEvent, light: LightSourceSummary) {
+  // Close any existing menus
+  contextMenu.value.visible = false
+  lightContextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    light
+  }
+}
+
+// Toggle light from context menu
+async function toggleLightFromContext() {
+  const light = lightContextMenu.value.light
+  if (!light) return
+
+  try {
+    const response = await invoke<{ success: boolean; data?: LightSourceSummary; error?: string }>('toggle_light_source', {
+      id: light.id
+    })
+
+    if (response.success && response.data) {
+      // Update local light source
+      const index = lightSources.value.findIndex(ls => ls.id === light.id)
+      if (index !== -1) {
+        const newLights = [...lightSources.value]
+        newLights[index] = response.data
+        lightSources.value = newLights
+      }
+      // Sync to player display
+      sendLightSourcesToDisplay()
+      // Update fog when hiding is active
+      if (!revealMap.value) {
+        sendFogToDisplay()
+      }
+    }
+  } catch (e) {
+    console.error('Failed to toggle light source:', e)
+  }
+
+  closeContextMenu()
 }
 
 // Toggle visibility of selected token
@@ -1048,6 +1120,9 @@ async function addAllPCsToMap() {
     // Arrange PCs in a row, spaced by grid size
     const startX = mapCenterX - ((pcs.length - 1) * gridSize) / 2
 
+    // Races with darkvision (D&D 5e)
+    const darkvisionRaces = ['dwarf', 'elf', 'half-elf', 'half-orc', 'gnome', 'tiefling', 'drow']
+
     for (let i = 0; i < pcs.length; i++) {
       const pc = pcs[i]
       const tokenX = startX + i * gridSize
@@ -1055,6 +1130,10 @@ async function addAllPCsToMap() {
 
       // Snap to grid
       const { x: snappedX, y: snappedY } = snapToGrid(tokenX, tokenY)
+
+      // Check if race has darkvision
+      const raceLower = (pc.race || '').toLowerCase()
+      const hasDarkvision = darkvisionRaces.some(r => raceLower.includes(r))
 
       try {
         const response = await invoke<{ success: boolean; data?: Token; error?: string }>('create_token', {
@@ -1067,7 +1146,9 @@ async function addAllPCsToMap() {
             y: snappedY,
             visible_to_players: true,
             character_id: pc.id,
-            color: '#4CAF50' // Green for PCs
+            color: '#4CAF50', // Green for PCs
+            vision_type: hasDarkvision ? 'darkvision' : 'normal',
+            vision_range_ft: hasDarkvision ? 60 : null
           }
         })
 
@@ -1250,19 +1331,27 @@ const effectiveGridSize = computed(() => props.gridSizePx ?? 70)
 const effectiveGridOffsetX = computed(() => props.gridOffsetX ?? 0)
 const effectiveGridOffsetY = computed(() => props.gridOffsetY ?? 0)
 
-// Player tokens that contribute to vision (PCs and visible NPCs)
+// Player tokens that contribute to vision (PCs only - NPCs don't reveal fog for players)
 const playerTokensWithVision = computed(() => {
   return tokens.value.filter(t =>
-    t.visible_to_players && (t.token_type === 'pc' || t.token_type === 'npc')
+    t.visible_to_players && t.token_type === 'pc'
   )
 })
 
 // Calculate vision radius in pixels for a token based on ambient light
-// In bright/dim light: all tokens can see 60ft
+// In bright light: unlimited vision (no fog needed)
+// In dim light: can see but with slight limitation
 // In darkness: only darkvision/blindsight/etc OR tokens with active light can see
 function getTokenVisionRadiusPx(token: Token): number {
   const gridSize = effectiveGridSize.value
   const ambient = currentAmbientLight.value
+
+  // In bright light, vision is unlimited - return very large value
+  if (ambient === 'bright') {
+    // Return map diagonal * 2 to ensure full coverage
+    const maxDim = Math.max(mapWidthRef.value, mapHeightRef.value)
+    return maxDim > 0 ? maxDim * 2 : 10000
+  }
 
   // Vision types that can see in darkness
   const darkVisionTypes = ['darkvision', 'blindsight', 'tremorsense', 'truesight', 'devils_sight']
@@ -1278,6 +1367,7 @@ function getTokenVisionRadiusPx(token: Token): number {
     return 0
   }
 
+  // In dim light or darkness with special vision:
   // If token has a light, use the light's range (bright + dim)
   // Otherwise use darkvision range or default 60ft
   let visionFeet: number

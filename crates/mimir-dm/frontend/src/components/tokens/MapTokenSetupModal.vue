@@ -13,6 +13,7 @@
               ref="paletteRef"
               :module-id="map.module_id"
               @token-config-change="handleTokenConfigChange"
+              @light-config-change="handleLightConfigChange"
             />
           </div>
 
@@ -35,7 +36,7 @@
             <div
               class="map-viewport"
               ref="viewportRef"
-              :class="{ 'placement-mode': !!pendingTokenConfig }"
+              :class="{ 'placement-mode': !!pendingTokenConfig || !!pendingLightType }"
               @wheel.prevent="onWheel"
               @mousedown="onMouseDown"
               @mousemove="onMouseMove"
@@ -107,6 +108,17 @@
                     title="Hidden from players"
                   >👁️‍🗨️</span>
                 </div>
+
+                <!-- Light Sources -->
+                <div
+                  v-for="light in lightSources"
+                  :key="'light-' + light.id"
+                  class="light-dot"
+                  :class="{ 'light-inactive': !light.is_active }"
+                  :style="getLightStyle(light)"
+                  :title="`${light.name} (${light.bright_radius_ft}/${light.dim_radius_ft}ft) - Right-click to toggle`"
+                  @contextmenu.prevent="toggleLight(light)"
+                />
               </div>
 
               <!-- Placement Preview -->
@@ -152,6 +164,41 @@
                   class="token-list-delete"
                   @click.stop="confirmDeleteToken(token)"
                   title="Delete token"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <!-- Light Sources Section -->
+            <h4 v-if="lightSources.length > 0" class="section-header">Light Sources</h4>
+            <div v-if="lightSources.length > 0" class="token-list">
+              <div
+                v-for="light in lightSources"
+                :key="'light-' + light.id"
+                class="token-list-item light-item"
+                :class="{ 'light-inactive': !light.is_active }"
+              >
+                <div
+                  class="token-list-color light-color"
+                  :style="{ background: light.color || '#ffcc00' }"
+                />
+                <div class="token-list-info">
+                  <span class="token-list-name">{{ light.name }}</span>
+                  <span class="token-list-type">{{ light.bright_radius_ft }}/{{ light.dim_radius_ft }}ft</span>
+                </div>
+                <button
+                  class="light-toggle-btn"
+                  :class="{ lit: light.is_active }"
+                  @click.stop="toggleLight(light)"
+                  :title="light.is_active ? 'Click to extinguish' : 'Click to ignite'"
+                >
+                  {{ light.is_active ? 'Lit' : 'Unlit' }}
+                </button>
+                <button
+                  class="token-list-delete"
+                  @click.stop="confirmDeleteLight(light)"
+                  title="Delete light source"
                 >
                   ×
                 </button>
@@ -260,6 +307,23 @@ const pendingTokenConfig = ref<TokenConfigWithMonster | null>(null)
 const mousePosition = ref<{ x: number; y: number } | null>(null)
 const selectedTokenId = ref<number | null>(null)
 
+// Light placement state
+const pendingLightType = ref<'' | 'torch' | 'lantern' | 'candle'>('')
+
+// Light sources on the map
+interface LightSource {
+  id: number
+  name: string
+  light_type: string
+  x: number
+  y: number
+  bright_radius_ft: number
+  dim_radius_ft: number
+  color: string | null
+  is_active: boolean
+}
+const lightSources = ref<LightSource[]>([])
+
 // Context menu
 const contextMenu = ref({
   visible: false,
@@ -322,9 +386,9 @@ const tokenLayerStyle = computed(() => ({
 // Watch for visibility changes
 watch(() => props.visible, async (visible) => {
   if (visible && props.map.id) {
-    await Promise.all([loadMapImage(), loadUvttData(), loadTokens()])
+    await Promise.all([loadMapImage(), loadUvttData(), loadTokens(), loadLightSources()])
   }
-})
+}, { immediate: true })
 
 watch(() => props.map.id, () => {
   if (props.visible) {
@@ -349,6 +413,19 @@ async function loadMapImage() {
     }
   } catch (e) {
     console.error('Failed to load map image:', e)
+  }
+}
+
+async function loadLightSources() {
+  try {
+    const response = await invoke<{ success: boolean; data?: LightSource[] }>('list_light_sources', {
+      mapId: props.map.id
+    })
+    if (response.success && response.data) {
+      lightSources.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load light sources:', e)
   }
 }
 
@@ -436,13 +513,32 @@ function onMouseUp() {
 // Token config from palette
 function handleTokenConfigChange(config: TokenConfigWithMonster | null) {
   pendingTokenConfig.value = config
+  // Clear light selection when selecting token
+  if (config) {
+    pendingLightType.value = ''
+  }
 }
 
-// Canvas click for token placement
+// Light config from palette
+function handleLightConfigChange(lightType: 'torch' | 'lantern' | 'candle' | null) {
+  pendingLightType.value = lightType || ''
+  // Clear token selection when selecting light
+  if (lightType) {
+    pendingTokenConfig.value = null
+  }
+}
+
+// Canvas click for token or light placement
 async function handleCanvasClick(event: MouseEvent) {
   // Close context menu if open
   if (contextMenu.value.visible) {
     contextMenu.value.visible = false
+    return
+  }
+
+  // Handle light placement
+  if (pendingLightType.value && viewportRef.value) {
+    await handleLightPlacement(event)
     return
   }
 
@@ -490,6 +586,52 @@ async function handleCanvasClick(event: MouseEvent) {
     if (token.token_type === 'monster' && monsterName && monsterSource && props.map.module_id) {
       await addMonsterToModule(monsterName, monsterSource, props.map.module_id)
     }
+  }
+}
+
+// Handle light placement on canvas click
+async function handleLightPlacement(event: MouseEvent) {
+  if (!viewportRef.value || !pendingLightType.value) return
+
+  const rect = viewportRef.value.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  const clickY = event.clientY - rect.top
+
+  // Convert to image coordinates
+  const effectiveScale = baseScale.value * zoom.value
+  const imageX = (clickX - panX.value) / effectiveScale
+  const imageY = (clickY - panY.value) / effectiveScale
+
+  // Light defaults based on type
+  const lightDefaults: Record<string, { name: string; bright: number; dim: number; color: string }> = {
+    torch: { name: 'Torch', bright: 20, dim: 40, color: '#ff9933' },
+    lantern: { name: 'Lantern', bright: 30, dim: 60, color: '#ffcc66' },
+    candle: { name: 'Candle', bright: 5, dim: 10, color: '#ffaa44' }
+  }
+
+  const lightConfig = lightDefaults[pendingLightType.value]
+  if (!lightConfig) return
+
+  try {
+    await invoke('create_light_source', {
+      request: {
+        map_id: props.map.id,
+        name: lightConfig.name,
+        light_type: pendingLightType.value,
+        x: imageX,
+        y: imageY,
+        bright_radius_ft: lightConfig.bright,
+        dim_radius_ft: lightConfig.dim,
+        color: lightConfig.color,
+        is_active: true
+      }
+    })
+
+    // Reload lights and reset selection
+    await loadLightSources()
+    pendingLightType.value = ''
+  } catch (e) {
+    console.error('Failed to create light source:', e)
   }
 }
 
@@ -563,6 +705,17 @@ async function confirmDeleteToken(token: Token) {
   }
 }
 
+async function confirmDeleteLight(light: LightSource) {
+  if (confirm(`Delete light source "${light.name}"?`)) {
+    try {
+      await invoke('delete_light_source', { id: light.id })
+      await loadLightSources()
+    } catch (e) {
+      console.error('Failed to delete light source:', e)
+    }
+  }
+}
+
 // Token display helpers
 function getTokenColor(token: Token): string {
   return token.color || TOKEN_TYPE_COLORS[token.token_type as keyof typeof TOKEN_TYPE_COLORS] || '#666666'
@@ -585,6 +738,26 @@ function getTokenStyle(token: Token) {
 
 function getTokenInitial(token: Token): string {
   return token.name.charAt(0).toUpperCase()
+}
+
+function getLightStyle(light: LightSource) {
+  const dotSize = 12
+  return {
+    left: (light.x * baseScale.value - dotSize / 2) + 'px',
+    top: (light.y * baseScale.value - dotSize / 2) + 'px',
+    width: dotSize + 'px',
+    height: dotSize + 'px',
+    background: light.color || '#ffcc00'
+  }
+}
+
+async function toggleLight(light: LightSource) {
+  try {
+    await invoke('toggle_light_source', { id: light.id })
+    await loadLightSources()
+  } catch (e) {
+    console.error('Failed to toggle light:', e)
+  }
 }
 
 function getPlacementPreviewStyle() {
@@ -704,6 +877,11 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
+.divider {
+  color: var(--color-border);
+  margin: 0 var(--spacing-xs);
+}
+
 .token-count {
   font-size: 0.875rem;
   color: var(--color-text-muted);
@@ -790,6 +968,28 @@ onUnmounted(() => {
   font-size: 0.75rem;
 }
 
+/* Light Sources */
+.light-dot {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 8px 2px rgba(255, 204, 0, 0.6);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.light-dot:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 12px 4px rgba(255, 204, 0, 0.8);
+}
+
+.light-dot.light-inactive {
+  opacity: 0.4;
+  box-shadow: none;
+  border-color: #888;
+}
+
 /* Placement Preview */
 .placement-preview {
   position: absolute;
@@ -813,6 +1013,42 @@ onUnmounted(() => {
   margin: 0 0 var(--spacing-md) 0;
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.token-list-panel h4.section-header {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.token-list-item.light-item {
+  background: rgba(255, 200, 0, 0.05);
+}
+
+.token-list-item.light-item.light-inactive {
+  opacity: 0.5;
+}
+
+.light-color {
+  box-shadow: 0 0 4px rgba(255, 200, 0, 0.5);
+}
+
+.light-toggle-btn {
+  padding: 2px 6px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-base-200);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.light-toggle-btn.lit {
+  background: rgba(255, 180, 0, 0.2);
+  border-color: #ffb400;
+  color: #b38000;
 }
 
 .empty-tokens {

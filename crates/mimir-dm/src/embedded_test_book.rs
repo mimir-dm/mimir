@@ -1,55 +1,17 @@
-//! Embedded test books for development builds
-//! Automatically loads all .tar.gz files from assets/dev/
+//! Dev test books - loaded from disk at runtime (not embedded in binary)
+//!
+//! For development, books are loaded from the repo's assets/dev directory.
+//! Set MIMIR_DEV_ASSETS env var to override the path.
 
 use flate2::read::GzDecoder;
+use std::path::PathBuf;
 use tar::Archive;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
-/// Structure to hold embedded test book data
-#[allow(dead_code)]
-pub struct EmbeddedTestBook {
+/// Structure to hold test book data loaded from disk
+pub struct DevTestBook {
     pub name: String,
-    #[allow(dead_code)]
-    pub data: &'static [u8],
-}
-
-/// Macro to include all test books from the assets/dev directory
-/// Only includes files that exist (checked by build.rs setting cfg flags)
-macro_rules! include_test_books {
-    () => {{
-        #[allow(unused_mut, clippy::vec_init_then_push)]
-        let mut books = Vec::new();
-
-        // PHB - only included if build.rs detected the file exists
-        #[cfg(has_dev_phb)]
-        books.push(EmbeddedTestBook {
-            name: "PHB".to_string(),
-            data: include_bytes!("../assets/dev/phb.tar.gz"),
-        });
-
-        // MM - only included if build.rs detected the file exists
-        #[cfg(has_dev_mm)]
-        books.push(EmbeddedTestBook {
-            name: "MM".to_string(),
-            data: include_bytes!("../assets/dev/mm.tar.gz"),
-        });
-
-        // DMG - only included if build.rs detected the file exists
-        #[cfg(has_dev_dmg)]
-        books.push(EmbeddedTestBook {
-            name: "DMG".to_string(),
-            data: include_bytes!("../assets/dev/dmg.tar.gz"),
-        });
-
-        // Dev tokens - minimal token images for seeder
-        #[cfg(has_dev_tokens)]
-        books.push(EmbeddedTestBook {
-            name: "DEV_TOKENS".to_string(),
-            data: include_bytes!("../assets/dev/dev-tokens.tar.gz"),
-        });
-
-        books
-    }};
+    pub data: Vec<u8>,
 }
 
 /// Check if we're in development mode
@@ -57,21 +19,97 @@ pub fn is_dev_build() -> bool {
     cfg!(debug_assertions) || std::env::var("MIMIR_DEV").is_ok()
 }
 
-/// Get all embedded test books
-#[allow(clippy::vec_init_then_push)]
-pub fn get_embedded_test_books() -> Vec<EmbeddedTestBook> {
-    include_test_books!()
+/// Get the dev assets directory path
+fn get_dev_assets_dir() -> Option<PathBuf> {
+    // 1. Check env var override
+    if let Ok(path) = std::env::var("MIMIR_DEV_ASSETS") {
+        let p = PathBuf::from(path);
+        if p.exists() {
+            return Some(p);
+        }
+        warn!("MIMIR_DEV_ASSETS path does not exist: {:?}", p);
+    }
+
+    // 2. Try to find repo root from executable location (for dev builds)
+    if let Ok(exe) = std::env::current_exe() {
+        // Walk up from executable to find Cargo.toml (repo root indicator)
+        let mut current = exe.parent();
+        while let Some(dir) = current {
+            let cargo_toml = dir.join("Cargo.toml");
+            if cargo_toml.exists() {
+                let assets_dir = dir.join("crates/mimir-dm/assets/dev");
+                if assets_dir.exists() {
+                    return Some(assets_dir);
+                }
+            }
+            current = dir.parent();
+        }
+    }
+
+    // 3. Try relative to current working directory
+    let cwd_assets = PathBuf::from("crates/mimir-dm/assets/dev");
+    if cwd_assets.exists() {
+        return Some(cwd_assets);
+    }
+
+    None
 }
 
-/// Extract all embedded test book archives
-#[allow(dead_code)]
+/// Get all dev test books by loading from disk
+pub fn get_dev_test_books() -> Vec<DevTestBook> {
+    let Some(assets_dir) = get_dev_assets_dir() else {
+        if is_dev_build() {
+            warn!("Dev assets directory not found. Set MIMIR_DEV_ASSETS env var or run from repo root.");
+        }
+        return Vec::new();
+    };
+
+    let book_files = [
+        ("PHB", "phb.tar.gz"),
+        ("MM", "mm.tar.gz"),
+        ("DMG", "dmg.tar.gz"),
+    ];
+
+    let mut books = Vec::new();
+    for (name, filename) in book_files {
+        let path = assets_dir.join(filename);
+        if path.exists() {
+            match std::fs::read(&path) {
+                Ok(data) => {
+                    info!("Loaded dev book {} ({} bytes)", name, data.len());
+                    books.push(DevTestBook {
+                        name: name.to_string(),
+                        data,
+                    });
+                }
+                Err(e) => {
+                    warn!("Failed to read dev book {}: {}", name, e);
+                }
+            }
+        }
+    }
+
+    books
+}
+
+/// Backwards compatibility alias
+pub fn get_embedded_test_books() -> Vec<DevTestBook> {
+    get_dev_test_books()
+}
+
+/// Extract all dev test book archives to target directory
 pub fn extract_all_test_books(
     target_dir: &std::path::Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let test_books = get_embedded_test_books();
+    let test_books = get_dev_test_books();
+
+    if test_books.is_empty() {
+        info!("No dev test books found to extract");
+        return Ok(());
+    }
 
     info!(
-        "Extracting {} embedded test books to {:?}",
+        "Extracting {} dev test books to {:?}",
         test_books.len(),
         target_dir
     );
@@ -87,17 +125,12 @@ pub fn extract_all_test_books(
 }
 
 /// Extract a single test book archive
-#[allow(dead_code)]
 fn extract_single_book(
-    book: &EmbeddedTestBook,
+    book: &DevTestBook,
     target_dir: &std::path::Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Create a decoder from the embedded bytes
-    let decoder = GzDecoder::new(book.data);
+    let decoder = GzDecoder::new(book.data.as_slice());
     let mut archive = Archive::new(decoder);
-
-    // Extract the archive
     archive.unpack(target_dir)?;
-
     Ok(())
 }

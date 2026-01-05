@@ -1,23 +1,80 @@
 //! Map and token seeding for dev data.
+//!
+//! Map assets are loaded from disk at runtime (not embedded in binary).
+//! Set MIMIR_DEV_ASSETS env var to override the path.
 
 use crate::connection::DbConnection;
 use crate::error::Result;
+use crate::models::campaign::light_sources::NewLightSource;
 use crate::models::campaign::modules::Module;
 use crate::models::campaign::{GridType, NewMap, NewToken, TokenSize, TokenType};
 use crate::models::character::Character;
-use crate::services::{MapService, TokenService};
+use crate::services::{LightSourceService, MapService, TokenService};
 use std::path::PathBuf;
-use tracing::info;
+use tracing::{info, warn};
 
-// Embedded map files
-const GOBLIN_HIDEOUT_UVTT: &[u8] = include_bytes!("../assets/goblin-hideout.dd2vtt");
+// Map dimensions (these are constants, not the actual data)
 const GOBLIN_HIDEOUT_WIDTH: i32 = 2592;
 const GOBLIN_HIDEOUT_HEIGHT: i32 = 1458;
 const GOBLIN_HIDEOUT_GRID_PX: i32 = 54;
 
-const GOBLIN_REGION_PNG: &[u8] = include_bytes!("../assets/GoblinRegion.png");
 const GOBLIN_REGION_WIDTH: i32 = 1792;
 const GOBLIN_REGION_HEIGHT: i32 = 1024;
+
+/// Get the seed assets directory path
+fn get_seed_assets_dir() -> Option<PathBuf> {
+    // 1. Check env var override
+    if let Ok(path) = std::env::var("MIMIR_DEV_ASSETS") {
+        // If it's a dev assets dir, look for seed assets relative to repo
+        let p = PathBuf::from(&path);
+        if let Some(repo_root) = p.parent().and_then(|p| p.parent()).and_then(|p| p.parent()) {
+            let seed_assets = repo_root.join("crates/mimir-dm-core/src/seed/assets");
+            if seed_assets.exists() {
+                return Some(seed_assets);
+            }
+        }
+    }
+
+    // 2. Try to find repo root from executable location
+    if let Ok(exe) = std::env::current_exe() {
+        let mut current = exe.parent();
+        while let Some(dir) = current {
+            let cargo_toml = dir.join("Cargo.toml");
+            if cargo_toml.exists() {
+                let assets_dir = dir.join("crates/mimir-dm-core/src/seed/assets");
+                if assets_dir.exists() {
+                    return Some(assets_dir);
+                }
+            }
+            current = dir.parent();
+        }
+    }
+
+    // 3. Try relative to current working directory
+    let cwd_assets = PathBuf::from("crates/mimir-dm-core/src/seed/assets");
+    if cwd_assets.exists() {
+        return Some(cwd_assets);
+    }
+
+    None
+}
+
+/// Load a seed asset file from disk
+fn load_seed_asset(filename: &str) -> Option<Vec<u8>> {
+    let assets_dir = get_seed_assets_dir()?;
+    let path = assets_dir.join(filename);
+
+    match std::fs::read(&path) {
+        Ok(data) => {
+            info!("Loaded seed asset {} ({} bytes)", filename, data.len());
+            Some(data)
+        }
+        Err(e) => {
+            warn!("Failed to load seed asset {}: {}", filename, e);
+            None
+        }
+    }
+}
 
 /// Seed maps and tokens.
 pub fn seed(
@@ -39,6 +96,12 @@ fn seed_battle_map(
     characters: &[Character],
     data_dir: &str,
 ) -> Result<()> {
+    // Load map asset from disk
+    let Some(uvtt_data) = load_seed_asset("goblin-hideout.dd2vtt") else {
+        warn!("Skipping battle map - asset not found. Set MIMIR_DEV_ASSETS or run from repo root.");
+        return Ok(());
+    };
+
     let module = modules.iter().find(|m| m.name == "Cragmaw Hideout");
     let module_id = module.map(|m| m.id);
 
@@ -51,7 +114,7 @@ fn seed_battle_map(
     std::fs::create_dir_all(&maps_dir)?;
 
     let filename = "goblin-hideout.dd2vtt";
-    std::fs::write(maps_dir.join(filename), GOBLIN_HIDEOUT_UVTT)?;
+    std::fs::write(maps_dir.join(filename), &uvtt_data)?;
 
     // Create map record
     let mut new_map = NewMap::new(
@@ -78,7 +141,10 @@ fn seed_battle_map(
     // Add special tokens: trap, NPC, point of interest
     seed_special_tokens(conn, map.id, characters)?;
 
-    info!("Created battle map with tokens");
+    // Add light sources
+    seed_light_sources(conn, map.id)?;
+
+    info!("Created battle map with tokens and lights");
     Ok(())
 }
 
@@ -140,8 +206,37 @@ fn seed_special_tokens(conn: &mut DbConnection, map_id: i32, characters: &[Chara
     Ok(())
 }
 
+fn seed_light_sources(conn: &mut DbConnection, map_id: i32) -> Result<()> {
+    let mut service = LightSourceService::new(conn);
+
+    // Torch in the main chamber (bright 20ft, dim 40ft)
+    let torch1 = NewLightSource::torch(map_id, 800.0, 800.0)
+        .with_name("Wall Torch".into());
+    service.create_light_source(torch1)?;
+
+    // Lantern near treasure cache (bright 30ft, dim 60ft)
+    let lantern = NewLightSource::lantern(map_id, 2100.0, 850.0)
+        .with_name("Hanging Lantern".into());
+    service.create_light_source(lantern)?;
+
+    // Inactive torch (to demonstrate toggle)
+    let torch2 = NewLightSource::torch(map_id, 1500.0, 600.0)
+        .with_name("Unlit Torch".into())
+        .inactive();
+    service.create_light_source(torch2)?;
+
+    info!("Created light sources (2 active, 1 inactive)");
+    Ok(())
+}
+
 fn seed_region_map(conn: &mut DbConnection, campaign_id: i32, data_dir: &str) -> Result<()> {
     use base64::{engine::general_purpose::STANDARD, Engine};
+
+    // Load PNG from disk
+    let Some(png_data) = load_seed_asset("GoblinRegion.png") else {
+        warn!("Skipping region map - asset not found. Set MIMIR_DEV_ASSETS or run from repo root.");
+        return Ok(());
+    };
 
     let maps_dir = PathBuf::from(data_dir)
         .join("campaigns")
@@ -157,7 +252,7 @@ fn seed_region_map(conn: &mut DbConnection, campaign_id: i32, data_dir: &str) ->
             "map_size": {"x": GOBLIN_REGION_WIDTH as f64 / 70.0, "y": GOBLIN_REGION_HEIGHT as f64 / 70.0},
             "pixels_per_grid": 70
         },
-        "image": STANDARD.encode(GOBLIN_REGION_PNG),
+        "image": STANDARD.encode(&png_data),
         "line_of_sight": [],
         "portals": [],
         "lights": []
