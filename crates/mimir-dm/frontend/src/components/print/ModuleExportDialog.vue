@@ -29,10 +29,26 @@
               <span class="checkbox-label">Monsters</span>
             </label>
             <label class="checkbox-option">
+              <input type="checkbox" v-model="options.includeTraps" />
+              <span class="checkbox-label">Traps</span>
+            </label>
+            <label class="checkbox-option">
               <input type="checkbox" v-model="options.includeNpcs" />
               <span class="checkbox-label">NPCs</span>
             </label>
           </div>
+        </div>
+
+        <!-- Session Notes (separate from documents for post-play export) -->
+        <div class="mode-card" :class="{ active: options.includeSessionNotes }">
+          <label class="mode-header" @click.prevent="options.includeSessionNotes = !options.includeSessionNotes">
+            <input type="checkbox" v-model="options.includeSessionNotes" @click.stop />
+            <span class="mode-icon">&#128221;</span>
+            <div class="mode-info">
+              <span class="mode-label">Session Notes</span>
+              <span class="mode-desc">Play session notes and summaries</span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -169,7 +185,9 @@ const options = reactive({
   // Content section
   includeDocuments: true,
   includeMonsters: true,
+  includeTraps: true,
   includeNpcs: false,
+  includeSessionNotes: false,
   // Map Preview section
   includePreview: true,
   previewGrid: true,
@@ -184,7 +202,7 @@ const options = reactive({
 
 // Computed
 const hasAnySelection = computed(() => {
-  return options.includeDocuments || options.includePreview || options.includePlay
+  return options.includeDocuments || options.includeSessionNotes || options.includePreview || options.includePlay
 })
 
 const defaultFileName = computed(() => {
@@ -200,7 +218,9 @@ watch(() => props.visible, (newVisible) => {
     // Content section
     options.includeDocuments = true
     options.includeMonsters = true
+    options.includeTraps = true
     options.includeNpcs = false
+    options.includeSessionNotes = false
     // Map Preview section
     options.includePreview = true
     options.previewGrid = true
@@ -238,7 +258,9 @@ async function handleExport() {
     const result = await PrintService.exportModuleDocuments(props.moduleId, {
       include_documents: options.includeDocuments,
       include_monsters: options.includeDocuments && options.includeMonsters,
+      include_traps: options.includeDocuments && options.includeTraps,
       include_npcs: options.includeDocuments && options.includeNpcs,
+      include_session_notes: options.includeSessionNotes,
       // Map options
       include_preview: options.includePreview,
       preview_grid: options.previewGrid,

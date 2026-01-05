@@ -82,8 +82,7 @@ const selectedId = ref<number | null>(null)
 // Filter to characters that match NPC/PC type and aren't already in this campaign
 const availableCharacters = computed(() => {
   return characterStore.characters.filter(c => {
-    const isNpc = c.is_npc === 1
-    return isNpc === props.isNpc && c.campaign_id !== props.campaignId
+    return c.is_npc === props.isNpc && c.campaign_id !== props.campaignId
   })
 })
 
