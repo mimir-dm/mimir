@@ -50,7 +50,7 @@ def unit(watch: bool = False, core: bool = False, ui: bool = False, all: bool = 
     if run_core:
         print("\nRunning Rust tests (unit + integration) for core crates...")
         result = subprocess.run(
-            ["cargo", "test", "--workspace", "--exclude", "mimir-dm", "--", "--test-threads=1"],
+            ["cargo", "test", "--workspace", "--exclude", "mimir-dm", "--exclude", "mimir-dm-agent-test", "--", "--test-threads=1"],
             cwd=PROJECT_ROOT,
             capture_output=False
         )
