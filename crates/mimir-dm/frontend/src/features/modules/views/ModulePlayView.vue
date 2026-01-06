@@ -420,7 +420,7 @@ onMounted(async () => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--color-base-200);
+  background: var(--color-background);
   overflow: hidden;
 }
 
@@ -430,9 +430,9 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: var(--color-base-300);
-  border-bottom: 2px solid var(--color-accent, #e67e22);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-warning);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-left,
@@ -457,18 +457,18 @@ onMounted(async () => {
   padding: 0.5rem 1rem;
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
-  color: var(--color-text-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .back-to-prep-button:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface-variant);
   color: var(--color-text);
-  border-color: var(--color-text-muted);
+  border-color: var(--color-text-secondary);
 }
 
 .back-to-prep-button .icon {
@@ -495,9 +495,9 @@ onMounted(async () => {
   font-weight: 700;
   letter-spacing: 0.1em;
   padding: 0.2rem 0.6rem;
-  background: var(--color-accent, #e67e22);
-  color: white;
-  border-radius: 0.25rem;
+  background: var(--color-warning);
+  color: var(--color-background);
+  border-radius: var(--radius-sm);
 }
 
 /* Display Controls */
@@ -514,23 +514,23 @@ onMounted(async () => {
   padding: 0.5rem 1rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .display-button:hover {
-  background: var(--color-base-200);
-  border-color: var(--color-primary);
+  background: var(--color-surface-variant);
+  border-color: var(--color-primary-500);
 }
 
 .display-button.active {
-  background: var(--color-success, #10b981);
-  border-color: var(--color-success, #10b981);
-  color: white;
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--color-background);
 }
 
 .display-button .icon {
@@ -545,21 +545,21 @@ onMounted(async () => {
   padding: 0.5rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
-  color: var(--color-text-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .blackout-button:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface-variant);
   color: var(--color-text);
 }
 
 .blackout-button.active {
-  background: var(--color-warning, #f59e0b);
-  border-color: var(--color-warning, #f59e0b);
-  color: white;
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+  color: var(--color-background);
 }
 
 .blackout-button .icon {
@@ -569,17 +569,17 @@ onMounted(async () => {
 
 .end-session-button {
   padding: 0.5rem 1rem;
-  background: var(--color-error, #dc3545);
-  color: white;
+  background: var(--color-error);
+  color: var(--color-background);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-base);
 }
 
 .end-session-button:hover {
-  background: var(--color-error-dark, #c82333);
+  background: var(--color-error-dark);
 }
 
 /* Content Area */
@@ -603,7 +603,7 @@ onMounted(async () => {
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: width var(--transition-slow);
   position: relative;
 }
 
@@ -626,12 +626,12 @@ onMounted(async () => {
   justify-content: center;
   z-index: 10;
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .sidebar-toggle:hover {
-  background: var(--color-base-200);
-  border-color: var(--color-primary);
+  background: var(--color-surface-variant);
+  border-color: var(--color-primary-500);
 }
 
 .sidebar-content {
@@ -649,7 +649,7 @@ onMounted(async () => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-border);
@@ -692,7 +692,7 @@ onMounted(async () => {
   border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  transition: height 0.3s ease;
+  transition: height var(--transition-slow);
   height: 250px;
   min-height: 40px;
 }
@@ -706,7 +706,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: var(--color-base-300);
+  background: var(--color-surface-variant);
   border: none;
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
@@ -718,12 +718,12 @@ onMounted(async () => {
 }
 
 .notes-toggle:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface-hover);
 }
 
 .notes-toggle-icon {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .notes-toggle-label {
@@ -732,13 +732,13 @@ onMounted(async () => {
 
 .notes-saving {
   font-size: 0.75rem;
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
   font-style: italic;
 }
 
 .notes-saved {
   font-size: 0.75rem;
-  color: var(--color-success, #10b981);
+  color: var(--color-success);
 }
 
 .notes-content {
@@ -765,7 +765,7 @@ onMounted(async () => {
 }
 
 .notes-textarea::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -775,17 +775,17 @@ onMounted(async () => {
 }
 
 .notes-textarea::-webkit-scrollbar-track {
-  background: var(--color-base-200);
-  border-radius: 4px;
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-sm);
 }
 
 .notes-textarea::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .notes-textarea::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: var(--color-text-secondary);
 }
 
 /* Adjust main area when notes expanded */
@@ -798,13 +798,13 @@ onMounted(async () => {
 .loading-text,
 .empty-text {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .monster-qty {
   font-weight: 600;
-  color: var(--color-accent, #e67e22);
+  color: var(--color-warning);
   min-width: 2rem;
 }
 
@@ -814,8 +814,8 @@ onMounted(async () => {
 
 /* Monster Card Styles */
 .monster-card {
-  background: var(--color-base-200);
-  border-radius: 0.5rem;
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-lg);
   padding: 1rem;
 }
 
@@ -835,7 +835,7 @@ onMounted(async () => {
 
 .monster-source {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .monster-stats {
@@ -853,7 +853,7 @@ onMounted(async () => {
 
 .stat-label {
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .stat-value {
@@ -880,7 +880,7 @@ onMounted(async () => {
 .ability-name {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -893,7 +893,7 @@ onMounted(async () => {
 
 .no-data-text {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
   text-align: center;
   padding: 0.5rem;
@@ -913,7 +913,7 @@ onMounted(async () => {
 .monster-reactions h4 {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--color-accent, #e67e22);
+  color: var(--color-warning);
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -933,12 +933,12 @@ onMounted(async () => {
 .monster-action :deep(.hit-bonus),
 .monster-action :deep(.damage-roll),
 .monster-action :deep(.dice-roll) {
-  color: var(--color-primary, #4a9eff);
+  color: var(--color-primary-500);
   font-weight: 600;
 }
 
 .monster-action :deep(.cross-ref-link) {
-  color: var(--color-primary, #4a9eff);
+  color: var(--color-primary-500);
   cursor: pointer;
 }
 
@@ -952,7 +952,7 @@ onMounted(async () => {
 .monster-legendary h4 {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #9333ea; /* Purple for legendary */
+  color: var(--color-secondary); /* Purple for legendary */
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -961,7 +961,7 @@ onMounted(async () => {
 .legendary-intro {
   font-size: 0.75rem;
   font-style: italic;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin: 0 0 0.5rem 0;
   line-height: 1.3;
 }
@@ -976,7 +976,7 @@ onMounted(async () => {
 .monster-spellcasting h4 {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #2563eb; /* Blue for spellcasting */
+  color: var(--color-info); /* Blue for spellcasting */
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1006,27 +1006,27 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.8rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
   color: var(--color-text);
-  background: var(--color-base-200);
-  transition: all 0.15s ease;
+  background: var(--color-surface-variant);
+  transition: all var(--transition-fast);
   border-left: 3px solid transparent;
 }
 
 .monster-quick-item:hover {
-  background: var(--color-base-300);
-  border-left-color: var(--color-accent, #e67e22);
+  background: var(--color-surface-hover);
+  border-left-color: var(--color-warning);
 }
 
 .monster-quick-item.active {
-  background: var(--color-base-300);
-  border-left-color: var(--color-primary, #4a9eff);
+  background: var(--color-surface-hover);
+  border-left-color: var(--color-primary-500);
 }
 
 .monster-quick-item .monster-qty {
   font-weight: 700;
-  color: var(--color-accent, #e67e22);
+  color: var(--color-warning);
   min-width: 1.5rem;
 }
 
@@ -1039,8 +1039,8 @@ onMounted(async () => {
   font-size: 0.65rem;
   padding: 0.1rem 0.4rem;
   background: var(--color-surface);
-  border-radius: 0.25rem;
-  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -1064,7 +1064,7 @@ onMounted(async () => {
 }
 
 .map-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface-variant);
 }
 
 .map-item.active {
@@ -1091,7 +1091,7 @@ onMounted(async () => {
 
 .map-item-meta {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .map-active-indicator {
@@ -1120,14 +1120,14 @@ onMounted(async () => {
 .cross-ref-tooltip {
   position: fixed;
   z-index: 9999;
-  background: var(--color-surface, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
-  border-radius: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
   color: var(--color-text);
   max-width: 300px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
   pointer-events: none;
 }
 
@@ -1149,7 +1149,7 @@ onMounted(async () => {
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
-  transition: margin-right 0.3s ease;
+  transition: margin-right var(--transition-slow);
 }
 
 .combat-layout.monster-panel-open .map-area {

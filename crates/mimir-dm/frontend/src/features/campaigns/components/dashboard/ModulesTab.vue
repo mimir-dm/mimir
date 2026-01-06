@@ -688,9 +688,9 @@ onMounted(async () => {
   width: 280px;
   min-width: 240px;
   max-width: 320px;
-  border-right: 1px solid var(--color-border, #333);
+  border-right: 1px solid var(--color-border);
   overflow-y: auto;
-  background: var(--color-surface, #1a1a1a);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
 }
@@ -707,33 +707,34 @@ onMounted(async () => {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .btn-add {
   width: 20px;
   height: 20px;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
 }
 
 .btn-add:hover {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background: var(--color-primary-500);
+  color: var(--color-background);
+  border-color: var(--color-primary-500);
 }
 
 .modules-loading,
 .modules-empty,
 .maps-loading,
 .maps-empty {
-  padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .modules-list {
@@ -741,31 +742,31 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--spacing-xs, 4px);
+  padding: var(--spacing-xs);
 }
 
 .module-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   color: var(--color-text);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .module-item:hover {
-  background: var(--color-surface-variant, #252525);
+  background: var(--color-surface-variant);
 }
 
 .module-item.selected {
-  background: var(--color-primary-900, #1e3a5f);
+  background: var(--color-primary-100);
 }
 
 .module-number {
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
 }
 
@@ -778,22 +779,22 @@ onMounted(async () => {
 
 /* Maps section */
 .maps-section {
-  border-top: 1px solid var(--color-border, #333);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-xs) var(--spacing-sm);
 }
 
 .maps-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px) 0;
+  padding: var(--spacing-xs) var(--spacing-sm) 0;
 }
 
 .maps-header h4 {
   margin: 0;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--color-text-muted, #666);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -805,19 +806,19 @@ onMounted(async () => {
 }
 
 .map-item {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
   color: var(--color-text);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .map-item:hover {
-  background: var(--color-surface-variant, #252525);
+  background: var(--color-surface-variant);
 }
 
 .map-item.selected {
-  background: var(--color-primary-900, #1e3a5f);
+  background: var(--color-primary-100);
 }
 
 /* Main panel */
@@ -840,7 +841,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+  padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -852,23 +853,23 @@ onMounted(async () => {
 
 .map-actions {
   display: flex;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 .btn-action {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
 }
 
 .btn-action:hover {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background: var(--color-primary-500);
+  color: var(--color-background);
+  border-color: var(--color-primary-500);
 }
 
 .btn-action.btn-danger:hover {
@@ -877,11 +878,11 @@ onMounted(async () => {
 }
 
 .btn-close {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.75rem;
   border: none;
   background: none;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -906,7 +907,7 @@ onMounted(async () => {
 }
 
 .map-loading {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .map-info {
@@ -914,14 +915,14 @@ onMounted(async () => {
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
 }
 
 /* Module Dashboard */
 .module-dashboard {
-  padding: var(--spacing-lg, 16px);
+  padding: var(--spacing-lg);
   overflow-y: auto;
   height: 100%;
 }
@@ -930,8 +931,8 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-lg, 16px);
-  padding-bottom: var(--spacing-md, 12px);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -943,14 +944,14 @@ onMounted(async () => {
 
 .module-actions {
   display: flex;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 /* Dashboard Grid - Two Column Layout */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -959,7 +960,7 @@ onMounted(async () => {
 .dashboard-left {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
   overflow-y: auto;
 }
 
@@ -978,76 +979,76 @@ onMounted(async () => {
 }
 
 .dashboard-section {
-  background: var(--color-surface, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
-  border-radius: var(--radius-md, 8px);
-  padding: var(--spacing-md, 12px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-sm, 8px);
-  padding-bottom: var(--spacing-xs, 4px);
-  border-bottom: 1px solid var(--color-border, #333);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .section-header h3 {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .section-empty,
 .section-loading {
   font-size: 0.75rem;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
   text-align: center;
-  padding: var(--spacing-md, 12px);
+  padding: var(--spacing-md);
 }
 
 /* NPC Cards */
 .npc-cards {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
 .npc-card {
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-surface-variant, #252525);
-  border: 1px solid var(--color-border, #333);
-  border-left: 3px solid var(--color-warning, #f59e0b);
-  border-radius: var(--radius-sm, 4px);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 
 .npc-card:hover {
-  border-color: var(--color-primary, #4a9eff);
-  border-left-color: var(--color-warning, #f59e0b);
+  border-color: var(--color-primary-500);
+  border-left-color: var(--color-warning);
 }
 
 .npc-name {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .npc-role {
   font-size: 0.65rem;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
 }
 
 /* Monster List (grouped by encounter tag) */
 .monster-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
   overflow-y: auto;
   flex: 1;
 }
@@ -1062,14 +1063,14 @@ onMounted(async () => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-error, #dc3545);
-  padding: var(--spacing-xs, 4px) 0;
-  border-bottom: 1px solid var(--color-border, #333);
-  margin-bottom: var(--spacing-xs, 4px);
+  color: var(--color-error);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-xs);
 }
 
 .monster-group-header.untagged {
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
 }
 
 .monster-group-items {
@@ -1081,35 +1082,35 @@ onMounted(async () => {
 .monster-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-surface-variant, #252525);
-  border-radius: var(--radius-sm, 4px);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 
 .monster-row:hover {
-  background: var(--color-primary-900, #1e3a5f);
+  background: var(--color-primary-100);
 }
 
 .monster-row.active {
-  background: var(--color-primary-900, #1e3a5f);
-  border-left: 3px solid var(--color-error, #dc3545);
-  padding-left: calc(var(--spacing-sm, 8px) - 3px);
+  background: var(--color-primary-100);
+  border-left: 3px solid var(--color-error);
+  padding-left: calc(var(--spacing-sm) - 3px);
 }
 
 .monster-qty {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-error, #dc3545);
+  color: var(--color-error);
   min-width: 24px;
 }
 
 .monster-name {
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 /* Monster Stats Panel in Module Dashboard */
@@ -1143,7 +1144,7 @@ onMounted(async () => {
 .dangers-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
   overflow-y: auto;
   flex: 1;
 }
@@ -1158,9 +1159,9 @@ onMounted(async () => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-muted, #888);
-  padding: var(--spacing-xs, 4px) 0;
-  margin-bottom: var(--spacing-xs, 4px);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs) 0;
+  margin-bottom: var(--spacing-xs);
 }
 
 /* Trap List */
@@ -1173,96 +1174,96 @@ onMounted(async () => {
 .trap-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-surface-variant, #252525);
-  border-radius: var(--radius-sm, 4px);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 
 .trap-row:hover {
-  background: var(--color-primary-900, #1e3a5f);
+  background: var(--color-primary-100);
 }
 
 .trap-row.active {
-  background: var(--color-primary-900, #1e3a5f);
-  border-left: 3px solid var(--color-warning, #f59e0b);
-  padding-left: calc(var(--spacing-sm, 8px) - 3px);
+  background: var(--color-primary-100);
+  border-left: 3px solid var(--color-warning);
+  padding-left: calc(var(--spacing-sm) - 3px);
 }
 
 .trap-qty {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
   min-width: 24px;
 }
 
 .trap-name {
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 /* Map Cards */
 .map-cards {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
 .map-card {
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-surface-variant, #252525);
-  border: 1px solid var(--color-border, #333);
-  border-radius: var(--radius-sm, 4px);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 
 .map-card:hover {
-  border-color: var(--color-primary, #4a9eff);
+  border-color: var(--color-primary-500);
 }
 
 .map-name {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .map-size {
   font-size: 0.65rem;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
 }
 
 /* Document Cards */
 .document-cards {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
 .document-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-surface-variant, #252525);
-  border: 1px solid var(--color-border, #333);
-  border-radius: var(--radius-sm, 4px);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 
 .document-card:hover {
-  border-color: var(--color-primary, #4a9eff);
+  border-color: var(--color-primary-500);
 }
 
 .doc-title {
   font-size: 0.8rem;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .doc-status {
@@ -1273,8 +1274,8 @@ onMounted(async () => {
 }
 
 .doc-status.complete {
-  background: var(--color-success-900, rgba(16, 185, 129, 0.2));
-  color: var(--color-success, #10b981);
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 /* Empty state */
@@ -1285,35 +1286,35 @@ onMounted(async () => {
   justify-content: center;
   height: 100%;
   text-align: center;
-  padding: var(--spacing-xl, 24px);
-  color: var(--color-text-muted, #888);
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
 }
 
 .empty-icon {
   font-size: 3rem;
-  margin-bottom: var(--spacing-md, 12px);
+  margin-bottom: var(--spacing-md);
   opacity: 0.5;
 }
 
 .empty-state h3 {
-  margin: 0 0 var(--spacing-sm, 8px) 0;
+  margin: 0 0 var(--spacing-sm) 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .empty-state p {
-  margin: 0 0 var(--spacing-md, 12px) 0;
+  margin: 0 0 var(--spacing-md) 0;
   font-size: 0.875rem;
 }
 
 /* Session Notes Panel */
 .notes-panel {
-  background: var(--color-surface, #1a1a1a);
-  border-top: 1px solid var(--color-border, #333);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  transition: height 0.3s ease;
+  transition: height var(--transition-slow);
   height: 200px;
   min-height: 36px;
   flex-shrink: 0;
@@ -1326,25 +1327,25 @@ onMounted(async () => {
 .notes-toggle {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-xs, 4px) var(--spacing-md, 12px);
-  background: var(--color-surface-variant, #252525);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-surface-variant);
   border: none;
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   text-align: left;
   width: 100%;
 }
 
 .notes-toggle:hover {
-  background: var(--color-base-300, #333);
+  background: var(--color-surface-hover);
 }
 
 .notes-toggle-icon {
   font-size: 0.65rem;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
 }
 
 .notes-toggle-label {
@@ -1353,13 +1354,13 @@ onMounted(async () => {
 
 .notes-saving {
   font-size: 0.7rem;
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
   font-style: italic;
 }
 
 .notes-saved {
   font-size: 0.7rem;
-  color: var(--color-success, #10b981);
+  color: var(--color-success);
 }
 
 .notes-content {
@@ -1370,14 +1371,14 @@ onMounted(async () => {
 
 .notes-textarea {
   flex: 1;
-  padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   resize: none;
   font-family: inherit;
   font-size: 0.85rem;
   line-height: 1.5;
-  background: var(--color-surface, #1a1a1a);
-  color: var(--color-text, #e0e0e0);
+  background: var(--color-surface);
+  color: var(--color-text);
   overflow-y: auto;
 }
 
@@ -1386,7 +1387,7 @@ onMounted(async () => {
 }
 
 .notes-textarea::placeholder {
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 </style>

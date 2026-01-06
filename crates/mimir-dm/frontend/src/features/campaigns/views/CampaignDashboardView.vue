@@ -157,7 +157,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-base-100, #0d0d0d);
+  background: var(--color-background);
 }
 
 .dashboard-loading,
@@ -167,15 +167,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: var(--spacing-md, 12px);
-  color: var(--color-text-muted, #888);
+  gap: var(--spacing-md);
+  color: var(--color-text-secondary);
 }
 
 .loading-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--color-border, #333);
-  border-top-color: var(--color-primary, #4a9eff);
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary-500);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -185,47 +185,47 @@ onMounted(() => {
 }
 
 .btn-retry {
-  padding: var(--spacing-sm, 8px) var(--spacing-lg, 16px);
-  background: var(--color-primary, #4a9eff);
-  color: white;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-primary-500);
+  color: var(--color-background);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .btn-retry:hover {
-  opacity: 0.9;
+  background: var(--color-primary-600);
 }
 
 .dashboard-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
-  background: var(--color-surface, #1a1a1a);
-  border-bottom: 1px solid var(--color-border, #333);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
 }
 
 .header-info h1 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .header-actions {
   display: flex;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 .btn-sm {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
 }
 
