@@ -168,12 +168,12 @@ onMounted(() => {
 
 <style scoped>
 .npcs-tab {
-  padding: var(--spacing-lg, 16px);
+  padding: var(--spacing-lg);
   height: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
 }
 
 .tab-header {
@@ -186,12 +186,12 @@ onMounted(() => {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .header-actions {
   display: flex;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 /* Loading/Empty states */
@@ -202,9 +202,9 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
   text-align: center;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-secondary);
 }
 
 .empty-icon {
@@ -216,7 +216,7 @@ onMounted(() => {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .empty-state p {
@@ -228,50 +228,51 @@ onMounted(() => {
 .character-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md, 12px);
+  gap: var(--spacing-md);
 }
 
 .character-card {
-  background: var(--color-surface, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
-  border-left: 3px solid var(--color-warning, #f59e0b);
-  border-radius: var(--radius-md, 8px);
-  padding: var(--spacing-md, 12px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .character-card:hover {
-  border-color: var(--color-primary, #4a9eff);
-  border-left-color: var(--color-warning, #f59e0b);
+  border-color: var(--color-primary-500);
+  border-left-color: var(--color-warning);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-xs, 4px);
+  margin-bottom: var(--spacing-xs);
 }
 
 .character-name {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .character-details {
   font-size: 0.875rem;
-  color: var(--color-primary, #4a9eff);
-  margin-bottom: var(--spacing-sm, 8px);
+  color: var(--color-primary-500);
+  margin-bottom: var(--spacing-sm);
 }
 
 .card-actions {
   display: flex;
-  gap: var(--spacing-xs, 4px);
-  padding-top: var(--spacing-sm, 8px);
-  border-top: 1px solid var(--color-border, #333);
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
 }
 
 .card-actions .btn {
