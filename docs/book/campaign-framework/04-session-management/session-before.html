@@ -563,7 +563,7 @@ If pressed: "The ancestors demand purity!"
 <p><strong>From Step 6 Notes</strong>: “Morak: gaunt, whispers” → Becomes full NPC card with dialogue and reactions</p>
 <p><strong>From Step 7 Notes</strong>: “Animated armor” → Becomes tactical encounter with environment details</p>
 <p><strong>From Step 8 Notes</strong>: “Letter, potions” → Becomes integrated rewards within scene flow</p>
-<p>The transformation from notes to one-page plan is what makes your prep usable at the table. The <a href="../06-templates/templates/session-outline.html">Session Outline template</a> guides both the note-taking and final formatting.</p>
+<p>The transformation from notes to one-page plan is what makes your prep usable at the table. Your module provides the content foundation; this process creates your session-specific action plan.</p>
 <h2 id="weekly-time-investment-summary"><a class="header" href="#weekly-time-investment-summary">Weekly Time Investment Summary</a></h2>
 <p>Total weekly prep time: 2.5-3 hours</p>
 <ul>
@@ -583,7 +583,7 @@ If pressed: "The ancestors demand purity!"
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../campaign-framework/04-session-management/session-interlude.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../campaign-framework/04-session-management/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -597,7 +597,7 @@ If pressed: "The ancestors demand purity!"
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../campaign-framework/04-session-management/session-interlude.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../campaign-framework/04-session-management/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
@@ -608,6 +608,22 @@ If pressed: "The ancestors demand purity!"
 
         </div>
 
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
 
 
 

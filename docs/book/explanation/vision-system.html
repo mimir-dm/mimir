@@ -1,0 +1,404 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Vision System - Mimir - D&amp;D Campaign Assistant</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A local-first D&amp;D campaign assistant for Dungeon Masters">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mimir - D&amp;D Campaign Assistant</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/mimir-dm/mimir" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/mimir-dm/mimir/edit/main/docs/src/explanation/vision-system.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="vision-system"><a class="header" href="#vision-system">Vision System</a></h1>
+<p>How Mimir implements D&amp;D 5e vision and lighting rules.</p>
+<h2 id="why-vision-matters"><a class="header" href="#why-vision-matters">Why Vision Matters</a></h2>
+<p>In D&amp;D, what characters can see affects:</p>
+<ul>
+<li>Exploration and discovery</li>
+<li>Combat tactics</li>
+<li>Stealth and surprise</li>
+<li>Atmosphere and tension</li>
+</ul>
+<p>Mimir’s vision system brings these rules to your virtual tabletop.</p>
+<h2 id="dd-5e-vision-rules"><a class="header" href="#dd-5e-vision-rules">D&amp;D 5e Vision Rules</a></h2>
+<h3 id="light-levels"><a class="header" href="#light-levels">Light Levels</a></h3>
+<p>D&amp;D defines three light levels:</p>
+<p><strong>Bright Light</strong>
+Most creatures see normally. Includes:</p>
+<ul>
+<li>Daylight</li>
+<li>Torchlit rooms</li>
+<li>Magical light</li>
+</ul>
+<p><strong>Dim Light</strong>
+Lightly obscured area. Creates:</p>
+<ul>
+<li>Disadvantage on Perception checks</li>
+<li>Shadows and half-light</li>
+</ul>
+<p><strong>Darkness</strong>
+Heavily obscured area. Results in:</p>
+<ul>
+<li>Effectively blind</li>
+<li>Auto-fail sight-based checks</li>
+<li>Advantage for hidden creatures</li>
+</ul>
+<h3 id="darkvision"><a class="header" href="#darkvision">Darkvision</a></h3>
+<p>Many races and creatures can see in darkness:</p>
+<ul>
+<li>Treat darkness as dim light</li>
+<li>Treat dim light as bright light</li>
+<li>Cannot discern color (shades of gray)</li>
+<li>Typical range: 60 feet</li>
+</ul>
+<h2 id="how-mimir-implements-this"><a class="header" href="#how-mimir-implements-this">How Mimir Implements This</a></h2>
+<h3 id="fog-of-war"><a class="header" href="#fog-of-war">Fog of War</a></h3>
+<p>The map is divided into:</p>
+<ul>
+<li><strong>Revealed</strong> - Areas PCs can see</li>
+<li><strong>Hidden</strong> - Areas beyond PC vision</li>
+</ul>
+<p>As tokens move, fog updates automatically.</p>
+<h3 id="vision-radius"><a class="header" href="#vision-radius">Vision Radius</a></h3>
+<p>Each PC token calculates visible area:</p>
+<ol>
+<li>Base vision from ambient light</li>
+<li>Extended by darkvision (if applicable)</li>
+<li>Extended by light sources</li>
+<li>Blocked by walls (UVTT maps)</li>
+</ol>
+<h3 id="light-sources"><a class="header" href="#light-sources">Light Sources</a></h3>
+<p>Placed light sources create illumination:</p>
+<ul>
+<li>Torch: 20 ft bright, 40 ft dim</li>
+<li>Lantern: 30 ft bright, 60 ft dim</li>
+<li>Candle: 5 ft bright, 10 ft dim</li>
+</ul>
+<p>Lit sources expand visible areas. Unlit sources have no effect.</p>
+<h3 id="wall-occlusion"><a class="header" href="#wall-occlusion">Wall Occlusion</a></h3>
+<p>UVTT maps include wall data:</p>
+<ul>
+<li>Vision stops at walls</li>
+<li>Rooms reveal individually</li>
+<li>Doors can be open or closed</li>
+</ul>
+<p>Without wall data, vision is circular (line of sight to all directions).</p>
+<h2 id="vision-modes"><a class="header" href="#vision-modes">Vision Modes</a></h2>
+<h3 id="fog-mode"><a class="header" href="#fog-mode">Fog Mode</a></h3>
+<p>Default exploration mode:</p>
+<ul>
+<li>Map hidden outside vision</li>
+<li>Reveals as PCs explore</li>
+<li>Maximum immersion</li>
+</ul>
+<h3 id="token-mode"><a class="header" href="#token-mode">Token Mode</a></h3>
+<p>Combat-focused mode:</p>
+<ul>
+<li>Map fully visible</li>
+<li>Enemy tokens hidden outside vision</li>
+<li>Geography known, enemies hidden</li>
+</ul>
+<h3 id="reveal-mode"><a class="header" href="#reveal-mode">Reveal Mode</a></h3>
+<p>Override mode:</p>
+<ul>
+<li>Everything visible</li>
+<li>Bypasses all fog</li>
+<li>Use for non-exploration scenes</li>
+</ul>
+<h2 id="what-creates-vision"><a class="header" href="#what-creates-vision">What Creates Vision</a></h2>
+<p><strong>Does reveal fog:</strong></p>
+<ul>
+<li>Player Character tokens</li>
+<li>Active light sources</li>
+</ul>
+<p><strong>Does not reveal fog:</strong></p>
+<ul>
+<li>NPC tokens</li>
+<li>Monster tokens</li>
+<li>Hidden tokens</li>
+</ul>
+<p>This prevents accidental reveals from positioned enemies.</p>
+<h2 id="practical-considerations"><a class="header" href="#practical-considerations">Practical Considerations</a></h2>
+<h3 id="dungeon-exploration"><a class="header" href="#dungeon-exploration">Dungeon Exploration</a></h3>
+<ul>
+<li>Use Fog mode</li>
+<li>Set ambient light to dim or dark</li>
+<li>Place torches on walls</li>
+<li>Reveal room by room</li>
+</ul>
+<h3 id="combat-encounters"><a class="header" href="#combat-encounters">Combat Encounters</a></h3>
+<ul>
+<li>Consider Token mode</li>
+<li>Players see the battlefield</li>
+<li>Hidden reinforcements stay hidden</li>
+</ul>
+<h3 id="town-scenes"><a class="header" href="#town-scenes">Town Scenes</a></h3>
+<ul>
+<li>Use Reveal mode</li>
+<li>Fog doesn’t fit the fiction</li>
+<li>Focus on roleplay, not exploration</li>
+</ul>
+<h3 id="dramatic-reveals"><a class="header" href="#dramatic-reveals">Dramatic Reveals</a></h3>
+<ul>
+<li>Use Blackout</li>
+<li>Position elements</li>
+<li>Reveal with effect</li>
+</ul>
+<h2 id="tips-for-dms"><a class="header" href="#tips-for-dms">Tips for DMs</a></h2>
+<h3 id="before-sessions"><a class="header" href="#before-sessions">Before Sessions</a></h3>
+<ul>
+<li>Check ambient light setting</li>
+<li>Place light sources strategically</li>
+<li>Test with a PC token</li>
+</ul>
+<h3 id="during-play"><a class="header" href="#during-play">During Play</a></h3>
+<ul>
+<li>Toggle lights for effect</li>
+<li>Adjust ambient as needed</li>
+<li>Switch modes as appropriate</li>
+</ul>
+<h3 id="for-atmosphere"><a class="header" href="#for-atmosphere">For Atmosphere</a></h3>
+<ul>
+<li>Dark + scattered torches = tension</li>
+<li>Bright = safety</li>
+<li>Sudden darkness = danger</li>
+</ul>
+<h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
+<ul>
+<li><a href="../reference/vision-and-lighting.html">Vision &amp; Lighting Reference</a></li>
+<li><a href="../how-to/maps/manage-light-sources.html">Manage Light Sources</a></li>
+<li><a href="../how-to/play-mode/fog-of-war.html">Fog of War</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../explanation/document-workflow.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../campaign-framework/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../explanation/document-workflow.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../campaign-framework/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

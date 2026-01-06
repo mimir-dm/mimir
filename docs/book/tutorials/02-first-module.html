@@ -1,0 +1,452 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Your First Module - Mimir - D&amp;D Campaign Assistant</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A local-first D&amp;D campaign assistant for Dungeon Masters">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mimir - D&amp;D Campaign Assistant</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/mimir-dm/mimir" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/mimir-dm/mimir/edit/main/docs/src/tutorials/02-first-module.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="your-first-module"><a class="header" href="#your-first-module">Your First Module</a></h1>
+<p>This tutorial walks you through creating an adventure module in Mimir. By the end, you’ll have a module with maps, monsters, and tokens ready for play.</p>
+<p><strong>Time to complete:</strong> 15-20 minutes</p>
+<p><strong>What you’ll learn:</strong></p>
+<ul>
+<li>Create a module within your campaign</li>
+<li>Upload and configure maps</li>
+<li>Add monsters from the D&amp;D 5e catalog</li>
+<li>Place tokens on maps with the Token Setup tool</li>
+<li>Add light sources for dynamic lighting</li>
+</ul>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<ul>
+<li>A campaign created (<a href="./01-first-campaign.html">Tutorial 1</a>)</li>
+<li>A map image (PNG, JPG, or UVTT file)</li>
+</ul>
+<h2 id="what-is-a-module"><a class="header" href="#what-is-a-module">What is a Module?</a></h2>
+<p>In Mimir, a <strong>module</strong> is a self-contained adventure within your campaign. Think of it as a chapter or episode - “The Goblin Hideout”, “Dragon’s Lair”, or “The Haunted Manor”. Each module has its own:</p>
+<ul>
+<li>Maps and encounters</li>
+<li>Monsters and traps</li>
+<li>NPCs</li>
+<li>Session notes and documents</li>
+</ul>
+<p>This separation lets you prepare adventures independently and reuse them across campaigns.</p>
+<h2 id="step-1-navigate-to-the-modules-tab"><a class="header" href="#step-1-navigate-to-the-modules-tab">Step 1: Navigate to the Modules Tab</a></h2>
+<ol>
+<li>Open your campaign from the Campaign Selector</li>
+<li>Click the <strong>Modules</strong> tab in the dashboard</li>
+</ol>
+<p>You’ll see the module sidebar (left) and the main panel (right).</p>
+<p><img src="../images/tutorials/module-tab.png" alt="Modules Tab" /></p>
+<h2 id="step-2-create-a-module"><a class="header" href="#step-2-create-a-module">Step 2: Create a Module</a></h2>
+<ol>
+<li>Click the <strong>+</strong> button next to “Modules” in the sidebar header</li>
+<li>In the Create Module dialog:
+<ul>
+<li><strong>Module Number</strong> - Automatically assigned (1, 2, 3…)</li>
+<li><strong>Name</strong> - Enter a descriptive name (e.g., “The Lost Mine - Cragmaw Hideout”)</li>
+</ul>
+</li>
+<li>Click <strong>Create</strong></li>
+</ol>
+<p>Your new module appears in the sidebar. Click it to select it.</p>
+<h2 id="step-3-explore-the-module-dashboard"><a class="header" href="#step-3-explore-the-module-dashboard">Step 3: Explore the Module Dashboard</a></h2>
+<p>When you select a module, the main panel shows its dashboard with several sections:</p>
+<h3 id="left-column"><a class="header" href="#left-column">Left Column</a></h3>
+<ul>
+<li><strong>Documents</strong> - Session prep documents and notes</li>
+<li><strong>NPCs</strong> - Non-player characters in this module</li>
+<li><strong>Maps</strong> - Battle maps and area maps</li>
+</ul>
+<h3 id="right-column"><a class="header" href="#right-column">Right Column</a></h3>
+<ul>
+<li><strong>Dangers</strong> - Monsters and traps for encounters</li>
+</ul>
+<p>The header shows the module name and two action buttons:</p>
+<ul>
+<li><strong>Play</strong> - Enter Play Mode for this module</li>
+<li><strong>Print</strong> - Export maps and materials to PDF</li>
+</ul>
+<h2 id="step-4-upload-a-map"><a class="header" href="#step-4-upload-a-map">Step 4: Upload a Map</a></h2>
+<ol>
+<li>
+<p>In the Maps section, click the <strong>+</strong> button</p>
+</li>
+<li>
+<p>Choose your map file:</p>
+<ul>
+<li><strong>Image files</strong> (PNG, JPG, WebP) - Standard map images</li>
+<li><strong>UVTT files</strong> - Universal VTT format with embedded grid data</li>
+</ul>
+</li>
+<li>
+<p>Configure the map settings:</p>
+<ul>
+<li><strong>Name</strong> - Display name for the map</li>
+<li><strong>Grid Size</strong> - Pixels per grid square (typically 70-140)</li>
+<li><strong>Grid Offset</strong> - Adjust if the grid doesn’t align with the image</li>
+</ul>
+</li>
+<li>
+<p>Click <strong>Upload</strong></p>
+</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> UVTT files from tools like Dungeondraft include grid configuration automatically, saving setup time.</p>
+</blockquote>
+<!-- Screenshot: map-upload.png -->
+<h2 id="step-5-open-token-setup"><a class="header" href="#step-5-open-token-setup">Step 5: Open Token Setup</a></h2>
+<p>The Token Setup modal is where you add monsters, place tokens, and configure your map.</p>
+<ol>
+<li>Click a map card in the Maps section</li>
+<li>The Token Setup modal opens showing:
+<ul>
+<li><strong>Token Palette</strong> (left) - Token types and monster search</li>
+<li><strong>Map Canvas</strong> (center) - The map with grid overlay</li>
+<li><strong>Token Inventory</strong> (right) - Placed tokens and light sources</li>
+</ul>
+</li>
+</ol>
+<p><img src="../images/tutorials/token-setup.png" alt="Token Setup Modal" /></p>
+<h3 id="token-palette-sections"><a class="header" href="#token-palette-sections">Token Palette Sections</a></h3>
+<p>The palette contains several sections:</p>
+<ul>
+<li><strong>Monster</strong> - Search and add monsters from the D&amp;D 5e catalog</li>
+<li><strong>NPC</strong> - Add NPC tokens</li>
+<li><strong>Trap</strong> - Add traps and hazards</li>
+<li><strong>Object</strong> - Add generic object tokens</li>
+<li><strong>Light Sources</strong> - Torch, Lantern, Candle</li>
+</ul>
+<h2 id="step-6-add-monsters"><a class="header" href="#step-6-add-monsters">Step 6: Add Monsters</a></h2>
+<ol>
+<li>In the Token Palette, click <strong>Monster</strong></li>
+<li>Search for a monster by name (e.g., “Goblin”, “Wolf”, “Bugbear”)</li>
+<li>Select a monster from the search results</li>
+<li>Configure token options (size, color, visibility)</li>
+<li>Click on the map to place the monster token</li>
+</ol>
+<!-- Screenshot: add-monsters.png -->
+<p>Repeat to add more monsters. Each placed monster appears in the Token Inventory on the right.</p>
+<h3 id="token-options"><a class="header" href="#token-options">Token Options</a></h3>
+<p>When you select a token type from the palette, you can configure:</p>
+<ul>
+<li><strong>Size</strong> - Tiny, Small, Medium, Large, Huge, Gargantuan</li>
+<li><strong>Color</strong> - Token border color for identification</li>
+<li><strong>Visible to Players</strong> - Toggle whether players can see this token</li>
+</ul>
+<h3 id="managing-placed-tokens"><a class="header" href="#managing-placed-tokens">Managing Placed Tokens</a></h3>
+<p>Placed tokens appear in the Token Inventory (right panel):</p>
+<ul>
+<li>Click a token to select it on the map</li>
+<li>Drag tokens to reposition them</li>
+<li>Right-click for a context menu with options</li>
+<li>Click the <strong>×</strong> to delete a token</li>
+</ul>
+<h2 id="step-7-add-light-sources"><a class="header" href="#step-7-add-light-sources">Step 7: Add Light Sources</a></h2>
+<p>For dynamic lighting and fog of war:</p>
+<ol>
+<li>
+<p>In the Token Palette, find the <strong>Light Sources</strong> section</p>
+</li>
+<li>
+<p>Click a light type:</p>
+<ul>
+<li><strong>Torch</strong> - 20 ft bright / 40 ft dim</li>
+<li><strong>Lantern</strong> - 30 ft bright / 60 ft dim</li>
+<li><strong>Candle</strong> - 5 ft bright / 10 ft dim</li>
+</ul>
+</li>
+<li>
+<p>Click on the map to place the light source</p>
+</li>
+</ol>
+<h3 id="managing-light-sources"><a class="header" href="#managing-light-sources">Managing Light Sources</a></h3>
+<p>Light sources appear in the Token Inventory under “Light Sources”:</p>
+<ul>
+<li><strong>Lit/Unlit</strong> button - Toggle whether the light is active</li>
+<li>Light sources affect fog of war in Play Mode</li>
+<li>Delete with the <strong>×</strong> button</li>
+</ul>
+<h2 id="step-8-configure-the-grid-image-files-only"><a class="header" href="#step-8-configure-the-grid-image-files-only">Step 8: Configure the Grid (Image Files Only)</a></h2>
+<blockquote>
+<p><strong>Note:</strong> Skip this step if you uploaded a UVTT file - the grid is configured automatically.</p>
+</blockquote>
+<p>If your map’s grid doesn’t align correctly:</p>
+<ol>
+<li>
+<p>Click the <strong>Grid</strong> button in the canvas controls</p>
+</li>
+<li>
+<p>Adjust settings:</p>
+<ul>
+<li><strong>Grid Size</strong> - Pixels per square</li>
+<li><strong>X Offset</strong> - Horizontal shift</li>
+<li><strong>Y Offset</strong> - Vertical shift</li>
+</ul>
+</li>
+<li>
+<p>Click <strong>Save</strong> to apply</p>
+</li>
+</ol>
+<p>The grid overlay shows your adjustments in real-time.</p>
+<h2 id="step-9-save-and-close"><a class="header" href="#step-9-save-and-close">Step 9: Save and Close</a></h2>
+<p>Token placements save automatically. Click <strong>×</strong> or press Escape to close the Token Setup modal.</p>
+<p>Your module is now ready for play!</p>
+<h2 id="whats-next"><a class="header" href="#whats-next">What’s Next?</a></h2>
+<p>Your module is prepared with maps, monsters, and tokens. Continue to:</p>
+<ol>
+<li><strong><a href="./03-first-session.html">Run your first session</a></strong> - Use Play Mode to run an encounter</li>
+<li><strong>Add more content</strong> - Upload additional maps, add NPCs, create documents</li>
+<li><strong>Prepare multiple modules</strong> - Create the next chapter of your adventure</li>
+</ol>
+<hr />
+<h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Action</th><th>How To</th></tr></thead><tbody>
+<tr><td>Create module</td><td>Modules tab → + button</td></tr>
+<tr><td>Upload map</td><td>Maps section → + button</td></tr>
+<tr><td>Open token setup</td><td>Click a map card</td></tr>
+<tr><td>Add monsters</td><td>Token Setup → Monster → search → click map</td></tr>
+<tr><td>Place token</td><td>Select in palette → click map</td></tr>
+<tr><td>Add light source</td><td>Light Sources → select → click map</td></tr>
+<tr><td>Toggle light</td><td>Token Inventory → Lit/Unlit button</td></tr>
+<tr><td>Configure grid</td><td>Grid button in canvas controls</td></tr>
+</tbody></table>
+</div>
+<hr />
+<p><em>Next tutorial: <a href="./03-first-session.html">Running Your First Session</a></em></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../tutorials/01-first-campaign.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../tutorials/03-first-session.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../tutorials/01-first-campaign.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../tutorials/03-first-session.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

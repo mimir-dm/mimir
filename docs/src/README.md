@@ -2,55 +2,56 @@
 
 > *"Remember, I know everything that can be known in the multiverse."* - Mimir, Planescape
 
-Welcome to Mimir, a local-first D&D campaign assistant. Named after the wise floating skull of Planescape lore, Mimir helps Dungeon Masters manage the cognitive complexity of running campaigns.
+Welcome to Mimir, your local-first D&D 5e campaign management tool. Named after the wise floating skull of Planescape lore, Mimir helps Dungeon Masters organize campaigns, run sessions, and keep everything at their fingertips.
 
-## Current Status
+## Quick Start
 
-**v0.1.0 Released** - Mimir is available as a downloadable desktop application with core campaign management features.
+**New to Mimir?** Start with our tutorials:
 
-### Getting Started
+1. **[Your First Campaign](./tutorials/01-first-campaign.md)** - Create a campaign and explore the dashboard
+2. **[Your First Module](./tutorials/02-first-module.md)** - Build an adventure with maps and monsters
+3. **[Running Your First Session](./tutorials/03-first-session.md)** - Use Play Mode to run an encounter
+4. **[Player Display Setup](./tutorials/04-player-display.md)** - Set up a second screen for players
 
-1. **[Download Mimir](https://github.com/mimir-dm/mimir/releases)** - Get the latest release for your platform
-2. **Install** - Follow the installation instructions in the [main README](../../README.md#installation)
-3. **Explore** - Start managing your D&D campaigns with the Campaign Generation Framework
+## Features
 
-### Features
+### Campaign Management
+Create and organize campaigns with a structured workflow. Track documents, NPCs, and plot threads across multiple adventure modules.
 
-- Campaign workflow management with structured phases
-- D&D 5e catalog with full-text search
-- Document templates and rich text editing
-- Local LLM integration via Ollama
-- PDF export via Typst templates
-- Cross-platform support (macOS, Windows, Linux)
+### Interactive Maps
+Upload maps (UVTT or images), configure grids, and place tokens. Manage fog of war with line-of-sight calculations and light sources.
 
-### Campaign Generation Framework
+### Play Mode
+Run sessions with a dedicated play interface. Control what players see on a second display while you manage encounters behind the scenes.
 
-The **[Campaign Generation Framework](./campaign-framework/README.md)** provides a complete system for creating and managing D&D campaigns:
+### D&D 5e Reference
+Search monsters, spells, items, and more from your D&D sourcebooks. Quick access to rules when you need them.
 
-- The Three-Board System for organization
-- Campaign genesis process
-- Module creation workflow
-- Session management techniques
-- Ready-to-use templates
+### PDF Export
+Print character sheets, spell cards, and maps with token cutouts for physical play.
 
-## Vision
+## Documentation
 
-Mimir is a desktop application built with Rust and Tauri that serves as your intelligent campaign companion. The application implements the Campaign Generation Framework and provides:
+This documentation is organized using the [Diataxis](https://diataxis.fr/) framework:
 
-- Local LLM integration for creative assistance (via Ollama)
-- Intelligent NPC and plot tracking
-- Session preparation tools
-- Privacy-first design with all data stored locally
-- Cross-platform native desktop experience
+| Section | Purpose |
+|---------|---------|
+| **[Tutorials](./tutorials/README.md)** | Step-by-step learning guides |
+| **[How-To Guides](./how-to/README.md)** | Task-focused instructions |
+| **[Reference](./reference/README.md)** | Detailed feature documentation |
+| **[Understanding Mimir](./explanation/README.md)** | Concepts and design philosophy |
 
-## Documentation Structure
+## Download
 
-This documentation follows the [Diataxis](https://diataxis.fr/) framework:
+Get the latest release from [GitHub Releases](https://github.com/mimir-dm/mimir/releases).
 
-- **[Campaign Framework](./campaign-framework/README.md)** - The complete campaign management system
-- **[Reference](./reference/characters/README.md)** - Technical documentation for features
+**Supported Platforms:** macOS, Windows, Linux
 
 ## Getting Help
 
-- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/mimir-dm/mimir/issues)
-- **Discussions**: Join community discussions on [GitHub Discussions](https://github.com/mimir-dm/mimir/discussions)
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/mimir-dm/mimir/issues)
+- **Discussions**: Ask questions on [GitHub Discussions](https://github.com/mimir-dm/mimir/discussions)
+
+---
+
+*Mimir is open source software. See the [Developer Documentation](./developer/README.md) if you'd like to contribute.*

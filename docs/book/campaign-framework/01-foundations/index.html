@@ -315,7 +315,7 @@
 <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>The framework’s modular nature means you can adopt it gradually:</p>
 <ol>
-<li><strong>Start small</strong>: Implement just the Three-Board System</li>
+<li><strong>Start small</strong>: Implement just the Two-Board System</li>
 <li><strong>Build habits</strong>: Establish your weekly workflow</li>
 <li><strong>Add tools</strong>: Introduce templates as needed</li>
 <li><strong>Refine process</strong>: Adjust to your table’s needs</li>
@@ -352,6 +352,22 @@
 
         </div>
 
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
 
 
 

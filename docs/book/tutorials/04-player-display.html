@@ -1,0 +1,475 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Player Display Setup - Mimir - D&amp;D Campaign Assistant</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A local-first D&amp;D campaign assistant for Dungeon Masters">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mimir - D&amp;D Campaign Assistant</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/mimir-dm/mimir" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/mimir-dm/mimir/edit/main/docs/src/tutorials/04-player-display.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="player-display-setup"><a class="header" href="#player-display-setup">Player Display Setup</a></h1>
+<p>This tutorial walks you through setting up and using the Player Display - a second window that shows your players what their characters can see while you maintain full DM control.</p>
+<p><strong>Time to complete:</strong> 5 minutes</p>
+<p><strong>What you’ll learn:</strong></p>
+<ul>
+<li>Set up a second screen for players</li>
+<li>Open and control the Player Display</li>
+<li>Understand what players see vs. what you see</li>
+<li>Use Blackout mode for dramatic reveals</li>
+</ul>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<ul>
+<li>Completed <a href="./03-first-session.html">Tutorial 3</a> (Play Mode basics)</li>
+<li>Ideally: a second monitor, TV, or projector for players</li>
+</ul>
+<h2 id="the-two-screen-setup"><a class="header" href="#the-two-screen-setup">The Two-Screen Setup</a></h2>
+<p>The Player Display creates a two-screen experience:</p>
+<div class="table-wrapper"><table><thead><tr><th>Your Screen (DM)</th><th>Player Screen</th></tr></thead><tbody>
+<tr><td>Full map with all tokens</td><td>Fog of war applied</td></tr>
+<tr><td>Monster names and stats</td><td>Token images only</td></tr>
+<tr><td>Hidden tokens visible</td><td>Hidden tokens invisible</td></tr>
+<tr><td>All controls and tools</td><td>Clean, focused view</td></tr>
+</tbody></table>
+</div>
+<p>This lets you manage everything behind the scenes while players see only what their characters would see.</p>
+<h2 id="step-1-connect-your-second-screen"><a class="header" href="#step-1-connect-your-second-screen">Step 1: Connect Your Second Screen</a></h2>
+<p>Before opening the Player Display, connect your second screen:</p>
+<ul>
+<li><strong>TV or Monitor</strong> - HDMI/DisplayPort connection</li>
+<li><strong>Projector</strong> - For tabletop projection</li>
+<li><strong>Extended Display</strong> - Not mirrored (each screen shows different content)</li>
+</ul>
+<h3 id="display-arrangement"><a class="header" href="#display-arrangement">Display Arrangement</a></h3>
+<p>On your computer:</p>
+<ol>
+<li>Open display settings</li>
+<li>Set to “Extend” (not “Mirror”)</li>
+<li>Arrange screens to match physical layout</li>
+<li>Note which screen is secondary</li>
+</ol>
+<h2 id="step-2-enter-play-mode"><a class="header" href="#step-2-enter-play-mode">Step 2: Enter Play Mode</a></h2>
+<ol>
+<li>Open your campaign</li>
+<li>Go to the <strong>Modules</strong> tab</li>
+<li>Select a module and click <strong>Play</strong></li>
+<li>Make sure a map is active (click one in the sidebar)</li>
+</ol>
+<h2 id="step-3-open-the-player-display"><a class="header" href="#step-3-open-the-player-display">Step 3: Open the Player Display</a></h2>
+<p>In the Play Mode header:</p>
+<ol>
+<li>Click the <strong>Player Display</strong> button</li>
+<li>A new window opens</li>
+<li>The button changes to show “Display Open”</li>
+</ol>
+<p><img src="../images/tutorials/player-display-header.png" alt="Player Display Button" /></p>
+<h3 id="position-the-window"><a class="header" href="#position-the-window">Position the Window</a></h3>
+<p>Drag the Player Display window to your secondary screen:</p>
+<ol>
+<li>Click and hold the window title bar</li>
+<li>Drag to the player-facing screen</li>
+<li>Maximize the window (or press F11 for fullscreen)</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> On macOS, you can use Mission Control to move windows between spaces. On Windows, use Win+Shift+Arrow keys.</p>
+</blockquote>
+<h2 id="step-4-understanding-the-views"><a class="header" href="#step-4-understanding-the-views">Step 4: Understanding the Views</a></h2>
+<h3 id="what-you-see-dm-view"><a class="header" href="#what-you-see-dm-view">What You See (DM View)</a></h3>
+<p><img src="../images/tutorials/dm-view.png" alt="DM View" /></p>
+<p>Your view shows everything:</p>
+<ul>
+<li>All tokens (visible and hidden)</li>
+<li>Monster names and quantities</li>
+<li>Full toolbar and controls</li>
+<li>Line of sight visualization (debug mode)</li>
+<li>Session notes panel</li>
+</ul>
+<h3 id="what-players-see"><a class="header" href="#what-players-see">What Players See</a></h3>
+<p><img src="../images/tutorials/player-view-fog.png" alt="Player View - Fog of War" /></p>
+<p><img src="../images/tutorials/player-view-token-los.png" alt="Player View - Token Line of Sight" /></p>
+<p>The player display shows:</p>
+<ul>
+<li>The map image</li>
+<li>Fog of war based on PC positions</li>
+<li>Visible tokens only (no hidden enemies)</li>
+<li>Token images without names</li>
+<li>No controls or UI elements</li>
+</ul>
+<h2 id="step-5-controlling-what-players-see"><a class="header" href="#step-5-controlling-what-players-see">Step 5: Controlling What Players See</a></h2>
+<h3 id="fog-of-war"><a class="header" href="#fog-of-war">Fog of War</a></h3>
+<p>Fog of war updates automatically based on:</p>
+<ul>
+<li>Where PC tokens are positioned</li>
+<li>Their vision radius (including darkvision)</li>
+<li>Active light sources</li>
+<li>Walls and obstacles (UVTT maps)</li>
+</ul>
+<p>Move a PC token and watch the fog update in real-time on both screens.</p>
+<h3 id="reveal-map-toggle"><a class="header" href="#reveal-map-toggle">Reveal Map Toggle</a></h3>
+<p>For situations where you want to show the whole map:</p>
+<ol>
+<li>Find the <strong>Reveal Map</strong> toggle in the toolbar</li>
+<li>Enable it to bypass fog of war</li>
+<li>Disable it to restore fog of war</li>
+</ol>
+<p>Use this for:</p>
+<ul>
+<li>Area maps without exploration</li>
+<li>Post-combat wrap-up</li>
+<li>Location reveals</li>
+</ul>
+<h3 id="ambient-lighting"><a class="header" href="#ambient-lighting">Ambient Lighting</a></h3>
+<p>The ambient light level affects visibility:</p>
+<div class="table-wrapper"><table><thead><tr><th>Level</th><th>Effect</th></tr></thead><tbody>
+<tr><td>Bright</td><td>Normal visibility, full colors</td></tr>
+<tr><td>Dim</td><td>Reduced visibility, muted colors</td></tr>
+<tr><td>Dark</td><td>Only darkvision and light sources work</td></tr>
+</tbody></table>
+</div>
+<p>Change this to match the in-game environment (dungeon, night, etc.).</p>
+<h2 id="step-6-using-blackout-mode"><a class="header" href="#step-6-using-blackout-mode">Step 6: Using Blackout Mode</a></h2>
+<p>The Blackout button (eye icon) appears when the display is open:</p>
+<ol>
+<li>Click <strong>Blackout</strong> to hide everything from players</li>
+<li>The player screen goes completely black</li>
+<li>Click again to restore the view</li>
+</ol>
+<h3 id="when-to-use-blackout"><a class="header" href="#when-to-use-blackout">When to Use Blackout</a></h3>
+<ul>
+<li><strong>Before the session</strong> - Set up tokens without revealing</li>
+<li><strong>Dramatic reveals</strong> - Build anticipation</li>
+<li><strong>Breaks</strong> - Bathroom/snack breaks</li>
+<li><strong>Map transitions</strong> - Switch maps without showing the change</li>
+<li><strong>Plot moments</strong> - Describe what happens before showing it</li>
+</ul>
+<h2 id="step-7-syncing-views"><a class="header" href="#step-7-syncing-views">Step 7: Syncing Views</a></h2>
+<p>Control whether players see your exact viewport:</p>
+<h3 id="auto-sync-default"><a class="header" href="#auto-sync-default">Auto-Sync (Default)</a></h3>
+<ul>
+<li>Your pan and zoom are mirrored</li>
+<li>Players see what you focus on</li>
+<li>Great for guided exploration</li>
+</ul>
+<h3 id="manual-sync"><a class="header" href="#manual-sync">Manual Sync</a></h3>
+<ol>
+<li>Click the <strong>Sync</strong> button to disable auto-sync</li>
+<li>Navigate freely on your screen</li>
+<li>Click <strong>Push View</strong> when ready to update players</li>
+</ol>
+<h3 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Scenario</th><th>Sync Setting</th></tr></thead><tbody>
+<tr><td>Guided dungeon crawl</td><td>Auto-sync ON</td></tr>
+<tr><td>Combat positioning</td><td>Auto-sync OFF, push when ready</td></tr>
+<tr><td>Looking ahead secretly</td><td>Auto-sync OFF</td></tr>
+<tr><td>Theater of the mind</td><td>Blackout ON</td></tr>
+</tbody></table>
+</div>
+<h2 id="step-8-closing-the-display"><a class="header" href="#step-8-closing-the-display">Step 8: Closing the Display</a></h2>
+<p>When your session ends:</p>
+<ol>
+<li>Click <strong>Player Display</strong> button again, or</li>
+<li>Close the player display window directly</li>
+<li>The button returns to its original state</li>
+</ol>
+<p>The main Play Mode continues - you can reopen the display anytime.</p>
+<h2 id="physical-setup-tips"><a class="header" href="#physical-setup-tips">Physical Setup Tips</a></h2>
+<h3 id="tvmonitor-setup"><a class="header" href="#tvmonitor-setup">TV/Monitor Setup</a></h3>
+<ul>
+<li>Position so all players can see</li>
+<li>Adjust brightness for room lighting</li>
+<li>Consider a TV mount or stand</li>
+</ul>
+<h3 id="projector-setup"><a class="header" href="#projector-setup">Projector Setup</a></h3>
+<ul>
+<li>Project onto table or wall</li>
+<li>Calibrate for grid accuracy</li>
+<li>Consider ambient light levels</li>
+</ul>
+<h3 id="virtual-setup"><a class="header" href="#virtual-setup">Virtual Setup</a></h3>
+<ul>
+<li>Share the player window via screen share</li>
+<li>Use a separate browser window for remote players</li>
+<li>Consider latency for viewport updates</li>
+</ul>
+<hr />
+<h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Action</th><th>How To</th></tr></thead><tbody>
+<tr><td>Open player display</td><td>Play Mode → Player Display button</td></tr>
+<tr><td>Close player display</td><td>Click button again or close window</td></tr>
+<tr><td>Blackout</td><td>Eye icon (when display open)</td></tr>
+<tr><td>Reveal entire map</td><td>Reveal Map toggle</td></tr>
+<tr><td>Change lighting</td><td>Ambient light dropdown</td></tr>
+<tr><td>Sync views</td><td>Sync button (toggle)</td></tr>
+<tr><td>Push current view</td><td>Push View button</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="display-opens-on-wrong-screen"><a class="header" href="#display-opens-on-wrong-screen">Display Opens on Wrong Screen</a></h3>
+<ul>
+<li>Drag window to correct screen</li>
+<li>Maximize after moving</li>
+</ul>
+<h3 id="players-see-hidden-tokens"><a class="header" href="#players-see-hidden-tokens">Players See Hidden Tokens</a></h3>
+<ul>
+<li>Check token visibility settings</li>
+<li>Ensure “visible to players” is off for hidden tokens</li>
+</ul>
+<h3 id="fog-not-updating"><a class="header" href="#fog-not-updating">Fog Not Updating</a></h3>
+<ul>
+<li>Verify PC tokens are marked visible</li>
+<li>Check that PCs have a token on the active map</li>
+<li>Confirm UVTT wall data loaded (for wall occlusion)</li>
+</ul>
+<h3 id="no-second-window"><a class="header" href="#no-second-window">No Second Window</a></h3>
+<ul>
+<li>Check popup blocker settings</li>
+<li>Try clicking the button again</li>
+<li>Restart Play Mode</li>
+</ul>
+<hr />
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>You’ve completed the tutorial series! You can now:</p>
+<ul>
+<li>Create and manage campaigns</li>
+<li>Build adventure modules with maps and encounters</li>
+<li>Run sessions with fog of war</li>
+<li>Use a second screen for players</li>
+</ul>
+<p>Explore the <a href="../how-to/README.html">How-To Guides</a> for specific tasks, or check the <a href="../reference/README.html">Reference</a> for detailed documentation.</p>
+<hr />
+<p><em>Return to: <a href="./README.html">Tutorials Overview</a></em></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../tutorials/03-first-session.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../how-to/campaigns/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../tutorials/03-first-session.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../how-to/campaigns/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

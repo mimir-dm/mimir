@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Session Management - Mimir - D&amp;D Campaign Assistant</title>
+        <title>Running the Game - Mimir - D&amp;D Campaign Assistant</title>
 
 
         <!-- Custom HTML head -->
@@ -172,26 +172,31 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="session-management"><a class="header" href="#session-management">Session Management</a></h1>
-<p>Running great sessions consistently transforms a campaign from a series of games into an unforgettable story. Session management breaks down into three distinct phases, each requiring different skills and techniques.</p>
+                        <h1 id="running-the-game"><a class="header" href="#running-the-game">Running the Game</a></h1>
+<p>Great sessions don’t happen by accident. This section covers the skills and techniques for running modules effectively—the preparation, execution, and continuity work that transforms written content into memorable play.</p>
+<h2 id="modules-vs-sessions"><a class="header" href="#modules-vs-sessions">Modules vs Sessions</a></h2>
+<p><strong>Modules</strong> are the content unit—complete, runnable adventures with everything needed to play: encounters, NPCs, locations, and narrative structure. You’ve already created these using the module templates.</p>
+<p><strong>Sessions</strong> are the play time—the 3-4 hours when you and your players actually meet. A single module might span multiple sessions, or you might run through portions of different modules in one session.</p>
+<p>This section focuses on the DM skills needed to bridge that gap: turning prepared content into live play.</p>
 <h2 id="the-three-phases"><a class="header" href="#the-three-phases">The Three Phases</a></h2>
 <p>Every game session involves:</p>
 <h3 id="pre-session-preparation"><a class="header" href="#pre-session-preparation"><a href="./session-before.html">Pre-Session Preparation</a></a></h3>
-<p>The week between sessions determines success. Learn the weekly workflow that turns one hour of focused prep into four hours of engaging play. Covers everything from post-game notes through your pre-game ritual.</p>
+<p>The time between sessions determines success. Learn the workflow that turns focused prep into engaging play. Covers reviewing your module, preparing for the specific session, and your pre-game ritual.</p>
 <h3 id="running-the-session"><a class="header" href="#running-the-session"><a href="./session-during.html">Running the Session</a></a></h3>
-<p>Where preparation meets improvisation. Master the techniques for strong openings, reading the room, managing different player types, and landing satisfying cliffhangers. Your guide to 3-4 hours of actual play.</p>
+<p>Where preparation meets improvisation. Master the techniques for strong openings, reading the room, managing different player types, and landing satisfying cliffhangers. Your guide to actual play.</p>
 <h3 id="post-session--campaign-continuity"><a class="header" href="#post-session--campaign-continuity"><a href="./session-after.html">Post-Session &amp; Campaign Continuity</a></a></h3>
-<p>The 30 minutes after a session shapes the next one. Capture what matters, track the living world, and maintain campaign momentum. Plus tools for managing continuity without drowning in notes.</p>
+<p>The 30 minutes after a session shapes the next one. Capture what matters, track the living world, and maintain campaign momentum. Tools for managing continuity without drowning in notes.</p>
 <h2 id="core-principles"><a class="header" href="#core-principles">Core Principles</a></h2>
+<p><strong>Modules provide structure, sessions provide energy</strong> - Your module is the foundation; your session skills bring it alive.</p>
 <p><strong>One hour of prep creates four hours of play</strong> - if you prep the right things.</p>
 <p><strong>The world moves without the players</strong> - NPCs pursue goals, events unfold, consequences ripple.</p>
 <p><strong>Tools over memory</strong> - Simple tracking systems beat trying to remember everything.</p>
 <p><strong>Energy management matters</strong> - Both yours and your players’ energy must be sustained.</p>
 <h2 id="start-here"><a class="header" href="#start-here">Start Here</a></h2>
 <p>To see these principles in action, we’ll follow a complete example throughout this section:</p>
-<p><strong><a href="./session-interlude.html">Interlude: Session 1 Play-Through</a></strong> - See what happened in Session 1 of our Brittle Steel mystery, establishing the foundation we’ll build on in our prep examples.</p>
+<p><strong><a href="./session-interlude.html">Interlude: Session 1 Play-Through</a></strong> - See what happened in Session 1 of our Brittle Steel mystery module, establishing the foundation we’ll build on.</p>
 <p>New DMs: After reading the interlude, begin with <a href="./session-before.html">Pre-Session Preparation</a> to build sustainable habits.</p>
-<p>Experienced DMs: Jump to whichever phase challenges you most, though the interlude provides helpful context.</p>
+<p>Experienced DMs: Jump to whichever phase challenges you most.</p>
 <p>The three phases work together—master all three for consistently excellent sessions.</p>
 
                     </main>
@@ -202,7 +207,7 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../../campaign-framework/04-session-management/session-interlude.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../campaign-framework/04-session-management/session-before.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -216,13 +221,29 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../../campaign-framework/04-session-management/session-interlude.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../campaign-framework/04-session-management/session-before.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
 
         </div>
 
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
 
 
 
