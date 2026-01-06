@@ -81,8 +81,8 @@ impl NpcIndexCardSection {
 
         typst.push_str(&format!(
             r##"box(
-  width: 5in,
-  height: 3in,
+  width: 3.875in,
+  height: 3.25in,
   stroke: 1pt + colors.border,
   radius: 4pt,
   clip: true,
@@ -308,8 +308,11 @@ impl Renderable for NpcIndexCardSection {
 
         let mut typst = String::new();
 
-        // 3x5 cards - 2 per page (landscape orientation fits 2 side by side)
-        let cards_per_page = 2;
+        // Set page margins for index cards
+        typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
+
+        // Index cards - 6 per page (2x3 grid)
+        let cards_per_page = 6;
         let total_pages = (self.npcs.len() + cards_per_page - 1) / cards_per_page;
 
         for page_num in 0..total_pages {
@@ -321,31 +324,29 @@ impl Renderable for NpcIndexCardSection {
                 typst.push_str("\n#pagebreak()\n");
             }
 
-            // Center the card grid
-            typst.push_str("#align(center)[\n  #grid(\n");
-            typst.push_str("    columns: (5in,) * 2,\n");
-            typst.push_str("    rows: (3in,),\n");
-            typst.push_str(&format!(
-                "    column-gutter: {},\n\n",
-                if self.show_cut_lines { "0pt" } else { "8pt" }
-            ));
+            // Card grid (2x3) - sized to fit with gutters for cutting
+            typst.push_str("#grid(\n");
+            typst.push_str("    columns: (3.875in,) * 2,\n");
+            typst.push_str("    rows: (3.25in,) * 3,\n");
+            typst.push_str("    column-gutter: 0.25in,\n");
+            typst.push_str("    row-gutter: 0.25in,\n\n");
 
             // Render each card
             for (i, npc) in page_npcs.iter().enumerate() {
                 typst.push_str("    ");
                 typst.push_str(&Self::render_card(npc));
-                if i < page_npcs.len() - 1 || page_npcs.len() < 2 {
+                if i < page_npcs.len() - 1 || page_npcs.len() < 6 {
                     typst.push(',');
                 }
                 typst.push('\n');
             }
 
-            // Fill remaining slot
-            if page_npcs.len() < 2 {
-                typst.push_str("    box(width: 5in, height: 3in),\n");
+            // Fill remaining slots
+            for _ in page_npcs.len()..6 {
+                typst.push_str("    box(width: 3.875in, height: 3.25in),\n");
             }
 
-            typst.push_str("  )\n]\n");
+            typst.push_str(")\n");
 
             // Cut lines indicator
             if self.show_cut_lines && !page_npcs.is_empty() {

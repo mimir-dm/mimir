@@ -95,8 +95,8 @@ impl TrapCardSection {
 
         format!(
             r##"box(
-  width: 4in,
-  height: 5.5in,
+  width: 3.875in,
+  height: 5.125in,
   stroke: (
     top: 3pt + {accent_color},
     bottom: 3pt + {accent_color},
@@ -202,8 +202,8 @@ impl TrapCardSection {
 
         Some(format!(
             r##"box(
-  width: 4in,
-  height: 5.5in,
+  width: 3.875in,
+  height: 5.125in,
   stroke: (
     top: 3pt + {accent_color},
     bottom: 3pt + {accent_color},
@@ -259,42 +259,61 @@ impl Renderable for TrapCardSection {
         // Set page margins for half-page cards
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
 
-        // Collect all cards (front + optional back for each trap)
-        let mut all_cards: Vec<String> = Vec::new();
+        // Build list of card units (single cards or front+back pairs that must stay together)
+        let mut card_units: Vec<Vec<String>> = Vec::new();
         for trap in &self.traps {
-            all_cards.push(Self::render_card(trap));
-
-            // Add back card if foldable
+            let front = Self::render_card(trap);
             if let Some(back) = Self::render_back_card(trap) {
-                all_cards.push(back);
+                // Foldable: front and back must stay together
+                card_units.push(vec![front, back]);
+            } else {
+                // Single card
+                card_units.push(vec![front]);
             }
         }
 
-        // Layout cards in 2x2 grid pages
-        let cards_per_page = 4;
-        let total_pages = (all_cards.len() + cards_per_page - 1) / cards_per_page;
+        // Pack units into pages (4 cards per page), keeping pairs together
+        let mut pages: Vec<Vec<String>> = Vec::new();
+        let mut current_page: Vec<String> = Vec::new();
 
-        for page_num in 0..total_pages {
-            let start_idx = page_num * cards_per_page;
-            let end_idx = std::cmp::min(start_idx + cards_per_page, all_cards.len());
-            let page_cards = &all_cards[start_idx..end_idx];
+        for unit in card_units {
+            let unit_size = unit.len();
+            let space_left = 4 - current_page.len();
 
+            // If unit won't fit on current page, start a new page
+            if unit_size > space_left && !current_page.is_empty() {
+                pages.push(current_page);
+                current_page = Vec::new();
+            }
+
+            // Add all cards from this unit to current page
+            for card in unit {
+                current_page.push(card);
+            }
+
+            // If page is full, start a new one
+            if current_page.len() >= 4 {
+                pages.push(current_page);
+                current_page = Vec::new();
+            }
+        }
+
+        // Don't forget the last page
+        if !current_page.is_empty() {
+            pages.push(current_page);
+        }
+
+        for (page_num, page_cards) in pages.iter().enumerate() {
             if page_num > 0 {
                 typst.push_str("\n#pagebreak()\n");
             }
 
-            // Card grid (2x2)
+            // Card grid (2x2) - cards sized to fit with gutters for cutting
             typst.push_str("#grid(\n");
-            typst.push_str("    columns: (4in,) * 2,\n");
-            typst.push_str("    rows: (5.5in,) * 2,\n");
-            typst.push_str(&format!(
-                "    column-gutter: {},\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
-            typst.push_str(&format!(
-                "    row-gutter: {},\n\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
+            typst.push_str("    columns: (3.875in,) * 2,\n");
+            typst.push_str("    rows: (5.125in,) * 2,\n");
+            typst.push_str("    column-gutter: 0.25in,\n");
+            typst.push_str("    row-gutter: 0.25in,\n\n");
 
             // Render each card
             for (i, card) in page_cards.iter().enumerate() {
@@ -308,7 +327,7 @@ impl Renderable for TrapCardSection {
 
             // Fill remaining slots with empty boxes
             for _ in page_cards.len()..4 {
-                typst.push_str("    box(width: 4in, height: 5.5in),\n");
+                typst.push_str("    box(width: 3.875in, height: 5.125in),\n");
             }
 
             typst.push_str(")\n");
@@ -859,9 +878,9 @@ mod tests {
         let typst = section.to_typst(&ctx).unwrap();
 
         // Verify half-page dimensions and grid layout
-        assert!(typst.contains("width: 4in"));
-        assert!(typst.contains("height: 5.5in"));
-        assert!(typst.contains("columns: (4in,) * 2"));
+        assert!(typst.contains("width: 3.875in"));
+        assert!(typst.contains("height: 5.125in"));
+        assert!(typst.contains("columns: (3.875in,) * 2"));
         assert!(typst.contains("#grid("));
     }
 }

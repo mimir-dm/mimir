@@ -78,6 +78,10 @@ impl MonsterCardSection {
         // HP with formula
         let hp_display = extract_hp_full(monster);
 
+        // HP tracker (numeric value for boxes)
+        let hp_average = extract_hp_average(monster);
+        let hp_tracker = render_hp_tracker(hp_average);
+
         // Speed (all types)
         let speed_display = extract_speed_full(monster);
 
@@ -121,8 +125,8 @@ impl MonsterCardSection {
 
         format!(
             r##"box(
-  width: 4in,
-  height: 5.5in,
+  width: 3.875in,
+  height: 5.125in,
   stroke: (
     top: 3pt + colors.accent,
     bottom: 3pt + colors.accent,
@@ -133,6 +137,15 @@ impl MonsterCardSection {
   clip: true,
   inset: 0pt,
 )[
+  // HP Tracker
+  #block(
+    width: 100%,
+    inset: (x: 6pt, y: 4pt),
+    stroke: (bottom: 0.5pt + colors.border-light),
+  )[
+    {hp_tracker}
+  ]
+
   // Header
   #block(
     width: 100%,
@@ -225,6 +238,7 @@ impl MonsterCardSection {
             cr = escape_typst(&cr),
             ac_display = escape_typst(&ac_display),
             hp_display = escape_typst(&hp_display),
+            hp_tracker = hp_tracker,
             passive = passive,
             speed_display = escape_typst(&speed_display),
             str_score = str_score,
@@ -282,8 +296,8 @@ impl MonsterCardSection {
 
         Some(format!(
             r##"box(
-  width: 4in,
-  height: 5.5in,
+  width: 3.875in,
+  height: 5.125in,
   stroke: (
     top: 3pt + colors.accent,
     bottom: 3pt + colors.accent,
@@ -340,46 +354,66 @@ impl Renderable for MonsterCardSection {
 
         let mut typst = String::new();
 
-        // Set page margins for half-page cards
+        // Set page margins for half-page cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
 
-        // Build list of all cards (front + back for foldable monsters)
-        let mut all_cards: Vec<String> = Vec::new();
+        // Build list of card units (single cards or front+back pairs that must stay together)
+        // Each unit is a Vec of 1-2 cards
+        let mut card_units: Vec<Vec<String>> = Vec::new();
         for monster in &self.monsters {
-            // Always add front card
-            all_cards.push(Self::render_card(monster));
-
-            // Add back card if foldable
+            let front = Self::render_card(monster);
             if let Some(back) = Self::render_back_card(monster) {
-                all_cards.push(back);
+                // Foldable: front and back must stay together
+                card_units.push(vec![front, back]);
+            } else {
+                // Single card
+                card_units.push(vec![front]);
             }
         }
 
-        // Layout cards in 2x2 grid pages
-        let cards_per_page = 4;
-        let total_pages = (all_cards.len() + cards_per_page - 1) / cards_per_page;
+        // Pack units into pages (4 cards per page), keeping pairs together
+        let mut pages: Vec<Vec<String>> = Vec::new();
+        let mut current_page: Vec<String> = Vec::new();
 
-        for page_num in 0..total_pages {
-            let start_idx = page_num * cards_per_page;
-            let end_idx = std::cmp::min(start_idx + cards_per_page, all_cards.len());
-            let page_cards = &all_cards[start_idx..end_idx];
+        for unit in card_units {
+            let unit_size = unit.len();
+            let space_left = 4 - current_page.len();
+
+            // If unit won't fit on current page, start a new page
+            if unit_size > space_left && !current_page.is_empty() {
+                pages.push(current_page);
+                current_page = Vec::new();
+            }
+
+            // Add all cards from this unit to current page
+            for card in unit {
+                current_page.push(card);
+            }
+
+            // If page is full, start a new one
+            if current_page.len() >= 4 {
+                pages.push(current_page);
+                current_page = Vec::new();
+            }
+        }
+
+        // Don't forget the last page
+        if !current_page.is_empty() {
+            pages.push(current_page);
+        }
+
+        for (page_num, page_cards) in pages.iter().enumerate() {
 
             if page_num > 0 {
                 typst.push_str("\n#pagebreak()\n");
             }
 
-            // Card grid (2x2)
+            // Card grid (2x2) - cards sized to fit with gutters for cutting
             typst.push_str("#grid(\n");
-            typst.push_str("    columns: (4in,) * 2,\n");
-            typst.push_str("    rows: (5.5in,) * 2,\n");
-            typst.push_str(&format!(
-                "    column-gutter: {},\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
-            typst.push_str(&format!(
-                "    row-gutter: {},\n\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
+            typst.push_str("    columns: (3.875in,) * 2,\n");
+            typst.push_str("    rows: (5.125in,) * 2,\n");
+            typst.push_str("    column-gutter: 0.25in,\n");
+            typst.push_str("    row-gutter: 0.25in,\n\n");
 
             // Render each card
             for (i, card) in page_cards.iter().enumerate() {
@@ -393,7 +427,7 @@ impl Renderable for MonsterCardSection {
 
             // Fill remaining slots with empty boxes
             for _ in page_cards.len()..4 {
-                typst.push_str("    box(width: 4in, height: 5.5in),\n");
+                typst.push_str("    box(width: 3.875in, height: 5.125in),\n");
             }
 
             typst.push_str(")\n");
@@ -514,6 +548,109 @@ fn extract_hp_full(monster: &Value) -> String {
             }
         })
         .unwrap_or_else(|| "1".to_string())
+}
+
+/// Extract just the numeric HP value for tracker calculations
+fn extract_hp_average(monster: &Value) -> i64 {
+    monster
+        .get("hp")
+        .map(|hp_val| {
+            if let Some(n) = hp_val.as_i64() {
+                n
+            } else if let Some(obj) = hp_val.as_object() {
+                obj.get("average").and_then(|v| v.as_i64()).unwrap_or(1)
+            } else {
+                1
+            }
+        })
+        .unwrap_or(1)
+}
+
+// === HP Tracker Functions ===
+
+/// Render HP tracker based on HP value
+fn render_hp_tracker(hp: i64) -> String {
+    match hp {
+        1..=20 => render_individual_boxes(hp),
+        21..=100 => render_fives_and_ones(hp),
+        _ => render_tens_and_ones(hp),
+    }
+}
+
+/// Render individual 1-HP boxes (for 1-20 HP)
+/// Every 10th box is styled differently
+fn render_individual_boxes(hp: i64) -> String {
+    let mut boxes = Vec::new();
+    for i in 1..=hp {
+        if i % 10 == 0 {
+            // Styled 10th box - thicker border, slight fill
+            boxes.push(r##"#box(width: 7pt, height: 7pt, stroke: 1pt + black, fill: rgb("#e5e5e5"))"##.to_string());
+        } else {
+            // Regular 1-HP box
+            boxes.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
+        }
+    }
+    boxes.join("#h(1pt)")
+}
+
+/// Render 5-HP boxes plus 1-HP boxes (for 21-100 HP)
+fn render_fives_and_ones(hp: i64) -> String {
+    let fives = hp / 5;
+    let ones = hp % 5;
+
+    let mut parts = Vec::new();
+
+    // 5-HP boxes with "5" label
+    for i in 0..fives {
+        // Every other 5-box (at 10, 20, 30...) gets extra styling
+        if (i + 1) % 2 == 0 {
+            parts.push(r##"#box(width: 10pt, height: 10pt, stroke: 1pt + black, fill: rgb("#d4d4d4"))[#align(center + horizon)[#text(size: 5pt, weight: "bold")[5]]]"##.to_string());
+        } else {
+            parts.push(r##"#box(width: 10pt, height: 10pt, stroke: 0.75pt + black, fill: rgb("#f5f5f5"))[#align(center + horizon)[#text(size: 5pt)[5]]]"##.to_string());
+        }
+    }
+
+    // Add spacing before 1-HP boxes if we have both
+    if fives > 0 && ones > 0 {
+        parts.push("#h(3pt)".to_string());
+    }
+
+    // 1-HP boxes
+    for _ in 0..ones {
+        parts.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
+    }
+
+    parts.join("#h(1pt)")
+}
+
+/// Render 10-HP boxes plus 1-HP boxes (for 101+ HP)
+fn render_tens_and_ones(hp: i64) -> String {
+    let tens = hp / 10;
+    let ones = hp % 10;
+
+    let mut parts = Vec::new();
+
+    // 10-HP boxes with "10" label
+    for i in 0..tens {
+        // Every 5th ten-box (at 50, 100, 150...) gets extra styling
+        if (i + 1) % 5 == 0 {
+            parts.push(r##"#box(width: 12pt, height: 10pt, stroke: 1.5pt + black, fill: rgb("#c4c4c4"))[#align(center + horizon)[#text(size: 5pt, weight: "bold")[10]]]"##.to_string());
+        } else {
+            parts.push(r##"#box(width: 12pt, height: 10pt, stroke: 0.75pt + black, fill: rgb("#e5e5e5"))[#align(center + horizon)[#text(size: 5pt)[10]]]"##.to_string());
+        }
+    }
+
+    // Add spacing before 1-HP boxes if we have both
+    if tens > 0 && ones > 0 {
+        parts.push("#h(3pt)".to_string());
+    }
+
+    // 1-HP boxes
+    for _ in 0..ones {
+        parts.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
+    }
+
+    parts.join("#h(1pt)")
 }
 
 fn extract_speed_full(monster: &Value) -> String {
@@ -1090,5 +1227,154 @@ mod tests {
         assert_eq!(strip_5etools_tags("{@hit 5}"), "+5");
         assert_eq!(strip_5etools_tags("{@damage 1d6+3}"), "1d6+3");
         assert_eq!(strip_5etools_tags("{@dc 13}"), "DC 13");
+    }
+
+    #[test]
+    fn test_extract_hp_average() {
+        // Simple number
+        let monster = json!({"hp": 42});
+        assert_eq!(extract_hp_average(&monster), 42);
+
+        // Object with average
+        let monster = json!({"hp": {"average": 59, "formula": "7d10+21"}});
+        assert_eq!(extract_hp_average(&monster), 59);
+
+        // Missing HP defaults to 1
+        let monster = json!({"name": "Test"});
+        assert_eq!(extract_hp_average(&monster), 1);
+    }
+
+    #[test]
+    fn test_render_individual_boxes() {
+        // 7 HP should produce 7 boxes
+        let result = render_individual_boxes(7);
+        assert!(result.contains("#box(width: 6pt"));
+        assert_eq!(result.matches("#box").count(), 7);
+
+        // 10 HP should have a styled 10th box
+        let result = render_individual_boxes(10);
+        assert!(result.contains("width: 7pt")); // styled box
+        assert_eq!(result.matches("#box").count(), 10);
+
+        // 20 HP should have two styled boxes (at 10 and 20)
+        let result = render_individual_boxes(20);
+        assert_eq!(result.matches("width: 7pt").count(), 2);
+    }
+
+    #[test]
+    fn test_render_fives_and_ones() {
+        // 25 HP = 5 five-boxes, 0 ones
+        let result = render_fives_and_ones(25);
+        assert!(result.contains("[5]"));
+        assert_eq!(result.matches("[5]").count(), 5);
+
+        // 59 HP = 11 five-boxes + 4 one-boxes
+        let result = render_fives_and_ones(59);
+        assert_eq!(result.matches("[5]").count(), 11);
+        assert!(result.contains("width: 6pt")); // 1-HP boxes
+    }
+
+    #[test]
+    fn test_render_tens_and_ones() {
+        // 100 HP = 10 ten-boxes, 0 ones
+        let result = render_tens_and_ones(100);
+        assert!(result.contains("[10]"));
+        assert_eq!(result.matches("[10]").count(), 10);
+
+        // 125 HP = 12 ten-boxes + 5 one-boxes
+        let result = render_tens_and_ones(125);
+        assert_eq!(result.matches("[10]").count(), 12);
+        assert!(result.contains("width: 6pt")); // 1-HP boxes
+    }
+
+    #[test]
+    fn test_render_hp_tracker_tier_selection() {
+        // Low HP (1-20) uses individual boxes
+        let result = render_hp_tracker(7);
+        assert!(!result.contains("[5]"));
+        assert!(!result.contains("[10]"));
+
+        // Medium HP (21-100) uses 5s and 1s
+        let result = render_hp_tracker(59);
+        assert!(result.contains("[5]"));
+        assert!(!result.contains("[10]"));
+
+        // High HP (101+) uses 10s and 1s
+        let result = render_hp_tracker(256);
+        assert!(result.contains("[10]"));
+        assert!(!result.contains("[5]"));
+    }
+
+    #[test]
+    fn test_render_card_with_hp_tracker() {
+        use crate::builder::{RenderContext, Renderable};
+
+        // Create monsters with different HP values to test all tiers
+        let monsters = vec![
+            json!({
+                "name": "Goblin",
+                "hp": {"average": 7, "formula": "2d6"},
+                "ac": [{"ac": 15, "from": ["leather armor", "shield"]}],
+                "cr": "1/4",
+                "size": ["S"],
+                "type": "humanoid",
+                "alignment": ["N", "E"],
+                "speed": {"walk": 30},
+                "str": 8, "dex": 14, "con": 10, "int": 10, "wis": 8, "cha": 8,
+                "passive": 9,
+                "source": "MM"
+            }),
+            json!({
+                "name": "Ogre",
+                "hp": {"average": 59, "formula": "7d10+21"},
+                "ac": [{"ac": 11, "from": ["hide armor"]}],
+                "cr": "2",
+                "size": ["L"],
+                "type": "giant",
+                "alignment": ["C", "E"],
+                "speed": {"walk": 40},
+                "str": 19, "dex": 8, "con": 16, "int": 5, "wis": 7, "cha": 7,
+                "passive": 8,
+                "source": "MM"
+            }),
+            json!({
+                "name": "Adult Red Dragon",
+                "hp": {"average": 256, "formula": "19d12+133"},
+                "ac": [{"ac": 19, "from": ["natural armor"]}],
+                "cr": "17",
+                "size": ["H"],
+                "type": "dragon",
+                "alignment": ["C", "E"],
+                "speed": {"walk": 40, "climb": 40, "fly": 80},
+                "str": 27, "dex": 10, "con": 25, "int": 16, "wis": 13, "cha": 21,
+                "passive": 23,
+                "source": "MM"
+            }),
+            json!({
+                "name": "Tarrasque",
+                "hp": {"average": 676, "formula": "33d20+330"},
+                "ac": [{"ac": 25, "from": ["natural armor"]}],
+                "cr": "30",
+                "size": ["G"],
+                "type": "monstrosity",
+                "alignment": ["U"],
+                "speed": {"walk": 40},
+                "str": 30, "dex": 11, "con": 30, "int": 3, "wis": 11, "cha": 11,
+                "passive": 10,
+                "source": "MM"
+            }),
+        ];
+
+        let section = MonsterCardSection::new(monsters);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // Verify HP trackers are present for each monster
+        assert!(typst.contains("#box(width: 6pt")); // 1-HP boxes for Goblin
+        assert!(typst.contains("[5]")); // 5-HP boxes for Ogre
+        assert!(typst.contains("[10]")); // 10-HP boxes for Dragon/Tarrasque
+
+        // Output the Typst for manual inspection if needed
+        // println!("{}", typst);
     }
 }

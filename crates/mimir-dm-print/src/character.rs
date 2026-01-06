@@ -12,8 +12,8 @@ use serde::Deserialize;
 use crate::builder::DocumentBuilder;
 use crate::error::Result;
 use crate::sections::{
-    is_card_worthy, CharacterLongFormSection, CharacterSheetSection, CompactSheetSection,
-    EquipmentCardsSection, EquipmentDetailSection, SpellCardsSection,
+    is_card_worthy, CharacterBattleCardSection, CharacterLongFormSection, CharacterSheetSection,
+    CompactSheetSection, EquipmentCardsSection, EquipmentDetailSection, SpellCardsSection,
 };
 
 /// Options for composable character export
@@ -24,6 +24,8 @@ pub struct CharacterExportOptions {
     pub include_compact_sheet: bool,
     /// Include long form character details (personality, background, RP notes)
     pub include_long_form: bool,
+    /// Include battle card (half-page combat reference card)
+    pub include_battle_card: bool,
     /// Include spell cards (silently no-op if no spells)
     pub include_spell_cards: bool,
     /// Include detailed equipment list with descriptions
@@ -111,7 +113,15 @@ pub fn export_character_pdf_with_equipment(
         builder = builder.append(section);
     }
 
-    // 3. Spell Cards (silently no-op if no spells)
+    // 3. Battle Card (half-page combat reference)
+    if options.include_battle_card {
+        // Convert character to JSON for the battle card section
+        let char_json = serde_json::to_value(&character).unwrap_or_default();
+        let section = CharacterBattleCardSection::new(vec![char_json]);
+        builder = builder.append(section);
+    }
+
+    // 4. Spell Cards (silently no-op if no spells)
     if options.include_spell_cards && !spells.is_empty() {
         // Convert Spell structs to JSON Values for SpellCardsSection
         let spell_values: Vec<serde_json::Value> = spells
@@ -125,7 +135,7 @@ pub fn export_character_pdf_with_equipment(
         }
     }
 
-    // 4. Equipment Cards (weapons, magic items, special ammo)
+    // 5. Equipment Cards (weapons, magic items, special ammo)
     if options.include_equipment_cards && !equipment.is_empty() {
         // Filter to only card-worthy items
         let card_worthy: Vec<serde_json::Value> = equipment
@@ -139,7 +149,7 @@ pub fn export_character_pdf_with_equipment(
         }
     }
 
-    // 5. Equipment Detail
+    // 6. Equipment Detail
     if options.include_equipment_detail {
         let section = EquipmentDetailSection::new(character.clone());
         builder = builder.append(section);
@@ -260,6 +270,7 @@ mod tests {
         let options = CharacterExportOptions {
             include_compact_sheet: true,
             include_long_form: false,
+            include_battle_card: false,
             include_spell_cards: false,
             include_equipment_cards: false,
             include_equipment_detail: false,
@@ -277,6 +288,7 @@ mod tests {
         let options = CharacterExportOptions {
             include_compact_sheet: false,
             include_long_form: true,
+            include_battle_card: false,
             include_spell_cards: false,
             include_equipment_cards: false,
             include_equipment_detail: false,
@@ -315,6 +327,7 @@ mod tests {
         let options = CharacterExportOptions {
             include_compact_sheet: false,
             include_long_form: false,
+            include_battle_card: false,
             include_spell_cards: false,
             include_equipment_cards: false,
             include_equipment_detail: true,
@@ -345,6 +358,7 @@ mod tests {
         let options = CharacterExportOptions {
             include_compact_sheet: true,
             include_long_form: true,
+            include_battle_card: true,
             include_spell_cards: true,  // No spells, so silently skipped
             include_equipment_cards: true,
             include_equipment_detail: true,
@@ -410,6 +424,7 @@ mod tests {
         let options = CharacterExportOptions {
             include_compact_sheet: false,
             include_long_form: false,
+            include_battle_card: false,
             include_spell_cards: true,
             include_equipment_cards: false,
             include_equipment_detail: false,

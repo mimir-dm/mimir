@@ -68,6 +68,9 @@ impl CharacterBattleCardSection {
         let hp_max = get_hp_max(character);
         let speed = get_speed_full(character);
 
+        // HP tracker
+        let hp_tracker = render_hp_tracker(hp_max);
+
         // Ability scores
         let abilities = character.get("abilities");
         let str_score = get_ability(abilities, "strength", character.get("str"));
@@ -101,8 +104,8 @@ impl CharacterBattleCardSection {
 
         format!(
             r##"box(
-  width: 4in,
-  height: 5.5in,
+  width: 3.875in,
+  height: 5.125in,
   stroke: (
     top: 3pt + {accent_color},
     bottom: 3pt + {accent_color},
@@ -113,6 +116,15 @@ impl CharacterBattleCardSection {
   clip: true,
   inset: 0pt,
 )[
+  // HP Tracker
+  #block(
+    width: 100%,
+    inset: (x: 6pt, y: 4pt),
+    stroke: (bottom: 0.5pt + colors.border-light),
+  )[
+    {hp_tracker}
+  ]
+
   // Header
   #block(
     width: 100%,
@@ -207,6 +219,7 @@ impl CharacterBattleCardSection {
 ]"##,
             accent_color = accent_color,
             header_color = header_color,
+            hp_tracker = hp_tracker,
             name = escape_typst(name),
             subtitle = escape_typst(&subtitle),
             level = level,
@@ -322,7 +335,7 @@ impl Renderable for CharacterBattleCardSection {
         let cards_per_page = 4; // 2x2 grid of half-page cards
         let total_pages = (self.characters.len() + cards_per_page - 1) / cards_per_page;
 
-        // Set page margins for half-page cards
+        // Set page margins for half-page cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
 
         for page_num in 0..total_pages {
@@ -334,18 +347,12 @@ impl Renderable for CharacterBattleCardSection {
                 typst.push_str("\n#pagebreak()\n");
             }
 
-            // Card grid (2x2)
+            // Card grid (2x2) - cards sized to fit with gutters for cutting
             typst.push_str("#grid(\n");
-            typst.push_str("    columns: (4in,) * 2,\n");
-            typst.push_str("    rows: (5.5in,) * 2,\n");
-            typst.push_str(&format!(
-                "    column-gutter: {},\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
-            typst.push_str(&format!(
-                "    row-gutter: {},\n\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
+            typst.push_str("    columns: (3.875in,) * 2,\n");
+            typst.push_str("    rows: (5.125in,) * 2,\n");
+            typst.push_str("    column-gutter: 0.25in,\n");
+            typst.push_str("    row-gutter: 0.25in,\n\n");
 
             // Render each card
             for (i, character) in page_chars.iter().enumerate() {
@@ -359,7 +366,7 @@ impl Renderable for CharacterBattleCardSection {
 
             // Fill remaining slots with empty boxes
             for _ in page_chars.len()..4 {
-                typst.push_str("    box(width: 4in, height: 5.5in),\n");
+                typst.push_str("    box(width: 3.875in, height: 5.125in),\n");
             }
 
             typst.push_str(")\n");
@@ -797,6 +804,94 @@ fn modifier(score: i64) -> String {
     }
 }
 
+/// Render HP tracker based on HP value
+/// - 1-20 HP: Individual boxes with styled 10th box
+/// - 21-100 HP: 5s and 1s grouping
+/// - 101+ HP: 10s and 1s grouping
+fn render_hp_tracker(hp: i64) -> String {
+    match hp {
+        1..=20 => render_individual_boxes(hp),
+        21..=100 => render_fives_and_ones(hp),
+        _ => render_tens_and_ones(hp),
+    }
+}
+
+/// Render individual HP boxes (1-20 HP)
+/// Every 10th box is styled differently for easier counting
+fn render_individual_boxes(hp: i64) -> String {
+    let mut boxes = Vec::new();
+    for i in 1..=hp {
+        if i % 10 == 0 {
+            // Styled 10th box - slightly larger with fill
+            boxes.push(r##"#box(width: 7pt, height: 7pt, stroke: 1pt + black, fill: rgb("#e5e5e5"))"##.to_string());
+        } else {
+            // Regular box
+            boxes.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
+        }
+    }
+    boxes.join("#h(1pt)")
+}
+
+/// Render 5-HP boxes plus 1-HP boxes (for 21-100 HP)
+fn render_fives_and_ones(hp: i64) -> String {
+    let fives = hp / 5;
+    let ones = hp % 5;
+
+    let mut parts = Vec::new();
+
+    // 5-HP boxes with "5" label
+    for i in 0..fives {
+        // Every other 5-box (at 10, 20, 30...) gets extra styling
+        if (i + 1) % 2 == 0 {
+            parts.push(r##"#box(width: 10pt, height: 10pt, stroke: 1pt + black, fill: rgb("#d4d4d4"))[#align(center + horizon)[#text(size: 5pt, weight: "bold")[5]]]"##.to_string());
+        } else {
+            parts.push(r##"#box(width: 10pt, height: 10pt, stroke: 0.75pt + black, fill: rgb("#f5f5f5"))[#align(center + horizon)[#text(size: 5pt)[5]]]"##.to_string());
+        }
+    }
+
+    // Add spacing before 1-HP boxes if we have both
+    if fives > 0 && ones > 0 {
+        parts.push("#h(3pt)".to_string());
+    }
+
+    // 1-HP boxes
+    for _ in 0..ones {
+        parts.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
+    }
+
+    parts.join("#h(1pt)")
+}
+
+/// Render 10-HP boxes plus 1-HP boxes (for 101+ HP)
+fn render_tens_and_ones(hp: i64) -> String {
+    let tens = hp / 10;
+    let ones = hp % 10;
+
+    let mut parts = Vec::new();
+
+    // 10-HP boxes with "10" label
+    for i in 0..tens {
+        // Every 5th ten-box (at 50, 100, 150...) gets extra styling
+        if (i + 1) % 5 == 0 {
+            parts.push(r##"#box(width: 12pt, height: 10pt, stroke: 1.5pt + black, fill: rgb("#c4c4c4"))[#align(center + horizon)[#text(size: 5pt, weight: "bold")[10]]]"##.to_string());
+        } else {
+            parts.push(r##"#box(width: 12pt, height: 10pt, stroke: 0.75pt + black, fill: rgb("#e5e5e5"))[#align(center + horizon)[#text(size: 5pt)[10]]]"##.to_string());
+        }
+    }
+
+    // Add spacing before 1-HP boxes if we have both
+    if tens > 0 && ones > 0 {
+        parts.push("#h(3pt)".to_string());
+    }
+
+    // 1-HP boxes
+    for _ in 0..ones {
+        parts.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
+    }
+
+    parts.join("#h(1pt)")
+}
+
 /// Escape special Typst characters
 fn escape_typst(s: &str) -> String {
     s.replace('\\', "\\\\")
@@ -882,9 +977,9 @@ mod tests {
         let typst = section.to_typst(&ctx).unwrap();
 
         // Verify half-page dimensions and grid layout
-        assert!(typst.contains("width: 4in"));
-        assert!(typst.contains("height: 5.5in"));
-        assert!(typst.contains("columns: (4in,) * 2"));
+        assert!(typst.contains("width: 3.875in"));
+        assert!(typst.contains("height: 5.125in"));
+        assert!(typst.contains("columns: (3.875in,) * 2"));
         assert!(typst.contains("#grid("));
     }
 }

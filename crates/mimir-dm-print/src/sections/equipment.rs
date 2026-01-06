@@ -212,7 +212,7 @@ impl EquipmentCardsSection {
         format!(
             r##"box(
   width: 2.5in,
-  height: 3.5in,
+  height: 3.25in,
   stroke: 0.5pt + black,
   radius: 3pt,
   clip: true,
@@ -310,7 +310,7 @@ impl Renderable for EquipmentCardsSection {
 
 "#);
 
-        // Set tight margins to fit 3x3 grid of 2.5in x 3.5in cards
+        // Set page margins for equipment cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
 
         for page_num in 0..total_pages {
@@ -322,18 +322,12 @@ impl Renderable for EquipmentCardsSection {
                 typst.push_str("\n#pagebreak()\n");
             }
 
-            // Center the card grid
+            // Card grid (3x3) - cards sized to fit with gutters for cutting
             typst.push_str("#align(center)[\n  #grid(\n");
             typst.push_str("    columns: (2.5in,) * 3,\n");
-            typst.push_str("    rows: (3.5in,) * 3,\n");
-            typst.push_str(&format!(
-                "    column-gutter: {},\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
-            typst.push_str(&format!(
-                "    row-gutter: {},\n\n",
-                if self.show_cut_lines { "0pt" } else { "4pt" }
-            ));
+            typst.push_str("    rows: (3.25in,) * 3,\n");
+            typst.push_str("    column-gutter: 0.25in,\n");
+            typst.push_str("    row-gutter: 0.25in,\n\n");
 
             // Render each card in this page
             for (i, item) in page_items.iter().enumerate() {
@@ -347,7 +341,7 @@ impl Renderable for EquipmentCardsSection {
 
             // Fill remaining slots with empty boxes
             for _ in page_items.len()..9 {
-                typst.push_str("    box(width: 2.5in, height: 3.5in),\n");
+                typst.push_str("    box(width: 2.5in, height: 3.25in),\n");
             }
 
             typst.push_str("  )\n]\n");

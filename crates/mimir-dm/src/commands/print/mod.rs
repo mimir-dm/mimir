@@ -514,6 +514,9 @@ pub struct CharacterExportOptions {
     /// Include long form character details (personality, background, RP notes)
     #[serde(default)]
     pub include_long_form: bool,
+    /// Include battle card (half-page combat reference card)
+    #[serde(default)]
+    pub include_battle_card: bool,
     /// Include spell cards (silently no-op if no spells)
     #[serde(default = "default_true")]
     pub include_spell_cards: bool,
@@ -530,6 +533,7 @@ impl Default for CharacterExportOptions {
         Self {
             include_compact_sheet: true,
             include_long_form: false,
+            include_battle_card: false,
             include_spell_cards: true,
             include_equipment_cards: false,
             include_equipment_detail: false,
@@ -558,10 +562,11 @@ pub async fn export_character(
 
     let opts = options.unwrap_or_default();
     info!(
-        "Exporting character {} with options: compact={}, long_form={}, spells={}, equipment_cards={}, equipment_detail={}",
+        "Exporting character {} with options: compact={}, long_form={}, battle_card={}, spells={}, equipment_cards={}, equipment_detail={}",
         character_id,
         opts.include_compact_sheet,
         opts.include_long_form,
+        opts.include_battle_card,
         opts.include_spell_cards,
         opts.include_equipment_cards,
         opts.include_equipment_detail
@@ -707,6 +712,7 @@ pub async fn export_character(
     let print_options = PrintExportOptions {
         include_compact_sheet: opts.include_compact_sheet,
         include_long_form: opts.include_long_form,
+        include_battle_card: opts.include_battle_card,
         include_spell_cards: opts.include_spell_cards,
         include_equipment_cards: opts.include_equipment_cards,
         include_equipment_detail: opts.include_equipment_detail,
@@ -1809,6 +1815,102 @@ pub async fn export_module_documents(
         Vec::new()
     };
 
+    // Fetch NPCs for the campaign (if requested) - NPCs are campaign-scoped
+    let mut npcs_json: Vec<serde_json::Value> = Vec::new();
+
+    if opts.include_npcs {
+        use mimir_dm_core::models::catalog::{ClassFeature, SubclassFeature};
+        use mimir_dm_core::services::{CharacterService, ClassService};
+
+        let mut npc_conn = state
+            .db
+            .get_connection()
+            .map_err(|e| format!("Database error: {}", e))?;
+
+        let mut char_service = CharacterService::new(&mut npc_conn);
+        let campaign_characters = char_service
+            .list_characters_for_campaign(module.campaign_id)
+            .map_err(|e| format!("Failed to get characters: {}", e))?;
+
+        // Filter to only NPCs and fetch their data
+        let npc_characters: Vec<_> = campaign_characters
+            .into_iter()
+            .filter(|c| c.is_npc)
+            .collect();
+
+        // Fetch character data for each NPC and convert to JSON
+        for npc in npc_characters {
+            let mut npc_data_conn = state
+                .db
+                .get_connection()
+                .map_err(|e| format!("Database error: {}", e))?;
+
+            let mut npc_service = CharacterService::new(&mut npc_data_conn);
+            match npc_service.get_character(npc.id) {
+                Ok((_character, character_data)) => {
+                    // Fetch feature details from catalog
+                    let mut class_feature_details: Vec<ClassFeature> = Vec::new();
+                    let mut subclass_feature_details: Vec<SubclassFeature> = Vec::new();
+
+                    {
+                        let mut feature_conn = state
+                            .db
+                            .get_connection()
+                            .map_err(|e| format!("Database error: {}", e))?;
+                        let mut class_service = ClassService::new(&mut feature_conn);
+
+                        for feature_ref in &character_data.class_features {
+                            if let Some(ref subclass_name) = feature_ref.subclass_name {
+                                // Try to fetch as subclass feature
+                                if let Ok(Some(feature)) = class_service.get_subclass_feature(
+                                    &feature_ref.name,
+                                    &feature_ref.class_name,
+                                    subclass_name,
+                                    &feature_ref.source,
+                                ) {
+                                    subclass_feature_details.push(feature);
+                                }
+                            } else {
+                                // Fetch as class feature
+                                if let Ok(Some(feature)) = class_service.get_class_feature(
+                                    &feature_ref.name,
+                                    &feature_ref.class_name,
+                                    &feature_ref.source,
+                                ) {
+                                    class_feature_details.push(feature);
+                                }
+                            }
+                        }
+                    }
+
+                    // Convert to JSON
+                    let npc_json = serde_json::to_value(&character_data)
+                        .map_err(|e| format!("Failed to serialize NPC {}: {}", npc.character_name, e))?;
+
+                    let class_features_json = serde_json::to_value(&class_feature_details)
+                        .map_err(|e| format!("Failed to serialize class features: {}", e))?;
+                    let subclass_features_json = serde_json::to_value(&subclass_feature_details)
+                        .map_err(|e| format!("Failed to serialize subclass features: {}", e))?;
+
+                    // Merge feature details into NPC data
+                    let mut npc_data = npc_json;
+                    if let Some(obj) = npc_data.as_object_mut() {
+                        obj.insert("class_feature_details".to_string(), class_features_json);
+                        obj.insert("subclass_feature_details".to_string(), subclass_features_json);
+                        obj.insert("is_npc".to_string(), serde_json::Value::Bool(true));
+                    }
+
+                    npcs_json.push(npc_data);
+                }
+                Err(e) => {
+                    debug!("Failed to get NPC data for {}: {:?}", npc.character_name, e);
+                }
+            }
+        }
+
+        info!("Loaded {} NPCs for module export", npcs_json.len());
+    }
+
     // Fetch maps for this module (if map previews or play tiles are requested)
     let mut maps_data: Vec<(mimir_dm_print::RenderMap, Vec<mimir_dm_print::RenderToken>)> = Vec::new();
 
@@ -1901,25 +2003,22 @@ pub async fn export_module_documents(
         } else {
             Some(serde_json::Value::Array(trap_json))
         },
-        npcs: None, // NPCs not yet implemented for module export
+        npcs: if npcs_json.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Array(npcs_json))
+        },
         campaign_maps: Vec::new(), // Module export has no campaign-level maps
         module_maps: maps_data,    // All maps are module maps
         base_path: campaign_base_path,
         templates_root,
     };
 
-    if opts.include_npcs {
-        tracing::warn!(
-            "include_npcs was requested but is not yet implemented for module export. \
-            NPCs are campaign-scoped and will be added in a future update."
-        );
-    }
-
     let export_options = ExportOptions {
         include_toc: true,
         include_monsters: opts.include_monsters,
         include_traps: opts.include_traps,
-        include_npcs: false, // NPCs not yet implemented for module export
+        include_npcs: opts.include_npcs,
         // Campaign map options (none for module export)
         include_campaign_map_previews: false,
         include_campaign_tiled_maps: false,

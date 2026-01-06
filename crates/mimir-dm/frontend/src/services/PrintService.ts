@@ -90,6 +90,8 @@ export interface CharacterExportOptions {
   include_compact_sheet?: boolean
   /** Include long form character details (personality, background, RP notes) */
   include_long_form?: boolean
+  /** Include battle card (half-page combat reference card) */
+  include_battle_card?: boolean
   /** Include spell cards (silently no-op if no spells) */
   include_spell_cards?: boolean
   /** Include equipment cards (weapons, magic items, special ammo) */

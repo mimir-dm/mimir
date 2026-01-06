@@ -37,6 +37,17 @@
           </label>
         </div>
 
+        <!-- Battle Card -->
+        <div class="mode-card" :class="{ active: options.includeBattleCard }">
+          <label class="mode-header" @click.prevent="options.includeBattleCard = !options.includeBattleCard">
+            <input type="checkbox" v-model="options.includeBattleCard" @click.stop />
+            <div class="mode-info">
+              <span class="mode-label">Battle Card</span>
+              <span class="mode-desc">Half-page combat reference card (AC, HP, attacks, saves)</span>
+            </div>
+          </label>
+        </div>
+
         <!-- Spell Cards -->
         <div class="mode-card" :class="{ active: options.includeSpellCards }">
           <label class="mode-header" @click.prevent="options.includeSpellCards = !options.includeSpellCards">
@@ -142,6 +153,7 @@ const pdfPreviewRef = ref<InstanceType<typeof PdfPreviewModal> | null>(null)
 const options = reactive({
   includeCompactSheet: true,
   includeLongForm: false,
+  includeBattleCard: false,
   includeSpellCards: true,
   includeEquipmentCards: false,
   includeEquipmentDetail: false,
@@ -150,8 +162,8 @@ const options = reactive({
 // Computed
 const hasAnySelection = computed(() => {
   return options.includeCompactSheet || options.includeLongForm ||
-         options.includeSpellCards || options.includeEquipmentCards ||
-         options.includeEquipmentDetail
+         options.includeBattleCard || options.includeSpellCards ||
+         options.includeEquipmentCards || options.includeEquipmentDetail
 })
 
 const defaultFileName = computed(() => {
@@ -167,6 +179,7 @@ watch(() => props.visible, (newVisible) => {
     // Reset to defaults
     options.includeCompactSheet = true
     options.includeLongForm = false
+    options.includeBattleCard = false
     options.includeSpellCards = true
     options.includeEquipmentCards = false
     options.includeEquipmentDetail = false
@@ -197,6 +210,7 @@ async function handleExport() {
     const result = await PrintService.generateCharacterExport(props.characterId, {
       include_compact_sheet: options.includeCompactSheet,
       include_long_form: options.includeLongForm,
+      include_battle_card: options.includeBattleCard,
       include_spell_cards: options.includeSpellCards,
       include_equipment_cards: options.includeEquipmentCards,
       include_equipment_detail: options.includeEquipmentDetail,
