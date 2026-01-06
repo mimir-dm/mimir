@@ -12,9 +12,9 @@ path = "src/main.rs"
 
 [dependencies]
 # Our crates
-mimir-dm = { version = "0.1.2", path = "../mimir-dm" }
-mimir-dm-core = { version = "0.1.2", path = "../mimir-dm-core" }
-mimir-dm-llm = { version = "0.1.2", path = "../mimir-dm-llm" }
+mimir-dm = { path = "../mimir-dm" }
+mimir-dm-core = { path = "../mimir-dm-core" }
+mimir-dm-llm = { path = "../mimir-dm-llm" }
 
 # Core dependencies
 anyhow = { workspace = true }
