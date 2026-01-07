@@ -4,15 +4,15 @@ level: task
 title: "Hard Delete Campaign Support"
 short_code: "MIMIR-T-0327"
 created_at: 2026-01-07T09:32:29.857152+00:00
-updated_at: 2026-01-07T09:32:29.857152+00:00
+updated_at: 2026-01-07T15:00:31.127117+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#feature"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -38,6 +38,12 @@ Add the ability to permanently delete campaigns from the database, as opposed to
 - **User Value**: Users need to clean up test campaigns, campaigns with broken paths, or campaigns they no longer want cluttering their list
 - **Business Value**: Better data hygiene and user control over their workspace
 - **Effort Estimate**: S
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

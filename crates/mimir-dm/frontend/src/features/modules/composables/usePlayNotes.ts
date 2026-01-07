@@ -2,10 +2,10 @@ import { ref, type Ref, onBeforeUnmount } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
 /**
- * Composable for managing session notes with auto-save
+ * Composable for managing play notes with auto-save
  * Handles loading, saving, and debounced auto-save of notes
  */
-export function useSessionNotes() {
+export function usePlayNotes() {
   // State
   const notesCollapsed = ref(true)
   const notesContent = ref('')

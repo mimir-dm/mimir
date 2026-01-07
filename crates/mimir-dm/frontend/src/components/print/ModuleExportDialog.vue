@@ -39,14 +39,14 @@
           </div>
         </div>
 
-        <!-- Session Notes (separate from documents for post-play export) -->
-        <div class="mode-card" :class="{ active: options.includeSessionNotes }">
-          <label class="mode-header" @click.prevent="options.includeSessionNotes = !options.includeSessionNotes">
-            <input type="checkbox" v-model="options.includeSessionNotes" @click.stop />
+        <!-- Play Notes (separate from documents for post-play export) -->
+        <div class="mode-card" :class="{ active: options.includePlayNotes }">
+          <label class="mode-header" @click.prevent="options.includePlayNotes = !options.includePlayNotes">
+            <input type="checkbox" v-model="options.includePlayNotes" @click.stop />
             <span class="mode-icon">&#128221;</span>
             <div class="mode-info">
-              <span class="mode-label">Session Notes</span>
-              <span class="mode-desc">Play session notes and summaries</span>
+              <span class="mode-label">Play Notes</span>
+              <span class="mode-desc">Notes and summaries from play sessions</span>
             </div>
           </label>
         </div>
@@ -187,7 +187,7 @@ const options = reactive({
   includeMonsters: true,
   includeTraps: true,
   includeNpcs: false,
-  includeSessionNotes: false,
+  includePlayNotes: false,
   // Map Preview section
   includePreview: true,
   previewGrid: true,
@@ -202,7 +202,7 @@ const options = reactive({
 
 // Computed
 const hasAnySelection = computed(() => {
-  return options.includeDocuments || options.includeSessionNotes || options.includePreview || options.includePlay
+  return options.includeDocuments || options.includePlayNotes || options.includePreview || options.includePlay
 })
 
 const defaultFileName = computed(() => {
@@ -220,7 +220,7 @@ watch(() => props.visible, (newVisible) => {
     options.includeMonsters = true
     options.includeTraps = true
     options.includeNpcs = false
-    options.includeSessionNotes = false
+    options.includePlayNotes = false
     // Map Preview section
     options.includePreview = true
     options.previewGrid = true
@@ -260,7 +260,7 @@ async function handleExport() {
       include_monsters: options.includeDocuments && options.includeMonsters,
       include_traps: options.includeDocuments && options.includeTraps,
       include_npcs: options.includeDocuments && options.includeNpcs,
-      include_session_notes: options.includeSessionNotes,
+      include_play_notes: options.includePlayNotes,
       // Map options
       include_preview: options.includePreview,
       preview_grid: options.previewGrid,

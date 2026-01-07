@@ -164,8 +164,8 @@ class BoardConfigurationService {
         'Consider how players might interact with each faction'
       ]
     },
-    'session_notes': {
-      title: 'Session Notes',
+    'play_notes': {
+      title: 'Play Notes',
       description: 'Record of events and decisions from game sessions',
       tips: [
         'Note important player decisions',

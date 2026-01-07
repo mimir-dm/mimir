@@ -139,7 +139,7 @@
         <aside class="notes-panel" :class="{ collapsed: notesCollapsed }">
           <button class="notes-toggle" @click="toggleNotes">
             <span class="notes-toggle-icon">{{ notesCollapsed ? '&#9650;' : '&#9660;' }}</span>
-            <span class="notes-toggle-label">Session Notes</span>
+            <span class="notes-toggle-label">Play Notes</span>
             <span v-if="notesSaving" class="notes-saving">Saving...</span>
             <span v-else-if="notesLastSaved" class="notes-saved">Saved</span>
           </button>
@@ -148,7 +148,7 @@
             <textarea
               v-model="notesContent"
               class="notes-textarea"
-              placeholder="Type your session notes here... (auto-saves)"
+              placeholder="Type your play notes here... (auto-saves)"
               @input="handleNotesInput"
             ></textarea>
           </div>
@@ -188,7 +188,7 @@ import type { Module, Campaign } from '@/types'
 import { useCrossReferences } from '@/features/sources/composables/useCrossReferences'
 import { useModuleMonsters } from '../composables/useModuleMonsters'
 import { useModuleMaps } from '../composables/useModuleMaps'
-import { useSessionNotes, buildNotesFilePath } from '../composables/useSessionNotes'
+import { usePlayNotes, buildNotesFilePath } from '../composables/usePlayNotes'
 
 const route = useRoute()
 const router = useRouter()
@@ -306,7 +306,7 @@ function selectMonsterAndShowTab(monster: any) {
   monsterPanelOpen.value = true
 }
 
-// Session notes (from composable)
+// Play notes (from composable)
 const {
   notesCollapsed,
   notesContent,
@@ -316,7 +316,7 @@ const {
   setNotesFilePath,
   loadNotes,
   handleNotesInput
-} = useSessionNotes()
+} = usePlayNotes()
 
 // Load module and campaign data
 async function loadModule() {
@@ -389,7 +389,7 @@ function toggleSidebar() {
 
 // Cleanup
 onBeforeUnmount(() => {
-  // Note: Session notes cleanup is handled by useSessionNotes composable
+  // Note: Play notes cleanup is handled by usePlayNotes composable
   // Clean up cross-reference handlers
   document.removeEventListener('click', handleCrossRefClick as any)
   document.removeEventListener('mouseover', handleCrossRefHover as any)

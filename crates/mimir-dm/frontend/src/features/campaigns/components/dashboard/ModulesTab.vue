@@ -217,11 +217,11 @@
             </div>
           </div>
 
-          <!-- Session Notes Panel -->
+          <!-- Play Notes Panel -->
           <aside class="notes-panel" :class="{ collapsed: notesCollapsed }">
             <button class="notes-toggle" @click="toggleNotes">
               <span class="notes-toggle-icon">{{ notesCollapsed ? '▲' : '▼' }}</span>
-              <span class="notes-toggle-label">Session Notes</span>
+              <span class="notes-toggle-label">Play Notes</span>
               <span v-if="notesSaving" class="notes-saving">Saving...</span>
               <span v-else-if="notesLastSaved" class="notes-saved">Saved</span>
             </button>
@@ -230,7 +230,7 @@
               <textarea
                 v-model="notesContent"
                 class="notes-textarea"
-                placeholder="Type your session notes here... (auto-saves)"
+                placeholder="Type your play notes here... (auto-saves)"
                 @input="handleNotesInput"
               ></textarea>
             </div>
@@ -326,7 +326,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import { DocumentService } from '@/services/DocumentService'
 import { useModuleMonsters } from '@/features/modules/composables/useModuleMonsters'
-import { useSessionNotes, buildNotesFilePath } from '@/features/modules/composables/useSessionNotes'
+import { usePlayNotes, buildNotesFilePath } from '@/features/modules/composables/usePlayNotes'
 import { openSourcesReference } from '@/shared/utils/windows'
 import CreateModuleModal from '../StageLanding/CreateModuleModal.vue'
 import MapUploadModal from '../StageLanding/MapUploadModal.vue'
@@ -399,7 +399,7 @@ const loadingTraps = ref(false)
 const selectedTrap = ref<ModuleTrap | null>(null)
 const trapPanelOpen = ref(true)
 
-// Session notes (from composable)
+// Play notes (from composable)
 const {
   notesCollapsed,
   notesContent,
@@ -409,7 +409,7 @@ const {
   setNotesFilePath,
   loadNotes,
   handleNotesInput
-} = useSessionNotes()
+} = usePlayNotes()
 
 // Document state
 const moduleDocuments = ref<Document[]>([])
@@ -1468,7 +1468,7 @@ onMounted(async () => {
   font-size: 0.875rem;
 }
 
-/* Session Notes Panel */
+/* Play Notes Panel */
 .notes-panel {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);

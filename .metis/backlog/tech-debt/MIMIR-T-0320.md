@@ -4,15 +4,15 @@ level: task
 title: "Normalize session notes to play notes terminology"
 short_code: "MIMIR-T-0320"
 created_at: 2026-01-05T16:59:11.242109+00:00
-updated_at: 2026-01-05T16:59:11.242109+00:00
+updated_at: 2026-01-07T15:01:31.645208+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -65,6 +65,10 @@ Standardize terminology from "session notes" to "play notes" across the codebase
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

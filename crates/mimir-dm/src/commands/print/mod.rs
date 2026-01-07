@@ -99,9 +99,9 @@ pub struct ModuleExportOptions {
     /// Include campaign NPC sheets (default: false)
     #[serde(default)]
     pub include_npcs: bool,
-    /// Include session notes (play-notes.md) (default: false)
+    /// Include play notes (play-notes.md) (default: false)
     #[serde(default)]
-    pub include_session_notes: bool,
+    pub include_play_notes: bool,
 
     // Map Preview section
     /// Include map previews (fit to single page) (default: true)
@@ -139,7 +139,7 @@ impl Default for ModuleExportOptions {
             include_monsters: true,
             include_traps: true,
             include_npcs: false,
-            include_session_notes: false,
+            include_play_notes: false,
             include_preview: true,
             preview_grid: true,
             preview_los_walls: false,
@@ -1691,7 +1691,7 @@ pub async fn export_module_documents(
     }
 
     // Check for play-notes.md file (created during play mode) - separate from documents
-    if opts.include_session_notes {
+    if opts.include_play_notes {
         let play_notes_path = std::path::PathBuf::from(&campaign.directory_path)
             .join("modules")
             .join(format!("module_{:02}", module.module_number))

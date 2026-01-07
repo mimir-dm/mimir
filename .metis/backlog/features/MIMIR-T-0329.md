@@ -4,15 +4,15 @@ level: task
 title: "Arbitrary Document Creation for Campaigns and Modules"
 short_code: "MIMIR-T-0329"
 created_at: 2026-01-07T09:32:30.095083+00:00
-updated_at: 2026-01-07T09:32:30.095083+00:00
+updated_at: 2026-01-07T15:00:38.454417+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#feature"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -38,6 +38,12 @@ Allow users to create arbitrary markdown documents at the campaign or module lev
 - **User Value**: DMs often need to create custom documents that don't fit existing templates (e.g., custom lore pages, puzzle solutions, DM notes, custom tables)
 - **Business Value**: Removes friction and makes Mimir more flexible for diverse campaign styles
 - **Effort Estimate**: M (upload, preview, export - gallery cut from scope)
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
