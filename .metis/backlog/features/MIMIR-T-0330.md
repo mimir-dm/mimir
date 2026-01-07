@@ -4,15 +4,15 @@ level: task
 title: "Delete Campaign Documents via Sidebar"
 short_code: "MIMIR-T-0330"
 created_at: 2026-01-07T10:15:37.553902+00:00
-updated_at: 2026-01-07T10:15:37.553902+00:00
+updated_at: 2026-01-07T14:43:11.460855+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#feature"
+  - "#phase/todo"
 
 
 exit_criteria_met: false
@@ -37,6 +37,8 @@ Allow users to delete unneeded campaign documents directly from the sidebar, rem
 ### Business Justification
 - **User Value**: Users can clean up optional documents they don't need (safety_tools, house_rules, etc.) without leaving the app or manually deleting files
 - **Effort Estimate**: S
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

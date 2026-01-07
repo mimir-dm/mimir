@@ -141,7 +141,7 @@ impl<'a> DocumentService<'a> {
 
     /// Delete a document.
     ///
-    /// Removes the database record. Does not delete the file on disk.
+    /// Removes both the file on disk and the database record.
     ///
     /// # Arguments
     /// * `document_id` - Database ID of the document
@@ -149,6 +149,18 @@ impl<'a> DocumentService<'a> {
     /// # Returns
     /// * `Ok(())` - If deletion succeeds
     pub fn delete_document(&mut self, document_id: i32) -> Result<()> {
+        // Get the document first to retrieve file path (ignore if not found)
+        if let Ok(doc) = DocumentRepository::find_by_id(self.conn, document_id) {
+            // Try to delete the file from disk (ignore errors if file doesn't exist)
+            let path = std::path::Path::new(&doc.file_path);
+            if path.exists() {
+                if let Err(e) = std::fs::remove_file(path) {
+                    tracing::warn!("Failed to delete document file {:?}: {}", path, e);
+                }
+            }
+        }
+
+        // Delete the database record
         DocumentRepository::delete(self.conn, document_id).map(|_| ())
     }
 

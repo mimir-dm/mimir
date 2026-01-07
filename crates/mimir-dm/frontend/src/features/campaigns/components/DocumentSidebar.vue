@@ -39,9 +39,9 @@
             <div class="document-items">
               <div
                 v-for="doc in getStageDocuments(stage.key).documents"
-                :key="doc.templateId"
+                :key="doc.instance?.id || doc.templateId"
                 class="document-item"
-                :class="{ selected: selectedDocument?.template_id === doc.templateId }"
+                :class="{ selected: selectedDocument?.id === doc.instance?.id }"
                 @click="handleDocumentClick(doc)"
               >
                 <img
@@ -53,6 +53,15 @@
                   {{ doc.title }}
                   <span v-if="!doc.required" class="optional-label">(Optional)</span>
                 </span>
+                <button
+                  class="delete-btn"
+                  @click="confirmDeleteDocument(doc.instance, $event)"
+                  title="Delete document"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -83,6 +92,15 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
               <span class="document-title">{{ doc.title }}</span>
+              <button
+                class="delete-btn"
+                @click="confirmDeleteDocument(doc, $event)"
+                title="Delete document"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -104,6 +122,21 @@
       @close="showCreateModal = false"
       @created="handleDocumentCreated"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <AppModal
+      :visible="showDeleteModal"
+      title="Delete Document"
+      size="sm"
+      @close="showDeleteModal = false"
+    >
+      <p>Are you sure you want to delete "{{ documentToDelete?.title }}"?</p>
+      <p class="delete-warning">This will permanently remove the document and its file from disk.</p>
+      <template #footer>
+        <button class="btn btn-secondary" @click="showDeleteModal = false">Cancel</button>
+        <button class="btn btn-danger" @click="deleteDocument">Delete</button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -115,6 +148,7 @@ import { useThemeStore } from '../../../stores/theme'
 import { debugDocument } from '../../../shared/utils/debug'
 import CampaignExportDialog from '../../../components/print/CampaignExportDialog.vue'
 import CreateDocumentModal from '../../../components/CreateDocumentModal.vue'
+import AppModal from '../../../components/shared/AppModal.vue'
 
 // Import icon images
 import lightEditIcon from '../../../assets/images/light-edit.png'
@@ -134,32 +168,34 @@ const emit = defineEmits<{
   documentCompletionChanged: [document: Document]
 }>()
 
-// Get document templates from board configuration
-const stageDocuments = computed(() => {
+// Build a map of template IDs to their stage and metadata from board config
+const templateMetadata = computed(() => {
   if (!props.boardConfig) return {}
-  
-  const documents: Record<string, any[]> = {}
-  
+
+  const metadata: Record<string, { stage: string; required: boolean; displayName: string }> = {}
+
   for (const stage of props.boardConfig.stages) {
-    documents[stage.key] = [
-      ...stage.required_documents.map((docId: string) => ({
-        templateId: docId,
-        title: docId.replace(/[-_]/g, ' ').split(' ').map((word: string) => 
+    for (const docId of stage.required_documents) {
+      metadata[docId] = {
+        stage: stage.key,
+        required: true,
+        displayName: docId.replace(/[-_]/g, ' ').split(' ').map((word: string) =>
           word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' '),
-        required: true
-      })),
-      ...stage.optional_documents.map((docId: string) => ({
-        templateId: docId,
-        title: docId.replace(/[-_]/g, ' ').split(' ').map((word: string) => 
+        ).join(' ')
+      }
+    }
+    for (const docId of stage.optional_documents) {
+      metadata[docId] = {
+        stage: stage.key,
+        required: false,
+        displayName: docId.replace(/[-_]/g, ' ').split(' ').map((word: string) =>
           word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' '),
-        required: false
-      }))
-    ]
+        ).join(' ')
+      }
+    }
   }
-  
-  return documents
+
+  return metadata
 })
 
 // State
@@ -170,6 +206,8 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const showExportDialog = ref(false)
 const showCreateModal = ref(false)
+const showDeleteModal = ref(false)
+const documentToDelete = ref<Document | null>(null)
 
 // Theme store for icon selection
 const themeStore = useThemeStore()
@@ -181,36 +219,52 @@ const iconMap = {
   hyper: { edit: hyperEditIcon }
 }
 
-// Stage documents are now computed dynamically from board configuration
+// Group existing documents by stage - only shows documents that exist in database
+const documentsByStage = computed(() => {
+  const grouped: Record<string, Document[]> = {}
 
-// Filter stages to only those with documents
+  for (const doc of documents.value) {
+    const templateId = doc.template_id
+    if (templateId && templateMetadata.value[templateId]) {
+      const stage = templateMetadata.value[templateId].stage
+      if (!grouped[stage]) {
+        grouped[stage] = []
+      }
+      grouped[stage].push(doc)
+    }
+  }
+
+  return grouped
+})
+
+// Filter stages to only those with actual documents that exist
 const stagesWithDocuments = computed(() => {
   if (!props.boardConfig?.stages) return []
   return props.boardConfig.stages.filter((stage: any) =>
-    stage.required_documents.length > 0 || stage.optional_documents.length > 0
+    documentsByStage.value[stage.key]?.length > 0
   )
 })
 
-// Get documents for a specific stage
+// Get documents for a specific stage - only returns documents that exist
 const getStageDocuments = (stage: string) => {
-  const templates = stageDocuments.value[stage] || []
-  const stageDocumentList = templates.map((template: any) => {
-    // Simple matching - everything uses snake_case now
-    const instance = documents.value.find(doc => 
-      doc.template_id === template.templateId
-    )
+  const stageDocs = documentsByStage.value[stage] || []
+  const stageDocumentList = stageDocs.map((doc: Document) => {
+    const templateId = doc.template_id
+    const meta = templateId ? templateMetadata.value[templateId] : null
     return {
-      ...template,
-      instance
+      templateId: templateId,
+      title: meta?.displayName || doc.title,
+      required: meta?.required ?? true,
+      instance: doc
     }
   })
-  
+
   // Only count required documents for completion tracking
   const requiredDocs = stageDocumentList.filter((doc: any) => doc.required)
   const completed = requiredDocs.filter((doc: any) => doc.instance?.completed_at).length
   const total = requiredDocs.length
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
-  
+
   return {
     documents: stageDocumentList,
     completed,
@@ -227,36 +281,27 @@ const getEditIcon = (): string => {
 
 // Get which stage a template belongs to
 const getDocumentStage = (templateId: string): string => {
-  for (const [stage, docs] of Object.entries(stageDocuments.value)) {
-    if ((docs as any[]).some(d => d.templateId === templateId)) {
-      return stage
-    }
-  }
-  return 'concept'
+  return templateMetadata.value[templateId]?.stage || 'concept'
 }
 
 // Get all documents for active/concluding/completed campaigns (simplified view)
+// Only returns documents that actually exist in the database
 const getAllDocumentsForActive = () => {
   const allDocs: any[] = []
-  
-  // Collect all documents from all stages (both required and optional)
-  if (props.boardConfig) {
-    for (const stage of props.boardConfig.stages) {
-      const templates = stageDocuments.value[stage.key] || []
-      for (const template of templates) {
-        const instance = documents.value.find(doc => 
-          doc.template_id === template.templateId
-        )
-        
-        // Include all documents (with or without instance)
-        allDocs.push({
-          ...template,
-          instance
-        })
-      }
-    }
+
+  // Only include documents that exist in the database
+  for (const doc of documents.value) {
+    const templateId = doc.template_id
+    const meta = templateId ? templateMetadata.value[templateId] : null
+
+    allDocs.push({
+      templateId: templateId,
+      title: meta?.displayName || doc.title,
+      required: meta?.required ?? true,
+      instance: doc
+    })
   }
-  
+
   // Sort alphabetically by title
   return allDocs.sort((a, b) => a.title.localeCompare(b.title))
 }
@@ -314,44 +359,11 @@ const handleDocumentCreated = async () => {
   }
 }
 
-// Handle document click
-const handleDocumentClick = async (doc: any) => {
+// Handle document click - all documents shown now exist in database
+const handleDocumentClick = (doc: any) => {
   debugDocument('click', { doc, stage: getDocumentStage(doc.templateId) })
-
-  // If document doesn't exist in database, just create a simple object pointing to the file
-  if (!doc.instance) {
-    // Get campaign info to build the full path
-    const campaignResponse = await invoke<{ success: boolean; data: any }>('get_campaign', {
-      id: props.campaignId
-    })
-    
-    if (campaignResponse.success && campaignResponse.data) {
-      const simpleDoc = {
-        id: -1, // Use -1 as temporary ID to indicate it's not in database
-        campaign_id: props.campaignId,
-        template_id: doc.templateId,
-        document_type: doc.templateId.replace(/-/g, '_'),
-        title: doc.title,
-        file_path: `${campaignResponse.data.directory_path}/${doc.templateId}.md`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        completed_at: null,
-        module_id: null,
-        session_id: null
-      } as Document
-      // Add to documents array so it shows as existing
-      const existingIndex = documents.value.findIndex(d => d.template_id === doc.templateId)
-      if (existingIndex === -1) {
-        documents.value.push(simpleDoc)
-      } else {
-        documents.value[existingIndex] = simpleDoc
-      }
-      
-      // Select the document
-      selectDocument(simpleDoc)
-    }
-  } else {
-    debugDocument('selecting-existing', { instance: doc.instance })
+  // Since we only show documents that exist, just select the instance
+  if (doc.instance) {
     selectDocument(doc.instance)
   }
 }
@@ -415,6 +427,40 @@ const toggleDocumentCompletion = async (doc: any) => {
 // Open export dialog
 const openExportDialog = () => {
   showExportDialog.value = true
+}
+
+// Confirm delete document
+const confirmDeleteDocument = (doc: Document, event: Event) => {
+  event.stopPropagation()
+  documentToDelete.value = doc
+  showDeleteModal.value = true
+}
+
+// Delete document
+const deleteDocument = async () => {
+  if (!documentToDelete.value) return
+
+  try {
+    await invoke('delete_document', {
+      documentId: documentToDelete.value.id
+    })
+
+    // Remove from user documents list
+    userDocuments.value = userDocuments.value.filter(d => d.id !== documentToDelete.value!.id)
+
+    // Remove from template documents list
+    documents.value = documents.value.filter(d => d.id !== documentToDelete.value!.id)
+
+    // Clear selection if deleted doc was selected
+    if (selectedDocument.value?.id === documentToDelete.value.id) {
+      selectedDocument.value = null
+    }
+
+    showDeleteModal.value = false
+    documentToDelete.value = null
+  } catch (e) {
+    console.error('Failed to delete document:', e)
+  }
 }
 
 // Watch for campaign or stage changes
@@ -617,5 +663,73 @@ onMounted(() => {
 
 .user-document .document-icon-svg {
   color: var(--color-primary-400, #60a5fa);
+}
+
+/* Delete button */
+.delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.document-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: var(--color-error-100, rgba(239, 68, 68, 0.1));
+  color: var(--color-error, #ef4444);
+}
+
+.delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Delete modal styles */
+.delete-warning {
+  font-size: 0.875rem;
+  color: var(--color-error, #ef4444);
+  margin-top: 0.5rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface-variant);
+}
+
+.btn-danger {
+  background: var(--color-error, #ef4444);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: var(--color-error-dark, #dc2626);
 }
 </style>

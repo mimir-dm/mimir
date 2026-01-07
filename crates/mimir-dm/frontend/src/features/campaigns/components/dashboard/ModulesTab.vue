@@ -78,6 +78,15 @@
                     <span class="doc-title">{{ formatDocumentTitle(doc.template_id || doc.title || 'Untitled') }}</span>
                     <span v-if="doc.completed_at" class="doc-status complete">Done</span>
                     <span v-else-if="doc.is_user_created" class="doc-status user">Custom</span>
+                    <button
+                      class="doc-delete-btn"
+                      @click="confirmDeleteDocument(doc, $event)"
+                      title="Delete document"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </section>
@@ -292,6 +301,21 @@
       @close="showCreateDocModal = false"
       @created="handleDocumentCreated"
     />
+
+    <!-- Delete Document Confirmation Modal -->
+    <AppModal
+      :visible="showDeleteDocModal"
+      title="Delete Document"
+      size="sm"
+      @close="showDeleteDocModal = false"
+    >
+      <p>Are you sure you want to delete "{{ documentToDelete?.title }}"?</p>
+      <p class="delete-warning">This will permanently remove the document and its file from disk.</p>
+      <template #footer>
+        <button class="btn btn-secondary" @click="showDeleteDocModal = false">Cancel</button>
+        <button class="btn btn-danger" @click="handleDeleteDocument">Delete</button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -313,6 +337,7 @@ import MonsterStatsPanel from '@/features/modules/components/MonsterStatsPanel.v
 import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 import type { Campaign, BoardConfig, Module, Document } from '@/types'
 
 interface MapData {
@@ -399,6 +424,8 @@ const selectedMapForTokens = ref<MapData | null>(null)
 
 // Document creation state
 const showCreateDocModal = ref(false)
+const showDeleteDocModal = ref(false)
+const documentToDelete = ref<Document | null>(null)
 
 // NPC state
 interface ModuleNpcWithCharacter {
@@ -602,6 +629,37 @@ async function handleDocumentCreated() {
   // Clear the document cache since we created via a separate command
   DocumentService.clearCache()
   await loadModuleDocuments()
+}
+
+// Confirm delete document
+function confirmDeleteDocument(doc: Document, event: Event) {
+  event.stopPropagation()
+  documentToDelete.value = doc
+  showDeleteDocModal.value = true
+}
+
+// Delete document
+async function handleDeleteDocument() {
+  if (!documentToDelete.value) return
+
+  try {
+    await invoke('delete_document', {
+      documentId: documentToDelete.value.id
+    })
+
+    // Remove from documents list
+    moduleDocuments.value = moduleDocuments.value.filter(d => d.id !== documentToDelete.value!.id)
+
+    // Clear selection if deleted doc was selected
+    if (selectedDocument.value?.id === documentToDelete.value.id) {
+      selectedDocument.value = null
+    }
+
+    showDeleteDocModal.value = false
+    documentToDelete.value = null
+  } catch (e) {
+    console.error('Failed to delete document:', e)
+  }
 }
 
 // Format document title
@@ -1309,6 +1367,75 @@ onMounted(async () => {
 
 .document-card.user-created {
   border-left: 3px solid var(--color-primary-500);
+}
+
+/* Document delete button */
+.doc-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  margin-left: var(--spacing-xs);
+}
+
+.document-card:hover .doc-delete-btn {
+  opacity: 1;
+}
+
+.doc-delete-btn:hover {
+  background: var(--color-error-100, rgba(239, 68, 68, 0.1));
+  color: var(--color-error);
+}
+
+.doc-delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Delete modal styles */
+.delete-warning {
+  font-size: 0.875rem;
+  color: var(--color-error);
+  margin-top: var(--spacing-sm);
+}
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface-variant);
+}
+
+.btn-danger {
+  background: var(--color-error);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: var(--color-error-dark, #dc2626);
 }
 
 /* Empty state */
