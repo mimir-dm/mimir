@@ -4,15 +4,15 @@ level: task
 title: "Remove unused Vue components"
 short_code: "MIMIR-T-0321"
 created_at: 2026-01-05T17:03:24.048766+00:00
-updated_at: 2026-01-05T17:03:24.048766+00:00
+updated_at: 2026-01-07T15:10:07.646528+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -65,6 +65,10 @@ Audit and remove unused Vue components from the frontend codebase to reduce bund
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
