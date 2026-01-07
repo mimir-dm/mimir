@@ -51,11 +51,12 @@ pub use maps::{generate_map_pdf, slice_map_into_tiles, MapPdfOptions};
 pub use builder::{DocumentBuilder, DocumentConfig, RenderContext, Renderable, VirtualFileRegistry};
 pub use error::{PrintError, Result};
 pub use sections::{
-    CharacterBattleCardSection, CharacterLongFormSection, CharacterSheetSection,
-    CharacterSummarySection, CompactSheetSection, EncounterSection, EquipmentDetailSection,
-    MapPreview, MarkdownSection, MonsterAppendix, MonsterCardSection, MonsterStatBlockSection,
-    NpcAppendix, NpcIndexCardSection, SpellCardsSection, SpellListSection, TileData,
-    TiledMapSection, TokenCutoutSheet, TrapAppendix, TrapCardSection,
+    is_image_extension, CharacterBattleCardSection, CharacterLongFormSection,
+    CharacterSheetSection, CharacterSummarySection, CompactSheetSection, EncounterSection,
+    EquipmentDetailSection, ImageSection, MapPreview, MarkdownSection, MonsterAppendix,
+    MonsterCardSection, MonsterStatBlockSection, NpcAppendix, NpcIndexCardSection,
+    SpellCardsSection, SpellListSection, TileData, TiledMapSection, TokenCutoutSheet,
+    TrapAppendix, TrapCardSection,
 };
 pub use map_renderer::{
     render_map, render_map_for_print, MapPrintOptions, RenderMap, RenderToken, RenderedMap,

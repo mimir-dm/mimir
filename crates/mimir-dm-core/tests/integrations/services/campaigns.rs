@@ -99,6 +99,8 @@ fn test_document_lifecycle() {
         file_path: format!("{}/campaign_pitch.md", campaign.directory_path),
         module_id: None,
         session_id: None,
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
 
     let doc = DocumentRepository::create(&mut conn, new_doc).unwrap();
@@ -146,6 +148,8 @@ fn test_document_list_by_campaign() {
             file_path: format!("{}/{}.md", campaign.directory_path, template_id),
             module_id: None,
             session_id: None,
+            file_type: "markdown".to_string(),
+            is_user_created: false,
         };
         DocumentRepository::create(&mut conn, new_doc).unwrap();
     }
@@ -203,6 +207,8 @@ fn test_campaign_stage_progression() {
         file_path: format!("{}/campaign_pitch.md", campaign.directory_path),
         module_id: None,
         session_id: None,
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     let doc = DocumentRepository::create(&mut conn, new_doc).unwrap();
 
@@ -273,6 +279,8 @@ fn test_document_check_exists() {
         file_path: format!("{}/campaign_pitch.md", campaign.directory_path),
         module_id: None,
         session_id: None,
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     DocumentRepository::create(&mut conn, new_doc).unwrap();
 

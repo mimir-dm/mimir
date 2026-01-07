@@ -2,14 +2,25 @@
   <div class="document-sidebar">
     <div class="sidebar-header">
       <h3>Documents</h3>
-      <button
-        v-if="documents.length > 0"
-        class="export-btn"
-        @click="openExportDialog"
-        title="Export campaign as PDF"
-      >
-        PDF
-      </button>
+      <div class="header-actions">
+        <button
+          class="add-btn"
+          @click="showCreateModal = true"
+          title="Create or upload document"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
+        <button
+          v-if="documents.length > 0"
+          class="export-btn"
+          @click="openExportDialog"
+          title="Export campaign as PDF"
+        >
+          PDF
+        </button>
+      </div>
     </div>
 
     <!-- Document List Grouped by Stage -->
@@ -49,6 +60,33 @@
           <hr v-if="index < stagesWithDocuments.length - 1" class="stage-divider" />
         </template>
       </div>
+
+      <!-- User Documents Section -->
+      <div v-if="userDocuments.length > 0" class="user-documents-section">
+        <hr class="stage-divider" />
+        <div class="stage-group">
+          <div class="stage-header">
+            <h4>My Documents</h4>
+          </div>
+          <div class="document-items">
+            <div
+              v-for="doc in userDocuments"
+              :key="doc.id"
+              class="document-item user-document"
+              :class="{ selected: selectedDocument?.id === doc.id }"
+              @click="handleUserDocumentClick(doc)"
+            >
+              <svg v-if="isImageDocument(doc)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="document-icon-svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 19.5h16.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 6.75v10.5A2.25 2.25 0 003.75 19.5z" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="document-icon-svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              <span class="document-title">{{ doc.title }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Campaign Export Dialog -->
@@ -57,6 +95,14 @@
       :campaign-id="campaignId"
       :campaign-name="campaignName"
       @close="showExportDialog = false"
+    />
+
+    <!-- Create Document Modal -->
+    <CreateDocumentModal
+      :visible="showCreateModal"
+      :campaign-id="campaignId"
+      @close="showCreateModal = false"
+      @created="handleDocumentCreated"
     />
   </div>
 </template>
@@ -68,6 +114,7 @@ import { DocumentService, type Document } from '@/services/DocumentService'
 import { useThemeStore } from '../../../stores/theme'
 import { debugDocument } from '../../../shared/utils/debug'
 import CampaignExportDialog from '../../../components/print/CampaignExportDialog.vue'
+import CreateDocumentModal from '../../../components/CreateDocumentModal.vue'
 
 // Import icon images
 import lightEditIcon from '../../../assets/images/light-edit.png'
@@ -117,10 +164,12 @@ const stageDocuments = computed(() => {
 
 // State
 const documents = ref<Document[]>([])
+const userDocuments = ref<Document[]>([])
 const selectedDocument = ref<Document | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const showExportDialog = ref(false)
+const showCreateModal = ref(false)
 
 // Theme store for icon selection
 const themeStore = useThemeStore()
@@ -219,10 +268,49 @@ const loadDocuments = async () => {
 
   try {
     documents.value = await DocumentService.list(undefined, props.campaignId)
+    // Also load user documents
+    await loadUserDocuments()
   } catch (e) {
     error.value = 'Failed to load documents'
   } finally {
     loading.value = false
+  }
+}
+
+// Load user-created documents
+const loadUserDocuments = async () => {
+  try {
+    const response = await invoke<{ success: boolean; data: Document[] }>('get_user_documents', {
+      campaignId: props.campaignId,
+      moduleId: null
+    })
+    if (response.success && response.data) {
+      userDocuments.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load user documents:', e)
+  }
+}
+
+// Check if document is an image
+const isImageDocument = (doc: Document): boolean => {
+  const fileType = (doc as any).file_type || 'markdown'
+  return fileType !== 'markdown'
+}
+
+// Handle user document click
+const handleUserDocumentClick = (doc: Document) => {
+  selectDocument(doc)
+}
+
+// Handle document created from modal
+const handleDocumentCreated = async () => {
+  showCreateModal.value = false
+  await loadUserDocuments()
+  // Select the most recently created document
+  if (userDocuments.value.length > 0) {
+    const lastDoc = userDocuments.value[userDocuments.value.length - 1]
+    selectDocument(lastDoc)
   }
 }
 
@@ -377,6 +465,38 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.add-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
 /* Document content area */
 .document-content {
   padding: var(--spacing-sm, 8px);
@@ -480,5 +600,22 @@ onMounted(() => {
 /* Active documents (simplified list) */
 .active-documents .document-items {
   gap: var(--spacing-xs, 4px);
+}
+
+/* User documents section */
+.user-documents-section {
+  margin-top: var(--spacing-sm, 8px);
+}
+
+.document-icon-svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  flex-shrink: 0;
+  color: var(--color-text-muted, #888);
+}
+
+.user-document .document-icon-svg {
+  color: var(--color-primary-400, #60a5fa);
 }
 </style>

@@ -99,6 +99,8 @@ pub fn create_stage_documents(
                 document_type: template_id.replace('-', "_"),
                 title: title.to_string(),
                 file_path: file_path.to_string_lossy().to_string(),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             };
 
             DocumentRepository::create(conn, new_doc)?;

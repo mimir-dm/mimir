@@ -36,6 +36,8 @@ export interface Document {
   module_id?: number | null
   session_id?: number | null
   file_path?: string
+  file_type?: string
+  is_user_created?: boolean
 }
 
 class DocumentServiceClass {

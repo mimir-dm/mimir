@@ -1,6 +1,8 @@
 <template>
   <div class="document-sidebar">
-    <DocumentSidebarHeader :module-stage="moduleStage" />
+    <DocumentSidebarHeader
+      :module-stage="moduleStage"
+    />
 
     <BackToCampaignButton :campaign-id="campaignId" />
 

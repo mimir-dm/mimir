@@ -108,6 +108,14 @@
       />
     </div>
 
+    <!-- User Documents (for all stages) -->
+    <div v-if="module.campaign_id" class="mt-8">
+      <ModuleUserDocuments
+        :module-id="module.id"
+        :campaign-id="module.campaign_id"
+      />
+    </div>
+
     <!-- Stage-Specific Content from Backend -->
     <div class="stage-content-section" v-if="stageContent">
       <div :class="`stage-${stage}`">
@@ -139,6 +147,7 @@ import StageTransitionCard from './stage/StageTransitionCard.vue'
 import ModuleMonsters from './ModuleMonsters.vue'
 import ModuleMaps from './ModuleMaps.vue'
 import ModuleNPCs from './ModuleNPCs.vue'
+import ModuleUserDocuments from './ModuleUserDocuments.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import { useModuleStage } from '../composables/useModuleStage'
 

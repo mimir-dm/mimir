@@ -174,6 +174,8 @@ impl<'a> ModuleService<'a> {
             document_type: "module_overview".to_string(),
             title,
             file_path: overview_file_path.to_string_lossy().to_string(),
+            file_type: "markdown".to_string(),
+            is_user_created: false,
         };
 
         DocumentRepository::create(self.conn, overview_doc)?;
@@ -377,6 +379,8 @@ impl<'a> ModuleService<'a> {
                         .collect::<Vec<_>>()
                         .join(" "),
                     file_path: file_path.to_string_lossy().to_string(),
+                    file_type: "markdown".to_string(),
+                    is_user_created: false,
                 };
 
                 DocumentRepository::create(self.conn, new_doc)?;

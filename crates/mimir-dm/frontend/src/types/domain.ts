@@ -19,6 +19,8 @@ export interface Document {
   document_type?: string
   parent_id?: string
   file_path?: string
+  file_type?: string
+  is_user_created?: boolean
   created_at?: string
   updated_at?: string
   completed_at?: string | null

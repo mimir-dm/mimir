@@ -126,6 +126,8 @@ diesel::table! {
         created_at -> Text,
         updated_at -> Text,
         completed_at -> Nullable<Text>,
+        file_type -> Text,
+        is_user_created -> Bool,
     }
 }
 

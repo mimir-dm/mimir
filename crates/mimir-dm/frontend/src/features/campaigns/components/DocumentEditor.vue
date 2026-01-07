@@ -9,10 +9,11 @@
         <h2>{{ document?.title || 'Untitled Document' }}</h2>
       </div>
       <div class="header-right">
-        <span v-if="saveStatus" class="save-status" :class="saveStatus">
+        <span v-if="saveStatus && !isImageDocument" class="save-status" :class="saveStatus">
           {{ saveStatusText }}
         </span>
         <button
+          v-if="!isImageDocument"
           class="btn-toolbar"
           @click="exportToPdf"
           :disabled="exporting || !document?.id || document.id < 0"
@@ -23,8 +24,11 @@
       </div>
     </div>
 
-    <!-- Editor Content -->
-    <div class="editor-content">
+    <!-- Image Preview for image documents -->
+    <ImagePreview v-if="isImageDocument" :document="document" />
+
+    <!-- Editor Content for markdown documents -->
+    <div v-else class="editor-content">
       <!-- Editor -->
       <div class="editor-wrapper">
         <!-- Toolbar -->
@@ -184,6 +188,7 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { invoke } from '@tauri-apps/api/core'
 import { debounce } from '../../../shared/utils/debounce'
 import { PrintService } from '../../../services/PrintService'
+import ImagePreview from '../../../components/ImagePreview.vue'
 
 const props = defineProps<{
   document: any
@@ -247,6 +252,12 @@ const saveStatusText = computed(() => {
     case 'error': return 'Error saving'
     default: return ''
   }
+})
+
+// Check if document is an image type
+const isImageDocument = computed(() => {
+  const fileType = props.document?.file_type || 'markdown'
+  return fileType !== 'markdown'
 })
 
 // Load document content

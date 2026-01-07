@@ -525,6 +525,8 @@ impl<'a> CampaignService<'a> {
                 document_type: doc_type.to_string(),
                 title,
                 file_path,
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             };
 
             if let Err(e) = DocumentRepository::create(self.conn, new_doc) {
@@ -639,6 +641,8 @@ impl<'a> CampaignService<'a> {
                     .collect::<Vec<_>>()
                     .join(" "),
                 file_path,
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             };
 
             if let Err(e) = DocumentRepository::create(self.conn, new_doc) {
@@ -719,7 +723,7 @@ mod tests {
 
         assert_eq!(campaign.name, "My Test Campaign");
         assert_eq!(campaign.status, "concept");
-        assert!(campaign.directory_path.contains("My Test Campaign"));
+        assert!(campaign.directory_path.contains("my-test-campaign"));
 
         // Verify directory was created
         let campaign_dir = Path::new(&campaign.directory_path);

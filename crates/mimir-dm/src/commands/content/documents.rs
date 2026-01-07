@@ -346,3 +346,123 @@ pub async fn save_document_file(
         ))),
     }
 }
+
+/// Create a new user document.
+///
+/// Creates a blank markdown document with the given title.
+///
+/// # Parameters
+/// - `campaign_id` - The database ID of the campaign
+/// - `module_id` - Optional module ID for module-level documents
+/// - `title` - Title for the new document
+/// - `content` - Optional initial content
+/// - `state` - Application state containing the database connection
+///
+/// # Returns
+/// `ApiResponse` containing the created `Document`.
+#[tauri::command]
+pub async fn create_user_document(
+    campaign_id: i32,
+    module_id: Option<i32>,
+    title: String,
+    content: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<ApiResponse<Document>, ApiError> {
+    let mut conn = state.db.get_connection()?;
+    let mut service = DocumentService::new(&mut conn);
+
+    match service.create_user_document(campaign_id, module_id, &title, content.as_deref()) {
+        Ok(document) => Ok(ApiResponse::success(document)),
+        Err(e) => Ok(ApiResponse::error(format!(
+            "Failed to create user document: {}",
+            e
+        ))),
+    }
+}
+
+/// Upload a document file (markdown or image).
+///
+/// Saves the file to the user-documents directory and creates a database record.
+///
+/// # Parameters
+/// - `campaign_id` - The database ID of the campaign
+/// - `module_id` - Optional module ID for module-level documents
+/// - `filename` - Original filename with extension
+/// - `data` - File contents (string for markdown, base64 for images)
+/// - `is_base64` - Whether data is base64-encoded
+/// - `state` - Application state containing the database connection
+///
+/// # Returns
+/// `ApiResponse` containing the created `Document`.
+#[tauri::command]
+pub async fn upload_document(
+    campaign_id: i32,
+    module_id: Option<i32>,
+    filename: String,
+    data: String,
+    is_base64: bool,
+    state: State<'_, AppState>,
+) -> Result<ApiResponse<Document>, ApiError> {
+    let mut conn = state.db.get_connection()?;
+    let mut service = DocumentService::new(&mut conn);
+
+    match service.upload_document(campaign_id, module_id, &filename, &data, is_base64) {
+        Ok(document) => Ok(ApiResponse::success(document)),
+        Err(e) => Ok(ApiResponse::error(format!(
+            "Failed to upload document: {}",
+            e
+        ))),
+    }
+}
+
+/// Read an image document as a base64 data URL.
+///
+/// # Parameters
+/// - `file_path` - Path to the image file on disk
+/// - `state` - Application state containing the database connection
+///
+/// # Returns
+/// `ApiResponse` containing the data URL (e.g., "data:image/png;base64,...").
+#[tauri::command]
+pub async fn read_image_document(
+    file_path: String,
+    state: State<'_, AppState>,
+) -> Result<ApiResponse<String>, ApiError> {
+    let mut conn = state.db.get_connection()?;
+    let service = DocumentService::new(&mut conn);
+
+    match service.read_image_document(&file_path) {
+        Ok(data_url) => Ok(ApiResponse::success(data_url)),
+        Err(e) => Ok(ApiResponse::error(format!(
+            "Failed to read image document: {}",
+            e
+        ))),
+    }
+}
+
+/// Get all user-created documents for a campaign or module.
+///
+/// # Parameters
+/// - `campaign_id` - The database ID of the campaign
+/// - `module_id` - Optional module ID to filter by
+/// - `state` - Application state containing the database connection
+///
+/// # Returns
+/// `ApiResponse` containing a vector of user-created `Document` objects.
+#[tauri::command]
+pub async fn get_user_documents(
+    campaign_id: i32,
+    module_id: Option<i32>,
+    state: State<'_, AppState>,
+) -> Result<ApiResponse<Vec<Document>>, ApiError> {
+    let mut conn = state.db.get_connection()?;
+    let mut service = DocumentService::new(&mut conn);
+
+    match service.get_user_documents(campaign_id, module_id) {
+        Ok(documents) => Ok(ApiResponse::success(documents)),
+        Err(e) => Ok(ApiResponse::error(format!(
+            "Failed to load user documents: {}",
+            e
+        ))),
+    }
+}

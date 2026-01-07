@@ -29,6 +29,6 @@ pub use catalog::{
 };
 
 pub use document::{
-    DocumentListItem, EditDocumentInput, EditDocumentResponse, ListDocumentsInput,
-    ReadDocumentInput, ReadDocumentResponse,
+    CreateUserDocumentInput, DocumentListItem, EditDocumentInput, EditDocumentResponse,
+    ListDocumentsInput, ReadDocumentInput, ReadDocumentResponse,
 };

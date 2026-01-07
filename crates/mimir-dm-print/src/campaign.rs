@@ -14,8 +14,8 @@ use crate::error::Result;
 use crate::map_renderer::{load_image_from_file, render_map_for_print, MapPrintOptions, RenderMap, RenderToken};
 use crate::maps::slice_map_into_tiles;
 use crate::sections::{
-    CharacterBattleCardSection, MapPreview, MarkdownSection, MonsterCardSection, TiledMapSection,
-    TokenCutoutSheet, TrapCardSection,
+    is_image_extension, CharacterBattleCardSection, ImageSection, MapPreview, MarkdownSection,
+    MonsterCardSection, TiledMapSection, TokenCutoutSheet, TrapCardSection,
 };
 
 /// Options for campaign/module PDF export
@@ -166,15 +166,35 @@ pub fn build_campaign_pdf(data: CampaignExportData, options: ExportOptions) -> R
         .with_title_page(options.include_toc) // Title page follows TOC setting
         .with_context(context);
 
-    // Add markdown documents
+    // Add documents (markdown or images)
     for doc_path in &data.documents {
         debug!("Adding document: {:?}", doc_path);
-        match MarkdownSection::from_file(doc_path) {
-            Ok(section) => {
-                builder = builder.append(section);
+
+        // Check if it's an image file
+        let extension = doc_path
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("");
+
+        if is_image_extension(extension) {
+            // Render as image section
+            match ImageSection::from_file(doc_path) {
+                Ok(section) => {
+                    builder = builder.append(section);
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to read image document {:?}: {}", doc_path, e);
+                }
             }
-            Err(e) => {
-                tracing::warn!("Failed to read document {:?}: {}", doc_path, e);
+        } else {
+            // Render as markdown section
+            match MarkdownSection::from_file(doc_path) {
+                Ok(section) => {
+                    builder = builder.append(section);
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to read document {:?}: {}", doc_path, e);
+                }
             }
         }
     }

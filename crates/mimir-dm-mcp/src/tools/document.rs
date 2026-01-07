@@ -459,3 +459,73 @@ pub struct TemplateListItem {
     pub level: Option<String>,
     pub purpose: Option<String>,
 }
+
+/// Input for create_user_document tool
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateUserDocumentInput {
+    /// Title for the new document
+    pub title: String,
+
+    /// Optional initial content (markdown)
+    #[serde(default)]
+    pub content: Option<String>,
+
+    /// Optional module ID to associate document with a module
+    #[serde(default)]
+    pub module_id: Option<i32>,
+}
+
+impl CreateUserDocumentInput {
+    /// Get the tool definition
+    pub fn tool() -> Tool {
+        Tool {
+            name: "create_user_document".to_string(),
+            description: Some(
+                "Create a new user document (markdown file) with a title and optional content. Use module_id to create document within a module."
+                    .to_string(),
+            ),
+            input_schema: ToolInputSchema::new(
+                vec!["title".to_string()],
+                create_properties(vec![
+                    ("title", "string", "Title for the new document"),
+                    ("content", "string", "Optional initial markdown content"),
+                    ("module_id", "integer", "Optional module ID to associate document with"),
+                ]),
+                None,
+            ),
+            title: None,
+            annotations: None,
+            icons: vec![],
+            execution: None,
+            output_schema: None,
+            meta: None,
+        }
+    }
+
+    /// Execute the create_user_document tool
+    pub async fn execute(
+        &self,
+        context: Arc<McpContext>,
+    ) -> Result<CreateDocumentResponse, McpError> {
+        let campaign = context.require_active_campaign().await?;
+        let mut conn = context.get_connection()?;
+        let mut service = DocumentService::new(&mut conn);
+
+        let document = service
+            .create_user_document(
+                campaign.id,
+                self.module_id,
+                &self.title,
+                self.content.as_deref(),
+            )
+            .map_err(|e| McpError::Service(e.to_string()))?;
+
+        Ok(CreateDocumentResponse {
+            success: true,
+            document_id: document.id,
+            title: document.title,
+            document_type: document.document_type,
+            file_path: document.file_path,
+        })
+    }
+}

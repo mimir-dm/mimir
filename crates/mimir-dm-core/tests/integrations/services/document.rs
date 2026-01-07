@@ -51,6 +51,8 @@ fn test_document_service_create_document() {
         document_type: "notes".to_string(),
         title: "Test Document".to_string(),
         file_path: temp_dir.path().join("test_doc.md").to_string_lossy().to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
 
     let doc = service.create_document(new_doc).expect("Failed to create document");
@@ -77,6 +79,8 @@ fn test_document_service_get_campaign_documents() {
             document_type: "notes".to_string(),
             title: format!("Document {}", i),
             file_path: temp_dir.path().join(format!("doc_{}.md", i)).to_string_lossy().to_string(),
+            file_type: "markdown".to_string(),
+            is_user_created: false,
         };
         service.create_document(new_doc).expect("Failed to create document");
     }
@@ -105,6 +109,8 @@ fn test_document_service_get_documents_by_level() {
         document_type: "notes".to_string(),
         title: "Campaign Notes".to_string(),
         file_path: temp_dir.path().join("campaign_notes.md").to_string_lossy().to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     service.create_document(campaign_doc).expect("Failed to create campaign doc");
 
@@ -117,6 +123,8 @@ fn test_document_service_get_documents_by_level() {
         document_type: "handout".to_string(),
         title: "Player Handout".to_string(),
         file_path: temp_dir.path().join("handout.md").to_string_lossy().to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     service.create_document(handout_doc).expect("Failed to create handout");
 
@@ -154,6 +162,8 @@ fn test_document_service_update_document() {
         document_type: "notes".to_string(),
         title: "Original Title".to_string(),
         file_path: temp_dir.path().join("update_test.md").to_string_lossy().to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     let doc = service.create_document(new_doc).expect("Failed to create document");
 
@@ -186,6 +196,8 @@ fn test_document_service_complete_document() {
         document_type: "notes".to_string(),
         title: "Complete Test".to_string(),
         file_path: temp_dir.path().join("complete_test.md").to_string_lossy().to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     let doc = service.create_document(new_doc).expect("Failed to create document");
     assert!(doc.completed_at.is_none());
@@ -213,6 +225,8 @@ fn test_document_service_delete_document() {
         document_type: "notes".to_string(),
         title: "Delete Test".to_string(),
         file_path: temp_dir.path().join("delete_test.md").to_string_lossy().to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
     let doc = service.create_document(new_doc).expect("Failed to create document");
 
@@ -243,6 +257,8 @@ fn test_document_service_incomplete_and_completed_documents() {
             document_type: "notes".to_string(),
             title: format!("Status Test {}", i),
             file_path: temp_dir.path().join(format!("status_{}.md", i)).to_string_lossy().to_string(),
+            file_type: "markdown".to_string(),
+            is_user_created: false,
         };
         service.create_document(new_doc).expect("Failed to create document");
     }

@@ -1,7 +1,6 @@
 <template>
   <div class="sidebar-header">
-    <h3 v-if="['active', 'completed'].includes(moduleStage)">Module Documents</h3>
-    <h3 v-else>Module Documents</h3>
+    <h3>Module Documents</h3>
   </div>
 </template>
 

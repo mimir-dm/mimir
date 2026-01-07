@@ -5,10 +5,10 @@
 use crate::context::McpContext;
 use crate::tools::{
     AddItemToCharacterInput, AddItemToModuleInput, AddMonsterToModuleInput, AssignNpcToModuleInput,
-    CreateModuleInput, CreateNpcInput, EditDocumentInput, GetCharacterInput, GetModuleDetailsInput,
-    ListCampaignsInput, ListCharactersInput, ListDocumentsInput, ListModulesInput,
-    ReadDocumentInput, SearchItemsInput, SearchMonstersInput, SearchTrapsInput,
-    SetActiveCampaignInput, UpdateCharacterCurrencyInput,
+    CreateModuleInput, CreateNpcInput, CreateUserDocumentInput, EditDocumentInput,
+    GetCharacterInput, GetModuleDetailsInput, ListCampaignsInput, ListCharactersInput,
+    ListDocumentsInput, ListModulesInput, ReadDocumentInput, SearchItemsInput, SearchMonstersInput,
+    SearchTrapsInput, SetActiveCampaignInput, UpdateCharacterCurrencyInput,
 };
 use async_trait::async_trait;
 use rust_mcp_sdk::mcp_server::ServerHandler;
@@ -47,6 +47,7 @@ impl MimirHandler {
             ListDocumentsInput::tool(),
             ReadDocumentInput::tool(),
             EditDocumentInput::tool(),
+            CreateUserDocumentInput::tool(),
             // Character tools
             ListCharactersInput::tool(),
             GetCharacterInput::tool(),
@@ -155,6 +156,15 @@ impl MimirHandler {
             }
             "edit_document" => {
                 let input: EditDocumentInput =
+                    serde_json::from_value(args_value).map_err(|e| e.to_string())?;
+                let result = input
+                    .execute(self.context.clone())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                serde_json::to_value(result).map_err(|e| e.to_string())
+            }
+            "create_user_document" => {
+                let input: CreateUserDocumentInput =
                     serde_json::from_value(args_value).map_err(|e| e.to_string())?;
                 let result = input
                     .execute(self.context.clone())

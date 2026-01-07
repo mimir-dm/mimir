@@ -62,6 +62,7 @@
               <section class="dashboard-section documents-section">
                 <div class="section-header">
                   <h3>Documents</h3>
+                  <button class="btn-add" @click="showCreateDocModal = true" title="Create Document">+</button>
                 </div>
                 <div v-if="moduleDocuments.length === 0" class="section-empty">
                   No documents yet
@@ -71,10 +72,12 @@
                     v-for="doc in moduleDocuments"
                     :key="doc.id"
                     class="document-card"
+                    :class="{ 'user-created': doc.is_user_created }"
                     @click="selectedDocument = doc"
                   >
                     <span class="doc-title">{{ formatDocumentTitle(doc.template_id || doc.title || 'Untitled') }}</span>
                     <span v-if="doc.completed_at" class="doc-status complete">Done</span>
+                    <span v-else-if="doc.is_user_created" class="doc-status user">Custom</span>
                   </div>
                 </div>
               </section>
@@ -280,6 +283,15 @@
       @close="showNpcSelector = false"
       @added="handleNpcsAdded"
     />
+
+    <!-- Create Document Modal -->
+    <CreateDocumentModal
+      :visible="showCreateDocModal"
+      :campaign-id="campaign?.id || 0"
+      :module-id="selectedModule?.id"
+      @close="showCreateDocModal = false"
+      @created="handleDocumentCreated"
+    />
   </div>
 </template>
 
@@ -300,6 +312,7 @@ import NpcSelectorModal from '@/features/modules/components/NpcSelectorModal.vue
 import MonsterStatsPanel from '@/features/modules/components/MonsterStatsPanel.vue'
 import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
+import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import type { Campaign, BoardConfig, Module, Document } from '@/types'
 
 interface MapData {
@@ -383,6 +396,9 @@ const loadingMaps = ref(false)
 const showMapUploadModal = ref(false)
 const showTokenSetupModal = ref(false)
 const selectedMapForTokens = ref<MapData | null>(null)
+
+// Document creation state
+const showCreateDocModal = ref(false)
 
 // NPC state
 interface ModuleNpcWithCharacter {
@@ -578,6 +594,14 @@ function handleDocumentUpdated(doc: Document) {
   if (index !== -1) {
     moduleDocuments.value[index] = doc
   }
+}
+
+// Handle document created
+async function handleDocumentCreated() {
+  showCreateDocModal.value = false
+  // Clear the document cache since we created via a separate command
+  DocumentService.clearCache()
+  await loadModuleDocuments()
 }
 
 // Format document title
@@ -1276,6 +1300,15 @@ onMounted(async () => {
 .doc-status.complete {
   background: var(--color-success-bg);
   color: var(--color-success);
+}
+
+.doc-status.user {
+  background: var(--color-primary-100);
+  color: var(--color-primary-600);
+}
+
+.document-card.user-created {
+  border-left: 3px solid var(--color-primary-500);
 }
 
 /* Empty state */

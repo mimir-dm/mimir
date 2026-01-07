@@ -57,6 +57,8 @@ fn test_create_document() {
         document_type: "planning".to_string(),
         title: "Test Document".to_string(),
         file_path: "/test/doc.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
     };
 
     let doc = DocumentRepository::create(&mut conn, new_doc).expect("Failed to create document");
@@ -110,6 +112,8 @@ fn test_find_document_by_id() {
             document_type: "session".to_string(),
             title: "Find Me".to_string(),
             file_path: "/test/find.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -174,6 +178,8 @@ fn test_find_documents_by_campaign() {
                 document_type: "planning".to_string(),
                 title: format!("Doc {}", i),
                 file_path: format!("/test/doc{}.md", i),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             },
         )
         .expect("Failed to create document");
@@ -191,6 +197,8 @@ fn test_find_documents_by_campaign() {
                 document_type: "planning".to_string(),
                 title: format!("Other Doc {}", i),
                 file_path: format!("/test/other{}.md", i),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             },
         )
         .expect("Failed to create document");
@@ -262,6 +270,8 @@ fn test_find_documents_by_module() {
                 document_type: "module".to_string(),
                 title: format!("Module Doc {}", i),
                 file_path: format!("/test/mod_doc{}.md", i),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             },
         )
         .expect("Failed to create module document");
@@ -278,6 +288,8 @@ fn test_find_documents_by_module() {
             document_type: "planning".to_string(),
             title: "Campaign Doc".to_string(),
             file_path: "/test/camp_doc.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create campaign document");
@@ -334,6 +346,8 @@ fn test_find_handouts() {
                 document_type: "handout".to_string(),
                 title: format!("Handout {}", i),
                 file_path: format!("/test/handout{}.md", i),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             },
         )
         .expect("Failed to create handout");
@@ -350,6 +364,8 @@ fn test_find_handouts() {
             document_type: "planning".to_string(),
             title: "Not a handout".to_string(),
             file_path: "/test/not_handout.md".to_string(),
+            file_type: "markdown".to_string(),
+            is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -404,6 +420,8 @@ fn test_update_document() {
             document_type: "planning".to_string(),
             title: "Original Title".to_string(),
             file_path: "/test/update.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -465,6 +483,8 @@ fn test_mark_completed() {
             document_type: "planning".to_string(),
             title: "To Complete".to_string(),
             file_path: "/test/complete.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -522,6 +542,8 @@ fn test_find_incomplete_and_completed() {
                 document_type: "planning".to_string(),
                 title: format!("Incomplete {}", i),
                 file_path: format!("/test/incomplete{}.md", i),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             },
         )
         .expect("Failed to create document");
@@ -539,6 +561,8 @@ fn test_find_incomplete_and_completed() {
                 document_type: "planning".to_string(),
                 title: format!("Complete {}", i),
                 file_path: format!("/test/complete{}.md", i),
+                file_type: "markdown".to_string(),
+                is_user_created: false,
             },
         )
         .expect("Failed to create document");
@@ -599,6 +623,8 @@ fn test_delete_document() {
             document_type: "planning".to_string(),
             title: "To Delete".to_string(),
             file_path: "/test/delete.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -666,6 +692,8 @@ fn test_document_level() {
             document_type: "planning".to_string(),
             title: "Campaign Level".to_string(),
             file_path: "/test/camp_level.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -683,6 +711,8 @@ fn test_document_level() {
             document_type: "module".to_string(),
             title: "Module Level".to_string(),
             file_path: "/test/mod_level.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -700,6 +730,8 @@ fn test_document_level() {
             document_type: "handout".to_string(),
             title: "Handout Level".to_string(),
             file_path: "/test/handout_level.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
@@ -749,6 +781,8 @@ fn test_exists_by_path() {
             document_type: "planning".to_string(),
             title: "Check Path".to_string(),
             file_path: "/test/check_path.md".to_string(),
+        file_type: "markdown".to_string(),
+        is_user_created: false,
         },
     )
     .expect("Failed to create document");
