@@ -10,33 +10,15 @@ use crate::tools::{
     ReadDocumentInput, SearchItemsInput, SearchMonstersInput, SearchTrapsInput,
     SetActiveCampaignInput, UpdateCharacterCurrencyInput,
 };
+use async_trait::async_trait;
 use rust_mcp_sdk::mcp_server::ServerHandler;
 use rust_mcp_sdk::schema::{
-    CallToolRequestParams, CallToolResult, ContentBlock, ListToolsResult,
-    PaginatedRequestParams, RpcError, Tool,
+    schema_utils::CallToolError, CallToolRequestParams, CallToolResult, ContentBlock,
+    ListToolsResult, PaginatedRequestParams, RpcError, Tool,
 };
 use rust_mcp_sdk::McpServer;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use tracing::{error, info};
-
-/// Error type for tool call failures
-#[derive(Debug)]
-pub struct CallToolError {
-    code: i64,
-    message: String,
-}
-
-impl From<CallToolError> for rust_mcp_sdk::schema::RpcError {
-    fn from(e: CallToolError) -> Self {
-        rust_mcp_sdk::schema::RpcError {
-            code: e.code,
-            message: e.message,
-            data: None,
-        }
-    }
-}
 
 /// Mimir MCP server handler
 pub struct MimirHandler {
@@ -268,69 +250,52 @@ impl MimirHandler {
     }
 }
 
+#[async_trait]
 impl ServerHandler for MimirHandler {
-    fn handle_list_tools_request<'life0, 'async_trait>(
-        &'life0 self,
+    async fn handle_list_tools_request(
+        &self,
         _params: Option<PaginatedRequestParams>,
         _runtime: Arc<dyn McpServer>,
-    ) -> Pin<Box<dyn Future<Output = Result<ListToolsResult, RpcError>> + Send + 'async_trait>>
-    where
-        Self: 'async_trait,
-        'life0: 'async_trait,
-    {
-        Box::pin(async move {
-            info!("Handling list_tools request");
-            Ok(ListToolsResult {
-                tools: Self::get_tools(),
-                meta: None,
-                next_cursor: None,
-            })
+    ) -> Result<ListToolsResult, RpcError> {
+        info!("Handling list_tools request");
+        Ok(ListToolsResult {
+            tools: Self::get_tools(),
+            meta: None,
+            next_cursor: None,
         })
     }
 
-    fn handle_call_tool_request<'life0, 'async_trait>(
-        &'life0 self,
+    async fn handle_call_tool_request(
+        &self,
         params: CallToolRequestParams,
         _runtime: Arc<dyn McpServer>,
-    ) -> Pin<
-        Box<
-            dyn Future<Output = Result<CallToolResult, rust_mcp_sdk::schema::CallToolError>>
-                + Send
-                + 'async_trait,
-        >,
-    >
-    where
-        Self: 'async_trait,
-        'life0: 'async_trait,
-    {
-        Box::pin(async move {
-            info!(tool = %params.name, "Handling call_tool request");
+    ) -> Result<CallToolResult, CallToolError> {
+        info!(tool = %params.name, "Handling call_tool request");
 
-            let arguments = params.arguments.unwrap_or_else(serde_json::Map::new);
+        let arguments = params.arguments.unwrap_or_else(serde_json::Map::new);
 
-            match self.execute_tool(&params.name, arguments).await {
-                Ok(result) => {
-                    let content = vec![ContentBlock::text_content(
-                        serde_json::to_string_pretty(&result).unwrap_or_default(),
-                    )];
-                    Ok(CallToolResult {
-                        content,
-                        is_error: None,
-                        meta: None,
-                        structured_content: None,
-                    })
-                }
-                Err(e) => {
-                    error!(tool = %params.name, error = %e, "Tool execution failed");
-                    let content = vec![ContentBlock::text_content(format!("Error: {}", e))];
-                    Ok(CallToolResult {
-                        content,
-                        is_error: Some(true),
-                        meta: None,
-                        structured_content: None,
-                    })
-                }
+        match self.execute_tool(&params.name, arguments).await {
+            Ok(result) => {
+                let content = vec![ContentBlock::text_content(
+                    serde_json::to_string_pretty(&result).unwrap_or_default(),
+                )];
+                Ok(CallToolResult {
+                    content,
+                    is_error: None,
+                    meta: None,
+                    structured_content: None,
+                })
             }
-        })
+            Err(e) => {
+                error!(tool = %params.name, error = %e, "Tool execution failed");
+                let content = vec![ContentBlock::text_content(format!("Error: {}", e))];
+                Ok(CallToolResult {
+                    content,
+                    is_error: Some(true),
+                    meta: None,
+                    structured_content: None,
+                })
+            }
+        }
     }
 }

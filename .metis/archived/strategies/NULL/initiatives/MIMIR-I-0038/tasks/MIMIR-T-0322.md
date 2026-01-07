@@ -1,11 +1,11 @@
 ---
-id: kebab-case-campaign-directory
+id: mcp-server-foundation-and-campaign
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "MCP Server Foundation and Campaign Tools"
+short_code: "MIMIR-T-0322"
+created_at: 2026-01-05T18:05:44.980824+00:00
+updated_at: 2026-01-05T18:25:05.008241+00:00
+parent: MIMIR-I-0038
 blocked_by: []
 archived: true
 
@@ -16,59 +16,20 @@ tags:
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: MIMIR-I-0038
 ---
 
-# Kebab-case campaign directory defaults
-
-## Problem
-
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
-
-## Solution
-
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+# MCP Server Foundation and Campaign Tools
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[MIMIR-I-0038]]
 
-## Objective **[REQUIRED]**
+## Objective
 
-{Clear statement of what this task accomplishes}
+Create the mimir-dm-mcp crate with MCP server foundation using rust-mcp-sdk, stdio transport, and campaign context tools.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -104,11 +65,23 @@ function toKebabCase(str) {
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
 
-## Acceptance Criteria **[REQUIRED]**
+## Acceptance Criteria
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [ ] New crate `crates/mimir-dm-mcp/` added to workspace
+- [ ] MCP server starts with stdio transport
+- [ ] McpContext manages active campaign state
+- [ ] `list_campaigns` tool returns all campaigns
+- [ ] `set_active_campaign` tool sets context
+- [ ] `get_campaign_details` returns campaign info, stage, modules
+- [ ] Error types provide meaningful messages for agents
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

@@ -19,7 +19,7 @@ use clap::Parser;
 use mimir_dm_core::AppPaths;
 use mimir_dm_mcp::{context::McpContext, handler::MimirHandler};
 use rust_mcp_sdk::mcp_server::{server_runtime, McpServerOptions};
-use rust_mcp_sdk::schema::{Implementation, InitializeResult, ServerCapabilities};
+use rust_mcp_sdk::schema::{Implementation, InitializeResult, ServerCapabilities, LATEST_PROTOCOL_VERSION};
 use rust_mcp_sdk::{McpServer, StdioTransport, ToMcpServerHandler, TransportOptions};
 use std::env;
 use tracing::{error, info};
@@ -82,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Server info for MCP protocol
     let server_details = InitializeResult {
-        protocol_version: "2024-11-05".to_string(),
+        protocol_version: LATEST_PROTOCOL_VERSION.to_string(),
         capabilities: ServerCapabilities {
             tools: Some(rust_mcp_sdk::schema::ServerCapabilitiesTools {
                 list_changed: None,

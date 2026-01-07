@@ -17,7 +17,14 @@ path = "src/main.rs"
 mimir-dm-core = { path = "../mimir-dm-core" }
 
 # MCP SDK
-rust-mcp-sdk = { version = "0.8", features = ["server"] }
+rust-mcp-sdk = { version = "0.8.0", default-features = false, features = [
+    "server",
+    "macros",
+    "hyper-server",
+    "streamable-http",
+    "stdio",
+] }
+async-trait = "0.1"
 
 # URL with serde support (needed to fix rust-mcp-sdk dependency issue)
 url = { workspace = true }

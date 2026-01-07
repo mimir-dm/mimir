@@ -1,74 +1,36 @@
 ---
-id: kebab-case-campaign-directory
+id: unify-filter-tab-styling
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Unify filter tab styling"
+short_code: "MIMIR-T-0275"
+created_at: 2026-01-03T02:58:32.452378+00:00
+updated_at: 2026-01-03T03:35:55.778614+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
+  - "#tech-debt"
   - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: NULL
 ---
 
-# Kebab-case campaign directory defaults
-
-## Problem
-
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
-
-## Solution
-
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+# Unify filter tab styling
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
-{Clear statement of what this task accomplishes}
+Replace custom `.filter-tab` and `.tab-button` scoped styles with global `.btn-tab` classes from `buttons.css`.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -77,13 +39,13 @@ function toKebabCase(str) {
 ### Type
 - [ ] Bug - Production issue that needs fixing
 - [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
+- [x] Tech Debt - Code improvement or refactoring
 - [ ] Chore - Maintenance or setup work
 
 ### Priority
 - [ ] P0 - Critical (blocks users/revenue)
 - [ ] P1 - High (important for user experience)
-- [ ] P2 - Medium (nice to have)
+- [x] P2 - Medium (nice to have)
 - [ ] P3 - Low (when time permits)
 
 ### Impact Assessment **[CONDITIONAL: Bug]**
@@ -100,15 +62,40 @@ function toKebabCase(str) {
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Global `.btn-tab` styles exist but are unused. Views implement custom `.filter-tab` and `.tab-button` with slightly different styling.
+- **Benefits of Fixing**: Unified tab appearance, reduced CSS duplication, consistent hover/active states
+- **Risk Assessment**: Low risk - straightforward class replacement
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+- [ ] `CharacterListView.vue` uses `.btn-tab` and `.btn-tab--active` classes
+- [ ] `CampaignManagementModal.vue` uses `.btn-tab` classes
+- [ ] Scoped `.filter-tab` and `.tab-button` styles removed
+- [ ] Tab hover/active states consistent across all uses
+
+### Implementation
+```vue
+<!-- Before -->
+<button class="filter-tab" :class="{ active: filter === 'all' }">
+
+<!-- After -->
+<button class="btn-tab" :class="{ 'btn-tab--active': filter === 'all' }">
+```
+
+### Files to Modify
+- `crates/mimir-dm/frontend/src/features/characters/views/CharacterListView.vue`
+- `crates/mimir-dm/frontend/src/features/campaigns/components/CampaignManagementModal.vue`
+
+### Reference
+Global tab styles: `src/assets/styles/components/buttons.css` (lines 459-487)
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

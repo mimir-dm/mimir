@@ -66,12 +66,31 @@ Standardize terminology from "session notes" to "play notes" across the codebase
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
 
-## Acceptance Criteria **[REQUIRED]**
+## Acceptance Criteria
 
-- [ ] Rename `include_session_notes` → `include_play_notes` in backend `ModuleExportOptions`
+### Backend
+- [ ] Rename `include_session_notes` → `include_play_notes` in `ModuleExportOptions`
+- [ ] Update any internal variable names referencing "session_notes"
+- [ ] Update Tauri command parameters if applicable
+
+### Frontend
 - [ ] Update `ModuleExportDialog.vue` UI label from "Session Notes" to "Play Notes"
 - [ ] Update `PrintService.ts` interface property name
-- [ ] No remaining references to "session notes" in codebase (grep clean)
+- [ ] Rename any Vue components or composables using "session_notes"
+
+### Templates
+- [ ] Rename template file if named `session_notes.md` or similar
+- [ ] Update template_id/document_type in database seeder
+- [ ] Update any template frontmatter references
+
+### Documentation
+- [ ] Update user-facing docs referencing "session notes"
+- [ ] Update any code comments
+
+### Verification
+- [ ] No remaining references to "session_notes" or "session notes" in codebase (grep clean)
+- [ ] Template seeding works correctly with new name
+- [ ] Export functionality works with renamed option
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

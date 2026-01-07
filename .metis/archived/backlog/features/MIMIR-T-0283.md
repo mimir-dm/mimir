@@ -1,70 +1,74 @@
 ---
-id: kebab-case-campaign-directory
+id: region-entity-system-for-pre
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Region Entity System for Pre-Cooked Campaigns"
+short_code: "MIMIR-T-0283"
+created_at: 2026-01-03T13:44:20.767358+00:00
+updated_at: 2026-01-03T13:44:20.767358+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/completed"
+  - "#phase/backlog"
+  - "#feature"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: NULL
 ---
 
-# Kebab-case campaign directory defaults
+# Region Entity System for Pre-Cooked Campaigns
 
-## Problem
+## Feature Request
 
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
+An optional system for campaigns that benefit from structured geographic data - particularly useful for "pre-cooked" or published adventure support.
 
-## Solution
+## Context
 
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
+Currently regions are just filesystem directories with markdown documents. They're reference material, not tracked entities. This works fine for improvised/emergent campaigns where geography is discovered through play.
 
-## Files to Modify
+However, for pre-written adventures or campaigns with established geography, there's value in:
+- Treating regions as first-class entities (like modules)
+- Linking random encounter tables to catalog creatures
+- Tracking which regions are "active" in the campaign
+- Connecting modules to their geographic locations
 
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
+## Potential Value
 
-## Implementation
+**For published adventure support:**
+- Import a pre-built region with encounter tables already linked
+- Generate encounter stat blocks automatically
+- Track party location and relevant regional content
 
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
+**For world-builder DMs:**
+- Structure geographic content systematically
+- Reuse regions across campaigns
+- Generate regional reference sheets with creature stats
 
-## Effort
+## Prerequisites
 
-30 minutes
+This would require foundational work:
+1. Create `regions` table (make regions database entities)
+2. Add `RegionService` for CRUD operations
+3. Link modules to regions (where does this adventure happen?)
+4. Then: catalog integration for encounters, notable creatures, regional items
 
-## Acceptance Criteria
+## Priority
 
-## Acceptance Criteria
+Low - this is a "nice to have" for a specific use case (pre-cooked campaigns). The core framework supports improvised play well without this infrastructure.
 
-## Acceptance Criteria
+## Related
 
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+- Archived: MIMIR-I-0032 (original proposal that put cart before horse)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
@@ -103,6 +107,8 @@ function toKebabCase(str) {
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

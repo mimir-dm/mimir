@@ -1,74 +1,36 @@
 ---
-id: kebab-case-campaign-directory
+id: unify-card-hover-behaviors
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Unify card hover behaviors"
+short_code: "MIMIR-T-0277"
+created_at: 2026-01-03T02:58:32.713166+00:00
+updated_at: 2026-01-03T03:40:31.569889+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
+  - "#tech-debt"
   - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: NULL
 ---
 
-# Kebab-case campaign directory defaults
-
-## Problem
-
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
-
-## Solution
-
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+# Unify card hover behaviors
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
-{Clear statement of what this task accomplishes}
+Create a shared `.card-interactive` class and unify hover behaviors across all clickable cards.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -77,14 +39,14 @@ function toKebabCase(str) {
 ### Type
 - [ ] Bug - Production issue that needs fixing
 - [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
+- [x] Tech Debt - Code improvement or refactoring
 - [ ] Chore - Maintenance or setup work
 
 ### Priority
 - [ ] P0 - Critical (blocks users/revenue)
 - [ ] P1 - High (important for user experience)
 - [ ] P2 - Medium (nice to have)
-- [ ] P3 - Low (when time permits)
+- [x] P3 - Low (when time permits)
 
 ### Impact Assessment **[CONDITIONAL: Bug]**
 - **Affected Users**: {Number/percentage of users affected}
@@ -100,15 +62,31 @@ function toKebabCase(str) {
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Interactive cards have different hover behaviors:
+  - `CampaignListView.vue`: Transform + shadow
+  - `CharacterListView.vue`: Border color change + shadow
+- **Benefits of Fixing**: Consistent interactive feedback, unified card styling
+- **Risk Assessment**: Very low risk - minor visual refinement
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+- [ ] `.card-interactive` class added to global CSS with consistent hover behavior
+- [ ] All clickable cards use the shared class
+- [ ] Hover includes: transform, shadow enhancement, border color change
+- [ ] Transition timing uses `var(--transition-base)`
+
+### Files to Modify
+- `crates/mimir-dm/frontend/src/assets/styles/components.css` (or create `cards.css`)
+- `crates/mimir-dm/frontend/src/features/campaigns/views/CampaignListView.vue`
+- `crates/mimir-dm/frontend/src/features/characters/views/CharacterListView.vue`
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

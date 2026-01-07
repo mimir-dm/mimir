@@ -1,70 +1,78 @@
 ---
-id: kebab-case-campaign-directory
+id: faction-entity-system-for
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Faction Entity System for Political Campaigns"
+short_code: "MIMIR-T-0284"
+created_at: 2026-01-03T13:45:28.178287+00:00
+updated_at: 2026-01-03T13:45:28.178287+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/completed"
+  - "#phase/backlog"
+  - "#feature"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: NULL
 ---
 
-# Kebab-case campaign directory defaults
+# Faction Entity System for Political Campaigns
 
-## Problem
+## Feature Request
 
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
+An optional system for campaigns with significant political/faction dynamics - useful for intrigue-heavy campaigns or published adventures with established power structures.
 
-## Solution
+## Context
 
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
+Currently factions are just markdown documents in `world/factions/`. They're world-building reference material, not tracked entities. This works fine for campaigns where factions are backdrop rather than central gameplay.
 
-## Files to Modify
+However, for political campaigns or faction-heavy published adventures, there's value in:
+- Treating factions as first-class entities
+- Linking faction forces to catalog creatures (armies, guards, monsters)
+- Tracking faction relationships and power levels
+- Connecting NPCs to factions systematically (beyond text fields)
+- Tracking faction artifacts/items
 
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
+## Potential Value
 
-## Implementation
+**For political/intrigue campaigns:**
+- Track faction standings and relationships
+- Generate force rosters with stat blocks
+- Link key NPCs to factions properly
+- Model faction resources and capabilities
 
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
+**For published adventure support:**
+- Import pre-built faction data
+- Generate faction reference sheets
+- Track party reputation with factions
 
-## Effort
+## Prerequisites
 
-30 minutes
+This would require foundational work:
+1. Create `factions` table (make factions database entities)
+2. Add `FactionService` for CRUD operations
+3. Link NPCs to factions via FK (not just text field)
+4. Then: catalog integration for forces, artifacts, key members
 
-## Acceptance Criteria
+## Priority
 
-## Acceptance Criteria
+Low - this is a "nice to have" for political campaigns. Most campaigns treat factions as narrative flavor rather than tracked game state.
 
-## Acceptance Criteria
+## Related
 
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+- MIMIR-T-0283: Region Entity System (similar pattern)
+- Archived: MIMIR-I-0033 (original proposal that put cart before horse)
+- Note: `CharacterData.npc_faction` exists as text field - could become FK if factions become entities
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
@@ -103,6 +111,8 @@ function toKebabCase(str) {
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

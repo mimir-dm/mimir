@@ -100,6 +100,8 @@ High - these are quick wins that compound into significant friction reduction
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 ## Acceptance Criteria **[REQUIRED]**
 
 - [ ] {Specific, testable requirement 1}

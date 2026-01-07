@@ -45,6 +45,8 @@ Stage landing pages always show full guidance text, creating cognitive overload 
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
 - [ ] First visit to a stage shows full guidance
 - [ ] Subsequent visits show collapsed summary
 - [ ] User can expand/collapse guidance manually

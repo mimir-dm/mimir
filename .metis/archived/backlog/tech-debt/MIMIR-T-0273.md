@@ -1,74 +1,36 @@
 ---
-id: kebab-case-campaign-directory
+id: standardize-button-usage-across
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Standardize button usage across views"
+short_code: "MIMIR-T-0273"
+created_at: 2026-01-03T02:58:32.206350+00:00
+updated_at: 2026-01-03T03:08:47.704668+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
+  - "#tech-debt"
   - "#phase/completed"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: NULL
 ---
 
-# Kebab-case campaign directory defaults
-
-## Problem
-
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
-
-## Solution
-
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+# Standardize button usage across views
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
-{Clear statement of what this task accomplishes}
+Replace custom scoped button styles with global `.btn` classes from `buttons.css` for UI consistency.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -77,12 +39,12 @@ function toKebabCase(str) {
 ### Type
 - [ ] Bug - Production issue that needs fixing
 - [ ] Feature - New functionality or enhancement  
-- [ ] Tech Debt - Code improvement or refactoring
+- [x] Tech Debt - Code improvement or refactoring
 - [ ] Chore - Maintenance or setup work
 
 ### Priority
 - [ ] P0 - Critical (blocks users/revenue)
-- [ ] P1 - High (important for user experience)
+- [x] P1 - High (important for user experience)
 - [ ] P2 - Medium (nice to have)
 - [ ] P3 - Low (when time permits)
 
@@ -100,15 +62,25 @@ function toKebabCase(str) {
 - **Effort Estimate**: {Rough size - S/M/L/XL}
 
 ### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
-- **Current Problems**: {What's difficult/slow/buggy now}
-- **Benefits of Fixing**: {What improves after refactoring}
-- **Risk Assessment**: {Risks of not addressing this}
+- **Current Problems**: Views define custom `.btn-action`, `.btn-pdf`, `.btn-play` in scoped styles instead of using global button system. Creates visual inconsistency and duplicated CSS.
+- **Benefits of Fixing**: Unified button appearance, easier theme updates, reduced CSS duplication
+- **Risk Assessment**: Low risk - no new functionality, visual refinement only
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+- [ ] `CharacterListView.vue` uses global `.btn` classes instead of `.btn-action`
+- [ ] `ModulesTable.vue` uses global `.btn` classes instead of `.btn-play`, `.btn-pdf`
+- [ ] `ModuleListView.vue` uses global `.btn` classes
+- [ ] All buttons have consistent hover/active states across views
+- [ ] Scoped button CSS removed from affected views
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 
@@ -163,13 +135,19 @@ function toKebabCase(str) {
 {Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
 
 ### Technical Approach
-{How this will be implemented}
+1. Replace `<button class="btn-action">` with `<button class="btn btn-ghost btn-sm">`
+2. Replace custom color buttons with appropriate variants (`.btn-primary`, `.btn-danger`, etc.)
+3. Remove scoped `.btn-action`, `.btn-play`, `.btn-pdf` styles from components
 
-### Dependencies
-{Other tasks or systems this depends on}
+### Files to Modify
+- `crates/mimir-dm/frontend/src/features/characters/views/CharacterListView.vue`
+- `crates/mimir-dm/frontend/src/features/campaigns/components/StageLanding/ModulesTable.vue`
+- `crates/mimir-dm/frontend/src/features/modules/views/ModuleListView.vue`
 
-### Risk Considerations
-{Technical risks and mitigation strategies}
+### Reference
+Global button system: `src/assets/styles/components/buttons.css`
+- Variants: `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`, `.btn-warning`
+- Sizes: `.btn-xs`, `.btn-sm`, `.btn-lg`, `.btn-xl`
 
 ## Status Updates **[REQUIRED]**
 

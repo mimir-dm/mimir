@@ -1,10 +1,10 @@
 ---
-id: kebab-case-campaign-directory
+id: moduleplayview-prep-play-mode-split
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
+title: "ModulePlayView Prep/Play Mode Split"
+short_code: "MIMIR-T-0288"
+created_at: 2026-01-03T13:57:42.828692+00:00
+updated_at: 2026-01-04T14:18:09.885749+00:00
 parent: MIMIR-I-0034
 blocked_by: []
 archived: true
@@ -19,36 +19,73 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0034
 ---
 
-# Kebab-case campaign directory defaults
+# ModulePlayView Prep/Play Mode Split
+
+## Overview
+
+Split the 67KB ModulePlayView into focused Prep and Play modes.
 
 ## Problem
 
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
+ModulePlayView handles too many concerns:
+- Document editing
+- Encounter building
+- Monster selection
+- Map management
+- Initiative tracking
+- Player display controls
+- Session management
 
-## Solution
+This creates cognitive overload during actual play sessions.
 
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
+## Chosen Approach: Option C - Prep is Board, Play is Dedicated
+
+**Mental Model:** "I prep on the board, I run in play mode"
+
+- **ModuleBoardView** (existing) → Prep: documents, encounters, monsters, maps
+- **ModulePlayView** (refactor) → Play-only: map, quick stats, notes, player display
+
+## Implementation Plan
+
+### Phase 1: Extract Composables
+Extract reusable logic from ModulePlayView into composables:
+
+| Composable | Responsibility |
+|------------|----------------|
+| `useModuleMonsters.ts` | Load monsters, formatting functions (15+ funcs) |
+| `useModuleMaps.ts` | Load maps, send to player display |
+| `useSessionNotes.ts` | Auto-save notes to file |
+
+### Phase 2: Streamline ModulePlayView
+Remove prep concerns, focus on play:
+
+**Remove:**
+- Document tabs and viewer (access from board)
+- Full encounter browser (just show active)
+- Complex sidebar
+
+**Keep/Enhance:**
+- Map viewer (make default, more prominent)
+- Monster quick-stats panel (slide-in)
+- Session notes (always visible bottom bar)
+- Player display controls
+
+**Add:**
+- "Back to Prep" button
+- Encounter selector dropdown (not full browser)
+
+### Phase 3: Update ModuleBoardView
+Add "Start Session" button to launch play mode.
 
 ## Files to Modify
 
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
+| File | Action |
+|------|--------|
+| `composables/useModuleMonsters.ts` | Create |
+| `composables/useModuleMaps.ts` | Create |
+| `composables/useSessionNotes.ts` | Create |
+| `views/ModulePlayView.vue` | Refactor (reduce ~50%) |
+| `views/ModuleBoardView.vue` | Add "Start Session" button |
 
 ## Acceptance Criteria
 
@@ -56,15 +93,22 @@ function toKebabCase(str) {
 
 ## Acceptance Criteria
 
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+## Acceptance Criteria
+
+- [ ] Monster formatting extracted to composable
+- [ ] Map loading/display extracted to composable
+- [ ] Session notes extracted to composable
+- [ ] ModulePlayView reduced to <1200 lines
+- [ ] Play mode defaults to map view
+- [ ] Document tabs removed from play mode
+- [ ] "Back to Prep" navigation works
+- [ ] Type-check passes
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 

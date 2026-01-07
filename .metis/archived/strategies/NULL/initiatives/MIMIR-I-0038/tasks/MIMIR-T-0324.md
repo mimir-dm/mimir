@@ -1,11 +1,11 @@
 ---
-id: kebab-case-campaign-directory
+id: mcp-character-and-npc-tools
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "MCP Character and NPC Tools"
+short_code: "MIMIR-T-0324"
+created_at: 2026-01-05T18:05:45.327077+00:00
+updated_at: 2026-01-05T20:15:31.500458+00:00
+parent: MIMIR-I-0038
 blocked_by: []
 archived: true
 
@@ -16,59 +16,20 @@ tags:
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: MIMIR-I-0038
 ---
 
-# Kebab-case campaign directory defaults
-
-## Problem
-
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
-
-## Solution
-
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+# MCP Character and NPC Tools
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[MIMIR-I-0038]]
 
-## Objective **[REQUIRED]**
+## Objective
 
-{Clear statement of what this task accomplishes}
+Implement MCP tools for character and NPC management: listing, creating, and assigning NPCs to modules.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -104,11 +65,21 @@ function toKebabCase(str) {
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
 
-## Acceptance Criteria **[REQUIRED]**
+## Acceptance Criteria
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [ ] `list_characters` filters by type (pc/npc), optional details
+- [ ] `create_npc` creates NPC with name, race, role, location, notes
+- [ ] `create_character` creates PC with full D&D 5e validation (race, class, background)
+- [ ] `get_character` returns character details with version history
+- [ ] `assign_npc_to_module` links NPC to module with role and encounter_tag
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

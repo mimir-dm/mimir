@@ -1,70 +1,60 @@
 ---
-id: kebab-case-campaign-directory
+id: keyboard-shortcuts-for-power-users
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Keyboard Shortcuts for Power Users"
+short_code: "MIMIR-T-0289"
+created_at: 2026-01-03T14:12:55.111770+00:00
+updated_at: 2026-01-03T14:12:55.111770+00:00
+parent: 
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/completed"
+  - "#phase/backlog"
+  - "#feature"
 
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: NULL
 ---
 
-# Kebab-case campaign directory defaults
+# Keyboard Shortcuts for Power Users
 
-## Problem
+## Overview
 
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
+Add keyboard shortcuts for common actions to improve power user efficiency.
 
-## Solution
+## Potential Shortcuts
 
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
+- `Cmd/Ctrl+K` - Command palette (search campaigns, modules, documents, actions)
+- `Cmd/Ctrl+N` - New (context-aware: campaign, module, or document)
+- `Cmd/Ctrl+S` - Save current document
+- `Cmd/Ctrl+E` - Export to PDF
+- `Esc` - Close modals/panels
+- Arrow keys - Navigate lists
+- `Enter` - Open selected item
 
-## Files to Modify
+## Implementation Notes
 
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
+- Consider a settings page to customize shortcuts
+- Show shortcuts in tooltips/menus for discoverability
+- Command palette (Cmd+K) could be the anchor feature
 
-## Implementation
+## Related
 
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
+- MIMIR-T-0286: Command Palette (could be first implementation)
 
-## Effort
+## Priority
 
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+Low - nice-to-have for power users, not critical path
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
@@ -103,6 +93,8 @@ function toKebabCase(str) {
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

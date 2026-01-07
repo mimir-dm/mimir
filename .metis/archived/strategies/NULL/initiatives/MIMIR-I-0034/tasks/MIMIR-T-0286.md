@@ -1,17 +1,17 @@
 ---
-id: kebab-case-campaign-directory
+id: command-palette-for-quick
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
+title: "Command Palette for Quick Navigation"
+short_code: "MIMIR-T-0286"
+created_at: 2026-01-03T13:57:42.568264+00:00
+updated_at: 2026-01-03T13:57:42.568264+00:00
 parent: MIMIR-I-0034
 blocked_by: []
 archived: true
 
 tags:
   - "#task"
-  - "#phase/completed"
+  - "#phase/todo"
 
 
 exit_criteria_met: false
@@ -19,52 +19,41 @@ strategy_id: NULL
 initiative_id: MIMIR-I-0034
 ---
 
-# Kebab-case campaign directory defaults
+# Command Palette for Quick Navigation
 
-## Problem
+## Overview
 
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
+Add `Cmd/Ctrl+K` command palette for keyboard-driven navigation and actions.
 
-## Solution
+## Features
 
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
+- **Campaign search:** Type to filter and jump to any campaign
+- **Module search:** Jump to modules within current campaign
+- **Document search:** Quick access to documents by name
+- **Actions:** Common actions like "New Campaign", "New Module", "Export PDF"
+- **Recent items:** Show recently accessed items at top
 
 ## Implementation
 
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
+- **File:** New `frontend/src/shared/components/ui/CommandPalette.vue`
+- **Integration:** `AppHeader.vue` for global shortcut binding
+- **Effort:** 4-6 hours
 
-## Effort
+## Benefits
 
-30 minutes
+- Power users can navigate without mouse
+- Reduces click depth for all common actions
+- Pattern familiar from VS Code, Slack, Notion, etc.
 
-## Acceptance Criteria
+## Priority
 
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+Low - part of broader keyboard shortcuts initiative (see MIMIR-T-0289)
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[Parent Initiative]]
 
 ## Objective **[REQUIRED]**
 
@@ -103,6 +92,8 @@ function toKebabCase(str) {
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

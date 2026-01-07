@@ -100,12 +100,13 @@ fn main() {
                 Ok(_) => info!("Database migrations completed successfully"),
                 Err(e) => warn!("Database migration warning: {}", e),
             }
-            // Seed templates for new databases (reuse migration connection)
-            if is_new_db {
-                info!("Seeding initial templates...");
-                if let Err(e) = seed_templates::seed_templates(&mut conn) {
-                    warn!("Failed to seed templates: {}", e);
-                }
+            // Seed templates (idempotent - only adds missing templates)
+            // This runs on every startup to pick up any new templates added to the codebase
+            info!("Checking for new templates...");
+            match seed_templates::seed_templates(&mut conn) {
+                Ok(count) if count > 0 => info!("Added {} new templates", count),
+                Ok(_) => {} // No new templates, stay quiet
+                Err(e) => warn!("Failed to seed templates: {}", e),
             }
 
             // Seed dev data in debug builds

@@ -19,6 +19,30 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tracing::{debug, warn};
 
+/// Convert a string to kebab-case for use as a folder name.
+/// Examples: "The Frost Architect" -> "the-frost-architect"
+///           "My Campaign Name" -> "my-campaign-name"
+fn to_kebab_case(s: &str) -> String {
+    s.chars()
+        .map(|c| {
+            if c.is_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else if c.is_whitespace() || c == '_' {
+                '-'
+            } else {
+                // Skip other special characters
+                '\0'
+            }
+        })
+        .filter(|&c| c != '\0')
+        .collect::<String>()
+        // Collapse multiple dashes into one
+        .split('-')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
 /// Service for campaign-related business logic operations.
 pub struct CampaignService<'a> {
     conn: &'a mut DbConnection,
@@ -348,7 +372,9 @@ impl<'a> CampaignService<'a> {
         base_path: &Path,
         campaign_name: &str,
     ) -> Result<PathBuf> {
-        let campaign_path = base_path.join(campaign_name);
+        // Convert campaign name to kebab-case for folder name
+        let folder_name = to_kebab_case(campaign_name);
+        let campaign_path = base_path.join(&folder_name);
 
         // Check if campaign directory already exists
         if campaign_path.exists() {
@@ -433,27 +459,37 @@ impl<'a> CampaignService<'a> {
             // Create directory if needed
             let full_path = std::path::Path::new(&file_path);
             if let Some(parent) = full_path.parent() {
-                fs::create_dir_all(parent)?;
+                if let Err(e) = fs::create_dir_all(parent) {
+                    warn!(document_type = %doc_type, error = %e, "Failed to create directory for document");
+                    continue;
+                }
             }
 
-            // Get the template from the database - this MUST exist
-            let template =
-                TemplateRepository::get_latest(self.conn, &template_id).map_err(|e| {
-                    DbError::InvalidData(format!(
-                        "Required template '{}' not found in database: {}",
-                        template_id, e
-                    ))
-                })?;
+            // Get the template from the database - skip if not found
+            let template = match TemplateRepository::get_latest(self.conn, &template_id) {
+                Ok(t) => t,
+                Err(e) => {
+                    warn!(template_id = %template_id, error = %e, "Template not found, skipping document creation");
+                    continue;
+                }
+            };
 
             // Render the template with its default context
             let context = template.create_context();
             let mut tera = tera::Tera::default();
-            tera.add_raw_template(&template.document_id, &template.document_content)
-                .map_err(|e| DbError::InvalidData(format!("Failed to add template: {}", e)))?;
+            if let Err(e) = tera.add_raw_template(&template.document_id, &template.document_content)
+            {
+                warn!(document_type = %doc_type, error = %e, "Failed to parse template");
+                continue;
+            }
 
-            let rendered_content = tera
-                .render(&template.document_id, &context)
-                .map_err(|e| DbError::InvalidData(format!("Failed to render template: {}", e)))?;
+            let rendered_content = match tera.render(&template.document_id, &context) {
+                Ok(c) => c,
+                Err(e) => {
+                    warn!(document_type = %doc_type, error = %e, "Failed to render template");
+                    continue;
+                }
+            };
 
             // Generate title from doc_type (e.g., "campaign_pitch" -> "Campaign Pitch")
             let title: String = doc_type
@@ -476,7 +512,10 @@ impl<'a> CampaignService<'a> {
             );
 
             // Write the rendered template content to the file with frontmatter
-            fs::write(full_path, content_with_frontmatter)?;
+            if let Err(e) = fs::write(full_path, &content_with_frontmatter) {
+                warn!(document_type = %doc_type, error = %e, "Failed to write document file");
+                continue;
+            }
 
             let new_doc = NewDocument {
                 campaign_id: campaign.id,
@@ -484,25 +523,12 @@ impl<'a> CampaignService<'a> {
                 session_id: None,
                 template_id,
                 document_type: doc_type.to_string(),
-                title: doc_type
-                    .replace('_', " ")
-                    .split_whitespace()
-                    .map(|w| {
-                        let mut chars = w.chars();
-                        match chars.next() {
-                            None => String::new(),
-                            Some(first) => {
-                                first.to_uppercase().collect::<String>() + chars.as_str()
-                            }
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join(" "),
+                title,
                 file_path,
             };
 
             if let Err(e) = DocumentRepository::create(self.conn, new_doc) {
-                warn!(document_type = %doc_type, error = %e, "Failed to create document");
+                warn!(document_type = %doc_type, error = %e, "Failed to create document record");
             }
         }
 

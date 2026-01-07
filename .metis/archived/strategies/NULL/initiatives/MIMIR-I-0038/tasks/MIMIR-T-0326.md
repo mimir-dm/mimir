@@ -1,11 +1,11 @@
 ---
-id: kebab-case-campaign-directory
+id: claude-code-skill-and-integration
 level: task
-title: "Kebab-case campaign directory defaults"
-short_code: "MIMIR-T-0295"
-created_at: 2026-01-03T14:19:06.896117+00:00
-updated_at: 2026-01-03T14:19:06.896117+00:00
-parent: MIMIR-I-0034
+title: "Claude Code Skill and Integration"
+short_code: "MIMIR-T-0326"
+created_at: 2026-01-05T18:05:45.716799+00:00
+updated_at: 2026-01-05T20:17:53.855921+00:00
+parent: MIMIR-I-0038
 blocked_by: []
 archived: true
 
@@ -16,59 +16,20 @@ tags:
 
 exit_criteria_met: false
 strategy_id: NULL
-initiative_id: MIMIR-I-0034
+initiative_id: MIMIR-I-0038
 ---
 
-# Kebab-case campaign directory defaults
-
-## Problem
-
-Auto-generated campaign directory uses exact campaign name, which can include spaces and special characters.
-
-## Solution
-
-Convert campaign name to kebab-case for directory default:
-- "The Dragon's Lair" → "the-dragons-lair"
-- "Rise of Tiamat" → "rise-of-tiamat"
-
-## Files to Modify
-
-- `frontend/src/features/campaigns/views/CampaignCreateView.vue`
-
-## Implementation
-
-```javascript
-function toKebabCase(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-```
-
-## Effort
-
-30 minutes
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-## Acceptance Criteria
-
-- [ ] Directory name is kebab-cased from campaign name
-- [ ] Special characters removed
-- [ ] Leading/trailing hyphens stripped
+# Claude Code Skill and Integration
 
 *This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
 
 ## Parent Initiative **[CONDITIONAL: Assigned Task]**
 
-[[MIMIR-I-0034]]
+[[MIMIR-I-0038]]
 
-## Objective **[REQUIRED]**
+## Objective
 
-{Clear statement of what this task accomplishes}
+Create Claude Code skill/plugin with SKILL.md guidance for effective MCP tool usage.
 
 ## Backlog Item Details **[CONDITIONAL: Backlog Item]**
 
@@ -104,11 +65,21 @@ function toKebabCase(str) {
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
 
-## Acceptance Criteria **[REQUIRED]**
+## Acceptance Criteria
 
-- [ ] {Specific, testable requirement 1}
-- [ ] {Specific, testable requirement 2}
-- [ ] {Specific, testable requirement 3}
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [ ] Plugin structure: plugin.json, .mcp.json, skills/mimir-campaign/SKILL.md
+- [ ] SKILL.md teaches: campaign selection, document types, NPC creation patterns
+- [ ] .mcp.json configures mimir-mcp server command
+- [ ] End-to-end test: Claude Code can list campaigns and create an NPC
+- [ ] Documentation for installing the plugin
 
 ## Test Cases **[CONDITIONAL: Testing Task]**
 

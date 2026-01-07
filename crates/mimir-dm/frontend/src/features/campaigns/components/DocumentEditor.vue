@@ -95,6 +95,55 @@
             " Quote
           </button>
           <div class="btn-toolbar-divider"></div>
+          <!-- Table commands -->
+          <button
+            @click="editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"
+            class="btn-toolbar"
+            title="Insert Table"
+          >
+            + Table
+          </button>
+          <button
+            @click="editor?.chain().focus().deleteTable().run()"
+            :disabled="!editor?.isActive('table')"
+            class="btn-toolbar"
+            title="Delete Table"
+          >
+            - Table
+          </button>
+          <button
+            @click="editor?.chain().focus().addColumnAfter().run()"
+            :disabled="!editor?.isActive('table')"
+            class="btn-toolbar"
+            title="Add Column"
+          >
+            + Col
+          </button>
+          <button
+            @click="editor?.chain().focus().deleteColumn().run()"
+            :disabled="!editor?.isActive('table')"
+            class="btn-toolbar"
+            title="Delete Column"
+          >
+            - Col
+          </button>
+          <button
+            @click="editor?.chain().focus().addRowAfter().run()"
+            :disabled="!editor?.isActive('table')"
+            class="btn-toolbar"
+            title="Add Row"
+          >
+            + Row
+          </button>
+          <button
+            @click="editor?.chain().focus().deleteRow().run()"
+            :disabled="!editor?.isActive('table')"
+            class="btn-toolbar"
+            title="Delete Row"
+          >
+            - Row
+          </button>
+          <div class="btn-toolbar-divider"></div>
           <button
             @click="editor?.chain().focus().setHorizontalRule().run()"
             class="btn-toolbar"
@@ -152,6 +201,7 @@ const showPreview = ref(false)
 const saveStatus = ref<'saving' | 'saved' | 'error' | null>(null)
 const pendingContent = ref<string | null>(null)
 const exporting = ref(false)
+const isLoading = ref(false) // Prevent saves during document load
 
 // Initialize Tiptap editor with markdown support
 const editor = useEditor({
@@ -206,6 +256,8 @@ const loadDocument = async () => {
     return
   }
 
+  isLoading.value = true // Prevent saves during load
+
   try {
     const response = await invoke<{ success: boolean; data?: string; error?: string }>('read_document_file', {
       filePath: props.document.file_path
@@ -224,6 +276,8 @@ const loadDocument = async () => {
     }
   } catch (e) {
     console.error('Error loading document:', e, 'Path:', props.document.file_path)
+  } finally {
+    isLoading.value = false // Re-enable saves
   }
 }
 
@@ -238,7 +292,8 @@ const getMarkdown = (): string => {
 // Save document content
 const saveDocument = async () => {
   if (!props.document?.file_path) return
-  
+  if (isLoading.value) return // Don't save while loading
+
   saveStatus.value = 'saving'
   
   try {
@@ -373,11 +428,13 @@ const transitionToNextStage = async (nextStage: string) => {
 watch(() => props.document, (newDoc, oldDoc) => {
   // Load if document changed - check multiple fields since temporary docs have id = -1
   if (newDoc && (
-    newDoc?.id !== oldDoc?.id || 
+    newDoc?.id !== oldDoc?.id ||
     newDoc?.file_path !== oldDoc?.file_path ||
     newDoc?.template_id !== oldDoc?.template_id
   )) {
     if (editor.value) {
+      // Prevent saves while switching documents
+      isLoading.value = true
       // Clear the editor first to avoid mixing content
       editor.value.commands.clearContent()
       loadDocument()

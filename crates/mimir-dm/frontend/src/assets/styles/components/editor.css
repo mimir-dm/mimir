@@ -148,6 +148,58 @@
   margin: 2rem 0;
 }
 
+/* Table Styles */
+.editor-area .ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.editor-area .ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.editor-area .ProseMirror table td,
+.editor-area .ProseMirror table th {
+  min-width: 1em;
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  background: var(--color-surface);
+}
+
+.editor-area .ProseMirror table th {
+  font-weight: bold;
+  text-align: left;
+  background: var(--color-surface-variant);
+  color: var(--color-text);
+}
+
+.editor-area .ProseMirror table .selectedCell {
+  background: var(--color-primary-100);
+}
+
+.editor-area .ProseMirror table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  z-index: 20;
+  background: var(--color-primary-500);
+  pointer-events: none;
+}
+
+.editor-area .ProseMirror table p {
+  margin: 0;
+}
+
 /* Preview Mode */
 .editor-area.preview-mode {
   background-color: var(--color-background);
