@@ -1,6 +1,6 @@
 [package]
 name = "mimir-5etools-splitter"
-version = "0.1.2"
+version = "0.2.3"
 edition = "2021"
 authors = ["Mimir Contributors"]
 description = "Splits 5etools repositories into book-specific archives"

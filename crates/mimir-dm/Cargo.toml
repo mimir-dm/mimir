@@ -1,6 +1,6 @@
 [package]
 name = "mimir-dm"
-version = "0.2.1"
+version = "0.2.3"
 edition = "2021"
 description = "Mimir D&D Campaign Assistant - Desktop Application"
 authors = ["Mimir Team"]
@@ -25,9 +25,9 @@ tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
 
 # Our crates
-mimir-dm-core = { version = "0.2.1", path = "../mimir-dm-core" }
-mimir-dm-llm = { version = "0.2.1", path = "../mimir-dm-llm" }
-mimir-dm-print = { version = "0.2.1", path = "../mimir-dm-print" }
+mimir-dm-core = { path = "../mimir-dm-core" }
+mimir-dm-llm = { path = "../mimir-dm-llm" }
+mimir-dm-print = { path = "../mimir-dm-print" }
 
 # Core dependencies
 anyhow = { workspace = true }

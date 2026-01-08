@@ -1,6 +1,6 @@
 [package]
 name = "mimir-dm-agent-test"
-version = "0.1.2"
+version = "0.2.3"
 edition = "2021"
 description = "Agent test harness for Mimir DM"
 authors = ["Mimir Team"]
