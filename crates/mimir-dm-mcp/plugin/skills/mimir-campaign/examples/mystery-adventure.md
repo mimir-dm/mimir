@@ -20,8 +20,10 @@ create_module(
 create_npc(
   name: "Lord Edmund Blackwood",
   race: "Human",
+  class: "Noble",
   role: "neutral",
   location: "Blackwood Manor (deceased)",
+  alignment: "Lawful Neutral",
   notes: "Wealthy noble found dead in his study. Had many enemies."
 )
 ```
@@ -33,6 +35,7 @@ create_npc(
   race: "Human",
   role: "neutral",
   location: "Blackwood Manor",
+  faction: "Blackwood Family",
   notes: "The wife. Stands to inherit everything. Alibi: was at a social gathering."
 )
 
@@ -41,14 +44,17 @@ create_npc(
   race: "Human",
   role: "neutral",
   location: "Blackwood Manor",
+  faction: "Blackwood Family",
   notes: "The estranged son. Recently returned asking for money. Alibi: claims he was in town."
 )
 
 create_npc(
   name: "Grimsby",
   race: "Human",
+  class: "Commoner",
   role: "informant",
   location: "Blackwood Manor",
+  alignment: "Lawful Good",
   notes: "The butler. Knows all the family secrets. Saw something that night."
 )
 ```
@@ -60,6 +66,7 @@ create_npc(
   race: "Human",
   role: "antagonist",
   location: "Blackwood Manor",
+  alignment: "Neutral Evil",
   notes: "The governess. Secret lover of Lord Blackwood who was being cast aside. THE KILLER."
 )
 ```
@@ -67,10 +74,10 @@ create_npc(
 ## 3. Assign NPCs to Module
 
 ```
-assign_npc_to_module(npc_id: <lady_isabelle_id>, module_id: <module_id>, role: "neutral", encounter_tag: "suspect_interview")
-assign_npc_to_module(npc_id: <victor_id>, module_id: <module_id>, role: "neutral", encounter_tag: "suspect_interview")
-assign_npc_to_module(npc_id: <grimsby_id>, module_id: <module_id>, role: "informant", encounter_tag: "key_witness")
-assign_npc_to_module(npc_id: <cassandra_id>, module_id: <module_id>, role: "antagonist", encounter_tag: "reveal")
+assign_npc_to_module(character_id: <lady_isabelle_id>, module_id: <module_id>, role: "neutral", encounter_tag: "suspect_interview")
+assign_npc_to_module(character_id: <victor_id>, module_id: <module_id>, role: "neutral", encounter_tag: "suspect_interview")
+assign_npc_to_module(character_id: <grimsby_id>, module_id: <module_id>, role: "informant", encounter_tag: "key_witness")
+assign_npc_to_module(character_id: <cassandra_id>, module_id: <module_id>, role: "antagonist", encounter_tag: "reveal")
 ```
 
 ## 4. Add Clue Items
@@ -81,14 +88,16 @@ search_items(name: "letter")
 add_item_to_module(
   module_id: <module_id>,
   item_name: "Letter",
-  source: "PHB",
-  notes: "CLUE: Love letter from Cassandra to Edmund, hidden in desk"
+  item_source: "PHB",
+  location: "Hidden in desk drawer",
+  notes: "CLUE: Love letter from Cassandra to Edmund"
 )
 
 add_item_to_module(
   module_id: <module_id>,
   item_name: "Dagger",
-  source: "PHB",
+  item_source: "PHB",
+  location: "Crime scene",
   notes: "CLUE: Murder weapon. Has initials C.V. on the handle"
 )
 ```
@@ -102,5 +111,15 @@ edit_document(
   document_id: <overview_doc_id>,
   search: "## Overview",
   replace: "## Overview\n\nLord Edmund Blackwood has been murdered in his study. The party is hired to investigate. Everyone has motive, but only one had opportunity.\n\n## The Truth\nCassandra Vane, the governess and Edmund's secret lover, killed him when he threatened to end their affair and dismiss her without reference.\n\n## Clues\n1. Love letter (DC 15 Investigation in study)\n2. Dagger with initials (DC 12 Perception at crime scene)\n3. Grimsby's testimony (DC 14 Persuasion)\n4. Cassandra's alibi has holes (DC 16 Insight)"
+)
+```
+
+## 6. Create Investigation Checklist
+
+```
+create_user_document(
+  title: "Investigation Progress Tracker",
+  module_id: <module_id>,
+  content: "# Investigation Progress\n\n## Clues Found\n- [ ] Love letter\n- [ ] Murder weapon\n- [ ] Grimsby's testimony\n- [ ] Alibi inconsistencies\n\n## Suspects Interviewed\n- [ ] Lady Isabelle\n- [ ] Victor\n- [ ] Grimsby\n- [ ] Cassandra"
 )
 ```

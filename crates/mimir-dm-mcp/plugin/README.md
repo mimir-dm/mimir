@@ -102,13 +102,13 @@ The skill activates automatically. Try:
 
 > "Add a goblin to the current module"
 
-## Available MCP Tools
+## Available MCP Tools (20 total)
 
 | Category | Tools |
 |----------|-------|
 | Campaign | `list_campaigns`, `set_active_campaign` |
 | Module | `create_module`, `list_modules`, `get_module_details`, `add_monster_to_module`, `add_item_to_module` |
-| Document | `list_documents`, `read_document`, `edit_document` |
+| Document | `list_documents`, `read_document`, `edit_document`, `create_user_document` |
 | Character | `list_characters`, `get_character`, `create_npc`, `assign_npc_to_module`, `add_item_to_character`, `update_character_currency` |
 | Catalog | `search_monsters`, `search_items`, `search_traps` |
 

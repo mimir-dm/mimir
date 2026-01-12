@@ -25,25 +25,25 @@ Add them to the module:
 add_monster_to_module(
   module_id: <module_id>,
   monster_name: "Skeleton",
-  source: "MM",
+  monster_source: "MM",
   quantity: 6,
-  notes: "Patrol the main hall in groups of 2"
+  encounter_tag: "main_hall"
 )
 
 add_monster_to_module(
   module_id: <module_id>,
   monster_name: "Ghoul",
-  source: "MM",
+  monster_source: "MM",
   quantity: 2,
-  notes: "Guard the treasure vault"
+  encounter_tag: "treasure_vault"
 )
 
 add_monster_to_module(
   module_id: <module_id>,
   monster_name: "Wight",
-  source: "MM",
+  monster_source: "MM",
   quantity: 1,
-  notes: "Boss encounter - former crypt guardian"
+  encounter_tag: "boss_fight"
 )
 ```
 
@@ -55,8 +55,9 @@ search_traps(category: "Trap")
 add_item_to_module(
   module_id: <module_id>,
   item_name: "Pit Trap",
-  source: "DMG",
-  notes: "Hidden in corridor before treasure room"
+  item_source: "DMG",
+  location: "Corridor before treasure room",
+  notes: "DC 15 Perception to spot, 2d6 falling damage"
 )
 ```
 
@@ -68,15 +69,15 @@ search_items(rarity: "uncommon")
 add_item_to_module(
   module_id: <module_id>,
   item_name: "Cloak of Protection",
-  source: "DMG",
+  item_source: "DMG",
   quantity: 1,
-  notes: "Worn by the Wight boss"
+  location: "Worn by the Wight boss"
 )
 
 add_item_to_module(
   module_id: <module_id>,
   item_name: "Potion of Healing",
-  source: "PHB",
+  item_source: "PHB",
   quantity: 3,
   notes: "Scattered in various rooms"
 )
@@ -94,7 +95,7 @@ create_npc(
 )
 
 assign_npc_to_module(
-  npc_id: <npc_id>,
+  character_id: <npc_character_id>,
   module_id: <module_id>,
   role: "quest_giver"
 )
@@ -109,5 +110,15 @@ edit_document(
   document_id: <overview_doc_id>,
   search: "## Overview",
   replace: "## Overview\n\nThe Sunken Crypt is an ancient burial site that has become infested with undead. Local villagers report strange lights and sounds emanating from the hillside entrance."
+)
+```
+
+## 7. Create Custom Notes (Optional)
+
+```
+create_user_document(
+  title: "Sunken Crypt - Room Descriptions",
+  module_id: <module_id>,
+  content: "# Room Descriptions\n\n## Entry Hall\nA musty corridor with crumbling stone walls..."
 )
 ```
