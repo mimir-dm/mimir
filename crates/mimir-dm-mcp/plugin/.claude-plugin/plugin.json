@@ -1,8 +1,11 @@
 {
-  "name": "mimir-campaign",
-  "version": "0.1.0",
+  "name": "mimir-dm",
+  "version": "0.2.3",
   "description": "D&D 5e campaign authoring tools for Mimir. Create campaigns, modules, NPCs, and documents.",
-  "author": "Mimir",
-  "homepage": "https://github.com/colliery/mimir",
+  "author": {
+    "name": "Colliery",
+    "email": "contact@colliery.io"
+  },
+  "homepage": "https://github.com/mimir-dm/mimir",
   "keywords": ["dnd", "5e", "campaign", "ttrpg", "dungeon-master"]
 }

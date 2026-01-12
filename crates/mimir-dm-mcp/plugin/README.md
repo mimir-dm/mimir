@@ -1,4 +1,4 @@
-# Mimir Campaign Plugin for Claude Code
+# Mimir DM Plugin for Claude Code
 
 A distributable Claude Code plugin for D&D 5e campaign authoring with Mimir.
 
@@ -15,18 +15,18 @@ A distributable Claude Code plugin for D&D 5e campaign authoring with Mimir.
 ### From Marketplace (Recommended)
 
 ```bash
-claude plugins add mimir-campaign
+claude plugins add mimir-dm
 ```
 
 ### From GitHub
 
 ```bash
-claude plugins add github:colliery/mimir/crates/mimir-dm-mcp/plugin
+claude plugins add github:mimir-dm/mimir/crates/mimir-dm-mcp/plugin
 ```
 
 ### Manual Installation
 
-1. Clone or copy this plugin directory to `~/.claude/plugins/mimir-campaign/`
+1. Clone or copy this plugin directory to `~/.claude/plugins/mimir-dm/`
 2. Set up the MCP server (see below)
 
 ## MCP Server Setup
@@ -45,9 +45,9 @@ The plugin requires the `mimir-mcp` binary and a Mimir database.
    - **Linux**: `~/.local/share/mimir/mimir.db`
    - **Windows**: `%APPDATA%\com.mimir.mimir\mimir.db`
 
-### Quick Install Scripts
+### Quick Install Scripts (Claude Desktop)
 
-Platform-specific scripts in `scripts/` configure Claude Desktop:
+The scripts in `scripts/` configure **Claude Desktop** (the standalone app), not Claude Code (the CLI).
 
 ```bash
 # macOS
@@ -60,10 +60,12 @@ Platform-specific scripts in `scripts/` configure Claude Desktop:
 .\scripts\install-windows.ps1
 ```
 
+**For Claude Code**: The `.mcp.json` file in this plugin directory is automatically used when the plugin is installed. No additional configuration needed.
+
 ## Plugin Structure
 
 ```
-mimir-campaign/
+mimir-dm/
 ├── .claude-plugin/
 │   └── plugin.json           # Plugin manifest
 ├── .mcp.json                  # MCP server configuration
@@ -72,7 +74,7 @@ mimir-campaign/
 │   ├── create-module.md      # /create-module
 │   └── search-monsters.md    # /search-monsters
 ├── skills/
-│   └── mimir-campaign/
+│   └── mimir-dm/
 │       ├── SKILL.md          # Main skill definition
 │       ├── references/       # Detailed tool documentation
 │       └── examples/         # Workflow examples
@@ -141,5 +143,5 @@ MIT
 
 ## Links
 
-- [Mimir Repository](https://github.com/colliery/mimir)
+- [Mimir Repository](https://github.com/mimir-dm/mimir)
 - [Claude Code Plugins Documentation](https://docs.anthropic.com/en/docs/claude-code/plugins)

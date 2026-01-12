@@ -1,6 +1,6 @@
 ---
-name: Mimir Campaign
-version: 1.0.0
+name: Mimir DM
+version: 0.2.3
 description: This skill should be used when the user asks to "create a D&D campaign", "make a new module", "add an NPC", "create an encounter", "search for monsters", "find D&D items", "list campaigns", "set up a dungeon crawl", "create a mystery adventure", "add loot to characters", "search for traps", "manage character inventory", "build an adventure", "populate a dungeon", "give items to players", "create a villain", "add treasure", "write session notes", or mentions "Mimir campaign", "D&D 5e authoring", or "dungeon master tools". Provides MCP tools for campaign management, module creation, NPC authoring, and catalog searching.
 ---
 

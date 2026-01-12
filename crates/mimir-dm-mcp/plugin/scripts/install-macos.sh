@@ -1,5 +1,6 @@
 #!/bin/bash
-# Install Mimir MCP server for Claude Desktop on macOS
+# Install Mimir MCP server for Claude Desktop (standalone app) on macOS
+# NOTE: For Claude Code (CLI), use the plugin's .mcp.json instead - no script needed.
 
 set -e
 

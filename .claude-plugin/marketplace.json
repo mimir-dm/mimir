@@ -1,0 +1,28 @@
+{
+  "name": "mimir",
+  "owner": {
+    "name": "Colliery",
+    "email": "contact@colliery.io"
+  },
+  "metadata": {
+    "description": "Mimir D&D 5e campaign management tools for Claude Code",
+    "version": "0.2.3"
+  },
+  "plugins": [
+    {
+      "name": "mimir-dm",
+      "source": "./crates/mimir-dm-mcp/plugin",
+      "description": "D&D 5e campaign authoring tools for Mimir. Create campaigns, modules, NPCs, and documents.",
+      "version": "0.2.3",
+      "author": {
+        "name": "Colliery",
+        "email": "contact@colliery.io"
+      },
+      "homepage": "https://github.com/mimir-dm/mimir",
+      "repository": "https://github.com/mimir-dm/mimir",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["dnd", "5e", "campaign", "ttrpg", "dungeon-master", "mimir"]
+    }
+  ]
+}

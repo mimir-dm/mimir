@@ -1,4 +1,5 @@
-# Install Mimir MCP server for Claude Desktop on Windows
+# Install Mimir MCP server for Claude Desktop (standalone app) on Windows
+# NOTE: For Claude Code (CLI), use the plugin's .mcp.json instead - no script needed.
 # Run with: powershell -ExecutionPolicy Bypass -File install-windows.ps1
 
 param(
