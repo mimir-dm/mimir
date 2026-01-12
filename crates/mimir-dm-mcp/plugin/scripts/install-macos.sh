@@ -3,9 +3,17 @@
 
 set -e
 
-# Paths
-MIMIR_MCP_BIN="${1:-$HOME/Desktop/colliery/mimir/target/release/mimir-mcp}"
-MIMIR_DB="${2:-$HOME/Library/Application Support/com.mimir.mimir/mimir.db}"
+# Default paths - can be overridden via arguments or environment variables
+DEFAULT_BIN_LOCATIONS=(
+    "./target/release/mimir-mcp"
+    "../../../target/release/mimir-mcp"
+    "$HOME/.cargo/bin/mimir-mcp"
+)
+DEFAULT_DB_PATH="$HOME/Library/Application Support/com.mimir.mimir/mimir.db"
+
+# Use arguments, environment variables, or defaults
+MIMIR_MCP_BIN="${1:-${MIMIR_MCP_BIN:-}}"
+MIMIR_DB="${2:-${MIMIR_DATABASE_PATH:-$DEFAULT_DB_PATH}}"
 CLAUDE_CONFIG_DIR="$HOME/Library/Application Support/Claude"
 CLAUDE_CONFIG="$CLAUDE_CONFIG_DIR/claude_desktop_config.json"
 
@@ -19,12 +27,32 @@ echo "Mimir MCP Installer for Claude Desktop"
 echo "======================================="
 echo ""
 
+# Find mimir-mcp binary if not specified
+if [ -z "$MIMIR_MCP_BIN" ]; then
+    for location in "${DEFAULT_BIN_LOCATIONS[@]}"; do
+        if [ -f "$location" ]; then
+            MIMIR_MCP_BIN="$location"
+            break
+        fi
+    done
+fi
+
 # Check if mimir-mcp binary exists
-if [ ! -f "$MIMIR_MCP_BIN" ]; then
-    echo -e "${RED}Error: mimir-mcp binary not found at: $MIMIR_MCP_BIN${NC}"
+if [ -z "$MIMIR_MCP_BIN" ] || [ ! -f "$MIMIR_MCP_BIN" ]; then
+    echo -e "${RED}Error: mimir-mcp binary not found${NC}"
+    echo ""
+    echo "Searched locations:"
+    for location in "${DEFAULT_BIN_LOCATIONS[@]}"; do
+        echo "  - $location"
+    done
+    echo ""
     echo "Build it first with: cargo build --release -p mimir-dm-mcp"
+    echo "Or specify the path: $0 /path/to/mimir-mcp"
     exit 1
 fi
+
+# Convert to absolute path
+MIMIR_MCP_BIN="$(cd "$(dirname "$MIMIR_MCP_BIN")" && pwd)/$(basename "$MIMIR_MCP_BIN")"
 
 # Check if database exists
 if [ ! -f "$MIMIR_DB" ]; then

@@ -1,6 +1,6 @@
-# Mimir MCP Plugin for Claude Code
+# Mimir Campaign Plugin for Claude Code
 
-This plugin enables Claude to author D&D 5e campaigns in Mimir using the Model Context Protocol (MCP).
+A distributable Claude Code plugin for D&D 5e campaign authoring with Mimir.
 
 ## Features
 
@@ -12,6 +12,27 @@ This plugin enables Claude to author D&D 5e campaigns in Mimir using the Model C
 
 ## Installation
 
+### From Marketplace (Recommended)
+
+```bash
+claude plugins add mimir-campaign
+```
+
+### From GitHub
+
+```bash
+claude plugins add github:colliery/mimir/crates/mimir-dm-mcp/plugin
+```
+
+### Manual Installation
+
+1. Clone or copy this plugin directory to `~/.claude/plugins/mimir-campaign/`
+2. Set up the MCP server (see below)
+
+## MCP Server Setup
+
+The plugin requires the `mimir-mcp` binary and a Mimir database.
+
 ### Prerequisites
 
 1. Build the mimir-mcp binary:
@@ -19,100 +40,69 @@ This plugin enables Claude to author D&D 5e campaigns in Mimir using the Model C
    cargo build --release -p mimir-dm-mcp
    ```
 
-2. Locate the binary at `target/release/mimir-mcp`
-
-3. Locate your Mimir database:
+2. Set the `MIMIR_DATABASE_PATH` environment variable:
    - **macOS**: `~/Library/Application Support/com.mimir.mimir/mimir.db`
    - **Linux**: `~/.local/share/mimir/mimir.db`
-   - **Windows**: `%APPDATA%\mimir\mimir.db`
+   - **Windows**: `%APPDATA%\com.mimir.mimir\mimir.db`
 
-### Claude Desktop
+### Quick Install Scripts
 
-1. Open your Claude Desktop config file:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-2. Add the mimir server configuration:
-
-   ```json
-   {
-     "mcpServers": {
-       "mimir": {
-         "command": "/absolute/path/to/mimir-mcp",
-         "args": [],
-         "env": {
-           "MIMIR_DATABASE_PATH": "/absolute/path/to/mimir.db"
-         }
-       }
-     }
-   }
-   ```
-
-3. Replace the paths with your actual paths
-
-4. Restart Claude Desktop
-
-**macOS Quick Install:**
-```bash
-./crates/mimir-dm-mcp/plugin/install-macos.sh
-```
-
-### Claude Code (CLI)
-
-#### Option 1: Add MCP server directly
+Platform-specific scripts in `scripts/` configure Claude Desktop:
 
 ```bash
-claude mcp add mimir -- mimir-mcp --env MIMIR_DATABASE_PATH=/path/to/mimir.db
+# macOS
+./scripts/install-macos.sh
+
+# Linux
+./scripts/install-linux.sh
+
+# Windows (PowerShell)
+.\scripts\install-windows.ps1
 ```
-
-#### Option 2: Project-level configuration
-
-Add to your project's `.mcp.json`:
-
-```json
-{
-  "mimir": {
-    "command": "mimir-mcp",
-    "args": [],
-    "env": {
-      "MIMIR_DATABASE_PATH": "/path/to/mimir.db"
-    }
-  }
-}
-```
-
-#### Option 3: Install as a plugin
-
-1. Copy this plugin directory to `~/.claude/plugins/mimir-campaign/`
-2. Set the `MIMIR_DATABASE_PATH` environment variable
-3. Restart Claude Code
 
 ## Plugin Structure
 
 ```
-plugin/
-├── plugin.json           # Plugin metadata
-├── .mcp.json             # MCP server configuration
-├── README.md             # This file
-├── install-macos.sh      # macOS installer
-└── skills/
-    └── mimir-campaign/
-        └── Skill.md      # Skill instructions for Claude
+mimir-campaign/
+├── .claude-plugin/
+│   └── plugin.json           # Plugin manifest
+├── .mcp.json                  # MCP server configuration
+├── commands/                  # Slash commands
+│   ├── mimir-campaigns.md    # /mimir-campaigns
+│   ├── create-module.md      # /create-module
+│   └── search-monsters.md    # /search-monsters
+├── skills/
+│   └── mimir-campaign/
+│       ├── SKILL.md          # Main skill definition
+│       ├── references/       # Detailed tool documentation
+│       └── examples/         # Workflow examples
+├── scripts/                  # Installation scripts
+└── README.md
 ```
 
 ## Usage
 
-Once configured, Claude can use Mimir tools. Start by asking:
+### Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/mimir-campaigns` | List all campaigns |
+| `/create-module <name> [type]` | Create a new module |
+| `/search-monsters [query]` | Search the monster catalog |
+
+### Natural Language
+
+The skill activates automatically. Try:
 
 > "List my Mimir campaigns"
 
-or
+> "Create a dungeon module called 'The Sunken Crypt'"
 
-> "Help me create a new D&D module called 'The Haunted Manor'"
+> "Search for undead monsters with CR 5 or less"
 
-The skill activates automatically when Claude detects relevant context.
+> "Add a goblin to the current module"
 
-## Available Tools
+## Available MCP Tools
 
 | Category | Tools |
 |----------|-------|
@@ -128,8 +118,8 @@ The skill activates automatically when Claude detects relevant context.
 Call `set_active_campaign` with a valid campaign ID first. Use `list_campaigns` to see available campaigns.
 
 ### Server not connecting
-1. Verify the mimir-mcp binary path is correct and executable
-2. Check the database path exists
+1. Verify the mimir-mcp binary is in your PATH or specify full path
+2. Check that `MIMIR_DATABASE_PATH` is set correctly
 3. Run `/mcp` in Claude Code to see server status
 
 ### Database locked errors
@@ -140,13 +130,16 @@ Ensure the Mimir desktop app isn't running, or that WAL mode is enabled (default
 To run the MCP server manually for testing:
 
 ```bash
-MIMIR_DATABASE_PATH=/path/to/mimir.db ./target/release/mimir-mcp
+MIMIR_DATABASE_PATH=/path/to/mimir.db mimir-mcp
 ```
 
 The server communicates over stdio using the MCP protocol.
 
-## Sources
+## License
 
-- [Claude Code MCP Documentation](https://code.claude.com/docs/en/mcp)
-- [Creating Custom Skills](https://support.claude.com/en/articles/12512198)
-- [Skills and MCP Overview](https://claude.com/blog/extending-claude-capabilities-with-skills-mcp-servers)
+MIT
+
+## Links
+
+- [Mimir Repository](https://github.com/colliery/mimir)
+- [Claude Code Plugins Documentation](https://docs.anthropic.com/en/docs/claude-code/plugins)
