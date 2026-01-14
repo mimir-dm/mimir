@@ -62,6 +62,8 @@ impl TestEnv {
         {
             let mut conn = db.get_connection()?;
             mimir_dm_core::run_migrations(&mut conn)?;
+            // Seed templates for module and document creation
+            mimir_dm_core::seed::template_seeder::seed_templates(&mut conn)?;
         }
 
         // Create session manager

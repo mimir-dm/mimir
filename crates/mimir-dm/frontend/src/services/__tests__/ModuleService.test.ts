@@ -75,7 +75,7 @@ describe('ModuleService', () => {
       const result = await ModuleService.list(1)
       
       expect(invoke).toHaveBeenCalledWith('list_campaign_modules', {
-        campaignId: 1
+        request: { campaign_id: 1 }
       })
       expect(result).toHaveLength(2)
     })
@@ -106,9 +106,12 @@ describe('ModuleService', () => {
       })
       
       expect(invoke).toHaveBeenCalledWith('create_module', {
-        name: 'New Module',
-        campaign_id: 1,
-        module_type: 'standard'
+        request: {
+          campaign_id: 1,
+          name: 'New Module',
+          module_type: 'standard',
+          expected_sessions: 4
+        }
       })
       expect(result).toEqual(newModule)
     })
@@ -142,7 +145,11 @@ describe('ModuleService', () => {
       
       expect(invoke).toHaveBeenCalledWith('update_module', {
         id: 1,
-        name: 'Updated'
+        request: {
+          name: 'Updated',
+          expected_sessions: undefined,
+          actual_sessions: undefined
+        }
       })
       expect(result).toEqual(updatedModule)
     })
@@ -184,12 +191,15 @@ describe('ModuleService', () => {
     it('should update module status', async () => {
       const updatedModule = createMockModule({ status: 'active' })
       invoke.mockResolvedValueOnce({ data: updatedModule })
-      
+
       const result = await ModuleService.updateStatus(1, 'active')
-      
-      expect(invoke).toHaveBeenCalledWith('update_module_status', {
-        moduleId: 1,
-        status: 'active'
+
+      // updateStatus internally calls transitionStage
+      expect(invoke).toHaveBeenCalledWith('transition_module_stage', {
+        request: {
+          module_id: 1,
+          new_stage: 'active'
+        }
       })
       expect(result.status).toBe('active')
     })
@@ -197,12 +207,14 @@ describe('ModuleService', () => {
     it('should transition module stage', async () => {
       const transitionedModule = createMockModule({ status: 'ready' })
       invoke.mockResolvedValueOnce({ data: transitionedModule })
-      
+
       const result = await ModuleService.transitionStage(1, 'ready')
-      
+
       expect(invoke).toHaveBeenCalledWith('transition_module_stage', {
-        moduleId: 1,
-        newStage: 'ready'
+        request: {
+          module_id: 1,
+          new_stage: 'ready'
+        }
       })
       expect(result.status).toBe('ready')
     })
@@ -210,13 +222,22 @@ describe('ModuleService', () => {
 
   describe('document management', () => {
     it('should initialize module documents', async () => {
+      const mockModule = createMockModule({ id: 1, campaign_id: 1 })
+      const mockCampaign = { directory_path: '/campaigns/test' }
       const documentPaths = ['/path/doc1.md', '/path/doc2.md']
+
+      // Service first gets the module, then the campaign, then initializes
+      invoke.mockResolvedValueOnce({ data: mockModule })
+      invoke.mockResolvedValueOnce({ data: mockCampaign })
       invoke.mockResolvedValueOnce({ data: documentPaths })
-      
+
       const result = await ModuleService.initializeDocuments(1)
-      
+
       expect(invoke).toHaveBeenCalledWith('initialize_module_documents', {
-        moduleId: 1
+        request: {
+          module_id: 1,
+          campaign_directory: '/campaigns/test'
+        }
       })
       expect(result).toEqual(documentPaths)
     })
@@ -270,11 +291,11 @@ describe('ModuleService', () => {
 
     it('should increment session count', async () => {
       invoke.mockResolvedValueOnce(undefined)
-      
+
       await ModuleService.incrementSessionCount(1)
-      
+
       expect(invoke).toHaveBeenCalledWith('increment_module_sessions', {
-        moduleId: 1
+        module_id: 1
       })
     })
   })

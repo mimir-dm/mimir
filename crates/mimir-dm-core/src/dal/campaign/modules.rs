@@ -1,6 +1,7 @@
 //! Module data access layer
 
 use crate::connection::DbConnection;
+use crate::dal::traits::ModuleRepositoryTrait;
 use crate::error::Result;
 use crate::models::campaign::modules::{Module, NewModule, UpdateModule};
 use crate::schema::modules;
@@ -145,5 +146,55 @@ impl<'a> ModuleRepository<'a> {
             .unwrap_or(0);
 
         Ok(max_number + 1)
+    }
+}
+
+// =============================================================================
+// Trait Implementation
+// =============================================================================
+
+impl<'a> ModuleRepositoryTrait for ModuleRepository<'a> {
+    fn create(&mut self, new_module: NewModule) -> Result<Module> {
+        ModuleRepository::create(self, new_module)
+    }
+
+    fn find_by_id(&mut self, id: i32) -> Result<Option<Module>> {
+        ModuleRepository::find_by_id(self, id)
+    }
+
+    fn update(&mut self, id: i32, update: UpdateModule) -> Result<Module> {
+        ModuleRepository::update(self, id, update)
+    }
+
+    fn transition_status(&mut self, id: i32, new_status: &str) -> Result<Module> {
+        ModuleRepository::transition_status(self, id, new_status)
+    }
+
+    fn increment_sessions(&mut self, id: i32) -> Result<Module> {
+        ModuleRepository::increment_sessions(self, id)
+    }
+
+    fn delete(&mut self, id: i32) -> Result<()> {
+        ModuleRepository::delete(self, id)
+    }
+
+    fn list_by_campaign(&mut self, campaign_id: i32) -> Result<Vec<Module>> {
+        ModuleRepository::list_by_campaign(self, campaign_id)
+    }
+
+    fn list_by_campaign_and_status(
+        &mut self,
+        campaign_id: i32,
+        status: &str,
+    ) -> Result<Vec<Module>> {
+        ModuleRepository::list_by_campaign_and_status(self, campaign_id, status)
+    }
+
+    fn find_modules_needing_next(&mut self, campaign_id: i32) -> Result<Vec<Module>> {
+        ModuleRepository::find_modules_needing_next(self, campaign_id)
+    }
+
+    fn get_next_module_number(&mut self, campaign_id: i32) -> Result<i32> {
+        ModuleRepository::get_next_module_number(self, campaign_id)
     }
 }

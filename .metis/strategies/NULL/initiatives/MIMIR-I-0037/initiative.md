@@ -4,14 +4,14 @@ level: initiative
 title: "Schema-First Catalog Model Hardening"
 short_code: "MIMIR-I-0037"
 created_at: 2026-01-05T02:27:26.213586+00:00
-updated_at: 2026-01-05T02:27:26.213586+00:00
+updated_at: 2026-01-14T15:49:12.354657+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/decompose"
 
 
 exit_criteria_met: false

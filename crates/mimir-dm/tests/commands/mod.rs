@@ -5,6 +5,10 @@
 
 mod common;
 
-mod chat_tests;
-mod log_tests;
 mod book_tests;
+mod campaign_tests;
+mod character_tests;
+mod chat_tests;
+mod document_tests;
+mod log_tests;
+mod module_tests;

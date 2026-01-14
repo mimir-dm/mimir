@@ -1,6 +1,7 @@
 //! Campaign data access layer
 
 use crate::connection::DbConnection;
+use crate::dal::traits::CampaignRepositoryTrait;
 use crate::error::Result;
 use crate::models::campaign::campaigns::{Campaign, NewCampaign, UpdateCampaign};
 use crate::schema::campaigns;
@@ -121,5 +122,55 @@ impl<'a> CampaignRepository<'a> {
         };
 
         self.update(id, update)
+    }
+}
+
+// =============================================================================
+// Trait Implementation
+// =============================================================================
+
+impl<'a> CampaignRepositoryTrait for CampaignRepository<'a> {
+    fn create(&mut self, new_campaign: NewCampaign) -> Result<Campaign> {
+        CampaignRepository::create(self, new_campaign)
+    }
+
+    fn find_by_id(&mut self, id: i32) -> Result<Option<Campaign>> {
+        CampaignRepository::find_by_id(self, id)
+    }
+
+    fn update(&mut self, id: i32, update: UpdateCampaign) -> Result<Campaign> {
+        CampaignRepository::update(self, id, update)
+    }
+
+    fn transition_status(&mut self, id: i32, new_status: &str) -> Result<Campaign> {
+        CampaignRepository::transition_status(self, id, new_status)
+    }
+
+    fn delete(&mut self, id: i32) -> Result<()> {
+        CampaignRepository::delete(self, id)
+    }
+
+    fn list(&mut self) -> Result<Vec<Campaign>> {
+        CampaignRepository::list(self)
+    }
+
+    fn list_by_status(&mut self, status: &str) -> Result<Vec<Campaign>> {
+        CampaignRepository::list_by_status(self, status)
+    }
+
+    fn list_active(&mut self) -> Result<Vec<Campaign>> {
+        CampaignRepository::list_active(self)
+    }
+
+    fn list_archived(&mut self) -> Result<Vec<Campaign>> {
+        CampaignRepository::list_archived(self)
+    }
+
+    fn archive(&mut self, id: i32) -> Result<Campaign> {
+        CampaignRepository::archive(self, id)
+    }
+
+    fn unarchive(&mut self, id: i32) -> Result<Campaign> {
+        CampaignRepository::unarchive(self, id)
     }
 }

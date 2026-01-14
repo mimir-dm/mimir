@@ -2,6 +2,7 @@
 
 use crate::{
     connection::DbConnection,
+    dal::traits::DocumentRepositoryTrait,
     error::{DbError, Result},
     models::campaign::documents::{Document, NewDocument, UpdateDocument},
     schema::documents,
@@ -169,5 +170,86 @@ impl DocumentRepository {
             .order(documents::created_at.asc())
             .load(conn)
             .map_err(DbError::Query)
+    }
+}
+
+// =============================================================================
+// Instance-based wrapper for trait implementation
+// =============================================================================
+
+/// Instance-based document repository that wraps the static methods.
+///
+/// This wrapper provides the same functionality as [`DocumentRepository`] but
+/// implements [`DocumentRepositoryTrait`] for use with dependency injection.
+pub struct DocumentRepositoryInstance<'a> {
+    conn: &'a mut DbConnection,
+}
+
+impl<'a> DocumentRepositoryInstance<'a> {
+    /// Create a new document repository instance
+    pub fn new(conn: &'a mut DbConnection) -> Self {
+        Self { conn }
+    }
+}
+
+impl<'a> DocumentRepositoryTrait for DocumentRepositoryInstance<'a> {
+    fn create(&mut self, new_document: NewDocument) -> Result<Document> {
+        DocumentRepository::create(self.conn, new_document)
+    }
+
+    fn find_by_id(&mut self, document_id: i32) -> Result<Document> {
+        DocumentRepository::find_by_id(self.conn, document_id)
+    }
+
+    fn find_by_campaign(&mut self, campaign_id: i32) -> Result<Vec<Document>> {
+        DocumentRepository::find_by_campaign(self.conn, campaign_id)
+    }
+
+    fn find_by_module(&mut self, module_id: i32) -> Result<Vec<Document>> {
+        DocumentRepository::find_by_module(self.conn, module_id)
+    }
+
+    fn find_by_module_and_template(
+        &mut self,
+        module_id: i32,
+        template_id: &str,
+    ) -> Result<Option<Document>> {
+        DocumentRepository::find_by_module_and_template(self.conn, module_id, template_id)
+    }
+
+    fn find_by_session(&mut self, session_id: i32) -> Result<Vec<Document>> {
+        DocumentRepository::find_by_session(self.conn, session_id)
+    }
+
+    fn find_by_template(&mut self, template_id: &str) -> Result<Vec<Document>> {
+        DocumentRepository::find_by_template(self.conn, template_id)
+    }
+
+    fn find_incomplete_by_campaign(&mut self, campaign_id: i32) -> Result<Vec<Document>> {
+        DocumentRepository::find_incomplete_by_campaign(self.conn, campaign_id)
+    }
+
+    fn find_completed_by_campaign(&mut self, campaign_id: i32) -> Result<Vec<Document>> {
+        DocumentRepository::find_completed_by_campaign(self.conn, campaign_id)
+    }
+
+    fn update(&mut self, document_id: i32, update: UpdateDocument) -> Result<Document> {
+        DocumentRepository::update(self.conn, document_id, update)
+    }
+
+    fn mark_completed(&mut self, document_id: i32) -> Result<Document> {
+        DocumentRepository::mark_completed(self.conn, document_id)
+    }
+
+    fn delete(&mut self, document_id: i32) -> Result<usize> {
+        DocumentRepository::delete(self.conn, document_id)
+    }
+
+    fn exists_by_path(&mut self, file_path: &str) -> Result<bool> {
+        DocumentRepository::exists_by_path(self.conn, file_path)
+    }
+
+    fn find_handouts_by_campaign(&mut self, campaign_id: i32) -> Result<Vec<Document>> {
+        DocumentRepository::find_handouts_by_campaign(self.conn, campaign_id)
     }
 }

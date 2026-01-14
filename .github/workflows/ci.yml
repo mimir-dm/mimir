@@ -75,3 +75,39 @@ jobs:
 
       - name: Run core tests
         run: angreal test unit --core
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies (ubuntu)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run Rust coverage
+        run: |
+          cargo tarpaulin -p mimir-dm-core -p mimir-dm-llm \
+            --out Html --out Xml \
+            --output-dir target/coverage \
+            --ignore-tests \
+            --no-fail-fast \
+            -- --test-threads=1
+        continue-on-error: true
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            target/coverage/tarpaulin-report.html
+            target/coverage/cobertura.xml
+          retention-days: 30
