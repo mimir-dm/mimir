@@ -2,8 +2,20 @@
 //!
 //! This module contains all the data structures for static game content
 //! like spells, items, monsters, classes, and more.
+//!
+//! # Module Organization
+//!
+//! - **Entity modules** (`monster.rs`, `class.rs`, etc.) - Hand-maintained types
+//!   with database mapping and custom serialization
+//! - **`types`** - Shared polymorphic types used across entities
+//! - **`schema`** - Schema management and download utilities
+//! - **`generated`** - Reference types generated from JSON Schema (feature-gated)
 
 pub mod types;
+pub mod schema;
+
+#[cfg(feature = "generated-types")]
+pub mod generated;
 pub mod action;
 pub mod background;
 pub mod book;
@@ -126,6 +138,10 @@ pub use types::{
     PrerequisiteRace,
     // Spell types
     AdditionalSpellEntry, AdditionalSpellList, AdditionalSpells, SpellcastingAbility,
+    ConsumeValue,
+    // Starting Equipment types
+    StartingEquipmentEntry, StartingEquipmentChoiceGroup, StartingEquipmentItem,
+    StartingEquipmentItemObject,
     // Source types
     OtherSource,
 };

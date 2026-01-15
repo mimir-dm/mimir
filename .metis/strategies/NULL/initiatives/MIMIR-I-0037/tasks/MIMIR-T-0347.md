@@ -4,14 +4,14 @@ level: task
 title: "Remaining Entity Type Migrations"
 short_code: "MIMIR-T-0347"
 created_at: 2026-01-14T15:49:22.610803+00:00
-updated_at: 2026-01-14T15:49:22.610803+00:00
+updated_at: 2026-01-15T02:21:07.362970+00:00
 parent: MIMIR-I-0037
 blocked_by: [MIMIR-T-0343]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -71,6 +71,10 @@ Complete type migrations for remaining catalog entities: background, spell, and 
 - `background.rs`
 - `spell.rs`
 - `optionalfeature.rs`
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -144,4 +148,36 @@ Complete type migrations for remaining catalog entities: background, spell, and 
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+### Session 2026-01-15
+
+**Completed Remaining Entity Type Migrations**
+
+1. **Analyzed all three target files**:
+   - `background.rs`: `starting_equipment: Vec<serde_json::Value>` on line 16
+   - `spell.rs`: `consume: Option<serde_json::Value>` in MaterialComponent::Object
+   - `optionalfeature.rs`: `additional_spells: Option<Vec<serde_json::Value>>`
+
+2. **Examined actual JSON data** to understand polymorphic patterns:
+   - `startingEquipment`: Array of choice groups with `_` for default items, `a`/`b`/`c` for alternatives
+   - Items can be strings ("common clothes|phb") or objects with item/special/displayName/quantity/containsValue
+   - `consume`: Can be boolean `true` or string `"optional"`
+   - `additionalSpells`: Already has existing `AdditionalSpells` type in types.rs
+
+3. **Added new types to types.rs**:
+   - `StartingEquipmentEntry` enum (wrapping ChoiceGroup)
+   - `StartingEquipmentChoiceGroup` struct with default_items, a, b, c fields
+   - `StartingEquipmentItem` enum (ItemRef or Object variants)
+   - `StartingEquipmentItemObject` struct with item, special, display_name, quantity, contains_value
+   - `ConsumeValue` enum (Flag or Text variants) with helper methods
+
+4. **Updated model files**:
+   - `background.rs`: Changed `Vec<serde_json::Value>` to `Vec<StartingEquipmentEntry>`
+   - `spell.rs`: Changed `Option<serde_json::Value>` to `Option<ConsumeValue>`
+   - `optionalfeature.rs`: Changed `Option<Vec<serde_json::Value>>` to `Option<Vec<AdditionalSpells>>`
+
+5. **Added 12 deserialization tests**:
+   - Background: test_parse_starting_equipment_with_items, test_parse_starting_equipment_with_choices, test_parse_empty_starting_equipment
+   - Spell: test_parse_consume_bool_true, test_parse_consume_optional, test_parse_material_component_no_consume, test_parse_material_component_text, test_parse_material_component_bool
+   - OptionalFeature: test_parse_additional_spells_innate, test_parse_optional_feature_no_additional_spells, test_optional_feature_summary_grants_spells, test_optional_feature_summary_no_spells
+
+**Results**: All 12 new tests pass, all 465 existing tests continue to pass.

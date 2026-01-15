@@ -1,6 +1,6 @@
 //! Spell catalog models
 
-use super::types::Entry;
+use super::types::{ConsumeValue, Entry};
 use crate::schema::catalog_spells;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -130,7 +130,7 @@ pub enum MaterialComponent {
         #[serde(default)]
         cost: Option<u32>,
         #[serde(default)]
-        consume: Option<serde_json::Value>, // Can be bool or "optional"
+        consume: Option<ConsumeValue>,
     },
     Bool(bool), // Sometimes it's just true/false
 }
@@ -464,5 +464,83 @@ impl NewCatalogSpell {
             source: source.to_string(),
             full_spell_json: serde_json::to_string(&spell).unwrap_or_else(|_| "{}".to_string()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_consume_bool_true() {
+        let json = r#"{
+            "text": "a diamond worth at least 1,000 gp, which the spell consumes",
+            "cost": 100000,
+            "consume": true
+        }"#;
+
+        let mc: MaterialComponent = serde_json::from_str(json).unwrap();
+        if let MaterialComponent::Object { consume, .. } = mc {
+            assert!(consume.is_some());
+            let consume_val = consume.unwrap();
+            assert!(consume_val.is_consumed());
+            assert!(!consume_val.is_optional());
+        } else {
+            panic!("Expected Object variant");
+        }
+    }
+
+    #[test]
+    fn test_parse_consume_optional() {
+        let json = r#"{
+            "text": "holy water and powdered ruby",
+            "cost": 100000,
+            "consume": "optional"
+        }"#;
+
+        let mc: MaterialComponent = serde_json::from_str(json).unwrap();
+        if let MaterialComponent::Object { consume, .. } = mc {
+            assert!(consume.is_some());
+            let consume_val = consume.unwrap();
+            assert!(!consume_val.is_consumed());
+            assert!(consume_val.is_optional());
+        } else {
+            panic!("Expected Object variant");
+        }
+    }
+
+    #[test]
+    fn test_parse_material_component_no_consume() {
+        let json = r#"{
+            "text": "a piece of string",
+            "cost": 0
+        }"#;
+
+        let mc: MaterialComponent = serde_json::from_str(json).unwrap();
+        if let MaterialComponent::Object { consume, .. } = mc {
+            assert!(consume.is_none());
+        } else {
+            panic!("Expected Object variant");
+        }
+    }
+
+    #[test]
+    fn test_parse_material_component_text() {
+        let json = r#""a bit of fur""#;
+
+        let mc: MaterialComponent = serde_json::from_str(json).unwrap();
+        if let MaterialComponent::Text(text) = mc {
+            assert_eq!(text, "a bit of fur");
+        } else {
+            panic!("Expected Text variant");
+        }
+    }
+
+    #[test]
+    fn test_parse_material_component_bool() {
+        let json = "true";
+
+        let mc: MaterialComponent = serde_json::from_str(json).unwrap();
+        assert!(matches!(mc, MaterialComponent::Bool(true)));
     }
 }

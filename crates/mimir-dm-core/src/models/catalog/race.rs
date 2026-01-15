@@ -1,6 +1,6 @@
 //! D&D 5e Race models for catalog
 
-use super::types::{AbilityBonus, DamageModifier, Entry, Image, ProficiencyItem};
+use super::types::{AbilityBonus, DamageModifier, Entry, HeightAndWeight, Image, Lineage, ProficiencyItem, RaceSpeed};
 use crate::schema::catalog_races;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ pub struct Race {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub speed: Option<serde_json::Value>, // Can be number or Speed object
+    pub speed: Option<RaceSpeed>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ability: Option<Vec<AbilityBonus>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -49,14 +49,14 @@ pub struct Race {
     #[serde(rename = "soundClip")]
     pub sound_clip: Option<SoundClip>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lineage: Option<serde_json::Value>, // Can be boolean true or string (source)
+    pub lineage: Option<Lineage>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub race_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub race_source: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "heightAndWeight")]
-    pub height_and_weight: Option<serde_json::Value>,
+    pub height_and_weight: Option<HeightAndWeight>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "hasFluff")]
     pub has_fluff: Option<bool>,
@@ -81,7 +81,7 @@ pub struct Subrace {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ability: Option<Vec<AbilityBonus>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub speed: Option<serde_json::Value>, // Can be number or Speed object
+    pub speed: Option<RaceSpeed>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub darkvision: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -240,13 +240,11 @@ impl From<&Race> for RaceSummary {
             .unwrap_or("Medium")
             .to_string();
 
-        let speed = match &race.speed {
-            Some(serde_json::Value::Number(n)) => n.as_i64().unwrap_or(30) as i32,
-            Some(serde_json::Value::Object(obj)) => {
-                obj.get("walk").and_then(|v| v.as_i64()).unwrap_or(30) as i32
-            }
-            _ => 30,
-        };
+        let speed = race
+            .speed
+            .as_ref()
+            .map(|s| s.walk_speed())
+            .unwrap_or(30);
 
         let ability_bonuses = format_ability_bonuses(race.ability.as_ref());
 
@@ -267,13 +265,11 @@ impl From<&Subrace> for RaceSummary {
     fn from(subrace: &Subrace) -> Self {
         let ability_bonuses = format_ability_bonuses(subrace.ability.as_ref());
 
-        let speed = match &subrace.speed {
-            Some(serde_json::Value::Number(n)) => n.as_i64().unwrap_or(30) as i32,
-            Some(serde_json::Value::Object(obj)) => {
-                obj.get("walk").and_then(|v| v.as_i64()).unwrap_or(30) as i32
-            }
-            _ => 30,
-        };
+        let speed = subrace
+            .speed
+            .as_ref()
+            .map(|s| s.walk_speed())
+            .unwrap_or(30);
 
         // Format subrace name as "Subrace, Race" for better sorting
         let name = match &subrace.name {
@@ -445,5 +441,132 @@ impl From<&Subrace> for NewCatalogRace {
             source: subrace.source.clone(),
             full_race_json: serde_json::to_string(subrace).unwrap_or_default(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_race_speed_number() {
+        let json = r#"{"name": "Human", "source": "PHB", "speed": 30}"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        assert_eq!(race.name, "Human");
+        let speed = race.speed.unwrap();
+        assert_eq!(speed.walk_speed(), 30);
+    }
+
+    #[test]
+    fn test_parse_race_speed_object() {
+        let json = r#"{"name": "Aarakocra", "source": "EEPC", "speed": {"walk": 25, "fly": 50}}"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        let speed = race.speed.unwrap();
+        assert_eq!(speed.walk_speed(), 25);
+        match speed {
+            RaceSpeed::Object(obj) => {
+                assert_eq!(obj.fly.unwrap().as_number(), 50);
+            }
+            _ => panic!("Expected Object variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_race_speed_with_swim_true() {
+        // Some races have "swim": true meaning swim speed equals walk speed
+        let json = r#"{"name": "Giff", "source": "AAG", "speed": {"walk": 30, "swim": true}}"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        let speed = race.speed.unwrap();
+        match speed {
+            RaceSpeed::Object(obj) => {
+                assert!(obj.swim.as_ref().unwrap().is_equal_to_walk());
+            }
+            _ => panic!("Expected Object variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_lineage_string() {
+        let json = r#"{"name": "Custom Lineage", "source": "TCE", "lineage": "VRGR"}"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        match race.lineage.unwrap() {
+            Lineage::Source(s) => assert_eq!(s, "VRGR"),
+            _ => panic!("Expected Source variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_lineage_bool() {
+        let json = r#"{"name": "Variant Human", "source": "PHB", "lineage": true}"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        match race.lineage.unwrap() {
+            Lineage::Flag(b) => assert!(b),
+            _ => panic!("Expected Flag variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_height_and_weight() {
+        let json = r#"{
+            "name": "Dragonborn",
+            "source": "PHB",
+            "heightAndWeight": {
+                "baseHeight": 66,
+                "baseWeight": 175,
+                "heightMod": "2d8",
+                "weightMod": "2d6"
+            }
+        }"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        let hw = race.height_and_weight.unwrap();
+        assert_eq!(hw.base_height, Some(66));
+        assert_eq!(hw.base_weight, Some(175));
+        assert_eq!(hw.height_mod, Some("2d8".to_string()));
+        assert_eq!(hw.weight_mod, Some("2d6".to_string()));
+    }
+
+    #[test]
+    fn test_parse_minimal_race() {
+        let json = r#"{"name": "Test Race", "source": "TEST"}"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        assert_eq!(race.name, "Test Race");
+        assert_eq!(race.source, "TEST");
+        assert!(race.speed.is_none());
+        assert!(race.lineage.is_none());
+        assert!(race.height_and_weight.is_none());
+    }
+
+    #[test]
+    fn test_race_summary_from_race() {
+        let json = r#"{
+            "name": "Elf",
+            "source": "PHB",
+            "size": ["M"],
+            "speed": 30,
+            "entries": []
+        }"#;
+        let race: Race = serde_json::from_str(json).unwrap();
+        let summary = RaceSummary::from(&race);
+        assert_eq!(summary.name, "Elf");
+        assert_eq!(summary.size, "Medium");
+        assert_eq!(summary.speed, 30);
+        assert!(!summary.is_subrace);
+    }
+
+    #[test]
+    fn test_subrace_speed() {
+        let json = r#"{
+            "name": "Wood Elf",
+            "source": "PHB",
+            "raceName": "Elf",
+            "raceSource": "PHB",
+            "speed": 35,
+            "entries": []
+        }"#;
+        let subrace: Subrace = serde_json::from_str(json).unwrap();
+        let summary = RaceSummary::from(&subrace);
+        assert_eq!(summary.speed, 35);
+        assert!(summary.is_subrace);
+        assert_eq!(summary.parent_race, Some("Elf".to_string()));
     }
 }

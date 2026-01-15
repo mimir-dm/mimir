@@ -2,7 +2,7 @@
 
 use super::types::{
     AlignmentValue, ArmorClassValue, ChallengeRatingValue, CreatureTypeValue, Entry,
-    HitPointsValue, Image, SpeedValue,
+    HitPointsValue, Image, LegendaryGroup, SpeedValue, SrdValue,
 };
 use crate::schema::catalog_monsters;
 use diesel::prelude::*;
@@ -56,14 +56,14 @@ pub struct Monster {
     pub bonus: Option<Vec<MonsterAction>>,
     pub reaction: Option<Vec<MonsterAction>>,
     pub legendary: Option<Vec<MonsterAction>>,
-    pub legendary_group: Option<serde_json::Value>, // Complex structure, keep as Value
+    pub legendary_group: Option<LegendaryGroup>,
     pub mythic: Option<Vec<MonsterAction>>,
 
     // Environment
     pub environment: Option<Vec<String>>,
 
     // Flags
-    pub srd: Option<serde_json::Value>, // Can be true or "..."
+    pub srd: Option<SrdValue>,
     pub basic_rules: Option<bool>,
 
     // Token image
@@ -80,8 +80,15 @@ pub type HitPoints = HitPointsValue;
 /// A monster action, trait, reaction, or legendary action.
 ///
 /// These are `{name, entries}` objects distinct from the general Entry system.
-/// We use `serde_json::Value` for entries to handle the full variety of 5etools
-/// entry formats without strict typing - these get passed through to the frontend.
+///
+/// # Why entries uses `serde_json::Value`
+///
+/// We deliberately keep entries as `Value` rather than using the typed `Entry` enum because:
+/// 1. The frontend handles 5etools tag processing (e.g., `{@atk mw}`, `{@damage 1d8}`)
+/// 2. Using the typed Entry enum would lose information for unknown entry types
+/// 3. This is a pass-through field - Rust doesn't need to process the content
+///
+/// See `types.rs` for the typed `Entry` enum when Rust-side processing is needed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonsterAction {
     pub name: Option<String>,
@@ -443,5 +450,177 @@ impl From<&Monster> for NewCatalogMonster {
             fluff_json: None, // Fluff data will be set separately during import
             token_image_path,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_legendary_group_deserialization() {
+        let json = json!({
+            "name": "Aboleth",
+            "source": "MM"
+        });
+
+        let group: LegendaryGroup = serde_json::from_value(json).unwrap();
+        assert_eq!(group.name, "Aboleth");
+        assert_eq!(group.source, "MM");
+    }
+
+    #[test]
+    fn test_srd_value_boolean() {
+        let json = json!(true);
+        let srd: SrdValue = serde_json::from_value(json).unwrap();
+        assert!(matches!(srd, SrdValue::Flag(true)));
+
+        let json = json!(false);
+        let srd: SrdValue = serde_json::from_value(json).unwrap();
+        assert!(matches!(srd, SrdValue::Flag(false)));
+    }
+
+    #[test]
+    fn test_srd_value_string() {
+        let json = json!("Apparatus of the Crab");
+        let srd: SrdValue = serde_json::from_value(json).unwrap();
+        assert!(matches!(srd, SrdValue::Name(ref s) if s == "Apparatus of the Crab"));
+    }
+
+    #[test]
+    fn test_monster_with_legendary_group() {
+        let json = json!({
+            "name": "Adult Black Dragon",
+            "source": "MM",
+            "legendaryGroup": {
+                "name": "Black Dragon",
+                "source": "MM"
+            },
+            "srd": true
+        });
+
+        let monster: Monster = serde_json::from_value(json).unwrap();
+        assert_eq!(monster.name, "Adult Black Dragon");
+        assert!(monster.legendary_group.is_some());
+        let lg = monster.legendary_group.unwrap();
+        assert_eq!(lg.name, "Black Dragon");
+        assert_eq!(lg.source, "MM");
+        assert!(matches!(monster.srd, Some(SrdValue::Flag(true))));
+    }
+
+    #[test]
+    fn test_monster_without_legendary_group() {
+        let json = json!({
+            "name": "Goblin",
+            "source": "MM",
+            "srd": true
+        });
+
+        let monster: Monster = serde_json::from_value(json).unwrap();
+        assert_eq!(monster.name, "Goblin");
+        assert!(monster.legendary_group.is_none());
+    }
+
+    #[test]
+    fn test_monster_action_with_entries() {
+        let json = json!({
+            "name": "Multiattack",
+            "entries": [
+                "The dragon makes three attacks: one with its bite and two with its claws."
+            ]
+        });
+
+        let action: MonsterAction = serde_json::from_value(json).unwrap();
+        assert_eq!(action.name.as_deref(), Some("Multiattack"));
+        assert!(action.entries.is_some());
+        let entries = action.entries.unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].as_str().unwrap(), "The dragon makes three attacks: one with its bite and two with its claws.");
+    }
+
+    #[test]
+    fn test_full_monster_deserialization() {
+        // Test with realistic MM monster data
+        let json = json!({
+            "name": "Aboleth",
+            "source": "MM",
+            "page": 13,
+            "size": ["L"],
+            "type": "aberration",
+            "alignment": ["L", "E"],
+            "ac": [{"ac": 17, "from": ["natural armor"]}],
+            "hp": {"average": 135, "formula": "18d10 + 36"},
+            "speed": {"walk": 10, "swim": 40},
+            "str": 21,
+            "dex": 9,
+            "con": 15,
+            "int": 18,
+            "wis": 15,
+            "cha": 18,
+            "save": {"con": "+6", "int": "+8", "wis": "+6"},
+            "skill": {"history": "+12", "perception": "+10"},
+            "senses": ["darkvision 120 ft."],
+            "passive": 20,
+            "languages": ["Deep Speech", "telepathy 120 ft."],
+            "cr": "10",
+            "trait": [
+                {
+                    "name": "Amphibious",
+                    "entries": ["The aboleth can breathe air and water."]
+                }
+            ],
+            "action": [
+                {
+                    "name": "Multiattack",
+                    "entries": ["The aboleth makes three tentacle attacks."]
+                }
+            ],
+            "legendary": [
+                {
+                    "name": "Detect",
+                    "entries": ["The aboleth makes a Wisdom (Perception) check."]
+                }
+            ],
+            "legendaryGroup": {
+                "name": "Aboleth",
+                "source": "MM"
+            },
+            "environment": ["underdark"],
+            "srd": true,
+            "hasToken": true
+        });
+
+        let monster: Monster = serde_json::from_value(json).unwrap();
+
+        // Core fields
+        assert_eq!(monster.name, "Aboleth");
+        assert_eq!(monster.source, "MM");
+        assert_eq!(monster.page, Some(13));
+
+        // Size and type
+        assert_eq!(monster.size, Some(vec!["L".to_string()]));
+
+        // Ability scores
+        assert_eq!(monster.str, Some(21));
+        assert_eq!(monster.dex, Some(9));
+        assert_eq!(monster.con, Some(15));
+        assert_eq!(monster.int, Some(18));
+        assert_eq!(monster.wis, Some(15));
+        assert_eq!(monster.cha, Some(18));
+
+        // Legendary group
+        assert!(monster.legendary_group.is_some());
+        let lg = monster.legendary_group.unwrap();
+        assert_eq!(lg.name, "Aboleth");
+        assert_eq!(lg.source, "MM");
+
+        // SRD
+        assert!(matches!(monster.srd, Some(SrdValue::Flag(true))));
+
+        // Actions
+        assert!(monster.action.is_some());
+        assert!(monster.legendary.is_some());
+        assert!(monster.trait_entries.is_some());
     }
 }

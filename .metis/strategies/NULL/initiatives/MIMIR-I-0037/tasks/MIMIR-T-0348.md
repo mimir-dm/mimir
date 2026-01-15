@@ -4,14 +4,14 @@ level: task
 title: "Import Test Suite"
 short_code: "MIMIR-T-0348"
 created_at: 2026-01-14T15:49:22.715484+00:00
-updated_at: 2026-01-14T15:49:22.715484+00:00
+updated_at: 2026-01-15T02:35:41.782624+00:00
 parent: MIMIR-I-0037
 blocked_by: [MIMIR-T-0344, MIMIR-T-0345, MIMIR-T-0346, MIMIR-T-0347]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -70,6 +70,10 @@ Create comprehensive import test suite with fixtures from real 5etools data, val
 **Target:** `crates/mimir-dm-core/tests/integrations/import/`
 
 Create test infrastructure to validate catalog imports with real 5etools data.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -145,4 +149,32 @@ Create test infrastructure to validate catalog imports with real 5etools data.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+### Session 2026-01-15
+
+**Completed Import Test Suite**
+
+1. **Created directory structure**:
+   - `tests/integrations/import/` - Test module
+   - `tests/integrations/import/fixtures/` - JSON fixtures from real 5etools data
+
+2. **Added test fixtures** (extracted from 5etools v1.210.46):
+   - `monsters.json` - 10 monsters (Aboleth, Goblin, Dragon Turtle, Lich, etc.)
+   - `spells.json` - 10 spells (Fireball, Magic Missile, Clone, Wish, etc.)
+   - `classes.json` - 5 classes (Fighter, Wizard, Cleric, Rogue, Paladin)
+   - `races.json` - 8 races (Human, Elf, Dwarf, Halfling, etc.)
+   - `items.json` - 9 items (Bag of Holding, Staff of the Magi, etc.)
+   - `backgrounds.json` - 8 backgrounds (Acolyte, Criminal, Noble, etc.)
+
+3. **Wrote 18 deserialization tests**:
+   - **Monster tests**: import, AC polymorphism, CR polymorphism, roundtrip serialization
+   - **Spell tests**: import, material component consume field, roundtrip serialization
+   - **Class tests**: import, hit dice typed, roundtrip serialization
+   - **Race tests**: import, speed polymorphism, roundtrip serialization
+   - **Item tests**: import, roundtrip serialization
+   - **Background tests**: import, starting equipment typed, roundtrip serialization
+
+4. **Documented fixture update process** in module docstring:
+   - Instructions for updating fixtures when 5etools schema changes
+   - Example jq commands for extracting entity subsets
+
+**Results**: All 18 import tests pass, total test count increased from 465 to 483.

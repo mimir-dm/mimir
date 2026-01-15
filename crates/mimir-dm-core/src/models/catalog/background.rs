@@ -1,4 +1,4 @@
-use super::types::{Entry, Image, ProficiencyItem};
+use super::types::{Entry, Image, ProficiencyItem, StartingEquipmentEntry};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,7 +13,7 @@ pub struct Background {
     #[serde(rename = "toolProficiencies", default)]
     pub tool_proficiencies: Vec<ProficiencyItem>,
     #[serde(rename = "startingEquipment", default)]
-    pub starting_equipment: Vec<serde_json::Value>,
+    pub starting_equipment: Vec<StartingEquipmentEntry>,
     #[serde(default)]
     pub entries: Vec<Entry>,
     #[serde(rename = "hasFluff")]
@@ -226,4 +226,89 @@ pub struct BackgroundFilters {
     pub search_pattern: Option<String>,
     pub sources: Option<Vec<String>>,
     pub has_tools: Option<bool>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_starting_equipment_with_items() {
+        let json = r#"{
+            "name": "Acolyte",
+            "source": "PHB",
+            "skillProficiencies": [],
+            "languageProficiencies": [],
+            "toolProficiencies": [],
+            "startingEquipment": [
+                {
+                    "_": [
+                        {
+                            "item": "holy symbol|phb",
+                            "displayName": "holy symbol (a gift)"
+                        },
+                        {
+                            "special": "sticks of incense",
+                            "quantity": 5
+                        },
+                        "common clothes|phb",
+                        {
+                            "item": "pouch|phb",
+                            "containsValue": 1500
+                        }
+                    ]
+                }
+            ],
+            "entries": []
+        }"#;
+
+        let bg: Background = serde_json::from_str(json).unwrap();
+        assert_eq!(bg.name, "Acolyte");
+        assert_eq!(bg.starting_equipment.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_starting_equipment_with_choices() {
+        let json = r#"{
+            "name": "Acolyte",
+            "source": "PHB",
+            "skillProficiencies": [],
+            "languageProficiencies": [],
+            "toolProficiencies": [],
+            "startingEquipment": [
+                {
+                    "_": ["common clothes|phb"],
+                    "a": [{"item": "book|phb", "displayName": "prayer book"}],
+                    "b": [{"special": "prayer wheel"}]
+                }
+            ],
+            "entries": []
+        }"#;
+
+        let bg: Background = serde_json::from_str(json).unwrap();
+        assert_eq!(bg.name, "Acolyte");
+        assert_eq!(bg.starting_equipment.len(), 1);
+
+        if let StartingEquipmentEntry::ChoiceGroup(group) = &bg.starting_equipment[0] {
+            assert!(group.a.is_some());
+            assert!(group.b.is_some());
+        } else {
+            panic!("Expected ChoiceGroup");
+        }
+    }
+
+    #[test]
+    fn test_parse_empty_starting_equipment() {
+        let json = r#"{
+            "name": "Custom",
+            "source": "TEST",
+            "skillProficiencies": [],
+            "languageProficiencies": [],
+            "toolProficiencies": [],
+            "entries": []
+        }"#;
+
+        let bg: Background = serde_json::from_str(json).unwrap();
+        assert!(bg.starting_equipment.is_empty());
+    }
 }

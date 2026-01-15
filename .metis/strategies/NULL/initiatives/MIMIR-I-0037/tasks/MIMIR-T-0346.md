@@ -4,14 +4,14 @@ level: task
 title: "Race Type Migration"
 short_code: "MIMIR-T-0346"
 created_at: 2026-01-14T15:49:22.506975+00:00
-updated_at: 2026-01-14T15:49:22.506975+00:00
+updated_at: 2026-01-15T02:02:39.595167+00:00
 parent: MIMIR-I-0037
 blocked_by: [MIMIR-T-0343]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -70,6 +70,10 @@ Migrate the race model (`race.rs`) from 4 `serde_json::Value` fields to fully ty
 **Target:** `crates/mimir-dm-core/src/models/catalog/race.rs`
 
 The race model has 4 Value fields with polymorphic behavior that needs proper typing.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -143,4 +147,45 @@ The race model has 4 Value fields with polymorphic behavior that needs proper ty
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+### Session 2026-01-15
+
+**Completed Race Type Migration**
+
+1. **Analyzed race.rs Value fields** - Found 4 fields: `speed` and `lineage` and `height_and_weight` in Race, `speed` in Subrace
+
+2. **Examined actual JSON data** - Reviewed PHB and AAG race data to understand polymorphic patterns:
+   - `speed`: Can be number (30) or object with walk/fly/swim/climb/burrow keys
+   - Speed values can be numbers or `true` (meaning "equal to walk speed")
+   - `lineage`: Can be boolean flag or source string like "VRGR"
+   - `heightAndWeight`: Structured with baseHeight, baseWeight, heightMod, weightMod
+
+3. **Added new types to types.rs**:
+   - `RaceSpeed` enum (Number or Object variants) with `walk_speed()` helper
+   - `RaceSpeedObject` struct with optional movement types
+   - Helper methods on `SpeedValue` (`as_number()`, `is_equal_to_walk()`)
+   - `Lineage` enum (Flag or Source variants)
+   - `HeightAndWeight` struct
+
+4. **Updated race.rs**:
+   - Changed `speed: Option<Value>` to `speed: Option<RaceSpeed>` (Race and Subrace)
+   - Changed `lineage: Option<Value>` to `lineage: Option<Lineage>`
+   - Changed `height_and_weight: Option<Value>` to `height_and_weight: Option<HeightAndWeight>`
+   - Updated `From<&Race> for RaceSummary` to use typed speed
+   - Updated `From<&Subrace> for RaceSummary` to use typed speed
+
+5. **Fixed dependent services**:
+   - `creation.rs`: Updated speed extraction to use `race.speed.as_ref().map(|s| s.walk_speed()).unwrap_or(30)`
+   - `reference_service.rs`: Updated speed formatting to use typed RaceSpeed
+
+6. **Added 9 deserialization tests**:
+   - test_parse_race_speed_number
+   - test_parse_race_speed_object
+   - test_parse_race_speed_with_swim_true
+   - test_parse_lineage_string
+   - test_parse_lineage_bool
+   - test_parse_height_and_weight
+   - test_parse_minimal_race
+   - test_race_summary_from_race
+   - test_subrace_speed
+
+**Results**: All 9 new tests pass, all 465 existing tests continue to pass.

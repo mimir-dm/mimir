@@ -187,14 +187,10 @@ impl ClassInfo {
                 ))
             })?;
 
-        // Parse hit die
+        // Parse hit die from typed HitDice struct
         let (hit_die, hit_die_value) = if let Some(hd) = &class.hd {
-            if let Some(hd_obj) = hd.as_object() {
-                let faces = hd_obj.get("faces").and_then(|f| f.as_u64()).unwrap_or(6) as i32;
-                (format!("d{}", faces), faces)
-            } else {
-                ("d6".to_string(), 6)
-            }
+            let faces = hd.faces as i32;
+            (format!("d{}", faces), faces)
         } else {
             ("d6".to_string(), 6)
         };
@@ -232,37 +228,27 @@ impl ClassInfo {
         // Check if class table groups contain ASI information
         if let Some(table_groups) = &class.class_table_groups {
             for group in table_groups {
-                if let Some(group_obj) = group.as_object() {
-                    // Look for "Ability Score Improvement" or similar columns
-                    if let Some(col_labels) = group_obj.get("colLabels").and_then(|c| c.as_array())
-                    {
-                        for label in col_labels {
-                            if let Some(label_str) = label.as_str() {
-                                if label_str.contains("Ability Score") || label_str.contains("ASI")
-                                {
-                                    // Found ASI column, now extract levels from rows
-                                    if let Some(rows) =
-                                        group_obj.get("rows").and_then(|r| r.as_array())
-                                    {
-                                        let mut levels = Vec::new();
-                                        for (idx, row) in rows.iter().enumerate() {
-                                            if let Some(row_array) = row.as_array() {
-                                                // Check if this row has an ASI marker
-                                                for cell in row_array {
-                                                    if let Some(cell_str) = cell.as_str() {
-                                                        if cell_str.contains("Ability Score")
-                                                            || cell_str == "✓"
-                                                        {
-                                                            levels.push((idx + 1) as i32);
-                                                        }
-                                                    }
-                                                }
+                // Look for "Ability Score Improvement" or similar columns
+                if let Some(col_labels) = &group.col_labels {
+                    for label in col_labels {
+                        if label.contains("Ability Score") || label.contains("ASI") {
+                            // Found ASI column, now extract levels from rows
+                            if let Some(rows) = &group.rows {
+                                let mut levels = Vec::new();
+                                for (idx, row) in rows.iter().enumerate() {
+                                    // Check if this row has an ASI marker
+                                    for cell in row {
+                                        if let Some(cell_str) = cell.as_str() {
+                                            if cell_str.contains("Ability Score")
+                                                || cell_str == "✓"
+                                            {
+                                                levels.push((idx + 1) as i32);
                                             }
                                         }
-                                        if !levels.is_empty() {
-                                            return levels;
-                                        }
                                     }
+                                }
+                                if !levels.is_empty() {
+                                    return levels;
                                 }
                             }
                         }
@@ -300,34 +286,44 @@ impl MulticlassPrerequisites {
             .map_err(|e| DbError::InvalidData(format!("Failed to get class: {}", e)))?;
 
         if let Some(class) = class {
-            // Parse multiclassing requirements from class JSON
+            // Parse multiclassing requirements from typed Multiclassing struct
             if let Some(multiclassing) = &class.multiclassing {
-                if let Some(requirements) = multiclassing
-                    .as_object()
-                    .and_then(|m| m.get("requirements"))
-                {
+                if let Some(requirements) = &multiclassing.requirements {
                     let mut required_abilities = Vec::new();
 
-                    // Requirements can be in different formats
-                    if let Some(req_obj) = requirements.as_object() {
-                        // Format: {"str": 13, "cha": 13}
-                        for (ability_abbr, value) in req_obj {
-                            if let Some(min_score) = value.as_i64() {
-                                let ability_name = Self::expand_ability_name(ability_abbr);
-                                required_abilities.push((ability_name, min_score as i32));
+                    // Extract ability requirements from typed struct
+                    if let Some(min) = requirements.str {
+                        required_abilities.push(("Strength".to_string(), min));
+                    }
+                    if let Some(min) = requirements.dex {
+                        required_abilities.push(("Dexterity".to_string(), min));
+                    }
+                    if let Some(min) = requirements.con {
+                        required_abilities.push(("Constitution".to_string(), min));
+                    }
+                    if let Some(min) = requirements.int {
+                        required_abilities.push(("Intelligence".to_string(), min));
+                    }
+                    if let Some(min) = requirements.wis {
+                        required_abilities.push(("Wisdom".to_string(), min));
+                    }
+                    if let Some(min) = requirements.cha {
+                        required_abilities.push(("Charisma".to_string(), min));
+                    }
+
+                    // Handle OR requirements - for simplicity, just include all alternatives
+                    if let Some(or_reqs) = &requirements.or {
+                        for or_req in or_reqs {
+                            if let Some(min) = or_req.str {
+                                required_abilities.push(("Strength".to_string(), min));
                             }
-                        }
-                    } else if let Some(req_array) = requirements.as_array() {
-                        // Format: [{"str": 13}, {"cha": 13}] or ["Strength 13", "Charisma 13"]
-                        for req in req_array {
-                            if let Some(req_obj) = req.as_object() {
-                                for (ability_abbr, value) in req_obj {
-                                    if let Some(min_score) = value.as_i64() {
-                                        let ability_name = Self::expand_ability_name(ability_abbr);
-                                        required_abilities.push((ability_name, min_score as i32));
-                                    }
-                                }
+                            if let Some(min) = or_req.dex {
+                                required_abilities.push(("Dexterity".to_string(), min));
                             }
+                            if let Some(min) = or_req.cha {
+                                required_abilities.push(("Charisma".to_string(), min));
+                            }
+                            // Add other abilities as needed
                         }
                     }
 

@@ -604,3 +604,235 @@ pub enum SpellcastingAbility {
     /// Choice of abilities
     Choose { choose: Vec<String> },
 }
+
+// =============================================================================
+// Legendary Group Types
+// =============================================================================
+
+/// Reference to a legendary group definition.
+///
+/// 5etools uses this to link creatures to their legendary group data,
+/// which contains lair actions and regional effects shared by related creatures.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegendaryGroup {
+    /// Name of the legendary group (e.g., "Aboleth", "Black Dragon")
+    pub name: String,
+    /// Source book containing the legendary group definition
+    pub source: String,
+}
+
+// =============================================================================
+// SRD Types
+// =============================================================================
+
+/// SRD (System Reference Document) status indicator.
+///
+/// Most entries use a boolean `true` to indicate SRD inclusion.
+/// Some entries (especially items) use a string to specify an alternate
+/// SRD name when it differs from the official name.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SrdValue {
+    /// Boolean flag - true means included in SRD
+    Flag(bool),
+    /// Alternative SRD name (e.g., "Apparatus of the Crab" for "Apparatus of Kwalish")
+    Name(String),
+}
+
+// =============================================================================
+// Race Types
+// =============================================================================
+
+/// Race speed - can be a simple number or a structured object with multiple movement types.
+///
+/// Examples:
+/// - Simple: `30` (walk 30 ft)
+/// - Object: `{"walk": 30, "fly": 30}` or `{"walk": 30, "swim": true}` (swim equals walk)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RaceSpeed {
+    /// Simple walking speed in feet
+    Number(i32),
+    /// Structured speed with multiple movement types
+    Object(RaceSpeedObject),
+}
+
+impl RaceSpeed {
+    /// Get the walking speed (or base speed if only a number)
+    pub fn walk_speed(&self) -> i32 {
+        match self {
+            RaceSpeed::Number(n) => *n,
+            RaceSpeed::Object(obj) => obj.walk.as_ref().map(|v| v.as_number()).unwrap_or(30),
+        }
+    }
+}
+
+/// Structured speed object with optional movement types.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RaceSpeedObject {
+    #[serde(default)]
+    pub walk: Option<SpeedValue>,
+    #[serde(default)]
+    pub fly: Option<SpeedValue>,
+    #[serde(default)]
+    pub swim: Option<SpeedValue>,
+    #[serde(default)]
+    pub climb: Option<SpeedValue>,
+    #[serde(default)]
+    pub burrow: Option<SpeedValue>,
+    /// Whether flight requires no armor
+    #[serde(default)]
+    pub fly_can_hover: Option<bool>,
+}
+
+impl SpeedValue {
+    /// Get the numeric speed value
+    pub fn as_number(&self) -> i32 {
+        match self {
+            SpeedValue::Number(n) => *n,
+            SpeedValue::WithCondition { number, .. } => *number,
+            SpeedValue::Flag(_) => 0, // true means "equal to walk", caller should handle
+        }
+    }
+
+    /// Check if this is a "true" flag meaning "equal to walk"
+    pub fn is_equal_to_walk(&self) -> bool {
+        matches!(self, SpeedValue::Flag(true))
+    }
+}
+
+/// Lineage indicator - boolean or source string for legacy races.
+///
+/// In newer 5e content, `lineage: true` indicates a race follows the
+/// Customizing Your Origin rules. A string value (e.g., "VRGR") indicates
+/// the source where the lineage rules are defined.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum Lineage {
+    /// Boolean flag (true = uses lineage rules)
+    Flag(bool),
+    /// Source string where lineage rules are defined
+    Source(String),
+}
+
+/// Height and weight generation parameters for a race.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HeightAndWeight {
+    /// Base height in inches
+    #[serde(default)]
+    pub base_height: Option<i32>,
+    /// Height modifier dice expression (e.g., "2d8")
+    #[serde(default)]
+    pub height_mod: Option<String>,
+    /// Base weight in pounds
+    #[serde(default)]
+    pub base_weight: Option<i32>,
+    /// Weight modifier dice expression (e.g., "2d6")
+    #[serde(default)]
+    pub weight_mod: Option<String>,
+}
+
+// =============================================================================
+// Starting Equipment Types
+// =============================================================================
+
+/// An entry in starting equipment for backgrounds.
+///
+/// Starting equipment can be:
+/// - An item reference: `"common clothes|phb"`
+/// - An equipment object with item and metadata
+/// - A choice group with alternatives (a/b keys)
+///
+/// The `_` key represents the default/required items, while `a`, `b`, etc.
+/// represent alternative choices.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StartingEquipmentEntry {
+    /// A choice group with default items and alternatives
+    ChoiceGroup(StartingEquipmentChoiceGroup),
+}
+
+/// A choice group for starting equipment.
+///
+/// Uses `_` for default items and letter keys (a, b, etc.) for alternatives.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StartingEquipmentChoiceGroup {
+    /// Default/required items (underscore key in JSON)
+    #[serde(rename = "_", default)]
+    pub default_items: Vec<StartingEquipmentItem>,
+    /// Alternative choice A
+    #[serde(default)]
+    pub a: Option<Vec<StartingEquipmentItem>>,
+    /// Alternative choice B
+    #[serde(default)]
+    pub b: Option<Vec<StartingEquipmentItem>>,
+    /// Alternative choice C
+    #[serde(default)]
+    pub c: Option<Vec<StartingEquipmentItem>>,
+}
+
+/// A single item in starting equipment.
+///
+/// Can be a simple item reference string or a structured object.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StartingEquipmentItem {
+    /// Simple item reference: "common clothes|phb"
+    ItemRef(String),
+    /// Structured item with metadata
+    Object(StartingEquipmentItemObject),
+}
+
+/// A structured starting equipment item with optional metadata.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StartingEquipmentItemObject {
+    /// Item reference (e.g., "holy symbol|phb")
+    #[serde(default)]
+    pub item: Option<String>,
+    /// Special item description for non-catalog items
+    #[serde(default)]
+    pub special: Option<String>,
+    /// Display name override
+    #[serde(default)]
+    pub display_name: Option<String>,
+    /// Quantity of this item
+    #[serde(default)]
+    pub quantity: Option<i32>,
+    /// Value contained in this item (e.g., for pouches)
+    #[serde(default)]
+    pub contains_value: Option<i32>,
+}
+
+// =============================================================================
+// Spell Component Types
+// =============================================================================
+
+/// Material component consumption indicator.
+///
+/// Indicates whether a spell's material components are consumed:
+/// - `true`: Components are consumed when cast
+/// - `false`: Components are not consumed
+/// - `"optional"`: Components are optionally consumed (some uses consume, others don't)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ConsumeValue {
+    /// Boolean consumption flag
+    Flag(bool),
+    /// String value (typically "optional")
+    Text(String),
+}
+
+impl ConsumeValue {
+    /// Check if this always consumes the component
+    pub fn is_consumed(&self) -> bool {
+        matches!(self, ConsumeValue::Flag(true))
+    }
+
+    /// Check if consumption is optional
+    pub fn is_optional(&self) -> bool {
+        matches!(self, ConsumeValue::Text(s) if s == "optional")
+    }
+}

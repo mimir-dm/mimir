@@ -1,4 +1,4 @@
-use super::types::Entry;
+use super::types::{AdditionalSpells, Entry};
 use crate::schema::catalog_optional_features;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub struct OptionalFeature {
     pub consumes: Option<Consumes>,
 
     #[serde(rename = "additionalSpells")]
-    pub additional_spells: Option<Vec<serde_json::Value>>,
+    pub additional_spells: Option<Vec<AdditionalSpells>>,
 
     #[serde(rename = "hasFluffImages")]
     pub has_fluff_images: Option<bool>,
@@ -260,5 +260,78 @@ impl From<&OptionalFeature> for NewCatalogOptionalFeature {
             page: opt.page,
             full_optional_feature_json: serde_json::to_string(opt).unwrap_or_default(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_additional_spells_innate() {
+        let json = r#"{
+            "name": "Armor of Shadows",
+            "source": "PHB",
+            "featureType": ["EI"],
+            "additionalSpells": [
+                {
+                    "innate": {
+                        "_": ["mage armor"]
+                    }
+                }
+            ],
+            "entries": []
+        }"#;
+
+        let opt: OptionalFeature = serde_json::from_str(json).unwrap();
+        assert_eq!(opt.name, "Armor of Shadows");
+        assert!(opt.additional_spells.is_some());
+        let spells = opt.additional_spells.unwrap();
+        assert_eq!(spells.len(), 1);
+        assert!(spells[0].innate.is_some());
+    }
+
+    #[test]
+    fn test_parse_optional_feature_no_additional_spells() {
+        let json = r#"{
+            "name": "Aspect of the Moon",
+            "source": "XGE",
+            "featureType": ["EI"],
+            "prerequisite": [{"pact": "Tome"}],
+            "entries": ["You no longer need to sleep."]
+        }"#;
+
+        let opt: OptionalFeature = serde_json::from_str(json).unwrap();
+        assert_eq!(opt.name, "Aspect of the Moon");
+        assert!(opt.additional_spells.is_none());
+    }
+
+    #[test]
+    fn test_optional_feature_summary_grants_spells() {
+        let json = r#"{
+            "name": "Armor of Shadows",
+            "source": "PHB",
+            "featureType": ["EI"],
+            "additionalSpells": [{"innate": {"_": ["mage armor"]}}],
+            "entries": []
+        }"#;
+
+        let opt: OptionalFeature = serde_json::from_str(json).unwrap();
+        let summary = OptionalFeatureSummary::from(&opt);
+        assert!(summary.grants_spells);
+    }
+
+    #[test]
+    fn test_optional_feature_summary_no_spells() {
+        let json = r#"{
+            "name": "Aspect of the Moon",
+            "source": "XGE",
+            "featureType": ["EI"],
+            "entries": []
+        }"#;
+
+        let opt: OptionalFeature = serde_json::from_str(json).unwrap();
+        let summary = OptionalFeatureSummary::from(&opt);
+        assert!(!summary.grants_spells);
     }
 }

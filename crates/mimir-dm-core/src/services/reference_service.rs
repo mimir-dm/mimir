@@ -253,12 +253,11 @@ impl ReferenceService {
     ) -> Result<Option<ReferenceData>> {
         let mut service = ClassService::new(conn);
         if let Some(class) = service.get_class_by_name_and_source(name, source)? {
-            // Extract hit dice from the hd Value (can be object with "faces" field)
+            // Extract hit dice from the typed HitDice struct
             let hd = class
                 .hd
                 .as_ref()
-                .and_then(|v| v.get("faces").and_then(|f| f.as_u64()))
-                .map(|faces| format!("d{}", faces))
+                .map(|hd| format!("d{}", hd.faces))
                 .unwrap_or_else(|| "d?".to_string());
 
             let preview = format!("Class • {} Hit Die", hd);
@@ -286,15 +285,11 @@ impl ReferenceService {
             // Parse the JSON string into a Race struct
             let race: Race = serde_json::from_str(&race_json)?;
 
-            // Extract speed from Value (can be number or object with "walk" field)
+            // Extract speed from typed RaceSpeed
             let speed = race
                 .speed
                 .as_ref()
-                .and_then(|v| {
-                    v.as_u64()
-                        .map(|n| format!("{} ft.", n))
-                        .or_else(|| v.get("walk").and_then(|w| w.as_u64()).map(|n| format!("{} ft.", n)))
-                })
+                .map(|s| format!("{} ft.", s.walk_speed()))
                 .unwrap_or_else(|| "30 ft.".to_string());
 
             let preview = format!("Race • Speed {}", speed);

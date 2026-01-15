@@ -16,15 +16,17 @@ pub struct Class {
     #[serde(default)]
     pub basic_rules: Option<bool>,
     #[serde(default)]
-    pub hd: Option<serde_json::Value>, // Can be HitDice object or something else
+    pub hd: Option<HitDice>,
+    /// Saving throw proficiencies (array of ability abbreviations like "str", "dex", etc.)
     #[serde(default)]
-    pub proficiency: Option<serde_json::Value>, // Can be array or object
+    pub proficiency: Option<Vec<String>>,
+    /// Class feature references at each level
     #[serde(default)]
-    pub class_features: Option<Vec<serde_json::Value>>, // Can be strings or objects
+    pub class_features: Option<Vec<ClassFeatureRef>>,
     #[serde(default)]
-    pub starting_proficiencies: Option<serde_json::Value>,
+    pub starting_proficiencies: Option<StartingProficiencies>,
     #[serde(default)]
-    pub multiclassing: Option<serde_json::Value>,
+    pub multiclassing: Option<Multiclassing>,
     #[serde(default)]
     pub subclass_title: Option<String>,
     #[serde(default)]
@@ -38,11 +40,11 @@ pub struct Class {
     #[serde(default)]
     pub spellcasting_ability: Option<String>, // "int", "wis", "cha"
     #[serde(default)]
-    pub class_table_groups: Option<Vec<serde_json::Value>>,
+    pub class_table_groups: Option<Vec<ClassTableGroup>>,
     #[serde(default)]
-    pub starting_equipment: Option<serde_json::Value>,
+    pub starting_equipment: Option<StartingEquipment>,
     #[serde(default)]
-    pub optionalfeature_progression: Option<Vec<serde_json::Value>>,
+    pub optionalfeature_progression: Option<Vec<OptionalFeatureProgression>>,
     #[serde(default)]
     pub fluff: Option<ClassFluff>,
 }
@@ -52,6 +54,30 @@ pub struct Class {
 pub struct HitDice {
     pub number: u8,
     pub faces: u8,
+}
+
+/// A class feature reference - can be a string or object with metadata.
+///
+/// String format: "FeatureName|ClassName|ClassSource|Level|OptionalSource"
+/// Object format: { "classFeature": "...", "gainSubclassFeature": true, "tableDisplayName": "..." }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ClassFeatureRef {
+    /// Simple string reference (e.g., "Spellcasting|Cleric||1")
+    Simple(String),
+    /// Object with metadata
+    Object(ClassFeatureRefObject),
+}
+
+/// Class feature reference object with optional metadata.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassFeatureRefObject {
+    pub class_feature: String,
+    #[serde(default)]
+    pub gain_subclass_feature: Option<bool>,
+    #[serde(default)]
+    pub table_display_name: Option<String>,
 }
 
 /// Starting proficiencies for a class
@@ -74,10 +100,34 @@ pub struct StartingProficiencies {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Multiclassing {
+    /// Ability score requirements (e.g., {"str": 13, "cha": 13})
     #[serde(default)]
-    pub requirements: Option<serde_json::Value>, // Complex requirement objects
+    pub requirements: Option<MulticlassingRequirements>,
     #[serde(default)]
     pub proficiencies_gained: Option<MulticlassingProficiencies>,
+}
+
+/// Multiclassing requirements - ability score minimums.
+///
+/// Can be simple ability requirements (str: 13) or OR requirements
+/// that are satisfied if any one is met.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MulticlassingRequirements {
+    #[serde(default)]
+    pub str: Option<i32>,
+    #[serde(default)]
+    pub dex: Option<i32>,
+    #[serde(default)]
+    pub con: Option<i32>,
+    #[serde(default)]
+    pub int: Option<i32>,
+    #[serde(default)]
+    pub wis: Option<i32>,
+    #[serde(default)]
+    pub cha: Option<i32>,
+    /// Alternative requirements (OR condition)
+    #[serde(default)]
+    pub or: Option<Vec<MulticlassingRequirements>>,
 }
 
 /// Proficiencies gained from multiclassing
@@ -102,8 +152,61 @@ pub struct StartingEquipment {
     pub additional_from_background: Option<bool>,
     #[serde(default)]
     pub default: Option<Vec<String>>,
+    /// Structured equipment data for each choice
+    #[serde(default, rename = "defaultData")]
+    pub default_data: Option<Vec<serde_json::Value>>,
     #[serde(default)]
     pub gold_alternative: Option<String>,
+}
+
+/// A class table group defining columns and per-level data.
+///
+/// Table groups are used to display class progression tables.
+/// Rows contain values that may include 5etools tags for rendering.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassTableGroup {
+    /// Column labels (may contain 5etools filter tags)
+    #[serde(default)]
+    pub col_labels: Option<Vec<String>>,
+    /// Column styling hints
+    #[serde(default)]
+    pub col_styles: Option<Vec<String>>,
+    /// Row data (20 rows for levels 1-20)
+    /// Values can be numbers or strings with 5etools tags
+    #[serde(default)]
+    pub rows: Option<Vec<Vec<serde_json::Value>>>,
+    /// Subheader rows displayed between data rows
+    #[serde(default)]
+    pub row_sub_headers: Option<Vec<serde_json::Value>>,
+    /// Title for this table group
+    #[serde(default)]
+    pub title: Option<String>,
+}
+
+/// Optional feature progression (e.g., Warlock invocations, Metamagic).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionalFeatureProgression {
+    /// Feature type codes (e.g., "EI" for Eldritch Invocations)
+    #[serde(default)]
+    pub feature_type: Option<Vec<String>>,
+    /// Display name for the feature
+    #[serde(default)]
+    pub name: Option<String>,
+    /// Progression - either array of counts per level or object with level keys
+    #[serde(default)]
+    pub progression: Option<OptionalFeatureProgressionValue>,
+}
+
+/// Progression value - can be array or level-keyed object.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OptionalFeatureProgressionValue {
+    /// Array of counts for each level (index 0 = level 1)
+    Array(Vec<i32>),
+    /// Object with level numbers as keys
+    Object(std::collections::HashMap<String, i32>),
 }
 
 /// Container for class data from JSON files
@@ -132,10 +235,11 @@ pub struct Subclass {
     pub class_source: String,
     #[serde(default)]
     pub page: Option<u32>,
+    /// Subclass feature references (strings like "FeatureName|Class||Subclass||Level")
     #[serde(default)]
-    pub subclass_features: Option<serde_json::Value>, // Can be array of strings or objects
+    pub subclass_features: Option<Vec<String>>,
     #[serde(default)]
-    pub subclass_table_groups: Option<Vec<serde_json::Value>>,
+    pub subclass_table_groups: Option<Vec<ClassTableGroup>>,
     #[serde(default)]
     pub caster_progression: Option<String>,
     #[serde(default)]
@@ -144,6 +248,8 @@ pub struct Subclass {
     pub cantrip_progression: Option<Vec<u8>>,
     #[serde(default)]
     pub spells_known_progression: Option<Vec<u8>>,
+    /// Additional spells granted by the subclass
+    /// Contains level-keyed objects with spell lists
     #[serde(default)]
     pub additional_spells: Option<Vec<serde_json::Value>>,
     #[serde(default)]
@@ -252,52 +358,31 @@ pub struct ClassSummary {
 
 impl From<&Class> for ClassSummary {
     fn from(class: &Class) -> Self {
-        // Format hit die
+        // Format hit die using typed HitDice struct
         let hit_dice = if let Some(hd) = &class.hd {
-            if let Some(obj) = hd.as_object() {
-                if let (Some(number), Some(faces)) = (obj.get("number"), obj.get("faces")) {
-                    format!(
-                        "{}d{}",
-                        number.as_u64().unwrap_or(1),
-                        faces.as_u64().unwrap_or(6)
-                    )
-                } else {
-                    "1d6".to_string()
-                }
-            } else {
-                "1d6".to_string()
-            }
+            format!("{}d{}", hd.number, hd.faces)
         } else {
             "1d6".to_string()
         };
 
         // Format proficiency - extract saving throws from startingProficiencies
         let proficiency = if let Some(start_prof) = &class.starting_proficiencies {
-            if let Some(obj) = start_prof.as_object() {
-                if let Some(saves_val) = obj.get("savingThrows") {
-                    if let Some(saves_arr) = saves_val.as_array() {
-                        let saves: Vec<String> = saves_arr
-                            .iter()
-                            .filter_map(|v| v.as_str())
-                            .map(|s| match s {
-                                "str" => "STR",
-                                "dex" => "DEX",
-                                "con" => "CON",
-                                "int" => "INT",
-                                "wis" => "WIS",
-                                "cha" => "CHA",
-                                _ => s,
-                            })
-                            .map(|s| s.to_string())
-                            .collect();
-                        if !saves.is_empty() {
-                            saves.join(", ")
-                        } else {
-                            "None".to_string()
-                        }
-                    } else {
-                        "None".to_string()
-                    }
+            if let Some(saves) = &start_prof.saving_throws {
+                let formatted: Vec<String> = saves
+                    .iter()
+                    .map(|s| match s.as_str() {
+                        "str" => "STR",
+                        "dex" => "DEX",
+                        "con" => "CON",
+                        "int" => "INT",
+                        "wis" => "WIS",
+                        "cha" => "CHA",
+                        _ => s,
+                    })
+                    .map(|s| s.to_string())
+                    .collect();
+                if !formatted.is_empty() {
+                    formatted.join(", ")
                 } else {
                     "None".to_string()
                 }
@@ -322,14 +407,25 @@ impl From<&Class> for ClassSummary {
         let description = if let Some(features) = &class.class_features {
             features
                 .first()
-                .and_then(|f| f.as_str())
-                .unwrap_or("")
+                .map(|f| match f {
+                    ClassFeatureRef::Simple(s) => s.clone(),
+                    ClassFeatureRef::Object(obj) => obj.class_feature.clone(),
+                })
+                .unwrap_or_else(|| format!("A {} class", class.name))
                 .chars()
                 .take(200)
                 .collect::<String>()
         } else {
             format!("A {} class", class.name)
         };
+
+        // Serialize table groups for the summary (frontend needs JSON for rendering)
+        let table_groups = class.class_table_groups.as_ref().map(|groups| {
+            groups
+                .iter()
+                .filter_map(|g| serde_json::to_value(g).ok())
+                .collect()
+        });
 
         ClassSummary {
             name: class.name.clone(),
@@ -339,7 +435,7 @@ impl From<&Class> for ClassSummary {
             proficiency,
             primary_ability,
             spellcasting_ability: class.spellcasting_ability.clone(),
-            table_groups: class.class_table_groups.clone(),
+            table_groups,
             subclass_title: class.subclass_title.clone(),
             description,
             subclass_name: None,
@@ -489,52 +585,31 @@ pub struct ClassFilters {
 // Conversion from Class to NewCatalogClass
 impl From<&Class> for NewCatalogClass {
     fn from(class: &Class) -> Self {
-        // Format hit die
+        // Format hit die using typed HitDice struct
         let hit_dice = if let Some(hd) = &class.hd {
-            if let Some(obj) = hd.as_object() {
-                if let (Some(number), Some(faces)) = (obj.get("number"), obj.get("faces")) {
-                    Some(format!(
-                        "{}d{}",
-                        number.as_u64().unwrap_or(1),
-                        faces.as_u64().unwrap_or(6)
-                    ))
-                } else {
-                    Some("1d6".to_string())
-                }
-            } else {
-                Some("1d6".to_string())
-            }
+            Some(format!("{}d{}", hd.number, hd.faces))
         } else {
             Some("1d6".to_string())
         };
 
         // Format proficiency - extract saving throws from startingProficiencies
         let proficiency = if let Some(start_prof) = &class.starting_proficiencies {
-            if let Some(obj) = start_prof.as_object() {
-                if let Some(saves_val) = obj.get("savingThrows") {
-                    if let Some(saves_arr) = saves_val.as_array() {
-                        let saves: Vec<String> = saves_arr
-                            .iter()
-                            .filter_map(|v| v.as_str())
-                            .map(|s| match s {
-                                "str" => "STR",
-                                "dex" => "DEX",
-                                "con" => "CON",
-                                "int" => "INT",
-                                "wis" => "WIS",
-                                "cha" => "CHA",
-                                _ => s,
-                            })
-                            .map(|s| s.to_string())
-                            .collect();
-                        if !saves.is_empty() {
-                            Some(saves.join(", "))
-                        } else {
-                            Some("None".to_string())
-                        }
-                    } else {
-                        Some("None".to_string())
-                    }
+            if let Some(saves) = &start_prof.saving_throws {
+                let formatted: Vec<String> = saves
+                    .iter()
+                    .map(|s| match s.as_str() {
+                        "str" => "STR",
+                        "dex" => "DEX",
+                        "con" => "CON",
+                        "int" => "INT",
+                        "wis" => "WIS",
+                        "cha" => "CHA",
+                        _ => s,
+                    })
+                    .map(|s| s.to_string())
+                    .collect();
+                if !formatted.is_empty() {
+                    Some(formatted.join(", "))
                 } else {
                     Some("None".to_string())
                 }
@@ -680,5 +755,163 @@ impl ClassSummary {
             subclass_name: Some(subclass.name.clone()),
             row_type: "subclass".to_string(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_hit_dice() {
+        let json = r#"{"number": 1, "faces": 10}"#;
+        let hd: HitDice = serde_json::from_str(json).unwrap();
+        assert_eq!(hd.number, 1);
+        assert_eq!(hd.faces, 10);
+    }
+
+    #[test]
+    fn test_parse_class_feature_ref_simple() {
+        let json = r#""Spellcasting|Cleric||1""#;
+        let feature: ClassFeatureRef = serde_json::from_str(json).unwrap();
+        match feature {
+            ClassFeatureRef::Simple(s) => assert_eq!(s, "Spellcasting|Cleric||1"),
+            _ => panic!("Expected Simple variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_class_feature_ref_object() {
+        let json = r#"{"classFeature": "Divine Domain|Cleric||1", "gainSubclassFeature": true}"#;
+        let feature: ClassFeatureRef = serde_json::from_str(json).unwrap();
+        match feature {
+            ClassFeatureRef::Object(obj) => {
+                assert_eq!(obj.class_feature, "Divine Domain|Cleric||1");
+                assert_eq!(obj.gain_subclass_feature, Some(true));
+            }
+            _ => panic!("Expected Object variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_multiclassing_requirements() {
+        let json = r#"{"str": 13, "cha": 13}"#;
+        let reqs: MulticlassingRequirements = serde_json::from_str(json).unwrap();
+        assert_eq!(reqs.str, Some(13));
+        assert_eq!(reqs.cha, Some(13));
+        assert_eq!(reqs.dex, None);
+    }
+
+    #[test]
+    fn test_parse_optional_feature_progression_array() {
+        let json = r#"{"featureType": ["EI"], "name": "Eldritch Invocations", "progression": [0, 2, 2, 2, 3]}"#;
+        let prog: OptionalFeatureProgression = serde_json::from_str(json).unwrap();
+        assert_eq!(prog.name, Some("Eldritch Invocations".to_string()));
+        match prog.progression {
+            Some(OptionalFeatureProgressionValue::Array(arr)) => {
+                assert_eq!(arr, vec![0, 2, 2, 2, 3]);
+            }
+            _ => panic!("Expected Array variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_optional_feature_progression_object() {
+        let json = r#"{"featureType": ["PB"], "name": "Pact Boon", "progression": {"3": 1}}"#;
+        let prog: OptionalFeatureProgression = serde_json::from_str(json).unwrap();
+        assert_eq!(prog.name, Some("Pact Boon".to_string()));
+        match prog.progression {
+            Some(OptionalFeatureProgressionValue::Object(map)) => {
+                assert_eq!(map.get("3"), Some(&1));
+            }
+            _ => panic!("Expected Object variant"),
+        }
+    }
+
+    #[test]
+    fn test_parse_class_table_group() {
+        let json = r#"{
+            "colLabels": ["Cantrips Known", "Spells Known"],
+            "rows": [[2, 2], [2, 3], [2, 4]]
+        }"#;
+        let group: ClassTableGroup = serde_json::from_str(json).unwrap();
+        assert_eq!(group.col_labels, Some(vec!["Cantrips Known".to_string(), "Spells Known".to_string()]));
+        assert!(group.rows.is_some());
+        let rows = group.rows.unwrap();
+        assert_eq!(rows.len(), 3);
+    }
+
+    #[test]
+    fn test_parse_starting_equipment() {
+        let json = r#"{
+            "additionalFromBackground": true,
+            "default": ["a mace", "leather armor"],
+            "goldAlternative": "5d4 x 10 gp"
+        }"#;
+        let equip: StartingEquipment = serde_json::from_str(json).unwrap();
+        assert_eq!(equip.additional_from_background, Some(true));
+        assert_eq!(equip.default, Some(vec!["a mace".to_string(), "leather armor".to_string()]));
+        assert_eq!(equip.gold_alternative, Some("5d4 x 10 gp".to_string()));
+    }
+
+    #[test]
+    fn test_parse_minimal_class() {
+        let json = r#"{
+            "name": "Fighter",
+            "source": "PHB",
+            "hd": {"number": 1, "faces": 10},
+            "proficiency": ["str", "con"]
+        }"#;
+        let class: Class = serde_json::from_str(json).unwrap();
+        assert_eq!(class.name, "Fighter");
+        assert_eq!(class.source, "PHB");
+        assert!(class.hd.is_some());
+        let hd = class.hd.unwrap();
+        assert_eq!(hd.faces, 10);
+        assert_eq!(class.proficiency, Some(vec!["str".to_string(), "con".to_string()]));
+    }
+
+    #[test]
+    fn test_parse_class_with_features() {
+        let json = r#"{
+            "name": "Cleric",
+            "source": "PHB",
+            "classFeatures": [
+                "Spellcasting|Cleric||1",
+                {"classFeature": "Divine Domain|Cleric||1", "gainSubclassFeature": true}
+            ]
+        }"#;
+        let class: Class = serde_json::from_str(json).unwrap();
+        assert_eq!(class.name, "Cleric");
+        let features = class.class_features.unwrap();
+        assert_eq!(features.len(), 2);
+        match &features[0] {
+            ClassFeatureRef::Simple(s) => assert!(s.contains("Spellcasting")),
+            _ => panic!("Expected Simple variant for first feature"),
+        }
+        match &features[1] {
+            ClassFeatureRef::Object(obj) => assert!(obj.gain_subclass_feature == Some(true)),
+            _ => panic!("Expected Object variant for second feature"),
+        }
+    }
+
+    #[test]
+    fn test_parse_subclass() {
+        let json = r#"{
+            "name": "Knowledge Domain",
+            "source": "PHB",
+            "className": "Cleric",
+            "classSource": "PHB",
+            "subclassFeatures": [
+                "Knowledge Domain|Cleric||Knowledge||1",
+                "Channel Divinity: Knowledge of the Ages|Cleric||Knowledge||2"
+            ]
+        }"#;
+        let subclass: Subclass = serde_json::from_str(json).unwrap();
+        assert_eq!(subclass.name, "Knowledge Domain");
+        assert_eq!(subclass.class_name, "Cleric");
+        let features = subclass.subclass_features.unwrap();
+        assert_eq!(features.len(), 2);
+        assert!(features[0].contains("Knowledge Domain"));
     }
 }

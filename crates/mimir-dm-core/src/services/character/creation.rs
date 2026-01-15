@@ -340,17 +340,7 @@ impl<'a> CharacterBuilder<'a> {
 
         // Extract speed from race if available, otherwise use default
         let speed = if let Some(ref race) = race_opt {
-            if let Some(speed_value) = &race.speed {
-                if let Some(speed_num) = speed_value.as_i64() {
-                    speed_num as i32
-                } else if let Some(obj) = speed_value.as_object() {
-                    obj.get("walk").and_then(|v| v.as_i64()).unwrap_or(30) as i32
-                } else {
-                    30
-                }
-            } else {
-                30
-            }
+            race.speed.as_ref().map(|s| s.walk_speed()).unwrap_or(30)
         } else {
             30
         };
