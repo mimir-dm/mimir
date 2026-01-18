@@ -324,24 +324,45 @@ pub struct CharacterVersionSummary {
     pub created_at: String,
 }
 
-/// Input for create_npc tool
+/// Input for create_character tool
+/// Creates both NPCs (default) and player characters
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateNpcInput {
-    /// NPC name (required)
+pub struct CreateCharacterInput {
+    /// Character name (required)
     pub name: String,
 
     /// Race (e.g., "Human", "Elf", "Dwarf")
     pub race: String,
 
-    /// Class or occupation (e.g., "Commoner", "Noble", "Guard")
+    /// Class (e.g., "Fighter", "Wizard", "Commoner")
     #[serde(default)]
     pub class: Option<String>,
+
+    /// Whether this is an NPC (default: true for backwards compatibility)
+    #[serde(default = "default_true")]
+    pub is_npc: bool,
+
+    /// Player ID (optional, for player characters)
+    #[serde(default)]
+    pub player_id: Option<i32>,
+
+    /// Player name (optional, for display purposes)
+    #[serde(default)]
+    pub player_name: Option<String>,
+
+    /// Character level (default: 1)
+    #[serde(default = "default_one")]
+    pub level: i32,
+
+    /// Background (e.g., "Soldier", "Noble", "Acolyte")
+    #[serde(default)]
+    pub background: Option<String>,
 
     /// NPC's role in the story (e.g., "quest_giver", "merchant", "antagonist")
     #[serde(default)]
     pub role: Option<String>,
 
-    /// Location where the NPC can be found
+    /// Location where the character can be found
     #[serde(default)]
     pub location: Option<String>,
 
@@ -349,47 +370,81 @@ pub struct CreateNpcInput {
     #[serde(default)]
     pub faction: Option<String>,
 
-    /// Notes about the NPC
+    /// Notes about the character
     #[serde(default)]
     pub notes: Option<String>,
 
     /// Alignment (e.g., "Lawful Good", "Chaotic Neutral")
     #[serde(default)]
     pub alignment: Option<String>,
+
+    /// Backstory
+    #[serde(default)]
+    pub backstory: Option<String>,
 }
 
-impl CreateNpcInput {
+fn default_true() -> bool {
+    true
+}
+
+impl CreateCharacterInput {
     /// Get the tool definition
     pub fn tool() -> Tool {
         Tool {
-            name: "create_npc".to_string(),
+            name: "create_character".to_string(),
             description: Some(
-                "Create a new NPC (Non-Player Character) in the active campaign. NPCs are simplified characters for story purposes."
+                "Create a new character in the active campaign. Can create both NPCs (is_npc=true, default) and player characters (is_npc=false). For PCs, optionally provide player_id and player_name."
                     .to_string(),
             ),
             input_schema: ToolInputSchema::new(
                 vec!["name".to_string(), "race".to_string()],
                 create_properties(vec![
-                    ("name", "string", "NPC name (required)"),
+                    ("name", "string", "Character name (required)"),
                     ("race", "string", "Race (e.g., Human, Elf, Dwarf)"),
                     (
                         "class",
                         "string",
-                        "Class or occupation (e.g., Commoner, Noble, Guard)",
+                        "Class (e.g., Fighter, Wizard, Commoner)",
+                    ),
+                    (
+                        "is_npc",
+                        "boolean",
+                        "Whether this is an NPC (default: true). Set to false for player characters.",
+                    ),
+                    (
+                        "player_id",
+                        "integer",
+                        "Player ID for player characters (optional)",
+                    ),
+                    (
+                        "player_name",
+                        "string",
+                        "Player name for display (optional)",
+                    ),
+                    (
+                        "level",
+                        "integer",
+                        "Character level (default: 1)",
+                    ),
+                    (
+                        "background",
+                        "string",
+                        "Background (e.g., Soldier, Noble, Acolyte)",
                     ),
                     (
                         "role",
                         "string",
-                        "Role in the story (e.g., quest_giver, merchant, antagonist)",
+                        "Role in the story for NPCs (e.g., quest_giver, merchant, antagonist)",
                     ),
-                    ("location", "string", "Location where the NPC can be found"),
+                    ("location", "string", "Location where the character can be found"),
                     ("faction", "string", "Faction or organization affiliation"),
-                    ("notes", "string", "Notes about the NPC"),
+                    ("notes", "string", "Notes about the character"),
                     (
                         "alignment",
                         "string",
                         "Alignment (e.g., Lawful Good, Chaotic Neutral)",
                     ),
+                    ("backstory", "string", "Character backstory"),
                 ]),
                 None,
             ),
@@ -402,35 +457,54 @@ impl CreateNpcInput {
         }
     }
 
-    /// Execute the create_npc tool
+    /// Execute the create_character tool
     pub async fn execute(
         &self,
         context: Arc<McpContext>,
-    ) -> Result<CreateNpcResponse, McpError> {
+    ) -> Result<CreateCharacterResponse, McpError> {
         let campaign = context.require_active_campaign().await?;
         let mut conn = context.get_connection()?;
         let mut service = CharacterService::new(&mut conn);
 
-        // Build minimal CharacterData for NPC
-        let class_name = self.class.clone().unwrap_or_else(|| "Commoner".to_string());
+        // Build CharacterData
+        let class_name = self.class.clone().unwrap_or_else(|| {
+            if self.is_npc {
+                "Commoner".to_string()
+            } else {
+                "Fighter".to_string()
+            }
+        });
+        let background = self.background.clone().unwrap_or_else(|| {
+            if self.is_npc {
+                "NPC".to_string()
+            } else {
+                "Adventurer".to_string()
+            }
+        });
+        let snapshot_reason = if self.is_npc {
+            "NPC created via MCP".to_string()
+        } else {
+            "Player character created via MCP".to_string()
+        };
+
         let character_data = CharacterData {
             character_name: self.name.clone(),
-            player_id: None,
-            level: 1,
+            player_id: self.player_id,
+            level: self.level,
             experience_points: 0,
             version: 1,
-            snapshot_reason: Some("NPC created via MCP".to_string()),
+            snapshot_reason: Some(snapshot_reason),
             created_at: chrono::Utc::now().to_rfc3339(),
             race: self.race.clone(),
             subrace: None,
             classes: vec![ClassLevel {
                 class_name: class_name.clone(),
-                level: 1,
+                level: self.level,
                 subclass: None,
                 hit_dice_type: "d8".to_string(),
-                hit_dice_remaining: 1,
+                hit_dice_remaining: self.level,
             }],
-            background: "NPC".to_string(),
+            background,
             alignment: self.alignment.clone(),
             abilities: AbilityScores {
                 strength: 10,
@@ -440,8 +514,8 @@ impl CreateNpcInput {
                 wisdom: 10,
                 charisma: 10,
             },
-            max_hp: 8,
-            current_hp: 8,
+            max_hp: 8 + (self.level - 1) * 5, // Base HP + average per level
+            current_hp: 8 + (self.level - 1) * 5,
             proficiencies: Proficiencies {
                 skills: vec![],
                 saves: vec![],
@@ -458,15 +532,15 @@ impl CreateNpcInput {
             speed: 30,
             equipped: EquippedItems::default(),
             personality: Personality::default(),
-            player_name: None,
+            player_name: self.player_name.clone(),
             appearance: Default::default(),
-            backstory: None,
+            backstory: self.backstory.clone(),
             background_feature: None,
             roleplay_notes: Default::default(),
-            npc_role: self.role.clone(),
-            npc_location: self.location.clone(),
-            npc_faction: self.faction.clone(),
-            npc_notes: self.notes.clone(),
+            npc_role: if self.is_npc { self.role.clone() } else { None },
+            npc_location: if self.is_npc { self.location.clone() } else { None },
+            npc_faction: if self.is_npc { self.faction.clone() } else { None },
+            npc_notes: if self.is_npc { self.notes.clone() } else { None },
             legendary_actions: Vec::new(),
             legendary_action_count: None,
         };
@@ -474,33 +548,39 @@ impl CreateNpcInput {
         let character = service
             .create_character(
                 Some(campaign.id),
-                None, // No player for NPC
-                true, // is_npc = true
+                self.player_id,
+                self.is_npc,
                 &campaign.directory_path,
                 character_data,
             )
             .map_err(|e| McpError::Service(e.to_string()))?;
 
-        Ok(CreateNpcResponse {
+        Ok(CreateCharacterResponse {
             success: true,
             character_id: character.id,
             name: character.character_name,
             race: self.race.clone(),
             class: class_name,
+            level: self.level,
+            is_npc: self.is_npc,
+            player_id: self.player_id,
             role: self.role.clone(),
             location: self.location.clone(),
         })
     }
 }
 
-/// Response from create_npc
+/// Response from create_character
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateNpcResponse {
+pub struct CreateCharacterResponse {
     pub success: bool,
     pub character_id: i32,
     pub name: String,
     pub race: String,
     pub class: String,
+    pub level: i32,
+    pub is_npc: bool,
+    pub player_id: Option<i32>,
     pub role: Option<String>,
     pub location: Option<String>,
 }
@@ -816,4 +896,261 @@ pub struct CurrencySummary {
     pub electrum: i32,
     pub gold: i32,
     pub platinum: i32,
+}
+
+/// Input for edit_character tool
+/// Updates character attributes and creates a new version
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EditCharacterInput {
+    /// The character ID to edit (required)
+    pub character_id: i32,
+
+    /// New character name
+    #[serde(default)]
+    pub name: Option<String>,
+
+    /// New race
+    #[serde(default)]
+    pub race: Option<String>,
+
+    /// New alignment
+    #[serde(default)]
+    pub alignment: Option<String>,
+
+    /// New backstory
+    #[serde(default)]
+    pub backstory: Option<String>,
+
+    /// New max HP
+    #[serde(default)]
+    pub max_hp: Option<i32>,
+
+    /// New current HP
+    #[serde(default)]
+    pub current_hp: Option<i32>,
+
+    /// New speed
+    #[serde(default)]
+    pub speed: Option<i32>,
+
+    /// Ability scores (all six must be provided together if updating)
+    #[serde(default)]
+    pub abilities: Option<AbilityScoresInput>,
+
+    /// Personality traits
+    #[serde(default)]
+    pub personality_traits: Option<String>,
+
+    /// Ideals
+    #[serde(default)]
+    pub ideals: Option<String>,
+
+    /// Bonds
+    #[serde(default)]
+    pub bonds: Option<String>,
+
+    /// Flaws
+    #[serde(default)]
+    pub flaws: Option<String>,
+
+    /// NPC role (only for NPCs)
+    #[serde(default)]
+    pub npc_role: Option<String>,
+
+    /// NPC location (only for NPCs)
+    #[serde(default)]
+    pub npc_location: Option<String>,
+
+    /// NPC faction (only for NPCs)
+    #[serde(default)]
+    pub npc_faction: Option<String>,
+
+    /// NPC notes (only for NPCs)
+    #[serde(default)]
+    pub npc_notes: Option<String>,
+
+    /// Snapshot reason for version history
+    #[serde(default)]
+    pub snapshot_reason: Option<String>,
+}
+
+/// Ability scores input
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AbilityScoresInput {
+    pub strength: i32,
+    pub dexterity: i32,
+    pub constitution: i32,
+    pub intelligence: i32,
+    pub wisdom: i32,
+    pub charisma: i32,
+}
+
+impl EditCharacterInput {
+    /// Get the tool definition
+    pub fn tool() -> Tool {
+        Tool {
+            name: "edit_character".to_string(),
+            description: Some(
+                "Edit a character's attributes. All parameters except character_id are optional - only provide fields you want to change. Creates a new version of the character, preserving history."
+                    .to_string(),
+            ),
+            input_schema: ToolInputSchema::new(
+                vec!["character_id".to_string()],
+                create_properties(vec![
+                    ("character_id", "integer", "The character ID to edit (required)"),
+                    ("name", "string", "New character name"),
+                    ("race", "string", "New race"),
+                    ("alignment", "string", "New alignment (e.g., Lawful Good)"),
+                    ("backstory", "string", "New backstory"),
+                    ("max_hp", "integer", "New maximum HP"),
+                    ("current_hp", "integer", "New current HP"),
+                    ("speed", "integer", "New speed in feet"),
+                    ("abilities", "object", "Ability scores object with strength, dexterity, constitution, intelligence, wisdom, charisma"),
+                    ("personality_traits", "string", "Personality traits"),
+                    ("ideals", "string", "Character ideals"),
+                    ("bonds", "string", "Character bonds"),
+                    ("flaws", "string", "Character flaws"),
+                    ("npc_role", "string", "NPC role in story (NPCs only)"),
+                    ("npc_location", "string", "NPC location (NPCs only)"),
+                    ("npc_faction", "string", "NPC faction (NPCs only)"),
+                    ("npc_notes", "string", "NPC notes (NPCs only)"),
+                    ("snapshot_reason", "string", "Reason for this edit (for version history)"),
+                ]),
+                None,
+            ),
+            title: None,
+            annotations: None,
+            icons: vec![],
+            execution: None,
+            output_schema: None,
+            meta: None,
+        }
+    }
+
+    /// Execute the edit_character tool
+    pub async fn execute(
+        &self,
+        context: Arc<McpContext>,
+    ) -> Result<EditCharacterResponse, McpError> {
+        let _campaign = context.require_active_campaign().await?;
+        let mut conn = context.get_connection()?;
+        let mut service = CharacterService::new(&mut conn);
+
+        // Get existing character data
+        let (character, mut data) = service
+            .get_character(self.character_id)
+            .map_err(|e| McpError::Service(e.to_string()))?;
+
+        // Track what changed for the response
+        let mut changes = Vec::new();
+
+        // Apply updates
+        if let Some(ref name) = self.name {
+            data.character_name = name.clone();
+            changes.push("name".to_string());
+        }
+        if let Some(ref race) = self.race {
+            data.race = race.clone();
+            changes.push("race".to_string());
+        }
+        if let Some(ref alignment) = self.alignment {
+            data.alignment = Some(alignment.clone());
+            changes.push("alignment".to_string());
+        }
+        if let Some(ref backstory) = self.backstory {
+            data.backstory = Some(backstory.clone());
+            changes.push("backstory".to_string());
+        }
+        if let Some(max_hp) = self.max_hp {
+            data.max_hp = max_hp;
+            changes.push("max_hp".to_string());
+        }
+        if let Some(current_hp) = self.current_hp {
+            data.current_hp = current_hp;
+            changes.push("current_hp".to_string());
+        }
+        if let Some(speed) = self.speed {
+            data.speed = speed;
+            changes.push("speed".to_string());
+        }
+        if let Some(ref abilities) = self.abilities {
+            data.abilities = AbilityScores {
+                strength: abilities.strength,
+                dexterity: abilities.dexterity,
+                constitution: abilities.constitution,
+                intelligence: abilities.intelligence,
+                wisdom: abilities.wisdom,
+                charisma: abilities.charisma,
+            };
+            changes.push("abilities".to_string());
+        }
+        if let Some(ref traits) = self.personality_traits {
+            data.personality.traits = Some(traits.clone());
+            changes.push("personality_traits".to_string());
+        }
+        if let Some(ref ideals) = self.ideals {
+            data.personality.ideals = Some(ideals.clone());
+            changes.push("ideals".to_string());
+        }
+        if let Some(ref bonds) = self.bonds {
+            data.personality.bonds = Some(bonds.clone());
+            changes.push("bonds".to_string());
+        }
+        if let Some(ref flaws) = self.flaws {
+            data.personality.flaws = Some(flaws.clone());
+            changes.push("flaws".to_string());
+        }
+
+        // NPC-specific fields (only update if character is NPC)
+        if character.is_npc {
+            if let Some(ref role) = self.npc_role {
+                data.npc_role = Some(role.clone());
+                changes.push("npc_role".to_string());
+            }
+            if let Some(ref location) = self.npc_location {
+                data.npc_location = Some(location.clone());
+                changes.push("npc_location".to_string());
+            }
+            if let Some(ref faction) = self.npc_faction {
+                data.npc_faction = Some(faction.clone());
+                changes.push("npc_faction".to_string());
+            }
+            if let Some(ref notes) = self.npc_notes {
+                data.npc_notes = Some(notes.clone());
+                changes.push("npc_notes".to_string());
+            }
+        }
+
+        if changes.is_empty() {
+            return Err(McpError::InvalidParameter(
+                "No fields provided to update".to_string(),
+            ));
+        }
+
+        // Build snapshot reason
+        let snapshot_reason = self.snapshot_reason.clone().unwrap_or_else(|| {
+            format!("Updated via MCP: {}", changes.join(", "))
+        });
+
+        // Create new version with updates
+        let version = service
+            .update_character(self.character_id, data, Some(snapshot_reason))
+            .map_err(|e| McpError::Service(e.to_string()))?;
+
+        Ok(EditCharacterResponse {
+            success: true,
+            character_id: self.character_id,
+            new_version: version.version_number,
+            fields_updated: changes,
+        })
+    }
+}
+
+/// Response from edit_character
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EditCharacterResponse {
+    pub success: bool,
+    pub character_id: i32,
+    pub new_version: i32,
+    pub fields_updated: Vec<String>,
 }

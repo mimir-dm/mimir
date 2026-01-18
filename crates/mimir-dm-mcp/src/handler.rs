@@ -5,10 +5,10 @@
 use crate::context::McpContext;
 use crate::tools::{
     AddItemToCharacterInput, AddItemToModuleInput, AddMonsterToModuleInput, AssignNpcToModuleInput,
-    CreateModuleInput, CreateNpcInput, CreateUserDocumentInput, EditDocumentInput,
-    GetCharacterInput, GetModuleDetailsInput, ListCampaignsInput, ListCharactersInput,
-    ListDocumentsInput, ListModulesInput, ReadDocumentInput, SearchItemsInput, SearchMonstersInput,
-    SearchTrapsInput, SetActiveCampaignInput, UpdateCharacterCurrencyInput,
+    CreateCharacterInput, CreateModuleInput, CreateUserDocumentInput, EditCharacterInput,
+    EditDocumentInput, GetCharacterInput, GetModuleDetailsInput, ListCampaignsInput,
+    ListCharactersInput, ListDocumentsInput, ListModulesInput, ReadDocumentInput, SearchItemsInput,
+    SearchMonstersInput, SearchTrapsInput, SetActiveCampaignInput, UpdateCharacterCurrencyInput,
 };
 use async_trait::async_trait;
 use rust_mcp_sdk::mcp_server::ServerHandler;
@@ -51,7 +51,8 @@ impl MimirHandler {
             // Character tools
             ListCharactersInput::tool(),
             GetCharacterInput::tool(),
-            CreateNpcInput::tool(),
+            CreateCharacterInput::tool(),
+            EditCharacterInput::tool(),
             AssignNpcToModuleInput::tool(),
             AddItemToCharacterInput::tool(),
             UpdateCharacterCurrencyInput::tool(),
@@ -191,8 +192,17 @@ impl MimirHandler {
                     .map_err(|e| e.to_string())?;
                 serde_json::to_value(result).map_err(|e| e.to_string())
             }
-            "create_npc" => {
-                let input: CreateNpcInput =
+            "create_character" => {
+                let input: CreateCharacterInput =
+                    serde_json::from_value(args_value).map_err(|e| e.to_string())?;
+                let result = input
+                    .execute(self.context.clone())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                serde_json::to_value(result).map_err(|e| e.to_string())
+            }
+            "edit_character" => {
+                let input: EditCharacterInput =
                     serde_json::from_value(args_value).map_err(|e| e.to_string())?;
                 let result = input
                     .execute(self.context.clone())

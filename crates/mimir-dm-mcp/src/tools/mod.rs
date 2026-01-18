@@ -18,9 +18,9 @@ pub use campaign::{
 
 pub use character::{
     AddCharacterItemResponse, AddItemToCharacterInput, AssignNpcResponse, AssignNpcToModuleInput,
-    CharacterListItem, CharacterVersionSummary, CreateNpcInput, CreateNpcResponse,
-    GetCharacterInput, GetCharacterResponse, ListCharactersInput, UpdateCharacterCurrencyInput,
-    UpdateCurrencyResponse,
+    CharacterListItem, CharacterVersionSummary, CreateCharacterInput, CreateCharacterResponse,
+    EditCharacterInput, EditCharacterResponse, GetCharacterInput, GetCharacterResponse,
+    ListCharactersInput, UpdateCharacterCurrencyInput, UpdateCurrencyResponse,
 };
 
 pub use catalog::{

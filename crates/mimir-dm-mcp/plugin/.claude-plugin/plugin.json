@@ -1,7 +1,7 @@
 {
   "name": "mimir-dm",
-  "version": "0.2.3",
-  "description": "D&D 5e campaign authoring tools for Mimir. Create campaigns, modules, NPCs, and documents.",
+  "version": "0.2.4",
+  "description": "D&D 5e campaign authoring tools for Mimir. Create campaigns, modules, characters (PCs and NPCs), and documents.",
   "author": {
     "name": "Colliery",
     "email": "contact@colliery.io"

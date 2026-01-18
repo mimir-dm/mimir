@@ -465,7 +465,7 @@ mod document_tools {
 mod character_tools {
     use super::common::TestMcpEnv;
     use mimir_dm_mcp::tools::{
-        CreateNpcInput, GetCharacterInput, ListCharactersInput, UpdateCharacterCurrencyInput,
+        CreateCharacterInput, GetCharacterInput, ListCharactersInput, UpdateCharacterCurrencyInput,
     };
 
     #[tokio::test]
@@ -495,21 +495,27 @@ mod character_tools {
     }
 
     #[tokio::test]
-    async fn test_create_npc() {
+    async fn test_create_character_npc() {
         let env = TestMcpEnv::new().expect("Failed to create test environment");
 
         let (campaign_id, _) = env.create_campaign("Test Campaign").expect("Failed to create campaign");
         env.set_active_campaign(campaign_id).await.expect("Failed to set active");
 
-        let input = CreateNpcInput {
+        let input = CreateCharacterInput {
             name: "Shopkeeper Bob".to_string(),
             race: "Human".to_string(),
             class: None,
+            is_npc: true,
+            player_id: None,
+            player_name: None,
+            level: 1,
+            background: None,
             role: Some("Merchant".to_string()),
             location: Some("Market Square".to_string()),
             faction: None,
             notes: None,
             alignment: None,
+            backstory: None,
         };
         let result = input
             .execute(env.context.clone())
@@ -519,6 +525,42 @@ mod character_tools {
         assert!(result.character_id > 0);
         assert_eq!(result.name, "Shopkeeper Bob");
         assert!(result.success);
+        assert!(result.is_npc);
+    }
+
+    #[tokio::test]
+    async fn test_create_character_pc() {
+        let env = TestMcpEnv::new().expect("Failed to create test environment");
+
+        let (campaign_id, _) = env.create_campaign("Test Campaign").expect("Failed to create campaign");
+        env.set_active_campaign(campaign_id).await.expect("Failed to set active");
+
+        let input = CreateCharacterInput {
+            name: "Thorin Ironforge".to_string(),
+            race: "Dwarf".to_string(),
+            class: Some("Fighter".to_string()),
+            is_npc: false,
+            player_id: None,
+            player_name: Some("John".to_string()),
+            level: 3,
+            background: Some("Soldier".to_string()),
+            role: None,
+            location: None,
+            faction: None,
+            notes: None,
+            alignment: Some("Lawful Good".to_string()),
+            backstory: Some("A veteran of the mountain wars.".to_string()),
+        };
+        let result = input
+            .execute(env.context.clone())
+            .await
+            .expect("Failed to create PC");
+
+        assert!(result.character_id > 0);
+        assert_eq!(result.name, "Thorin Ironforge");
+        assert!(result.success);
+        assert!(!result.is_npc);
+        assert_eq!(result.level, 3);
     }
 
     #[tokio::test]
@@ -529,27 +571,39 @@ mod character_tools {
         env.set_active_campaign(campaign_id).await.expect("Failed to set active");
 
         // Create NPCs
-        let npc1 = CreateNpcInput {
+        let npc1 = CreateCharacterInput {
             name: "Guard Captain".to_string(),
             race: "Human".to_string(),
             class: None,
+            is_npc: true,
+            player_id: None,
+            player_name: None,
+            level: 1,
+            background: None,
             role: Some("Guard".to_string()),
             location: None,
             faction: None,
             notes: None,
             alignment: None,
+            backstory: None,
         };
         npc1.execute(env.context.clone()).await.expect("Failed to create");
 
-        let npc2 = CreateNpcInput {
+        let npc2 = CreateCharacterInput {
             name: "Innkeeper".to_string(),
             race: "Halfling".to_string(),
             class: None,
+            is_npc: true,
+            player_id: None,
+            player_name: None,
+            level: 1,
+            background: None,
             role: Some("Merchant".to_string()),
             location: Some("Tavern".to_string()),
             faction: None,
             notes: None,
             alignment: None,
+            backstory: None,
         };
         npc2.execute(env.context.clone()).await.expect("Failed to create");
 
@@ -570,15 +624,21 @@ mod character_tools {
         env.set_active_campaign(campaign_id).await.expect("Failed to set active");
 
         // Create an NPC
-        let npc = CreateNpcInput {
+        let npc = CreateCharacterInput {
             name: "Test NPC".to_string(),
             race: "Elf".to_string(),
             class: None,
+            is_npc: true,
+            player_id: None,
+            player_name: None,
+            level: 1,
+            background: None,
             role: None,
             location: None,
             faction: None,
             notes: None,
             alignment: None,
+            backstory: None,
         };
         npc.execute(env.context.clone()).await.expect("Failed to create");
 
@@ -603,15 +663,21 @@ mod character_tools {
         env.set_active_campaign(campaign_id).await.expect("Failed to set active");
 
         // Create an NPC
-        let npc = CreateNpcInput {
+        let npc = CreateCharacterInput {
             name: "Detailed NPC".to_string(),
             race: "Dwarf".to_string(),
             class: None,
+            is_npc: true,
+            player_id: None,
+            player_name: None,
+            level: 1,
+            background: None,
             role: Some("Blacksmith".to_string()),
             location: Some("Forge".to_string()),
             faction: None,
             notes: None,
             alignment: None,
+            backstory: None,
         };
         let created = npc.execute(env.context.clone()).await.expect("Failed to create");
 
@@ -654,15 +720,21 @@ mod character_tools {
         env.set_active_campaign(campaign_id).await.expect("Failed to set active");
 
         // Create an NPC
-        let npc = CreateNpcInput {
+        let npc = CreateCharacterInput {
             name: "Wealthy NPC".to_string(),
             race: "Human".to_string(),
             class: None,
+            is_npc: true,
+            player_id: None,
+            player_name: None,
+            level: 1,
+            background: None,
             role: None,
             location: None,
             faction: None,
             notes: None,
             alignment: None,
+            backstory: None,
         };
         let created = npc.execute(env.context.clone()).await.expect("Failed to create");
 
@@ -690,10 +762,11 @@ mod character_tools {
 
 mod tool_discovery {
     use mimir_dm_mcp::tools::{
-        CreateModuleInput, CreateNpcInput, CreateUserDocumentInput, EditDocumentInput,
-        GetCharacterInput, GetModuleDetailsInput, ListCampaignsInput, ListCharactersInput,
-        ListDocumentsInput, ListModulesInput, ReadDocumentInput, SearchItemsInput,
-        SearchMonstersInput, SearchTrapsInput, SetActiveCampaignInput, UpdateCharacterCurrencyInput,
+        CreateCharacterInput, CreateModuleInput, CreateUserDocumentInput, EditCharacterInput,
+        EditDocumentInput, GetCharacterInput, GetModuleDetailsInput, ListCampaignsInput,
+        ListCharactersInput, ListDocumentsInput, ListModulesInput, ReadDocumentInput,
+        SearchItemsInput, SearchMonstersInput, SearchTrapsInput, SetActiveCampaignInput,
+        UpdateCharacterCurrencyInput,
     };
 
     #[tokio::test]
@@ -741,8 +814,11 @@ mod tool_discovery {
         let get = GetCharacterInput::tool();
         assert_eq!(get.name, "get_character");
 
-        let create_npc = CreateNpcInput::tool();
-        assert_eq!(create_npc.name, "create_npc");
+        let create = CreateCharacterInput::tool();
+        assert_eq!(create.name, "create_character");
+
+        let edit = EditCharacterInput::tool();
+        assert_eq!(edit.name, "edit_character");
 
         let currency = UpdateCharacterCurrencyInput::tool();
         assert_eq!(currency.name, "update_character_currency");

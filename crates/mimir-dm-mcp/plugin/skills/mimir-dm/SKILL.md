@@ -1,12 +1,12 @@
 ---
-name: Mimir DM
-version: 0.2.3
-description: This skill should be used when the user asks to "create a D&D campaign", "make a new module", "add an NPC", "create an encounter", "search for monsters", "find D&D items", "list campaigns", "set up a dungeon crawl", "create a mystery adventure", "add loot to characters", "search for traps", "manage character inventory", "build an adventure", "populate a dungeon", "give items to players", "create a villain", "add treasure", "write session notes", or mentions "Mimir campaign", "D&D 5e authoring", or "dungeon master tools". Provides MCP tools for campaign management, module creation, NPC authoring, and catalog searching.
+name: mimir-dm
+version: 0.2.4
+description: This skill should be used when the user asks to "create a D&D campaign", "make a new module", "add an NPC", "create an encounter", "search for monsters", "find D&D items", "list campaigns", "set up a dungeon crawl", "create a mystery adventure", "add loot to characters", "search for traps", "manage character inventory", "build an adventure", "populate a dungeon", "give items to players", "create a villain", "add treasure", "write session notes", "create a player character", "edit a character", "update character stats", or mentions "Mimir campaign", "D&D 5e authoring", or "dungeon master tools". Provides MCP tools for campaign management, module creation, character creation and editing, and catalog searching.
 ---
 
 # Mimir Campaign Authoring
 
-This skill provides 20 MCP tools for creating and managing D&D 5e campaigns in Mimir, including campaign management, module creation, NPC authoring, and document writing.
+Create and manage D&D 5e campaigns using 21 MCP tools for campaign management, module creation, character management, and document writing.
 
 ## Getting Started
 
@@ -27,7 +27,8 @@ All subsequent tools operate within the active campaign context.
 | Modules | `create_module`, `list_modules`, `get_module_details` |
 | Module Content | `add_monster_to_module`, `add_item_to_module` |
 | Documents | `list_documents`, `read_document`, `edit_document`, `create_user_document` |
-| NPCs | `create_npc`, `assign_npc_to_module`, `list_characters`, `get_character` |
+| Characters | `create_character`, `edit_character`, `list_characters`, `get_character` |
+| NPCs | `assign_npc_to_module` |
 | Inventory | `add_item_to_character`, `update_character_currency` |
 | Catalog | `search_monsters`, `search_items`, `search_traps` |
 
@@ -67,10 +68,17 @@ search_items(rarity: "uncommon")
 add_item_to_module(module_id, item_name: "Potion of Healing", item_source: "PHB", location: "Chest")
 ```
 
-### Create NPCs
+### Create Characters
 ```
-create_npc(name: "Garrett", race: "Human", role: "quest_giver", location: "The Rusty Tankard")
+# Create an NPC (is_npc defaults to true)
+create_character(name: "Garrett", race: "Human", role: "quest_giver", location: "The Rusty Tankard")
 assign_npc_to_module(character_id, module_id, role: "quest_giver")
+
+# Create a player character
+create_character(name: "Thorin", race: "Dwarf", class: "Fighter", is_npc: false, player_name: "John")
+
+# Edit a character
+edit_character(character_id, max_hp: 45, alignment: "Lawful Good")
 ```
 
 ### Give Loot to Characters

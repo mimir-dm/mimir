@@ -1,6 +1,6 @@
 # Mimir MCP Tool Reference
 
-Complete reference for all available MCP tools (20 tools total).
+Complete reference for all available MCP tools (21 tools total).
 
 ## Campaign Management
 
@@ -34,7 +34,8 @@ Complete reference for all available MCP tools (20 tools total).
 |------|---------|
 | `list_characters` | List characters (filter by `character_type`: pc/npc/all) |
 | `get_character` | Get full character details (optionally include version history) |
-| `create_npc` | Create an NPC with name, race, class, role, faction, alignment |
+| `create_character` | Create a PC or NPC (use `is_npc: false` for player characters) |
+| `edit_character` | Edit character attributes (creates new version) |
 | `assign_npc_to_module` | Link NPC to module with role and optional encounter_tag |
 | `add_item_to_character` | Add item to character inventory (creates new version) |
 | `update_character_currency` | Update character's currency (creates new version) |
@@ -116,15 +117,45 @@ Complete reference for all available MCP tools (20 tools total).
 - `character_id` (integer, required) - Character ID
 - `include_versions` (boolean, optional) - Include version history (default: false)
 
-#### create_npc
-- `name` (string, required) - NPC name
+#### create_character
+- `name` (string, required) - Character name
 - `race` (string, required) - Race (e.g., "Human", "Elf", "Dwarf")
-- `class` (string, optional) - Class if applicable
-- `role` (string, optional) - Role: quest_giver, ally, antagonist, neutral, merchant, informant
-- `location` (string, optional) - Where the NPC can be found
+- `class` (string, optional) - Class (e.g., "Fighter", "Wizard", "Commoner")
+- `is_npc` (boolean, optional) - Whether this is an NPC (default: true). Set to false for player characters.
+- `player_id` (integer, optional) - Player ID for player characters
+- `player_name` (string, optional) - Player name for display
+- `level` (integer, optional) - Character level (default: 1)
+- `background` (string, optional) - Background (e.g., "Soldier", "Noble", "Acolyte")
+- `role` (string, optional) - Role for NPCs: quest_giver, ally, antagonist, neutral, merchant, informant
+- `location` (string, optional) - Where the character can be found
 - `faction` (string, optional) - Faction affiliation
 - `alignment` (string, optional) - Alignment (e.g., "Lawful Good", "Chaotic Neutral")
+- `backstory` (string, optional) - Character backstory
 - `notes` (string, optional) - Additional details
+
+*For backwards compatibility, omitting is_npc creates an NPC (is_npc defaults to true).*
+
+#### edit_character
+- `character_id` (integer, required) - Character ID to edit
+- `name` (string, optional) - New character name
+- `race` (string, optional) - New race
+- `alignment` (string, optional) - New alignment
+- `backstory` (string, optional) - New backstory
+- `max_hp` (integer, optional) - New maximum HP
+- `current_hp` (integer, optional) - New current HP
+- `speed` (integer, optional) - New speed in feet
+- `abilities` (object, optional) - Ability scores object with strength, dexterity, constitution, intelligence, wisdom, charisma
+- `personality_traits` (string, optional) - Personality traits
+- `ideals` (string, optional) - Character ideals
+- `bonds` (string, optional) - Character bonds
+- `flaws` (string, optional) - Character flaws
+- `npc_role` (string, optional) - NPC role in story (NPCs only)
+- `npc_location` (string, optional) - NPC location (NPCs only)
+- `npc_faction` (string, optional) - NPC faction (NPCs only)
+- `npc_notes` (string, optional) - NPC notes (NPCs only)
+- `snapshot_reason` (string, optional) - Reason for this edit (for version history)
+
+*Creates a new character version with the updated data, preserving history.*
 
 #### assign_npc_to_module
 - `character_id` (integer, required) - NPC's character ID

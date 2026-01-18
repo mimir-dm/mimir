@@ -6,7 +6,7 @@ A distributable Claude Code plugin for D&D 5e campaign authoring with Mimir.
 
 - Campaign and module management
 - Document authoring (session notes, module overviews, etc.)
-- NPC creation and assignment
+- Full character creation (both PCs and NPCs) and editing
 - Monster, item, and trap catalog search
 - Character inventory and currency management
 
@@ -104,14 +104,14 @@ The skill activates automatically. Try:
 
 > "Add a goblin to the current module"
 
-## Available MCP Tools (20 total)
+## Available MCP Tools (21 total)
 
 | Category | Tools |
 |----------|-------|
 | Campaign | `list_campaigns`, `set_active_campaign` |
 | Module | `create_module`, `list_modules`, `get_module_details`, `add_monster_to_module`, `add_item_to_module` |
 | Document | `list_documents`, `read_document`, `edit_document`, `create_user_document` |
-| Character | `list_characters`, `get_character`, `create_npc`, `assign_npc_to_module`, `add_item_to_character`, `update_character_currency` |
+| Character | `list_characters`, `get_character`, `create_character`, `edit_character`, `assign_npc_to_module`, `add_item_to_character`, `update_character_currency` |
 | Catalog | `search_monsters`, `search_items`, `search_traps` |
 
 ## Troubleshooting
