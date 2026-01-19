@@ -63,8 +63,6 @@ export function useDataEvents() {
   return {
     on,
     once,
-    emit,
-    // Expose raw bus for advanced use cases
-    bus: dataEvents
+    emit
   }
 }
