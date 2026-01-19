@@ -1,5 +1,6 @@
-import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { ref, computed, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { dataEvents } from '@/shared/utils/dataEvents'
 
 // Types
 export interface MapSummary {
@@ -93,6 +94,24 @@ export function useModuleMaps({ moduleId, campaignId, isDisplayOpen }: UseModule
   function setActiveMap(mapId: number | null) {
     activeMapId.value = mapId
   }
+
+  // Subscribe to map change events for automatic refresh
+  let unsubscribe: (() => void) | null = null
+
+  onMounted(() => {
+    unsubscribe = dataEvents.on('module:maps:changed', (payload) => {
+      if (payload.moduleId === moduleId.value) {
+        loadMaps()
+      }
+    })
+  })
+
+  onUnmounted(() => {
+    if (unsubscribe) {
+      unsubscribe()
+      unsubscribe = null
+    }
+  })
 
   return {
     // State

@@ -13,7 +13,7 @@ pub use campaign::{
     CampaignDetailsResponse, CampaignListItem, CreateModuleInput, CreateModuleResponse,
     GetCampaignDetailsInput, GetModuleDetailsInput, ListCampaignsInput, ListModulesInput,
     ModuleDetailsResponse, ModuleListItem, ModuleSummary, SetActiveCampaignInput,
-    SetActiveCampaignResponse, StageCompletionInfo,
+    SetActiveCampaignResponse, StageCompletionInfo, UpdateModuleMonsterInput, UpdateMonsterResponse,
 };
 
 pub use character::{

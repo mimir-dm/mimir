@@ -101,6 +101,8 @@ impl<'a> ModuleFrontmatterService<'a> {
                 monster_source: monster.source.clone(),
                 quantity: monster.quantity,
                 encounter_tag: monster.encounter.clone(),
+                display_name: None,
+                notes: None,
             };
             repo.create(new_monster)?;
             count += 1;

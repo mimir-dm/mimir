@@ -29,7 +29,7 @@ pub fn seed_monsters(conn: &mut DbConnection, modules: &[Module]) -> Result<()> 
 
         for (name, source, qty, tag) in monsters {
             let mut service = ModuleMonsterService::new(conn);
-            service.add_monster(module.id, name.to_string(), source.to_string(), *qty, tag.map(String::from))?;
+            service.add_monster(module.id, name.to_string(), source.to_string(), *qty, tag.map(String::from), None, None)?;
         }
     }
     info!("Seeded module monsters");

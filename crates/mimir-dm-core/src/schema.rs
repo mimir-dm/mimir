@@ -52,6 +52,8 @@ diesel::table! {
         monster_source -> Text,
         quantity -> Integer,
         encounter_tag -> Nullable<Text>,
+        display_name -> Nullable<Text>,
+        notes -> Nullable<Text>,
         created_at -> Text,
         updated_at -> Text,
     }

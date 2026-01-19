@@ -20,12 +20,20 @@ pub struct AddMonsterRequest {
     pub monster_source: String,
     pub quantity: i32,
     pub encounter_tag: Option<String>,
+    /// Custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<String>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateMonsterRequest {
     pub quantity: Option<i32>,
     pub encounter_tag: Option<Option<String>>,
+    /// Custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<Option<String>>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<Option<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -63,6 +71,8 @@ pub async fn add_module_monster(
         request.monster_source,
         request.quantity,
         request.encounter_tag,
+        request.display_name,
+        request.notes,
     ) {
         Ok(monster) => {
             info!("Monster added successfully with ID: {}", monster.id);
@@ -132,7 +142,7 @@ pub async fn update_module_monster(
     let mut conn = state.db.get_connection()?;
     let mut service = ModuleMonsterService::new(&mut conn);
 
-    match service.update_monster(monster_id, request.quantity, request.encounter_tag) {
+    match service.update_monster(monster_id, request.quantity, request.encounter_tag, request.display_name, request.notes) {
         Ok(monster) => {
             info!("Monster updated successfully");
             Ok(ApiResponse::success(monster))

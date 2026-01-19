@@ -54,11 +54,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import NpcSelectorModal from './NpcSelectorModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
+import { dataEvents } from '@/shared/utils/dataEvents'
 import type { ApiResponse } from '@/types/api'
 
 interface ModuleNpcWithCharacter {
@@ -116,6 +117,7 @@ const removeNpc = async (npc: ModuleNpcWithCharacter) => {
     await invoke<ApiResponse<void>>('remove_module_npc', {
       npcId: npc.id
     })
+    dataEvents.emit('module:npcs:changed', { moduleId: props.moduleId })
     loadNpcs()
   } catch (e) {
     console.error('Failed to remove NPC:', e)
@@ -132,8 +134,23 @@ watch(() => props.moduleId, () => {
   loadNpcs()
 })
 
+// Subscribe to NPC change events for automatic refresh
+let unsubscribe: (() => void) | null = null
+
 onMounted(() => {
   loadNpcs()
+  unsubscribe = dataEvents.on('module:npcs:changed', (payload) => {
+    if (payload.moduleId === props.moduleId) {
+      loadNpcs()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribe) {
+    unsubscribe()
+    unsubscribe = null
+  }
 })
 </script>
 

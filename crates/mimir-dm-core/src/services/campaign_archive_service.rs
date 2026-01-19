@@ -210,6 +210,10 @@ pub struct ModuleMonsterData {
     pub quantity: i32,
     /// Encounter tag grouping
     pub encounter_tag: Option<String>,
+    /// Custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<String>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<String>,
 }
 
 impl From<&ModuleMonster> for ModuleMonsterData {
@@ -220,6 +224,8 @@ impl From<&ModuleMonster> for ModuleMonsterData {
             monster_source: mm.monster_source.clone(),
             quantity: mm.quantity,
             encounter_tag: mm.encounter_tag.clone(),
+            display_name: mm.display_name.clone(),
+            notes: mm.notes.clone(),
         }
     }
 }
@@ -875,6 +881,8 @@ impl CampaignArchiveService {
                         monster_source: mm_data.monster_source.clone(),
                         quantity: mm_data.quantity,
                         encounter_tag: mm_data.encounter_tag.clone(),
+                        display_name: mm_data.display_name.clone(),
+                        notes: mm_data.notes.clone(),
                     };
                     mm_repo.create(new_mm)?;
                     debug!(

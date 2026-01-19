@@ -35,6 +35,8 @@ impl<'a> ModuleMonsterService<'a> {
     /// * `monster_source` - Source book abbreviation (e.g., "MM")
     /// * `quantity` - Number of this monster type
     /// * `encounter_tag` - Optional encounter grouping tag
+    /// * `display_name` - Optional custom display name (e.g., "Frost Wight" when using goblin stats)
+    /// * `notes` - Optional DM notes about customizations or thematic changes
     pub fn add_monster(
         &mut self,
         module_id: i32,
@@ -42,6 +44,8 @@ impl<'a> ModuleMonsterService<'a> {
         monster_source: String,
         quantity: i32,
         encounter_tag: Option<String>,
+        display_name: Option<String>,
+        notes: Option<String>,
     ) -> Result<ModuleMonster> {
         let mut repo = ModuleMonsterRepository::new(self.conn);
 
@@ -53,6 +57,8 @@ impl<'a> ModuleMonsterService<'a> {
             let update = UpdateModuleMonster {
                 quantity: Some(existing.quantity + quantity),
                 encounter_tag: None,
+                display_name: None,
+                notes: None,
             };
             return repo.update(existing.id, update);
         }
@@ -63,6 +69,8 @@ impl<'a> ModuleMonsterService<'a> {
             monster_source,
             quantity,
             encounter_tag,
+            display_name,
+            notes,
         };
 
         repo.create(new_monster)
@@ -74,17 +82,21 @@ impl<'a> ModuleMonsterService<'a> {
         repo.delete(monster_id)
     }
 
-    /// Update a monster entry (quantity or encounter tag).
+    /// Update a monster entry (quantity, encounter tag, display name, or notes).
     pub fn update_monster(
         &mut self,
         monster_id: i32,
         quantity: Option<i32>,
         encounter_tag: Option<Option<String>>,
+        display_name: Option<Option<String>>,
+        notes: Option<Option<String>>,
     ) -> Result<ModuleMonster> {
         let mut repo = ModuleMonsterRepository::new(self.conn);
         let update = UpdateModuleMonster {
             quantity,
             encounter_tag,
+            display_name,
+            notes,
         };
         repo.update(monster_id, update)
     }

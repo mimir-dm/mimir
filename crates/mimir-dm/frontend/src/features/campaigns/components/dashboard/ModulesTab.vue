@@ -192,7 +192,21 @@
                           @click="handleSelectMonster(monster)"
                         >
                           <span class="monster-qty">{{ monster.quantity }}×</span>
-                          <span class="monster-name">{{ monster.monster_name }}</span>
+                          <div class="monster-info">
+                            <span class="monster-name">{{ monster.display_name || monster.monster_name }}</span>
+                            <span v-if="monster.display_name" class="monster-original">({{ monster.monster_name }})</span>
+                            <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">*</span>
+                          </div>
+                          <button
+                            v-if="monster.id > 0"
+                            class="monster-edit-btn"
+                            @click.stop="openMonsterEditModal(monster)"
+                            title="Customize monster"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -351,6 +365,52 @@
         <button class="btn btn-danger" @click="handleDeleteModule">Delete Module</button>
       </template>
     </AppModal>
+
+    <!-- Monster Customization Modal -->
+    <AppModal
+      :visible="showMonsterEditModal"
+      title="Customize Monster"
+      size="md"
+      @close="closeMonsterEditModal"
+    >
+      <div v-if="monsterToEdit" class="monster-edit-form">
+        <div class="form-header">
+          <span class="base-monster-label">Base Monster:</span>
+          <span class="base-monster-name">{{ monsterToEdit.monster_name }}</span>
+          <span class="base-monster-source">({{ monsterToEdit.monster_source }})</span>
+        </div>
+
+        <div class="form-group">
+          <label for="display-name">Display Name</label>
+          <input
+            id="display-name"
+            v-model="monsterEditForm.display_name"
+            type="text"
+            class="form-input"
+            :placeholder="monsterToEdit.monster_name"
+          />
+          <p class="form-help">Custom name to display instead of the base monster name (e.g., "Frost Wight" for a reskinned Goblin)</p>
+        </div>
+
+        <div class="form-group">
+          <label for="monster-notes">DM Notes</label>
+          <textarea
+            id="monster-notes"
+            v-model="monsterEditForm.notes"
+            class="form-textarea"
+            rows="5"
+            placeholder="Notes about stat modifications, thematic changes, or encounter context..."
+          ></textarea>
+          <p class="form-help">Private notes about customizations or how this monster differs from the base stat block</p>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-secondary" @click="closeMonsterEditModal">Cancel</button>
+        <button class="btn btn-primary" @click="saveMonsterCustomization" :disabled="savingMonster">
+          {{ savingMonster ? 'Saving...' : 'Save' }}
+        </button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -363,6 +423,7 @@ import { DocumentService } from '@/services/DocumentService'
 import { useModuleMonsters } from '@/features/modules/composables/useModuleMonsters'
 import { usePlayNotes, buildNotesFilePath } from '@/features/modules/composables/usePlayNotes'
 import { openSourcesReference } from '@/shared/utils/windows'
+import { dataEvents } from '@/shared/utils/dataEvents'
 import CreateModuleModal from '../StageLanding/CreateModuleModal.vue'
 import MapUploadModal from '../StageLanding/MapUploadModal.vue'
 import MapTokenSetupModal from '@/components/tokens/MapTokenSetupModal.vue'
@@ -487,6 +548,15 @@ const loadingNpcs = ref(false)
 const existingNpcCharacterIds = computed(() => {
   return moduleNpcs.value.map(npc => npc.character_id)
 })
+
+// Monster customization modal state
+const showMonsterEditModal = ref(false)
+const monsterToEdit = ref<any>(null)
+const monsterEditForm = ref({
+  display_name: '',
+  notes: ''
+})
+const savingMonster = ref(false)
 
 // Load modules
 async function loadModules() {
@@ -825,6 +895,50 @@ async function loadNpcs() {
     moduleNpcs.value = []
   } finally {
     loadingNpcs.value = false
+  }
+}
+
+// Monster customization modal handlers
+function openMonsterEditModal(monster: any) {
+  monsterToEdit.value = monster
+  monsterEditForm.value = {
+    display_name: monster.display_name || '',
+    notes: monster.notes || ''
+  }
+  showMonsterEditModal.value = true
+}
+
+function closeMonsterEditModal() {
+  showMonsterEditModal.value = false
+  monsterToEdit.value = null
+  monsterEditForm.value = { display_name: '', notes: '' }
+}
+
+async function saveMonsterCustomization() {
+  if (!monsterToEdit.value || !selectedModule.value) return
+
+  savingMonster.value = true
+  try {
+    const displayName = monsterEditForm.value.display_name.trim() || null
+    const notes = monsterEditForm.value.notes.trim() || null
+
+    const response = await invoke<{ success: boolean; data?: any }>('update_module_monster', {
+      monsterId: monsterToEdit.value.id,
+      request: {
+        display_name: displayName,
+        notes: notes
+      }
+    })
+
+    if (response.success) {
+      // Emit event to trigger refresh in composable
+      dataEvents.emit('module:monsters:changed', { moduleId: selectedModule.value.id })
+      closeMonsterEditModal()
+    }
+  } catch (e) {
+    console.error('Failed to update monster:', e)
+  } finally {
+    savingMonster.value = false
   }
 }
 
@@ -1337,10 +1451,30 @@ onMounted(async () => {
   min-width: 24px;
 }
 
+.monster-info {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
 .monster-name {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--color-text);
+}
+
+.monster-original {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.monster-has-notes {
+  font-size: 0.8rem;
+  color: var(--color-primary-500);
+  font-weight: bold;
 }
 
 /* Monster Stats Panel in Module Dashboard */
@@ -1697,5 +1831,119 @@ onMounted(async () => {
 .notes-textarea::placeholder {
   color: var(--color-text-secondary);
   font-style: italic;
+}
+
+/* Monster Edit Button */
+.monster-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.monster-row:hover .monster-edit-btn {
+  opacity: 1;
+}
+
+.monster-edit-btn:hover {
+  background: var(--color-primary-100);
+  color: var(--color-primary-600);
+}
+
+.monster-edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Monster Edit Form */
+.monster-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.form-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-sm);
+}
+
+.base-monster-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.base-monster-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.base-monster-source {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.form-input {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+}
+
+.form-textarea {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+}
+
+.form-help {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
 }
 </style>

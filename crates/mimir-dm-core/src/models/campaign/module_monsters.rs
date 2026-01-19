@@ -18,6 +18,10 @@ pub struct ModuleMonster {
     pub monster_source: String,
     pub quantity: i32,
     pub encounter_tag: Option<String>,
+    /// Optional custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<String>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -31,6 +35,10 @@ pub struct NewModuleMonster {
     pub monster_source: String,
     pub quantity: i32,
     pub encounter_tag: Option<String>,
+    /// Optional custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<String>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<String>,
 }
 
 /// Module monster update structure
@@ -39,6 +47,10 @@ pub struct NewModuleMonster {
 pub struct UpdateModuleMonster {
     pub quantity: Option<i32>,
     pub encounter_tag: Option<Option<String>>,
+    /// Optional custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<Option<String>>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<Option<String>>,
 }
 
 /// Module monster with full monster data for display
@@ -50,6 +62,10 @@ pub struct ModuleMonsterWithData {
     pub monster_source: String,
     pub quantity: i32,
     pub encounter_tag: Option<String>,
+    /// Optional custom display name (e.g., "Frost Wight" when using goblin stats)
+    pub display_name: Option<String>,
+    /// DM notes about customizations or thematic changes
+    pub notes: Option<String>,
     /// Full monster data from catalog (optional, loaded on demand)
     pub monster_data: Option<serde_json::Value>,
 }
@@ -63,6 +79,8 @@ impl From<ModuleMonster> for ModuleMonsterWithData {
             monster_source: mm.monster_source,
             quantity: mm.quantity,
             encounter_tag: mm.encounter_tag,
+            display_name: mm.display_name,
+            notes: mm.notes,
             monster_data: None,
         }
     }

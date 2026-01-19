@@ -102,6 +102,7 @@ import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import CharacterCreationWizard from '@/features/characters/components/CharacterCreationWizard.vue'
+import { dataEvents } from '@/shared/utils/dataEvents'
 import type { Character } from '@/types/character'
 
 interface Props {
@@ -193,6 +194,7 @@ async function handleAdd() {
         }
       })
     }
+    dataEvents.emit('module:npcs:changed', { moduleId: props.moduleId })
     emit('added')
     handleClose()
   } catch (e) {

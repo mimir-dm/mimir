@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { dataEvents } from '@/shared/utils/dataEvents'
 import type {
   Character,
   CharacterData,
@@ -82,7 +83,7 @@ export const useCharacterStore = defineStore('characters', () => {
   /**
    * Get a specific character with full data
    */
-  const getCharacter = async (characterId: number) => {
+  const getCharacter = async (characterId: number, emitUpdate = true) => {
     loading.value = true
     error.value = null
 
@@ -102,6 +103,11 @@ export const useCharacterStore = defineStore('characters', () => {
         characters.value.push(result.character)
       }
 
+      // Emit update event for other listeners (e.g., after mutations call getCharacter)
+      if (emitUpdate) {
+        dataEvents.emit('character:updated', { characterId })
+      }
+
       return result
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to fetch character'
@@ -115,7 +121,7 @@ export const useCharacterStore = defineStore('characters', () => {
   /**
    * Create a new character
    */
-  const createCharacter = async (request: CreateCharacterRequest) => {
+  const createCharacter = async (request: CreateCharacterRequest, campaignId?: number) => {
     loading.value = true
     error.value = null
 
@@ -124,10 +130,11 @@ export const useCharacterStore = defineStore('characters', () => {
         request
       })
 
-      // Refresh the character list for the campaign
-      if (request.player_id) {
-        // We don't have campaign_id in the response, so we'd need to track it separately
-        // For now, just indicate success
+      // Emit event for listeners - need characterId from result
+      // The result is CharacterData which should have character_id or id
+      const characterId = (result as any).character_id || (result as any).id
+      if (campaignId && characterId) {
+        dataEvents.emit('character:created', { campaignId, characterId })
       }
 
       return result
@@ -459,7 +466,7 @@ export const useCharacterStore = defineStore('characters', () => {
   /**
    * Delete a character
    */
-  const deleteCharacter = async (characterId: number) => {
+  const deleteCharacter = async (characterId: number, campaignId?: number) => {
     loading.value = true
     error.value = null
 
@@ -472,6 +479,11 @@ export const useCharacterStore = defineStore('characters', () => {
       // Clear current character if it was deleted
       if (currentCharacter.value?.character.id === characterId) {
         currentCharacter.value = null
+      }
+
+      // Emit event for listeners
+      if (campaignId) {
+        dataEvents.emit('character:deleted', { campaignId, characterId })
       }
 
       return true

@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import type { Document } from './DocumentService'
+import { dataEvents } from '@/shared/utils/dataEvents'
 
 export interface ModuleData {
   name: string
@@ -120,13 +121,13 @@ class ModuleServiceClass {
           expected_sessions: 4 // Default value, can be made configurable
         }
       })
-      
+
       // Clear campaign cache since we added a new module
       this.clearCampaignCache(data.campaign_id)
-      
+
       const module = 'data' in response ? response.data : response
       // Ensure required fields have defaults
-      return {
+      const result = {
         ...module,
         module_number: module.module_number ?? 1,
         expected_sessions: module.expected_sessions ?? 0,
@@ -136,6 +137,9 @@ class ModuleServiceClass {
         started_at: module.started_at ?? null,
         completed_at: module.completed_at ?? null
       }
+
+      dataEvents.emit('module:created', { campaignId: data.campaign_id, moduleId: result.id })
+      return result
     } catch (error) {
       throw new Error(`Failed to create module "${data.name}": ${error}`)
     }
@@ -151,15 +155,15 @@ class ModuleServiceClass {
           actual_sessions: undefined
         }
       })
-      
+
       // Clear caches
       this.cache.delete(`module-${id}`)
       if (data.campaign_id) {
         this.clearCampaignCache(data.campaign_id)
       }
-      
+
       // Ensure required fields have defaults
-      return {
+      const result = {
         ...response.data,
         module_number: response.data.module_number ?? 1,
         expected_sessions: response.data.expected_sessions ?? 0,
@@ -169,17 +173,24 @@ class ModuleServiceClass {
         started_at: response.data.started_at ?? null,
         completed_at: response.data.completed_at ?? null
       }
+
+      dataEvents.emit('module:updated', { moduleId: id })
+      return result
     } catch (error) {
       throw new Error(`Failed to update module ${id}: ${error}`)
     }
   }
-  
-  async delete(id: number): Promise<void> {
+
+  async delete(id: number, campaignId?: number): Promise<void> {
     try {
       await invoke('delete_module', { id })
-      
+
       // Clear all caches since we don't know the campaign
       this.clearCache()
+
+      if (campaignId) {
+        dataEvents.emit('module:deleted', { campaignId, moduleId: id })
+      }
     } catch (error) {
       throw new Error(`Failed to delete module ${id}: ${error}`)
     }
@@ -199,12 +210,12 @@ class ModuleServiceClass {
           new_stage: newStage
         }
       })
-      
+
       // Clear module cache
       this.cache.delete(`module-${id}`)
-      
+
       // Ensure required fields have defaults
-      return {
+      const result = {
         ...response.data,
         module_number: response.data.module_number ?? 1,
         expected_sessions: response.data.expected_sessions ?? 0,
@@ -214,6 +225,9 @@ class ModuleServiceClass {
         started_at: response.data.started_at ?? null,
         completed_at: response.data.completed_at ?? null
       }
+
+      dataEvents.emit('module:updated', { moduleId: id })
+      return result
     } catch (error) {
       throw new Error(`Failed to transition module ${id} to ${newStage}: ${error}`)
     }

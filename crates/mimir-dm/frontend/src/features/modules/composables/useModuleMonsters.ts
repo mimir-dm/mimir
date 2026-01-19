@@ -1,6 +1,7 @@
-import { ref, type Ref } from 'vue'
+import { ref, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { processFormattingTags } from '@/features/sources/utils/textFormatting'
+import { dataEvents } from '@/shared/utils/dataEvents'
 
 // Types
 export interface MonsterWithData {
@@ -10,6 +11,10 @@ export interface MonsterWithData {
   monster_source: string
   quantity: number
   encounter_tag: string | null
+  /** Custom display name (e.g., "Frost Wight" when using goblin stats) */
+  display_name: string | null
+  /** DM notes about customizations or thematic changes */
+  notes: string | null
   monster_data: any | null
 }
 
@@ -116,6 +121,8 @@ export function useModuleMonsters(moduleId: Ref<number>) {
                 monster_source: token.monster_source || 'MM',
                 quantity: 1,
                 encounter_tag: 'On Map',
+                display_name: null,
+                notes: null,
                 monster_data: null // Will be looked up separately if needed
               })
             }
@@ -154,6 +161,25 @@ export function useModuleMonsters(moduleId: Ref<number>) {
   function clearSelectedMonster() {
     selectedMonster.value = null
   }
+
+  // Subscribe to monster change events for automatic refresh
+  let unsubscribe: (() => void) | null = null
+
+  onMounted(() => {
+    unsubscribe = dataEvents.on('module:monsters:changed', (payload) => {
+      if (payload.moduleId === moduleId.value) {
+        // Refetch monsters when our module's monsters change
+        loadEncounters()
+      }
+    })
+  })
+
+  onUnmounted(() => {
+    if (unsubscribe) {
+      unsubscribe()
+      unsubscribe = null
+    }
+  })
 
   return {
     // State

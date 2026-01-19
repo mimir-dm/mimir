@@ -9,6 +9,7 @@ use crate::tools::{
     EditDocumentInput, GetCharacterInput, GetModuleDetailsInput, ListCampaignsInput,
     ListCharactersInput, ListDocumentsInput, ListModulesInput, ReadDocumentInput, SearchItemsInput,
     SearchMonstersInput, SearchTrapsInput, SetActiveCampaignInput, UpdateCharacterCurrencyInput,
+    UpdateModuleMonsterInput,
 };
 use async_trait::async_trait;
 use rust_mcp_sdk::mcp_server::ServerHandler;
@@ -42,6 +43,7 @@ impl MimirHandler {
             ListModulesInput::tool(),
             GetModuleDetailsInput::tool(),
             AddMonsterToModuleInput::tool(),
+            UpdateModuleMonsterInput::tool(),
             AddItemToModuleInput::tool(),
             // Document tools
             ListDocumentsInput::tool(),
@@ -120,6 +122,15 @@ impl MimirHandler {
             }
             "add_monster_to_module" => {
                 let input: AddMonsterToModuleInput =
+                    serde_json::from_value(args_value).map_err(|e| e.to_string())?;
+                let result = input
+                    .execute(self.context.clone())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                serde_json::to_value(result).map_err(|e| e.to_string())
+            }
+            "update_module_monster" => {
+                let input: UpdateModuleMonsterInput =
                     serde_json::from_value(args_value).map_err(|e| e.to_string())?;
                 let result = input
                     .execute(self.context.clone())

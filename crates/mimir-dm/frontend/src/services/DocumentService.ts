@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { dataEvents } from '@/shared/utils/dataEvents'
 
 export interface DocumentData {
   title: string
@@ -50,6 +51,15 @@ class DocumentServiceClass {
       })
 
       this.clearCache()
+
+      // Emit event for listeners
+      if (data.moduleId) {
+        dataEvents.emit('document:created', {
+          moduleId: data.moduleId,
+          documentId: typeof response.data.id === 'number' ? response.data.id : parseInt(String(response.data.id))
+        })
+      }
+
       return response.data
     } catch (error) {
       throw new Error(`Failed to create document "${data.title}": ${error}`)
@@ -66,6 +76,7 @@ class DocumentServiceClass {
       })
 
       this.clearCache()
+      dataEvents.emit('document:updated', { documentId: Number(id) })
       return response.data
     } catch (error) {
       throw new Error(`Failed to update document ${id}: ${error}`)
@@ -80,24 +91,28 @@ class DocumentServiceClass {
       })
 
       this.clearCache()
+      dataEvents.emit('document:updated', { documentId: Number(id) })
       return response.data
     } catch (error) {
       throw new Error(`Failed to update metadata for document ${id}: ${error}`)
     }
   }
-  
-  async delete(id: string | number): Promise<void> {
+
+  async delete(id: string | number, moduleId?: number): Promise<void> {
     try {
       await invoke('delete_document', {
         documentId: Number(id)
       })
 
       this.clearCache()
+      if (moduleId) {
+        dataEvents.emit('document:deleted', { moduleId, documentId: Number(id) })
+      }
     } catch (error) {
       throw new Error(`Failed to delete document ${id}: ${error}`)
     }
   }
-  
+
   async transition(id: string | number, phase: string): Promise<Document> {
     try {
       const response = await invoke<{ data: Document }>('transition_document_phase', {
@@ -106,12 +121,13 @@ class DocumentServiceClass {
       })
 
       this.clearCache()
+      dataEvents.emit('document:updated', { documentId: Number(id) })
       return response.data
     } catch (error) {
       throw new Error(`Failed to transition document ${id} to ${phase}: ${error}`)
     }
   }
-  
+
   async complete(id: string | number): Promise<Document> {
     try {
       const response = await invoke<{ data: Document }>('complete_document', {
@@ -119,6 +135,7 @@ class DocumentServiceClass {
       })
 
       this.clearCache()
+      dataEvents.emit('document:updated', { documentId: Number(id) })
       return response.data
     } catch (error) {
       throw new Error(`Failed to complete document ${id}: ${error}`)
@@ -137,6 +154,7 @@ class DocumentServiceClass {
       })
 
       this.clearCache()
+      dataEvents.emit('document:updated', { documentId: Number(id) })
       return response.data
     } catch (error) {
       throw new Error(`Failed to uncomplete document ${id}: ${error}`)

@@ -95,6 +95,7 @@
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
+import { dataEvents } from '@/shared/utils/dataEvents'
 
 const props = defineProps<{
   visible: boolean
@@ -288,6 +289,9 @@ async function handleUpload() {
     })
 
     if (response.success) {
+      if (props.moduleId) {
+        dataEvents.emit('module:maps:changed', { moduleId: props.moduleId })
+      }
       emit('uploaded')
       resetForm()
     } else {

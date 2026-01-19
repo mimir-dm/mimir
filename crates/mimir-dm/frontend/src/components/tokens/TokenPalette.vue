@@ -200,6 +200,10 @@ interface ModuleMonsterWithData {
   monster_source: string
   quantity: number
   encounter_tag: string | null
+  /** Custom display name (e.g., "Frost Wight" when using goblin stats) */
+  display_name: string | null
+  /** DM notes about customizations or thematic changes */
+  notes: string | null
   monster_data: {
     id?: number
     size?: string

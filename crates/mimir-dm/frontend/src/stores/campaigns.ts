@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse, Campaign, NewCampaign } from '../types/api'
+import { dataEvents } from '@/shared/utils/dataEvents'
 
 export const useCampaignStore = defineStore('campaigns', () => {
   const campaigns = ref<Campaign[]>([])
@@ -61,11 +62,12 @@ export const useCampaignStore = defineStore('campaigns', () => {
   const createCampaign = async (data: NewCampaign) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await invoke<ApiResponse<Campaign>>('create_campaign', { request: data })
       if (response.success && response.data) {
         campaigns.value.push(response.data)
+        dataEvents.emit('campaign:created', { campaignId: response.data.id })
         return response.data
       } else {
         error.value = response.error || 'Failed to create campaign'
@@ -83,7 +85,7 @@ export const useCampaignStore = defineStore('campaigns', () => {
   const updateCampaignStatus = async (id: number, status: string) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await invoke<ApiResponse<Campaign>>('update_campaign_status', { id, status })
       if (response.success && response.data) {
@@ -95,6 +97,7 @@ export const useCampaignStore = defineStore('campaigns', () => {
         if (currentCampaign.value?.id === id) {
           currentCampaign.value = response.data
         }
+        dataEvents.emit('campaign:updated', { campaignId: id })
         return response.data
       } else {
         error.value = response.error || 'Failed to update campaign'
@@ -199,6 +202,7 @@ export const useCampaignStore = defineStore('campaigns', () => {
         if (currentCampaign.value?.id === id) {
           currentCampaign.value = null
         }
+        dataEvents.emit('campaign:deleted', { campaignId: id })
         return true
       } else {
         error.value = response.error || 'Failed to delete campaign'
@@ -280,6 +284,7 @@ export const useCampaignStore = defineStore('campaigns', () => {
       if (response.success && response.data) {
         // Add the new campaign to the list
         campaigns.value.push(response.data)
+        dataEvents.emit('campaign:created', { campaignId: response.data.id })
         return response.data
       } else {
         error.value = response.error || 'Failed to import campaign'

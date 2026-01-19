@@ -622,6 +622,14 @@ pub struct AddMonsterToModuleInput {
     /// Encounter tag for grouping (e.g., "goblin_ambush", "boss_fight")
     #[serde(default)]
     pub encounter_tag: Option<String>,
+
+    /// Custom display name for this monster (e.g., "Frost Wight" when using goblin stats)
+    #[serde(default)]
+    pub display_name: Option<String>,
+
+    /// DM notes about customizations or thematic changes
+    #[serde(default)]
+    pub notes: Option<String>,
 }
 
 fn default_quantity() -> i32 {
@@ -634,7 +642,7 @@ impl AddMonsterToModuleInput {
         Tool {
             name: "add_monster_to_module".to_string(),
             description: Some(
-                "Add a monster from the catalog to a module. Use encounter_tag to group monsters for specific encounters."
+                "Add a monster from the catalog to a module. Use encounter_tag to group monsters for specific encounters. Use display_name to give it a custom name (e.g., 'Frost Wight' when using goblin stats)."
                     .to_string(),
             ),
             input_schema: ToolInputSchema::new(
@@ -652,6 +660,16 @@ impl AddMonsterToModuleInput {
                         "encounter_tag",
                         "string",
                         "Encounter tag for grouping (e.g., goblin_ambush, boss_fight)",
+                    ),
+                    (
+                        "display_name",
+                        "string",
+                        "Custom display name (e.g., 'Frost Wight' when using goblin stats)",
+                    ),
+                    (
+                        "notes",
+                        "string",
+                        "DM notes about customizations or thematic changes",
                     ),
                 ]),
                 None,
@@ -683,6 +701,8 @@ impl AddMonsterToModuleInput {
                 self.monster_source.clone(),
                 self.quantity,
                 self.encounter_tag.clone(),
+                self.display_name.clone(),
+                self.notes.clone(),
             )
             .map_err(|e| McpError::Service(e.to_string()))?;
 
@@ -694,6 +714,8 @@ impl AddMonsterToModuleInput {
             monster_source: monster.monster_source,
             quantity: monster.quantity,
             encounter_tag: monster.encounter_tag,
+            display_name: monster.display_name,
+            notes: monster.notes,
         })
     }
 }
@@ -708,6 +730,8 @@ pub struct AddMonsterResponse {
     pub monster_source: String,
     pub quantity: i32,
     pub encounter_tag: Option<String>,
+    pub display_name: Option<String>,
+    pub notes: Option<String>,
 }
 
 /// Input for add_item_to_module tool
@@ -817,4 +841,117 @@ pub struct AddModuleItemResponse {
     pub item_source: String,
     pub quantity: i32,
     pub location: Option<String>,
+}
+
+/// Input for update_module_monster tool
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateModuleMonsterInput {
+    /// The module monster ID to update
+    pub monster_id: i32,
+
+    /// New quantity (optional)
+    #[serde(default)]
+    pub quantity: Option<i32>,
+
+    /// New encounter tag (optional, use null to clear)
+    #[serde(default)]
+    pub encounter_tag: Option<Option<String>>,
+
+    /// New custom display name (optional, use null to clear)
+    #[serde(default)]
+    pub display_name: Option<Option<String>>,
+
+    /// New DM notes (optional, use null to clear)
+    #[serde(default)]
+    pub notes: Option<Option<String>>,
+}
+
+impl UpdateModuleMonsterInput {
+    /// Get the tool definition
+    pub fn tool() -> Tool {
+        Tool {
+            name: "update_module_monster".to_string(),
+            description: Some(
+                "Update a monster entry in a module. Can change quantity, encounter tag, display name, or notes. Use null to clear optional fields."
+                    .to_string(),
+            ),
+            input_schema: ToolInputSchema::new(
+                vec!["monster_id".to_string()],
+                create_properties(vec![
+                    ("monster_id", "integer", "The module monster ID to update"),
+                    ("quantity", "integer", "New quantity (optional)"),
+                    (
+                        "encounter_tag",
+                        "string",
+                        "New encounter tag (optional, use null to clear)",
+                    ),
+                    (
+                        "display_name",
+                        "string",
+                        "New custom display name (optional, use null to clear)",
+                    ),
+                    (
+                        "notes",
+                        "string",
+                        "New DM notes about customizations (optional, use null to clear)",
+                    ),
+                ]),
+                None,
+            ),
+            title: None,
+            annotations: None,
+            icons: vec![],
+            execution: None,
+            output_schema: None,
+            meta: None,
+        }
+    }
+
+    /// Execute the update_module_monster tool
+    pub async fn execute(
+        &self,
+        context: Arc<McpContext>,
+    ) -> Result<UpdateMonsterResponse, McpError> {
+        let _campaign = context.require_active_campaign().await?;
+        let mut conn = context.get_connection()?;
+
+        use mimir_dm_core::services::ModuleMonsterService;
+        let mut service = ModuleMonsterService::new(&mut conn);
+
+        let monster = service
+            .update_monster(
+                self.monster_id,
+                self.quantity,
+                self.encounter_tag.clone(),
+                self.display_name.clone(),
+                self.notes.clone(),
+            )
+            .map_err(|e| McpError::Service(e.to_string()))?;
+
+        Ok(UpdateMonsterResponse {
+            success: true,
+            monster_id: monster.id,
+            module_id: monster.module_id,
+            monster_name: monster.monster_name,
+            monster_source: monster.monster_source,
+            quantity: monster.quantity,
+            encounter_tag: monster.encounter_tag,
+            display_name: monster.display_name,
+            notes: monster.notes,
+        })
+    }
+}
+
+/// Response from update_module_monster
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateMonsterResponse {
+    pub success: bool,
+    pub monster_id: i32,
+    pub module_id: i32,
+    pub monster_name: String,
+    pub monster_source: String,
+    pub quantity: i32,
+    pub encounter_tag: Option<String>,
+    pub display_name: Option<String>,
+    pub notes: Option<String>,
 }

@@ -8,11 +8,18 @@
       <!-- Monster Header -->
       <header class="monster-header">
         <div class="monster-title">
-          <h2>{{ monster.monster_name }}</h2>
+          <h2>{{ monster.display_name || monster.monster_name }}</h2>
+          <p v-if="monster.display_name" class="monster-alias">({{ monster.monster_name }})</p>
           <p class="monster-type">{{ formatCreatureType(monster.monster_data) }}</p>
         </div>
         <button class="close-monster" @click="$emit('close')" title="Close">×</button>
       </header>
+
+      <!-- DM Notes -->
+      <div v-if="monster.notes" class="dm-notes">
+        <div class="dm-notes-label">DM Notes</div>
+        <div class="dm-notes-content">{{ monster.notes }}</div>
+      </div>
 
       <div class="monster-body" v-if="monster.monster_data">
         <!-- Quick Stats Bar -->
@@ -236,11 +243,40 @@ defineEmits<{
   line-height: 1.2;
 }
 
+.monster-alias {
+  margin: 0.1rem 0 0 0;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
 .monster-type {
   margin: 0.15rem 0 0 0;
   font-size: 0.75rem;
   font-style: italic;
   color: var(--color-text-muted);
+}
+
+/* DM Notes Section */
+.dm-notes {
+  padding: 0.5rem 1rem;
+  background: var(--color-primary-100);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dm-notes-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary-600);
+  margin-bottom: 0.25rem;
+}
+
+.dm-notes-content {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .close-monster {
