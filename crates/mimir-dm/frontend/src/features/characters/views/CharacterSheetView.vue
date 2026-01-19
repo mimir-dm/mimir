@@ -103,8 +103,20 @@
               <div class="ability-grid">
                 <div v-for="(score, ability) in data.abilities" :key="ability" class="ability-box">
                   <div class="ability-name">{{ ability.slice(0, 3).toUpperCase() }}</div>
-                  <div class="ability-score">{{ score }}</div>
-                  <div class="ability-modifier">{{ formatModifier(getModifier(score)) }}</div>
+                  <template v-if="isEditing && editData">
+                    <input
+                      type="number"
+                      v-model.number="(editData.abilities as Record<string, number>)[ability as string]"
+                      :min="1"
+                      :max="30"
+                      class="edit-input edit-ability"
+                    />
+                    <div class="ability-modifier">{{ formatModifier(getModifier((editData.abilities as Record<string, number>)[ability as string])) }}</div>
+                  </template>
+                  <template v-else>
+                    <div class="ability-score">{{ score }}</div>
+                    <div class="ability-modifier">{{ formatModifier(getModifier(score)) }}</div>
+                  </template>
                 </div>
               </div>
             </section>
@@ -135,14 +147,21 @@
                 </div>
                 <div class="combat-stat hp-stat">
                   <span class="stat-label">Hit Points</span>
-                  <span v-if="isEditing && editData" class="stat-value">
+                  <span v-if="isEditing && editData" class="stat-value hp-edit-group">
                     <input
                       type="number"
                       v-model.number="editData.current_hp"
                       :min="0"
-                      :max="data.max_hp"
+                      :max="editData.max_hp"
                       class="edit-input edit-hp"
-                    /> / {{ data.max_hp }}
+                      title="Current HP"
+                    /> / <input
+                      type="number"
+                      v-model.number="editData.max_hp"
+                      :min="1"
+                      class="edit-input edit-hp"
+                      title="Max HP"
+                    />
                   </span>
                   <span v-else class="stat-value">{{ data.current_hp }} / {{ data.max_hp }}</span>
                 </div>
@@ -1284,7 +1303,16 @@ const isEditing = ref(false)
 const editData = ref<{
   character_name: string
   alignment: string
+  max_hp: number
   current_hp: number
+  abilities: {
+    strength: number
+    dexterity: number
+    constitution: number
+    intelligence: number
+    wisdom: number
+    charisma: number
+  }
   personality: {
     traits: string
     ideals: string
@@ -2503,7 +2531,9 @@ const startEditing = () => {
   editData.value = {
     character_name: data.value.character_name,
     alignment: data.value.alignment || '',
+    max_hp: data.value.max_hp,
     current_hp: data.value.current_hp,
+    abilities: { ...data.value.abilities },
     personality: {
       traits: data.value.personality.traits || '',
       ideals: data.value.personality.ideals || '',
@@ -2569,7 +2599,9 @@ const saveEdits = async () => {
       ...data.value,
       character_name: editData.value.character_name,
       alignment: editData.value.alignment || null,
+      max_hp: editData.value.max_hp,
       current_hp: editData.value.current_hp,
+      abilities: editData.value.abilities,
       personality: {
         traits: editData.value.personality.traits || null,
         ideals: editData.value.personality.ideals || null,
@@ -3050,8 +3082,41 @@ const spellsForPicker = computed(() => {
 }
 
 .edit-hp {
-  width: 60px;
+  width: 48px;
+  height: 28px;
   text-align: center;
+  padding: 2px 4px;
+  -moz-appearance: textfield;
+}
+
+.edit-hp::-webkit-outer-spin-button,
+.edit-hp::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hp-edit-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.edit-ability {
+  width: 44px;
+  height: 36px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 4px;
+  margin: 0 auto;
+  display: block;
+  -moz-appearance: textfield;
+}
+
+.edit-ability::-webkit-outer-spin-button,
+.edit-ability::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .edit-textarea {

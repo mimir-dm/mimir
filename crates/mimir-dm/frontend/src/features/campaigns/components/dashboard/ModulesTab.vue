@@ -42,7 +42,24 @@
           <!-- Module Header -->
           <div class="module-header">
             <div class="module-title">
-              <h2>{{ selectedModule.name }}</h2>
+              <template v-if="isEditingTitle">
+                <input
+                  ref="titleInput"
+                  v-model="editingTitleValue"
+                  class="module-title-input"
+                  @keyup.enter="saveModuleTitle"
+                  @keyup.escape="cancelEditTitle"
+                  @blur="saveModuleTitle"
+                />
+              </template>
+              <template v-else>
+                <h2>{{ selectedModule.name }}</h2>
+                <button class="btn-icon btn-edit-title" @click="startEditTitle" title="Edit title">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                </button>
+              </template>
             </div>
             <div class="module-actions">
               <button class="btn btn-primary" @click="handlePlayModule">
@@ -50,6 +67,9 @@
               </button>
               <button class="btn btn-secondary" @click="showExportDialog = true">
                 Print
+              </button>
+              <button class="btn btn-danger" @click="confirmDeleteModule" title="Delete module">
+                Delete
               </button>
             </div>
           </div>
@@ -316,11 +336,26 @@
         <button class="btn btn-danger" @click="handleDeleteDocument">Delete</button>
       </template>
     </AppModal>
+
+    <!-- Delete Module Confirmation Modal -->
+    <AppModal
+      :visible="showDeleteModuleModal"
+      title="Delete Module"
+      size="sm"
+      @close="showDeleteModuleModal = false"
+    >
+      <p>Are you sure you want to delete "{{ selectedModule?.name }}"?</p>
+      <p class="delete-warning">This will permanently delete the module and all its associated documents, maps, and assignments.</p>
+      <template #footer>
+        <button class="btn btn-secondary" @click="showDeleteModuleModal = false">Cancel</button>
+        <button class="btn btn-danger" @click="handleDeleteModule">Delete Module</button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
@@ -370,6 +405,12 @@ const modules = ref<Module[]>([])
 const selectedModule = ref<Module | null>(null)
 const loading = ref(false)
 const showCreateModal = ref(false)
+const showDeleteModuleModal = ref(false)
+
+// Title editing state
+const isEditingTitle = ref(false)
+const editingTitleValue = ref('')
+const titleInput = ref<HTMLInputElement | null>(null)
 
 // Computed moduleId for monsters composable
 const selectedModuleId = computed(() => selectedModule.value?.id || 0)
@@ -612,6 +653,67 @@ async function handleCreateModule(data: { name: string; type: string; sessions: 
     }
   } catch (e) {
     console.error('Failed to create module:', e)
+  }
+}
+
+// Title editing functions
+function startEditTitle() {
+  if (!selectedModule.value) return
+  editingTitleValue.value = selectedModule.value.name
+  isEditingTitle.value = true
+  nextTick(() => {
+    titleInput.value?.focus()
+    titleInput.value?.select()
+  })
+}
+
+function cancelEditTitle() {
+  isEditingTitle.value = false
+  editingTitleValue.value = ''
+}
+
+async function saveModuleTitle() {
+  if (!selectedModule.value || !editingTitleValue.value.trim()) {
+    cancelEditTitle()
+    return
+  }
+
+  const newName = editingTitleValue.value.trim()
+  if (newName === selectedModule.value.name) {
+    cancelEditTitle()
+    return
+  }
+
+  try {
+    await ModuleService.update(selectedModule.value.id, { name: newName })
+    selectedModule.value.name = newName
+    // Update in modules list
+    const idx = modules.value.findIndex(m => m.id === selectedModule.value!.id)
+    if (idx !== -1) {
+      modules.value[idx].name = newName
+    }
+  } catch (e) {
+    console.error('Failed to update module title:', e)
+  } finally {
+    cancelEditTitle()
+  }
+}
+
+// Delete module functions
+function confirmDeleteModule() {
+  showDeleteModuleModal.value = true
+}
+
+async function handleDeleteModule() {
+  if (!selectedModule.value) return
+
+  try {
+    await ModuleService.delete(selectedModule.value.id)
+    showDeleteModuleModal.value = false
+    selectedModule.value = null
+    await loadModules()
+  } catch (e) {
+    console.error('Failed to delete module:', e)
   }
 }
 
@@ -1018,10 +1120,56 @@ onMounted(async () => {
   border-bottom: 1px solid var(--color-border);
 }
 
+.module-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .module-title h2 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.module-title-input {
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 2px solid var(--color-primary-500);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-width: 200px;
+}
+
+.module-title-input:focus {
+  outline: none;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background: var(--color-surface-variant);
+  color: var(--color-text);
+}
+
+.btn-edit-title svg {
+  width: 16px;
+  height: 16px;
 }
 
 .module-actions {
