@@ -4,14 +4,14 @@ level: task
 title: "Lift 5etools import core from splitter into mimir-core"
 short_code: "MIMIR-T-0380"
 created_at: 2026-01-20T18:39:37.853657+00:00
-updated_at: 2026-01-20T18:40:16.848698+00:00
+updated_at: 2026-01-20T19:08:00.195917+00:00
 parent: MIMIR-I-0042
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -83,6 +83,8 @@ crates/mimir-core/src/import/
     ├── class.rs
     └── ... (other types)
 ```
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

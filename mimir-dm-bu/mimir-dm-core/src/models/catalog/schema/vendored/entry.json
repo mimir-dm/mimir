@@ -1,0 +1,3993 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "entry.json",
+	"title": "Entry",
+	"description": "A recursively renderable object.",
+	"version": "1.9.16",
+	"$defs": {
+		"_arrayOfSpell": {
+			"type": "array",
+			"uniqueItems": true,
+			"items": {
+				"oneOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"entry": {
+								"type": "string"
+							},
+							"hidden": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"entry",
+							"hidden"
+						]
+					}
+				]
+			}
+		},
+		"_entryDataStyle": {
+			"type": "string",
+			"enum": [
+				"inset",
+				"narrow"
+			]
+		},
+		"_entryDataData": {
+			"description": "A generic object for storing special data for external use-cases. Keys prefixed with \"rd-\" should be added as \"data-\" HTML attributes when rendering to HTML.",
+			"type": "object",
+			"properties": {
+				"genTables": {
+					"type": "object",
+					"properties": {
+						"tableIgnore": {
+							"const": true
+						},
+						"tableChapterIgnore": {
+							"const": true
+						},
+						"tableInclude": {
+							"const": true
+						},
+						"tableNamePrefix": {
+							"type": "string"
+						},
+						"tableName": {
+							"type": "string"
+						},
+						"skipSectionPrefix": {
+							"const": true
+						},
+						"reprintedAs": {
+							"$ref": "util.json#/$defs/reprintedAs"
+						},
+						"fauxGroupName": {
+							"type": "string"
+						},
+						"fauxGroupSource": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"fauxGroupPage": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"isFauxGroupAdditional": {
+							"const": true
+						}
+					},
+					"additionalProperties": false,
+					"minProperties": 1
+				}
+			},
+			"markdownDescription": "A generic object for storing special data for external use-cases. Keys prefixed with &quot;rd-&quot; should be added as &quot;data-&quot; HTML attributes when rendering to HTML."
+		},
+		"_entryTableColLabelItem": {
+			"anyOf": [
+				{
+					"$ref": "#/$defs/entryTableHeaderCell"
+				},
+				{
+					"type": "string"
+				}
+			]
+		},
+		"_entryStatblockBase": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "statblock"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"displayName": {
+					"type": "string"
+				},
+				"hash": {
+					"type": "string"
+				},
+				"style": {
+					"$ref": "#/$defs/_entryDataStyle"
+				},
+				"collapsed": {
+					"const": true
+				}
+			},
+			"required": [
+				"type"
+			]
+		},
+		"mediaHrefInternal": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "internal"
+				},
+				"path": {
+					"type": "string",
+					"pattern": "\\.(webp|mp3)$"
+				}
+			},
+			"required": [
+				"path"
+			],
+			"additionalProperties": false
+		},
+		"mediaHrefExternal": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "external"
+				},
+				"url": {
+					"type": "string",
+					"description": "Restrict the usage of:\n\n- Site URLs -- these should be `\"internal\"` URLs instead\n- Imgur links -- these are not accessible in the UK https://help.imgur.com/hc/en-us/articles/41592665292443-Imgur-access-in-the-United-Kingdom",
+					"markdownDescription": "Restrict the usage of:\n\n- Site URLs -- these should be &quot;internal&quot; URLs instead\n- Imgur links -- these are not accessible in the UK https://help.imgur.com/hc/en-us/articles/41592665292443-Imgur-access-in-the-United-Kingdom",
+					"minLength": 3,
+					"pattern": "^https?://",
+					"not": {
+						"pattern": "^https?://(5e\\.tools|5etools-mirror-\\d+\\.github\\.io|raw\\.githubusercontent\\.com/5etools-mirror-\\d+|i\\.imgur\\.com|imgur\\.com)/"
+					}
+				}
+			},
+			"required": [
+				"url"
+			],
+			"additionalProperties": false
+		},
+		"mediaHref": {
+			"oneOf": [
+				{
+					"$ref": "#/$defs/mediaHrefInternal"
+				},
+				{
+					"$ref": "#/$defs/mediaHrefExternal"
+				}
+			]
+		},
+		"entry": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type"
+			]
+		},
+		"entrySection": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "section"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"style": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryEntries": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "entries"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"style": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryQuote": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "quote"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"by": {
+					"oneOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"from": {
+					"type": "string"
+				},
+				"skipMarks": {
+					"description": "If the automatically-inserted quotation marks should be skipped.",
+					"type": "boolean",
+					"markdownDescription": "If the automatically-inserted quotation marks should be skipped."
+				},
+				"skipItalics": {
+					"type": "boolean"
+				},
+				"style": {
+					"type": "string",
+					"enum": [
+						"quote-pull"
+					]
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryInlineEntries": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "inline"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryEntriesInlineEntries": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "inlineBlock"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryOptions": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "options"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"count": {
+					"description": "Used to specify how many of the listed options can be chosen as e.g. permanent character features. Leave blank for transient choices.",
+					"type": "integer",
+					"markdownDescription": "Used to specify how many of the listed options can be chosen as e.g. permanent character features. Leave blank for transient choices."
+				},
+				"style": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryTableBase": {
+			"properties": {
+				"caption": {
+					"type": "string"
+				},
+				"isStriped": {
+					"type": "boolean"
+				},
+				"isNameGenerator": {
+					"type": "boolean",
+					"description": "Uses the result rolled to construct a name from multiple columns, such as Prefix, Given, Family, Suffix names etc.",
+					"markdownDescription": "Uses the result rolled to construct a name from multiple columns, such as Prefix, Given, Family, Suffix names etc."
+				},
+				"style": {
+					"type": "string"
+				},
+				"colLabels": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/_entryTableColLabelItem"
+					}
+				},
+				"colLabelRows": {
+					"type": "array",
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/$defs/_entryTableColLabelItem"
+						}
+					},
+					"minItems": 1
+				},
+				"colStyles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"rowLabels": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"rowStyles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"rows": {
+					"type": "array",
+					"items": {
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"$ref": "#"
+								}
+							},
+							{
+								"$ref": "#/$defs/entryTableRow"
+							}
+						]
+					}
+				},
+				"footnotes": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"intro": {
+					"description": "Primarily for homebrew use.",
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					},
+					"markdownDescription": "Primarily for homebrew use."
+				},
+				"outro": {
+					"description": "Primarily for homebrew use.",
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					},
+					"markdownDescription": "Primarily for homebrew use."
+				}
+			},
+			"dependencies": {
+				"colLabels": {
+					"not": {
+						"required": [
+							"colLabelRows"
+						]
+					}
+				},
+				"colLabelRows": {
+					"not": {
+						"required": [
+							"colLabels"
+						]
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"entryTable": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "table"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"caption": {
+					"type": "string"
+				},
+				"isStriped": {
+					"type": "boolean"
+				},
+				"isNameGenerator": {
+					"type": "boolean",
+					"description": "Uses the result rolled to construct a name from multiple columns, such as Prefix, Given, Family, Suffix names etc.",
+					"markdownDescription": "Uses the result rolled to construct a name from multiple columns, such as Prefix, Given, Family, Suffix names etc."
+				},
+				"style": {
+					"type": "string"
+				},
+				"colLabels": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/_entryTableColLabelItem"
+					}
+				},
+				"colLabelRows": {
+					"type": "array",
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/$defs/_entryTableColLabelItem"
+						}
+					},
+					"minItems": 1
+				},
+				"colStyles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"rowLabels": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"rowStyles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"rows": {
+					"type": "array",
+					"items": {
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"$ref": "#"
+								}
+							},
+							{
+								"$ref": "#/$defs/entryTableRow"
+							}
+						]
+					}
+				},
+				"footnotes": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"intro": {
+					"description": "Primarily for homebrew use.",
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					},
+					"markdownDescription": "Primarily for homebrew use."
+				},
+				"outro": {
+					"description": "Primarily for homebrew use.",
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					},
+					"markdownDescription": "Primarily for homebrew use."
+				}
+			},
+			"required": [
+				"type",
+				"rows"
+			],
+			"dependencies": {
+				"colLabels": {
+					"not": {
+						"required": [
+							"colLabelRows"
+						]
+					}
+				},
+				"colLabelRows": {
+					"not": {
+						"required": [
+							"colLabels"
+						]
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"entryTableGroup": {
+			"description": "Used to group related tables together; has no effect on rendering.",
+			"type": "object",
+			"markdownDescription": "Used to group related tables together; has no effect on rendering.",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "tableGroup"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"tables": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/entryTable"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"tables"
+			],
+			"additionalProperties": false
+		},
+		"entryTableRow": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "row"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"style": {
+					"type": "string"
+				},
+				"row": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"row"
+			],
+			"additionalProperties": false
+		},
+		"entryTableHeaderCell": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "cellHeader"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"width": {
+					"type": "integer",
+					"minimum": 2
+				},
+				"entry": {
+					"type": "string"
+				},
+				"style": {
+					"type": "string",
+					"enum": [
+						"th-skewer"
+					]
+				}
+			},
+			"required": [
+				"type",
+				"entry"
+			],
+			"additionalProperties": false
+		},
+		"entryTableCell": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "cell"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"width": {
+					"type": "integer"
+				},
+				"roll": {
+					"oneOf": [
+						{
+							"type": "object",
+							"properties": {
+								"min": {
+									"type": "integer"
+								},
+								"max": {
+									"type": "integer"
+								},
+								"pad": {
+									"type": "boolean"
+								}
+							},
+							"required": [
+								"min",
+								"max"
+							],
+							"additionalProperties": false
+						},
+						{
+							"type": "object",
+							"properties": {
+								"exact": {
+									"type": "integer"
+								},
+								"pad": {
+									"type": "boolean"
+								}
+							},
+							"required": [
+								"exact"
+							],
+							"additionalProperties": false
+						}
+					]
+				},
+				"entry": {
+					"$ref": "#"
+				}
+			},
+			"required": [
+				"type"
+			],
+			"additionalProperties": false
+		},
+		"entryList": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "list"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"columns": {
+					"description": "Number of columns the content should be split into. Note that the full value is only displayed on wide screens, and screens below certain widths will see an appropriately reduced number of columns.",
+					"type": "integer",
+					"markdownDescription": "Number of columns the content should be split into. Note that the full value is only displayed on wide screens, and screens below certain widths will see an appropriately reduced number of columns."
+				},
+				"style": {
+					"type": "string",
+					"description": "Formatting to be applied to the list; not providing a style results in a simple bullet point list.\n- list-decimal: decimal numbering 1. 2. 3. etc\n- list-hang: a list with the bullets removed and a full indentation\n- list-hang-notitle: a list with no bullets that indents all lines but the first\n- list-lower-roman: lowercase roman numeral numbering i, ii, iii, iv, etc.\n- list-name: a bulleted list with all text in bold\n- list-no-bullets: a list with the bullets removed and reduced indentation",
+					"enum": [
+						"list-decimal",
+						"list-hang",
+						"list-hang-notitle",
+						"list-hang-subtrait",
+						"list-lower-roman",
+						"list-upper-roman",
+						"list-name",
+						"list-no-bullets",
+						"list-caption"
+					],
+					"markdownDescription": "Formatting to be applied to the list; not providing a style results in a simple bullet point list.\n- list-decimal: decimal numbering 1. 2. 3. etc\n- list-hang: a list with the bullets removed and a full indentation\n- list-hang-notitle: a list with no bullets that indents all lines but the first\n- list-lower-roman: lowercase roman numeral numbering i, ii, iii, iv, etc.\n- list-name: a bulleted list with all text in bold\n- list-no-bullets: a list with the bullets removed and reduced indentation"
+				},
+				"start": {
+					"type": "integer"
+				},
+				"items": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"items"
+			],
+			"additionalProperties": false
+		},
+		"entryBonus": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "bonus"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"value": {
+					"type": "integer"
+				}
+			},
+			"required": [
+				"type",
+				"value"
+			],
+			"additionalProperties": false
+		},
+		"entryBonusSpeed": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "bonusSpeed"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"value": {
+					"type": "integer"
+				}
+			},
+			"required": [
+				"type",
+				"value"
+			],
+			"additionalProperties": false
+		},
+		"entryDice": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "dice"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"toRoll": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"number": {
+								"type": "integer"
+							},
+							"faces": {
+								"type": "integer"
+							},
+							"modifier": {
+								"description": "(Warning: unused)",
+								"type": "integer",
+								"markdownDescription": "(Warning: unused)"
+							},
+							"hideModifier": {
+								"description": "(Warning: unused)",
+								"type": "boolean",
+								"markdownDescription": "(Warning: unused)"
+							}
+						},
+						"required": [
+							"number",
+							"faces"
+						]
+					}
+				},
+				"rollable": {
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"type"
+			],
+			"additionalProperties": false
+		},
+		"entryAbilityDc": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "abilityDc"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"attributes": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"examples": [
+							"str",
+							"dex",
+							"con",
+							"int",
+							"wis",
+							"cha",
+							"spellcasting"
+						]
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"attributes"
+			],
+			"additionalProperties": false
+		},
+		"entryAbilityAttackMod": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "abilityAttackMod"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"attributes": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"examples": [
+							"str",
+							"dex",
+							"con",
+							"int",
+							"wis",
+							"cha",
+							"spellcasting"
+						]
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"attributes"
+			],
+			"additionalProperties": false
+		},
+		"abilityGeneric": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "abilityGeneric"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"text": {
+					"type": "string"
+				},
+				"attributes": {
+					"type": "array",
+					"items": {
+						"$ref": "util.json#/$defs/abilityScoreAbbreviation"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"text"
+			],
+			"additionalProperties": false
+		},
+		"entryLink": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "link"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"text": {
+					"type": "string"
+				},
+				"href": {
+					"oneOf": [
+						{
+							"type": "object",
+							"properties": {
+								"type": {
+									"const": "internal"
+								},
+								"path": {
+									"type": "string"
+								},
+								"hash": {
+									"type": "string"
+								},
+								"hashPreEncoded": {
+									"type": "boolean"
+								},
+								"subhashes": {
+									"type": "array",
+									"items": {
+										"oneOf": [
+											{
+												"type": "object",
+												"properties": {
+													"key": {
+														"type": "string"
+													},
+													"values": {
+														"type": "array",
+														"items": {
+															"type": "string"
+														}
+													},
+													"preEncoded": {
+														"type": "boolean"
+													}
+												},
+												"required": [
+													"key",
+													"values"
+												],
+												"additionalProperties": false
+											},
+											{
+												"type": "object",
+												"properties": {
+													"key": {
+														"type": "string"
+													},
+													"value": {
+														"type": "string"
+													},
+													"preEncoded": {
+														"type": "boolean"
+													}
+												},
+												"required": [
+													"key",
+													"value"
+												],
+												"additionalProperties": false
+											}
+										]
+									}
+								},
+								"hover": {
+									"type": "object",
+									"properties": {
+										"page": {
+											"$ref": "util.json#/$defs/page"
+										},
+										"source": {
+											"$ref": "util.json#/$defs/source"
+										},
+										"hash": {
+											"description": "Optional; overrides the href hash for hover handlers.",
+											"type": "string",
+											"markdownDescription": "Optional; overrides the href hash for hover handlers."
+										},
+										"hashPreEncoded": {
+											"type": "boolean"
+										}
+									},
+									"additionalProperties": false,
+									"required": [
+										"page",
+										"source"
+									]
+								}
+							},
+							"required": [
+								"path"
+							],
+							"additionalProperties": false
+						},
+						{
+							"$ref": "#/$defs/mediaHrefExternal"
+						}
+					]
+				}
+			},
+			"required": [
+				"type",
+				"text",
+				"href"
+			],
+			"additionalProperties": false
+		},
+		"entryOptFeature": {
+			"description": "For e.g. Eldritch Invocations which require prerequisite text. Deprecated; prefer \"refOptionalfeature\" or \"statblock\" entries instead.",
+			"type": "object",
+			"markdownDescription": "For e.g. Eldritch Invocations which require prerequisite text. Deprecated; prefer &quot;refOptionalfeature&quot; or &quot;statblock&quot; entries instead.",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "optfeature"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"deprecated": true,
+				"prerequisite": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name"
+			],
+			"additionalProperties": false
+		},
+		"entryInset": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "inset"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"style": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryInsetReadaloud": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "insetReadaloud"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"style": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryVariant": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "variant"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryVariantInner": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "variantInner"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryVariantSub": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "variantSub"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryItem": {
+			"oneOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "item"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"style": {
+							"type": "string"
+						},
+						"entry": {
+							"$ref": "#"
+						},
+						"nameDot": {
+							"const": false
+						}
+					},
+					"required": [
+						"type",
+						"entry"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "item"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"style": {
+							"type": "string"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "#"
+							}
+						},
+						"nameDot": {
+							"const": false
+						}
+					},
+					"required": [
+						"type",
+						"entries"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"entryItemSub": {
+			"oneOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "itemSub"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"entry": {
+							"$ref": "#"
+						},
+						"nameDot": {
+							"const": false
+						}
+					},
+					"required": [
+						"type",
+						"entry"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "itemSub"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "#"
+							}
+						},
+						"nameDot": {
+							"const": false
+						}
+					},
+					"required": [
+						"type",
+						"entries"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"entryItemSpell": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "itemSpell"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entry": {
+					"$ref": "#"
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"entry"
+			],
+			"additionalProperties": false
+		},
+		"entryImage": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "image"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"href": {
+					"$ref": "#/$defs/mediaHref"
+				},
+				"hrefThumbnail": {
+					"title": "A thumbnail image used in rare cases, e.g. when loading a wall of maps to choose from in the DM Screen.",
+					"$ref": "#/$defs/mediaHref"
+				},
+				"title": {
+					"type": "string"
+				},
+				"credit": {
+					"type": "string"
+				},
+				"altText": {
+					"description": "For accessibility purposes",
+					"type": "string",
+					"markdownDescription": "For accessibility purposes"
+				},
+				"imageType": {
+					"type": "string",
+					"enum": [
+						"map",
+						"mapPlayer"
+					]
+				},
+				"grid": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"enum": [
+								"none",
+								"square",
+								"hexRowsOdd",
+								"hexRowsEven",
+								"hexColsOdd",
+								"hexColsEven"
+							]
+						},
+						"size": {
+							"description": "The size of a single grid square/hex, in pixels.",
+							"type": "integer",
+							"minimum": 50,
+							"markdownDescription": "The size of a single grid square/hex, in pixels."
+						},
+						"offsetX": {
+							"type": "integer"
+						},
+						"offsetY": {
+							"type": "integer"
+						},
+						"scale": {
+							"description": "Map image scaling. Where possible, avoid using this, and use size/offset instead.",
+							"type": "number",
+							"markdownDescription": "Map image scaling. Where possible, avoid using this, and use size/offset instead."
+						},
+						"units": {
+							"description": "A unit of measurement (e.g. \"feet\", \"miles\") in which the grid should be presented.",
+							"type": "string",
+							"markdownDescription": "A unit of measurement (e.g. &quot;feet&quot;, &quot;miles&quot;) in which the grid should be presented.",
+							"examples": [
+								"feet",
+								"yards",
+								"miles",
+								"meters",
+								"kilometers"
+							]
+						},
+						"distance": {
+							"description": "The number of units (e.g. feet) per grid square/hex.",
+							"type": "number",
+							"markdownDescription": "The number of units (e.g. feet) per grid square/hex."
+						}
+					},
+					"additionalProperties": false
+				},
+				"mapRegions": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"area": {
+								"type": "string"
+							},
+							"points": {
+								"type": "array",
+								"items": {
+									"type": "array",
+									"items": {
+										"type": "integer"
+									},
+									"maxItems": 2,
+									"minItems": 2
+								},
+								"uniqueItems": true
+							}
+						},
+						"additionalProperties": false
+					},
+					"minItems": 1,
+					"uniqueItems": true
+				},
+				"labelMapRegions": {
+					"const": true
+				},
+				"mapParent": {
+					"description": "Note that the order of transformations is: scale, then offset.",
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						},
+						"offsetX": {
+							"description": "The X position of this map within the parent map. Defaults to 0.",
+							"type": "integer",
+							"markdownDescription": "The X position of this map within the parent map. Defaults to 0."
+						},
+						"offsetY": {
+							"description": "The Y position of this map within the parent map. Defaults to 0.",
+							"type": "integer",
+							"markdownDescription": "The Y position of this map within the parent map. Defaults to 0."
+						},
+						"scaleX": {
+							"description": "X scaling required for this map to match the parent map. Defaults to 1.",
+							"type": "number",
+							"exclusiveMinimum": 0,
+							"markdownDescription": "X scaling required for this map to match the parent map. Defaults to 1."
+						},
+						"scaleY": {
+							"description": "Y scaling required for this map to match the parent map. Defaults to 1.",
+							"type": "number",
+							"exclusiveMinimum": 0,
+							"markdownDescription": "Y scaling required for this map to match the parent map. Defaults to 1."
+						},
+						"autoScale": {
+							"description": "If the X/Y scaling for this map should be based on the size ratio between the two. This is often used a placeholder for maps requiring future manual adjustment.",
+							"type": "boolean",
+							"markdownDescription": "If the X/Y scaling for this map should be based on the size ratio between the two. This is often used a placeholder for maps requiring future manual adjustment."
+						}
+					},
+					"additionalProperties": false,
+					"markdownDescription": "Note that the order of transformations is: scale, then offset."
+				},
+				"mapName": {
+					"type": "string"
+				},
+				"width": {
+					"type": "integer"
+				},
+				"height": {
+					"type": "integer"
+				},
+				"maxWidth": {
+					"description": "Specify the max desired display width of the images, as opposed to \"width\" which should only be used for the _real_ width. Assumes pixels by default.",
+					"type": "integer",
+					"markdownDescription": "Specify the max desired display width of the images, as opposed to &quot;width&quot; which should only be used for the _real_ width. Assumes pixels by default."
+				},
+				"maxHeight": {
+					"description": "As per \"maxWidth\"",
+					"type": "integer",
+					"markdownDescription": "As per &quot;maxWidth&quot;"
+				},
+				"maxWidthUnits": {
+					"type": "string"
+				},
+				"maxHeightUnits": {
+					"type": "string"
+				},
+				"style": {
+					"enum": [
+						"comic-speaker-left",
+						"comic-speaker-right",
+						"deity-symbol"
+					]
+				},
+				"expectsLightBackground": {
+					"description": "If this image is largely transparent, and expects to be rendered atop a light background.",
+					"type": "boolean",
+					"const": true,
+					"markdownDescription": "If this image is largely transparent, and expects to be rendered atop a light background."
+				},
+				"expectsDarkBackground": {
+					"description": "If this image is largely transparent, and expects to be rendered atop a dark background.",
+					"type": "boolean",
+					"const": true,
+					"markdownDescription": "If this image is largely transparent, and expects to be rendered atop a dark background."
+				},
+				"foundrySceneRoot": {
+					"description": "Additional data to be applied if/when the image is used to create a scene in Foundry.\n\nSome properties are forbidden, as they should be provided/are implicit in non-Foundry-specific data on the entry.",
+					"type": "object",
+					"properties": {
+						"name": false,
+						"width": false,
+						"height": false,
+						"background": false,
+						"grid": false,
+						"flags": false
+					},
+					"markdownDescription": "Additional data to be applied if/when the image is used to create a scene in Foundry.\n\nSome properties are forbidden, as they should be provided/are implicit in non-Foundry-specific data on the entry."
+				},
+				"foundrySceneWalls": {
+					"$ref": "https://raw.githubusercontent.com/TheGiddyLimit/plutonium-scenes/main/test/schema/shared.json#/$defs/wallArray"
+				},
+				"foundrySceneLights": {
+					"$ref": "https://raw.githubusercontent.com/TheGiddyLimit/plutonium-scenes/main/test/schema/shared.json#/$defs/lightArray"
+				},
+				"foundrySceneFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				}
+			},
+			"required": [
+				"type",
+				"href"
+			],
+			"additionalProperties": false
+		},
+		"entryGallery": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "gallery"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"images": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/entryImage"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"images"
+			],
+			"additionalProperties": false
+		},
+		"entryActions": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "actions"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"name",
+				"entries"
+			],
+			"additionalProperties": false
+		},
+		"entryAttack": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "attack"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"attackType": {
+					"type": "string",
+					"description": "- MW: Melee Weapon\n- RW: Ranged Weapon",
+					"enum": [
+						"MW",
+						"RW"
+					],
+					"markdownDescription": "- MW: Melee Weapon\n- RW: Ranged Weapon"
+				},
+				"attackEntries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"hitEntries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"attackType",
+				"attackEntries",
+				"hitEntries"
+			],
+			"additionalProperties": false
+		},
+		"entryFlowchart": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "flowchart"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"blocks": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/entry"
+					}
+				}
+			},
+			"required": [
+				"type",
+				"blocks"
+			],
+			"additionalProperties": false
+		},
+		"entryFlowBlock": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "flowBlock"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/entry"
+					}
+				}
+			},
+			"required": [
+				"type"
+			],
+			"additionalProperties": false
+		},
+		"entryIngredient": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "ingredient"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entry": {
+					"$ref": "#"
+				}
+			},
+			"required": [
+				"type",
+				"entry"
+			],
+			"patternProperties": {
+				"^amount\\d+$": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false
+		},
+		"entryStatblockInline": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "monster"
+						},
+						"data": {
+							"$ref": "bestiary/bestiary.json#/$defs/creature"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "legendaryGroup"
+						},
+						"data": {
+							"$ref": "bestiary/legendarygroups.json#/$defs/legendaryGroup"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "spell"
+						},
+						"data": {
+							"$ref": "spells/spells.json#/$defs/spell"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "action"
+						},
+						"data": {
+							"$ref": "actions.json#/$defs/action"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "item"
+						},
+						"data": {
+							"$ref": "items.json#/$defs/item"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "background"
+						},
+						"data": {
+							"$ref": "backgrounds.json#/$defs/background"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "charoption"
+						},
+						"data": {
+							"$ref": "charcreationoptions.json#/$defs/charoption"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "condition"
+						},
+						"data": {
+							"$ref": "conditionsdiseases.json#/$defs/condition"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "disease"
+						},
+						"data": {
+							"$ref": "conditionsdiseases.json#/$defs/disease"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "status"
+						},
+						"data": {
+							"$ref": "conditionsdiseases.json#/$defs/status"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "cult"
+						},
+						"data": {
+							"$ref": "cultsboons.json#/$defs/cult"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "boon"
+						},
+						"data": {
+							"$ref": "cultsboons.json#/$defs/boon"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "deity"
+						},
+						"data": {
+							"$ref": "deities.json#/$defs/deity"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "feat"
+						},
+						"data": {
+							"$ref": "feats.json#/$defs/feat"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "language"
+						},
+						"data": {
+							"$ref": "languages.json#/$defs/language"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "object"
+						},
+						"data": {
+							"$ref": "objects.json#/$defs/object"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "optionalfeature"
+						},
+						"data": {
+							"$ref": "optionalfeatures.json#/$defs/optionalfeature"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "psionic"
+						},
+						"data": {
+							"$ref": "psionics.json#/$defs/psionic"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "race"
+						},
+						"data": {
+							"$ref": "races.json#/$defs/race"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "recipe"
+						},
+						"data": {
+							"$ref": "recipes.json#/$defs/recipe"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "reward"
+						},
+						"data": {
+							"$ref": "rewards.json#/$defs/reward"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "table"
+						},
+						"data": {
+							"$ref": "tables.json#/$defs/tableData"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "trap"
+						},
+						"data": {
+							"$ref": "trapshazards.json#/$defs/trap"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "hazard"
+						},
+						"data": {
+							"$ref": "trapshazards.json#/$defs/hazard"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "variantrule"
+						},
+						"data": {
+							"$ref": "variantrules.json#/$defs/variantrule"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "vehicle"
+						},
+						"data": {
+							"$ref": "vehicles.json#/$defs/vehicle"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "vehicleUpgrade"
+						},
+						"data": {
+							"$ref": "vehicles.json#/$defs/vehicleUpgrade"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "skill"
+						},
+						"data": {
+							"$ref": "skills.json#/$defs/skill"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"const": "statblockInline"
+						},
+						"dependencies": {
+							"$ref": "util.json#/$defs/metaDependenciesArray"
+						},
+						"dataType": {
+							"const": "sense"
+						},
+						"data": {
+							"$ref": "senses.json#/$defs/sense"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						}
+					},
+					"required": [
+						"type",
+						"dataType",
+						"data"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"entryStatblock": {
+			"oneOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "statblock"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"displayName": {
+							"type": "string"
+						},
+						"hash": {
+							"type": "string"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						},
+						"tag": {
+							"$ref": "util.json#/$defs/tagNameStats"
+						}
+					},
+					"required": [
+						"type",
+						"tag",
+						"name"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "statblock"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"displayName": {
+							"type": "string"
+						},
+						"hash": {
+							"type": "string"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						},
+						"tag": {
+							"const": "deity"
+						},
+						"pantheon": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"type",
+						"tag",
+						"name"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "statblock"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"displayName": {
+							"type": "string"
+						},
+						"hash": {
+							"type": "string"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						},
+						"tag": {
+							"const": "card"
+						},
+						"set": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"type",
+						"tag",
+						"name"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "statblock"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"displayName": {
+							"type": "string"
+						},
+						"hash": {
+							"type": "string"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						},
+						"tag": {
+							"$ref": "util.json#/$defs/tagNameStatsAbbreviation"
+						},
+						"abbreviation": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"type",
+						"tag",
+						"abbreviation"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"type": {
+							"type": "string",
+							"const": "statblock"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"data": {
+							"$ref": "#/$defs/_entryDataData"
+						},
+						"id": {
+							"type": "string"
+						},
+						"displayName": {
+							"type": "string"
+						},
+						"hash": {
+							"type": "string"
+						},
+						"style": {
+							"$ref": "#/$defs/_entryDataStyle"
+						},
+						"collapsed": {
+							"const": true
+						},
+						"prop": {
+							"$ref": "util.json#/$defs/propNameStats"
+						}
+					},
+					"required": [
+						"type",
+						"prop",
+						"name",
+						"source"
+					]
+				}
+			]
+		},
+		"entryRefClassFeature": {
+			"description": "For use in classes page content only.",
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "refClassFeature"
+				},
+				"classFeature": {
+					"type": "string"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				}
+			},
+			"required": [
+				"type",
+				"classFeature"
+			],
+			"additionalProperties": false,
+			"markdownDescription": "For use in classes page content only."
+		},
+		"entryRefSubclassFeature": {
+			"description": "For use in classes page content only.",
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "refSubclassFeature"
+				},
+				"subclassFeature": {
+					"type": "string"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				}
+			},
+			"required": [
+				"type",
+				"subclassFeature"
+			],
+			"additionalProperties": false,
+			"markdownDescription": "For use in classes page content only."
+		},
+		"entryRefOptionalfeature": {
+			"description": "For use in classes page content only.",
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "refOptionalfeature"
+				},
+				"optionalfeature": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"preserve": {
+					"type": "object",
+					"properties": {
+						"prerequisite": {
+							"const": true
+						},
+						"consumes": {
+							"const": true
+						}
+					},
+					"additionalProperties": false
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				}
+			},
+			"required": [
+				"type",
+				"optionalfeature"
+			],
+			"additionalProperties": false,
+			"markdownDescription": "For use in classes page content only."
+		},
+		"entryRefFeat": {
+			"description": "For use in classes page content only.",
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "refFeat"
+				},
+				"feat": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				}
+			},
+			"required": [
+				"type",
+				"feat"
+			],
+			"additionalProperties": false,
+			"markdownDescription": "For use in classes page content only."
+		},
+		"entryHr": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"const": "hr"
+				}
+			},
+			"required": [
+				"type"
+			]
+		},
+		"entrySpellcasting": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "spellcasting"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"headerEntries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"constant": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"will": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"ritual": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"rest": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"restLong": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"daily": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"weekly": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"monthly": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"yearly": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"charges": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"recharge": {
+					"$ref": "#/$defs/entrySpellcasting_recharge"
+				},
+				"legendary": {
+					"$ref": "#/$defs/entrySpellcasting_frequency"
+				},
+				"spells": {
+					"type": "object",
+					"properties": {
+						"0": {
+							"type": "object",
+							"properties": {
+								"spells": {
+									"type": "array",
+									"uniqueItems": true,
+									"items": {
+										"type": "string"
+									}
+								}
+							},
+							"required": [
+								"spells"
+							],
+							"additionalProperties": false
+						},
+						"1": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"2": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"3": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"4": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"5": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"6": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"7": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"8": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						},
+						"9": {
+							"$ref": "#/$defs/entrySpellcasting_level1to9"
+						}
+					},
+					"additionalProperties": false
+				},
+				"hidden": {
+					"description": "Allows the above properties to be specified, but not rendered. Useful if e.g. a creature can only cast one spell, and this is rendered in the header line.",
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": [
+							"constant",
+							"will",
+							"rest",
+							"restLong",
+							"daily",
+							"weekly",
+							"monthly",
+							"yearly",
+							"ritual",
+							"spells",
+							"charges",
+							"recharge",
+							"legendary"
+						]
+					},
+					"markdownDescription": "Allows the above properties to be specified, but not rendered. Useful if e.g. a creature can only cast one spell, and this is rendered in the header line."
+				},
+				"footerEntries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"ability": {
+					"$ref": "util.json#/$defs/abilityScoreAbbreviation"
+				},
+				"displayAs": {
+					"description": "Implicitly \"trait\"",
+					"type": "string",
+					"enum": [
+						"trait",
+						"action",
+						"bonus",
+						"reaction",
+						"legendary",
+						"mythic"
+					],
+					"markdownDescription": "Implicitly &quot;trait&quot;"
+				},
+				"chargesItem": {
+					"type": "string",
+					"description": "The UID of an item which provides the charges required to cast any \"charges\" spells.",
+					"markdownDescription": "The UID of an item which provides the charges required to cast any &quot;charges&quot; spells."
+				}
+			},
+			"required": [
+				"type",
+				"name"
+			],
+			"additionalProperties": false
+		},
+		"entrySpellcasting_level1to9": {
+			"type": "object",
+			"properties": {
+				"lower": {
+					"type": "number"
+				},
+				"slots": {
+					"type": "number"
+				},
+				"spells": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": {
+						"type": "string"
+					}
+				}
+			},
+			"required": [
+				"spells"
+			],
+			"additionalProperties": false
+		},
+		"entrySpellcasting_frequency": {
+			"type": "object",
+			"properties": {
+				"1": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"2": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"3": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"4": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"5": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"6": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"7": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"8": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"9": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"9e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"8e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"7e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"6e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"5e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"4e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"3e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"2e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"1e": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				}
+			},
+			"additionalProperties": false
+		},
+		"entrySpellcasting_recharge": {
+			"type": "object",
+			"properties": {
+				"1": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"2": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"3": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"4": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"5": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				},
+				"6": {
+					"$ref": "#/$defs/_arrayOfSpell"
+				}
+			},
+			"additionalProperties": false
+		},
+		"entryWrapped": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "wrapper"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"wrapped": {}
+			},
+			"required": [
+				"type",
+				"wrapped"
+			],
+			"additionalProperties": false
+		},
+		"dataDamImmune": {
+			"oneOf": [
+				{
+					"$ref": "util.json#/$defs/dataDamageType"
+				},
+				{
+					"type": "object",
+					"properties": {
+						"special": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"special"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"preNote": {
+							"type": "string"
+						},
+						"immune": {
+							"type": "array",
+							"items": {
+								"$ref": "#/$defs/dataDamImmune"
+							}
+						},
+						"note": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"immune"
+					]
+				}
+			]
+		},
+		"dataCondImmune": {
+			"oneOf": [
+				{
+					"$ref": "util.json#/$defs/dataCondition"
+				},
+				{
+					"type": "object",
+					"properties": {
+						"special": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"special"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"preNote": {
+							"type": "string"
+						},
+						"conditionImmune": {
+							"type": "array",
+							"items": {
+								"$ref": "util.json#/$defs/dataCondition"
+							}
+						},
+						"note": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"conditionImmune"
+					]
+				}
+			]
+		},
+		"entryHomebrew": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "homebrew"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"data": {
+					"$ref": "#/$defs/_entryDataData"
+				},
+				"id": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				},
+				"movedTo": {
+					"$ref": "#"
+				},
+				"oldEntries": {
+					"type": "array",
+					"items": {
+						"$ref": "#"
+					}
+				}
+			},
+			"required": [
+				"type"
+			],
+			"additionalProperties": false
+		}
+	},
+	"anyOf": [
+		{
+			"$ref": "#/$defs/entrySection"
+		},
+		{
+			"$ref": "#/$defs/entryEntries"
+		},
+		{
+			"$ref": "#/$defs/entryHomebrew"
+		},
+		{
+			"$ref": "#/$defs/entryQuote"
+		},
+		{
+			"$ref": "#/$defs/entryInlineEntries"
+		},
+		{
+			"$ref": "#/$defs/entryEntriesInlineEntries"
+		},
+		{
+			"$ref": "#/$defs/entryOptions"
+		},
+		{
+			"$ref": "#/$defs/entryTableGroup"
+		},
+		{
+			"$ref": "#/$defs/entryTable"
+		},
+		{
+			"$ref": "#/$defs/entryTableRow"
+		},
+		{
+			"$ref": "#/$defs/entryTableCell"
+		},
+		{
+			"$ref": "#/$defs/entryList"
+		},
+		{
+			"$ref": "#/$defs/entryBonus"
+		},
+		{
+			"$ref": "#/$defs/entryBonusSpeed"
+		},
+		{
+			"$ref": "#/$defs/entryDice"
+		},
+		{
+			"$ref": "#/$defs/entryAbilityDc"
+		},
+		{
+			"$ref": "#/$defs/entryAbilityAttackMod"
+		},
+		{
+			"$ref": "#/$defs/abilityGeneric"
+		},
+		{
+			"$ref": "#/$defs/entryLink"
+		},
+		{
+			"$ref": "#/$defs/entryOptFeature"
+		},
+		{
+			"$ref": "#/$defs/entryInset"
+		},
+		{
+			"$ref": "#/$defs/entryInsetReadaloud"
+		},
+		{
+			"$ref": "#/$defs/entryVariant"
+		},
+		{
+			"$ref": "#/$defs/entryVariantInner"
+		},
+		{
+			"$ref": "#/$defs/entryVariantSub"
+		},
+		{
+			"$ref": "#/$defs/entryItem"
+		},
+		{
+			"$ref": "#/$defs/entryItemSub"
+		},
+		{
+			"$ref": "#/$defs/entryItemSpell"
+		},
+		{
+			"$ref": "#/$defs/entryImage"
+		},
+		{
+			"$ref": "#/$defs/entryGallery"
+		},
+		{
+			"$ref": "#/$defs/entryActions"
+		},
+		{
+			"$ref": "#/$defs/entryAttack"
+		},
+		{
+			"$ref": "#/$defs/entryStatblockInline"
+		},
+		{
+			"$ref": "#/$defs/entryStatblock"
+		},
+		{
+			"$ref": "#/$defs/entryRefClassFeature"
+		},
+		{
+			"$ref": "#/$defs/entryRefSubclassFeature"
+		},
+		{
+			"$ref": "#/$defs/entryRefOptionalfeature"
+		},
+		{
+			"$ref": "#/$defs/entryRefFeat"
+		},
+		{
+			"$ref": "#/$defs/entryHr"
+		},
+		{
+			"$ref": "#/$defs/entrySpellcasting"
+		},
+		{
+			"$ref": "#/$defs/entryFlowchart"
+		},
+		{
+			"$ref": "#/$defs/entryFlowBlock"
+		},
+		{
+			"$ref": "#/$defs/entryIngredient"
+		},
+		{
+			"$ref": "#/$defs/entryWrapped"
+		},
+		{
+			"type": "string"
+		},
+		{
+			"type": "integer"
+		}
+	],
+	"markdownDescription": "A recursively renderable object."
+}

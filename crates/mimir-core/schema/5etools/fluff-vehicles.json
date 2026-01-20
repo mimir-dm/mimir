@@ -1,0 +1,14 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "fluff-vehicles.json",
+	"version": "1.4.0",
+	"type": "object",
+	"properties": {
+		"_meta": {
+			"$ref": "util.json#/$defs/metaBlock"
+		},
+		"vehicleFluff": {
+			"$ref": "util.json#/$defs/genericFluffArray"
+		}
+	}
+}

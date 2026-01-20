@@ -1,0 +1,382 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "trapshazards.json",
+	"version": "1.4.8",
+	"type": "object",
+	"$defs": {
+		"_trapHazardTier": {
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 4
+		},
+		"_trapLevel": {
+			"description": "Alternative to \"tier\" which allows for non-standard level ranges.",
+			"type": "object",
+			"properties": {
+				"min": {
+					"type": "integer"
+				},
+				"max": {
+					"type": "integer"
+				}
+			},
+			"markdownDescription": "Alternative to &quot;tier&quot; which allows for non-standard level ranges."
+		},
+		"_trapHazardThreat": {
+			"type": "string",
+			"enum": [
+				"nuisance",
+				"setback",
+				"moderate",
+				"dangerous",
+				"deadly"
+			]
+		},
+		"_trapHazardRating": {
+			"type": "array",
+			"items": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"level": {
+								"$ref": "#/$defs/_trapLevel"
+							},
+							"threat": {
+								"$ref": "#/$defs/_trapHazardThreat"
+							}
+						},
+						"required": [
+							"threat"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"tier": {
+								"$ref": "#/$defs/_trapHazardTier"
+							},
+							"threat": {
+								"$ref": "#/$defs/_trapHazardThreat"
+							}
+						},
+						"required": [
+							"threat"
+						],
+						"additionalProperties": false
+					}
+				]
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"_trapTrigger": {
+			"type": "array",
+			"items": {
+				"$ref": "entry.json"
+			},
+			"minItems": 1
+		},
+		"trap": {
+			"oneOf": [
+				{
+					"description": "Older format, used in DMG.\n\nExtended to support XDMG.",
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"trapHazType": {
+							"type": "string",
+							"description": "- HAUNT: Haunted Trap\n- MAG: Magical Trap\n- MECH: Mechanical Trap\n- TRP: Trap",
+							"enum": [
+								"MECH",
+								"MAG",
+								"TRP",
+								"HAUNT"
+							],
+							"markdownDescription": "- HAUNT: Haunted Trap\n- MAG: Magical Trap\n- MECH: Mechanical Trap\n- TRP: Trap"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"reprintedAs": {
+							"$ref": "util.json#/$defs/reprintedAs"
+						},
+						"trigger": {
+							"$ref": "#/$defs/_trapTrigger"
+						},
+						"duration": {
+							"$ref": "util-time.json#/$defs/durationEffect"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"rating": {
+							"$ref": "#/$defs/_trapHazardRating"
+						},
+						"hauntBonus": {
+							"type": "string"
+						},
+						"legacy": {
+							"$ref": "util.json#/$defs/legacy"
+						},
+						"hasFluff": {
+							"type": "boolean"
+						},
+						"hasFluffImages": {
+							"type": "boolean"
+						},
+						"fluff": {
+							"$ref": "util.json#/$defs/fluffObject"
+						},
+						"foundryImg": {
+							"$ref": "util-foundry.json#/$defs/foundryImg"
+						},
+						"foundryAdvice": {
+							"$ref": "entry.json"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"name",
+						"trapHazType",
+						"source",
+						"entries"
+					],
+					"markdownDescription": "Older format, used in DMG.\n\nExtended to support XDMG."
+				},
+				{
+					"description": "XGE \"Traps Revisited\" Simple/Complex traps",
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"trapHazType": {
+							"type": "string",
+							"enum": [
+								"SMPL",
+								"CMPX"
+							]
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"reprintedAs": {
+							"$ref": "util.json#/$defs/reprintedAs"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"rating": {
+							"$ref": "#/$defs/_trapHazardRating"
+						},
+						"trigger": {
+							"$ref": "#/$defs/_trapTrigger"
+						},
+						"initiative": {
+							"oneOf": [
+								{
+									"type": "integer",
+									"minimum": 1,
+									"maximum": 3
+								},
+								{
+									"description": "Custom initiative, for homebrew only.",
+									"type": "string",
+									"markdownDescription": "Custom initiative, for homebrew only."
+								}
+							]
+						},
+						"initiativeNote": {
+							"$ref": "entry.json"
+						},
+						"effect": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"eActive": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"eDynamic": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"eConstant": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"countermeasures": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"legacy": {
+							"$ref": "util.json#/$defs/legacy"
+						},
+						"hasFluff": {
+							"type": "boolean"
+						},
+						"hasFluffImages": {
+							"type": "boolean"
+						},
+						"fluff": {
+							"$ref": "util.json#/$defs/fluffObject"
+						},
+						"foundryImg": {
+							"$ref": "util-foundry.json#/$defs/foundryImg"
+						},
+						"foundryAdvice": {
+							"$ref": "entry.json"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"name",
+						"trapHazType",
+						"source",
+						"entries",
+						"trigger",
+						"countermeasures"
+					],
+					"markdownDescription": "XGE &quot;Traps Revisited&quot; Simple/Complex traps"
+				}
+			]
+		},
+		"hazard": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"trapHazType": {
+					"type": "string",
+					"description": "- ENV: Environmental Hazard\n- EST: Eldritch Storm\n- GEN: Generic\n- WTH: Weather\n- WLD: Wilderness Hazard",
+					"markdownDescription": "- ENV: Environmental Hazard\n- EST: Eldritch Storm\n- GEN: Generic\n- WTH: Weather\n- WLD: Wilderness Hazard",
+					"examples": [
+						"ENV",
+						"EST",
+						"GEN",
+						"WTH",
+						"WLD"
+					]
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"reprintedAs": {
+					"$ref": "util.json#/$defs/reprintedAs"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"legacy": {
+					"$ref": "util.json#/$defs/legacy"
+				},
+				"rating": {
+					"$ref": "#/$defs/_trapHazardRating"
+				},
+				"hasFluff": {
+					"type": "boolean"
+				},
+				"hasFluffImages": {
+					"type": "boolean"
+				},
+				"foundrySystem": {
+					"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+				},
+				"foundryActivities": {
+					"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+				},
+				"foundryFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				},
+				"foundryEffects": {
+					"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				},
+				"_foundryMerge": {
+					"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+				}
+			},
+			"additionalProperties": false,
+			"required": [
+				"name",
+				"source",
+				"entries"
+			]
+		}
+	},
+	"properties": {
+		"trap": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/trap"
+			}
+		},
+		"hazard": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/hazard"
+			}
+		}
+	},
+	"additionalProperties": false
+}

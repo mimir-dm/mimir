@@ -1,0 +1,117 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "actions.json",
+	"version": "1.2.8",
+	"type": "object",
+	"$defs": {
+		"action": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"reprintedAs": {
+					"$ref": "util.json#/$defs/reprintedAs"
+				},
+				"fromVariant": {
+					"type": "string",
+					"description": "UID of a \"variantrule\" to be linked as a footnote in the action.",
+					"markdownDescription": "UID of a &quot;variantrule&quot; to be linked as a footnote in the action."
+				},
+				"time": {
+					"type": "array",
+					"items": {
+						"oneOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"unit": {
+										"type": "string",
+										"enum": [
+											"action",
+											"bonus",
+											"reaction"
+										]
+									},
+									"number": {
+										"type": "integer"
+									}
+								},
+								"required": [
+									"unit",
+									"number"
+								],
+								"additionalProperties": false
+							}
+						]
+					}
+				},
+				"seeAlsoAction": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"description": "UIDs of \"action\"s to be linked in a \"See Also\" footnote.\n\nEx.: \"disarm|dmg\".",
+						"markdownDescription": "UIDs of &quot;action&quot;s to be linked in a &quot;See Also&quot; footnote.\n\nEx.: &quot;disarm|dmg&quot;."
+					}
+				},
+				"foundrySystem": {
+					"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+				},
+				"foundryActivities": {
+					"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+				},
+				"foundryFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				},
+				"foundryEffects": {
+					"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				},
+				"_foundryMerge": {
+					"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+				}
+			},
+			"required": [
+				"name",
+				"entries",
+				"source",
+				"page"
+			],
+			"additionalProperties": false
+		}
+	},
+	"properties": {
+		"action": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/action"
+			}
+		}
+	},
+	"required": [
+		"action"
+	],
+	"additionalProperties": false
+}

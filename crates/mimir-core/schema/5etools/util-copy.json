@@ -1,0 +1,1163 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "util-copy.json",
+	"title": "Util: Copy",
+	"version": "1.0.10",
+	"$defs": {
+		"_mod_renameArr_rename": {
+			"type": "object",
+			"properties": {
+				"rename": {
+					"type": "string"
+				},
+				"with": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"rename",
+				"with"
+			],
+			"additionalProperties": false
+		},
+		"_mod_removeArr_name": {
+			"type": "string"
+		},
+		"_mod_removeArr_base": {
+			"properties": {
+				"mode": {
+					"const": "removeArr"
+				},
+				"force": {
+					"const": true
+				}
+			},
+			"additionalProperties": false
+		},
+		"_mod_senseObject": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"type": "string",
+					"enum": [
+						"blindsight",
+						"darkvision",
+						"tremorsense",
+						"truesight"
+					]
+				},
+				"range": {
+					"type": "integer",
+					"minimum": 0
+				}
+			},
+			"required": [
+				"type",
+				"range"
+			],
+			"additionalProperties": false
+		},
+		"_mod_additionalSpellReplacementObject": {
+			"type": "object",
+			"patternProperties": {
+				"^(0|[1-9]e?)$": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"replace": {
+								"type": "string"
+							},
+							"with": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"replace",
+							"with"
+						],
+						"additionalProperties": false
+					},
+					"minItems": 1,
+					"uniqueItems": true
+				}
+			},
+			"minProperties": 1,
+			"additionalProperties": false
+		},
+		"_mod_additionalSpellAddRemoveObject": {
+			"type": "object",
+			"patternProperties": {
+				"^(0|[1-9]e?)$": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"minItems": 1,
+					"uniqueItems": true
+				}
+			},
+			"minProperties": 1,
+			"additionalProperties": false
+		},
+		"copyModifier": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "replaceTxt"
+						},
+						"replace": {
+							"type": "string"
+						},
+						"with": {
+							"type": "string"
+						},
+						"flags": {
+							"type": "string"
+						},
+						"props": {
+							"description": "If unspecified, defaults to `[null, \"entries\", \"headerEntries\", \"footerEntries\"]`. To apply to _any_ string, including those outside of sub-properties (for instance, when trying to replace text in an array of plain strings), include `null` as one of the props (i.e. `\"props\": [null]`)",
+							"type": "array",
+							"items": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"markdownDescription": "If unspecified, defaults to [null, &quot;entries&quot;, &quot;headerEntries&quot;, &quot;footerEntries&quot;]. To apply to _any_ string, including those outside of sub-properties (for instance, when trying to replace text in an array of plain strings), include null as one of the props (i.e. &quot;props&quot;: [null])"
+						},
+						"tagInsensitive": {
+							"const": true
+						}
+					},
+					"required": [
+						"mode",
+						"replace",
+						"with"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "replaceName"
+						},
+						"replace": {
+							"type": "string"
+						},
+						"with": {
+							"type": "string"
+						},
+						"flags": {
+							"type": "string"
+						},
+						"tagInsensitive": {
+							"const": true
+						}
+					},
+					"required": [
+						"mode",
+						"replace",
+						"with"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "appendStr"
+						},
+						"str": {
+							"type": "string"
+						},
+						"joiner": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"mode",
+						"str"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "prependArr"
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object"
+								},
+								{
+									"type": "array"
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"items"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "appendArr"
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object"
+								},
+								{
+									"type": "array"
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"items"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "appendIfNotExistsArr"
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object"
+								},
+								{
+									"type": "array"
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"items"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "replaceArr"
+						},
+						"replace": {
+							"oneOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object",
+									"properties": {
+										"index": {
+											"type": "integer"
+										}
+									},
+									"required": [
+										"index"
+									],
+									"additionalProperties": false
+								},
+								{
+									"type": "object",
+									"properties": {
+										"regex": {
+											"type": "string"
+										},
+										"flags": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"regex"
+									],
+									"additionalProperties": false
+								}
+							]
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object"
+								},
+								{
+									"type": "array"
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"replace",
+						"items"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "replaceOrAppendArr"
+						},
+						"replace": {
+							"oneOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object",
+									"properties": {
+										"index": {
+											"type": "integer"
+										}
+									},
+									"required": [
+										"index"
+									],
+									"additionalProperties": false
+								},
+								{
+									"type": "object",
+									"properties": {
+										"regex": {
+											"type": "string"
+										},
+										"flags": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"regex"
+									],
+									"additionalProperties": false
+								}
+							]
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "object"
+								},
+								{
+									"type": "array"
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"replace",
+						"items"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "insertArr"
+						},
+						"index": {
+							"type": "integer"
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "object"
+								},
+								{
+									"type": "string"
+								},
+								{
+									"type": "array"
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"index",
+						"items"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "removeArr"
+						},
+						"force": {
+							"const": true
+						},
+						"names": {
+							"anyOf": [
+								{
+									"$ref": "#/$defs/_mod_removeArr_name"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/_mod_removeArr_name"
+									},
+									"minItems": 1,
+									"uniqueItems": true
+								}
+							]
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"mode",
+						"names"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "removeArr"
+						},
+						"force": {
+							"const": true
+						},
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"minItems": 1,
+									"uniqueItems": true
+								}
+							]
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"mode",
+						"items"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "renameArr"
+						},
+						"renames": {
+							"anyOf": [
+								{
+									"$ref": "#/$defs/_mod_renameArr_rename"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/_mod_renameArr_rename"
+									},
+									"minItems": 1,
+									"uniqueItems": true
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"renames"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "setProp"
+						},
+						"prop": {
+							"type": "string"
+						},
+						"value": {}
+					},
+					"required": [
+						"mode",
+						"value"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "calculateProp"
+						},
+						"prop": {
+							"type": "string"
+						},
+						"formula": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"mode",
+						"prop",
+						"formula"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "replaceSpells"
+						},
+						"spells": {
+							"$ref": "#/$defs/_mod_additionalSpellReplacementObject"
+						},
+						"daily": {
+							"$ref": "#/$defs/_mod_additionalSpellReplacementObject"
+						}
+					},
+					"required": [
+						"mode"
+					],
+					"minProperties": 2,
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "removeSpells"
+						},
+						"spells": {
+							"$ref": "#/$defs/_mod_additionalSpellAddRemoveObject"
+						},
+						"daily": {
+							"$ref": "#/$defs/_mod_additionalSpellAddRemoveObject"
+						}
+					},
+					"required": [
+						"mode"
+					],
+					"minProperties": 2,
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "addSpells"
+						},
+						"name": {
+							"type": "string"
+						},
+						"spells": {
+							"type": "object",
+							"patternProperties": {
+								"^(0|[1-9]e?)$": {
+									"type": "object",
+									"properties": {
+										"spells": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											},
+											"minItems": 1,
+											"uniqueItems": true
+										}
+									},
+									"required": [
+										"spells"
+									],
+									"additionalProperties": false
+								}
+							},
+							"additionalProperties": false
+						},
+						"will": {
+							"type": "array",
+							"items": {
+								"type": "string"
+							},
+							"minItems": 1,
+							"uniqueItems": true
+						},
+						"daily": {
+							"$ref": "#/$defs/_mod_additionalSpellAddRemoveObject"
+						},
+						"weekly": {
+							"$ref": "#/$defs/_mod_additionalSpellAddRemoveObject"
+						},
+						"monthly": {
+							"$ref": "#/$defs/_mod_additionalSpellAddRemoveObject"
+						},
+						"yearly": {
+							"$ref": "#/$defs/_mod_additionalSpellAddRemoveObject"
+						}
+					},
+					"required": [
+						"mode"
+					],
+					"minProperties": 2,
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "addSkills"
+						},
+						"skills": {
+							"type": "object",
+							"propertyNames": {
+								"$ref": "util.json#/$defs/skillNameLower"
+							},
+							"patternProperties": {
+								"": {
+									"$ref": "util.json#/$defs/proficiencyLevel"
+								}
+							},
+							"minProperties": 1,
+							"additionalProperties": false
+						}
+					},
+					"required": [
+						"mode",
+						"skills"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "addSaves"
+						},
+						"saves": {
+							"type": "object",
+							"propertyNames": {
+								"type": "string",
+								"enum": [
+									"str",
+									"dex",
+									"con",
+									"int",
+									"wis",
+									"cha"
+								]
+							},
+							"patternProperties": {
+								"": {
+									"$ref": "util.json#/$defs/proficiencyLevel"
+								}
+							},
+							"minProperties": 1,
+							"additionalProperties": false
+						}
+					},
+					"required": [
+						"mode",
+						"saves"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "addAllSkills"
+						},
+						"skills": {
+							"$ref": "util.json#/$defs/proficiencyLevel"
+						}
+					},
+					"required": [
+						"mode",
+						"skills"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "addAllSaves"
+						},
+						"saves": {
+							"$ref": "util.json#/$defs/proficiencyLevel"
+						}
+					},
+					"required": [
+						"mode",
+						"saves"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "addSenses"
+						},
+						"senses": {
+							"anyOf": [
+								{
+									"$ref": "#/$defs/_mod_senseObject"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/_mod_senseObject"
+									},
+									"minItems": 1,
+									"uniqueItems": true
+								}
+							]
+						}
+					},
+					"required": [
+						"mode",
+						"senses"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "scalarAddProp"
+						},
+						"prop": {
+							"type": "string"
+						},
+						"scalar": {
+							"type": "number"
+						}
+					},
+					"required": [
+						"mode",
+						"scalar",
+						"prop"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "scalarMultProp"
+						},
+						"prop": {
+							"type": "string"
+						},
+						"scalar": {
+							"type": "number"
+						},
+						"floor": {
+							"const": true
+						}
+					},
+					"required": [
+						"mode",
+						"scalar",
+						"prop"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "scalarAddHit"
+						},
+						"scalar": {
+							"type": "number"
+						}
+					},
+					"required": [
+						"mode",
+						"scalar"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "scalarAddDc"
+						},
+						"scalar": {
+							"type": "number"
+						}
+					},
+					"required": [
+						"mode",
+						"scalar"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "maxSize"
+						},
+						"max": {
+							"$ref": "util.json#/$defs/size"
+						}
+					},
+					"required": [
+						"mode",
+						"max"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "scalarMultXp"
+						},
+						"scalar": {
+							"type": "number"
+						},
+						"floor": {
+							"const": true
+						}
+					},
+					"required": [
+						"mode",
+						"scalar"
+					],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "prefixSuffixStringProp"
+						},
+						"prop": {
+							"type": "string"
+						},
+						"prefix": {
+							"type": "string"
+						},
+						"suffix": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"mode",
+						"prop"
+					],
+					"minProperties": 3,
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"mode": {
+							"const": "prefixSuffixStringProp"
+						},
+						"prefix": {
+							"type": "string"
+						},
+						"suffix": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"mode"
+					],
+					"minProperties": 2,
+					"additionalProperties": false
+				}
+			]
+		},
+		"copyBlock_copy_base": {
+			"type": "object",
+			"properties": {
+				"_mod": {
+					"$ref": "#/$defs/_modObject"
+				},
+				"_templates": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"source": {
+								"$ref": "util.json#/$defs/source"
+							}
+						},
+						"required": [
+							"name",
+							"source"
+						],
+						"additionalProperties": false
+					},
+					"minItems": 1,
+					"uniqueItems": true
+				},
+				"_preserve": {
+					"type": "object",
+					"patternProperties": {
+						".*": {
+							"const": true
+						}
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"copyBlock_copy_generic": {
+			"type": "object",
+			"properties": {
+				"_mod": {
+					"$ref": "#/$defs/_modObject"
+				},
+				"_templates": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"source": {
+								"$ref": "util.json#/$defs/source"
+							}
+						},
+						"required": [
+							"name",
+							"source"
+						],
+						"additionalProperties": false
+					},
+					"minItems": 1,
+					"uniqueItems": true
+				},
+				"_preserve": {
+					"type": "object",
+					"patternProperties": {
+						".*": {
+							"const": true
+						}
+					}
+				},
+				"name": {
+					"type": "string"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"pantheon": {
+					"description": "Used in deity data",
+					"type": "string",
+					"markdownDescription": "Used in deity data"
+				},
+				"shortName": {
+					"description": "Used in subclass data",
+					"type": "string",
+					"markdownDescription": "Used in subclass data"
+				},
+				"className": {
+					"description": "Used in subclass data",
+					"type": "string",
+					"markdownDescription": "Used in subclass data"
+				},
+				"classSource": {
+					"description": "Used in subclass data",
+					"$ref": "util.json#/$defs/source",
+					"markdownDescription": "Used in subclass data"
+				},
+				"subclassSource": {
+					"description": "Used in subclass feature data",
+					"$ref": "util.json#/$defs/source",
+					"markdownDescription": "Used in subclass feature data"
+				},
+				"subclassShortName": {
+					"description": "Used in subclass feature data",
+					"type": "string",
+					"markdownDescription": "Used in subclass feature data"
+				},
+				"level": {
+					"description": "Used in subclass feature data",
+					"type": "integer",
+					"markdownDescription": "Used in subclass feature data"
+				},
+				"raceName": {
+					"description": "Used in race feature data",
+					"type": "string",
+					"markdownDescription": "Used in race feature data"
+				},
+				"raceSource": {
+					"description": "Used in race feature data",
+					"$ref": "util.json#/$defs/source",
+					"markdownDescription": "Used in race feature data"
+				}
+			},
+			"additionalProperties": false,
+			"required": [
+				"name",
+				"source"
+			]
+		},
+		"copyBlockGeneric": {
+			"type": "object",
+			"properties": {
+				"_copy": {
+					"$ref": "#/$defs/copyBlock_copy_generic"
+				}
+			},
+			"required": [
+				"_copy"
+			]
+		},
+		"version": {
+			"oneOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"_mod": {
+							"$ref": "#/$defs/_modObject"
+						},
+						"_preserve": {
+							"description": "Note that, by default, all properties are preserved for a version. To avoid preserving properties, pass an empty object `{}`.",
+							"$ref": "#/$defs/_preserveObject",
+							"markdownDescription": "Note that, by default, all properties are preserved for a version. To avoid preserving properties, pass an empty object {}."
+						}
+					},
+					"required": [
+						"name",
+						"source"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"_abstract": {
+							"type": "object",
+							"properties": {
+								"name": {
+									"type": "string"
+								},
+								"source": {
+									"$ref": "util.json#/$defs/source"
+								},
+								"_mod": {
+									"$ref": "#/$defs/_modObject"
+								},
+								"_preserve": {
+									"description": "Note that, by default, all properties are preserved for a version. To avoid preserving properties, pass an empty object `{}`.",
+									"$ref": "#/$defs/_preserveObject",
+									"markdownDescription": "Note that, by default, all properties are preserved for a version. To avoid preserving properties, pass an empty object {}."
+								}
+							},
+							"required": [
+								"name",
+								"source",
+								"_mod"
+							]
+						},
+						"_implementations": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"_variables": {
+										"type": "object"
+									}
+								},
+								"required": [
+									"_variables"
+								]
+							}
+						}
+					},
+					"required": [
+						"_abstract",
+						"_implementations"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"versionsArray": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"$ref": "#/$defs/version"
+			}
+		},
+		"_modObject": {
+			"type": "object",
+			"patternProperties": {
+				".*": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"$ref": "#/$defs/copyModifier"
+						},
+						{
+							"type": "array",
+							"items": {
+								"$ref": "#/$defs/copyModifier"
+							}
+						}
+					]
+				}
+			}
+		},
+		"_preserveObject": {
+			"type": "object",
+			"patternProperties": {
+				".*": {
+					"const": true
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+  "name": "mimir-schema-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bundle": "node bundle-schemas.mjs"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^11.1.0"
+  }
+}

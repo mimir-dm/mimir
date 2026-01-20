@@ -1,0 +1,559 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "deities.json",
+	"version": "1.2.14",
+	"type": "object",
+	"$defs": {
+		"deityData": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"reprintAlias": {
+					"type": "string"
+				},
+				"alignment": {
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"$ref": "util.json#/$defs/alignment"
+					}
+				},
+				"title": {
+					"type": "string"
+				},
+				"pantheon": {
+					"type": "string",
+					"examples": [
+						"Amaranthine",
+						"Celtic",
+						"Dawn War",
+						"Dragonlance",
+						"Drow",
+						"Dwarven",
+						"Eberron",
+						"Egyptian",
+						"Elven",
+						"Faerûnian",
+						"Forgotten Realms",
+						"Gnomish",
+						"Greek",
+						"Greyhawk",
+						"Halfling",
+						"Nonhuman",
+						"Norse",
+						"Orc",
+						"Gnome",
+						"Duergar",
+						"Exandria",
+						"Theros",
+						"Unknown",
+						"Yuan-ti",
+						"Umbral",
+						"Shadow Realm Godlings",
+						"Shadow Realm Dark Gods"
+					]
+				},
+				"category": {
+					"type": "string"
+				},
+				"domains": {
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": {
+						"type": "string",
+						"examples": [
+							"Arcana",
+							"Community",
+							"Death",
+							"Forge",
+							"Grave",
+							"Knowledge",
+							"Life",
+							"Light",
+							"Moon",
+							"Nature",
+							"Night",
+							"Order",
+							"Peace",
+							"Tempest",
+							"Trickery",
+							"Twilight",
+							"Unknown",
+							"War",
+							"Apocalypse",
+							"Wine",
+							"Cat",
+							"Darkness",
+							"Hunger",
+							"Hunting",
+							"Justice",
+							"Keeper",
+							"Labyrinth",
+							"Lust",
+							"Mercy",
+							"Ocean",
+							"Portal",
+							"Prophecy",
+							"Shadow",
+							"Travel",
+							"Void",
+							"Wind"
+						]
+					}
+				},
+				"province": {
+					"description": "The nouveau form of \"title\", first seen in MTF",
+					"type": "string",
+					"markdownDescription": "The nouveau form of &quot;title&quot;, first seen in MTF"
+				},
+				"symbol": {
+					"type": "string"
+				},
+				"dogma": {
+					"type": "string"
+				},
+				"favoredWeapons": {
+					"type": "string"
+				},
+				"plane": {
+					"type": "string"
+				},
+				"worshipers": {
+					"type": "string"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"additionalSources": {
+					"$ref": "util.json#/$defs/additionalSources"
+				},
+				"altNames": {
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": {
+						"type": "string"
+					}
+				},
+				"symbolImg": {
+					"$ref": "entry.json#/$defs/entryImage"
+				},
+				"legacy": {
+					"$ref": "util.json#/$defs/legacy"
+				},
+				"customExtensionOf": {
+					"type": "string",
+					"description": "A UID of an existing deity that this deity extends. e.g. \"Bahgtru|Orc|SCAG\"",
+					"markdownDescription": "A UID of an existing deity that this deity extends. e.g. &quot;Bahgtru|Orc|SCAG&quot;"
+				},
+				"piety": {
+					"type": "boolean"
+				},
+				"customProperties": {
+					"description": "For homebrew use only; a key-value dict of the form: `\"Typical Dissidents\": \"Human Bards\"`",
+					"type": "object",
+					"markdownDescription": "For homebrew use only; a key-value dict of the form: &quot;Typical Dissidents&quot;: &quot;Human Bards&quot;"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				}
+			},
+			"additionalProperties": false
+		},
+		"deity": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"reprintAlias": {
+							"type": "string"
+						},
+						"alignment": {
+							"type": "array",
+							"minItems": 1,
+							"items": {
+								"$ref": "util.json#/$defs/alignment"
+							}
+						},
+						"title": {
+							"type": "string"
+						},
+						"pantheon": {
+							"type": "string",
+							"examples": [
+								"Amaranthine",
+								"Celtic",
+								"Dawn War",
+								"Dragonlance",
+								"Drow",
+								"Dwarven",
+								"Eberron",
+								"Egyptian",
+								"Elven",
+								"Faerûnian",
+								"Forgotten Realms",
+								"Gnomish",
+								"Greek",
+								"Greyhawk",
+								"Halfling",
+								"Nonhuman",
+								"Norse",
+								"Orc",
+								"Gnome",
+								"Duergar",
+								"Exandria",
+								"Theros",
+								"Unknown",
+								"Yuan-ti",
+								"Umbral",
+								"Shadow Realm Godlings",
+								"Shadow Realm Dark Gods"
+							]
+						},
+						"category": {
+							"type": "string"
+						},
+						"domains": {
+							"type": "array",
+							"minItems": 1,
+							"uniqueItems": true,
+							"items": {
+								"type": "string",
+								"examples": [
+									"Arcana",
+									"Community",
+									"Death",
+									"Forge",
+									"Grave",
+									"Knowledge",
+									"Life",
+									"Light",
+									"Moon",
+									"Nature",
+									"Night",
+									"Order",
+									"Peace",
+									"Tempest",
+									"Trickery",
+									"Twilight",
+									"Unknown",
+									"War",
+									"Apocalypse",
+									"Wine",
+									"Cat",
+									"Darkness",
+									"Hunger",
+									"Hunting",
+									"Justice",
+									"Keeper",
+									"Labyrinth",
+									"Lust",
+									"Mercy",
+									"Ocean",
+									"Portal",
+									"Prophecy",
+									"Shadow",
+									"Travel",
+									"Void",
+									"Wind"
+								]
+							}
+						},
+						"province": {
+							"description": "The nouveau form of \"title\", first seen in MTF",
+							"type": "string",
+							"markdownDescription": "The nouveau form of &quot;title&quot;, first seen in MTF"
+						},
+						"symbol": {
+							"type": "string"
+						},
+						"dogma": {
+							"type": "string"
+						},
+						"favoredWeapons": {
+							"type": "string"
+						},
+						"plane": {
+							"type": "string"
+						},
+						"worshipers": {
+							"type": "string"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"additionalSources": {
+							"$ref": "util.json#/$defs/additionalSources"
+						},
+						"altNames": {
+							"type": "array",
+							"minItems": 1,
+							"uniqueItems": true,
+							"items": {
+								"type": "string"
+							}
+						},
+						"symbolImg": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"legacy": {
+							"$ref": "util.json#/$defs/legacy"
+						},
+						"customExtensionOf": {
+							"type": "string",
+							"description": "A UID of an existing deity that this deity extends. e.g. \"Bahgtru|Orc|SCAG\"",
+							"markdownDescription": "A UID of an existing deity that this deity extends. e.g. &quot;Bahgtru|Orc|SCAG&quot;"
+						},
+						"piety": {
+							"type": "boolean"
+						},
+						"customProperties": {
+							"description": "For homebrew use only; a key-value dict of the form: `\"Typical Dissidents\": \"Human Bards\"`",
+							"type": "object",
+							"markdownDescription": "For homebrew use only; a key-value dict of the form: &quot;Typical Dissidents&quot;: &quot;Human Bards&quot;"
+						},
+						"foundryImg": {
+							"$ref": "util-foundry.json#/$defs/foundryImg"
+						},
+						"foundryAdvice": {
+							"$ref": "entry.json"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"name",
+						"pantheon",
+						"source"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"reprintAlias": {
+							"type": "string"
+						},
+						"alignment": {
+							"type": "array",
+							"minItems": 1,
+							"items": {
+								"$ref": "util.json#/$defs/alignment"
+							}
+						},
+						"title": {
+							"type": "string"
+						},
+						"pantheon": {
+							"type": "string",
+							"examples": [
+								"Amaranthine",
+								"Celtic",
+								"Dawn War",
+								"Dragonlance",
+								"Drow",
+								"Dwarven",
+								"Eberron",
+								"Egyptian",
+								"Elven",
+								"Faerûnian",
+								"Forgotten Realms",
+								"Gnomish",
+								"Greek",
+								"Greyhawk",
+								"Halfling",
+								"Nonhuman",
+								"Norse",
+								"Orc",
+								"Gnome",
+								"Duergar",
+								"Exandria",
+								"Theros",
+								"Unknown",
+								"Yuan-ti",
+								"Umbral",
+								"Shadow Realm Godlings",
+								"Shadow Realm Dark Gods"
+							]
+						},
+						"category": {
+							"type": "string"
+						},
+						"domains": {
+							"type": "array",
+							"minItems": 1,
+							"uniqueItems": true,
+							"items": {
+								"type": "string",
+								"examples": [
+									"Arcana",
+									"Community",
+									"Death",
+									"Forge",
+									"Grave",
+									"Knowledge",
+									"Life",
+									"Light",
+									"Moon",
+									"Nature",
+									"Night",
+									"Order",
+									"Peace",
+									"Tempest",
+									"Trickery",
+									"Twilight",
+									"Unknown",
+									"War",
+									"Apocalypse",
+									"Wine",
+									"Cat",
+									"Darkness",
+									"Hunger",
+									"Hunting",
+									"Justice",
+									"Keeper",
+									"Labyrinth",
+									"Lust",
+									"Mercy",
+									"Ocean",
+									"Portal",
+									"Prophecy",
+									"Shadow",
+									"Travel",
+									"Void",
+									"Wind"
+								]
+							}
+						},
+						"province": {
+							"description": "The nouveau form of \"title\", first seen in MTF",
+							"type": "string",
+							"markdownDescription": "The nouveau form of &quot;title&quot;, first seen in MTF"
+						},
+						"symbol": {
+							"type": "string"
+						},
+						"dogma": {
+							"type": "string"
+						},
+						"favoredWeapons": {
+							"type": "string"
+						},
+						"plane": {
+							"type": "string"
+						},
+						"worshipers": {
+							"type": "string"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"additionalSources": {
+							"$ref": "util.json#/$defs/additionalSources"
+						},
+						"altNames": {
+							"type": "array",
+							"minItems": 1,
+							"uniqueItems": true,
+							"items": {
+								"type": "string"
+							}
+						},
+						"symbolImg": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"legacy": {
+							"$ref": "util.json#/$defs/legacy"
+						},
+						"customExtensionOf": {
+							"type": "string",
+							"description": "A UID of an existing deity that this deity extends. e.g. \"Bahgtru|Orc|SCAG\"",
+							"markdownDescription": "A UID of an existing deity that this deity extends. e.g. &quot;Bahgtru|Orc|SCAG&quot;"
+						},
+						"piety": {
+							"type": "boolean"
+						},
+						"customProperties": {
+							"description": "For homebrew use only; a key-value dict of the form: `\"Typical Dissidents\": \"Human Bards\"`",
+							"type": "object",
+							"markdownDescription": "For homebrew use only; a key-value dict of the form: &quot;Typical Dissidents&quot;: &quot;Human Bards&quot;"
+						},
+						"foundryImg": {
+							"$ref": "util-foundry.json#/$defs/foundryImg"
+						},
+						"foundryAdvice": {
+							"$ref": "entry.json"
+						},
+						"_copy": {
+							"$ref": "util-copy.json#/$defs/copyBlock_copy_generic"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"_copy"
+					]
+				}
+			]
+		}
+	},
+	"properties": {
+		"deity": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/deity"
+			}
+		},
+		"_meta": {
+			"$ref": "util.json#/$defs/metaBlock"
+		}
+	},
+	"additionalProperties": false
+}

@@ -1,0 +1,79 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "books.json",
+	"version": "1.2.19",
+	"type": "object",
+	"properties": {
+		"book": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"alias": {
+						"$ref": "util.json#/$defs/alias"
+					},
+					"id": {
+						"$ref": "util.json#/$defs/corpusId"
+					},
+					"source": {
+						"$ref": "util.json#/$defs/source"
+					},
+					"parentSource": {
+						"$ref": "corpus-shared.json#/$defs/corpusParentSource"
+					},
+					"legacy": {
+						"$ref": "util.json#/$defs/legacy"
+					},
+					"group": {
+						"description": "The group under which this book should be listed in the navbar.",
+						"type": "string",
+						"enum": [
+							"core",
+							"supplement",
+							"supplement-alt",
+							"setting",
+							"setting-alt",
+							"prerelease",
+							"homebrew",
+							"screen",
+							"organized-play",
+							"recipe",
+							"other"
+						],
+						"markdownDescription": "The group under which this book should be listed in the navbar."
+					},
+					"author": {
+						"type": "string"
+					},
+					"published": {
+						"$ref": "corpus-shared.json#/$defs/corpusPublished"
+					},
+					"revised": {
+						"$ref": "corpus-shared.json#/$defs/corpusPublished"
+					},
+					"cover": {
+						"$ref": "corpus-shared.json#/$defs/corpusCover"
+					},
+					"contents": {
+						"$ref": "corpus-shared.json#/$defs/corpusContents"
+					}
+				},
+				"additionalProperties": false,
+				"required": [
+					"name",
+					"id",
+					"source",
+					"contents",
+					"published",
+					"group"
+				]
+			}
+		}
+	},
+	"additionalProperties": false
+}

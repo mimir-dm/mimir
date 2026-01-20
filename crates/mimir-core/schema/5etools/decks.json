@@ -1,0 +1,397 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "decks.json",
+	"version": "1.0.5",
+	"type": "object",
+	"$defs": {
+		"deckData": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"cards": {
+					"type": "array",
+					"$comment": "Non-unique entries are permitted, to allow explicit ordering of duplicate cards.",
+					"items": {
+						"oneOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"uid": {
+										"type": "string"
+									},
+									"count": {
+										"type": "integer"
+									},
+									"replacement": {
+										"const": true
+									}
+								},
+								"required": [
+									"uid"
+								],
+								"minProperties": 2,
+								"additionalProperties": false
+							}
+						]
+					},
+					"minItems": 1
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"back": {
+					"$ref": "entry.json#/$defs/entryImage"
+				},
+				"hasCardArt": {
+					"description": "A hint used by filters, determining whether or not this deck should be filtered out by default.",
+					"type": "boolean",
+					"markdownDescription": "A hint used by filters, determining whether or not this deck should be filtered out by default."
+				}
+			},
+			"additionalProperties": false
+		},
+		"deck": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"cards": {
+							"type": "array",
+							"$comment": "Non-unique entries are permitted, to allow explicit ordering of duplicate cards.",
+							"items": {
+								"oneOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "object",
+										"properties": {
+											"uid": {
+												"type": "string"
+											},
+											"count": {
+												"type": "integer"
+											},
+											"replacement": {
+												"const": true
+											}
+										},
+										"required": [
+											"uid"
+										],
+										"minProperties": 2,
+										"additionalProperties": false
+									}
+								]
+							},
+							"minItems": 1
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"back": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"hasCardArt": {
+							"description": "A hint used by filters, determining whether or not this deck should be filtered out by default.",
+							"type": "boolean",
+							"markdownDescription": "A hint used by filters, determining whether or not this deck should be filtered out by default."
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"name",
+						"source",
+						"cards"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"cards": {
+							"type": "array",
+							"$comment": "Non-unique entries are permitted, to allow explicit ordering of duplicate cards.",
+							"items": {
+								"oneOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "object",
+										"properties": {
+											"uid": {
+												"type": "string"
+											},
+											"count": {
+												"type": "integer"
+											},
+											"replacement": {
+												"const": true
+											}
+										},
+										"required": [
+											"uid"
+										],
+										"minProperties": 2,
+										"additionalProperties": false
+									}
+								]
+							},
+							"minItems": 1
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"back": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"hasCardArt": {
+							"description": "A hint used by filters, determining whether or not this deck should be filtered out by default.",
+							"type": "boolean",
+							"markdownDescription": "A hint used by filters, determining whether or not this deck should be filtered out by default."
+						},
+						"_copy": {
+							"$ref": "util-copy.json#/$defs/copyBlock_copy_generic"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"_copy"
+					]
+				}
+			]
+		},
+		"cardData": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"set": {
+					"type": "string"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"face": {
+					"$ref": "entry.json#/$defs/entryImage"
+				},
+				"back": {
+					"$ref": "entry.json#/$defs/entryImage"
+				},
+				"suit": {
+					"type": "string"
+				},
+				"value": {
+					"type": "integer"
+				},
+				"valueName": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"card": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"set": {
+							"type": "string"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"face": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"back": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"suit": {
+							"type": "string"
+						},
+						"value": {
+							"type": "integer"
+						},
+						"valueName": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"name",
+						"source",
+						"set"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"set": {
+							"type": "string"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"face": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"back": {
+							"$ref": "entry.json#/$defs/entryImage"
+						},
+						"suit": {
+							"type": "string"
+						},
+						"value": {
+							"type": "integer"
+						},
+						"valueName": {
+							"type": "string"
+						},
+						"_copy": {
+							"$ref": "util-copy.json#/$defs/copyBlock_copy_generic"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"_copy"
+					]
+				}
+			]
+		}
+	},
+	"properties": {
+		"_meta": {
+			"$ref": "util.json#/$defs/metaBlock"
+		},
+		"deck": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/deck"
+			}
+		},
+		"card": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/card"
+			}
+		}
+	},
+	"required": [
+		"deck",
+		"card"
+	],
+	"additionalProperties": false
+}

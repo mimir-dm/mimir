@@ -1,0 +1,496 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "feats.json",
+	"version": "1.7.13",
+	"type": "object",
+	"$defs": {
+		"featData": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"prerequisite": {
+					"$ref": "util.json#/$defs/prerequisite"
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"additionalSources": {
+					"$ref": "util.json#/$defs/additionalSources"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"ability": {
+					"$ref": "util.json#/$defs/abilityScores"
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"reprintedAs": {
+					"$ref": "util.json#/$defs/reprintedAs"
+				},
+				"repeatable": {
+					"type": "boolean"
+				},
+				"repeatableNote": {
+					"type": "string"
+				},
+				"repeatableHidden": {
+					"const": true
+				},
+				"category": {
+					"$ref": "util.json#/$defs/dataFeatCategory"
+				},
+				"additionalSpells": {
+					"$ref": "util-additionalspells.json#/$defs/additionalSpellsArray"
+				},
+				"languageProficiencies": {
+					"$ref": "util.json#/$defs/languageProficiencies"
+				},
+				"skillProficiencies": {
+					"$ref": "util.json#/$defs/skillProficiencies"
+				},
+				"weaponProficiencies": {
+					"$ref": "util.json#/$defs/weaponProficiencies"
+				},
+				"armorProficiencies": {
+					"$ref": "util.json#/$defs/armorProficiencies"
+				},
+				"toolProficiencies": {
+					"$ref": "util.json#/$defs/toolProficiencies"
+				},
+				"skillToolLanguageProficiencies": {
+					"$ref": "util.json#/$defs/skillToolLanguageProficiencies"
+				},
+				"savingThrowProficiencies": {
+					"$ref": "util.json#/$defs/savingThrowProficiencies"
+				},
+				"optionalfeatureProgression": {
+					"$ref": "util.json#/$defs/optionalfeatureProgression"
+				},
+				"featProgression": {
+					"$ref": "util.json#/$defs/featProgression"
+				},
+				"expertise": {
+					"$ref": "util.json#/$defs/expertise"
+				},
+				"resist": {
+					"$ref": "util.json#/$defs/damageResistArrayPlayer"
+				},
+				"immune": {
+					"$ref": "util.json#/$defs/damageImmunityArrayPlayer"
+				},
+				"vulnerable": {
+					"$ref": "util.json#/$defs/damageVulnerabilityArrayPlayer"
+				},
+				"conditionImmune": {
+					"$ref": "util.json#/$defs/conditionImmunityArrayPlayer"
+				},
+				"senses": {
+					"$ref": "util.json#/$defs/sensesArray"
+				},
+				"bonusSenses": {
+					"$ref": "util.json#/$defs/sensesArray"
+				},
+				"traitTags": {
+					"description": "Additional filter-only tags, to be used when more specific data (\"skillProficiencies\", etc.) is not appropriate, due to e.g. conditional or temporary effects.",
+					"oneOf": [
+						{
+							"type": "array",
+							"items": {
+								"$ref": "util.json#/$defs/traitTagCharacter"
+							}
+						},
+						{
+							"type": "null"
+						}
+					],
+					"markdownDescription": "Additional filter-only tags, to be used when more specific data (&quot;skillProficiencies&quot;, etc.) is not appropriate, due to e.g. conditional or temporary effects."
+				},
+				"hasFluff": {
+					"const": true
+				},
+				"hasFluffImages": {
+					"const": true
+				},
+				"_versions": {
+					"$ref": "util-copy.json#/$defs/versionsArray"
+				},
+				"fluff": {
+					"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source",
+					"$ref": "util.json#/$defs/fluffObject",
+					"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source"
+				},
+				"foundrySystem": {
+					"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+				},
+				"foundryActivities": {
+					"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+				},
+				"foundryFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				},
+				"foundryEffects": {
+					"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				},
+				"_foundryMerge": {
+					"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+				}
+			},
+			"additionalProperties": false
+		},
+		"feat": {
+			"anyOf": [
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"prerequisite": {
+							"$ref": "util.json#/$defs/prerequisite"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"additionalSources": {
+							"$ref": "util.json#/$defs/additionalSources"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"ability": {
+							"$ref": "util.json#/$defs/abilityScores"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"reprintedAs": {
+							"$ref": "util.json#/$defs/reprintedAs"
+						},
+						"repeatable": {
+							"type": "boolean"
+						},
+						"repeatableNote": {
+							"type": "string"
+						},
+						"repeatableHidden": {
+							"const": true
+						},
+						"category": {
+							"$ref": "util.json#/$defs/dataFeatCategory"
+						},
+						"additionalSpells": {
+							"$ref": "util-additionalspells.json#/$defs/additionalSpellsArray"
+						},
+						"languageProficiencies": {
+							"$ref": "util.json#/$defs/languageProficiencies"
+						},
+						"skillProficiencies": {
+							"$ref": "util.json#/$defs/skillProficiencies"
+						},
+						"weaponProficiencies": {
+							"$ref": "util.json#/$defs/weaponProficiencies"
+						},
+						"armorProficiencies": {
+							"$ref": "util.json#/$defs/armorProficiencies"
+						},
+						"toolProficiencies": {
+							"$ref": "util.json#/$defs/toolProficiencies"
+						},
+						"skillToolLanguageProficiencies": {
+							"$ref": "util.json#/$defs/skillToolLanguageProficiencies"
+						},
+						"savingThrowProficiencies": {
+							"$ref": "util.json#/$defs/savingThrowProficiencies"
+						},
+						"optionalfeatureProgression": {
+							"$ref": "util.json#/$defs/optionalfeatureProgression"
+						},
+						"featProgression": {
+							"$ref": "util.json#/$defs/featProgression"
+						},
+						"expertise": {
+							"$ref": "util.json#/$defs/expertise"
+						},
+						"resist": {
+							"$ref": "util.json#/$defs/damageResistArrayPlayer"
+						},
+						"immune": {
+							"$ref": "util.json#/$defs/damageImmunityArrayPlayer"
+						},
+						"vulnerable": {
+							"$ref": "util.json#/$defs/damageVulnerabilityArrayPlayer"
+						},
+						"conditionImmune": {
+							"$ref": "util.json#/$defs/conditionImmunityArrayPlayer"
+						},
+						"senses": {
+							"$ref": "util.json#/$defs/sensesArray"
+						},
+						"bonusSenses": {
+							"$ref": "util.json#/$defs/sensesArray"
+						},
+						"traitTags": {
+							"description": "Additional filter-only tags, to be used when more specific data (\"skillProficiencies\", etc.) is not appropriate, due to e.g. conditional or temporary effects.",
+							"oneOf": [
+								{
+									"type": "array",
+									"items": {
+										"$ref": "util.json#/$defs/traitTagCharacter"
+									}
+								},
+								{
+									"type": "null"
+								}
+							],
+							"markdownDescription": "Additional filter-only tags, to be used when more specific data (&quot;skillProficiencies&quot;, etc.) is not appropriate, due to e.g. conditional or temporary effects."
+						},
+						"hasFluff": {
+							"const": true
+						},
+						"hasFluffImages": {
+							"const": true
+						},
+						"_versions": {
+							"$ref": "util-copy.json#/$defs/versionsArray"
+						},
+						"fluff": {
+							"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source",
+							"$ref": "util.json#/$defs/fluffObject",
+							"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source"
+						},
+						"foundrySystem": {
+							"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+						},
+						"foundryActivities": {
+							"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+						},
+						"foundryFlags": {
+							"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+						},
+						"foundryEffects": {
+							"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+						},
+						"foundryImg": {
+							"$ref": "util-foundry.json#/$defs/foundryImg"
+						},
+						"foundryAdvice": {
+							"$ref": "entry.json"
+						},
+						"_foundryMerge": {
+							"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"name",
+						"source",
+						"entries"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"alias": {
+							"$ref": "util.json#/$defs/alias"
+						},
+						"prerequisite": {
+							"$ref": "util.json#/$defs/prerequisite"
+						},
+						"source": {
+							"$ref": "util.json#/$defs/source"
+						},
+						"additionalSources": {
+							"$ref": "util.json#/$defs/additionalSources"
+						},
+						"page": {
+							"$ref": "util.json#/$defs/page"
+						},
+						"entries": {
+							"type": "array",
+							"items": {
+								"$ref": "entry.json"
+							}
+						},
+						"ability": {
+							"$ref": "util.json#/$defs/abilityScores"
+						},
+						"otherSources": {
+							"$ref": "util.json#/$defs/otherSources"
+						},
+						"reprintedAs": {
+							"$ref": "util.json#/$defs/reprintedAs"
+						},
+						"repeatable": {
+							"type": "boolean"
+						},
+						"repeatableNote": {
+							"type": "string"
+						},
+						"repeatableHidden": {
+							"const": true
+						},
+						"category": {
+							"$ref": "util.json#/$defs/dataFeatCategory"
+						},
+						"additionalSpells": {
+							"$ref": "util-additionalspells.json#/$defs/additionalSpellsArray"
+						},
+						"languageProficiencies": {
+							"$ref": "util.json#/$defs/languageProficiencies"
+						},
+						"skillProficiencies": {
+							"$ref": "util.json#/$defs/skillProficiencies"
+						},
+						"weaponProficiencies": {
+							"$ref": "util.json#/$defs/weaponProficiencies"
+						},
+						"armorProficiencies": {
+							"$ref": "util.json#/$defs/armorProficiencies"
+						},
+						"toolProficiencies": {
+							"$ref": "util.json#/$defs/toolProficiencies"
+						},
+						"skillToolLanguageProficiencies": {
+							"$ref": "util.json#/$defs/skillToolLanguageProficiencies"
+						},
+						"savingThrowProficiencies": {
+							"$ref": "util.json#/$defs/savingThrowProficiencies"
+						},
+						"optionalfeatureProgression": {
+							"$ref": "util.json#/$defs/optionalfeatureProgression"
+						},
+						"featProgression": {
+							"$ref": "util.json#/$defs/featProgression"
+						},
+						"expertise": {
+							"$ref": "util.json#/$defs/expertise"
+						},
+						"resist": {
+							"$ref": "util.json#/$defs/damageResistArrayPlayer"
+						},
+						"immune": {
+							"$ref": "util.json#/$defs/damageImmunityArrayPlayer"
+						},
+						"vulnerable": {
+							"$ref": "util.json#/$defs/damageVulnerabilityArrayPlayer"
+						},
+						"conditionImmune": {
+							"$ref": "util.json#/$defs/conditionImmunityArrayPlayer"
+						},
+						"senses": {
+							"$ref": "util.json#/$defs/sensesArray"
+						},
+						"bonusSenses": {
+							"$ref": "util.json#/$defs/sensesArray"
+						},
+						"traitTags": {
+							"description": "Additional filter-only tags, to be used when more specific data (\"skillProficiencies\", etc.) is not appropriate, due to e.g. conditional or temporary effects.",
+							"oneOf": [
+								{
+									"type": "array",
+									"items": {
+										"$ref": "util.json#/$defs/traitTagCharacter"
+									}
+								},
+								{
+									"type": "null"
+								}
+							],
+							"markdownDescription": "Additional filter-only tags, to be used when more specific data (&quot;skillProficiencies&quot;, etc.) is not appropriate, due to e.g. conditional or temporary effects."
+						},
+						"hasFluff": {
+							"const": true
+						},
+						"hasFluffImages": {
+							"const": true
+						},
+						"_versions": {
+							"$ref": "util-copy.json#/$defs/versionsArray"
+						},
+						"fluff": {
+							"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source",
+							"$ref": "util.json#/$defs/fluffObject",
+							"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source"
+						},
+						"foundrySystem": {
+							"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+						},
+						"foundryActivities": {
+							"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+						},
+						"foundryFlags": {
+							"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+						},
+						"foundryEffects": {
+							"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+						},
+						"foundryImg": {
+							"$ref": "util-foundry.json#/$defs/foundryImg"
+						},
+						"foundryAdvice": {
+							"$ref": "entry.json"
+						},
+						"_foundryMerge": {
+							"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+						},
+						"_copy": {
+							"$ref": "util-copy.json#/$defs/copyBlock_copy_generic"
+						}
+					},
+					"additionalProperties": false,
+					"required": [
+						"_copy"
+					]
+				}
+			]
+		}
+	},
+	"properties": {
+		"_meta": {
+			"$ref": "util.json#/$defs/metaBlock"
+		},
+		"feat": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/feat"
+			}
+		}
+	},
+	"required": [
+		"feat"
+	],
+	"additionalProperties": false
+}

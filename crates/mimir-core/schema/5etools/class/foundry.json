@@ -1,0 +1,431 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "foundry-class.json",
+	"version": "1.5.1",
+	"type": "object",
+	"properties": {
+		"class": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"identifier": {
+						"$ref": "../util-foundry.json#/$defs/foundryIdentifier"
+					},
+					"system": {
+						"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+					},
+					"activities": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryActivityObject"
+						}
+					},
+					"effects": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryEffectObject"
+						}
+					},
+					"flags": {
+						"$ref": "../util-foundry.json#/$defs/foundryFlagsObject"
+					},
+					"advice": {
+						"$ref": "../entry.json"
+					},
+					"img": {
+						"type": "string"
+					},
+					"advancement": {
+						"$ref": "../util-foundry.json#/$defs/foundryAdvancementsArray"
+					},
+					"migrationVersion": {
+						"type": "integer"
+					},
+					"_merge": {
+						"$ref": "../util-foundry.json#/$defs/foundryMergeObject"
+					},
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "../entry.json"
+						}
+					},
+					"entryData": {
+						"$ref": "../util-foundry.json#/$defs/entryDataObject"
+					},
+					"chooseSystem": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+						}
+					},
+					"isChooseSystemRenderEntries": {
+						"type": "boolean"
+					},
+					"isChooseFlagsRenderEntries": {
+						"type": "boolean"
+					},
+					"isIgnored": {
+						"const": true
+					},
+					"ignoreSrdActivities": {
+						"const": true
+					},
+					"ignoreSrdEffects": {
+						"const": true
+					},
+					"actorTokenMod": {
+						"type": "object"
+					},
+					"subEntities": {
+						"$ref": "../util-foundry.json#/$defs/foundrySubEntitiesObject"
+					}
+				},
+				"required": [
+					"name",
+					"source"
+				]
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"subclass": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": [
+					"name",
+					"shortName",
+					"source",
+					"className",
+					"classSource"
+				],
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"identifier": {
+						"$ref": "../util-foundry.json#/$defs/foundryIdentifier"
+					},
+					"system": {
+						"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+					},
+					"activities": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryActivityObject"
+						}
+					},
+					"effects": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryEffectObject"
+						}
+					},
+					"flags": {
+						"$ref": "../util-foundry.json#/$defs/foundryFlagsObject"
+					},
+					"advice": {
+						"$ref": "../entry.json"
+					},
+					"img": {
+						"type": "string"
+					},
+					"advancement": {
+						"$ref": "../util-foundry.json#/$defs/foundryAdvancementsArray"
+					},
+					"migrationVersion": {
+						"type": "integer"
+					},
+					"_merge": {
+						"$ref": "../util-foundry.json#/$defs/foundryMergeObject"
+					},
+					"shortName": {
+						"type": "string"
+					},
+					"className": {
+						"type": "string"
+					},
+					"classSource": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "../entry.json"
+						}
+					},
+					"entryData": {
+						"$ref": "../util-foundry.json#/$defs/entryDataObject"
+					},
+					"chooseSystem": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+						}
+					},
+					"isChooseSystemRenderEntries": {
+						"type": "boolean"
+					},
+					"isChooseFlagsRenderEntries": {
+						"type": "boolean"
+					},
+					"isIgnored": {
+						"const": true
+					},
+					"ignoreSrdActivities": {
+						"const": true
+					},
+					"ignoreSrdEffects": {
+						"const": true
+					},
+					"actorTokenMod": {
+						"type": "object"
+					},
+					"subEntities": {
+						"$ref": "../util-foundry.json#/$defs/foundrySubEntitiesObject"
+					}
+				}
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"classFeature": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": [
+					"name",
+					"source",
+					"className",
+					"classSource",
+					"level"
+				],
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"identifier": {
+						"$ref": "../util-foundry.json#/$defs/foundryIdentifier"
+					},
+					"system": {
+						"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+					},
+					"activities": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryActivityObject"
+						}
+					},
+					"effects": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryEffectObject"
+						}
+					},
+					"flags": {
+						"$ref": "../util-foundry.json#/$defs/foundryFlagsObject"
+					},
+					"advice": {
+						"$ref": "../entry.json"
+					},
+					"img": {
+						"type": "string"
+					},
+					"advancement": {
+						"$ref": "../util-foundry.json#/$defs/foundryAdvancementsArray"
+					},
+					"migrationVersion": {
+						"type": "integer"
+					},
+					"_merge": {
+						"$ref": "../util-foundry.json#/$defs/foundryMergeObject"
+					},
+					"className": {
+						"type": "string"
+					},
+					"classSource": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"level": {
+						"type": "integer"
+					},
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "../entry.json"
+						}
+					},
+					"entryData": {
+						"$ref": "../util-foundry.json#/$defs/entryDataObject"
+					},
+					"chooseSystem": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+						}
+					},
+					"isChooseSystemRenderEntries": {
+						"type": "boolean"
+					},
+					"isChooseFlagsRenderEntries": {
+						"type": "boolean"
+					},
+					"isIgnored": {
+						"const": true
+					},
+					"ignoreSrdActivities": {
+						"const": true
+					},
+					"ignoreSrdEffects": {
+						"const": true
+					},
+					"actorTokenMod": {
+						"type": "object"
+					},
+					"subEntities": {
+						"$ref": "../util-foundry.json#/$defs/foundrySubEntitiesObject"
+					}
+				}
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"subclassFeature": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": [
+					"name",
+					"source",
+					"className",
+					"classSource",
+					"level",
+					"subclassShortName",
+					"subclassSource"
+				],
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"identifier": {
+						"$ref": "../util-foundry.json#/$defs/foundryIdentifier"
+					},
+					"system": {
+						"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+					},
+					"activities": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryActivityObject"
+						}
+					},
+					"effects": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundryEffectObject"
+						}
+					},
+					"flags": {
+						"$ref": "../util-foundry.json#/$defs/foundryFlagsObject"
+					},
+					"advice": {
+						"$ref": "../entry.json"
+					},
+					"img": {
+						"type": "string"
+					},
+					"advancement": {
+						"$ref": "../util-foundry.json#/$defs/foundryAdvancementsArray"
+					},
+					"migrationVersion": {
+						"type": "integer"
+					},
+					"_merge": {
+						"$ref": "../util-foundry.json#/$defs/foundryMergeObject"
+					},
+					"className": {
+						"type": "string"
+					},
+					"classSource": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"level": {
+						"type": "integer"
+					},
+					"subclassShortName": {
+						"type": "string"
+					},
+					"subclassSource": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "../entry.json"
+						}
+					},
+					"entryData": {
+						"$ref": "../util-foundry.json#/$defs/entryDataObject"
+					},
+					"chooseSystem": {
+						"type": "array",
+						"items": {
+							"$ref": "../util-foundry.json#/$defs/foundrySystemObject"
+						}
+					},
+					"isChooseSystemRenderEntries": {
+						"type": "boolean"
+					},
+					"isChooseFlagsRenderEntries": {
+						"type": "boolean"
+					},
+					"isIgnored": {
+						"const": true
+					},
+					"ignoreSrdActivities": {
+						"const": true
+					},
+					"ignoreSrdEffects": {
+						"const": true
+					},
+					"actorTokenMod": {
+						"type": "object"
+					},
+					"subEntities": {
+						"$ref": "../util-foundry.json#/$defs/foundrySubEntitiesObject"
+					}
+				}
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		}
+	},
+	"required": [
+		"class",
+		"subclass",
+		"classFeature",
+		"subclassFeature"
+	],
+	"additionalProperties": false
+}

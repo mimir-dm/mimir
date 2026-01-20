@@ -1,0 +1,74 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "foundry-backgrounds.json",
+	"version": "1.1.1",
+	"type": "object",
+	"properties": {
+		"backgroundFeature": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"type": "object",
+				"required": [
+					"name",
+					"source",
+					"backgroundName",
+					"backgroundSource"
+				],
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "util.json#/$defs/source"
+					},
+					"identifier": {
+						"$ref": "util-foundry.json#/$defs/foundryIdentifier"
+					},
+					"system": {
+						"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+					},
+					"activities": {
+						"type": "array",
+						"items": {
+							"$ref": "util-foundry.json#/$defs/foundryActivityObject"
+						}
+					},
+					"effects": {
+						"type": "array",
+						"items": {
+							"$ref": "util-foundry.json#/$defs/foundryEffectObject"
+						}
+					},
+					"flags": {
+						"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+					},
+					"advice": {
+						"$ref": "entry.json"
+					},
+					"img": {
+						"type": "string"
+					},
+					"advancement": {
+						"$ref": "util-foundry.json#/$defs/foundryAdvancementsArray"
+					},
+					"migrationVersion": {
+						"type": "integer"
+					},
+					"_merge": {
+						"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+					},
+					"backgroundName": {
+						"type": "string"
+					},
+					"backgroundSource": {
+						"$ref": "util.json#/$defs/source"
+					}
+				}
+			}
+		}
+	},
+	"additionalProperties": false
+}

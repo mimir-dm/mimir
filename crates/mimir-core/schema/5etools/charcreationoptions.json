@@ -1,0 +1,104 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "charcreationoptions.json",
+	"version": "1.2.6",
+	"title": "Character Creation Options",
+	"type": "object",
+	"$defs": {
+		"optionType": {
+			"type": "string",
+			"description": "- CS: Character Secret\n- DG: Dark Gift\n- OF: Optional Feature\n- RF:B Replacement Feature: Background\n- SG: Supernatural Gift",
+			"markdownDescription": "- CS: Character Secret\n- DG: Dark Gift\n- OF: Optional Feature\n- RF:B Replacement Feature: Background\n- SG: Supernatural Gift",
+			"examples": [
+				"CS",
+				"DG",
+				"OF",
+				"RF:B",
+				"SG"
+			]
+		},
+		"charoption": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"optionType": {
+					"$comment": "Note that this field supports arbitrary strings for homebrew usage.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/optionType"
+					}
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"hasFluff": {
+					"type": "boolean"
+				},
+				"hasFluffImages": {
+					"type": "boolean"
+				},
+				"prerequisite": {
+					"$ref": "util.json#/$defs/prerequisite"
+				},
+				"fluff": {
+					"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source",
+					"$ref": "util.json#/$defs/fluffObject",
+					"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source"
+				},
+				"foundrySystem": {
+					"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+				},
+				"foundryActivities": {
+					"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+				},
+				"foundryFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				},
+				"foundryEffects": {
+					"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				},
+				"_foundryMerge": {
+					"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+				}
+			},
+			"required": [
+				"name",
+				"entries",
+				"source",
+				"optionType"
+			],
+			"additionalProperties": false
+		}
+	},
+	"properties": {
+		"charoption": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/charoption"
+			}
+		}
+	},
+	"additionalProperties": false
+}

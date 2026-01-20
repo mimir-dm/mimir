@@ -1,0 +1,198 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "conditionsdiseases.json",
+	"version": "1.2.12",
+	"type": "object",
+	"$defs": {
+		"_conditionDiseaseBase": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"reprintedAs": {
+					"$ref": "util.json#/$defs/reprintedAs"
+				},
+				"hasFluff": {
+					"type": "boolean"
+				},
+				"hasFluffImages": {
+					"type": "boolean"
+				},
+				"color": {
+					"description": "For homebrew use only; HTML hex color code this source should use when displayed on the DM Screen.\n\ne.g. \"ff00ff\"",
+					"type": "string",
+					"pattern": "^([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$",
+					"markdownDescription": "For homebrew use only; HTML hex color code this source should use when displayed on the DM Screen.\n\ne.g. &quot;ff00ff&quot;"
+				},
+				"fluff": {
+					"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source",
+					"$ref": "util.json#/$defs/fluffObject",
+					"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source"
+				},
+				"foundrySystem": {
+					"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+				},
+				"foundryActivities": {
+					"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+				},
+				"foundryFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				},
+				"foundryEffects": {
+					"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				},
+				"_foundryMerge": {
+					"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+				}
+			},
+			"required": [
+				"name",
+				"entries",
+				"source"
+			],
+			"additionalProperties": false
+		},
+		"condition": {
+			"$ref": "#/$defs/_conditionDiseaseBase"
+		},
+		"status": {
+			"$ref": "#/$defs/_conditionDiseaseBase"
+		},
+		"disease": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"alias": {
+					"$ref": "util.json#/$defs/alias"
+				},
+				"entries": {
+					"type": "array",
+					"items": {
+						"$ref": "entry.json"
+					}
+				},
+				"source": {
+					"$ref": "util.json#/$defs/source"
+				},
+				"page": {
+					"$ref": "util.json#/$defs/page"
+				},
+				"otherSources": {
+					"$ref": "util.json#/$defs/otherSources"
+				},
+				"reprintedAs": {
+					"$ref": "util.json#/$defs/reprintedAs"
+				},
+				"hasFluff": {
+					"type": "boolean"
+				},
+				"hasFluffImages": {
+					"type": "boolean"
+				},
+				"color": {
+					"description": "For homebrew use only; HTML hex color code this source should use when displayed on the DM Screen.\n\ne.g. \"ff00ff\"",
+					"type": "string",
+					"pattern": "^([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$",
+					"markdownDescription": "For homebrew use only; HTML hex color code this source should use when displayed on the DM Screen.\n\ne.g. &quot;ff00ff&quot;"
+				},
+				"fluff": {
+					"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source",
+					"$ref": "util.json#/$defs/fluffObject",
+					"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source"
+				},
+				"foundrySystem": {
+					"$ref": "util-foundry.json#/$defs/foundrySystemObject"
+				},
+				"foundryActivities": {
+					"$ref": "util-foundry.json#/$defs/foundryActivitiesArray"
+				},
+				"foundryFlags": {
+					"$ref": "util-foundry.json#/$defs/foundryFlagsObject"
+				},
+				"foundryEffects": {
+					"$ref": "util-foundry.json#/$defs/foundryEffectsArray"
+				},
+				"foundryImg": {
+					"$ref": "util-foundry.json#/$defs/foundryImg"
+				},
+				"foundryAdvice": {
+					"$ref": "entry.json"
+				},
+				"_foundryMerge": {
+					"$ref": "util-foundry.json#/$defs/foundryMergeObject"
+				},
+				"type": {
+					"type": "string",
+					"examples": [
+						"Magical Contagion"
+					]
+				}
+			},
+			"required": [
+				"name",
+				"entries",
+				"source"
+			],
+			"additionalProperties": false
+		}
+	},
+	"properties": {
+		"condition": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/condition"
+			}
+		},
+		"disease": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/disease"
+			}
+		},
+		"status": {
+			"type": "array",
+			"minItems": 1,
+			"uniqueItems": true,
+			"items": {
+				"$ref": "#/$defs/status"
+			}
+		}
+	},
+	"required": [
+		"condition",
+		"disease",
+		"status"
+	],
+	"additionalProperties": false
+}

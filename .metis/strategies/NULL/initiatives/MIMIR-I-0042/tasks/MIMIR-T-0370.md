@@ -4,14 +4,14 @@ level: task
 title: "Migration 001: CatalogSource table and types"
 short_code: "MIMIR-T-0370"
 created_at: 2026-01-20T02:43:35.694614+00:00
-updated_at: 2026-01-20T19:08:18.809044+00:00
+updated_at: 2026-01-20T19:55:32.722321+00:00
 parent: MIMIR-I-0042
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: MIMIR-I-0042
 ## Objective
 
 Create the first Diesel migration with the `catalog_sources` table. This table tracks which source books are imported and enabled in the catalog. All other catalog entities reference this table via `source` column.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -1,0 +1,716 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "items-shared.json",
+	"title": "Shared Item Schema",
+	"description": "Shared item definitions to be used in item schemas.",
+	"version": "1.2.0",
+	"$defs": {
+		"_itemModifySpeedEqual": {
+			"type": "string",
+			"enum": [
+				"walk",
+				"burrow",
+				"climb",
+				"fly",
+				"swim"
+			]
+		},
+		"itemModifySpeed": {
+			"type": "object",
+			"properties": {
+				"multiply": {
+					"type": "object",
+					"properties": {
+						"walk": {
+							"type": "number"
+						},
+						"burrow": {
+							"type": "number"
+						},
+						"climb": {
+							"type": "number"
+						},
+						"fly": {
+							"type": "number"
+						},
+						"swim": {
+							"type": "number"
+						},
+						"*": {
+							"type": "number"
+						}
+					},
+					"additionalProperties": false
+				},
+				"static": {
+					"type": "object",
+					"properties": {
+						"walk": {
+							"type": "number"
+						},
+						"burrow": {
+							"type": "number"
+						},
+						"climb": {
+							"type": "number"
+						},
+						"fly": {
+							"type": "number"
+						},
+						"swim": {
+							"type": "number"
+						},
+						"*": {
+							"type": "number"
+						}
+					},
+					"additionalProperties": false
+				},
+				"equal": {
+					"type": "object",
+					"properties": {
+						"walk": {
+							"$ref": "#/$defs/_itemModifySpeedEqual"
+						},
+						"burrow": {
+							"$ref": "#/$defs/_itemModifySpeedEqual"
+						},
+						"climb": {
+							"$ref": "#/$defs/_itemModifySpeedEqual"
+						},
+						"fly": {
+							"$ref": "#/$defs/_itemModifySpeedEqual"
+						},
+						"swim": {
+							"$ref": "#/$defs/_itemModifySpeedEqual"
+						}
+					},
+					"additionalProperties": false
+				},
+				"bonus": {
+					"type": "object",
+					"properties": {
+						"walk": {
+							"type": "number"
+						},
+						"burrow": {
+							"type": "number"
+						},
+						"climb": {
+							"type": "number"
+						},
+						"fly": {
+							"type": "number"
+						},
+						"swim": {
+							"type": "number"
+						},
+						"*": {
+							"type": "number"
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"itemRarity": {
+			"anyOf": [
+				{
+					"$ref": "util.json#/$defs/rarity"
+				},
+				{
+					"type": "string",
+					"description": "\"none\" is for mundane items. \"unknown (magic)\" is for miscellaneous magical items. \"unknown\" is for miscellaneous mundane items. \"varies\" is for item groups, or for magic variants, where it has the special functionality of maintaining a base item's rarity when creating specific variants.",
+					"enum": [
+						"none",
+						"unknown",
+						"unknown (magic)",
+						"varies"
+					],
+					"markdownDescription": "&quot;none&quot; is for mundane items. &quot;unknown (magic)&quot; is for miscellaneous magical items. &quot;unknown&quot; is for miscellaneous mundane items. &quot;varies&quot; is for item groups, or for magic variants, where it has the special functionality of maintaining a base item&apos;s rarity when creating specific variants."
+				}
+			]
+		},
+		"itemRecharge": {
+			"enum": [
+				"round",
+				"restShort",
+				"restLong",
+				"dawn",
+				"dusk",
+				"midnight",
+				"week",
+				"month",
+				"year",
+				"decade",
+				"century",
+				"special"
+			]
+		},
+		"itemRechargeAmount": {
+			"type": [
+				"integer",
+				"string"
+			]
+		},
+		"itemType": {
+			"type": "string",
+			"description": "- $|DMG: Treasure\n- $A|DMG: Treasure (Art Object)\n- $A|XDMG: Treasure (Art Object)\n- $C: Treasure (Coinage)\n- $C|XPHB: Treasure (Coinage)\n- $G|DMG: Treasure (Gemstone)\n- $G|XDMG: Treasure (Gemstone)\n- A: Ammunition\n- A|XPHB: Ammunition\n- AF|DMG: Ammunition (futuristic)\n- AF|XDMG: Ammunition (futuristic)\n- AIR|DMG: Vehicle (air)\n- AIR|XPHB: Vehicle (air)\n- AT: Artisan Tool\n- AT|XPHB: Artisan Tool\n- EXP|DMG: Explosive\n- EXP|XDMG: Explosive\n- FD: Food and Drink\n- FD|XPHB: Food and Drink\n- G: Adventuring Gear\n- G|XPHB: Adventuring Gear\n- GS: Gaming Set\n- GS|XPHB: Gaming Set\n- GV|DMG: Generic Variant\n- GV|XDMG: Generic Variant\n- HA: Heavy Armor\n- HA|XPHB: Heavy Armor\n- INS: Instrument\n- INS|XPHB: Instrument\n- LA: Light Armor\n- LA|XPHB: Light Armor\n- M: Melee Weapon\n- M|XPHB: Melee Weapon\n- MA: Medium Armor\n- MA|XPHB: Medium Armor\n- MNT: Mount\n- MNT|XPHB: Mount\n- OTH: Other\n- P: Potion\n- P|XPHB: Potion\n- R: Ranged Weapon\n- R|XPHB: Ranged Weapon\n- RD|DMG: Rod\n- RD|XDMG: Rod\n- RG|DMG: Ring\n- RG|XDMG: Ring\n- S: Shield\n- S|XPHB: Shield\n- SC|DMG: Scroll\n- SC|XPHB: Scroll\n- SCF: Spellcasting Focus\n- SCF|XPHB: Spellcasting Focus\n- SHP: Vehicle (water)\n- SHP|XPHB: Vehicle (water)\n- SPC|AAG: Vehicle (space)\n- T: Tool\n- T|XPHB: Tool\n- TAH: Tack and Harness\n- TAH|XPHB: Tack and Harness\n- TB|XDMG: Trade Bar\n- TG: Trade Good\n- TG|XPHB: Trade Good\n- VEH: Vehicle (land)\n- VEH|XPHB: Vehicle (land)\n- WD|DMG: Wand\n- WD|XDMG: Wand",
+			"markdownDescription": "- $|DMG: Treasure\n- $A|DMG: Treasure (Art Object)\n- $A|XDMG: Treasure (Art Object)\n- $C: Treasure (Coinage)\n- $C|XPHB: Treasure (Coinage)\n- $G|DMG: Treasure (Gemstone)\n- $G|XDMG: Treasure (Gemstone)\n- A: Ammunition\n- A|XPHB: Ammunition\n- AF|DMG: Ammunition (futuristic)\n- AF|XDMG: Ammunition (futuristic)\n- AIR|DMG: Vehicle (air)\n- AIR|XPHB: Vehicle (air)\n- AT: Artisan Tool\n- AT|XPHB: Artisan Tool\n- EXP|DMG: Explosive\n- EXP|XDMG: Explosive\n- FD: Food and Drink\n- FD|XPHB: Food and Drink\n- G: Adventuring Gear\n- G|XPHB: Adventuring Gear\n- GS: Gaming Set\n- GS|XPHB: Gaming Set\n- GV|DMG: Generic Variant\n- GV|XDMG: Generic Variant\n- HA: Heavy Armor\n- HA|XPHB: Heavy Armor\n- INS: Instrument\n- INS|XPHB: Instrument\n- LA: Light Armor\n- LA|XPHB: Light Armor\n- M: Melee Weapon\n- M|XPHB: Melee Weapon\n- MA: Medium Armor\n- MA|XPHB: Medium Armor\n- MNT: Mount\n- MNT|XPHB: Mount\n- OTH: Other\n- P: Potion\n- P|XPHB: Potion\n- R: Ranged Weapon\n- R|XPHB: Ranged Weapon\n- RD|DMG: Rod\n- RD|XDMG: Rod\n- RG|DMG: Ring\n- RG|XDMG: Ring\n- S: Shield\n- S|XPHB: Shield\n- SC|DMG: Scroll\n- SC|XPHB: Scroll\n- SCF: Spellcasting Focus\n- SCF|XPHB: Spellcasting Focus\n- SHP: Vehicle (water)\n- SHP|XPHB: Vehicle (water)\n- SPC|AAG: Vehicle (space)\n- T: Tool\n- T|XPHB: Tool\n- TAH: Tack and Harness\n- TAH|XPHB: Tack and Harness\n- TB|XDMG: Trade Bar\n- TG: Trade Good\n- TG|XPHB: Trade Good\n- VEH: Vehicle (land)\n- VEH|XPHB: Vehicle (land)\n- WD|DMG: Wand\n- WD|XDMG: Wand",
+			"examples": [
+				"$|DMG",
+				"$A|DMG",
+				"$A|XDMG",
+				"$C",
+				"$C|XPHB",
+				"$G|DMG",
+				"$G|XDMG",
+				"A",
+				"A|XPHB",
+				"AF|DMG",
+				"AF|XDMG",
+				"AIR|DMG",
+				"AIR|XPHB",
+				"AT",
+				"AT|XPHB",
+				"EXP|DMG",
+				"EXP|XDMG",
+				"FD",
+				"FD|XPHB",
+				"G",
+				"G|XPHB",
+				"GS",
+				"GS|XPHB",
+				"GV|DMG",
+				"GV|XDMG",
+				"HA",
+				"HA|XPHB",
+				"INS",
+				"INS|XPHB",
+				"LA",
+				"LA|XPHB",
+				"M",
+				"M|XPHB",
+				"MA",
+				"MA|XPHB",
+				"MNT",
+				"MNT|XPHB",
+				"OTH",
+				"P",
+				"P|XPHB",
+				"R",
+				"R|XPHB",
+				"RD|DMG",
+				"RD|XDMG",
+				"RG|DMG",
+				"RG|XDMG",
+				"S",
+				"S|XPHB",
+				"SC|DMG",
+				"SC|XPHB",
+				"SCF",
+				"SCF|XPHB",
+				"SHP",
+				"SHP|XPHB",
+				"SPC|AAG",
+				"T",
+				"T|XPHB",
+				"TAH",
+				"TAH|XPHB",
+				"TB|XDMG",
+				"TG",
+				"TG|XDMG",
+				"VEH",
+				"VEH|XPHB",
+				"WD|DMG",
+				"WD|XDMG"
+			]
+		},
+		"itemAge": {
+			"type": "string",
+			"examples": [
+				"futuristic",
+				"modern",
+				"renaissance"
+			]
+		},
+		"itemProperty": {
+			"description": "- 2H: Two-Handed\n- 2H|XPHB: Two-Handed\n- A: Ammunition\n- A|XPHB: Ammunition\n- AF|DMG: Ammunition (futuristic)\n- AF|XDMG: Ammunition (futuristic)\n- BF|DMG: Burst Fire\n- BF|XDMG: Burst Fire\n- F: Finesse\n- F|XPHB: Finesse\n- H: Heavy\n- H|XPHB: Heavy\n- L: Light\n- L|XPHB: Light\n- LD: Loading\n- LD|XPHB: Loading\n- OTH: Other\n- R: Reach\n- R|XPHB: Reach\n- RLD: Reload\n- RLD|XDMG: Reload\n- S: Special\n- T: Thrown\n- T|XPHB: Thrown\n- V: Versatile\n- V|XPHB: Versatile\n- Vst|EGW: Vestige of Divergence",
+			"type": "string",
+			"markdownDescription": "- 2H: Two-Handed\n- 2H|XPHB: Two-Handed\n- A: Ammunition\n- A|XPHB: Ammunition\n- AF|DMG: Ammunition (futuristic)\n- AF|XDMG: Ammunition (futuristic)\n- BF|DMG: Burst Fire\n- BF|XDMG: Burst Fire\n- F: Finesse\n- F|XPHB: Finesse\n- H: Heavy\n- H|XPHB: Heavy\n- L: Light\n- L|XPHB: Light\n- LD: Loading\n- LD|XPHB: Loading\n- OTH: Other\n- R: Reach\n- R|XPHB: Reach\n- RLD: Reload\n- RLD|XDMG: Reload\n- S: Special\n- T: Thrown\n- T|XPHB: Thrown\n- V: Versatile\n- V|XPHB: Versatile\n- Vst|EGW: Vestige of Divergence",
+			"examples": [
+				"2H",
+				"2H|XPHB",
+				"A",
+				"A|XPHB",
+				"AF|DMG",
+				"AF|XDMG",
+				"BF|DMG",
+				"BF|XDMG",
+				"F",
+				"F|XPHB",
+				"H",
+				"H|XPHB",
+				"L",
+				"L|XPHB",
+				"LD",
+				"LD|XPHB",
+				"OTH",
+				"R",
+				"R|XPHB",
+				"RLD",
+				"RLD|XDMG",
+				"S",
+				"T",
+				"T|XPHB",
+				"V",
+				"V|XPHB",
+				"Vst|EGW"
+			]
+		},
+		"itemPropertyArray": {
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/itemProperty"
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"itemPropertyOrWrapperArray": {
+			"type": "array",
+			"items": {
+				"oneOf": [
+					{
+						"$ref": "#/$defs/itemProperty"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"uid": {
+								"$ref": "#/$defs/itemProperty"
+							},
+							"note": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"uid"
+						],
+						"minProperties": 2,
+						"additionalProperties": false
+					}
+				]
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"itemScfType": {
+			"type": "string",
+			"examples": [
+				"arcane",
+				"druid",
+				"holy"
+			]
+		},
+		"itemTier": {
+			"type": "string",
+			"description": "Item Tier as per XGE p135",
+			"markdownDescription": "Item Tier as per XGE p135",
+			"examples": [
+				"minor",
+				"major"
+			]
+		},
+		"itemWeaponCategory": {
+			"type": "string",
+			"examples": [
+				"simple",
+				"martial"
+			]
+		},
+		"itemAmmoType": {
+			"type": "string",
+			"examples": [
+				"energy cell",
+				"energy cell|xdmg",
+				"modern bullet",
+				"blowgun needle|phb",
+				"crossbow bolt|phb",
+				"arrow|phb",
+				"renaissance bullet",
+				"sling bullet|phb",
+				"needle|xphb",
+				"bolt|xphb",
+				"arrow|xphb",
+				"firearm bullet|xphb",
+				"sling bullet|xphb"
+			]
+		},
+		"itemMastery": {
+			"type": "array",
+			"items": {
+				"oneOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"uid": {
+								"type": "string"
+							},
+							"note": {
+								"type": "string"
+							}
+						},
+						"additionalProperties": false,
+						"required": [
+							"uid",
+							"note"
+						]
+					}
+				]
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"itemCarryingCapacity": {
+			"type": "integer",
+			"description": "Of a mount/beast, not a container.",
+			"markdownDescription": "Of a mount/beast, not a container."
+		},
+		"itemSpeed": {
+			"type": "integer"
+		},
+		"itemReach": {
+			"type": "integer"
+		},
+		"itemDexterityMax": {
+			"description": "Maximum dexterity modifier for medium armor.",
+			"type": [
+				"integer",
+				"null"
+			],
+			"markdownDescription": "Maximum dexterity modifier for medium armor."
+		},
+		"packContents": {
+			"type": "array",
+			"items": {
+				"oneOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"special": {
+								"type": "string"
+							},
+							"quantity": {
+								"type": "integer"
+							}
+						},
+						"additionalProperties": false,
+						"required": [
+							"special"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"item": {
+								"type": "string"
+							},
+							"quantity": {
+								"type": "integer"
+							},
+							"displayName": {
+								"type": "string"
+							}
+						},
+						"additionalProperties": false,
+						"required": [
+							"item"
+						],
+						"minProperties": 2
+					}
+				]
+			}
+		},
+		"itemMiscTags": {
+			"type": "array",
+			"items": {
+				"description": "- CF/W: Creates Food/Water\n- CNS: Consumable\n- TT: Trinket Table",
+				"enum": [
+					"CF/W",
+					"CNS",
+					"TT"
+				],
+				"markdownDescription": "- CF/W: Creates Food/Water\n- CNS: Consumable\n- TT: Trinket Table"
+			}
+		},
+		"itemAbility": {
+			"description": "Item ability score adjustments.",
+			"type": "object",
+			"properties": {
+				"choose": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"from": {
+								"type": "array",
+								"items": {
+									"enum": [
+										"str",
+										"dex",
+										"con",
+										"int",
+										"wis",
+										"cha"
+									]
+								},
+								"uniqueItems": true
+							},
+							"count": {
+								"type": "integer"
+							},
+							"amount": {
+								"type": "integer"
+							}
+						},
+						"required": [
+							"from"
+						],
+						"additionalProperties": false
+					}
+				},
+				"static": {
+					"type": "object",
+					"properties": {
+						"str": {
+							"type": "integer"
+						},
+						"dex": {
+							"type": "integer"
+						},
+						"con": {
+							"type": "integer"
+						},
+						"int": {
+							"type": "integer"
+						},
+						"wis": {
+							"type": "integer"
+						},
+						"cha": {
+							"type": "integer"
+						}
+					},
+					"additionalProperties": false
+				},
+				"str": {
+					"type": "integer"
+				},
+				"dex": {
+					"type": "integer"
+				},
+				"con": {
+					"type": "integer"
+				},
+				"int": {
+					"type": "integer"
+				},
+				"wis": {
+					"type": "integer"
+				},
+				"cha": {
+					"type": "integer"
+				}
+			},
+			"markdownDescription": "Item ability score adjustments."
+		},
+		"itemLight": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"dim": {
+						"type": "number"
+					},
+					"bright": {
+						"type": "number"
+					},
+					"shape": {
+						"type": "string",
+						"enum": [
+							"radius",
+							"cone"
+						]
+					}
+				},
+				"minProperties": 1,
+				"additionalProperties": false
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		},
+		"_itemAttachedSpells_arrayOfSpell": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"uniqueItems": true,
+			"minItems": 1
+		},
+		"_itemAttachedSpells_frequency": {
+			"type": "object",
+			"patternProperties": {
+				"^\\d+e$": {
+					"$ref": "#/$defs/_itemAttachedSpells_arrayOfSpell"
+				},
+				"^\\d+$": {
+					"$ref": "#/$defs/_itemAttachedSpells_arrayOfSpell"
+				}
+			},
+			"additionalProperties": false,
+			"minProperties": 1
+		},
+		"_itemAttachedSpells_charges": {
+			"type": "object",
+			"patternProperties": {
+				"^\\d+$": {
+					"$ref": "#/$defs/_itemAttachedSpells_arrayOfSpell"
+				}
+			},
+			"additionalProperties": false,
+			"minProperties": 1
+		},
+		"itemAttachedSpells": {
+			"oneOf": [
+				{
+					"description": "A generic array of attached spells, implicitly \"other\" usage type (see below).",
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": {
+						"type": "string"
+					},
+					"markdownDescription": "A generic array of attached spells, implicitly &quot;other&quot; usage type (see below)."
+				},
+				{
+					"description": "Attached spells broken down by usage type.",
+					"type": "object",
+					"properties": {
+						"rest": {
+							"$ref": "#/$defs/_itemAttachedSpells_frequency"
+						},
+						"daily": {
+							"$ref": "#/$defs/_itemAttachedSpells_frequency"
+						},
+						"limited": {
+							"$ref": "#/$defs/_itemAttachedSpells_frequency"
+						},
+						"charges": {
+							"$ref": "#/$defs/_itemAttachedSpells_charges"
+						},
+						"resource": {
+							"$ref": "#/$defs/_itemAttachedSpells_charges"
+						},
+						"will": {
+							"$ref": "#/$defs/_itemAttachedSpells_arrayOfSpell"
+						},
+						"ritual": {
+							"$ref": "#/$defs/_itemAttachedSpells_arrayOfSpell"
+						},
+						"other": {
+							"$ref": "#/$defs/_itemAttachedSpells_arrayOfSpell"
+						},
+						"ability": {
+							"$ref": "util-additionalspells.json#/$defs/additionalSpellsAbility"
+						},
+						"resourceName": {
+							"description": "Optional resource name for resource-cast spells in this group",
+							"type": "string",
+							"markdownDescription": "Optional resource name for resource-cast spells in this group"
+						}
+					},
+					"additionalProperties": false,
+					"minProperties": 1,
+					"markdownDescription": "Attached spells broken down by usage type."
+				}
+			]
+		},
+		"itemOptionalfeatures": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"itemClassFeatures": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"customProperties": {
+			"description": "An unrestricted area for custom properties to be stored.",
+			"type": "object",
+			"additionalProperties": {
+				"type": [
+					"boolean",
+					"string",
+					"number",
+					"integer"
+				]
+			},
+			"markdownDescription": "An unrestricted area for custom properties to be stored."
+		},
+		"itemAcSpecial": {
+			"description": "Free text field for homebrew use.",
+			"type": "string",
+			"markdownDescription": "Free text field for homebrew use."
+		},
+		"fluff": {
+			"description": "This is intended to be used for Homebrew only - site data should include a fluff file per source.",
+			"anyOf": [
+				{
+					"description": "References \"itemFluff\" array items",
+					"type": "object",
+					"properties": {
+						"_itemFluff": {
+							"type": "object",
+							"properties": {
+								"name": {
+									"type": "string"
+								},
+								"source": {
+									"$ref": "util.json#/$defs/source"
+								}
+							}
+						},
+						"_appendItemFluff": {
+							"type": "object",
+							"properties": {
+								"name": {
+									"type": "string"
+								},
+								"source": {
+									"$ref": "util.json#/$defs/source"
+								}
+							}
+						}
+					},
+					"additionalProperties": false,
+					"markdownDescription": "References &quot;itemFluff&quot; array items"
+				},
+				{
+					"$ref": "util.json#/$defs/fluffObject"
+				}
+			],
+			"markdownDescription": "This is intended to be used for Homebrew only - site data should include a fluff file per source."
+		}
+	},
+	"markdownDescription": "Shared item definitions to be used in item schemas."
+}

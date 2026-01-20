@@ -1,0 +1,134 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "util-time.json",
+	"version": "1.0.5",
+	"title": "Util: Time",
+	"$defs": {
+		"time": {
+			"type": "object",
+			"properties": {
+				"number": {
+					"type": "integer"
+				},
+				"unit": {
+					"type": "string",
+					"examples": [
+						"action",
+						"bonus",
+						"reaction",
+						"round",
+						"minute",
+						"hour",
+						"special"
+					]
+				},
+				"condition": {
+					"type": "string"
+				},
+				"note": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"unit"
+			],
+			"additionalProperties": false
+		},
+		"timeMinutes": {
+			"oneOf": [
+				{
+					"type": "integer"
+				},
+				{
+					"type": "object",
+					"properties": {
+						"min": {
+							"type": "integer"
+						},
+						"max": {
+							"type": "integer"
+						}
+					},
+					"required": [
+						"min",
+						"max"
+					],
+					"additionalProperties": false
+				}
+			]
+		},
+		"_durationEffectItem": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"type": "string",
+					"enum": [
+						"instant",
+						"timed",
+						"permanent",
+						"special"
+					]
+				},
+				"duration": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"examples": [
+								"turn",
+								"round",
+								"minute",
+								"hour",
+								"day",
+								"week",
+								"month",
+								"year"
+							]
+						},
+						"amount": {
+							"type": "integer"
+						},
+						"upTo": {
+							"type": "boolean"
+						}
+					},
+					"required": [
+						"type"
+					],
+					"additionalProperties": false
+				},
+				"concentration": {
+					"type": "boolean"
+				},
+				"ends": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"description": "The examples given are short forms that are automatically expanded to \"discharged\", \"dispelled\" & \"triggered\".\n\nHomebrew files should state custom end conditions in full.",
+						"markdownDescription": "The examples given are short forms that are automatically expanded to &quot;discharged&quot;, &quot;dispelled&quot; &amp; &quot;triggered&quot;.\n\nHomebrew files should state custom end conditions in full.",
+						"examples": [
+							"dispel",
+							"trigger",
+							"discharge"
+						]
+					}
+				},
+				"condition": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type"
+			],
+			"additionalProperties": false
+		},
+		"durationEffect": {
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/_durationEffectItem"
+			},
+			"minItems": 1,
+			"uniqueItems": true
+		}
+	}
+}
