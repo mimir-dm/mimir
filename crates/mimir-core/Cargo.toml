@@ -1,0 +1,31 @@
+[package]
+name = "mimir-core"
+version = "0.5.0"
+edition = "2021"
+description = "Mimir v0.5 core library - models, services, and data access"
+
+[dependencies]
+# Database
+diesel = { workspace = true }
+diesel_migrations = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
