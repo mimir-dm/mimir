@@ -22,44 +22,45 @@
  */
 
 // Event payload types for type safety
+// Note: IDs are strings (UUIDs) matching the mimir-core backend
 export interface DataEventPayloads {
   // Module events
-  'module:created': { campaignId: number; moduleId: number }
-  'module:updated': { moduleId: number }
-  'module:deleted': { campaignId: number; moduleId: number }
+  'module:created': { campaignId: string; moduleId: string }
+  'module:updated': { moduleId: string }
+  'module:deleted': { campaignId: string; moduleId: string }
 
   // Module monster events
-  'module:monsters:changed': { moduleId: number }
-  'module:monster:added': { moduleId: number; monsterId: number }
-  'module:monster:updated': { moduleId: number; monsterId: number }
-  'module:monster:removed': { moduleId: number; monsterId: number }
+  'module:monsters:changed': { moduleId: string }
+  'module:monster:added': { moduleId: string; monsterId: string }
+  'module:monster:updated': { moduleId: string; monsterId: string }
+  'module:monster:removed': { moduleId: string; monsterId: string }
 
   // Module NPC events
-  'module:npcs:changed': { moduleId: number }
-  'module:npc:added': { moduleId: number; npcId: number }
-  'module:npc:removed': { moduleId: number; npcId: number }
+  'module:npcs:changed': { moduleId: string }
+  'module:npc:added': { moduleId: string; npcId: string }
+  'module:npc:removed': { moduleId: string; npcId: string }
 
   // Module item events
-  'module:items:changed': { moduleId: number }
+  'module:items:changed': { moduleId: string }
 
   // Module map events
-  'module:maps:changed': { moduleId: number }
-  'module:map:uploaded': { moduleId: number; mapId: number }
+  'module:maps:changed': { moduleId: string }
+  'module:map:uploaded': { moduleId: string; mapId: string }
 
   // Document events
-  'document:created': { moduleId: number; documentId: number }
-  'document:updated': { documentId: number }
-  'document:deleted': { moduleId: number; documentId: number }
+  'document:created': { moduleId: string; documentId: string }
+  'document:updated': { documentId: string }
+  'document:deleted': { moduleId: string; documentId: string }
 
   // Character events
-  'character:created': { campaignId: number; characterId: number }
-  'character:updated': { characterId: number }
-  'character:deleted': { campaignId: number; characterId: number }
+  'character:created': { campaignId: string; characterId: string }
+  'character:updated': { characterId: string }
+  'character:deleted': { campaignId: string; characterId: string }
 
   // Campaign events
-  'campaign:created': { campaignId: number }
-  'campaign:updated': { campaignId: number }
-  'campaign:deleted': { campaignId: number }
+  'campaign:created': { campaignId: string }
+  'campaign:updated': { campaignId: string }
+  'campaign:deleted': { campaignId: string }
 
   // Generic refresh trigger (use sparingly)
   'data:refresh-all': { scope?: string }

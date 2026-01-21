@@ -12,81 +12,108 @@ export interface Theme {
   description: string
 }
 
-// Campaign types
+// =============================================================================
+// Campaign types - matches mimir-core Campaign model
+// =============================================================================
 export interface Campaign {
-  id: number
+  /** Unique campaign ID (UUID) */
+  id: string
+  /** Campaign name */
   name: string
-  status: string
-  directory_path: string
+  /** Optional description */
+  description: string | null
+  /** ISO8601 timestamp when archived, null means active */
+  archived_at: string | null
+  /** ISO8601 timestamp of creation */
   created_at: string
-  session_zero_date?: string
-  first_session_date?: string
-  last_activity_at: string
-  archived_at?: string
-}
-
-export interface NewCampaign {
-  name: string
-  description?: string
-  directory_location: string
-}
-
-// Module types
-export interface Module {
-  id: number
-  campaign_id: number
-  name: string
-  module_number: number
-  description?: string
-  status: string
-  sessions_planned: number
-  sessions_completed: number
-  expected_sessions?: number
-  actual_sessions?: number
-  created_at: string
-}
-
-// Session types
-export interface Session {
-  id: number
-  module_id: number
-  session_number: number
-  name: string
-  status: string
-  scheduled_date?: string
-  actual_date?: string
-  notes?: string
-  created_at: string
-}
-
-// Workflow card types
-export interface WorkflowCard {
-  id: number
-  board_type: 'campaign' | 'module' | 'session'
-  board_id: number
-  title: string
-  description?: string
-  status: string
-  position: number
-  due_date?: string
-  created_at: string
+  /** ISO8601 timestamp of last update */
   updated_at: string
 }
 
-// Template types
-export interface Template {
-  document_id: string
-  version_number: number
-  document_content: string
-  document_type?: string
-  document_level?: string
-  purpose?: string
-  is_active: boolean
+/** Request for creating a new campaign */
+export interface CreateCampaignRequest {
+  name: string
+  description?: string
 }
 
-export interface RenderTemplateRequest {
-  template_id: string
-  variables: Record<string, any>
+/** Request for updating a campaign */
+export interface UpdateCampaignRequest {
+  name?: string
+  description?: string | null
+}
+
+// =============================================================================
+// Module types - matches mimir-core Module model
+// =============================================================================
+export interface Module {
+  /** Unique module ID (UUID) */
+  id: string
+  /** Campaign this module belongs to */
+  campaign_id: string
+  /** Module name */
+  name: string
+  /** Optional description */
+  description: string | null
+  /** Module ordering number within the campaign */
+  module_number: number
+  /** ISO8601 timestamp of creation */
+  created_at: string
+  /** ISO8601 timestamp of last update */
+  updated_at: string
+}
+
+/** Request for creating a new module */
+export interface CreateModuleRequest {
+  campaign_id: string
+  name: string
+  description?: string
+  module_number?: number
+}
+
+/** Request for updating a module */
+export interface UpdateModuleRequest {
+  name?: string
+  description?: string | null
+  module_number?: number
+}
+
+// =============================================================================
+// Document types - matches mimir-core Document model
+// =============================================================================
+export interface Document {
+  /** Unique document ID (UUID) */
+  id: string
+  /** Campaign this document belongs to */
+  campaign_id: string
+  /** Module this document belongs to (optional) */
+  module_id: string | null
+  /** Document title */
+  title: string
+  /** Markdown content */
+  content: string
+  /** Document type (note, session, npc, location, etc.) */
+  doc_type: string
+  /** ISO8601 timestamp of creation */
+  created_at: string
+  /** ISO8601 timestamp of last update */
+  updated_at: string
+}
+
+/** Request for creating a new document */
+export interface CreateDocumentRequest {
+  campaign_id: string
+  module_id?: string
+  title: string
+  content?: string
+  doc_type: string
+}
+
+/** Request for updating a document */
+export interface UpdateDocumentRequest {
+  title?: string
+  content?: string
+  doc_type?: string
+  module_id?: string | null
 }
 
 // Character types moved to ./character.ts

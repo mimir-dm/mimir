@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { ApiResponse, Campaign, NewCampaign } from '../types/api'
+import type { ApiResponse, Campaign, CreateCampaignRequest, UpdateCampaignRequest } from '../types/api'
 import { dataEvents } from '@/shared/utils/dataEvents'
 
 export const useCampaignStore = defineStore('campaigns', () => {
@@ -10,17 +10,17 @@ export const useCampaignStore = defineStore('campaigns', () => {
   const currentCampaign = ref<Campaign | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  
-  // Fetch all campaigns
+
+  // Fetch all active campaigns
   const fetchCampaigns = async () => {
     loading.value = true
     error.value = null
-    
+
     try {
       console.log('Fetching campaigns...')
       const response = await invoke<ApiResponse<Campaign[]>>('list_campaigns')
       console.log('Campaign response:', response)
-      
+
       if (response.success && response.data) {
         campaigns.value = response.data
         console.log('Campaigns loaded successfully:', response.data.length, 'campaigns')
@@ -35,12 +35,12 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
+
   // Get campaign by ID
-  const getCampaign = async (id: number) => {
+  const getCampaign = async (id: string) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await invoke<ApiResponse<Campaign>>('get_campaign', { id })
       if (response.success && response.data) {
@@ -57,14 +57,14 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
+
   // Create new campaign
-  const createCampaign = async (data: NewCampaign) => {
+  const createCampaign = async (request: CreateCampaignRequest) => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await invoke<ApiResponse<Campaign>>('create_campaign', { request: data })
+      const response = await invoke<ApiResponse<Campaign>>('create_campaign', { request })
       if (response.success && response.data) {
         campaigns.value.push(response.data)
         dataEvents.emit('campaign:created', { campaignId: response.data.id })
@@ -80,14 +80,14 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
-  // Update campaign status
-  const updateCampaignStatus = async (id: number, status: string) => {
+
+  // Update campaign
+  const updateCampaign = async (id: string, request: UpdateCampaignRequest) => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await invoke<ApiResponse<Campaign>>('update_campaign_status', { id, status })
+      const response = await invoke<ApiResponse<Campaign>>('update_campaign', { id, request })
       if (response.success && response.data) {
         // Update local state
         const index = campaigns.value.findIndex(c => c.id === id)
@@ -110,12 +110,12 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
+
   // Fetch archived campaigns
   const fetchArchivedCampaigns = async () => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await invoke<ApiResponse<Campaign[]>>('list_archived_campaigns')
       if (response.success && response.data) {
@@ -129,12 +129,12 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
+
   // Archive campaign
-  const archiveCampaign = async (id: number) => {
+  const archiveCampaign = async (id: string) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await invoke<ApiResponse<Campaign>>('archive_campaign', { campaignId: id })
       if (response.success && response.data) {
@@ -157,12 +157,12 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
+
   // Unarchive campaign
-  const unarchiveCampaign = async (id: number) => {
+  const unarchiveCampaign = async (id: string) => {
     loading.value = true
     error.value = null
-    
+
     try {
       console.log('Calling unarchive_campaign with:', { campaignId: id })
       const response = await invoke<ApiResponse<Campaign>>('unarchive_campaign', { campaignId: id })
@@ -186,9 +186,9 @@ export const useCampaignStore = defineStore('campaigns', () => {
       loading.value = false
     }
   }
-  
-  // Delete campaign (hard delete - only for archived campaigns)
-  const deleteCampaign = async (id: number, deleteFiles = false) => {
+
+  // Delete campaign permanently
+  const deleteCampaign = async (id: string, deleteFiles = false) => {
     loading.value = true
     error.value = null
 
@@ -197,7 +197,8 @@ export const useCampaignStore = defineStore('campaigns', () => {
         request: { campaign_id: id, delete_files: deleteFiles }
       })
       if (response.success) {
-        // Remove from archived campaigns
+        // Remove from both lists (could be in either)
+        campaigns.value = campaigns.value.filter(c => c.id !== id)
         archivedCampaigns.value = archivedCampaigns.value.filter(c => c.id !== id)
         if (currentCampaign.value?.id === id) {
           currentCampaign.value = null
@@ -216,99 +217,14 @@ export const useCampaignStore = defineStore('campaigns', () => {
     }
   }
 
-  // Export campaign to archive
-  const exportCampaign = async (campaignId: number, outputDirectory: string) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await invoke<ApiResponse<{ archive_path: string; file_name: string }>>('export_campaign_archive', {
-        campaignId,
-        outputDirectory
-      })
-      if (response.success && response.data) {
-        return response.data
-      } else {
-        error.value = response.error || 'Failed to export campaign'
-        return null
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
-      return null
-    } finally {
-      loading.value = false
-    }
+  // Set current campaign
+  const setCurrentCampaign = (campaign: Campaign | null) => {
+    currentCampaign.value = campaign
   }
 
-  // Preview an archive before importing
-  const previewArchive = async (archivePath: string) => {
-    loading.value = true
+  // Clear error
+  const clearError = () => {
     error.value = null
-
-    try {
-      const response = await invoke<ApiResponse<{
-        campaign_name: string
-        file_count: number
-        asset_count: number
-        catalog_references: Array<{ type: string; name: string; source: string }>
-        mimir_version: string
-        created_at: string
-      }>>('preview_campaign_archive', { archivePath })
-      if (response.success && response.data) {
-        return response.data
-      } else {
-        error.value = response.error || 'Failed to preview archive'
-        return null
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
-      return null
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // Import campaign from archive
-  const importCampaign = async (archivePath: string, campaignName: string, campaignsDirectory: string) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await invoke<ApiResponse<Campaign>>('import_campaign_archive', {
-        request: {
-          archive_path: archivePath,
-          campaign_name: campaignName,
-          campaigns_directory: campaignsDirectory
-        }
-      })
-      if (response.success && response.data) {
-        // Add the new campaign to the list
-        campaigns.value.push(response.data)
-        dataEvents.emit('campaign:created', { campaignId: response.data.id })
-        return response.data
-      } else {
-        error.value = response.error || 'Failed to import campaign'
-        return null
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
-      return null
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // Get the archive file extension
-  const getArchiveExtension = async (): Promise<string> => {
-    try {
-      const response = await invoke<ApiResponse<string>>('get_campaign_archive_extension')
-      if (response.success && response.data) {
-        return response.data
-      }
-      return '.mimir-campaign.tar.gz'
-    } catch {
-      return '.mimir-campaign.tar.gz'
-    }
   }
 
   return {
@@ -321,13 +237,11 @@ export const useCampaignStore = defineStore('campaigns', () => {
     fetchArchivedCampaigns,
     getCampaign,
     createCampaign,
-    updateCampaignStatus,
+    updateCampaign,
     archiveCampaign,
     unarchiveCampaign,
     deleteCampaign,
-    exportCampaign,
-    previewArchive,
-    importCampaign,
-    getArchiveExtension
+    setCurrentCampaign,
+    clearError
   }
 })
