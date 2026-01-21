@@ -30,11 +30,13 @@
 mod collector;
 mod discovery;
 mod filter;
+mod images;
 mod service;
 mod srd;
 
 pub use collector::*;
 pub use discovery::*;
 pub use filter::*;
+pub use images::*;
 pub use service::*;
 pub use srd::*;

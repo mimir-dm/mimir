@@ -5,9 +5,8 @@
 
 use crate::dal::catalog::{self, insert_source};
 use crate::fts::{flatten_entries, index_entity, ContentType};
-use crate::import::{collect_source_entities, discover_available_sources, CollectedEntities};
+use crate::import::{collect_source_entities, copy_images, discover_available_sources, get_token_path, CollectedEntities};
 use crate::models::catalog::*;
-use crate::tokens::copy_token;
 use anyhow::{Context, Result};
 use diesel::connection::SimpleConnection;
 use diesel::SqliteConnection;
@@ -27,8 +26,8 @@ pub struct ImportResult {
     pub entity_counts: HashMap<String, usize>,
     /// Total entities imported.
     pub total_entities: usize,
-    /// Count of token images copied.
-    pub tokens_copied: usize,
+    /// Count of images copied.
+    pub images_copied: usize,
 }
 
 impl ImportResult {
@@ -40,11 +39,11 @@ impl ImportResult {
     /// Get a summary of the import.
     pub fn summary(&self) -> String {
         let mut s = format!(
-            "Imported {} sources, {} failed, {} total entities, {} tokens\n",
+            "Imported {} sources, {} failed, {} total entities, {} images\n",
             self.sources_imported.len(),
             self.sources_failed.len(),
             self.total_entities,
-            self.tokens_copied
+            self.images_copied
         );
 
         if !self.entity_counts.is_empty() {
@@ -70,12 +69,12 @@ impl ImportResult {
 /// Catalog import service for importing 5etools data.
 pub struct CatalogImportService<'a> {
     conn: &'a mut SqliteConnection,
-    /// Optional path to 5etools img directory for token import.
-    img_dir: Option<PathBuf>,
-    /// Optional path to app data directory where tokens will be copied.
-    app_data_dir: Option<PathBuf>,
-    /// Count of tokens copied during import.
-    tokens_copied: usize,
+    /// Optional path to 5etools img directory.
+    source_img_dir: Option<PathBuf>,
+    /// Optional path to destination directory where images will be copied.
+    dest_img_dir: Option<PathBuf>,
+    /// Count of images copied during import.
+    images_copied: usize,
 }
 
 impl<'a> CatalogImportService<'a> {
@@ -83,19 +82,22 @@ impl<'a> CatalogImportService<'a> {
     pub fn new(conn: &'a mut SqliteConnection) -> Self {
         Self {
             conn,
-            img_dir: None,
-            app_data_dir: None,
-            tokens_copied: 0,
+            source_img_dir: None,
+            dest_img_dir: None,
+            images_copied: 0,
         }
     }
 
-    /// Configure token import with image source and destination directories.
+    /// Configure image copying from source to destination.
     ///
-    /// - `img_dir`: Path to 5etools img directory (contains bestiary/tokens/)
-    /// - `app_data_dir`: Path to app data directory where tokens will be copied
-    pub fn with_token_import(mut self, img_dir: PathBuf, app_data_dir: PathBuf) -> Self {
-        self.img_dir = Some(img_dir);
-        self.app_data_dir = Some(app_data_dir);
+    /// All images from the source directory will be copied to the destination,
+    /// preserving the directory structure so paths in imported data work as-is.
+    ///
+    /// - `source_img_dir`: Path to 5etools img directory
+    /// - `dest_img_dir`: Path to destination directory for images
+    pub fn with_image_copy(mut self, source_img_dir: PathBuf, dest_img_dir: PathBuf) -> Self {
+        self.source_img_dir = Some(source_img_dir);
+        self.dest_img_dir = Some(dest_img_dir);
         self
     }
 
@@ -103,8 +105,26 @@ impl<'a> CatalogImportService<'a> {
     ///
     /// Each source is imported in its own transaction. If a source fails,
     /// it's rolled back and the next source is attempted.
+    ///
+    /// If image copying is configured (via `with_image_copy`), all images are
+    /// copied first before entity import begins.
     pub fn import_from_directory(&mut self, repo_path: &Path) -> Result<ImportResult> {
         let mut result = ImportResult::default();
+
+        // Copy images first if configured
+        if let (Some(source), Some(dest)) = (&self.source_img_dir, &self.dest_img_dir) {
+            info!("Copying images from {:?} to {:?}", source, dest);
+            match copy_images(source, dest) {
+                Ok(count) => {
+                    self.images_copied = count;
+                    info!("Copied {} images", count);
+                }
+                Err(e) => {
+                    error!("Failed to copy images: {}", e);
+                    // Continue with import even if image copy fails
+                }
+            }
+        }
 
         // Discover available sources
         let books = discover_available_sources(repo_path)
@@ -140,8 +160,8 @@ impl<'a> CatalogImportService<'a> {
             }
         }
 
-        // Add token count to result
-        result.tokens_copied = self.tokens_copied;
+        // Add image count to result
+        result.images_copied = self.images_copied;
 
         Ok(result)
     }
@@ -321,22 +341,11 @@ impl<'a> CatalogImportService<'a> {
 
         let monster_id = catalog::insert_monster(self.conn, &monster).context("Failed to insert monster")?;
 
-        // Copy token if configured
-        if let (Some(img_dir), Some(app_data_dir)) = (&self.img_dir, &self.app_data_dir) {
-            match copy_token(img_dir, app_data_dir, source, name) {
-                Ok(Some(rel_path)) => {
-                    // Update monster with token path
-                    if let Err(e) = catalog::set_token_image_path(self.conn, monster_id, Some(&rel_path)) {
-                        warn!("Failed to update monster token path: {}", e);
-                    } else {
-                        self.tokens_copied += 1;
-                    }
-                }
-                Ok(None) => {
-                    // No token found - this is normal for many monsters
-                }
-                Err(e) => {
-                    warn!("Failed to copy token for {} ({}): {}", name, source, e);
+        // Set token path if images are configured and token exists
+        if let Some(dest_img_dir) = &self.dest_img_dir {
+            if let Some(token_path) = get_token_path(dest_img_dir, source, name) {
+                if let Err(e) = catalog::set_token_image_path(self.conn, monster_id, Some(&token_path)) {
+                    warn!("Failed to update monster token path: {}", e);
                 }
             }
         }

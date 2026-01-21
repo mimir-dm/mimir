@@ -31,5 +31,8 @@ tracing = { workspace = true }
 once_cell = "1.19"
 regex = "1.10"
 
+# File system
+walkdir = { workspace = true }
+
 [dev-dependencies]
 tempfile = { workspace = true }
