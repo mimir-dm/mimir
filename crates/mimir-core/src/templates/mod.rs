@@ -9,92 +9,62 @@
 // =============================================================================
 
 /// Campaign pitch template - the initial hook and premise.
-pub const CAMPAIGN_PITCH: &str =
-    include_str!("../../../../docs/src/campaign-framework/06-templates/templates/campaign_pitch.md");
+pub const CAMPAIGN_PITCH: &str = include_str!("campaign_pitch.md");
 
 /// Starting scenario template - where the adventure begins.
-pub const STARTING_SCENARIO: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/starting_scenario.md"
-);
+pub const STARTING_SCENARIO: &str = include_str!("starting_scenario.md");
 
 /// World primer template - essential setting information for players.
-pub const WORLD_PRIMER: &str =
-    include_str!("../../../../docs/src/campaign-framework/06-templates/templates/world_primer.md");
+pub const WORLD_PRIMER: &str = include_str!("world_primer.md");
 
 /// Character guidelines template - rules and options for character creation.
-pub const CHARACTER_GUIDELINES: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/character_guidelines.md"
-);
+pub const CHARACTER_GUIDELINES: &str = include_str!("character_guidelines.md");
 
 /// Table expectations template - social contract and gameplay norms.
-pub const TABLE_EXPECTATIONS: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/table_expectations.md"
-);
+pub const TABLE_EXPECTATIONS: &str = include_str!("table_expectations.md");
 
 /// Character integration template - weaving PCs into the story.
-pub const CHARACTER_INTEGRATION: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/character_integration.md"
-);
+pub const CHARACTER_INTEGRATION: &str = include_str!("character_integration.md");
 
 /// Campaign bible template - the DM's reference for campaign lore.
-pub const CAMPAIGN_BIBLE: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/campaign_bible.md"
-);
+pub const CAMPAIGN_BIBLE: &str = include_str!("campaign_bible.md");
 
 /// Safety tools template - lines, veils, and safety mechanics.
-pub const SAFETY_TOOLS: &str =
-    include_str!("../../../../docs/src/campaign-framework/06-templates/templates/safety_tools.md");
+pub const SAFETY_TOOLS: &str = include_str!("safety_tools.md");
 
 /// House rules template - custom rules and rulings.
-pub const HOUSE_RULES: &str =
-    include_str!("../../../../docs/src/campaign-framework/06-templates/templates/house_rules.md");
+pub const HOUSE_RULES: &str = include_str!("house_rules.md");
 
 /// Player secrets template - information known only to specific players.
-pub const PLAYER_SECRETS: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/player_secrets.md"
-);
+pub const PLAYER_SECRETS: &str = include_str!("player_secrets.md");
 
 /// Faction overview template - major factions and their relationships.
-pub const FACTION_OVERVIEW: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/faction_overview.md"
-);
+pub const FACTION_OVERVIEW: &str = include_str!("faction_overview.md");
 
 // =============================================================================
 // Module Templates
 // =============================================================================
 
 /// General module overview template - works for any adventure type.
-pub const MODULE_OVERVIEW: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/module_overview.md"
-);
+pub const MODULE_OVERVIEW: &str = include_str!("module_overview.md");
 
 /// Mystery module template - investigation and clue-based adventures.
-pub const MODULE_MYSTERY: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/module_mystery.md"
-);
+pub const MODULE_MYSTERY: &str = include_str!("module_mystery.md");
 
 /// Dungeon crawl template - exploration and combat-focused adventures.
-pub const MODULE_DUNGEON: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/module_dungeon.md"
-);
+pub const MODULE_DUNGEON: &str = include_str!("module_dungeon.md");
 
 /// Heist module template - planning and execution of complex operations.
-pub const MODULE_HEIST: &str =
-    include_str!("../../../../docs/src/campaign-framework/06-templates/templates/module_heist.md");
+pub const MODULE_HEIST: &str = include_str!("module_heist.md");
 
 /// Horror module template - tension, dread, and survival.
-pub const MODULE_HORROR: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/module_horror.md"
-);
+pub const MODULE_HORROR: &str = include_str!("module_horror.md");
 
 /// Political intrigue template - factions, diplomacy, and scheming.
-pub const MODULE_POLITICAL: &str = include_str!(
-    "../../../../docs/src/campaign-framework/06-templates/templates/module_political.md"
-);
+pub const MODULE_POLITICAL: &str = include_str!("module_political.md");
 
 /// Play notes template - session-by-session DM notes.
-pub const PLAY_NOTES: &str =
-    include_str!("../../../../docs/src/campaign-framework/06-templates/templates/play_notes.md");
+pub const PLAY_NOTES: &str = include_str!("play_notes.md");
 
 // =============================================================================
 // Template Access Functions
