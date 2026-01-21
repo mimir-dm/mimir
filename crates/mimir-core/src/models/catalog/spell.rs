@@ -128,7 +128,7 @@ impl<'a> NewSpell<'a> {
 }
 
 /// Filters for searching spells.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct SpellFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

@@ -1,0 +1,43 @@
+/* Card Component Styles */
+
+/* Base Card */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+/* Interactive Card - for clickable cards */
+.card-interactive {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.card-interactive:hover {
+  border-color: var(--color-primary-500);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card-interactive:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Card Variants */
+.card-interactive.card-warning {
+  border-left: 3px solid var(--color-warning);
+}
+
+.card-interactive.card-success {
+  border-left: 3px solid var(--color-success);
+}
+
+.card-interactive.card-info {
+  border-left: 3px solid var(--color-info);
+}

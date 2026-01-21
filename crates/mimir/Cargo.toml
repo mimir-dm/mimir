@@ -1,0 +1,50 @@
+[package]
+name = "mimir"
+version = "0.5.0"
+edition = "2021"
+description = "Mimir D&D Campaign Manager - Desktop Application"
+authors = ["Dylan Storey"]
+license = "MIT"
+default-run = "mimir"
+
+[lib]
+name = "mimir_lib"
+crate-type = ["lib", "staticlib", "cdylib"]
+
+[[bin]]
+name = "mimir"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+
+# Core library
+mimir-core = { path = "../mimir-core" }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Database
+diesel = { version = "2.2", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Error handling
+thiserror = "2"
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

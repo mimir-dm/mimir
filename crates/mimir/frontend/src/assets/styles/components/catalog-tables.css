@@ -1,0 +1,330 @@
+/* ========================================
+   Catalog Table Components - SIMPLIFIED
+   ======================================== */
+
+/* Base catalog table container */
+.catalog-table {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+/* Table content area */
+.catalog-table__content {
+  flex: 1;
+  overflow: auto;
+}
+
+/* SIMPLE TABLE STYLES - NO BEM COMPLEXITY */
+.catalog-table table,
+.catalog-table .catalog-table__table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  background: var(--color-surface);
+}
+
+.catalog-table th,
+.catalog-table .catalog-table__th {
+  background: var(--color-surface-variant) !important;
+  color: var(--color-text) !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  padding: 16px !important;
+  border: 1px solid var(--color-border) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
+}
+
+.catalog-table td,
+.catalog-table .catalog-table__td {
+  padding: 16px !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  vertical-align: top !important;
+}
+
+/* Row styling */
+.catalog-table tr,
+.catalog-table .catalog-table__row {
+  transition: background-color 0.2s ease;
+}
+
+.catalog-table tbody tr:hover,
+.catalog-table .catalog-table__row:hover {
+  background-color: var(--color-surface-variant) !important;
+}
+
+.catalog-table tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.catalog-table tbody tr:nth-child(even):hover {
+  background-color: var(--color-surface-variant) !important;
+}
+
+/* Content styling */
+.catalog-table .catalog-table__name {
+  font-weight: 600;
+}
+
+.catalog-table .catalog-table__center {
+  text-align: center;
+}
+
+.catalog-table .catalog-table__description {
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.catalog-table .catalog-table__secondary {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.catalog-table .catalog-table__source {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.catalog-table .catalog-table__empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Badge styles */
+.catalog-table .catalog-table__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.catalog-table .catalog-table__badge--primary {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.catalog-table .catalog-table__badge--secondary {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text-secondary);
+}
+
+.catalog-table .catalog-table__badge--srd {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+  margin-left: 8px;
+}
+
+.catalog-table .catalog-table__badge--source {
+  background-color: var(--color-surface-variant);
+  color: var(--color-text-secondary);
+}
+
+/* Cult/Boon category badges */
+.catalog-table .catalog-table__badge.cult {
+  background: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
+  border: 1px solid rgba(156, 39, 176, 0.4);
+}
+
+.catalog-table .catalog-table__badge.boon {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+}
+
+/* Cult type badges */
+.catalog-table .catalog-table__badge.diabolical {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.4);
+}
+
+.catalog-table .catalog-table__badge.demonic {
+  background: rgba(255, 87, 34, 0.2);
+  color: #ff5722;
+  border: 1px solid rgba(255, 87, 34, 0.4);
+}
+
+.catalog-table .catalog-table__badge.elder-evil {
+  background: rgba(103, 58, 183, 0.2);
+  color: #673ab7;
+  border: 1px solid rgba(103, 58, 183, 0.4);
+}
+
+.catalog-table .catalog-table__badge.other {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+/* Psionic type badges */
+.catalog-table .catalog-table__badge.discipline {
+  background: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
+  border: 1px solid rgba(156, 39, 176, 0.4);
+}
+
+.catalog-table .catalog-table__badge.talent {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+}
+
+/* Psionic order badges */
+.catalog-table .catalog-table__badge.order-avatar {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+}
+
+.catalog-table .catalog-table__badge.order-awakened {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+  border: 1px solid rgba(33, 150, 243, 0.4);
+}
+
+.catalog-table .catalog-table__badge.order-immortal {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+}
+
+.catalog-table .catalog-table__badge.order-nomad {
+  background: rgba(121, 85, 72, 0.2);
+  color: #795548;
+  border: 1px solid rgba(121, 85, 72, 0.4);
+}
+
+.catalog-table .catalog-table__badge.order-wu-jen {
+  background: rgba(103, 58, 183, 0.2);
+  color: #673ab7;
+  border: 1px solid rgba(103, 58, 183, 0.4);
+}
+
+/* Variant rule type badges */
+.catalog-table .catalog-table__badge.general {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.catalog-table .catalog-table__badge.action-options {
+  background: rgba(255, 87, 34, 0.2);
+  color: #ff5722;
+  border: 1px solid rgba(255, 87, 34, 0.4);
+}
+
+.catalog-table .catalog-table__badge.v {
+  background: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
+  border: 1px solid rgba(156, 39, 176, 0.4);
+}
+
+.catalog-table .catalog-table__badge.o {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+  border: 1px solid rgba(33, 150, 243, 0.4);
+}
+
+/* Sortable headers */
+.catalog-table .catalog-table__th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.catalog-table .catalog-table__th--sortable:hover {
+  background-color: var(--color-border) !important;
+}
+
+.catalog-table .catalog-table__sort-indicator {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Fixed column widths for ActionTable */
+.catalog-table[data-table="action"] table {
+  table-layout: fixed;
+}
+
+.catalog-table[data-table="action"] th:nth-child(1),
+.catalog-table[data-table="action"] td:nth-child(1) { width: 15%; }
+
+.catalog-table[data-table="action"] th:nth-child(2),
+.catalog-table[data-table="action"] td:nth-child(2) { width: 12%; }
+
+.catalog-table[data-table="action"] th:nth-child(3),
+.catalog-table[data-table="action"] td:nth-child(3) { width: 45%; }
+
+.catalog-table[data-table="action"] th:nth-child(4),
+.catalog-table[data-table="action"] td:nth-child(4) { width: 18%; }
+
+.catalog-table[data-table="action"] th:nth-child(5),
+.catalog-table[data-table="action"] td:nth-child(5) { width: 10%; }
+
+/* ========================================
+   Catalog Table Header & Filters Layout
+   ======================================== */
+
+.catalog-table__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 12px);
+  padding: var(--spacing-lg, 16px);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.catalog-table__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.catalog-table__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md, 12px);
+  align-items: center;
+}
+
+/* Responsive filter layout */
+@media (max-width: 768px) {
+  .catalog-table__filters {
+    gap: var(--spacing-sm, 8px);
+  }
+}
+
+.catalog-table__filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+}
+
+.catalog-table__results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm, 8px) var(--spacing-lg, 16px);
+  background: var(--color-surface-variant);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.catalog-table__result-count {
+  font-weight: 500;
+}

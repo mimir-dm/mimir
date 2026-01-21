@@ -48,7 +48,7 @@ impl<'a> NewClass<'a> {
 }
 
 /// Filters for searching classes.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct ClassFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

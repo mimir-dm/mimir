@@ -1,0 +1,91 @@
+/* Light Theme - Based on light-mimir.png color palette */
+.theme-light {
+  /* Primary colors - soft blues and purples from the image */
+  --color-primary-50: #f3f0ff;
+  --color-primary-100: #e9e3ff;
+  --color-primary-200: #d4c5fd;
+  --color-primary-300: #b197fc;
+  --color-primary-400: #9775fa;
+  --color-primary-500: #7c3aed;
+  --color-primary-600: #6d28d9;
+  --color-primary-700: #5b21b6;
+  --color-primary-800: #4c1d95;
+  --color-primary-900: #3c1a78;
+
+  /* Neutral colors - light grays */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Semantic colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Status colors for session/campaign states */
+  --color-status-planning: #6b7280;
+  --color-status-next-week: #9333ea;
+  --color-status-prep-needed: #3b82f6;
+  --color-status-in-prep: #06b6d4;
+  --color-status-ready: #f59e0b;
+  --color-status-running: #2563eb;
+  --color-status-complete: #10b981;
+  --color-status-active: #10b981;
+  --color-status-completed: #6b7280;
+  --color-status-concluding: #f59e0b;
+
+  /* Surface colors */
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
+  --color-surface-variant: #f3f4f6;
+  --color-surface-hover: #e5e7eb;
+  
+  /* Text colors */
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-disabled: #9ca3af;
+  
+  /* Border colors */
+  --color-border: #e5e7eb;
+  --color-border-hover: #d1d5db;
+  
+  /* Accent colors from the skull */
+  --color-accent-blue: #60a5fa;
+  --color-accent-purple: #a78bfa;
+  
+  /* Overlay colors */
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-overlay-light: rgba(0, 0, 0, 0.03);
+  
+  /* Chromatic gradient for special UI elements */
+  --gradient-chromatic: linear-gradient(135deg, #a855f7, #3b82f6, #06b6d4, #10b981);
+  --gradient-chromatic-subtle: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.1));
+  --color-chromatic-border: rgba(168, 85, 247, 0.3);
+
+  /* D&D Content Colors */
+  --color-dnd-damage: #dc2626;
+  --color-dnd-healing: #16a34a;
+  --color-dnd-condition: #ca8a04;
+  --color-dnd-spell: #7c3aed;
+  --color-dnd-creature: #ea580c;
+  --color-dnd-item: #16a34a;
+  --color-dnd-skill: #7c3aed;
+  --color-dnd-action: #2563eb;
+  --color-dnd-dc: #dc2626;
+  --color-dnd-resource: #ea580c;
+  --color-dnd-buff: #3b82f6;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}

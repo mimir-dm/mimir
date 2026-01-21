@@ -1,0 +1,122 @@
+/* Hyper Theme - Vaporwave aesthetic based on hyper-mimir.png */
+.theme-hyper {
+  /* Primary colors - neon pink/purple gradient */
+  --color-primary-50: #fae8ff;
+  --color-primary-100: #f5d0fe;
+  --color-primary-200: #f0abfc;
+  --color-primary-300: #e879f9;
+  --color-primary-400: #d946ef;
+  --color-primary-500: #c026d3;
+  --color-primary-600: #a21caf;
+  --color-primary-700: #86198f;
+  --color-primary-800: #701a75;
+  --color-primary-900: #581c87;
+
+  /* Neutral colors - very dark with purple tint */
+  --color-gray-50: #0a0a0f;
+  --color-gray-100: #18181b;
+  --color-gray-200: #27272a;
+  --color-gray-300: #3f3f46;
+  --color-gray-400: #52525b;
+  --color-gray-500: #71717a;
+  --color-gray-600: #a1a1aa;
+  --color-gray-700: #d4d4d8;
+  --color-gray-800: #e4e4e7;
+  --color-gray-900: #f4f4f5;
+
+  /* Semantic colors - neon variants */
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-error: #f43f5e;
+  --color-info: #06b6d4;
+
+  /* Status colors for session/campaign states - neon variants */
+  --color-status-planning: #71717a;
+  --color-status-next-week: #c084fc;
+  --color-status-prep-needed: #60a5fa;
+  --color-status-in-prep: #67e8f9;
+  --color-status-ready: #fde047;
+  --color-status-running: #818cf8;
+  --color-status-complete: #4ade80;
+  --color-status-active: #4ade80;
+  --color-status-completed: #71717a;
+  --color-status-concluding: #facc15;
+
+  /* Surface colors */
+  --color-background: #000000;
+  --color-surface: #0a0a0f;
+  --color-surface-variant: #18181b;
+  --color-surface-hover: #27272a;
+  
+  /* Text colors */
+  --color-text: #fafafa;
+  --color-text-secondary: #e4e4e7;
+  --color-text-disabled: #71717a;
+  
+  /* Border colors */
+  --color-border: #27272a;
+  --color-border-hover: #3f3f46;
+  
+  /* Neon accent colors from the skull */
+  --color-accent-pink: #ec4899;
+  --color-accent-purple: #a855f7;
+  --color-accent-yellow: #fbbf24;
+  --color-accent-orange: #fb923c;
+  --color-accent-cyan: #06b6d4;
+  
+  /* Neon glow effects */
+  --glow-pink: 0 0 20px #ec4899;
+  --glow-purple: 0 0 20px #a855f7;
+  --glow-yellow: 0 0 20px #fbbf24;
+  
+  /* Overlay colors */
+  --color-overlay: rgba(0, 0, 0, 0.8);
+  --color-overlay-light: rgba(138, 43, 226, 0.05);
+  
+  /* Chromatic gradient for special UI elements - NEON VERSION */
+  --gradient-chromatic: linear-gradient(135deg, #ec4899, #a855f7, #06b6d4, #4ade80);
+  --gradient-chromatic-subtle: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2), rgba(6, 182, 212, 0.2), rgba(74, 222, 128, 0.2));
+  --color-chromatic-border: rgba(236, 72, 153, 0.5);
+
+  /* D&D Content Colors - Neon variants */
+  --color-dnd-damage: #f43f5e;
+  --color-dnd-healing: #4ade80;
+  --color-dnd-condition: #fde047;
+  --color-dnd-spell: #c084fc;
+  --color-dnd-creature: #fb923c;
+  --color-dnd-item: #4ade80;
+  --color-dnd-skill: #c084fc;
+  --color-dnd-action: #67e8f9;
+  --color-dnd-dc: #f43f5e;
+  --color-dnd-resource: #fb923c;
+  --color-dnd-buff: #818cf8;
+
+  /* Shadow - stronger for cyberpunk effect */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.6), 0 1px 2px -1px rgb(0 0 0 / 0.6);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+}
+
+/* Special hyper theme overrides for neon effects */
+.theme-hyper .btn-primary {
+  background: linear-gradient(135deg, var(--color-accent-pink) 0%, var(--color-accent-purple) 100%);
+  box-shadow: var(--glow-pink);
+  transition: all 0.3s ease;
+}
+
+.theme-hyper .btn-primary:hover {
+  box-shadow: 0 0 30px #ec4899, 0 0 60px #a855f7;
+  transform: translateY(-2px);
+}
+
+.theme-hyper .action-card:hover {
+  border-color: var(--color-accent-pink);
+  box-shadow: var(--glow-pink);
+}
+
+.theme-hyper .hero-image {
+  filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.7))
+          drop-shadow(0 0 40px rgba(168, 85, 247, 0.5))
+          drop-shadow(0 0 60px rgba(168, 85, 247, 0.2));
+}

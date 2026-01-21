@@ -40,7 +40,7 @@ impl<'a> NewCondition<'a> {
 }
 
 /// Filters for searching conditions.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct ConditionFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

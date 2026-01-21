@@ -48,7 +48,7 @@ impl<'a> NewFeat<'a> {
 }
 
 /// Filters for searching feats.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct FeatFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

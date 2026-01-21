@@ -1,0 +1,278 @@
+/* Catalog Component Styles */
+
+/* Catalog Search Modal */
+.catalog-search-modal {
+  position: relative;
+}
+
+/* Spell Tags */
+.spell-tag.damage {
+  background: rgba(255, 121, 121, 0.15);
+  color: #ff7979;
+  border-color: rgba(255, 121, 121, 0.3);
+}
+
+.spell-tag.control {
+  background: rgba(87, 203, 255, 0.15);
+  color: #54a0ff;
+  border-color: rgba(87, 203, 255, 0.3);
+}
+
+.spell-tag.buff {
+  background: rgba(255, 204, 104, 0.15);
+  color: #feca57;
+  border-color: rgba(255, 204, 104, 0.3);
+}
+
+.spell-tag.debuff {
+  background: rgba(253, 121, 168, 0.15);
+  color: #fd79a8;
+  border-color: rgba(253, 121, 168, 0.3);
+}
+
+.spell-tag.utility {
+  background: rgba(129, 236, 236, 0.15);
+  color: #81ecec;
+  border-color: rgba(129, 236, 236, 0.3);
+}
+
+.spell-tag.healing {
+  background: rgba(108, 207, 127, 0.15);
+  color: #6bcf7f;
+  border-color: rgba(108, 207, 127, 0.3);
+}
+
+.spell-tag.summoning {
+  background: rgba(162, 155, 254, 0.15);
+  color: #a29bfe;
+  border-color: rgba(162, 155, 254, 0.3);
+}
+
+.spell-tag.light {
+  background: rgba(255, 218, 121, 0.15);
+  color: #ffda79;
+  border-color: rgba(255, 218, 121, 0.3);
+}
+
+.spell-tag.scaling {
+  background: rgba(255, 159, 67, 0.15);
+  color: #ff9f43;
+  border-color: rgba(255, 159, 67, 0.3);
+}
+
+/* Spell Properties Grid */
+.spell-properties-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+}
+
+.property-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.property-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.property-label {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.property-value {
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+/* Combat Mechanics Section */
+.spell-combat-section {
+  margin: 1.5rem 0;
+}
+
+.spell-combat-section h4 {
+  color: var(--color-accent);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.combat-mechanics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.combat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  border: 1px solid var(--color-border-light);
+}
+
+.combat-label {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  min-width: 60px;
+}
+
+.combat-value {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* Catalog Search Section */
+.catalog-search {
+  padding: var(--spacing-lg);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.search-container {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-500-alpha);
+}
+
+.search-type-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+/* Catalog Results */
+.catalog-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.results-count {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.results-grid {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.result-item {
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.result-item:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary-500);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.result-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.result-item-name {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.result-item-meta {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.result-badge {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--color-surface-variant);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.result-item-description {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Loading and Empty States */
+.catalog-loading,
+.catalog-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-secondary);
+}
+
+.catalog-empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.catalog-empty-text {
+  font-size: 1rem;
+  text-align: center;
+}

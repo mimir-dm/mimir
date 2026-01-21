@@ -48,7 +48,7 @@ impl<'a> NewBackground<'a> {
 }
 
 /// Filters for searching backgrounds.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct BackgroundFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

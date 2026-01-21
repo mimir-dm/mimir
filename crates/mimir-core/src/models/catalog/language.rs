@@ -57,7 +57,7 @@ impl<'a> NewLanguage<'a> {
 }
 
 /// Filters for searching languages.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct LanguageFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

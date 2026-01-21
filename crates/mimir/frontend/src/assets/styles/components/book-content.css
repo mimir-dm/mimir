@@ -1,0 +1,74 @@
+/* Book Content Styles */
+
+.book-content {
+  padding: 10px 15px;
+}
+
+/* Game Mechanics - Subtle, theme-aware formatting */
+.dice-roll {
+  display: inline-block;
+  padding: 1px 4px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.damage-roll {
+  display: inline-block;
+  padding: 1px 4px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+/* Mode Switcher */
+.mode-switcher-bar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.mode-switcher {
+  display: flex;
+  gap: 2px;
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mode-button {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: calc(var(--radius-md) - 2px);
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.mode-button:hover:not(.active) {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.mode-button.active {
+  background: var(--color-primary-500);
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.mode-button.active:hover {
+  background: var(--color-primary-600);
+}

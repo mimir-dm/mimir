@@ -1,0 +1,241 @@
+/* Sidebar Component Styles */
+
+/* Base Sidebar */
+.document-sidebar {
+  width: 320px;
+  min-width: 280px;
+  height: 100%;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Stage Groups */
+.stage-groups {
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-group {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stage-group:last-child {
+  border-bottom: none;
+}
+
+.stage-header {
+  padding: 0 var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.stage-header h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 16px;
+  background-color: var(--color-surface-variant);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--color-primary-400);
+  border-radius: 8px;
+  transition: width var(--transition-base);
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    var(--color-overlay-light) 10px,
+    var(--color-overlay-light) 20px
+  );
+  border-radius: 8px;
+}
+
+/* Document Content */
+.document-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+/* Active Documents View */
+.active-documents {
+  padding-top: var(--spacing-sm);
+}
+
+.active-documents .document-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.active-documents .document-item {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.active-documents .document-item:hover {
+  background-color: var(--color-surface-variant);
+}
+
+/* Document List */
+.document-list {
+  height: 100%;
+}
+
+/* Loading and Empty States */
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.empty-state p {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Document Items */
+.document-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.document-item {
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+}
+
+.document-item:hover:not(.locked) {
+  border-color: var(--color-border);
+}
+
+.document-item.selected {
+  border-color: var(--color-primary-400);
+}
+
+.document-item.completed {
+  opacity: 0.8;
+}
+
+.document-item.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Document Icons and Title */
+.document-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.document-icon:hover:not(.locked) {
+  transform: scale(1.1);
+}
+
+.document-icon.locked {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.document-title {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.document-title:hover {
+  color: var(--color-primary-500);
+}
+
+.document-title.optional {
+  color: var(--color-text-secondary);
+}
+
+.optional-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-left: var(--spacing-xs);
+}
+
+/* Completion Checkbox */
+.completion-checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-left: auto;
+  background: transparent;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  color: transparent;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.completion-checkbox:hover {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-50);
+}
+
+.completion-checkbox.checked {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.completion-checkbox.checked:hover {
+  background: var(--color-success-dark);
+  border-color: var(--color-success-dark);
+}
+
+/* Legacy completion icon support */
+.completion-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-left: auto;
+}

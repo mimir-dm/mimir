@@ -1,0 +1,156 @@
+/* Board Layout Styles */
+
+/* Container */
+.board-container {
+  display: flex;
+  height: 100%;
+  gap: 0;
+}
+
+/* Entity-specific containers - for future customization */
+.campaign-board-container,
+.module-board-container,
+.session-board-container {
+  /* Entity-specific styles can be added here */
+}
+
+/* Main Board */
+.board {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Entity-specific boards - for future customization */
+.campaign-board,
+.module-board,
+.session-board {
+  /* Entity-specific board styles can be added here */
+}
+
+/* Stage Progress Indicator */
+.stage-progress {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  height: 42px;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.stage-indicator {
+  flex: 1;
+  background-color: var(--color-surface-variant);
+  border: 2px solid var(--color-border);
+  padding: 0 var(--spacing-md) 0 var(--spacing-xl);
+  position: relative;
+  transition: all var(--transition-base);
+  margin-right: -2px; /* Overlap borders */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  max-width: 200px;
+  min-width: 140px;
+}
+
+.stage-indicator:first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.stage-indicator:last-child {
+  margin-right: 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.stage-indicator.active {
+  border-color: var(--color-primary-500);
+}
+
+.stage-indicator.completed {
+  border-color: var(--color-success);
+}
+
+/* Stage Content */
+.stage-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  z-index: 1;
+}
+
+.stage-name {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.stage-indicator.active .stage-name,
+.stage-indicator.completed .stage-name {
+  color: var(--color-text);
+}
+
+.stage-marker {
+  text-align: center;
+  color: var(--color-primary-600);
+  font-size: 0.875rem;
+}
+
+/* Arrow Points for Stage Progression */
+.stage-arrow-point {
+  position: absolute;
+  right: -20px;
+  top: -2px;
+  width: 0;
+  height: 0;
+  border-left: 20px solid var(--color-border);
+  border-top: 23px solid transparent;
+  border-bottom: 23px solid transparent;
+  z-index: 3;
+}
+
+.stage-arrow-point::before {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: -21px;
+  width: 0;
+  height: 0;
+  border-left: 18px solid var(--color-surface-variant);
+  border-top: 21px solid transparent;
+  border-bottom: 21px solid transparent;
+}
+
+.stage-indicator.active .stage-arrow-point {
+  border-left-color: var(--color-primary-500);
+}
+
+.stage-indicator.active .stage-arrow-point::before {
+  border-left-color: var(--color-surface-variant);
+}
+
+.stage-indicator.completed .stage-arrow-point {
+  border-left-color: var(--color-success);
+}
+
+.stage-indicator.completed .stage-arrow-point::before {
+  border-left-color: var(--color-surface-variant);
+}
+
+.stage-indicator:last-child .stage-arrow-point {
+  display: none;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  background-color: var(--color-surface);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px var(--color-shadow);
+  overflow-y: auto;
+}

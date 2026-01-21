@@ -40,7 +40,7 @@ impl<'a> NewHazard<'a> {
 }
 
 /// Filters for searching hazards.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct HazardFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

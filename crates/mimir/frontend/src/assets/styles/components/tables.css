@@ -1,0 +1,238 @@
+/* Table Component Styles */
+
+/* Base Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.table.table-bordered {
+  border: 1px solid var(--color-border);
+}
+
+.table.table-striped tbody tr:nth-child(odd) {
+  background: var(--color-surface-variant);
+}
+
+.table.table-hover tbody tr:hover {
+  background: var(--color-surface-hover);
+  cursor: pointer;
+}
+
+/* Table Header */
+.table thead {
+  background: var(--color-surface-variant);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  position: relative;
+}
+
+.table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.table th.sortable:hover {
+  background: var(--color-surface-hover);
+}
+
+.table th.sortable::after {
+  content: '↕';
+  opacity: 0.3;
+  margin-left: 0.5rem;
+  font-size: 0.875em;
+}
+
+.table th.sort-asc::after {
+  content: '↑';
+  opacity: 1;
+}
+
+.table th.sort-desc::after {
+  content: '↓';
+  opacity: 1;
+}
+
+/* Table Body */
+.table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-text);
+}
+
+/* Column Types */
+.table .col-icon {
+  width: 40px;
+  text-align: center;
+}
+
+.table .col-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table .col-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table .col-checkbox {
+  width: 40px;
+  text-align: center;
+}
+
+/* Table States */
+.table tr.selected {
+  background: var(--color-primary-100);
+}
+
+.theme-dark .table tr.selected {
+  background: var(--color-primary-900);
+}
+
+.table tr.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table tr.disabled:hover {
+  background: inherit;
+}
+
+/* Empty State */
+.table-empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Rounded Table Variant */
+.table.table-rounded {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.table.table-rounded tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Responsive Tables */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-responsive {
+  min-width: 600px;
+}
+
+/* Compact Table */
+.table.table-compact th,
+.table.table-compact td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Table with Fixed Header */
+.table-fixed-header {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+}
+
+.table-fixed-header thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-surface);
+}
+
+/* Catalog/D&D Specific Tables - DEPRECATED: Now using consolidated catalog-tables.css */
+/*
+.catalog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+*/
+
+/*
+.catalog-table th {
+  background: var(--color-surface-variant);
+  padding: var(--spacing-sm);
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.catalog-table td {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.catalog-table tbody tr:hover {
+  background: var(--color-surface-hover);
+  cursor: pointer;
+}
+*/
+
+/* Spell Table Specific */
+.spell-level-0 { color: var(--color-gray-600); }
+.spell-level-1 { color: var(--color-green-600); }
+.spell-level-2 { color: var(--color-blue-600); }
+.spell-level-3 { color: var(--color-purple-600); }
+.spell-level-4 { color: var(--color-orange-600); }
+.spell-level-5 { color: var(--color-red-600); }
+.spell-level-6 { color: var(--color-pink-600); }
+.spell-level-7 { color: var(--color-indigo-600); }
+.spell-level-8 { color: var(--color-yellow-600); }
+.spell-level-9 { color: var(--color-red-800); }
+
+.spell-concentration::before {
+  content: '●';
+  color: var(--color-warning);
+  margin-right: 0.25rem;
+}
+
+.spell-ritual::before {
+  content: '◆';
+  color: var(--color-info);
+  margin-right: 0.25rem;
+}
+
+/* Item Rarity Colors */
+.rarity-common { color: var(--color-gray-600); }
+.rarity-uncommon { color: var(--color-green-600); }
+.rarity-rare { color: var(--color-blue-600); }
+.rarity-veryrare { color: var(--color-purple-600); }
+.rarity-legendary { color: var(--color-orange-600); }
+.rarity-artifact { color: var(--color-red-600); }
+
+/* Monster CR Colors */
+.cr-low { color: var(--color-green-600); }  /* CR 0-4 */
+.cr-medium { color: var(--color-yellow-600); }  /* CR 5-10 */
+.cr-high { color: var(--color-orange-600); }  /* CR 11-16 */
+.cr-deadly { color: var(--color-red-600); }  /* CR 17+ */

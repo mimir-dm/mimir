@@ -168,7 +168,7 @@ impl<'a> NewMonster<'a> {
 }
 
 /// Filters for searching monsters.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct MonsterFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

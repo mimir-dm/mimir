@@ -48,7 +48,7 @@ impl<'a> NewRace<'a> {
 }
 
 /// Filters for searching races.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct RaceFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,

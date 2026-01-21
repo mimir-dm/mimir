@@ -38,7 +38,7 @@ impl<'a> NewAction<'a> {
 }
 
 /// Filters for searching actions.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct ActionFilter {
     pub name_contains: Option<String>,
     pub source: Option<String>,
