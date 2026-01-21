@@ -4,14 +4,14 @@ level: task
 title: "Create templates module with embedded campaign/module templates"
 short_code: "MIMIR-T-0393"
 created_at: 2026-01-21T03:02:30.165811+00:00
-updated_at: 2026-01-21T03:02:30.165811+00:00
+updated_at: 2026-01-21T03:33:50.064383+00:00
 parent: MIMIR-I-0044
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -31,14 +31,18 @@ Create a templates module that embeds all campaign and module document templates
 
 ## Acceptance Criteria
 
-- [ ] `src/templates/mod.rs` module created and exported
-- [ ] All 11 campaign templates embedded and accessible
-- [ ] All 7 module templates embedded (6 type-specific + play_notes)
-- [ ] `get_campaign_template(doc_type: &str) -> Option<&'static str>`
-- [ ] `get_module_template(module_type: &str) -> Option<&'static str>`
-- [ ] `get_play_notes_template() -> &'static str`
-- [ ] `list_campaign_templates() -> Vec<(&'static str, &'static str)>` (type, title)
-- [ ] Unit tests verify all templates are accessible
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [x] `src/templates/mod.rs` module created and exported
+- [x] All 11 campaign templates embedded and accessible
+- [x] All 7 module templates embedded (6 type-specific + play_notes)
+- [x] `get_campaign_template(doc_type: &str) -> Option<&'static str>`
+- [x] `get_module_template(module_type: &str) -> Option<&'static str>`
+- [x] `get_play_notes_template() -> &'static str`
+- [x] `list_campaign_templates() -> Vec<(&'static str, &'static str)>` (type, title)
+- [x] Unit tests verify all templates are accessible (9 tests)
 
 ## Implementation Notes
 
@@ -112,4 +116,13 @@ pub mod templates {
 
 ## Status Updates
 
-*To be added during implementation*
+### Completed - 2026-01-20
+
+Created `crates/mimir-core/src/templates/mod.rs` with:
+- 11 campaign templates embedded via `include_str!`
+- 6 module templates + play_notes template
+- `CampaignTemplateInfo` and `ModuleTemplateInfo` structs with metadata
+- `CAMPAIGN_TEMPLATES` and `MODULE_TEMPLATES` const arrays
+- Access functions: `get_campaign_template()`, `get_module_template()`, `get_play_notes_template()`
+- List functions: `list_campaign_templates()`, `list_module_templates()`
+- 9 unit tests verifying all templates load and have content

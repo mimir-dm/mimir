@@ -9,6 +9,7 @@ pub mod import;
 pub mod models;
 mod schema;
 pub mod services;
+pub mod templates;
 pub mod tokens;
 
 #[cfg(test)]
