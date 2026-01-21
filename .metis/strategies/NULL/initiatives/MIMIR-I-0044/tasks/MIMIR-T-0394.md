@@ -4,14 +4,14 @@ level: task
 title: "Implement CampaignService with document creation"
 short_code: "MIMIR-T-0394"
 created_at: 2026-01-21T03:02:30.337707+00:00
-updated_at: 2026-01-21T03:02:30.337707+00:00
+updated_at: 2026-01-21T03:40:52.607869+00:00
 parent: MIMIR-I-0044
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -31,16 +31,20 @@ Implement `CampaignService` that handles campaign CRUD operations and automatica
 
 ## Acceptance Criteria
 
-- [ ] `CampaignService` struct with stateful connection pattern
-- [ ] `create()` - creates campaign + 11 documents in transaction
-- [ ] `list()` - list campaigns with optional archived filter
-- [ ] `get()` - get campaign by ID
-- [ ] `update()` - update campaign name/description
-- [ ] `archive()` - soft-delete campaign (sets archived_at)
-- [ ] `delete()` - hard delete campaign and all related data
-- [ ] All 11 documents created from embedded templates
-- [ ] Unit tests for all operations
-- [ ] Integration test: create campaign → verify 11 documents exist
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [x] `CampaignService` struct with stateful connection pattern
+- [x] `create()` - creates campaign + 11 documents in transaction
+- [x] `list()` - list campaigns with optional archived filter
+- [x] `get()` - get campaign by ID
+- [x] `update()` - update campaign name/description
+- [x] `archive()` - soft-delete campaign (sets archived_at)
+- [x] `delete()` - hard delete campaign and all related data
+- [x] All 11 documents created from embedded templates
+- [x] Unit tests for all operations (12 tests)
+- [x] Integration test: create campaign → verify 11 documents exist
 
 ## Implementation Notes
 
@@ -124,4 +128,12 @@ pub fn create(&mut self, input: CreateCampaign) -> ServiceResult<Campaign> {
 
 ## Status Updates
 
-*To be added during implementation*
+### Completed - 2026-01-20
+
+Created `crates/mimir-core/src/services/campaign.rs` with:
+- `CampaignService` with stateful connection pattern
+- `CreateCampaignInput` and `UpdateCampaignInput` types
+- Full CRUD: create, list, get, update, archive, unarchive, delete
+- `create()` uses diesel transaction to insert campaign + 11 documents atomically
+- Documents populated from `templates::CAMPAIGN_TEMPLATES`
+- 12 unit tests covering all operations

@@ -3,10 +3,14 @@
 //! Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
 //! Services encapsulate validation, transactions, and orchestration of database operations.
 
+mod campaign;
 pub mod catalog;
+mod module;
 
 use thiserror::Error;
 
+pub use campaign::{CampaignService, CreateCampaignInput, UpdateCampaignInput};
+pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 pub use catalog::{
     ActionService, BackgroundService, CatalogEntityService, ClassService, ConditionService,
     FeatService, HazardService, ItemService, LanguageService, MonsterService, RaceService,

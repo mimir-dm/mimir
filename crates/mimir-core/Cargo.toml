@@ -24,6 +24,9 @@ thiserror = { workspace = true }
 # Time
 chrono = { workspace = true }
 
+# UUID generation
+uuid = { workspace = true }
+
 # Logging
 tracing = { workspace = true }
 

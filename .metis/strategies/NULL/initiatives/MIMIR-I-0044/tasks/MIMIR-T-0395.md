@@ -4,14 +4,14 @@ level: task
 title: "Implement ModuleService with type-based document creation"
 short_code: "MIMIR-T-0395"
 created_at: 2026-01-21T03:02:30.509384+00:00
-updated_at: 2026-01-21T03:02:30.509384+00:00
+updated_at: 2026-01-21T13:03:49.926065+00:00
 parent: MIMIR-I-0044
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -31,16 +31,20 @@ Implement `ModuleService` that handles module CRUD operations. On creation, the 
 
 ## Acceptance Criteria
 
-- [ ] `ModuleService` struct with stateful connection pattern
-- [ ] `create()` - creates module + 2 documents based on module type
-- [ ] `list_for_campaign()` - list modules for a campaign
-- [ ] `get()` - get module by ID
-- [ ] `update()` - update module name/description
-- [ ] `delete()` - delete module and related documents
-- [ ] Module type selects correct overview template
-- [ ] Play notes document always created (blank template)
-- [ ] Unit tests for all operations
-- [ ] Test: each module type creates correct template
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [x] `ModuleService` struct with stateful connection pattern
+- [x] `create()` - creates module + 2 documents based on module type
+- [x] `list_for_campaign()` - list modules for a campaign
+- [x] `get()` - get module by ID
+- [x] `update()` - update module name/description
+- [x] `delete()` - delete module and related documents
+- [x] Module type selects correct overview template
+- [x] Play notes document always created (blank template)
+- [x] Unit tests for all operations (16 tests)
+- [x] Test: each module type creates correct template
 
 ## Implementation Notes
 
@@ -153,4 +157,12 @@ pub fn create(&mut self, input: CreateModule) -> ServiceResult<Module> {
 
 ## Status Updates
 
-*To be added during implementation*
+### Completed - 2026-01-20
+
+Created `crates/mimir-core/src/services/module.rs` with:
+- `ModuleService` with stateful connection pattern
+- `ModuleType` enum: General, Mystery, Dungeon, Heist, Horror, Political
+- `CreateModuleInput` and `UpdateModuleInput` types
+- Full CRUD: create, list_for_campaign, get, get_by_number, update, delete
+- `create()` auto-assigns module_number, creates 2 docs (type-specific overview + play_notes)
+- 16 unit tests covering all operations and module types
