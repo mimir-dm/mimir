@@ -4,14 +4,14 @@ level: task
 title: "Update characters schema and implement CharacterService"
 short_code: "MIMIR-T-0397"
 created_at: 2026-01-21T03:02:30.849052+00:00
-updated_at: 2026-01-21T03:02:30.849052+00:00
+updated_at: 2026-01-21T13:56:32.863046+00:00
 parent: MIMIR-I-0044
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -31,25 +31,32 @@ Update the characters table schema to include race and background catalog refere
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
+## Acceptance Criteria
+
 ### Schema Updates
-- [ ] Add `race_name TEXT` column to characters table
-- [ ] Add `race_source TEXT` column to characters table
-- [ ] Add `background_name TEXT` column to characters table
-- [ ] Add `background_source TEXT` column to characters table
-- [ ] Update `Character` model with new fields
-- [ ] Update `NewCharacter` with builder methods
-- [ ] Run `diesel print-schema` to regenerate `schema.rs`
+- [x] Add `race_name TEXT` column to characters table
+- [x] Add `race_source TEXT` column to characters table
+- [x] Add `background_name TEXT` column to characters table
+- [x] Add `background_source TEXT` column to characters table
+- [x] Update `Character` model with new fields
+- [x] Update `NewCharacter` with builder methods (with_race, with_background)
+- [x] Update `schema.rs` with new columns
 
 ### CharacterService
-- [ ] `CharacterService` struct with stateful connection pattern
-- [ ] `create()` - create character with race/background/class
-- [ ] `list_for_campaign()` - list characters in a campaign
-- [ ] `get()` - get character by ID with full details
-- [ ] `update()` - update character attributes
-- [ ] `delete()` - delete character and related data
-- [ ] `add_to_inventory()` - add item to character inventory
-- [ ] `remove_from_inventory()` - remove item from inventory
-- [ ] Unit tests for all operations
+- [x] `CharacterService` struct with stateful connection pattern
+- [x] `create()` - create character with race/background/ability scores
+- [x] `list_for_campaign()` - list characters in a campaign
+- [x] `list_pcs()` / `list_npcs()` - filter by character type
+- [x] `get()` - get character by ID
+- [x] `update()` - update character attributes
+- [x] `delete()` - delete character
+- [x] `add_to_inventory()` - add item to character inventory
+- [x] `remove_from_inventory()` - remove item from inventory
+- [x] `get_inventory()` / `get_equipped_items()` / `get_attuned_items()`
+- [x] `update_inventory_item()` - update quantity/equipped/attuned
+- [x] Unit tests for all operations (18 tests)
 
 ## Implementation Notes
 

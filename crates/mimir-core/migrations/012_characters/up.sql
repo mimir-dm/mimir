@@ -8,6 +8,12 @@ CREATE TABLE characters (
     is_npc INTEGER NOT NULL DEFAULT 0,
     player_name TEXT,
 
+    -- Race and background (catalog references)
+    race_name TEXT,
+    race_source TEXT,
+    background_name TEXT,
+    background_source TEXT,
+
     -- Ability scores (standard D&D 5e range 1-30, default 10)
     strength INTEGER NOT NULL DEFAULT 10,
     dexterity INTEGER NOT NULL DEFAULT 10,

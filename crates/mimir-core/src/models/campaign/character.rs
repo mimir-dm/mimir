@@ -21,6 +21,16 @@ pub struct Character {
     /// Player name (for PCs)
     pub player_name: Option<String>,
 
+    // Race and background (catalog references)
+    /// Race name (e.g., "Elf", "Human")
+    pub race_name: Option<String>,
+    /// Race source (e.g., "PHB", "VGtM")
+    pub race_source: Option<String>,
+    /// Background name (e.g., "Acolyte", "Criminal")
+    pub background_name: Option<String>,
+    /// Background source (e.g., "PHB")
+    pub background_source: Option<String>,
+
     // Ability scores
     pub strength: i32,
     pub dexterity: i32,
@@ -119,6 +129,10 @@ pub struct NewCharacter<'a> {
     pub name: &'a str,
     pub is_npc: i32,
     pub player_name: Option<&'a str>,
+    pub race_name: Option<&'a str>,
+    pub race_source: Option<&'a str>,
+    pub background_name: Option<&'a str>,
+    pub background_source: Option<&'a str>,
     pub strength: i32,
     pub dexterity: i32,
     pub constitution: i32,
@@ -148,6 +162,10 @@ impl<'a> NewCharacter<'a> {
             name,
             is_npc: 0,
             player_name: Some(player_name),
+            race_name: None,
+            race_source: None,
+            background_name: None,
+            background_source: None,
             strength: 10,
             dexterity: 10,
             constitution: 10,
@@ -177,6 +195,10 @@ impl<'a> NewCharacter<'a> {
             name,
             is_npc: 1,
             player_name: None,
+            race_name: None,
+            race_source: None,
+            background_name: None,
+            background_source: None,
             strength: 10,
             dexterity: 10,
             constitution: 10,
@@ -196,6 +218,20 @@ impl<'a> NewCharacter<'a> {
             location: None,
             faction: None,
         }
+    }
+
+    /// Set the race.
+    pub fn with_race(mut self, name: &'a str, source: &'a str) -> Self {
+        self.race_name = Some(name);
+        self.race_source = Some(source);
+        self
+    }
+
+    /// Set the background.
+    pub fn with_background(mut self, name: &'a str, source: &'a str) -> Self {
+        self.background_name = Some(name);
+        self.background_source = Some(source);
+        self
     }
 
     /// Set ability scores.
@@ -262,6 +298,10 @@ impl<'a> NewCharacter<'a> {
 pub struct UpdateCharacter<'a> {
     pub name: Option<&'a str>,
     pub player_name: Option<Option<&'a str>>,
+    pub race_name: Option<Option<&'a str>>,
+    pub race_source: Option<Option<&'a str>>,
+    pub background_name: Option<Option<&'a str>>,
+    pub background_source: Option<Option<&'a str>>,
     pub strength: Option<i32>,
     pub dexterity: Option<i32>,
     pub constitution: Option<i32>,
@@ -357,6 +397,30 @@ impl<'a> UpdateCharacter<'a> {
             role: Some(role),
             location: Some(location),
             faction: Some(faction),
+            updated_at: Some(updated_at),
+            ..Default::default()
+        }
+    }
+
+    /// Update race.
+    pub fn set_race(name: Option<&'a str>, source: Option<&'a str>, updated_at: &'a str) -> Self {
+        Self {
+            race_name: Some(name),
+            race_source: Some(source),
+            updated_at: Some(updated_at),
+            ..Default::default()
+        }
+    }
+
+    /// Update background.
+    pub fn set_background(
+        name: Option<&'a str>,
+        source: Option<&'a str>,
+        updated_at: &'a str,
+    ) -> Self {
+        Self {
+            background_name: Some(name),
+            background_source: Some(source),
             updated_at: Some(updated_at),
             ..Default::default()
         }

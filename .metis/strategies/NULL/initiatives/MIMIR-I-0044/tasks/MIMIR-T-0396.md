@@ -4,14 +4,14 @@ level: task
 title: "Implement DocumentService for CRUD operations"
 short_code: "MIMIR-T-0396"
 created_at: 2026-01-21T03:02:30.681507+00:00
-updated_at: 2026-01-21T03:02:30.681507+00:00
+updated_at: 2026-01-21T13:24:10.467375+00:00
 parent: MIMIR-I-0044
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -31,15 +31,27 @@ Implement `DocumentService` for managing campaign and module documents. This pro
 
 ## Acceptance Criteria
 
-- [ ] `DocumentService` struct with stateful connection pattern
-- [ ] `list_for_campaign()` - list all campaign-level documents
-- [ ] `list_for_module()` - list all module documents
-- [ ] `get()` - get document by ID
-- [ ] `update()` - update document title and/or content
-- [ ] `delete()` - delete a document
-- [ ] `create_blank()` - create ad-hoc blank document for campaign or module
-- [ ] Update sets `updated_at` timestamp
-- [ ] Unit tests for all operations
+## Acceptance Criteria
+
+- [x] `DocumentService` struct with stateful connection pattern
+- [x] `list_for_campaign()` - list all campaign-level documents
+- [x] `list_for_module()` - list all module documents
+- [x] `get()` - get document by ID
+- [x] `update()` - update document title and/or content
+- [x] `delete()` - delete a document
+- [x] `create()` - create ad-hoc document for campaign or module (named `create` with builder pattern input)
+- [x] Update sets `updated_at` timestamp
+- [x] Unit tests for all operations (16 tests)
+
+### Additional Methods Implemented
+- `list_by_type()` - list documents by doc_type
+- `move_to_module()` - move document to a module
+- `move_to_campaign()` - move document out of module to campaign level
+- `exists()` - check if document exists
+- `count_for_campaign()` - count all documents for campaign
+- `count_for_module()` - count documents in a module
+- `search()` - full-text search across campaign documents
+- `search_in_module()` - full-text search within module
 
 ## Implementation Notes
 
