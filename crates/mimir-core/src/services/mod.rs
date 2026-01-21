@@ -5,11 +5,13 @@
 
 mod campaign;
 pub mod catalog;
+mod document;
 mod module;
 
 use thiserror::Error;
 
 pub use campaign::{CampaignService, CreateCampaignInput, UpdateCampaignInput};
+pub use document::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
 pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 pub use catalog::{
     ActionService, BackgroundService, CatalogEntityService, ClassService, ConditionService,
