@@ -4,6 +4,12 @@
 
 pub mod catalog;
 pub mod dal;
+pub mod fts;
 pub mod import;
 pub mod models;
 mod schema;
+pub mod tokens;
+
+#[cfg(test)]
+pub mod test_utils;
+

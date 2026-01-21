@@ -28,6 +28,8 @@ pub struct Monster {
     pub token_image_path: Option<String>,
     /// Full 5etools JSON data.
     pub data: String,
+    /// Lore/flavor text and image paths from fluff files.
+    pub fluff: Option<String>,
 }
 
 impl Monster {
@@ -77,6 +79,7 @@ pub struct NewMonster<'a> {
     pub size: Option<&'a str>,
     pub token_image_path: Option<&'a str>,
     pub data: &'a str,
+    pub fluff: Option<&'a str>,
 }
 
 impl<'a> NewMonster<'a> {
@@ -90,6 +93,7 @@ impl<'a> NewMonster<'a> {
             size: None,
             token_image_path: None,
             data,
+            fluff: None,
         }
     }
 

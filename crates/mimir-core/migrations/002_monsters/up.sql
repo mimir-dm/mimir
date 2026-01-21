@@ -10,6 +10,7 @@ CREATE TABLE monsters (
     size TEXT,                            -- Extracted from data.size[0]
     token_image_path TEXT,                -- Path to token image file (nullable)
     data TEXT NOT NULL,                   -- Full 5etools JSON blob
+    fluff TEXT,                           -- Lore/flavor text and image paths from fluff files
     UNIQUE(name, source)
 );
 

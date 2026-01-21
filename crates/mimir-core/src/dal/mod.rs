@@ -6,6 +6,8 @@
 //! Diesel connections. Higher-level service layers should use these
 //! functions to implement business logic.
 
+pub mod campaign;
 pub mod catalog;
 
+pub use campaign::*;
 pub use catalog::*;

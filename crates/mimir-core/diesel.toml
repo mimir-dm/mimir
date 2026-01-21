@@ -4,5 +4,21 @@
 file = "src/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId"]
 
+# Exclude FTS5 virtual tables - they're managed via raw SQL, not Diesel
+filter = { except_tables = [
+    "catalog_fts",
+    "catalog_fts_config",
+    "catalog_fts_content",
+    "catalog_fts_data",
+    "catalog_fts_docsize",
+    "catalog_fts_idx",
+    "documents_fts",
+    "documents_fts_config",
+    "documents_fts_content",
+    "documents_fts_data",
+    "documents_fts_docsize",
+    "documents_fts_idx"
+] }
+
 [migrations_directory]
 dir = "migrations"

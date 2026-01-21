@@ -13,6 +13,24 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::path::Path;
 
+/// Key for looking up fluff data.
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
+pub struct FluffKey {
+    pub entity_type: String,
+    pub name: String,
+    pub source: String,
+}
+
+impl FluffKey {
+    pub fn new(entity_type: &str, name: &str, source: &str) -> Self {
+        Self {
+            entity_type: entity_type.to_string(),
+            name: name.to_string(),
+            source: source.to_string(),
+        }
+    }
+}
+
 /// Collected entities from a source, organized by entity type.
 #[derive(Debug, Default)]
 pub struct CollectedEntities {
@@ -20,6 +38,8 @@ pub struct CollectedEntities {
     pub source: String,
     /// Entities organized by type (e.g., "monster" -> [...], "spell" -> [...]).
     pub entities: HashMap<String, Vec<Value>>,
+    /// Fluff data indexed by (entity_type, name, source).
+    pub fluff: HashMap<FluffKey, Value>,
     /// Total count of entities collected.
     pub total_count: usize,
 }
@@ -30,6 +50,7 @@ impl CollectedEntities {
         Self {
             source: source.into(),
             entities: HashMap::new(),
+            fluff: HashMap::new(),
             total_count: 0,
         }
     }
@@ -62,6 +83,23 @@ impl CollectedEntities {
     /// Get all entity types that have been collected.
     pub fn entity_types(&self) -> Vec<&str> {
         self.entities.keys().map(|s| s.as_str()).collect()
+    }
+
+    /// Add fluff data for an entity.
+    pub fn add_fluff(&mut self, entity_type: &str, name: &str, source: &str, fluff: Value) {
+        let key = FluffKey::new(entity_type, name, source);
+        self.fluff.insert(key, fluff);
+    }
+
+    /// Get fluff data for an entity.
+    pub fn get_fluff(&self, entity_type: &str, name: &str, source: &str) -> Option<&Value> {
+        let key = FluffKey::new(entity_type, name, source);
+        self.fluff.get(&key)
+    }
+
+    /// Get fluff count.
+    pub fn fluff_count(&self) -> usize {
+        self.fluff.len()
     }
 }
 
@@ -135,6 +173,9 @@ pub fn collect_source_entities(repo_path: &Path, source: &str) -> Result<Collect
     // Also check the common root-level files
     collect_root_level_entities(&mut collected, &data_dir, source)?;
 
+    // Collect fluff data for all entity types
+    collect_fluff(&mut collected, &data_dir, source)?;
+
     Ok(collected)
 }
 
@@ -184,6 +225,9 @@ fn collect_root_level_entities(
         ("variantrules.json", &["variantrule"][..]),
         ("vehicles.json", &["vehicle"][..]),
         ("psionics.json", &["psionic"][..]),
+        // Items are in root-level files, not a subdirectory
+        ("items.json", &["item"][..]),
+        ("items-base.json", &["item", "baseitem"][..]),
     ];
 
     for (filename, entity_types) in root_files {
@@ -194,6 +238,193 @@ fn collect_root_level_entities(
                     let filtered = data.filter_key_by_source(entity_type, source);
                     if !filtered.is_empty() {
                         collected.add(entity_type, filtered);
+                    }
+                }
+            }
+        }
+    }
+
+    // Classes are in individual files per class (class-fighter.json, class-wizard.json, etc.)
+    // not per source, so we need to scan all class files
+    collect_classes_from_directory(collected, data_dir, source)?;
+
+    Ok(())
+}
+
+/// Collect classes and subclasses from the class directory.
+///
+/// Classes are stored as one file per class (e.g., class-fighter.json),
+/// not one file per source. Each class file contains the class with its source.
+fn collect_classes_from_directory(
+    collected: &mut CollectedEntities,
+    data_dir: &Path,
+    source: &str,
+) -> Result<()> {
+    let class_dir = data_dir.join("class");
+    if !class_dir.exists() {
+        return Ok(());
+    }
+
+    if let Ok(entries) = std::fs::read_dir(&class_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            // Only process class-*.json files (not fluff-class-*.json)
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.starts_with("class-") && filename.ends_with(".json") {
+                    if let Ok(data) = discovery::load_json_file(&path) {
+                        // Extract classes matching the source
+                        let classes = data.filter_key_by_source("class", source);
+                        if !classes.is_empty() {
+                            collected.add("class", classes);
+                        }
+
+                        // Extract subclasses matching the source
+                        let subclasses = data.filter_key_by_source("subclass", source);
+                        if !subclasses.is_empty() {
+                            collected.add("subclass", subclasses);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Collect fluff (lore, flavor text, images) for all entity types from a source.
+fn collect_fluff(collected: &mut CollectedEntities, data_dir: &Path, source: &str) -> Result<()> {
+    // Fluff file mappings: (fluff_file, fluff_json_key, entity_type)
+    // Root-level fluff files
+    let root_fluff_files = [
+        ("fluff-races.json", "raceFluff", "race"),
+        ("fluff-backgrounds.json", "backgroundFluff", "background"),
+        ("fluff-feats.json", "featFluff", "feat"),
+        ("fluff-items.json", "itemFluff", "item"),
+        ("fluff-conditionsdiseases.json", "conditionFluff", "condition"),
+        ("fluff-conditionsdiseases.json", "diseaseFluff", "disease"),
+        ("fluff-rewards.json", "rewardFluff", "reward"),
+        ("fluff-optionalfeatures.json", "optionalfeatureFluff", "optionalfeature"),
+    ];
+
+    for (filename, json_key, entity_type) in root_fluff_files {
+        let file_path = data_dir.join(filename);
+        if file_path.exists() {
+            collect_fluff_from_file(collected, &file_path, json_key, entity_type, source)?;
+        }
+    }
+
+    // Monster fluff - in bestiary subdirectory, named fluff-bestiary-{source}.json
+    let monster_fluff_path = data_dir
+        .join("bestiary")
+        .join(format!("fluff-bestiary-{}.json", source.to_lowercase()));
+    if monster_fluff_path.exists() {
+        collect_fluff_from_file(collected, &monster_fluff_path, "monsterFluff", "monster", source)?;
+    }
+
+    // Spell fluff - in spells subdirectory, named fluff-spells-{source}.json
+    let spell_fluff_path = data_dir
+        .join("spells")
+        .join(format!("fluff-spells-{}.json", source.to_lowercase()));
+    if spell_fluff_path.exists() {
+        collect_fluff_from_file(collected, &spell_fluff_path, "spellFluff", "spell", source)?;
+    }
+
+    // Class fluff - in class subdirectory, named fluff-class-{classname}.json
+    collect_class_fluff(collected, data_dir, source)?;
+
+    Ok(())
+}
+
+/// Collect fluff from a single fluff file.
+fn collect_fluff_from_file(
+    collected: &mut CollectedEntities,
+    file_path: &Path,
+    json_key: &str,
+    entity_type: &str,
+    source: &str,
+) -> Result<()> {
+    if let Ok(data) = discovery::load_json_file(file_path) {
+        if let Some(fluff_array) = data.get(json_key).and_then(|v| v.as_array()) {
+            for fluff_entry in fluff_array {
+                // Extract name and source from the fluff entry
+                let name = fluff_entry.get("name").and_then(|v| v.as_str());
+                let fluff_source = fluff_entry.get("source").and_then(|v| v.as_str());
+
+                if let (Some(name), Some(fluff_source)) = (name, fluff_source) {
+                    // Only collect fluff matching the target source
+                    if fluff_source == source {
+                        collected.add_fluff(entity_type, name, fluff_source, fluff_entry.clone());
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Collect class fluff from class directory.
+///
+/// Class fluff files are named fluff-class-{classname}.json and contain
+/// fluff for classes and subclasses.
+fn collect_class_fluff(
+    collected: &mut CollectedEntities,
+    data_dir: &Path,
+    source: &str,
+) -> Result<()> {
+    let class_dir = data_dir.join("class");
+    if !class_dir.exists() {
+        return Ok(());
+    }
+
+    if let Ok(entries) = std::fs::read_dir(&class_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.starts_with("fluff-class-") && filename.ends_with(".json") {
+                    if let Ok(data) = discovery::load_json_file(&path) {
+                        // Class fluff
+                        if let Some(fluff_array) = data.get("classFluff").and_then(|v| v.as_array())
+                        {
+                            for fluff_entry in fluff_array {
+                                let name = fluff_entry.get("name").and_then(|v| v.as_str());
+                                let fluff_source =
+                                    fluff_entry.get("source").and_then(|v| v.as_str());
+
+                                if let (Some(name), Some(fluff_source)) = (name, fluff_source) {
+                                    if fluff_source == source {
+                                        collected.add_fluff(
+                                            "class",
+                                            name,
+                                            fluff_source,
+                                            fluff_entry.clone(),
+                                        );
+                                    }
+                                }
+                            }
+                        }
+
+                        // Subclass fluff
+                        if let Some(fluff_array) =
+                            data.get("subclassFluff").and_then(|v| v.as_array())
+                        {
+                            for fluff_entry in fluff_array {
+                                let name = fluff_entry.get("name").and_then(|v| v.as_str());
+                                let fluff_source =
+                                    fluff_entry.get("source").and_then(|v| v.as_str());
+
+                                if let (Some(name), Some(fluff_source)) = (name, fluff_source) {
+                                    if fluff_source == source {
+                                        collected.add_fluff(
+                                            "subclass",
+                                            name,
+                                            fluff_source,
+                                            fluff_entry.clone(),
+                                        );
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

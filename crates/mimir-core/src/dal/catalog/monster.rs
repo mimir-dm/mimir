@@ -176,51 +176,11 @@ pub fn set_token_image_path(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dal::catalog::insert_source;
-    use crate::models::catalog::NewCatalogSource;
-    use diesel::connection::SimpleConnection;
-
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        // Create the tables
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE monsters (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                cr TEXT,
-                creature_type TEXT,
-                size TEXT,
-                token_image_path TEXT,
-                data TEXT NOT NULL,
-                UNIQUE(name, source)
-            );
-            CREATE INDEX idx_monsters_name ON monsters(name);
-            CREATE INDEX idx_monsters_source ON monsters(source);
-            CREATE INDEX idx_monsters_cr ON monsters(cr);
-            CREATE INDEX idx_monsters_creature_type ON monsters(creature_type);
-            CREATE INDEX idx_monsters_size ON monsters(size);",
-        )
-        .expect("Failed to create tables");
-
-        // Insert a test source
-        let source = NewCatalogSource::new("MM", "Monster Manual", true, "2024-01-20T12:00:00Z");
-        insert_source(&mut conn, &source).expect("Failed to insert source");
-
-        conn
-    }
+    use crate::test_utils::setup_test_db_with_sources;
 
     #[test]
     fn test_insert_and_get_monster() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let data = r#"{"name":"Goblin","source":"MM","cr":"1/4","type":"humanoid","size":["S"]}"#;
         let monster = NewMonster::new("Goblin", "MM", data)
@@ -241,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_get_monster_by_name() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let data = r#"{"name":"Goblin"}"#;
         let monster = NewMonster::new("Goblin", "MM", data);
@@ -258,7 +218,7 @@ mod tests {
 
     #[test]
     fn test_list_monsters_by_source() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let monsters = vec![
             NewMonster::new("Goblin", "MM", r#"{"name":"Goblin"}"#),
@@ -272,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_search_monsters() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let monsters = vec![
             NewMonster::new("Goblin", "MM", r#"{"name":"Goblin"}"#)
@@ -310,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_search_monsters_paginated() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         // Create owned strings for the monster names
         let names: Vec<String> = (1..=10).map(|i| format!("Monster {}", i)).collect();
@@ -330,7 +290,7 @@ mod tests {
 
     #[test]
     fn test_delete_monster() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let monster = NewMonster::new("Goblin", "MM", r#"{"name":"Goblin"}"#);
         let id = insert_monster(&mut conn, &monster).expect("Failed to insert");
@@ -344,7 +304,7 @@ mod tests {
 
     #[test]
     fn test_delete_monsters_by_source() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let monsters = vec![
             NewMonster::new("Goblin", "MM", r#"{"name":"Goblin"}"#),
@@ -361,7 +321,7 @@ mod tests {
 
     #[test]
     fn test_set_token_image_path() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         let monster = NewMonster::new("Goblin", "MM", r#"{"name":"Goblin"}"#);
         let id = insert_monster(&mut conn, &monster).expect("Failed to insert");
@@ -377,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_count_monsters() {
-        let mut conn = setup_test_db();
+        let mut conn = setup_test_db_with_sources();
 
         assert_eq!(count_monsters(&mut conn).expect("Failed to count"), 0);
 
