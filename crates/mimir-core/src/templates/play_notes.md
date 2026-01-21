@@ -1,32 +1,7 @@
----
-id: play_notes
-title: Play Notes
-type: play_notes
-level: session
-purpose: Capture what happened during play for campaign continuity
-author: Mimir Team
-variables:
-  - name: session_number
-    type: number
-    description: The session number
-    default: 1
-    required: true
-  - name: module_name
-    type: string
-    description: Name of the current module
-    default: "[Module Name]"
-    required: false
-  - name: session_date
-    type: string
-    description: Date of the session
-    default: "[Date]"
-    required: false
----
+# Play Notes: Session [Number]
 
-# Play Notes: Session {{session_number}}
-
-**Date:** {{session_date}}
-**Module:** {{module_name}}
+**Date:** [Date]
+**Module:** [Module Name]
 **Duration:** [Actual play time]
 
 ---

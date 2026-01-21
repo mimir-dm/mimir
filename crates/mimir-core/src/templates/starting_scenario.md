@@ -1,29 +1,4 @@
----
-id: starting_scenario
-title: Starting Scenario Template
-type: starting_scenario
-level: campaign
-purpose: Design the opening scenario that brings the party together
-author: Mimir Team
-variables:
-  - name: scenario_name
-    type: string
-    description: Name of the starting scenario
-    default: "[Scenario Name]"
-    required: true
-  - name: location
-    type: string
-    description: Starting location
-    default: "[Starting Location]"
-    required: true
-  - name: scenario_hook
-    type: string
-    description: The main hook that draws characters in
-    default: "[The main event or situation that draws the characters together]"
-    required: true
----
-
-# Starting Scenario: {{ scenario_name }}
+# Starting Scenario: [Scenario Name]
 
 ## Where You Are
 [1-2 paragraphs about the specific location where characters have been staying. How long? What's the immediate neighborhood like? Focus on their direct experience.]

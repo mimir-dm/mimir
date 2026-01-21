@@ -1,13 +1,3 @@
----
-id: faction_overview
-title: Faction Overview
-type: faction_overview
-level: campaign
-purpose: Quick reference for all major factions and their relationships
-author: Mimir Team
-variables: []
----
-
 # Faction Overview
 
 ## Faction Summary Table

@@ -1,13 +1,3 @@
----
-id: player_secrets
-title: Player Secrets & Hidden Information
-type: player_secrets
-level: campaign
-purpose: Track secrets known only to individual players and when to reveal them
-author: Mimir Team
-variables: []
----
-
 # Player Secrets & Hidden Information
 
 ## About This Document

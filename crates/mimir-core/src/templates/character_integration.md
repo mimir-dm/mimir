@@ -1,23 +1,3 @@
----
-id: character_integration
-title: Character Integration
-type: character_integration
-level: session
-purpose: Integrate player characters into your campaign world
-author: Mimir Team
-variables:
-  - name: character_name
-    type: string
-    description: Character name
-    default: "[Character Name]"
-    required: true
-  - name: player_name
-    type: string
-    description: Player name
-    default: "[Player Name]"
-    required: true
----
-
 # Character Integration Sheet
 
 *Building a connected party during Session Zero*

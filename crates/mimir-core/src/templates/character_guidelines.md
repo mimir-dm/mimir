@@ -1,52 +1,19 @@
----
-id: character_guidelines
-title: Character Creation Guidelines
-type: character_guidelines
-level: campaign
-purpose: Connect character options directly to your world while maintaining player agency
-author: Mimir Team
-variables:
-  - name: campaign_name
-    type: string
-    description: Name of the campaign
-    default: "[Campaign Name]"
-    required: true
-  - name: core_concept
-    type: string
-    description: Core concept for characters in this campaign
-    default: "You are adventurers drawn together by fate and circumstance"
-    required: true
-  - name: common_ancestries
-    type: string
-    description: Common ancestry options and their roles
-    default: "**Humans**: The most common ancestry\n**Elves**: Ancient and wise\n**Dwarves**: Sturdy and traditional\n**Halflings**: Clever and resourceful"
-    required: true
-  - name: valued_classes
-    type: string
-    description: Classes that fit well in this campaign
-    default: "All classes are welcome, though some may face unique challenges"
-    required: true
-  - name: starting_bonds
-    type: string
-    description: Required character connections to the world
-    default: "1. **Why you're here**: Your reason for being in this place\n2. **What you offer**: Your unique skills or perspective\n3. **What you want**: Your personal goals"
-    required: true
----
-
-# Creating Your Character for {{ campaign_name }}
+# Creating Your Character for [Campaign Name]
 
 ## Core Concept
-{{ core_concept }}
+[You are adventurers drawn together by fate and circumstance]
 
 ## Ancestry Options
-{{ common_ancestries }}
+[Common ancestry options and their roles in this world]
 
 ## Class Considerations
-{{ valued_classes }}
+[Classes that fit well in this campaign]
 
 ## Starting Bonds
 Every character needs:
-{{ starting_bonds }}
+1. **Why you're here**: Your reason for being in this place
+2. **What you offer**: Your unique skills or perspective
+3. **What you want**: Your personal goals
 
 ## Party Connections
 During Session Zero, we'll establish deeper connections between PCs:

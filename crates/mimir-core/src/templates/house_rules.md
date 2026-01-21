@@ -1,13 +1,3 @@
----
-id: house_rules
-title: House Rules
-type: house_rules
-level: campaign
-purpose: Document modifications to the base game rules for this campaign
-author: Mimir Team
-variables: []
----
-
 # House Rules
 
 ## Combat Modifications

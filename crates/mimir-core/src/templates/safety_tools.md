@@ -1,42 +1,17 @@
----
-id: safety_tools
-title: Safety Tools & Boundaries
-type: safety_tools
-level: campaign
-purpose: Establish safety tools and content boundaries for comfortable play
-author: Mimir Team
-variables:
-  - name: lines
-    type: string
-    description: Hard limits - topics that will not appear in the game
-    default: "[List hard limits that will never appear in the game]"
-    required: true
-  - name: veils
-    type: string
-    description: Topics that may appear but will be handled off-screen
-    default: "[List topics that will fade to black or be handled abstractly]"
-    required: true
-  - name: x_card
-    type: string
-    description: Whether X-Card or similar pause mechanism is used
-    default: "Yes - anyone can call for a pause at any time"
-    required: true
----
-
 # Safety Tools & Boundaries
 
 ## Lines (Hard Limits)
 These topics will not appear in this campaign under any circumstances:
 
-{{ lines }}
+[List hard limits that will never appear in the game]
 
 ## Veils (Fade to Black)
 These topics may be referenced but will not be played out in detail:
 
-{{ veils }}
+[List topics that will fade to black or be handled abstractly]
 
 ## Pause Mechanism
-{{ x_card }}
+[Yes - anyone can call for a pause at any time]
 
 ## How to Use Safety Tools
 

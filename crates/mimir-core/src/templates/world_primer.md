@@ -1,19 +1,4 @@
----
-id: world_primer
-title: World Primer
-type: world_primer
-level: campaign
-purpose: High-level overview of your campaign world
-author: Mimir Team
-variables:
-  - name: world_name
-    type: string
-    description: Name of your world
-    default: "[World Name]"
-    required: true
----
-
-# {{world_name}} Overview
+# [World Name] Overview
 
 *The foundation of your campaign setting*
 

@@ -1,54 +1,9 @@
----
-id: table_expectations
-title: Table Expectations & Logistics
-type: table_expectations
-level: campaign
-purpose: Set clear boundaries and logistics before anyone invests time in characters
-author: Mimir Team
-variables:
-  - name: game_tone
-    type: string
-    description: The tone and style of the game
-    default: "Heroic adventure with consequences"
-    required: true
-  - name: content_rating
-    type: string
-    description: Content rating and boundaries
-    default: "PG-13 (violence yes, graphic descriptions no)"
-    required: true
-  - name: lethality_level
-    type: string
-    description: How lethal is the game
-    default: "Moderate (death possible but not arbitrary)"
-    required: true
-  - name: session_day
-    type: string
-    description: Regular session day
-    default: "[Day]"
-    required: true
-  - name: session_time
-    type: string
-    description: Regular session time
-    default: "[Time]"
-    required: true
-  - name: session_frequency
-    type: string
-    description: How often sessions occur
-    default: "Weekly"
-    required: true
-  - name: session_length
-    type: string
-    description: Typical session length
-    default: "3-4 hours"
-    required: true
----
-
 # Table Expectations & Logistics
 
 ## Game Style
-- **Tone**: {{ game_tone }}
-- **Rating**: {{ content_rating }}
-- **Lethality**: {{ lethality_level }}
+- **Tone**: [Heroic adventure with consequences]
+- **Rating**: [PG-13 (violence yes, graphic descriptions no)]
+- **Lethality**: [Moderate (death possible but not arbitrary)]
 - **Roleplay**: Expected but not required to do voices
 - **Focus**: Collaborative storytelling over rules mastery
 
@@ -61,9 +16,9 @@ We use the following tools to ensure everyone's comfort:
 - **Open Door**: Anyone can step away if needed
 
 ## Scheduling
-- **Day/Time**: {{ session_day }} at {{ session_time }}
-- **Frequency**: {{ session_frequency }}
-- **Length**: {{ session_length }}
+- **Day/Time**: [Day] at [Time]
+- **Frequency**: [Weekly]
+- **Length**: [3-4 hours]
 - **Attendance**: Life happens, but please give notice when possible
 - **Quorum**: Game runs with 3+ players present
 - **Cancellation**: 24-hour notice when possible
