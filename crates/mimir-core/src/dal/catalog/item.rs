@@ -154,6 +154,15 @@ pub fn count_items_by_source(conn: &mut SqliteConnection, source: &str) -> Query
         .get_result(conn)
 }
 
+/// List all distinct sources that have items.
+pub fn list_item_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    items::table
+        .select(items::source)
+        .distinct()
+        .order(items::source.asc())
+        .load(conn)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

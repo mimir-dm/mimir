@@ -162,6 +162,15 @@ pub fn count_monsters_by_source(conn: &mut SqliteConnection, source: &str) -> Qu
         .get_result(conn)
 }
 
+/// List all distinct sources that have monsters.
+pub fn list_monster_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    monsters::table
+        .select(monsters::source)
+        .distinct()
+        .order(monsters::source.asc())
+        .load(conn)
+}
+
 /// Update a monster's token image path.
 pub fn set_token_image_path(
     conn: &mut SqliteConnection,

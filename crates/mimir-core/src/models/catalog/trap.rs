@@ -56,6 +56,35 @@ impl<'a> NewTrap<'a> {
     }
 }
 
+/// Filters for searching traps.
+#[derive(Debug, Default, Clone)]
+pub struct TrapFilter {
+    pub name_contains: Option<String>,
+    pub source: Option<String>,
+    pub tier: Option<String>,
+}
+
+impl TrapFilter {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_name_contains(mut self, name: impl Into<String>) -> Self {
+        self.name_contains = Some(name.into());
+        self
+    }
+
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
+        self.source = Some(source.into());
+        self
+    }
+
+    pub fn with_tier(mut self, tier: impl Into<String>) -> Self {
+        self.tier = Some(tier.into());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -2,7 +2,7 @@
 //!
 //! Database operations for character feats.
 
-use crate::models::catalog::{Feat, NewFeat};
+use crate::models::catalog::{Feat, FeatFilter, NewFeat};
 use crate::schema::feats;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -27,6 +27,11 @@ pub fn insert_feats(conn: &mut SqliteConnection, feats: &[NewFeat]) -> QueryResu
 /// Get a feat by its ID.
 pub fn get_feat(conn: &mut SqliteConnection, id: i32) -> QueryResult<Feat> {
     feats::table.filter(feats::id.eq(id)).first(conn)
+}
+
+/// Get a feat by its ID, returning None if not found.
+pub fn get_feat_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Feat>> {
+    feats::table.filter(feats::id.eq(id)).first(conn).optional()
 }
 
 /// Get a feat by name and source.
@@ -77,6 +82,64 @@ pub fn delete_feats_by_source(conn: &mut SqliteConnection, source: &str) -> Quer
 /// Count all feats.
 pub fn count_feats(conn: &mut SqliteConnection) -> QueryResult<i64> {
     feats::table.count().get_result(conn)
+}
+
+/// Count feats from a specific source.
+pub fn count_feats_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    feats::table
+        .filter(feats::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have feats.
+pub fn list_feat_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    feats::table
+        .select(feats::source)
+        .distinct()
+        .order(feats::source.asc())
+        .load(conn)
+}
+
+/// Search feats with filters.
+pub fn search_feats(conn: &mut SqliteConnection, filter: &FeatFilter) -> QueryResult<Vec<Feat>> {
+    let mut query = feats::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(feats::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(feats::source.eq(source));
+    }
+
+    query.order(feats::name.asc()).load(conn)
+}
+
+/// Search feats with pagination.
+pub fn search_feats_paginated(
+    conn: &mut SqliteConnection,
+    filter: &FeatFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Feat>> {
+    let mut query = feats::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(feats::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(feats::source.eq(source));
+    }
+
+    query
+        .order(feats::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

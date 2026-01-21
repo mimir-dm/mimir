@@ -2,7 +2,7 @@
 //!
 //! Database operations for actions.
 
-use crate::models::catalog::{Action, NewAction};
+use crate::models::catalog::{Action, ActionFilter, NewAction};
 use crate::schema::actions;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -32,6 +32,14 @@ pub fn get_action(conn: &mut SqliteConnection, id: i32) -> QueryResult<Action> {
     actions::table
         .filter(actions::id.eq(id))
         .first(conn)
+}
+
+/// Get an action by its ID, returning None if not found.
+pub fn get_action_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Action>> {
+    actions::table
+        .filter(actions::id.eq(id))
+        .first(conn)
+        .optional()
 }
 
 /// Get an action by name and source.
@@ -79,6 +87,64 @@ pub fn delete_actions_by_source(
 /// Count all actions.
 pub fn count_actions(conn: &mut SqliteConnection) -> QueryResult<i64> {
     actions::table.count().get_result(conn)
+}
+
+/// Count actions from a specific source.
+pub fn count_actions_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    actions::table
+        .filter(actions::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have actions.
+pub fn list_action_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    actions::table
+        .select(actions::source)
+        .distinct()
+        .order(actions::source.asc())
+        .load(conn)
+}
+
+/// Search actions with filters.
+pub fn search_actions(conn: &mut SqliteConnection, filter: &ActionFilter) -> QueryResult<Vec<Action>> {
+    let mut query = actions::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(actions::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(actions::source.eq(source));
+    }
+
+    query.order(actions::name.asc()).load(conn)
+}
+
+/// Search actions with pagination.
+pub fn search_actions_paginated(
+    conn: &mut SqliteConnection,
+    filter: &ActionFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Action>> {
+    let mut query = actions::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(actions::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(actions::source.eq(source));
+    }
+
+    query
+        .order(actions::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

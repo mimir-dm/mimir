@@ -207,6 +207,15 @@ pub fn count_spells_by_level(conn: &mut SqliteConnection, level: i32) -> QueryRe
         .get_result(conn)
 }
 
+/// List all distinct sources that have spells.
+pub fn list_spell_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    spells::table
+        .select(spells::source)
+        .distinct()
+        .order(spells::source.asc())
+        .load(conn)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

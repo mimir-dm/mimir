@@ -2,7 +2,7 @@
 //!
 //! Database operations for conditions.
 
-use crate::models::catalog::{Condition, NewCondition};
+use crate::models::catalog::{Condition, ConditionFilter, NewCondition};
 use crate::schema::conditions;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -32,6 +32,14 @@ pub fn get_condition(conn: &mut SqliteConnection, id: i32) -> QueryResult<Condit
     conditions::table
         .filter(conditions::id.eq(id))
         .first(conn)
+}
+
+/// Get a condition by its ID, returning None if not found.
+pub fn get_condition_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Condition>> {
+    conditions::table
+        .filter(conditions::id.eq(id))
+        .first(conn)
+        .optional()
 }
 
 /// Get a condition by name and source.
@@ -79,6 +87,64 @@ pub fn delete_conditions_by_source(
 /// Count all conditions.
 pub fn count_conditions(conn: &mut SqliteConnection) -> QueryResult<i64> {
     conditions::table.count().get_result(conn)
+}
+
+/// Count conditions from a specific source.
+pub fn count_conditions_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    conditions::table
+        .filter(conditions::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have conditions.
+pub fn list_condition_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    conditions::table
+        .select(conditions::source)
+        .distinct()
+        .order(conditions::source.asc())
+        .load(conn)
+}
+
+/// Search conditions with filters.
+pub fn search_conditions(conn: &mut SqliteConnection, filter: &ConditionFilter) -> QueryResult<Vec<Condition>> {
+    let mut query = conditions::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(conditions::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(conditions::source.eq(source));
+    }
+
+    query.order(conditions::name.asc()).load(conn)
+}
+
+/// Search conditions with pagination.
+pub fn search_conditions_paginated(
+    conn: &mut SqliteConnection,
+    filter: &ConditionFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Condition>> {
+    let mut query = conditions::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(conditions::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(conditions::source.eq(source));
+    }
+
+    query
+        .order(conditions::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

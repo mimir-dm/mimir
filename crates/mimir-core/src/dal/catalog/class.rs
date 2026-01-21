@@ -2,7 +2,7 @@
 //!
 //! Database operations for character classes.
 
-use crate::models::catalog::{Class, NewClass};
+use crate::models::catalog::{Class, ClassFilter, NewClass};
 use crate::schema::classes;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -27,6 +27,11 @@ pub fn insert_classes(conn: &mut SqliteConnection, classes: &[NewClass]) -> Quer
 /// Get a class by its ID.
 pub fn get_class(conn: &mut SqliteConnection, id: i32) -> QueryResult<Class> {
     classes::table.filter(classes::id.eq(id)).first(conn)
+}
+
+/// Get a class by its ID, returning None if not found.
+pub fn get_class_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Class>> {
+    classes::table.filter(classes::id.eq(id)).first(conn).optional()
 }
 
 /// Get a class by name and source.
@@ -68,6 +73,67 @@ pub fn delete_classes_by_source(conn: &mut SqliteConnection, source: &str) -> Qu
 /// Count all classes.
 pub fn count_classes(conn: &mut SqliteConnection) -> QueryResult<i64> {
     classes::table.count().get_result(conn)
+}
+
+/// Count classes from a specific source.
+pub fn count_classes_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    classes::table
+        .filter(classes::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have classes.
+pub fn list_class_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    classes::table
+        .select(classes::source)
+        .distinct()
+        .order(classes::source.asc())
+        .load(conn)
+}
+
+/// Search classes with filters.
+pub fn search_classes(
+    conn: &mut SqliteConnection,
+    filter: &ClassFilter,
+) -> QueryResult<Vec<Class>> {
+    let mut query = classes::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(classes::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(classes::source.eq(source));
+    }
+
+    query.order(classes::name.asc()).load(conn)
+}
+
+/// Search classes with pagination.
+pub fn search_classes_paginated(
+    conn: &mut SqliteConnection,
+    filter: &ClassFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Class>> {
+    let mut query = classes::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(classes::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(classes::source.eq(source));
+    }
+
+    query
+        .order(classes::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

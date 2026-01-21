@@ -30,10 +30,56 @@ Design the import pipeline for loading 5e content from source files into the cat
 Note: Catalog entity Rust types are defined in [[MIMIR-T-0357]] Database Schema Design.
 
 ## Acceptance Criteria
-- [ ] Source management service design
-- [ ] Import pipeline specification
-- [ ] 5eTools JSON parsing
-- [ ] Source enable/disable UI flow
+- [x] Source management service design
+- [x] Import pipeline specification
+- [x] 5eTools JSON parsing
+- [ ] Source enable/disable UI flow (frontend work)
+
+## Implementation Status
+
+**IMPLEMENTED** - Core import pipeline exists in `mimir-core/src/import/`:
+- `discovery.rs` - Discovers books from 5etools data directories
+- `filter.rs` - Filters entities by source code
+- `srd.rs` - SRD content identification
+- `collector.rs` - Generic entity collection
+- `service.rs` - Orchestration with DB insertion and FTS indexing
+
+### Entity Types (26 total, 26 imported)
+
+| Entity | Table | Import | Notes |
+|--------|-------|--------|-------|
+| Monsters | ✅ | ✅ | CR, type, size extracted |
+| Spells | ✅ | ✅ | Level, school, ritual, concentration, class lists |
+| Items | ✅ | ✅ | Type, rarity, attunement classes |
+| Classes | ✅ | ✅ | Core classes |
+| Subclasses | ✅ | ✅ | With parent class tracking |
+| Races | ✅ | ✅ | Player races |
+| Backgrounds | ✅ | ✅ | Character backgrounds |
+| Feats | ✅ | ✅ | Character feats |
+| Skills | ✅ | ✅ | With ability field |
+| Senses | ✅ | ✅ | Creature senses |
+| Languages | ✅ | ✅ | With type classification |
+| Actions | ✅ | ✅ | Combat actions |
+| Conditions | ✅ | ✅ | Game conditions |
+| Diseases | ✅ | ✅ | Disease entries |
+| Traps | ✅ | ✅ | With trap tier |
+| Hazards | ✅ | ✅ | Environmental hazards |
+| Objects | ✅ | ✅ | With object type |
+| Vehicles | ✅ | ✅ | With vehicle type |
+| Deities | ✅ | ✅ | With pantheon |
+| Cults | ✅ | ✅ | Cults and boons |
+| Optional Features | ✅ | ✅ | With feature_type (EI, MM, etc.) |
+| Psionics | ✅ | ✅ | With psionic_type and order |
+| Rewards | ✅ | ✅ | With reward_type (blessing, boon, charm) |
+| Variant Rules | ✅ | ✅ | With rule_type |
+| Catalog Tables | ✅ | ✅ | Roll tables, trinkets, etc. |
+| Spell Lists | ✅ | ✅ | Class/subclass spell assignments |
+
+### Special Features
+- Token image importing from 5etools img directory
+- FTS indexing of entries and fluff
+- Transaction safety with per-source SAVEPOINTs
+- Spell-class and item-attunement join tables
 
 ## Source Management Service
 
@@ -138,4 +184,14 @@ Settings > Sources
 
 ## Progress
 
-*To be updated during implementation*
+### 2026-01-20: Completed 5 missing catalog entities
+- Created migration `018_remaining_catalog` with 5 new tables:
+  - `optional_features` (feature_type for EI/MM/etc.)
+  - `psionics` (psionic_type and psionic_order)
+  - `rewards` (reward_type for blessing/boon/charm)
+  - `variant_rules` (rule_type)
+  - `catalog_tables` (roll tables, trinkets, etc.)
+- Created Rust models: OptionalFeature, Psionic, Reward, VariantRule, CatalogTable
+- Created DAL functions with full CRUD + batch insert
+- Updated import service to persist all 5 entity types
+- All 576 tests passing

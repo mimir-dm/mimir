@@ -2,7 +2,7 @@
 //!
 //! Database operations for environmental hazards.
 
-use crate::models::catalog::{Hazard, NewHazard};
+use crate::models::catalog::{Hazard, HazardFilter, NewHazard};
 use crate::schema::hazards;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -32,6 +32,14 @@ pub fn get_hazard(conn: &mut SqliteConnection, id: i32) -> QueryResult<Hazard> {
     hazards::table
         .filter(hazards::id.eq(id))
         .first(conn)
+}
+
+/// Get a hazard by its ID, returning None if not found.
+pub fn get_hazard_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Hazard>> {
+    hazards::table
+        .filter(hazards::id.eq(id))
+        .first(conn)
+        .optional()
 }
 
 /// Get a hazard by name and source.
@@ -79,6 +87,64 @@ pub fn delete_hazards_by_source(
 /// Count all hazards.
 pub fn count_hazards(conn: &mut SqliteConnection) -> QueryResult<i64> {
     hazards::table.count().get_result(conn)
+}
+
+/// Count hazards from a specific source.
+pub fn count_hazards_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    hazards::table
+        .filter(hazards::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have hazards.
+pub fn list_hazard_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    hazards::table
+        .select(hazards::source)
+        .distinct()
+        .order(hazards::source.asc())
+        .load(conn)
+}
+
+/// Search hazards with filters.
+pub fn search_hazards(conn: &mut SqliteConnection, filter: &HazardFilter) -> QueryResult<Vec<Hazard>> {
+    let mut query = hazards::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(hazards::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(hazards::source.eq(source));
+    }
+
+    query.order(hazards::name.asc()).load(conn)
+}
+
+/// Search hazards with pagination.
+pub fn search_hazards_paginated(
+    conn: &mut SqliteConnection,
+    filter: &HazardFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Hazard>> {
+    let mut query = hazards::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(hazards::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(hazards::source.eq(source));
+    }
+
+    query
+        .order(hazards::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

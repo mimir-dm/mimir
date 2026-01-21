@@ -2,7 +2,7 @@
 //!
 //! Database operations for traps.
 
-use crate::models::catalog::{NewTrap, Trap};
+use crate::models::catalog::{NewTrap, Trap, TrapFilter};
 use crate::schema::traps;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -32,6 +32,14 @@ pub fn get_trap(conn: &mut SqliteConnection, id: i32) -> QueryResult<Trap> {
     traps::table
         .filter(traps::id.eq(id))
         .first(conn)
+}
+
+/// Get a trap by its ID, returning None if not found.
+pub fn get_trap_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Trap>> {
+    traps::table
+        .filter(traps::id.eq(id))
+        .first(conn)
+        .optional()
 }
 
 /// Get a trap by name and source.
@@ -100,6 +108,72 @@ pub fn delete_traps_by_source(
 /// Count all traps.
 pub fn count_traps(conn: &mut SqliteConnection) -> QueryResult<i64> {
     traps::table.count().get_result(conn)
+}
+
+/// Count traps from a specific source.
+pub fn count_traps_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    traps::table
+        .filter(traps::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have traps.
+pub fn list_trap_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    traps::table
+        .select(traps::source)
+        .distinct()
+        .order(traps::source.asc())
+        .load(conn)
+}
+
+/// Search traps with filters.
+pub fn search_traps(conn: &mut SqliteConnection, filter: &TrapFilter) -> QueryResult<Vec<Trap>> {
+    let mut query = traps::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(traps::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(traps::source.eq(source));
+    }
+
+    if let Some(ref tier) = filter.tier {
+        query = query.filter(traps::trap_tier.eq(tier));
+    }
+
+    query.order(traps::name.asc()).load(conn)
+}
+
+/// Search traps with pagination.
+pub fn search_traps_paginated(
+    conn: &mut SqliteConnection,
+    filter: &TrapFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Trap>> {
+    let mut query = traps::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(traps::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(traps::source.eq(source));
+    }
+
+    if let Some(ref tier) = filter.tier {
+        query = query.filter(traps::trap_tier.eq(tier));
+    }
+
+    query
+        .order(traps::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

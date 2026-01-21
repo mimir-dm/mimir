@@ -56,6 +56,35 @@ impl<'a> NewLanguage<'a> {
     }
 }
 
+/// Filters for searching languages.
+#[derive(Debug, Default, Clone)]
+pub struct LanguageFilter {
+    pub name_contains: Option<String>,
+    pub source: Option<String>,
+    pub language_type: Option<String>,
+}
+
+impl LanguageFilter {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_name_contains(mut self, name: impl Into<String>) -> Self {
+        self.name_contains = Some(name.into());
+        self
+    }
+
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
+        self.source = Some(source.into());
+        self
+    }
+
+    pub fn with_type(mut self, language_type: impl Into<String>) -> Self {
+        self.language_type = Some(language_type.into());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

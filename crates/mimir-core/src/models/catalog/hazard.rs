@@ -39,6 +39,29 @@ impl<'a> NewHazard<'a> {
     }
 }
 
+/// Filters for searching hazards.
+#[derive(Debug, Default, Clone)]
+pub struct HazardFilter {
+    pub name_contains: Option<String>,
+    pub source: Option<String>,
+}
+
+impl HazardFilter {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_name_contains(mut self, name: impl Into<String>) -> Self {
+        self.name_contains = Some(name.into());
+        self
+    }
+
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
+        self.source = Some(source.into());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

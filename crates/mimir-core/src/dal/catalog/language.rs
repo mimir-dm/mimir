@@ -2,7 +2,7 @@
 //!
 //! Database operations for languages.
 
-use crate::models::catalog::{Language, NewLanguage};
+use crate::models::catalog::{Language, LanguageFilter, NewLanguage};
 use crate::schema::languages;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -32,6 +32,14 @@ pub fn get_language(conn: &mut SqliteConnection, id: i32) -> QueryResult<Languag
     languages::table
         .filter(languages::id.eq(id))
         .first(conn)
+}
+
+/// Get a language by its ID, returning None if not found.
+pub fn get_language_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Language>> {
+    languages::table
+        .filter(languages::id.eq(id))
+        .first(conn)
+        .optional()
 }
 
 /// Get a language by name and source.
@@ -90,6 +98,72 @@ pub fn delete_languages_by_source(
 /// Count all languages.
 pub fn count_languages(conn: &mut SqliteConnection) -> QueryResult<i64> {
     languages::table.count().get_result(conn)
+}
+
+/// Count languages from a specific source.
+pub fn count_languages_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    languages::table
+        .filter(languages::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have languages.
+pub fn list_language_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    languages::table
+        .select(languages::source)
+        .distinct()
+        .order(languages::source.asc())
+        .load(conn)
+}
+
+/// Search languages with filters.
+pub fn search_languages(conn: &mut SqliteConnection, filter: &LanguageFilter) -> QueryResult<Vec<Language>> {
+    let mut query = languages::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(languages::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(languages::source.eq(source));
+    }
+
+    if let Some(ref language_type) = filter.language_type {
+        query = query.filter(languages::language_type.eq(language_type));
+    }
+
+    query.order(languages::name.asc()).load(conn)
+}
+
+/// Search languages with pagination.
+pub fn search_languages_paginated(
+    conn: &mut SqliteConnection,
+    filter: &LanguageFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Language>> {
+    let mut query = languages::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(languages::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(languages::source.eq(source));
+    }
+
+    if let Some(ref language_type) = filter.language_type {
+        query = query.filter(languages::language_type.eq(language_type));
+    }
+
+    query
+        .order(languages::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

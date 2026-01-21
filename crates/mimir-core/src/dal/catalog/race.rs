@@ -2,7 +2,7 @@
 //!
 //! Database operations for character races.
 
-use crate::models::catalog::{NewRace, Race};
+use crate::models::catalog::{NewRace, Race, RaceFilter};
 use crate::schema::races;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -27,6 +27,11 @@ pub fn insert_races(conn: &mut SqliteConnection, races: &[NewRace]) -> QueryResu
 /// Get a race by its ID.
 pub fn get_race(conn: &mut SqliteConnection, id: i32) -> QueryResult<Race> {
     races::table.filter(races::id.eq(id)).first(conn)
+}
+
+/// Get a race by its ID, returning None if not found.
+pub fn get_race_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Race>> {
+    races::table.filter(races::id.eq(id)).first(conn).optional()
 }
 
 /// Get a race by name and source.
@@ -77,6 +82,64 @@ pub fn delete_races_by_source(conn: &mut SqliteConnection, source: &str) -> Quer
 /// Count all races.
 pub fn count_races(conn: &mut SqliteConnection) -> QueryResult<i64> {
     races::table.count().get_result(conn)
+}
+
+/// Count races from a specific source.
+pub fn count_races_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    races::table
+        .filter(races::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// List all distinct sources that have races.
+pub fn list_race_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    races::table
+        .select(races::source)
+        .distinct()
+        .order(races::source.asc())
+        .load(conn)
+}
+
+/// Search races with filters.
+pub fn search_races(conn: &mut SqliteConnection, filter: &RaceFilter) -> QueryResult<Vec<Race>> {
+    let mut query = races::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(races::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(races::source.eq(source));
+    }
+
+    query.order(races::name.asc()).load(conn)
+}
+
+/// Search races with pagination.
+pub fn search_races_paginated(
+    conn: &mut SqliteConnection,
+    filter: &RaceFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Race>> {
+    let mut query = races::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(races::name.like(pattern));
+    }
+
+    if let Some(ref source) = filter.source {
+        query = query.filter(races::source.eq(source));
+    }
+
+    query
+        .order(races::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]
