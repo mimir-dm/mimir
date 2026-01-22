@@ -10,15 +10,6 @@
       </div>
 
       <nav class="header-nav">
-        <router-link to="/players" class="nav-link" title="Manage Players">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>Players</span>
-        </router-link>
         <router-link to="/characters" class="nav-link" title="Manage Characters">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -49,17 +40,6 @@
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
           <span>{{ isReseeding ? 'Reseeding...' : 'Reseed' }}</span>
-        </button>
-        <button
-          v-if="appSettingsStore.aiAssistantEnabled"
-          @click="handleOpenChat"
-          class="chat-button"
-          title="Open Chat (new window)"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span>Chat</span>
         </button>
         <router-link to="/settings" class="settings-icon" title="Settings">
           <img :src="gearIcon" alt="Settings" class="gear-icon" />
@@ -96,7 +76,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useThemeStore } from '../stores/theme'
-import { useAppSettingsStore } from '../stores/appSettings'
 import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse } from '../types/api'
 import CampaignSelector from '../features/campaigns/components/CampaignSelector.vue'
@@ -112,7 +91,6 @@ import darkMimir from '../assets/images/themes/dark/mimir.png'
 import hyperMimir from '../assets/images/themes/hyper/mimir.png'
 
 const themeStore = useThemeStore()
-const appSettingsStore = useAppSettingsStore()
 
 // Dev mode state
 const isDevMode = ref(false)
@@ -124,11 +102,8 @@ onMounted(async () => {
   try {
     isDevMode.value = await invoke<boolean>('is_dev_mode')
   } catch (error) {
-    console.error('Failed to check dev mode:', error)
+    // Dev mode command not available - that's fine, isDevMode stays false
   }
-
-  // Load app settings for AI assistant visibility
-  await appSettingsStore.loadSettings()
 })
 
 // Show reseed confirmation modal
@@ -172,15 +147,6 @@ const handleOpenRules = async () => {
   }
 }
 
-// Handle opening the chat window
-const handleOpenChat = async () => {
-  try {
-    await invoke('open_chat_window')
-  } catch (error) {
-    console.error('Failed to open chat window:', error)
-  }
-}
-
 // Dynamically select gear icon based on current theme
 const gearIcon = computed(() => {
   switch (themeStore.currentTheme) {
@@ -221,6 +187,7 @@ const skullIcon = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
 .header-left {
@@ -311,6 +278,9 @@ const skullIcon = computed(() => {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .nav-link {
@@ -355,37 +325,6 @@ const skullIcon = computed(() => {
 
 .nav-link.router-link-active svg {
   opacity: 1;
-}
-
-.chat-button {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  background-color: var(--color-primary-500);
-  color: white;
-  border: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-}
-
-.chat-button:hover {
-  background-color: var(--color-primary-600);
-  box-shadow: var(--shadow);
-  transform: translateY(-1px);
-}
-
-.chat-button:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: var(--shadow-sm);
-}
-
-.chat-button svg {
-  opacity: 0.9;
 }
 
 /* Dev-only button */

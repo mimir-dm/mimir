@@ -16,7 +16,7 @@ export type LightLevel = 'bright' | 'dim' | 'darkness'
 
 /** Visible area circle for a token */
 export interface VisibleArea {
-  tokenId: number
+  tokenId: string
   x: number
   y: number
   /** Radius in pixels where token has full clear vision */
@@ -29,7 +29,7 @@ export interface VisibleArea {
 
 /** Light zone on the map */
 export interface LightZone {
-  lightSourceId: number
+  lightSourceId: string
   x: number
   y: number
   brightRadiusPx: number

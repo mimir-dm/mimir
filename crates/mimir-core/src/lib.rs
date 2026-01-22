@@ -4,6 +4,7 @@
 
 pub mod catalog;
 pub mod dal;
+pub mod db;
 pub mod fts;
 pub mod import;
 pub mod models;

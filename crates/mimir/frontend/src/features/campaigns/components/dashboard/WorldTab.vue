@@ -3,14 +3,10 @@
     <!-- Sidebar -->
     <div class="sidebar-panel">
       <DocumentSidebar
-        v-if="campaign && boardConfig"
+        v-if="campaign"
         :campaign-id="campaign.id"
         :campaign-name="campaign.name"
-        :campaign-stage="campaign.status"
-        :board-config="boardConfig"
         @select-document="handleSelectDocument"
-        @create-document="handleCreateDocument"
-        @document-completion-changed="handleDocumentCompletionChanged"
       />
 
       <!-- Maps List -->
@@ -41,7 +37,7 @@
       <DocumentEditor
         v-if="selectedDocument"
         :document="selectedDocument"
-        :campaign-id="campaign?.id || 0"
+        :campaign-id="campaign?.id || ''"
         @close="selectedDocument = null"
         @updated="handleDocumentUpdated"
         @stage-transitioned="handleStageTransitioned"
@@ -85,7 +81,7 @@
     <!-- Upload Modal -->
     <MapUploadModal
       :visible="showUploadModal"
-      :campaign-id="campaign?.id || 0"
+      :campaign-id="campaign?.id || ''"
       @close="showUploadModal = false"
       @uploaded="handleMapUploaded"
     />
@@ -120,12 +116,12 @@ import DocumentEditor from '../DocumentEditor.vue'
 import MapUploadModal from '../StageLanding/MapUploadModal.vue'
 import MapGridConfigModal from '../StageLanding/MapGridConfigModal.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
-import type { Campaign, BoardConfig } from '@/types'
+import type { Campaign } from '@/types'
 
 interface MapData {
-  id: number
-  campaign_id: number
-  module_id: number | null
+  id: string
+  campaign_id: string
+  module_id: string | null
   name: string
   image_path: string
   width_px: number
@@ -140,13 +136,18 @@ interface MapData {
 
 const props = defineProps<{
   campaign?: Campaign
-  boardConfig?: BoardConfig
   documents?: any[]
 }>()
 
 const emit = defineEmits<{
   refresh: []
 }>()
+
+// Helper to derive status from campaign data
+function getCampaignStatus(campaign: Campaign): string {
+  if (campaign.archived_at) return 'archived'
+  return 'active'
+}
 
 // Document state
 const selectedDocument = ref<any>(null)
@@ -165,8 +166,8 @@ async function loadMaps() {
   if (!props.campaign) return
   loadingMaps.value = true
   try {
-    const response = await invoke<{ success: boolean; data?: MapData[] }>('list_maps', {
-      request: { campaign_id: props.campaign.id, module_id: null }
+    const response = await invoke<{ success: boolean; data?: MapData[] }>('list_campaign_maps', {
+      campaignId: props.campaign.id
     })
     if (response.success && response.data) {
       maps.value = response.data
@@ -179,9 +180,9 @@ async function loadMaps() {
 }
 
 // Load map image
-async function loadMapImage(mapId: number) {
+async function loadMapImage(mapId: string) {
   try {
-    const response = await invoke<{ success: boolean; data?: string }>('serve_map_image', { id: mapId })
+    const response = await invoke<{ success: boolean; data?: string }>('read_map_uvtt', { id: mapId })
     if (response.success && response.data) {
       mapImageUrl.value = response.data
     }

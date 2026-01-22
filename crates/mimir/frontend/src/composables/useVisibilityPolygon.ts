@@ -449,7 +449,7 @@ export function useVisibilityPolygon(
  * Calculate visibility polygons for multiple tokens.
  */
 export function useMultiTokenVisibility(
-  tokens: Ref<Array<{ id: number; x: number; y: number; visionRadius: number }>>,
+  tokens: Ref<Array<{ id: string; x: number; y: number; visionRadius: number }>>,
   walls: Ref<Wall[]>,
   portals: Ref<Portal[]>,
   mapWidth: Ref<number>,

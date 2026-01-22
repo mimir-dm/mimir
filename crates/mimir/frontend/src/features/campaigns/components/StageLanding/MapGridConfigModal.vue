@@ -261,7 +261,7 @@ import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 
 interface Map {
-  id: number
+  id: string
   name: string
   width_px: number
   height_px: number

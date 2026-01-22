@@ -119,7 +119,7 @@ pub fn count_module_documents(conn: &mut SqliteConnection, module_id: &str) -> Q
 }
 
 /// FTS search result with relevance ranking.
-#[derive(Debug, Clone, QueryableByName)]
+#[derive(Debug, Clone, QueryableByName, serde::Serialize)]
 pub struct DocumentSearchResult {
     #[diesel(sql_type = Text)]
     pub id: String,

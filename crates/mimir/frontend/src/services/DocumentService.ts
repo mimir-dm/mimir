@@ -1,245 +1,208 @@
+/**
+ * Document Service
+ *
+ * Provides access to document CRUD operations via Tauri commands.
+ * Types match mimir-core Document model.
+ */
+
 import { invoke } from '@tauri-apps/api/core'
+import type { ApiResponse, Document } from '@/types/api'
 import { dataEvents } from '@/shared/utils/dataEvents'
 
-export interface DocumentData {
+// =============================================================================
+// Request Types
+// =============================================================================
+
+export interface CreateDocumentRequest {
+  campaign_id: string
+  module_id?: string
   title: string
-  content: string
-  documentType: 'vision' | 'strategy' | 'initiative' | 'task' | 'adr'
-  parentId?: string
-  templateId?: string
-  moduleId?: number
-  campaignId?: number
+  doc_type?: string
+  content?: string
 }
 
-export interface Document {
-  id: string | number
-  title: string
-  content: string
-  phase?: 'draft' | 'review' | 'published' | 'archived'
-  documentType?: 'vision' | 'strategy' | 'initiative' | 'task' | 'adr'
-  document_type?: string
-  parent_id?: string
-  parentId?: string
-  template_id?: string
-  templateId?: string
-  created_at?: string
-  createdAt?: Date
-  updated_at?: string
-  updatedAt?: Date
-  completed_at?: string | null
-  completedAt?: Date | null
-  blocked_by?: string[]
-  blockedBy?: string[]
-  exit_criteria?: any[]
-  exitCriteria?: any[]
-  // Additional fields for compatibility
-  campaign_id?: number
-  module_id?: number | null
-  session_id?: number | null
-  file_path?: string
-  file_type?: string
-  is_user_created?: boolean
+export interface UpdateDocumentRequest {
+  title?: string
+  content?: string
+  doc_type?: string
 }
+
+// =============================================================================
+// Search Result Type
+// =============================================================================
+
+export interface DocumentSearchResult {
+  id: string
+  campaign_id: string
+  module_id: string | null
+  title: string
+  doc_type: string
+  snippet: string
+  created_at: string
+  updated_at: string
+}
+
+// =============================================================================
+// Document Service
+// =============================================================================
 
 class DocumentServiceClass {
-  private cache = new Map<string, Document[]>()
-  
-  async create(data: DocumentData): Promise<Document> {
-    try {
-      const response = await invoke<{ data: Document }>('create_document', {
-        newDocument: data
-      })
+  /**
+   * List campaign-level documents (not in any module)
+   */
+  async listForCampaign(campaignId: string): Promise<Document[]> {
+    const response = await invoke<ApiResponse<Document[]>>('list_campaign_documents', {
+      campaignId
+    })
 
-      this.clearCache()
+    if (response.success && response.data) {
+      return response.data
+    }
 
-      // Emit event for listeners
-      if (data.moduleId) {
+    throw new Error(response.error || 'Failed to list campaign documents')
+  }
+
+  /**
+   * List all documents for a specific module
+   */
+  async listForModule(moduleId: string): Promise<Document[]> {
+    const response = await invoke<ApiResponse<Document[]>>('list_module_documents', {
+      moduleId
+    })
+
+    if (response.success && response.data) {
+      return response.data
+    }
+
+    throw new Error(response.error || 'Failed to list module documents')
+  }
+
+  /**
+   * Get a document by ID
+   */
+  async get(id: string): Promise<Document> {
+    const response = await invoke<ApiResponse<Document>>('get_document', { id })
+
+    if (response.success && response.data) {
+      return response.data
+    }
+
+    throw new Error(response.error || `Failed to get document ${id}`)
+  }
+
+  /**
+   * Create a new document
+   */
+  async create(request: CreateDocumentRequest): Promise<Document> {
+    const response = await invoke<ApiResponse<Document>>('create_document', { request })
+
+    if (response.success && response.data) {
+      if (request.module_id) {
         dataEvents.emit('document:created', {
-          moduleId: data.moduleId,
-          documentId: typeof response.data.id === 'number' ? response.data.id : parseInt(String(response.data.id))
-        })
-      }
-
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to create document "${data.title}": ${error}`)
-    }
-  }
-  
-  async update(id: string | number, content: string): Promise<Document> {
-    try {
-      const response = await invoke<{ data: Document }>('update_document', {
-        documentId: Number(id),
-        update: {
-          content
-        }
-      })
-
-      this.clearCache()
-      dataEvents.emit('document:updated', { documentId: Number(id) })
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to update document ${id}: ${error}`)
-    }
-  }
-  
-  async updateMetadata(id: string | number, metadata: Partial<Document>): Promise<Document> {
-    try {
-      const response = await invoke<{ data: Document }>('update_document_metadata', {
-        documentId: Number(id),
-        ...metadata
-      })
-
-      this.clearCache()
-      dataEvents.emit('document:updated', { documentId: Number(id) })
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to update metadata for document ${id}: ${error}`)
-    }
-  }
-
-  async delete(id: string | number, moduleId?: number): Promise<void> {
-    try {
-      await invoke('delete_document', {
-        documentId: Number(id)
-      })
-
-      this.clearCache()
-      if (moduleId) {
-        dataEvents.emit('document:deleted', { moduleId, documentId: Number(id) })
-      }
-    } catch (error) {
-      throw new Error(`Failed to delete document ${id}: ${error}`)
-    }
-  }
-
-  async transition(id: string | number, phase: string): Promise<Document> {
-    try {
-      const response = await invoke<{ data: Document }>('transition_document_phase', {
-        documentId: Number(id),
-        phase: phase
-      })
-
-      this.clearCache()
-      dataEvents.emit('document:updated', { documentId: Number(id) })
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to transition document ${id} to ${phase}: ${error}`)
-    }
-  }
-
-  async complete(id: string | number): Promise<Document> {
-    try {
-      const response = await invoke<{ data: Document }>('complete_document', {
-        documentId: Number(id)
-      })
-
-      this.clearCache()
-      dataEvents.emit('document:updated', { documentId: Number(id) })
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to complete document ${id}: ${error}`)
-    }
-  }
-
-  async uncomplete(id: string | number): Promise<Document> {
-    try {
-      // There's no uncomplete_document command, so we use update_document
-      // to set completed_at to null
-      const response = await invoke<{ data: Document }>('update_document', {
-        documentId: Number(id),
-        update: {
-          completed_at: null
-        }
-      })
-
-      this.clearCache()
-      dataEvents.emit('document:updated', { documentId: Number(id) })
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to uncomplete document ${id}: ${error}`)
-    }
-  }
-  
-  async validateExitCriteria(id: string | number): Promise<boolean> {
-    try {
-      const response = await invoke<{ data: boolean }>('validate_exit_criteria', {
-        documentId: Number(id)
-      })
-
-      return response.data
-    } catch (error) {
-      throw new Error(`Failed to validate exit criteria for document ${id}: ${error}`)
-    }
-  }
-  
-  async list(moduleId?: number, campaignId?: number): Promise<Document[]> {
-    const cacheKey = `${moduleId || ''}-${campaignId || ''}`
-
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!
-    }
-
-    try {
-      let response: { data: Document[] }
-
-      if (campaignId && !moduleId) {
-        // Use get_campaign_documents for campaign-level documents
-        response = await invoke<{ data: Document[] }>('get_campaign_documents', {
-          campaignId: campaignId
-        })
-      } else if (moduleId) {
-        // Use get_documents_by_level for module documents
-        response = await invoke<{ data: Document[] }>('get_documents_by_level', {
-          campaignId: campaignId,
-          level: 'module',
-          moduleId: moduleId,
-          sessionId: null
+          moduleId: request.module_id,
+          documentId: response.data.id
         })
       } else {
-        // No campaignId or moduleId - return empty array
-        response = { data: [] }
+        dataEvents.emit('document:created', {
+          campaignId: request.campaign_id,
+          documentId: response.data.id
+        })
       }
-
-      const documents = response.data || []
-      this.cache.set(cacheKey, documents)
-      return documents
-    } catch (error) {
-      const context = moduleId
-        ? `module ${moduleId}`
-        : campaignId
-        ? `campaign ${campaignId}`
-        : 'unknown context'
-      throw new Error(`Failed to list documents for ${context}: ${error}`)
+      return response.data
     }
+
+    throw new Error(response.error || 'Failed to create document')
   }
-  
-  async getByType(moduleId: number | undefined, type: string): Promise<Document[]> {
-    const all = await this.list(moduleId)
-    return all.filter(d => 
-      d.documentType === type || d.document_type === type
-    )
+
+  /**
+   * Update a document
+   */
+  async update(id: string, request: UpdateDocumentRequest): Promise<Document> {
+    const response = await invoke<ApiResponse<Document>>('update_document', {
+      id,
+      request
+    })
+
+    if (response.success && response.data) {
+      dataEvents.emit('document:updated', { documentId: id })
+      return response.data
+    }
+
+    throw new Error(response.error || `Failed to update document ${id}`)
   }
-  
-  async getByTemplate(moduleId: number, templateId: string): Promise<Document | undefined> {
-    const all = await this.list(moduleId)
-    return all.find(d => 
-      d.templateId === templateId || d.template_id === templateId
-    )
+
+  /**
+   * Delete a document
+   */
+  async delete(id: string, moduleId?: string): Promise<void> {
+    const response = await invoke<ApiResponse<void>>('delete_document', { id })
+
+    if (response.success) {
+      if (moduleId) {
+        dataEvents.emit('document:deleted', { moduleId, documentId: id })
+      }
+      return
+    }
+
+    throw new Error(response.error || `Failed to delete document ${id}`)
   }
-  
-  async batchUpdate(updates: Array<{ id: string | number; content: string }>): Promise<Document[]> {
-    const results = await Promise.all(
-      updates.map(({ id, content }) => this.update(id, content))
-    )
-    
-    this.clearCache()
-    return results
+
+  /**
+   * Search documents in a campaign
+   */
+  async search(campaignId: string, query: string): Promise<DocumentSearchResult[]> {
+    const response = await invoke<ApiResponse<DocumentSearchResult[]>>('search_documents', {
+      campaignId,
+      query
+    })
+
+    if (response.success && response.data) {
+      return response.data
+    }
+
+    throw new Error(response.error || 'Failed to search documents')
   }
-  
-  clearCache() {
-    this.cache.clear()
+
+  /**
+   * Search documents within a specific module
+   */
+  async searchInModule(moduleId: string, query: string): Promise<DocumentSearchResult[]> {
+    const response = await invoke<ApiResponse<DocumentSearchResult[]>>('search_module_documents', {
+      moduleId,
+      query
+    })
+
+    if (response.success && response.data) {
+      return response.data
+    }
+
+    throw new Error(response.error || 'Failed to search module documents')
+  }
+
+  /**
+   * Update only the content of a document
+   */
+  async updateContent(id: string, content: string): Promise<Document> {
+    return this.update(id, { content })
+  }
+
+  /**
+   * Update only the title of a document
+   */
+  async updateTitle(id: string, title: string): Promise<Document> {
+    return this.update(id, { title })
+  }
+
+  /**
+   * Get documents by type from a module
+   */
+  async getByType(moduleId: string, docType: string): Promise<Document[]> {
+    const documents = await this.listForModule(moduleId)
+    return documents.filter(d => d.doc_type === docType)
   }
 }
 
 export const DocumentService = new DocumentServiceClass()
+
+// Re-export Document type for backwards compatibility
+export type { Document } from '@/types/api'

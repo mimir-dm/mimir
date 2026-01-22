@@ -26,12 +26,12 @@
         @click="viewNpc(npc)"
       >
         <div class="npc-header">
-          <h4 class="npc-name">{{ npc.character_name }}</h4>
+          <h4 class="npc-name">{{ npc.name }}</h4>
           <span class="npc-badge">NPC</span>
         </div>
         <div class="npc-details">
           <span class="npc-class">
-            Level {{ npc.current_level }} {{ npc.race || '' }} {{ npc.class || '' }}
+            {{ formatDetails(npc) }}
           </span>
         </div>
       </div>
@@ -57,7 +57,7 @@ import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Character } from '@/types/character'
 
 const props = defineProps<{
-  campaignId: number
+  campaignId: string
 }>()
 
 const router = useRouter()
@@ -65,17 +65,24 @@ const characterStore = useCharacterStore()
 
 const showWizard = ref(false)
 const loading = ref(false)
-const allCharacters = ref<Character[]>([])
 
-// Filter to only NPCs
+// Get NPCs from store
 const npcs = computed(() => {
-  return allCharacters.value.filter(c => c.is_npc)
+  return characterStore.characters.filter((c: Character) => c.campaign_id === props.campaignId && c.is_npc === 1)
 })
+
+// Format character details
+function formatDetails(npc: Character): string {
+  const parts: string[] = []
+  if (npc.race_name) parts.push(npc.race_name)
+  if (npc.background_name) parts.push(npc.background_name)
+  return parts.join(' ') || 'No details'
+}
 
 const loadNpcs = async () => {
   loading.value = true
   try {
-    allCharacters.value = await characterStore.fetchCharactersForCampaign(props.campaignId)
+    await characterStore.fetchNpcs(props.campaignId)
   } catch (e) {
     console.error('Failed to load NPCs:', e)
   } finally {

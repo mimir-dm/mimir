@@ -227,6 +227,29 @@ export const useCampaignStore = defineStore('campaigns', () => {
     error.value = null
   }
 
+  // Export campaign archive (stub - not yet implemented in backend)
+  const exportCampaign = async (campaignId: string, outputDirectory: string): Promise<{ archive_path: string; file_name: string } | null> => {
+    error.value = 'Campaign export is not yet implemented'
+    return null
+  }
+
+  // Import campaign archive (stub - not yet implemented in backend)
+  const importCampaign = async (archivePath: string, campaignName: string, campaignsDirectory: string): Promise<Campaign | null> => {
+    error.value = 'Campaign import is not yet implemented'
+    return null
+  }
+
+  // Preview archive contents (stub - not yet implemented in backend)
+  const previewArchive = async (archivePath: string): Promise<{ campaign_name: string; file_count: number; asset_count: number; catalog_references: Array<{ type: string; name: string; source: string }>; mimir_version: string; created_at: string } | null> => {
+    error.value = 'Campaign archive preview is not yet implemented'
+    return null
+  }
+
+  // Get archive file extension (stub - not yet implemented in backend)
+  const getArchiveExtension = async (): Promise<string> => {
+    return 'mimir-campaign.tar.gz'
+  }
+
   return {
     campaigns,
     archivedCampaigns,
@@ -242,6 +265,10 @@ export const useCampaignStore = defineStore('campaigns', () => {
     unarchiveCampaign,
     deleteCampaign,
     setCurrentCampaign,
-    clearError
+    clearError,
+    exportCampaign,
+    importCampaign,
+    previewArchive,
+    getArchiveExtension
   }
 })

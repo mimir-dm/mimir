@@ -54,9 +54,9 @@
             />
           </div>
           <div class="npc-info">
-            <span class="npc-name">{{ npc.character_name }}</span>
+            <span class="npc-name">{{ npc.name }}</span>
             <span class="npc-details">
-              Level {{ npc.current_level }} {{ npc.race || '' }} {{ npc.class || '' }}
+              {{ npc.race_name || 'Unknown Race' }}
             </span>
           </div>
           <span v-if="isAlreadyInModule(npc.id)" class="already-badge">Added</span>
@@ -107,9 +107,9 @@ import type { Character } from '@/types/character'
 
 interface Props {
   visible: boolean
-  moduleId: number
-  campaignId: number
-  existingNpcIds: number[] // Character IDs already in the module
+  moduleId: string
+  campaignId: string
+  existingNpcIds: string[] // Character IDs already in the module
 }
 
 interface Emits {
@@ -124,7 +124,7 @@ const loading = ref(false)
 const adding = ref(false)
 const searchQuery = ref('')
 const allCampaignNpcs = ref<Character[]>([])
-const selectedNpcIds = ref<number[]>([])
+const selectedNpcIds = ref<string[]>([])
 const showWizard = ref(false)
 
 // Filter to NPCs not already in the module
@@ -138,14 +138,13 @@ const filteredNpcs = computed(() => {
   if (!query) return allCampaignNpcs.value
 
   return allCampaignNpcs.value.filter(npc => {
-    const name = npc.character_name.toLowerCase()
-    const race = (npc.race || '').toLowerCase()
-    const cls = (npc.class || '').toLowerCase()
-    return name.includes(query) || race.includes(query) || cls.includes(query)
+    const name = npc.name.toLowerCase()
+    const race = (npc.race_name || '').toLowerCase()
+    return name.includes(query) || race.includes(query)
   })
 })
 
-function isAlreadyInModule(characterId: number): boolean {
+function isAlreadyInModule(characterId: string): boolean {
   return props.existingNpcIds.includes(characterId)
 }
 
@@ -167,8 +166,8 @@ async function loadCampaignNpcs() {
     const characters = await invoke<Character[]>('list_characters_for_campaign', {
       campaignId: props.campaignId
     })
-    // Filter to only NPCs
-    allCampaignNpcs.value = characters.filter(c => c.is_npc)
+    // Filter to only NPCs (is_npc is a number: 1 = NPC, 0 = PC)
+    allCampaignNpcs.value = characters.filter(c => c.is_npc === 1)
   } catch (e) {
     console.error('Failed to load campaign NPCs:', e)
     allCampaignNpcs.value = []

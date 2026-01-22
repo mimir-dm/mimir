@@ -13,14 +13,14 @@ interface ApiResponse<T> {
   error?: string
 }
 
-export function useTokens(mapId: number) {
+export function useTokens(mapId: string) {
   const tokens = ref<Token[]>([])
   const tokenSummaries = ref<TokenSummary[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
   // Cache for token images (token_id -> base64 data URL)
-  const tokenImages = ref<Map<number, string>>(new Map())
+  const tokenImages = ref<Map<string, string>>(new Map())
 
   // Computed
   const visibleTokens = computed(() =>
@@ -104,7 +104,7 @@ export function useTokens(mapId: number) {
   }
 
   // Update a token
-  async function updateToken(id: number, request: UpdateTokenRequest): Promise<Token | null> {
+  async function updateToken(id: string, request: UpdateTokenRequest): Promise<Token | null> {
     loading.value = true
     error.value = null
     try {
@@ -129,7 +129,7 @@ export function useTokens(mapId: number) {
   }
 
   // Update token position (for drag operations)
-  async function updateTokenPosition(id: number, x: number, y: number): Promise<Token | null> {
+  async function updateTokenPosition(id: string, x: number, y: number): Promise<Token | null> {
     try {
       const response = await invoke<ApiResponse<Token>>('update_token_position', { id, x, y })
       if (response.success && response.data) {
@@ -147,7 +147,7 @@ export function useTokens(mapId: number) {
   }
 
   // Toggle token visibility
-  async function toggleVisibility(id: number): Promise<Token | null> {
+  async function toggleVisibility(id: string): Promise<Token | null> {
     try {
       const response = await invoke<ApiResponse<Token>>('toggle_token_visibility', { id })
       if (response.success && response.data) {
@@ -165,7 +165,7 @@ export function useTokens(mapId: number) {
   }
 
   // Delete a token
-  async function deleteToken(id: number): Promise<boolean> {
+  async function deleteToken(id: string): Promise<boolean> {
     loading.value = true
     error.value = null
     try {
@@ -198,7 +198,7 @@ export function useTokens(mapId: number) {
   }
 
   // Load a token's image
-  async function loadTokenImage(tokenId: number): Promise<string | null> {
+  async function loadTokenImage(tokenId: string): Promise<string | null> {
     // Check cache first
     if (tokenImages.value.has(tokenId)) {
       return tokenImages.value.get(tokenId)!
@@ -224,7 +224,7 @@ export function useTokens(mapId: number) {
   }
 
   // Get cached token image
-  function getTokenImage(tokenId: number): string | undefined {
+  function getTokenImage(tokenId: string): string | undefined {
     return tokenImages.value.get(tokenId)
   }
 

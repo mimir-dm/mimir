@@ -159,10 +159,10 @@ import { PrintService } from '../../services/PrintService'
 
 interface Props {
   visible: boolean
-  moduleId: number | null
+  moduleId: string | null
   moduleName?: string
   moduleNumber?: number
-  campaignId?: number
+  campaignId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {

@@ -10,6 +10,7 @@ pub mod character;
 pub mod document;
 pub mod map;
 pub mod module;
+pub mod source;
 
 use serde::Serialize;
 

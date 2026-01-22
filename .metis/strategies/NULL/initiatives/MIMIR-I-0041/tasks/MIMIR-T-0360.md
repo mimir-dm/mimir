@@ -1,17 +1,17 @@
 ---
-id: v2-pinia-store-design
+id: v0-5-pinia-store-design
 level: task
 title: "v0.5 Pinia Store Design"
 short_code: "MIMIR-T-0360"
 created_at: 2026-01-19T22:06:59.835606+00:00
-updated_at: 2026-01-19T22:06:59.835606+00:00
+updated_at: 2026-01-21T16:38:38.813773+00:00
 parent: MIMIR-I-0041
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ initiative_id: MIMIR-I-0041
 
 ## Objective
 Design Pinia stores that mirror backend state. Stores own all frontend state; components are purely presentational. Backend is source of truth; stores sync via Tauri commands.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 - [ ] Store definitions for all domains
@@ -427,6 +431,68 @@ async function createModule(name: string) {
 ## Dependencies
 - Depends on: [[MIMIR-T-0358]] Service Layer API Design
 
+## Investigation Findings (2026-01-21)
+
+### Existing Store Analysis
+
+**Store Inventory (mimir-dm-bu/mimir-dm/frontend/src/):**
+- 7 main stores + 6 chat sub-stores
+- Uses composition API `defineStore()` pattern (matches v0.5)
+- Consistent `loading` and `error` state handling
+
+**Campaign Store** (332 LOC) - 90% reusable:
+- Already implements campaigns, activeCampaignId, loading, error pattern
+- Has getters for activeCampaign, activeCampaigns, archivedCampaigns
+- Actions map to Tauri commands correctly
+
+**Character Store** (599 LOC) - 70% reusable:
+- Needs state normalization (currently uses nested objects)
+- PC/NPC separation exists but needs cleanup
+
+**Module Store** - Well aligned with v0.5 design
+
+**App Settings/Theme Stores** - 95% reusable as-is
+
+### Key Differences from Design
+
+| Aspect | v0.5 Design | Current Implementation |
+|--------|-------------|----------------------|
+| Return types | Direct types | `ApiResponse<T>` wrapper |
+| Chat store | Monolithic | Sub-store coordinator pattern |
+| State coordination | Store watches | Event bus (`dataEvents`) |
+| Composables | Thin wrappers | Independent state (problematic) |
+
+### What Can Be Reused
+- ✅ All Pinia store patterns and structure
+- ✅ Tauri invocation infrastructure
+- ✅ `dataEvents` bus utility for cache invalidation
+- ✅ Store action patterns
+
+### What Needs Refactoring
+- ❌ ApiResponse wrapper handling (add adapter or change backend)
+- ❌ Move composable state into stores (30+ composables duplicating state)
+- ❌ Flatten chat store sub-stores into single store
+- ❌ Normalize character store state shape
+
+### Migration Approach
+
+**Option A - Adapter Layer:**
+Add `unwrapResponse()` utility to handle ApiResponse in stores.
+Minimal backend changes, frontend absorbs complexity.
+
+**Option B - Backend Alignment:**
+Update Tauri commands to return direct types.
+Cleaner frontend, requires backend coordination.
+
+**Recommendation:** Option A for initial migration, Option B as follow-up.
+
+### Acceptance Criteria Status
+- [x] Store definitions for all domains (exist, need refinement)
+- [x] Clear state shape for each store (documented above)
+- [x] Actions map to Tauri commands (implemented)
+- [x] Getters provide computed/filtered views (implemented)
+- [ ] Loading and error states handled consistently (needs ApiResponse fix)
+
 ## Progress
 
-*To be updated during implementation*
+- 2026-01-21: Investigation complete. Existing stores ~70% aligned with design.

@@ -1,6 +1,5 @@
 import { ref, computed, watch, toRef, isRef, type Ref, type MaybeRef } from 'vue'
 import { SearchService, type SearchFilters } from '../services/SearchService'
-import { useSharedContextStore } from '@/stores/sharedContext'
 import type {
   SpellSummary,
   ItemSummary,
@@ -44,8 +43,6 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
   const searchPerformed = ref(false)
   const sortColumn = ref('name')
   const sortDirection = ref<'asc' | 'desc'>('asc')
-  
-  const contextStore = useSharedContextStore()
   
   // Watch for external source changes and update local copy
   watch(sourcesRef, (newSources) => {
@@ -94,23 +91,11 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
   
   async function performSearch() {
     searchPerformed.value = true
-    
-    // Update context with catalog search info
-    await contextStore.updateReference({
-      activeTab: 'catalog',
-      reading: undefined,
-      catalog: {
-        selectedCategory: selectedCategory.value,
-        searchQuery: searchQuery.value,
-        selectedItems: contextStore.reference?.catalog?.selectedItems || [],
-        selectedSources: selectedSources.value
-      }
-    })
-    
-    const sources = selectedSources.value.length > 0 
-      ? SearchService.mapBookIdsToSources(selectedSources.value) 
+
+    const sources = selectedSources.value.length > 0
+      ? SearchService.mapBookIdsToSources(selectedSources.value)
       : undefined
-    
+
     results.value = await SearchService.search({
       query: searchQuery.value,
       sources,
@@ -147,17 +132,7 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
       source: spell.source,
       type: 'spell'
     })
-    
-    // Update context with selected item in catalog mode
-    const selectedItems = contextStore.reference?.catalog?.selectedItems || []
-    await contextStore.updateReference({
-      ...contextStore.reference,
-      catalog: {
-        ...contextStore.reference?.catalog,
-        selectedItems: [...selectedItems, `Spell: ${spell.name}`].slice(-5) // Keep last 5
-      }
-    })
-    
+
     modalStack.value.push({
       visible: true,
       title: spell.name,

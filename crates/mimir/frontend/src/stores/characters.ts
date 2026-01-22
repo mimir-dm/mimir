@@ -509,16 +509,16 @@ export const useCharacterStore = defineStore('characters', () => {
     getCharacter,
     createPc,
     createNpc,
-    updateCharacter,
+    updateCharacter, // Previously: updateCurrency (use currency: [cp, sp, ep, gp, pp] field)
     deleteCharacter,
 
     // Inventory actions
     fetchInventory,
     fetchEquippedItems,
     fetchAttunedItems,
-    addInventoryItem,
-    removeInventoryItem,
-    updateInventoryItem,
+    addInventoryItem,    // Previously: addItem
+    removeInventoryItem, // Previously: removeItem
+    updateInventoryItem, // Previously: updateEquipped (pass { equipped: boolean })
 
     // Local state
     setCurrentCharacter,

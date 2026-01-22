@@ -69,37 +69,15 @@ const routes: RouteRecordRaw[] = [
     props: true
   },
   {
-    path: '/modules/:id/board',
-    name: 'module-board',
-    component: () => import('../../features/modules/views/ModuleBoardView.vue'),
-    props: true
-  },
-  {
     path: '/modules/:id/play',
     name: 'module-play',
     component: () => import('../../features/modules/views/ModulePlayView.vue'),
     props: true
   },
   {
-    path: '/templates',
-    name: 'templates',
-    component: () => import('../../features/templates/views/TemplateListView.vue')
-  },
-  {
-    path: '/templates/:id',
-    name: 'template-detail',
-    component: () => import('../../features/templates/views/TemplateDetailView.vue'),
-    props: true
-  },
-  {
     path: '/settings',
     name: 'settings',
     component: () => import('../../views/SettingsView.vue')
-  },
-  {
-    path: '/players',
-    name: 'players',
-    component: () => import('../../features/players/views/PlayerListView.vue')
   },
   {
     path: '/characters',

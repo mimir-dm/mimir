@@ -56,8 +56,8 @@ export interface UvttMapState {
  * @param mapFilePath - The UVTT file path (e.g., "abc123.dd2vtt")
  */
 export function useUvttMap(
-  campaignId: Ref<number | null>,
-  moduleId: Ref<number | null>,
+  campaignId: Ref<string | null>,
+  moduleId: Ref<string | null>,
   mapFilePath: Ref<string | null>
 ) {
   const uvttData = ref<UvttData | null>(null)

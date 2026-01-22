@@ -12,23 +12,23 @@
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </div>
-      
+
       <div v-if="isOpen" class="dropdown-menu" @click.stop>
         <div v-if="isLoading" class="dropdown-loading">
           Loading campaigns...
         </div>
-        
+
         <div v-else-if="error" class="dropdown-error">
           {{ error }}
         </div>
-        
+
         <div v-else-if="campaigns.length === 0" class="dropdown-empty">
           <p>No campaigns found</p>
           <router-link to="/campaigns/new" class="create-link" @click="closeDropdown">
             Create your first campaign
           </router-link>
         </div>
-        
+
         <div v-else class="dropdown-options">
           <div
             v-for="campaign in campaigns"
@@ -39,15 +39,15 @@
           >
             <div class="option-content">
               <div class="option-name">{{ campaign.name }}</div>
-              <div class="option-status">{{ campaign.status }}</div>
+              <div class="option-status">{{ getCampaignStatus(campaign) }}</div>
             </div>
             <svg v-if="campaign.id === selectedCampaignId" class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          
+
           <div class="dropdown-divider"></div>
-          
+
           <router-link
             to="/campaigns/new"
             class="dropdown-action"
@@ -88,18 +88,16 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCampaignStore } from '../../../stores/campaigns'
-import { useSharedContextStore } from '../../../stores/sharedContext'
 import { storeToRefs } from 'pinia'
 import CampaignArchiveImportDialog from '../../../components/campaigns/CampaignArchiveImportDialog.vue'
 import type { Campaign } from '../../../types/api'
 
 const router = useRouter()
 const campaignStore = useCampaignStore()
-const contextStore = useSharedContextStore()
 const { campaigns, loading, error } = storeToRefs(campaignStore)
 
 // Local state for dropdown and selection
-const selectedCampaignId = ref<number | null>(null)
+const selectedCampaignId = ref<string | null>(null)
 const isOpen = ref(false)
 const showImportDialog = ref(false)
 
@@ -109,6 +107,12 @@ const selectedCampaign = computed(() => {
   if (!selectedCampaignId.value) return null
   return campaigns.value.find(c => c.id === selectedCampaignId.value) || null
 })
+
+// Helper to derive status from campaign data
+function getCampaignStatus(campaign: Campaign): string {
+  if (campaign.archived_at) return 'archived'
+  return 'active'
+}
 
 function toggleDropdown() {
   if (!isOpen.value) {
@@ -133,25 +137,15 @@ function handleCampaignImported(campaign: Campaign) {
   selectCampaign(campaign.id)
 }
 
-async function selectCampaign(campaignId: number) {
+async function selectCampaign(campaignId: string) {
   selectedCampaignId.value = campaignId
   // Also update the current campaign in the store
-  const campaign = await campaignStore.getCampaign(campaignId)
+  await campaignStore.getCampaign(campaignId)
   closeDropdown()
-  
-  // Update shared context with campaign info
-  if (campaign) {
-    await contextStore.updateCampaign({
-      id: campaign.id.toString(),
-      name: campaign.name,
-      currentStage: campaign.status,
-      directory_path: campaign.directory_path
-    })
-  }
-  
+
   // Persist selection to localStorage
-  localStorage.setItem('selectedCampaignId', campaignId.toString())
-  
+  localStorage.setItem('selectedCampaignId', campaignId)
+
   // Navigate to the campaign dashboard
   router.push(`/campaigns/${campaignId}/dashboard`)
 }
@@ -167,41 +161,20 @@ function handleClickOutside(event: MouseEvent) {
 onMounted(async () => {
   // Load campaigns first
   await campaignStore.fetchCampaigns()
-  
+
   // Then initialize from localStorage
   const storedId = localStorage.getItem('selectedCampaignId')
   if (storedId) {
-    const id = parseInt(storedId, 10)
-    if (!isNaN(id)) {
-      selectedCampaignId.value = id
-      // Load the current campaign to ensure it's in the store
-      const campaign = await campaignStore.getCampaign(id)
-      // Update context with loaded campaign
-      if (campaign) {
-        await contextStore.updateCampaign({
-          id: campaign.id.toString(),
-          name: campaign.name,
-          currentStage: campaign.status,
-          directory_path: campaign.directory_path
-        })
-      }
-    }
+    selectedCampaignId.value = storedId
+    // Load the current campaign to ensure it's in the store
+    await campaignStore.getCampaign(storedId)
   } else if (campaigns.value.length > 0) {
     // If no stored selection but we have campaigns, select the first one
     selectedCampaignId.value = campaigns.value[0].id
-    localStorage.setItem('selectedCampaignId', campaigns.value[0].id.toString())
-    const campaign = await campaignStore.getCampaign(campaigns.value[0].id)
-    // Update context with first campaign
-    if (campaign) {
-      await contextStore.updateCampaign({
-        id: campaign.id.toString(),
-        name: campaign.name,
-        currentStage: campaign.status,
-        directory_path: campaign.directory_path
-      })
-    }
+    localStorage.setItem('selectedCampaignId', campaigns.value[0].id)
+    await campaignStore.getCampaign(campaigns.value[0].id)
   }
-  
+
   // Add click outside listener
   document.addEventListener('click', handleClickOutside)
 })
@@ -214,12 +187,12 @@ onUnmounted(() => {
 watch(() => router.currentRoute.value, (route) => {
   // Only update if we're on a campaign route
   if (route.path.startsWith('/campaigns/') && route.params.id) {
-    const id = parseInt(route.params.id as string, 10)
-    if (!isNaN(id) && id !== selectedCampaignId.value) {
+    const id = route.params.id as string
+    if (id !== selectedCampaignId.value) {
       // Just update the selection, don't navigate again
       selectedCampaignId.value = id
       campaignStore.getCampaign(id)
-      localStorage.setItem('selectedCampaignId', id.toString())
+      localStorage.setItem('selectedCampaignId', id)
     }
   }
   // If we're on a module route, don't change the selection

@@ -97,9 +97,9 @@ import MapGridConfigModal from './MapGridConfigModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface Map {
-  id: number
-  campaign_id: number
-  module_id: number | null
+  id: string
+  campaign_id: string
+  module_id: string | null
   name: string
   image_path: string
   width_px: number
@@ -113,7 +113,7 @@ interface Map {
 }
 
 const props = defineProps<{
-  campaignId: number
+  campaignId: string
 }>()
 
 const emit = defineEmits<{
@@ -122,7 +122,7 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const maps = ref<Map[]>([])
-const mapThumbnails = ref<Record<number, string>>({})
+const mapThumbnails = ref<Record<string, string>>({})
 const showUploadModal = ref(false)
 const showGridConfigModal = ref(false)
 const selectedMapForGrid = ref<Map | null>(null)
@@ -150,7 +150,7 @@ async function loadMaps() {
 }
 
 // Load a map thumbnail
-async function loadMapThumbnail(mapId: number) {
+async function loadMapThumbnail(mapId: string) {
   try {
     const response = await invoke<{ success: boolean; data?: string }>('serve_map_image', {
       id: mapId

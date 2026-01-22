@@ -39,7 +39,7 @@
           </div>
 
           <EmptyState
-            v-if="characterData.inventory.length === 0"
+            v-if="inventory.length === 0"
             variant="generic"
             title="No items in inventory"
             description="Add items using the button above"
@@ -47,20 +47,20 @@
 
           <div v-else class="inventory-list">
             <div
-              v-for="item in characterData.inventory"
-              :key="item.name"
+              v-for="item in inventory"
+              :key="item.id"
               class="inventory-item"
             >
               <div class="item-info">
-                <span class="item-name">{{ item.name }}</span>
+                <span class="item-name">{{ item.item_name }}</span>
                 <span class="item-quantity">x{{ item.quantity }}</span>
               </div>
               <div class="item-details">
-                <span v-if="item.weight" class="item-weight">{{ item.weight }} lb</span>
+                <span v-if="item.equipped" class="item-equipped">Equipped</span>
                 <span v-if="item.notes" class="item-notes">{{ item.notes }}</span>
               </div>
               <div class="item-actions">
-                <button @click="removeItem(item.name)" class="btn-remove" title="Remove one">-</button>
+                <button @click="removeItem(item.id)" class="btn-remove" title="Remove">-</button>
               </div>
             </div>
           </div>
@@ -68,62 +68,31 @@
 
         <!-- Equipment Tab -->
         <div v-if="activeTab === 'equipment'" class="tab-content">
-          <div class="equipment-slots">
-            <div class="equipment-slot">
-              <label>Armor</label>
-              <select v-model="equippedArmor" @change="updateEquipment">
-                <option :value="null">None</option>
-                <option
-                  v-for="item in armorItems"
-                  :key="item.name"
-                  :value="item.name"
-                >
-                  {{ item.name }}
-                </option>
-              </select>
-            </div>
+          <div class="section-header">
+            <h3>Equipped Items</h3>
+          </div>
 
-            <div class="equipment-slot">
-              <label>Shield</label>
-              <select v-model="equippedShield" @change="updateEquipment">
-                <option :value="null">None</option>
-                <option
-                  v-for="item in shieldItems"
-                  :key="item.name"
-                  :value="item.name"
-                >
-                  {{ item.name }}
-                </option>
-              </select>
-            </div>
+          <EmptyState
+            v-if="inventory.length === 0"
+            variant="generic"
+            title="No items"
+            description="Add items to your inventory first"
+          />
 
-            <div class="equipment-slot">
-              <label>Main Hand</label>
-              <select v-model="equippedMainHand" @change="updateEquipment">
-                <option :value="null">None</option>
-                <option
-                  v-for="item in weaponItems"
-                  :key="item.name"
-                  :value="item.name"
-                >
-                  {{ item.name }}
-                </option>
-              </select>
-            </div>
-
-            <div class="equipment-slot">
-              <label>Off Hand</label>
-              <select v-model="equippedOffHand" @change="updateEquipment">
-                <option :value="null">None</option>
-                <option
-                  v-for="item in offHandItems"
-                  :key="item.name"
-                  :value="item.name"
-                >
-                  {{ item.name }}
-                </option>
-              </select>
-            </div>
+          <div v-else class="equipment-list">
+            <label
+              v-for="item in inventory"
+              :key="item.id"
+              class="equipment-item"
+            >
+              <input
+                type="checkbox"
+                :checked="item.equipped !== 0"
+                @change="toggleEquipped(item)"
+              />
+              <span class="item-name">{{ item.item_name }}</span>
+              <span class="item-source">{{ item.item_source }}</span>
+            </label>
           </div>
 
           <!-- Attunement -->
@@ -138,16 +107,16 @@
             <div v-else class="attunement-list">
               <label
                 v-for="item in magicItems"
-                :key="item.name"
+                :key="item.id"
                 class="attunement-item"
               >
                 <input
                   type="checkbox"
-                  :checked="isAttuned(item.name)"
-                  :disabled="!isAttuned(item.name) && attunedCount >= 3"
-                  @change="toggleAttunement(item.name)"
+                  :checked="isAttuned(item)"
+                  :disabled="!isAttuned(item) && attunedCount >= 3"
+                  @change="toggleAttunement(item)"
                 />
-                {{ item.name }}
+                {{ item.item_name }}
               </label>
             </div>
           </div>
@@ -269,10 +238,10 @@ import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '../../../stores/characters'
-import type { CharacterData, InventoryItem } from '../../../types/character'
+import type { Character, CharacterInventory } from '../../../types/character'
 
 interface CatalogItem {
-  id: number
+  id: string
   name: string
   source: string
   item_type: string
@@ -281,8 +250,8 @@ interface CatalogItem {
 
 const props = defineProps<{
   visible: boolean
-  characterId: number
-  characterData: CharacterData
+  characterId: string
+  characterData: Character
 }>()
 
 const emit = defineEmits<{
@@ -303,71 +272,62 @@ const selectedItem = ref<CatalogItem | null>(null)
 const addQuantity = ref(1)
 const addNotes = ref('')
 
-// Equipment state
-const equippedArmor = ref<string | null>(null)
-const equippedShield = ref<string | null>(null)
-const equippedMainHand = ref<string | null>(null)
-const equippedOffHand = ref<string | null>(null)
-
-// Currency state
+// Currency state (uses flat fields from Character: cp, sp, ep, gp, pp)
 const currencyPlatinum = ref(0)
 const currencyGold = ref(0)
 const currencyElectrum = ref(0)
 const currencySilver = ref(0)
 const currencyCopper = ref(0)
 
-// Attunement state
-const attunedItems = ref<string[]>([])
+// Inventory from store (fetched separately from character)
+const inventory = computed(() => characterStore.currentInventory)
 
-// Computed properties
+// Computed properties for equipment filtering
 const armorItems = computed(() => {
-  // Filter inventory for armor-type items
-  return props.characterData.inventory.filter(item =>
-    item.name.toLowerCase().includes('armor') ||
-    item.name.toLowerCase().includes('mail') ||
-    item.name.toLowerCase().includes('leather') ||
-    item.name.toLowerCase().includes('hide') ||
-    item.name.toLowerCase().includes('plate')
+  return inventory.value.filter((item: CharacterInventory) =>
+    item.item_name.toLowerCase().includes('armor') ||
+    item.item_name.toLowerCase().includes('mail') ||
+    item.item_name.toLowerCase().includes('leather') ||
+    item.item_name.toLowerCase().includes('hide') ||
+    item.item_name.toLowerCase().includes('plate')
   )
 })
 
 const shieldItems = computed(() => {
-  return props.characterData.inventory.filter(item =>
-    item.name.toLowerCase().includes('shield')
+  return inventory.value.filter((item: CharacterInventory) =>
+    item.item_name.toLowerCase().includes('shield')
   )
 })
 
 const weaponItems = computed(() => {
-  return props.characterData.inventory.filter(item =>
-    item.name.toLowerCase().includes('sword') ||
-    item.name.toLowerCase().includes('axe') ||
-    item.name.toLowerCase().includes('mace') ||
-    item.name.toLowerCase().includes('bow') ||
-    item.name.toLowerCase().includes('crossbow') ||
-    item.name.toLowerCase().includes('dagger') ||
-    item.name.toLowerCase().includes('spear') ||
-    item.name.toLowerCase().includes('staff') ||
-    item.name.toLowerCase().includes('hammer') ||
-    item.name.toLowerCase().includes('flail') ||
-    item.name.toLowerCase().includes('halberd') ||
-    item.name.toLowerCase().includes('lance') ||
-    item.name.toLowerCase().includes('pike') ||
-    item.name.toLowerCase().includes('rapier') ||
-    item.name.toLowerCase().includes('scimitar') ||
-    item.name.toLowerCase().includes('trident') ||
-    item.name.toLowerCase().includes('warhammer') ||
-    item.name.toLowerCase().includes('whip')
+  return inventory.value.filter((item: CharacterInventory) =>
+    item.item_name.toLowerCase().includes('sword') ||
+    item.item_name.toLowerCase().includes('axe') ||
+    item.item_name.toLowerCase().includes('mace') ||
+    item.item_name.toLowerCase().includes('bow') ||
+    item.item_name.toLowerCase().includes('crossbow') ||
+    item.item_name.toLowerCase().includes('dagger') ||
+    item.item_name.toLowerCase().includes('spear') ||
+    item.item_name.toLowerCase().includes('staff') ||
+    item.item_name.toLowerCase().includes('hammer') ||
+    item.item_name.toLowerCase().includes('flail') ||
+    item.item_name.toLowerCase().includes('halberd') ||
+    item.item_name.toLowerCase().includes('lance') ||
+    item.item_name.toLowerCase().includes('pike') ||
+    item.item_name.toLowerCase().includes('rapier') ||
+    item.item_name.toLowerCase().includes('scimitar') ||
+    item.item_name.toLowerCase().includes('trident') ||
+    item.item_name.toLowerCase().includes('warhammer') ||
+    item.item_name.toLowerCase().includes('whip')
   )
 })
 
 const offHandItems = computed(() => {
-  // Can hold shields or light weapons in off hand
   return [...shieldItems.value, ...weaponItems.value]
 })
 
 const magicItems = computed(() => {
-  // Items with notes suggesting they're magic (e.g., "+1", "of", etc.)
-  return props.characterData.inventory.filter(item =>
+  return inventory.value.filter((item: CharacterInventory) =>
     item.notes && (
       item.notes.includes('+') ||
       item.notes.toLowerCase().includes('of ') ||
@@ -376,7 +336,12 @@ const magicItems = computed(() => {
   )
 })
 
-const attunedCount = computed(() => attunedItems.value.length)
+// Equipped items (items with equipped=1)
+const equippedItems = computed(() => {
+  return inventory.value.filter((item: CharacterInventory) => item.equipped !== 0)
+})
+
+const attunedCount = computed(() => inventory.value.filter((item: CharacterInventory) => item.attuned !== 0).length)
 
 const totalGoldValue = computed(() => {
   return (
@@ -446,13 +411,12 @@ const addItem = async () => {
   if (!selectedItem.value) return
 
   try {
-    await characterStore.addItem(
-      props.characterId,
-      selectedItem.value.name,
-      selectedItem.value.source,
-      addQuantity.value,
-      addNotes.value || undefined
-    )
+    await characterStore.addInventoryItem(props.characterId, {
+      item_name: selectedItem.value.name,
+      item_source: selectedItem.value.source,
+      quantity: addQuantity.value,
+      notes: addNotes.value || undefined
+    })
 
     // Reset and close modal
     selectedItem.value = null
@@ -466,24 +430,20 @@ const addItem = async () => {
   }
 }
 
-const removeItem = async (itemName: string) => {
+const removeItem = async (inventoryId: string) => {
   try {
-    await characterStore.removeItem(props.characterId, itemName, 1)
+    await characterStore.removeInventoryItem(inventoryId)
     emit('updated')
   } catch (e) {
     console.error('Failed to remove item:', e)
   }
 }
 
-const updateEquipment = async () => {
+const toggleEquipped = async (item: CharacterInventory) => {
   try {
-    await characterStore.updateEquipped(
-      props.characterId,
-      equippedArmor.value,
-      equippedShield.value,
-      equippedMainHand.value,
-      equippedOffHand.value
-    )
+    await characterStore.updateInventoryItem(item.id, {
+      equipped: item.equipped === 0
+    })
     emit('updated')
   } catch (e) {
     console.error('Failed to update equipment:', e)
@@ -492,14 +452,15 @@ const updateEquipment = async () => {
 
 const updateCurrency = async () => {
   try {
-    // Calculate deltas from current values
-    const current = props.characterData.currency
-    await characterStore.updateCurrency(props.characterId, {
-      platinum: currencyPlatinum.value - current.platinum,
-      gold: currencyGold.value - current.gold,
-      electrum: currencyElectrum.value - current.electrum,
-      silver: currencySilver.value - current.silver,
-      copper: currencyCopper.value - current.copper
+    // Update character with new currency values (flat fields: cp, sp, ep, gp, pp)
+    await characterStore.updateCharacter(props.characterId, {
+      currency: [
+        currencyCopper.value,
+        currencySilver.value,
+        currencyElectrum.value,
+        currencyGold.value,
+        currencyPlatinum.value
+      ]
     })
     emit('updated')
   } catch (e) {
@@ -507,35 +468,33 @@ const updateCurrency = async () => {
   }
 }
 
-const isAttuned = (itemName: string) => {
-  return attunedItems.value.includes(itemName)
+const isAttuned = (item: CharacterInventory) => {
+  return item.attuned !== 0
 }
 
-const toggleAttunement = (itemName: string) => {
-  if (isAttuned(itemName)) {
-    attunedItems.value = attunedItems.value.filter(n => n !== itemName)
-  } else if (attunedCount.value < 3) {
-    attunedItems.value.push(itemName)
+const toggleAttunement = async (item: CharacterInventory) => {
+  try {
+    await characterStore.updateInventoryItem(item.id, {
+      attuned: item.attuned === 0
+    })
+    emit('updated')
+  } catch (e) {
+    console.error('Failed to toggle attunement:', e)
   }
-  // Note: Attunement is currently local state only
-  // Could be persisted to character notes or a dedicated field
 }
 
 // Initialize state when dialog opens
-watch(() => props.visible, (visible) => {
+watch(() => props.visible, async (visible) => {
   if (visible) {
-    // Set equipment from character data
-    equippedArmor.value = props.characterData.equipped.armor
-    equippedShield.value = props.characterData.equipped.shield
-    equippedMainHand.value = props.characterData.equipped.main_hand
-    equippedOffHand.value = props.characterData.equipped.off_hand
+    // Fetch inventory from store
+    await characterStore.fetchInventory(props.characterId)
 
-    // Set currency from character data
-    currencyPlatinum.value = props.characterData.currency.platinum
-    currencyGold.value = props.characterData.currency.gold
-    currencyElectrum.value = props.characterData.currency.electrum
-    currencySilver.value = props.characterData.currency.silver
-    currencyCopper.value = props.characterData.currency.copper
+    // Set currency from character data (flat fields: cp, sp, ep, gp, pp)
+    currencyPlatinum.value = props.characterData.pp
+    currencyGold.value = props.characterData.gp
+    currencyElectrum.value = props.characterData.ep
+    currencySilver.value = props.characterData.sp
+    currencyCopper.value = props.characterData.cp
 
     // Reset tab
     activeTab.value = 'inventory'

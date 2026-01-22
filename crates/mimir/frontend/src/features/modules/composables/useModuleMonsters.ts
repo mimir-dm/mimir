@@ -5,8 +5,8 @@ import { dataEvents } from '@/shared/utils/dataEvents'
 
 // Types
 export interface MonsterWithData {
-  id: number
-  module_id: number
+  id: string
+  module_id: string
   monster_name: string
   monster_source: string
   quantity: number
@@ -27,7 +27,7 @@ export interface EncounterGroup {
  * Composable for managing module monsters and encounters
  * Handles loading, selection, and formatting of monster data
  */
-export function useModuleMonsters(moduleId: Ref<number>) {
+export function useModuleMonsters(moduleId: Ref<string>) {
   // State
   const encounterGroups = ref<EncounterGroup[]>([])
   const allMonsters = ref<MonsterWithData[]>([])
@@ -36,7 +36,7 @@ export function useModuleMonsters(moduleId: Ref<number>) {
   const encountersLoading = ref(true)
 
   // Load encounters/monsters for this module (including monster tokens from maps)
-  async function loadEncounters(campaignId?: number) {
+  async function loadEncounters(campaignId?: string) {
     encountersLoading.value = true
     try {
       // Load module monsters
@@ -86,7 +86,7 @@ export function useModuleMonsters(moduleId: Ref<number>) {
   }
 
   // Load monster tokens from all maps in this module
-  async function loadMapMonsterTokens(campaignId?: number): Promise<MonsterWithData[]> {
+  async function loadMapMonsterTokens(campaignId?: string): Promise<MonsterWithData[]> {
     if (!campaignId) return []
 
     try {
@@ -115,7 +115,7 @@ export function useModuleMonsters(moduleId: Ref<number>) {
             if (!seenMonsters.has(key)) {
               seenMonsters.add(key)
               mapMonsters.push({
-                id: -token.id, // Negative ID to distinguish from module_monsters
+                id: `map-token-${token.id}`, // Prefix to distinguish from module_monsters
                 module_id: moduleId.value,
                 monster_name: token.name,
                 monster_source: token.monster_source || 'MM',

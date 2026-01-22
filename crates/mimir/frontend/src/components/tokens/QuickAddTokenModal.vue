@@ -148,7 +148,7 @@ import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface MonsterResult {
-  id: number
+  id: string
   name: string
   cr: string
   size: string
@@ -157,7 +157,7 @@ interface MonsterResult {
 
 interface Props {
   visible: boolean
-  mapId: number
+  mapId: string
   gridSizePx: number
 }
 

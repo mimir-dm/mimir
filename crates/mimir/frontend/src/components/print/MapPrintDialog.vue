@@ -119,7 +119,7 @@ import { PrintService, type MapPrintOptions } from '../../services/PrintService'
 
 interface Props {
   visible: boolean
-  mapId: number | null
+  mapId: string | null
   mapName?: string
   mapDimensions?: { width: number; height: number }
   gridSizePx?: number

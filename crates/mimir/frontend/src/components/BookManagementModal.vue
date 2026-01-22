@@ -1,63 +1,113 @@
 <template>
   <AppModal
     :visible="visible"
-    title="Manage Reference Books"
-    size="md"
-    :closable="!isImporting"
-    :close-on-overlay="!isImporting"
-    :close-on-escape="!isImporting"
+    title="Manage Catalog Sources"
+    size="lg"
+    :closable="!isImporting && !isDeleting"
+    :close-on-overlay="!isImporting && !isDeleting"
+    :close-on-escape="!isImporting && !isDeleting"
     @close="closeModal"
   >
     <div v-if="isLoadingBooks" class="loading-message">
-      Loading books...
+      Loading sources...
     </div>
 
     <EmptyState
       v-else-if="books.length === 0"
       variant="books"
-      title="No books imported yet"
-      description="Import book archives to start building your reference library"
+      title="No sources imported yet"
+      description="Import a 5etools zip archive to populate your reference library"
     />
 
-    <div v-else class="book-list">
-      <div v-for="book in books" :key="book.id" class="book-item">
-        <div class="book-info">
-          <span class="book-name">{{ book.name }}</span>
-          <span v-if="book.image_count" class="book-meta">{{ book.image_count }} images</span>
-        </div>
-        <button
-          @click="handleRemoveBook(book)"
-          class="remove-button"
-          title="Remove book"
-        >
-          ×
-        </button>
-      </div>
+    <div v-else class="source-table-container">
+      <table class="source-table">
+        <thead>
+          <tr>
+            <th class="col-checkbox">
+              <input
+                type="checkbox"
+                :checked="isAllSelected"
+                :indeterminate="isIndeterminate"
+                @change="toggleSelectAll"
+                title="Select all"
+              />
+            </th>
+            <th class="col-code">Code</th>
+            <th class="col-name">Name</th>
+            <th class="col-date">Imported</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="book in books"
+            :key="book.id"
+            :class="{ selected: selectedIds.has(book.id) }"
+            @click="toggleSelect(book.id)"
+          >
+            <td class="col-checkbox" @click.stop>
+              <input
+                type="checkbox"
+                :checked="selectedIds.has(book.id)"
+                @change="toggleSelect(book.id)"
+              />
+            </td>
+            <td class="col-code">{{ book.id }}</td>
+            <td class="col-name">{{ book.name }}</td>
+            <td class="col-date">{{ formatDate(book.imported_at) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <template #footer>
-      <div v-if="isImporting" class="import-progress">
-        Importing {{ importProgress.current }}/{{ importProgress.total }}: {{ importProgress.currentName }}
+      <div class="footer-left">
+        <span v-if="selectedIds.size > 0" class="selection-count">
+          {{ selectedIds.size }} selected
+        </span>
+        <button
+          v-if="selectedIds.size > 0"
+          @click="handleDeleteSelected"
+          class="btn btn-danger"
+          :disabled="isDeleting"
+        >
+          {{ isDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.size})` }}
+        </button>
       </div>
-      <button @click="handleImportBook" class="btn btn-primary" :disabled="isImporting">
-        {{ isImporting ? 'Importing...' : 'Import Books' }}
-      </button>
-      <button @click="closeModal" class="btn btn-secondary" :disabled="isImporting">
-        Close
-      </button>
+      <div class="footer-right">
+        <div v-if="isImporting" class="import-progress">
+          Importing: {{ importProgress.currentName }}
+        </div>
+        <button @click="handleImportBook" class="btn btn-primary" :disabled="isImporting || isDeleting">
+          {{ isImporting ? 'Importing...' : 'Import 5etools Data' }}
+        </button>
+        <button @click="closeModal" class="btn btn-secondary" :disabled="isImporting || isDeleting">
+          Close
+        </button>
+      </div>
     </template>
   </AppModal>
 
   <!-- Delete Confirmation Modal -->
   <AppModal
     :visible="showDeleteModal"
-    title="Remove Book"
+    title="Remove Sources"
     size="sm"
     :stack-index="1"
     @close="cancelDelete"
   >
-    <p>Are you sure you want to remove "<strong>{{ bookToDelete?.name }}</strong>" from your library?</p>
-    <p class="warning-text">This will remove the book from your reference library.</p>
+    <p v-if="sourcesToDelete.length === 1">
+      Are you sure you want to remove "<strong>{{ sourcesToDelete[0]?.name }}</strong>" from the catalog?
+    </p>
+    <p v-else>
+      Are you sure you want to remove <strong>{{ sourcesToDelete.length }} sources</strong> from the catalog?
+    </p>
+    <p class="warning-text">This will remove all entities from {{ sourcesToDelete.length === 1 ? 'this source' : 'these sources' }}.</p>
+
+    <div v-if="sourcesToDelete.length > 1 && sourcesToDelete.length <= 10" class="sources-list">
+      <div v-for="source in sourcesToDelete" :key="source.id" class="source-item">
+        {{ source.name }} ({{ source.id }})
+      </div>
+    </div>
 
     <div v-if="deleteError" class="error-message">
       {{ deleteError }}
@@ -67,20 +117,20 @@
       <button @click="cancelDelete" class="btn btn-secondary">
         Cancel
       </button>
-      <button @click="confirmDelete" class="btn btn-danger">
-        Remove Book
+      <button @click="confirmDelete" class="btn btn-danger" :disabled="isDeleting">
+        {{ isDeleting ? 'Deleting...' : `Remove ${sourcesToDelete.length === 1 ? 'Source' : 'Sources'}` }}
       </button>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import type { BookInfo } from '../types/book'
+import type { BookInfo, ImportResponse } from '../types/book'
 
 interface Props {
   visible: boolean
@@ -94,32 +144,75 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const books = ref<BookInfo[]>([])
+const selectedIds = ref<Set<string>>(new Set())
 const isLoadingBooks = ref(false)
 const isImporting = ref(false)
+const isDeleting = ref(false)
 const importProgress = ref({ current: 0, total: 0, currentName: '' })
 const showDeleteModal = ref(false)
-const bookToDelete = ref<BookInfo | null>(null)
+const sourcesToDelete = ref<BookInfo[]>([])
 const deleteError = ref<string | null>(null)
+
+// Computed properties for select all
+const isAllSelected = computed(() => {
+  return books.value.length > 0 && selectedIds.value.size === books.value.length
+})
+
+const isIndeterminate = computed(() => {
+  return selectedIds.value.size > 0 && selectedIds.value.size < books.value.length
+})
 
 // Load books when modal becomes visible
 watch(() => props.visible, (newVisible) => {
   if (newVisible) {
     loadBooks()
+    selectedIds.value.clear()
   }
 })
+
+function formatDate(isoDate: string): string {
+  try {
+    const date = new Date(isoDate)
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch {
+    return isoDate
+  }
+}
+
+function toggleSelect(id: string) {
+  const newSet = new Set(selectedIds.value)
+  if (newSet.has(id)) {
+    newSet.delete(id)
+  } else {
+    newSet.add(id)
+  }
+  selectedIds.value = newSet
+}
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedIds.value = new Set()
+  } else {
+    selectedIds.value = new Set(books.value.map(b => b.id))
+  }
+}
 
 async function loadBooks() {
   try {
     isLoadingBooks.value = true
-    const response = await invoke<{ success: boolean; data: BookInfo[]; message?: string }>('list_library_books')
-    
+    const response = await invoke<{ success: boolean; data: BookInfo[]; error?: string }>('list_catalog_sources')
+
     if (response.success && response.data) {
       books.value = response.data
     } else {
       books.value = []
     }
   } catch (error) {
-    console.error('Failed to load books:', error)
+    console.error('Failed to load sources:', error)
     books.value = []
   } finally {
     isLoadingBooks.value = false
@@ -129,103 +222,94 @@ async function loadBooks() {
 async function handleImportBook() {
   try {
     const selected = await open({
-      multiple: true,
+      multiple: false,
       filters: [{
-        name: 'Book Archive',
-        extensions: ['tar.gz', 'gz']
+        name: '5etools Archive',
+        extensions: ['zip']
       }],
-      title: 'Select book archives to add to your library'
+      title: 'Select a 5etools zip archive to import'
     })
 
-    if (selected) {
-      // Normalize to array
-      const filePaths = Array.isArray(selected) ? selected : [selected]
-
-      if (filePaths.length === 0) return
-
+    if (selected && typeof selected === 'string') {
+      const fileName = selected.split('/').pop() || selected
       isImporting.value = true
-      importProgress.value = { current: 0, total: filePaths.length, currentName: '' }
+      importProgress.value = { current: 1, total: 1, currentName: fileName }
 
-      const results: { success: boolean; name: string; error?: string }[] = []
+      try {
+        const response = await invoke<{ success: boolean; data?: ImportResponse; error?: string }>('import_catalog_from_zip', {
+          archivePath: selected
+        })
 
-      for (let i = 0; i < filePaths.length; i++) {
-        const filePath = filePaths[i]
-        const fileName = filePath.split('/').pop() || filePath
-        importProgress.value = { current: i + 1, total: filePaths.length, currentName: fileName }
+        isImporting.value = false
 
-        try {
-          const response = await invoke<{ success: boolean; data?: BookInfo; message?: string }>('upload_book_archive', {
-            archivePath: filePath
-          })
-
-          results.push({
-            success: response.success,
-            name: fileName,
-            error: response.message
-          })
-        } catch (err) {
-          results.push({
-            success: false,
-            name: fileName,
-            error: 'Import failed'
-          })
+        if (response.success && response.data) {
+          alert(response.data.message)
+        } else {
+          alert(`Import failed: ${response.error || 'Unknown error'}`)
         }
+      } catch (err) {
+        isImporting.value = false
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        alert(`Import failed: ${errorMsg}`)
       }
 
-      isImporting.value = false
-
-      // Show results summary
-      const succeeded = results.filter(r => r.success).length
-      const failed = results.filter(r => !r.success)
-
-      if (failed.length === 0) {
-        alert(`Successfully imported ${succeeded} book${succeeded !== 1 ? 's' : ''}!`)
-      } else if (succeeded === 0) {
-        alert(`Failed to import ${failed.length} book${failed.length !== 1 ? 's' : ''}:\n${failed.map(f => `• ${f.name}: ${f.error}`).join('\n')}`)
-      } else {
-        alert(`Imported ${succeeded} book${succeeded !== 1 ? 's' : ''}.\n\nFailed to import ${failed.length}:\n${failed.map(f => `• ${f.name}: ${f.error}`).join('\n')}`)
-      }
-
-      // Reload the book list
+      // Reload the source list
       await loadBooks()
+      selectedIds.value.clear()
     }
   } catch (error) {
-    console.error('Failed to import books:', error)
+    console.error('Failed to import sources:', error)
     isImporting.value = false
   }
 }
 
-function handleRemoveBook(book: BookInfo) {
-  bookToDelete.value = book
+function handleDeleteSelected() {
+  sourcesToDelete.value = books.value.filter(b => selectedIds.value.has(b.id))
   deleteError.value = null
   showDeleteModal.value = true
 }
 
 async function confirmDelete() {
-  if (!bookToDelete.value) return
+  if (sourcesToDelete.value.length === 0) return
 
   deleteError.value = null
+  isDeleting.value = true
+
   try {
-    const response = await invoke<{ success: boolean; message?: string }>('remove_book_from_library', {
-      bookId: bookToDelete.value.id
-    })
-    
-    if (response.success) {
-      showDeleteModal.value = false
-      bookToDelete.value = null
-      // Reload the book list
-      await loadBooks()
-    } else {
-      deleteError.value = response.message || 'Failed to remove book'
+    let failedCount = 0
+    for (const source of sourcesToDelete.value) {
+      try {
+        const response = await invoke<{ success: boolean; error?: string }>('delete_catalog_source', {
+          sourceCode: source.id
+        })
+        if (!response.success) {
+          failedCount++
+        }
+      } catch {
+        failedCount++
+      }
     }
+
+    if (failedCount > 0) {
+      deleteError.value = `Failed to delete ${failedCount} source(s)`
+    } else {
+      showDeleteModal.value = false
+      sourcesToDelete.value = []
+      selectedIds.value.clear()
+    }
+
+    // Reload the source list
+    await loadBooks()
   } catch (error) {
-    deleteError.value = 'Failed to remove book. Please try again.'
+    deleteError.value = 'Failed to remove sources. Please try again.'
+  } finally {
+    isDeleting.value = false
   }
 }
 
 function cancelDelete() {
   showDeleteModal.value = false
-  bookToDelete.value = null
+  sourcesToDelete.value = []
   deleteError.value = null
 }
 
@@ -235,93 +319,144 @@ function closeModal() {
 </script>
 
 <style scoped>
-/* Domain-specific styles */
 .loading-message {
   text-align: center;
   color: var(--color-text-secondary);
   padding: var(--spacing-xl) 0;
 }
 
-.book-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.book-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md);
-  background: var(--color-surface-variant);
+.source-table-container {
+  max-height: 400px;
+  overflow-y: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast);
 }
 
-.book-item:hover {
-  background: var(--color-gray-100);
+.source-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
 }
 
-.theme-dark .book-item:hover {
-  background: var(--color-gray-800);
+.source-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 1;
 }
 
-.book-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+.source-table th {
+  text-align: left;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
 }
 
-.book-name {
-  font-weight: 500;
+.source-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
 }
 
-.book-meta {
-  font-size: 0.75rem;
+.source-table tbody tr {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.source-table tbody tr:hover {
+  background: var(--color-surface-variant);
+}
+
+.source-table tbody tr.selected {
+  background: var(--color-primary-100);
+}
+
+.theme-dark .source-table tbody tr.selected {
+  background: var(--color-primary-900);
+}
+
+.source-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.col-checkbox {
+  width: 40px;
+  text-align: center;
+}
+
+.col-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.col-code {
+  width: 80px;
+  font-family: monospace;
+  font-size: 0.8125rem;
   color: var(--color-text-secondary);
 }
 
-.remove-button {
-  background: var(--color-error-100);
-  color: var(--color-error-600);
-  border: 1px solid var(--color-error-200);
-  border-radius: var(--radius-sm);
-  width: 28px;
-  height: 28px;
+.col-name {
+  min-width: 200px;
+}
+
+.col-date {
+  width: 120px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+/* Footer layout */
+:deep(.modal-footer) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.footer-left {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.125rem;
-  line-height: 1;
-  transition: all var(--transition-fast);
+  gap: var(--spacing-md);
 }
 
-.remove-button:hover {
-  background: var(--color-error-200);
-  color: var(--color-error-700);
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
-.theme-dark .remove-button {
-  background: var(--color-error-900);
-  color: var(--color-error-400);
-  border-color: var(--color-error-800);
-}
-
-.theme-dark .remove-button:hover {
-  background: var(--color-error-800);
-  color: var(--color-error-300);
+.selection-count {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 .import-progress {
-  flex: 1;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Delete modal */
+.sources-list {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-md);
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+}
+
+.source-item {
+  padding: var(--spacing-xs) 0;
+  color: var(--color-text-secondary);
 }
 
 .warning-text {
@@ -344,5 +479,53 @@ function closeModal() {
   background: var(--color-error-900);
   color: var(--color-error-300);
   border-color: var(--color-error-800);
+}
+
+/* Button styles */
+.btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-600);
+}
+
+.btn-secondary {
+  background: var(--color-surface-variant);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-gray-200);
+}
+
+.theme-dark .btn-secondary:hover:not(:disabled) {
+  background: var(--color-gray-700);
+}
+
+.btn-danger {
+  background: var(--color-error);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-error-600);
 }
 </style>

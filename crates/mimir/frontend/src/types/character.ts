@@ -224,3 +224,4 @@ export function isEquipped(item: CharacterInventory): boolean {
 export function isAttuned(item: CharacterInventory): boolean {
   return item.attuned !== 0
 }
+

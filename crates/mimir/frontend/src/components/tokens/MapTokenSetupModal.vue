@@ -246,7 +246,7 @@ import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
 import { useTokens } from '@/composables/useTokens'
 
 interface Map {
-  id: number
+  id: string
   name: string
   image_path: string
   width_px: number
@@ -255,8 +255,8 @@ interface Map {
   grid_size_px: number | null
   grid_offset_x: number
   grid_offset_y: number
-  campaign_id: number
-  module_id?: number | null
+  campaign_id: string
+  module_id?: string | null
   original_width_px: number | null
   original_height_px: number | null
 }
@@ -305,7 +305,7 @@ const dragStartPanY = ref(0)
 // Token placement state
 const pendingTokenConfig = ref<TokenConfigWithMonster | null>(null)
 const mousePosition = ref<{ x: number; y: number } | null>(null)
-const selectedTokenId = ref<number | null>(null)
+const selectedTokenId = ref<string | null>(null)
 
 // Light placement state
 const pendingLightType = ref<'' | 'torch' | 'lantern' | 'candle'>('')
@@ -636,7 +636,7 @@ async function handleLightPlacement(event: MouseEvent) {
 }
 
 // Add monster to module_monsters if not already present
-async function addMonsterToModule(monsterName: string, monsterSource: string, moduleId: number) {
+async function addMonsterToModule(monsterName: string, monsterSource: string, moduleId: string) {
   try {
     // Check if already in module_monsters by checking the palette's current list
     const existingMonsters = paletteRef.value?.currentConfig

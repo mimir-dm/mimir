@@ -96,9 +96,9 @@ import AppModal from '@/components/shared/AppModal.vue'
 import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 
 interface UserDocument {
-  id: number
-  campaign_id: number
-  module_id: number | null
+  id: string
+  campaign_id: string
+  module_id: string | null
   title: string
   file_path: string
   file_type: string
@@ -108,8 +108,8 @@ interface UserDocument {
 }
 
 interface Props {
-  moduleId: number
-  campaignId: number
+  moduleId: string
+  campaignId: string
 }
 
 const props = defineProps<Props>()

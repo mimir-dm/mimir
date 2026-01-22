@@ -8,7 +8,7 @@
 )]
 
 use mimir_core::db::init_database;
-use mimir_lib::commands::{asset, campaign, catalog, character, document, map, module};
+use mimir_lib::commands::{asset, campaign, catalog, character, document, map, module, source};
 use mimir_lib::{AppPaths, AppState};
 use tauri::Manager;
 
@@ -174,6 +174,11 @@ fn main() {
             catalog::get_action_by_name,
             catalog::list_action_sources,
             catalog::count_actions,
+            // Source management commands
+            source::list_catalog_sources,
+            source::import_catalog_from_zip,
+            source::set_source_enabled,
+            source::delete_catalog_source,
         ])
         .run(tauri::generate_context!())
         .expect("Error running Mimir application");

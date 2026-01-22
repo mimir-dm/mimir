@@ -36,7 +36,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { SpellReferenceInput } from '@/types/character'
+
+// Spell reference type for selection
+interface SpellReferenceInput {
+  name: string
+  source: string
+}
 
 interface SpellOption {
   name: string

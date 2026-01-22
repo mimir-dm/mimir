@@ -125,8 +125,8 @@ export type TokenSize = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargan
 export type VisionType = 'normal' | 'darkvision' | 'blindsight' | 'tremorsense' | 'truesight' | 'devils_sight'
 
 export interface Token {
-  id: number
-  map_id: number
+  id: string
+  map_id: string
   name: string
   token_type: TokenType
   size: TokenSize
@@ -135,8 +135,8 @@ export interface Token {
   visible_to_players: boolean
   color: string | null
   image_path: string | null
-  monster_id: number | null
-  character_id: number | null
+  monster_id: string | null
+  character_id: string | null
   notes: string | null
   vision_type: string
   vision_range_ft: number | null
@@ -150,7 +150,7 @@ export interface TokenSummary extends Token {
 }
 
 export interface CreateTokenRequest {
-  map_id: number
+  map_id: string
   name: string
   token_type: string
   size: string
@@ -159,8 +159,8 @@ export interface CreateTokenRequest {
   visible_to_players?: boolean
   color?: string
   image_path?: string
-  monster_id?: number
-  character_id?: number
+  monster_id?: string
+  character_id?: string
   notes?: string
   vision_type?: VisionType
   vision_range_ft?: number | null

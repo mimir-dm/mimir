@@ -145,7 +145,7 @@ class PrintServiceClass {
    * @deprecated Use generateCharacterExport instead for composable sections
    */
   async generateCharacterSheet(
-    characterId: number,
+    characterId: string,
     template: 'sheet' | 'summary' = 'sheet',
     includeSpellCards: boolean = true
   ): Promise<PrintResult> {
@@ -167,7 +167,7 @@ class PrintServiceClass {
    * @param characterId - The ID of the character
    * @param options - Export options for section selection
    */
-  async generateCharacterExport(characterId: number, options?: CharacterExportOptions): Promise<PrintResult> {
+  async generateCharacterExport(characterId: string, options?: CharacterExportOptions): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('export_character', {
       characterId,
       options
@@ -184,7 +184,7 @@ class PrintServiceClass {
    * Export a single campaign document to PDF
    * @param documentId - The ID of the campaign document
    */
-  async exportCampaignDocument(documentId: number): Promise<PrintResult> {
+  async exportCampaignDocument(documentId: string): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('export_campaign_document', {
       documentId
     })
@@ -201,7 +201,7 @@ class PrintServiceClass {
    * @param campaignId - The ID of the campaign
    * @param options - Export options for content selection
    */
-  async exportCampaignDocuments(campaignId: number, options?: CampaignExportOptions): Promise<PrintResult> {
+  async exportCampaignDocuments(campaignId: string, options?: CampaignExportOptions): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('export_campaign_documents', {
       campaignId,
       options
@@ -219,7 +219,7 @@ class PrintServiceClass {
    * @param moduleId - The ID of the module
    * @param options - Export options for content selection
    */
-  async exportModuleDocuments(moduleId: number, options?: ModuleExportOptions): Promise<PrintResult> {
+  async exportModuleDocuments(moduleId: string, options?: ModuleExportOptions): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('export_module_documents', {
       moduleId,
       options
@@ -237,7 +237,7 @@ class PrintServiceClass {
    * @param mapId - The ID of the map
    * @param options - Print options (mode, overlays, etc.)
    */
-  async printMap(mapId: number, options?: MapPrintOptions): Promise<PrintResult> {
+  async printMap(mapId: string, options?: MapPrintOptions): Promise<PrintResult> {
     const response = await invoke<ApiResponse<PrintResult>>('print_map', {
       mapId,
       options

@@ -69,7 +69,7 @@ import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
 
 /** Token IDs that have an active light source */
 interface TokenLightInfo {
-  tokenId: number
+  tokenId: string
   isActive: boolean
 }
 
@@ -78,16 +78,16 @@ interface Props {
   gridSizePx: number
   baseScale?: number
   showHidden?: boolean
-  selectedTokenId?: number | null
-  draggingTokenId?: number | null
+  selectedTokenId?: string | null
+  draggingTokenId?: string | null
   dragOffset?: { x: number; y: number } | null
   interactive?: boolean
   /** Light source info for tokens */
   tokenLights?: TokenLightInfo[]
   /** Token IDs that are marked as dead */
-  deadTokenIds?: number[]
+  deadTokenIds?: string[]
   /** Map of token_id -> base64 image data URL */
-  tokenImages?: Map<number, string>
+  tokenImages?: Map<string, string>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -103,30 +103,30 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Get token image if available
-function getTokenImage(tokenId: number): string | undefined {
+function getTokenImage(tokenId: string): string | undefined {
   return props.tokenImages.get(tokenId)
 }
 
 // Check if token has an image
-function hasTokenImage(tokenId: number): boolean {
+function hasTokenImage(tokenId: string): boolean {
   return props.tokenImages.has(tokenId)
 }
 
 // Check if a token has a light source and if it's active
-function getTokenLight(tokenId: number): TokenLightInfo | undefined {
+function getTokenLight(tokenId: string): TokenLightInfo | undefined {
   return props.tokenLights.find(l => l.tokenId === tokenId)
 }
 
-function hasActiveLight(tokenId: number): boolean {
+function hasActiveLight(tokenId: string): boolean {
   const light = getTokenLight(tokenId)
   return light?.isActive ?? false
 }
 
-function hasLight(tokenId: number): boolean {
+function hasLight(tokenId: string): boolean {
   return props.tokenLights.some(l => l.tokenId === tokenId)
 }
 
-function isDead(tokenId: number): boolean {
+function isDead(tokenId: string): boolean {
   return props.deadTokenIds.includes(tokenId)
 }
 

@@ -97,7 +97,7 @@ import type { LightSourceSummary } from '@/composables/useLightSources'
 
 interface Props {
   lights: LightSourceSummary[]
-  tokens?: { id: number; x: number; y: number }[]
+  tokens?: { id: string; x: number; y: number }[]
   gridSizePx: number
   mapWidth: number
   mapHeight: number

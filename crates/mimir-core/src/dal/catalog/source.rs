@@ -67,7 +67,92 @@ pub fn set_enabled(conn: &mut SqliteConnection, code: &str, enabled: bool) -> Qu
 /// Delete a catalog source by its code.
 ///
 /// Note: This will fail if there are entities referencing this source.
+/// Use `delete_source_cascade` to delete all entities first.
 pub fn delete_source(conn: &mut SqliteConnection, code: &str) -> QueryResult<usize> {
+    diesel::delete(catalog_sources::table.find(code)).execute(conn)
+}
+
+/// Delete a catalog source and all associated entities.
+///
+/// This deletes from all entity tables first (monsters, spells, items, etc.)
+/// then deletes the source record.
+pub fn delete_source_cascade(conn: &mut SqliteConnection, code: &str) -> QueryResult<usize> {
+    use crate::schema::{
+        actions, backgrounds, catalog_tables, classes, conditions, cults, deities, diseases,
+        feats, hazards, item_attunement_classes, items, languages, monsters, objects,
+        optional_features, psionics, races, rewards, senses, skills, spell_classes,
+        spell_subclasses, spells, subclasses, traps, variant_rules, vehicles,
+    };
+
+    // Delete from junction tables first (spell_classes, spell_subclasses, item_attunement_classes)
+    // These reference spells/items which reference sources
+
+    // Get item IDs for this source to delete attunement classes
+    let item_ids: Vec<i32> = items::table
+        .filter(items::source.eq(code))
+        .select(items::id)
+        .load::<Option<i32>>(conn)?
+        .into_iter()
+        .flatten()
+        .collect();
+
+    if !item_ids.is_empty() {
+        diesel::delete(item_attunement_classes::table.filter(
+            item_attunement_classes::item_id.eq_any(&item_ids)
+        )).execute(conn)?;
+    }
+
+    // Get spell IDs for this source to delete spell classes/subclasses
+    let spell_ids: Vec<i32> = spells::table
+        .filter(spells::source.eq(code))
+        .select(spells::id)
+        .load::<Option<i32>>(conn)?
+        .into_iter()
+        .flatten()
+        .collect();
+
+    if !spell_ids.is_empty() {
+        diesel::delete(spell_classes::table.filter(
+            spell_classes::spell_id.eq_any(&spell_ids)
+        )).execute(conn)?;
+
+        diesel::delete(spell_subclasses::table.filter(
+            spell_subclasses::spell_id.eq_any(&spell_ids)
+        )).execute(conn)?;
+    }
+
+    // Also delete spell_classes and spell_subclasses that reference this source directly
+    diesel::delete(spell_classes::table.filter(spell_classes::source.eq(code))).execute(conn)?;
+    diesel::delete(spell_subclasses::table.filter(spell_subclasses::source.eq(code))).execute(conn)?;
+
+    // Delete from all entity tables
+    diesel::delete(actions::table.filter(actions::source.eq(code))).execute(conn)?;
+    diesel::delete(backgrounds::table.filter(backgrounds::source.eq(code))).execute(conn)?;
+    diesel::delete(catalog_tables::table.filter(catalog_tables::source.eq(code))).execute(conn)?;
+    diesel::delete(classes::table.filter(classes::source.eq(code))).execute(conn)?;
+    diesel::delete(conditions::table.filter(conditions::source.eq(code))).execute(conn)?;
+    diesel::delete(cults::table.filter(cults::source.eq(code))).execute(conn)?;
+    diesel::delete(deities::table.filter(deities::source.eq(code))).execute(conn)?;
+    diesel::delete(diseases::table.filter(diseases::source.eq(code))).execute(conn)?;
+    diesel::delete(feats::table.filter(feats::source.eq(code))).execute(conn)?;
+    diesel::delete(hazards::table.filter(hazards::source.eq(code))).execute(conn)?;
+    diesel::delete(items::table.filter(items::source.eq(code))).execute(conn)?;
+    diesel::delete(languages::table.filter(languages::source.eq(code))).execute(conn)?;
+    diesel::delete(monsters::table.filter(monsters::source.eq(code))).execute(conn)?;
+    diesel::delete(objects::table.filter(objects::source.eq(code))).execute(conn)?;
+    diesel::delete(optional_features::table.filter(optional_features::source.eq(code))).execute(conn)?;
+    diesel::delete(psionics::table.filter(psionics::source.eq(code))).execute(conn)?;
+    diesel::delete(races::table.filter(races::source.eq(code))).execute(conn)?;
+    diesel::delete(rewards::table.filter(rewards::source.eq(code))).execute(conn)?;
+    diesel::delete(senses::table.filter(senses::source.eq(code))).execute(conn)?;
+    diesel::delete(skills::table.filter(skills::source.eq(code))).execute(conn)?;
+    diesel::delete(spells::table.filter(spells::source.eq(code))).execute(conn)?;
+    diesel::delete(subclasses::table.filter(subclasses::source.eq(code))).execute(conn)?;
+    diesel::delete(traps::table.filter(traps::source.eq(code))).execute(conn)?;
+    diesel::delete(variant_rules::table.filter(variant_rules::source.eq(code))).execute(conn)?;
+    diesel::delete(vehicles::table.filter(vehicles::source.eq(code))).execute(conn)?;
+
+    // Finally delete the source itself
     diesel::delete(catalog_sources::table.find(code)).execute(conn)
 }
 

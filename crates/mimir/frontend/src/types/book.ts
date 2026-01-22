@@ -1,10 +1,25 @@
-// Book-related type definitions
+// Book/Source-related type definitions
 
 export interface BookInfo {
+  /** Source code (e.g., "PHB", "MM") - acts as unique ID */
   id: string
+  /** Display name (e.g., "Player's Handbook") */
   name: string
-  image_count?: number
-  // Add other properties as needed based on actual data structure
+  /** Whether this source is enabled */
+  enabled: boolean
+  /** ISO 8601 timestamp of when imported */
+  imported_at: string
+}
+
+export interface ImportResponse {
+  /** Number of sources successfully imported */
+  sources_imported: number
+  /** Number of sources that failed to import */
+  sources_failed: number
+  /** Total entities imported */
+  total_entities: number
+  /** Summary message */
+  message: string
 }
 
 export interface BookContent {

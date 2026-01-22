@@ -34,7 +34,6 @@
         <main class="dashboard-content">
           <router-view
             :campaign="campaign"
-            :board-config="boardConfig"
             :documents="documents"
             @refresh="loadCampaign"
           />
@@ -53,47 +52,31 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, provide } from 'vue'
-import { useSharedContextStore } from '@/stores/sharedContext'
 import { DocumentService } from '@/services/DocumentService'
 import { useApiCall } from '@/shared/composables/useApiCall'
 import MainLayout from '@/shared/components/layout/MainLayout.vue'
 import DashboardTabs from '../components/dashboard/DashboardTabs.vue'
 import CampaignArchiveExportDialog from '@/components/campaigns/CampaignArchiveExportDialog.vue'
-import type { Campaign, BoardConfig } from '@/types'
+import type { Campaign } from '@/types'
 
 const props = defineProps<{
   id: string
 }>()
 
-const contextStore = useSharedContextStore()
-
 // Local state
 const campaign = ref<Campaign | null>(null)
 const documents = ref<any[]>([])
-const boardConfig = ref<BoardConfig | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const showExportDialog = ref(false)
 
 // API call helpers
-const { execute: loadBoardApi } = useApiCall<BoardConfig>()
 const { execute: loadCampaignApi } = useApiCall<Campaign>()
 
 // Provide campaign data to child components
 provide('campaign', campaign)
-provide('boardConfig', boardConfig)
 provide('documents', documents)
 provide('campaignId', props.id)
-
-// Load board configuration
-const loadBoardConfiguration = async () => {
-  const data = await loadBoardApi('get_board_configuration', {
-    boardType: 'campaign'
-  })
-  if (data) {
-    boardConfig.value = data
-  }
-}
 
 // Load campaign data
 const loadCampaign = async () => {
@@ -101,27 +84,12 @@ const loadCampaign = async () => {
   error.value = null
 
   try {
-    // Load board configuration first
-    await loadBoardConfiguration()
-
     const data = await loadCampaignApi('get_campaign', {
-      id: parseInt(props.id)
+      id: props.id
     })
 
     if (data) {
       campaign.value = data
-
-      // Update context with campaign info
-      await contextStore.updateCampaign({
-        id: campaign.value.id.toString(),
-        name: campaign.value.name,
-        currentStage: campaign.value.status || undefined,
-        directory_path: campaign.value.directory_path || undefined
-      })
-
-      // Clear module/session context
-      await contextStore.updateModule({})
-      await contextStore.updateSession({})
 
       // Load documents
       await loadDocuments()
@@ -136,7 +104,7 @@ const loadCampaign = async () => {
 // Load all documents for the campaign
 const loadDocuments = async () => {
   try {
-    documents.value = await DocumentService.list(undefined, parseInt(props.id))
+    documents.value = await DocumentService.listForCampaign(props.id)
   } catch (e) {
     console.error('Failed to load documents:', e)
   }

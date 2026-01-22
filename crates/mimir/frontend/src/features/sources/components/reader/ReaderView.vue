@@ -101,7 +101,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useThemeStore } from '../../../../stores/theme'
-import { useSharedContextStore } from '../../../../stores/sharedContext'
 import { useBookLibrary } from '../../composables/useBookLibrary'
 import { useBookContent } from '../../composables/useBookContent'
 import { useBookNavigation } from '../../composables/useBookNavigation'
@@ -119,7 +118,6 @@ import CatalogPanel from '../../views/SearchView.vue'
 
 // Theme
 const themeStore = useThemeStore()
-const contextStore = useSharedContextStore()
 const currentTheme = computed(() => themeStore.currentTheme)
 
 // Mode state (reading vs catalog)
@@ -130,18 +128,9 @@ const currentMode = ref<AppMode>('reading')
 const selectedCatalogCategory = ref('Spells')
 const selectedSources = ref<string[]>([])
 
-// Watch for source selection changes
-watch(selectedSources, async (newSources) => {
-  // Update context when sources change in catalog mode
-  if (currentMode.value === 'catalog') {
-    await contextStore.updateReference({
-      ...contextStore.reference,
-      catalog: {
-        ...contextStore.reference?.catalog,
-        selectedSources: newSources
-      }
-    })
-  }
+// Watch for source selection changes (triggers re-search in catalog mode)
+watch(selectedSources, async () => {
+  // Sources changed - child components will handle updates
 })
 
 // Book library management
@@ -193,61 +182,17 @@ function jumpToEntry(sectionIndex: number, entryId: string) {
 watch(selectedBook, async (newBook) => {
   if (newBook) {
     loadBookContent(newBook)
-    
-    // Update reference context with selected book (reading mode)
-    if (currentMode.value === 'reading') {
-      const bookName = newBook.name || newBook.id
-      await contextStore.updateReference({
-        ...contextStore.reference,
-        activeTab: 'reading',
-        reading: {
-          currentBook: bookName,
-          currentSection: contextStore.reference?.reading?.currentSection
-        },
-        catalog: undefined // Clear catalog context when in reading mode
-      })
-    }
   }
 }, { immediate: true })
 
-// Watch for mode changes
-watch(currentMode, async (newMode) => {
-  // Update reference context based on mode
-  if (newMode === 'reading') {
-    await contextStore.updateReference({
-      activeTab: 'reading',
-      reading: {
-        currentBook: selectedBook.value?.name || selectedBook.value?.id,
-        currentSection: undefined
-      },
-      catalog: undefined
-    })
-  } else {
-    await contextStore.updateReference({
-      activeTab: 'catalog',
-      reading: undefined,
-      catalog: {
-        selectedCategory: selectedCatalogCategory.value,
-        selectedItems: [],
-        searchQuery: '',
-        selectedSources: selectedSources.value
-      }
-    })
-  }
+// Watch for mode changes (no-op now that context is removed)
+watch(currentMode, () => {
+  // Mode changed - UI handles updates automatically
 })
 
-// Watch for catalog category changes
-watch(selectedCatalogCategory, async (newCategory) => {
-  if (currentMode.value === 'catalog') {
-    await contextStore.updateReference({
-      ...contextStore.reference,
-      activeTab: 'catalog',
-      catalog: {
-        ...contextStore.reference?.catalog,
-        selectedCategory: newCategory
-      }
-    })
-  }
+// Watch for catalog category changes (no-op now that context is removed)
+watch(selectedCatalogCategory, () => {
+  // Category changed - child components handle updates
 })
 
 // Setup cross-reference event handlers
@@ -270,37 +215,13 @@ function setupCrossRefHandlers() {
 
 // Load initial data
 onMounted(async () => {
-  // Register this window with context service
-  ;(window as any).__TAURI_WINDOW_ID__ = 'reference'
-  await contextStore.registerWindow({
-    id: 'reference',
-    type: 'reference',
-    title: 'Source Library',
-    focused: true
-  })
-  
-  // Initialize reference context
-  await contextStore.updateReference({
-    activeTab: currentMode.value,
-    reading: currentMode.value === 'reading' ? {
-      currentBook: undefined,
-      currentSection: undefined
-    } : undefined,
-    catalog: currentMode.value === 'catalog' ? {
-      selectedCategory: selectedCatalogCategory.value,
-      selectedItems: [],
-      searchQuery: '',
-      selectedSources: []
-    } : undefined
-  })
-  
-  // Initialize theme - exactly as in original BookApp.vue
+  // Initialize theme
   themeStore.applyTheme()
   await themeStore.initThemeSync()
-  
+
   // Load library books
   await loadLibraryBooks()
-  
+
   // Setup cross-reference handlers
   setupCrossRefHandlers()
 })
@@ -314,7 +235,6 @@ watch([bookContent, selectedSection], () => {
 
 // Cleanup on unmount
 onUnmounted(() => {
-  contextStore.unregisterWindow('reference')
   document.removeEventListener('mouseover', handleCrossRefHover as any)
   document.removeEventListener('mouseout', hideTooltip)
   document.removeEventListener('click', handleCrossRefClick as any)

@@ -66,6 +66,18 @@ impl ImportResult {
     }
 }
 
+/// Default groups to include when importing.
+///
+/// Groups in 5etools:
+/// - "core" - PHB, DMG, MM
+/// - "supplement" - XGE, TCE, MPMM, etc.
+/// - "setting" - Eberron, Ravnica, Theros, etc.
+/// - "adventure" - Published adventures (CoS, LMoP, etc.)
+/// - "screen" - DM Screen supplements
+/// - "homebrew" - Homebrew content
+/// - Other one-offs
+const DEFAULT_ALLOWED_GROUPS: &[&str] = &["core", "supplement", "setting", "adventure"];
+
 /// Catalog import service for importing 5etools data.
 pub struct CatalogImportService<'a> {
     conn: &'a mut SqliteConnection,
@@ -75,17 +87,42 @@ pub struct CatalogImportService<'a> {
     dest_img_dir: Option<PathBuf>,
     /// Count of images copied during import.
     images_copied: usize,
+    /// Groups to include (None = all groups, Some = only specified groups).
+    allowed_groups: Option<Vec<String>>,
 }
 
 impl<'a> CatalogImportService<'a> {
     /// Create a new import service with a database connection.
+    ///
+    /// By default, only imports reference material (core, supplement, setting groups).
+    /// Use `with_all_groups()` to import everything including adventures.
     pub fn new(conn: &'a mut SqliteConnection) -> Self {
         Self {
             conn,
             source_img_dir: None,
             dest_img_dir: None,
             images_copied: 0,
+            allowed_groups: Some(
+                DEFAULT_ALLOWED_GROUPS
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect(),
+            ),
         }
+    }
+
+    /// Import all groups (including adventures, screens, etc.)
+    pub fn with_all_groups(mut self) -> Self {
+        self.allowed_groups = None;
+        self
+    }
+
+    /// Set specific groups to import.
+    ///
+    /// Common groups: "core", "supplement", "setting", "adventure", "screen"
+    pub fn with_groups(mut self, groups: Vec<String>) -> Self {
+        self.allowed_groups = Some(groups);
+        self
     }
 
     /// Configure image copying from source to destination.
@@ -127,10 +164,39 @@ impl<'a> CatalogImportService<'a> {
         }
 
         // Discover available sources
-        let books = discover_available_sources(repo_path)
+        let all_books = discover_available_sources(repo_path)
             .context("Failed to discover available sources")?;
 
-        info!("Found {} source books to import", books.len());
+        // Filter by allowed groups
+        let total_books = all_books.len();
+        let books: Vec<_> = if let Some(ref allowed) = self.allowed_groups {
+            info!(
+                "Filtering to groups: {:?} (from {} total sources)",
+                allowed, total_books
+            );
+            all_books
+                .into_iter()
+                .filter(|book| {
+                    let dominated = book.group
+                        .as_ref()
+                        .map(|g| allowed.iter().any(|a| a.eq_ignore_ascii_case(g)))
+                        .unwrap_or(false);
+                    if !dominated {
+                        info!(
+                            "Skipping {} ({}) - group: {:?}",
+                            book.name,
+                            book.id,
+                            book.group
+                        );
+                    }
+                    dominated
+                })
+                .collect()
+        } else {
+            all_books
+        };
+
+        info!("Importing {} source books", books.len());
 
         for book in &books {
             let source_code = &book.id;

@@ -1,14 +1,13 @@
 /**
  * App Settings Store
  *
- * Manages general application preferences like AI assistant visibility and MCP server.
+ * Manages general application preferences like MCP server settings.
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
 export interface AppSettings {
-  ai_assistant_enabled: boolean
   mcp_server_enabled: boolean
 }
 
@@ -18,7 +17,6 @@ export interface McpServerStatus {
 
 export const useAppSettingsStore = defineStore('appSettings', () => {
   // State
-  const aiAssistantEnabled = ref(false)
   const mcpServerEnabled = ref(false)
   const mcpServerRunning = ref(false)
   const isLoading = ref(false)
@@ -32,7 +30,6 @@ export const useAppSettingsStore = defineStore('appSettings', () => {
     isLoading.value = true
     try {
       const settings = await invoke<AppSettings>('get_app_settings')
-      aiAssistantEnabled.value = settings.ai_assistant_enabled
       mcpServerEnabled.value = settings.mcp_server_enabled
       isLoaded.value = true
 
@@ -41,7 +38,6 @@ export const useAppSettingsStore = defineStore('appSettings', () => {
     } catch (error) {
       console.error('Failed to load app settings:', error)
       // Use defaults on error
-      aiAssistantEnabled.value = false
       mcpServerEnabled.value = false
     } finally {
       isLoading.value = false
@@ -53,7 +49,6 @@ export const useAppSettingsStore = defineStore('appSettings', () => {
     try {
       await invoke('save_app_settings', {
         settings: {
-          ai_assistant_enabled: aiAssistantEnabled.value,
           mcp_server_enabled: mcpServerEnabled.value
         }
       })
@@ -61,12 +56,6 @@ export const useAppSettingsStore = defineStore('appSettings', () => {
       console.error('Failed to save app settings:', error)
       throw error
     }
-  }
-
-  // Toggle AI assistant and save
-  async function setAiAssistantEnabled(enabled: boolean) {
-    aiAssistantEnabled.value = enabled
-    await saveSettings()
   }
 
   // Toggle MCP server auto-start and save
@@ -137,7 +126,6 @@ export const useAppSettingsStore = defineStore('appSettings', () => {
 
   return {
     // State
-    aiAssistantEnabled,
     mcpServerEnabled,
     mcpServerRunning,
     mcpActionPending,
@@ -146,7 +134,6 @@ export const useAppSettingsStore = defineStore('appSettings', () => {
     // Actions
     loadSettings,
     saveSettings,
-    setAiAssistantEnabled,
     setMcpServerEnabled,
     refreshMcpServerStatus,
     startMcpServer,

@@ -16,9 +16,9 @@ export type LightType = 'torch' | 'lantern' | 'candle' | 'spell' | 'custom'
 
 /** Light source data from the database */
 export interface LightSource {
-  id: number
-  map_id: number
-  token_id: number | null
+  id: string
+  map_id: string
+  token_id: string | null
   name: string
   light_type: LightType
   x: number
@@ -33,9 +33,9 @@ export interface LightSource {
 
 /** Light source summary with token info */
 export interface LightSourceSummary {
-  id: number
-  map_id: number
-  token_id: number | null
+  id: string
+  map_id: string
+  token_id: string | null
   token_name: string | null
   name: string
   light_type: LightType
@@ -49,8 +49,8 @@ export interface LightSourceSummary {
 
 /** Request to create a new light source */
 export interface CreateLightSourceRequest {
-  map_id: number
-  token_id?: number | null
+  map_id: string
+  token_id?: string | null
   name: string
   light_type: LightType
   x: number
@@ -81,7 +81,7 @@ export const LIGHT_PRESETS: Record<LightType, { bright_ft: number; dim_ft: numbe
   custom: { bright_ft: 20, dim_ft: 40, color: null }
 }
 
-export function useLightSources(mapId: number) {
+export function useLightSources(mapId: string) {
   const lightSources = ref<LightSourceSummary[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -160,7 +160,7 @@ export function useLightSources(mapId: number) {
   }
 
   // Update a light source
-  async function updateLightSource(id: number, request: UpdateLightSourceRequest): Promise<LightSource | null> {
+  async function updateLightSource(id: string, request: UpdateLightSourceRequest): Promise<LightSource | null> {
     try {
       const response = await invoke<ApiResponse<LightSource>>('update_light_source', { id, request })
       if (response.success && response.data) {
@@ -182,7 +182,7 @@ export function useLightSources(mapId: number) {
   }
 
   // Move a light source
-  async function moveLightSource(id: number, x: number, y: number): Promise<LightSource | null> {
+  async function moveLightSource(id: string, x: number, y: number): Promise<LightSource | null> {
     try {
       const response = await invoke<ApiResponse<LightSource>>('move_light_source', { id, x, y })
       if (response.success && response.data) {
@@ -201,7 +201,7 @@ export function useLightSources(mapId: number) {
   }
 
   // Toggle a light source on/off
-  async function toggleLightSource(id: number): Promise<LightSource | null> {
+  async function toggleLightSource(id: string): Promise<LightSource | null> {
     try {
       const response = await invoke<ApiResponse<LightSource>>('toggle_light_source', { id })
       if (response.success && response.data) {
@@ -219,7 +219,7 @@ export function useLightSources(mapId: number) {
   }
 
   // Delete a light source
-  async function deleteLightSource(id: number): Promise<boolean> {
+  async function deleteLightSource(id: string): Promise<boolean> {
     try {
       const response = await invoke<ApiResponse<void>>('delete_light_source', { id })
       if (response.success) {
@@ -249,7 +249,7 @@ export function useLightSources(mapId: number) {
   }
 
   // Get a light source by ID
-  function getLightSource(id: number): LightSourceSummary | undefined {
+  function getLightSource(id: string): LightSourceSummary | undefined {
     return lightSources.value.find(l => l.id === id)
   }
 

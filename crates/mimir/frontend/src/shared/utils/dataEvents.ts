@@ -48,9 +48,10 @@ export interface DataEventPayloads {
   'module:map:uploaded': { moduleId: string; mapId: string }
 
   // Document events
-  'document:created': { moduleId: string; documentId: string }
+  // Documents can be either campaign-level (no module) or module-level
+  'document:created': { documentId: string; moduleId?: string; campaignId?: string }
   'document:updated': { documentId: string }
-  'document:deleted': { moduleId: string; documentId: string }
+  'document:deleted': { documentId: string; moduleId?: string }
 
   // Character events
   'character:created': { campaignId: string; characterId: string }

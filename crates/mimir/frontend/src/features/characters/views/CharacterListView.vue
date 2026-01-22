@@ -63,18 +63,18 @@
               v-for="character in unassignedCharacters"
               :key="character.id"
               class="card-interactive character-card"
-              :class="{ 'is-npc': character.is_npc }"
+              :class="{ 'is-npc': character.is_npc === 1 }"
               @click="viewCharacter(character)"
             >
               <div class="character-header">
-                <h3 class="character-name">{{ character.character_name }}</h3>
-                <span v-if="character.is_npc" class="npc-badge">NPC</span>
+                <h3 class="character-name">{{ character.name }}</h3>
+                <span v-if="character.is_npc === 1" class="npc-badge">NPC</span>
               </div>
               <div class="character-class-race">
-                Level {{ character.current_level }} {{ character.race || '' }} {{ character.class || '' }}
+                {{ character.race_name || 'Unknown Race' }}
               </div>
               <div class="character-meta">
-                <span class="character-player">{{ getPlayerName(character.player_id) }}</span>
+                <span class="character-player">{{ character.player_name || 'NPC' }}</span>
               </div>
               <div class="character-actions" @click.stop>
                 <div class="action-buttons">
@@ -111,24 +111,24 @@
 
         <!-- Campaign Characters -->
         <div v-for="(chars, campaignId) in charactersByCampaign" :key="campaignId" class="character-section">
-          <h2 class="section-title">{{ getCampaignName(Number(campaignId)) }}</h2>
+          <h2 class="section-title">{{ getCampaignName(String(campaignId)) }}</h2>
           <div class="character-grid">
             <div
               v-for="character in chars"
               :key="character.id"
               class="card-interactive character-card"
-              :class="{ 'is-npc': character.is_npc }"
+              :class="{ 'is-npc': character.is_npc === 1 }"
               @click="viewCharacter(character)"
             >
               <div class="character-header">
-                <h3 class="character-name">{{ character.character_name }}</h3>
-                <span v-if="character.is_npc" class="npc-badge">NPC</span>
+                <h3 class="character-name">{{ character.name }}</h3>
+                <span v-if="character.is_npc === 1" class="npc-badge">NPC</span>
               </div>
               <div class="character-class-race">
-                Level {{ character.current_level }} {{ character.race || '' }} {{ character.class || '' }}
+                {{ character.race_name || 'Unknown Race' }}
               </div>
               <div class="character-meta">
-                <span class="character-player">{{ getPlayerName(character.player_id) }}</span>
+                <span class="character-player">{{ character.player_name || 'NPC' }}</span>
               </div>
               <div class="character-actions" @click.stop>
                 <div class="action-buttons">
@@ -164,7 +164,7 @@
       v-if="selectedCharacterForPrint"
       :visible="showPrintDialog"
       :character-id="selectedCharacterForPrint.id"
-      :character-name="selectedCharacterForPrint.character_name"
+      :character-name="selectedCharacterForPrint.name"
       @close="closePrintDialog"
     />
 
@@ -187,7 +187,7 @@
     >
       <p>
         Are you sure you want to delete
-        <strong>{{ characterToDelete?.character_name }}</strong>?
+        <strong>{{ characterToDelete?.name }}</strong>?
       </p>
       <p class="warning-text">
         This action cannot be undone.
@@ -220,41 +220,40 @@ import { CharacterPrintDialog } from '../../../components/print'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '../../../shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '../../../stores/characters'
-import { usePlayerStore } from '../../../stores/players'
 import { useCampaignStore } from '../../../stores/campaigns'
-import type { Character, CharacterData } from '../../../types/character'
+import type { Character } from '../../../types/character'
 
 const router = useRouter()
 const characterStore = useCharacterStore()
-const playerStore = usePlayerStore()
 const campaignStore = useCampaignStore()
 
 onMounted(async () => {
-  // Load all data
-  await Promise.all([
-    playerStore.fetchPlayers(),
-    campaignStore.fetchCampaigns(),
-    characterStore.fetchAllCharacters()
-  ])
+  // Load campaigns first, then characters for each campaign
+  await campaignStore.fetchCampaigns()
+
+  // Fetch characters for all campaigns
+  for (const campaign of campaignStore.campaigns) {
+    await characterStore.fetchCharacters(campaign.id)
+  }
 })
 
 // Filter state
 type CharacterFilter = 'all' | 'pc' | 'npc'
 const characterFilter = ref<CharacterFilter>('all')
 
-// Counts for filter tabs
+// Counts for filter tabs (is_npc: 0 = PC, 1 = NPC)
 const allCharactersCount = computed(() => characterStore.characters.length)
-const pcCount = computed(() => characterStore.characters.filter(c => !c.is_npc).length)
-const npcCount = computed(() => characterStore.characters.filter(c => c.is_npc).length)
+const pcCount = computed(() => characterStore.characters.filter(c => c.is_npc === 0).length)
+const npcCount = computed(() => characterStore.characters.filter(c => c.is_npc === 1).length)
 
-// Filtered characters based on selected filter
+// Filtered characters based on selected filter (is_npc: 0 = PC, 1 = NPC)
 const characters = computed(() => {
   const all = characterStore.characters
   switch (characterFilter.value) {
     case 'pc':
-      return all.filter(c => !c.is_npc)
+      return all.filter(c => c.is_npc === 0)
     case 'npc':
-      return all.filter(c => c.is_npc)
+      return all.filter(c => c.is_npc === 1)
     default:
       return all
   }
@@ -263,12 +262,12 @@ const characters = computed(() => {
 // Sort characters: PCs first, then NPCs, then alphabetically
 const sortCharacters = (chars: Character[]) => {
   return [...chars].sort((a, b) => {
-    // PCs (is_npc = 0/false) come before NPCs (is_npc = 1/true)
+    // PCs (is_npc = 0) come before NPCs (is_npc = 1)
     if (a.is_npc !== b.is_npc) {
-      return a.is_npc ? 1 : -1
+      return a.is_npc - b.is_npc
     }
     // Then sort alphabetically by name
-    return a.character_name.localeCompare(b.character_name)
+    return a.name.localeCompare(b.name)
   })
 }
 
@@ -277,10 +276,10 @@ const unassignedCharacters = computed(() =>
 )
 
 const charactersByCampaign = computed(() => {
-  const grouped: Record<number, Character[]> = {}
+  const grouped: Record<string, Character[]> = {}
 
   characters.value
-    .filter(c => c.campaign_id !== null)
+    .filter(c => c.campaign_id !== null && c.campaign_id !== undefined)
     .forEach(character => {
       const campaignId = character.campaign_id!
       if (!grouped[campaignId]) {
@@ -297,15 +296,7 @@ const charactersByCampaign = computed(() => {
   return grouped
 })
 
-const getPlayerName = (playerId: number | null): string => {
-  if (playerId === null) {
-    return 'NPC'
-  }
-  const player = playerStore.players.find(p => p.id === playerId)
-  return player?.name || 'Unknown Player'
-}
-
-const getCampaignName = (campaignId: number): string => {
+const getCampaignName = (campaignId: string): string => {
   const campaign = campaignStore.campaigns.find(c => c.id === campaignId)
   return campaign?.name || 'Unknown Campaign'
 }
@@ -322,17 +313,19 @@ const handleWizardClose = () => {
 
 const handleCharacterCreated = async () => {
   showWizard.value = false
-  // Reload characters list
-  await characterStore.fetchAllCharacters()
+  // Reload characters for all campaigns
+  for (const campaign of campaignStore.campaigns) {
+    await characterStore.fetchCharacters(campaign.id)
+  }
 }
 
 const viewCharacter = (character: Character) => {
   router.push(`/characters/${character.id}`)
 }
 
-const assignToCampaign = async (characterId: number, event: Event) => {
+const assignToCampaign = async (characterId: string, event: Event) => {
   const select = event.target as HTMLSelectElement
-  const campaignId = parseInt(select.value)
+  const campaignId = select.value
 
   if (!campaignId) return
 
@@ -341,8 +334,8 @@ const assignToCampaign = async (characterId: number, event: Event) => {
       characterId,
       campaignId
     })
-    // Reload characters to show updated list
-    await characterStore.fetchAllCharacters()
+    // Reload characters for the target campaign
+    await characterStore.fetchCharacters(campaignId)
   } catch (error) {
     console.error('Failed to assign character to campaign:', error)
     characterStore.error = `Failed to assign character: ${error}`
@@ -376,21 +369,13 @@ const closePrintDialog = () => {
 // Level up dialog state
 const showLevelUpDialog = ref(false)
 const selectedCharacterForLevelUp = ref<Character | null>(null)
-const selectedCharacterData = ref<CharacterData | null>(null)
+const selectedCharacterData = ref<Character | null>(null)
 
 const levelUpCharacter = async (character: Character) => {
-  try {
-    // Fetch full character data for the level up dialog
-    const result = await invoke<{ character: Character; data: CharacterData }>('get_character', {
-      characterId: character.id
-    })
-    selectedCharacterForLevelUp.value = character
-    selectedCharacterData.value = result.data
-    showLevelUpDialog.value = true
-  } catch (error) {
-    console.error('Failed to load character data:', error)
-    characterStore.error = `Failed to load character: ${error}`
-  }
+  // Level-up uses the character data directly (dialog shows unavailable message)
+  selectedCharacterForLevelUp.value = character
+  selectedCharacterData.value = character
+  showLevelUpDialog.value = true
 }
 
 const closeLevelUpDialog = () => {
@@ -401,8 +386,10 @@ const closeLevelUpDialog = () => {
 
 const handleLevelUpCompleted = async () => {
   closeLevelUpDialog()
-  // Reload characters to show updated level
-  await characterStore.fetchAllCharacters()
+  // Reload characters for all campaigns
+  for (const campaign of campaignStore.campaigns) {
+    await characterStore.fetchCharacters(campaign.id)
+  }
 }
 
 // Delete dialog state
@@ -425,8 +412,10 @@ const confirmDelete = async () => {
 
   deleting.value = true
   try {
+    const campaignId = characterToDelete.value.campaign_id
     await characterStore.deleteCharacter(characterToDelete.value.id)
-    await characterStore.fetchAllCharacters()
+    // Reload characters for the character's campaign
+    await characterStore.fetchCharacters(campaignId)
     closeDeleteDialog()
   } catch (error) {
     console.error('Failed to delete character:', error)

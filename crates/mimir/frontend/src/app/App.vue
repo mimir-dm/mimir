@@ -11,9 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useThemeStore } from '../stores/theme'
-import { useChatStore } from '../stores/chat'
 import { useRoute } from 'vue-router'
-import { appDataDir } from '@tauri-apps/api/path'
 
 const route = useRoute()
 const routeKey = computed(() => {
@@ -30,7 +28,6 @@ const routeKey = computed(() => {
 })
 
 const themeStore = useThemeStore()
-const chatStore = useChatStore()
 const currentTheme = computed(() => `theme-${themeStore.currentTheme}`)
 
 onMounted(async () => {
@@ -40,16 +37,6 @@ onMounted(async () => {
   themeStore.applyTheme()
   // Initialize cross-window theme synchronization
   await themeStore.initThemeSync()
-  
-  // Configure todo storage during app initialization
-  try {
-    const dataDir = await appDataDir()
-    const todoStoragePath = `${dataDir}todos`
-    await chatStore.configureTodoStorage(todoStoragePath)
-    console.log(`Configured todo storage to: ${todoStoragePath}`)
-  } catch (err) {
-    console.error('Failed to configure todo storage during app initialization:', err)
-  }
 })
 </script>
 

@@ -13,7 +13,7 @@ import { useVisionCalculation, type AmbientLight } from '@/composables/useVision
 
 // Types for map display
 interface MapState {
-  mapId: number | null
+  mapId: string | null
   imageUrl: string | null
   gridType: 'square' | 'hex' | 'none'
   gridSizePx: number | null
@@ -49,8 +49,8 @@ const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const tokens = ref<Token[]>([])
-const deadTokenIds = ref<number[]>([])
-const tokenImages = ref<Map<number, string>>(new Map())
+const deadTokenIds = ref<string[]>([])
+const tokenImages = ref<Map<string, string>>(new Map())
 
 // Track actual display scale and image dimensions
 const displayScale = ref(1)
@@ -59,7 +59,7 @@ const imageNaturalHeight = ref(0)
 
 // Fog of war state (vision-based)
 interface VisionCircle {
-  tokenId: number
+  tokenId: string
   x: number
   y: number
   radiusPx: number
@@ -70,7 +70,7 @@ const visionCircles = ref<VisionCircle[]>([])
 
 // UVTT LOS state
 const useLosBlocking = ref(false)
-const visibilityPaths = ref<{ tokenId: number; path: string; polygon?: { x: number; y: number }[] }[]>([])
+const visibilityPaths = ref<{ tokenId: string; path: string; polygon?: { x: number; y: number }[] }[]>([])
 const blockingWalls = ref<Wall[]>([])
 const uvttLights = ref<Light[]>([])
 const tokenOnlyLos = ref(false) // Token LOS mode: map visible but tokens hidden outside LOS
@@ -269,7 +269,7 @@ onMounted(async () => {
 
   // Listen for map updates from main window
   unlistenMapUpdate = await listen<{
-    mapId: number
+    mapId: string
     gridType: string
     gridSizePx: number | null
     gridOffsetX: number
@@ -323,9 +323,9 @@ onMounted(async () => {
 
   // Listen for token updates
   unlistenTokensUpdate = await listen<{
-    mapId: number
+    mapId: string
     tokens: Token[]
-    deadTokenIds?: number[]
+    deadTokenIds?: string[]
   }>('player-display:tokens-update', async (event) => {
     console.log('PlayerDisplayWindow: Received tokens-update event:', event.payload.tokens.length, 'tokens')
     // Accept tokens if they're for the current map OR if we don't have a map yet (initial load)
@@ -352,12 +352,12 @@ onMounted(async () => {
 
   // Listen for fog of war updates (vision-based, with optional LOS data)
   unlistenFogUpdate = await listen<{
-    mapId: number
+    mapId: string
     revealMap: boolean
     tokenOnlyLos: boolean
     visionCircles: VisionCircle[]
     useLosBlocking?: boolean
-    visibilityPaths?: { tokenId: number; path: string; polygon?: { x: number; y: number }[] }[]
+    visibilityPaths?: { tokenId: string; path: string; polygon?: { x: number; y: number }[] }[]
     blockingWalls?: Wall[]
     uvttLights?: Light[]
     ambientLight?: 'bright' | 'dim' | 'darkness'
@@ -395,7 +395,7 @@ onMounted(async () => {
 
   // Listen for light source updates
   unlistenLightSourcesUpdate = await listen<{
-    mapId: number
+    mapId: string
     lightSources: LightSourceSummary[]
   }>('player-display:light-sources-update', (event) => {
     console.log('PlayerDisplayWindow: Received light-sources-update event:', event.payload.lightSources.length, 'lights')
@@ -424,7 +424,7 @@ onUnmounted(() => {
 })
 
 // Load map image from backend
-async function loadMapImage(mapId: number) {
+async function loadMapImage(mapId: string) {
   isLoading.value = true
   errorMessage.value = null
   tokens.value = [] // Clear tokens when loading a new map

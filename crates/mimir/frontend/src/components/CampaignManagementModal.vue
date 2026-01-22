@@ -43,9 +43,9 @@
           <div class="campaign-info">
             <div class="campaign-name">{{ campaign.name }}</div>
             <div class="campaign-meta">
-              <span class="campaign-status">{{ formatStatus(campaign.status) }}</span>
+              <span class="campaign-status">{{ getCampaignStatus(campaign) }}</span>
               <span class="campaign-activity">
-                Last activity: {{ formatDate(campaign.last_activity_at) }}
+                Last updated: {{ formatDate(campaign.updated_at) }}
               </span>
             </div>
           </div>
@@ -78,7 +78,7 @@
           <div class="campaign-info">
             <div class="campaign-name">{{ campaign.name }}</div>
             <div class="campaign-meta">
-              <span class="campaign-status">{{ formatStatus(campaign.status) }}</span>
+              <span class="campaign-status">{{ getCampaignStatus(campaign) }}</span>
               <span class="campaign-activity">
                 Archived: {{ formatDate(campaign.archived_at!) }}
               </span>
@@ -178,7 +178,7 @@ watch(() => props.visible, async (newVisible) => {
 })
 
 // Load campaigns when switching tabs
-watch(activeTab, async (newTab) => {
+watch(activeTab, async () => {
   if (props.visible) {
     await loadCampaigns()
   }
@@ -190,6 +190,12 @@ async function loadCampaigns() {
   } else {
     await campaignStore.fetchArchivedCampaigns()
   }
+}
+
+// Helper to derive status from campaign data
+function getCampaignStatus(campaign: Campaign): string {
+  if (campaign.archived_at) return 'Archived'
+  return 'Active'
 }
 
 async function handleArchiveCampaign(campaign: Campaign) {
@@ -247,12 +253,6 @@ function cancelDelete() {
 
 function closeModal() {
   emit('close')
-}
-
-function formatStatus(status: string): string {
-  return status.replace('_', ' ').split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
 }
 
 function formatDate(dateString: string): string {

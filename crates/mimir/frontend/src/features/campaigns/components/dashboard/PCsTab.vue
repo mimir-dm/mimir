@@ -37,13 +37,13 @@
         @click="viewCharacter(character)"
       >
         <div class="card-header">
-          <h3 class="character-name">{{ character.character_name }}</h3>
+          <h3 class="character-name">{{ character.name }}</h3>
         </div>
         <div class="character-details">
-          Level {{ character.current_level }} {{ character.race || '' }} {{ character.class || '' }}
+          {{ formatCharacterDetails(character) }}
         </div>
         <div class="character-player">
-          {{ getPlayerName(character.player_id) }}
+          {{ character.player_name || 'No player assigned' }}
         </div>
         <div class="card-actions" @click.stop>
           <button @click="viewCharacter(character)" class="btn btn-sm btn-ghost">
@@ -70,7 +70,7 @@
       v-if="printingCharacter"
       :visible="showPrintDialog"
       :character-id="printingCharacter.id"
-      :character-name="printingCharacter.character_name"
+      :character-name="printingCharacter.name"
       @close="closePrintDialog"
     />
 
@@ -90,22 +90,19 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharacterStore } from '@/stores/characters'
-import { usePlayerStore } from '@/stores/players'
 import CharacterCreationWizard from '@/features/characters/components/CharacterCreationWizard.vue'
 import { CharacterPrintDialog } from '@/components/print'
 import AddCharacterModal from './AddCharacterModal.vue'
-import type { Campaign, BoardConfig } from '@/types'
+import type { Campaign } from '@/types'
 import type { Character } from '@/types/character'
 
 const props = defineProps<{
   campaign?: Campaign
-  boardConfig?: BoardConfig
   documents?: any[]
 }>()
 
 const router = useRouter()
 const characterStore = useCharacterStore()
-const playerStore = usePlayerStore()
 
 // Local state
 const loading = ref(false)
@@ -114,29 +111,32 @@ const showAddModal = ref(false)
 const showPrintDialog = ref(false)
 const printingCharacter = ref<Character | null>(null)
 
-// PCs only
+// PCs only (is_npc === 0 means PC)
 const pcs = computed(() => {
   if (!props.campaign?.id) return []
   return characterStore.characters.filter(c =>
-    c.campaign_id === props.campaign!.id && !c.is_npc
+    c.campaign_id === props.campaign!.id && c.is_npc === 0
   )
 })
 
-// Get player name
-function getPlayerName(playerId: number | null): string {
-  if (playerId === null) return 'No player assigned'
-  const player = playerStore.players.find(p => p.id === playerId)
-  return player?.name || 'Unknown Player'
+// Format character details
+function formatCharacterDetails(character: Character): string {
+  const parts: string[] = []
+  if (character.race_name) {
+    parts.push(character.race_name)
+  }
+  if (character.background_name) {
+    parts.push(character.background_name)
+  }
+  return parts.join(' ') || 'No details'
 }
 
 // Load characters
 async function loadCharacters() {
+  if (!props.campaign?.id) return
   loading.value = true
   try {
-    await Promise.all([
-      characterStore.fetchAllCharacters(),
-      playerStore.fetchPlayers()
-    ])
+    await characterStore.fetchPcs(props.campaign.id)
   } catch (e) {
     console.error('Failed to load characters:', e)
   } finally {

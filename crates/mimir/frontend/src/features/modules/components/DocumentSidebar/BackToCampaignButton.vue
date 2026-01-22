@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  campaignId?: number
+  campaignId?: string
 }>()
 </script>
 

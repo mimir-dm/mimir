@@ -14,7 +14,7 @@
       <!-- Empty -->
       <div v-else-if="availableCharacters.length === 0" class="empty-state">
         <p>No {{ isNpc ? 'NPCs' : 'player characters' }} available to add.</p>
-        <p class="hint">Characters already in this campaign or without a matching type won't appear here.</p>
+        <p class="hint">Characters are created per-campaign. Use "Create {{ isNpc ? 'NPC' : 'PC' }}" instead.</p>
       </div>
 
       <!-- Character List -->
@@ -27,16 +27,16 @@
           @click="selectedId = character.id"
         >
           <div class="character-info">
-            <span class="character-name">{{ character.character_name }}</span>
+            <span class="character-name">{{ character.name }}</span>
             <span class="character-details">
-              Level {{ character.current_level }} {{ character.race || '' }} {{ character.class || '' }}
+              {{ formatCharacterDetails(character) }}
             </span>
           </div>
-          <span v-if="character.campaign_id" class="current-campaign">
-            Currently in another campaign
+          <span v-if="character.campaign_id === campaignId" class="current-campaign">
+            Already in this campaign
           </span>
-          <span v-else class="no-campaign">
-            Unassigned
+          <span v-else class="other-campaign">
+            In another campaign
           </span>
         </div>
       </div>
@@ -57,14 +57,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { useCharacterStore } from '@/stores/characters'
 import type { Character } from '@/types/character'
 
 const props = defineProps<{
   visible: boolean
-  campaignId: number
+  campaignId: string
   isNpc: boolean
 }>()
 
@@ -77,12 +76,27 @@ const characterStore = useCharacterStore()
 
 const loading = ref(false)
 const adding = ref(false)
-const selectedId = ref<number | null>(null)
+const selectedId = ref<string | null>(null)
+
+// Format character details
+function formatCharacterDetails(character: Character): string {
+  const parts: string[] = []
+  if (character.race_name) {
+    parts.push(character.race_name)
+  }
+  if (character.background_name) {
+    parts.push(character.background_name)
+  }
+  return parts.join(' ') || 'No details'
+}
 
 // Filter to characters that match NPC/PC type and aren't already in this campaign
+// Note: With current backend, characters always belong to a campaign,
+// so this will typically show nothing. This modal is kept for future use.
 const availableCharacters = computed(() => {
-  return characterStore.characters.filter(c => {
-    return c.is_npc === props.isNpc && c.campaign_id !== props.campaignId
+  const npcValue = props.isNpc ? 1 : 0
+  return characterStore.characters.filter((c: Character) => {
+    return c.is_npc === npcValue && c.campaign_id !== props.campaignId
   })
 })
 
@@ -92,7 +106,7 @@ watch(() => props.visible, async (isVisible) => {
     loading.value = true
     selectedId.value = null
     try {
-      await characterStore.fetchAllCharacters()
+      await characterStore.fetchCharacters(props.campaignId)
     } finally {
       loading.value = false
     }
@@ -104,10 +118,10 @@ async function addCharacter() {
 
   adding.value = true
   try {
-    await invoke('assign_character_to_campaign', {
-      characterId: selectedId.value,
-      campaignId: props.campaignId
-    })
+    // Note: Cross-campaign character assignment is not currently supported.
+    // Characters are created per-campaign. This would need backend support
+    // for reassigning characters between campaigns.
+    console.warn('Character reassignment between campaigns not yet implemented')
     emit('added')
   } catch (e) {
     console.error('Failed to add character to campaign:', e)
@@ -184,12 +198,8 @@ async function addCharacter() {
 }
 
 .current-campaign,
-.no-campaign {
+.other-campaign {
   font-size: 0.75rem;
   color: var(--color-text-muted, #888);
-}
-
-.no-campaign {
-  color: var(--color-success, #10b981);
 }
 </style>

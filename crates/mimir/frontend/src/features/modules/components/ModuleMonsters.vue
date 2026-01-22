@@ -134,10 +134,10 @@ interface ModuleMonster {
 }
 
 interface Props {
-  moduleId: number
+  moduleId: string
   moduleName: string
   moduleNumber: number
-  campaignId: number
+  campaignId: string
 }
 
 const props = defineProps<Props>()

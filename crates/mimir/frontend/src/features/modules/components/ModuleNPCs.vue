@@ -63,9 +63,9 @@ import { dataEvents } from '@/shared/utils/dataEvents'
 import type { ApiResponse } from '@/types/api'
 
 interface ModuleNpcWithCharacter {
-  id: number
-  module_id: number
-  character_id: number
+  id: string
+  module_id: string
+  character_id: string
   role: string | null
   encounter_tag: string | null
   notes: string | null
@@ -73,8 +73,8 @@ interface ModuleNpcWithCharacter {
 }
 
 const props = defineProps<{
-  moduleId: number
-  campaignId: number
+  moduleId: string
+  campaignId: string
 }>()
 
 const router = useRouter()

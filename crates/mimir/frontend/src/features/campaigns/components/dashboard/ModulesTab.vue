@@ -31,7 +31,7 @@
         <DocumentEditor
           v-if="selectedDocument"
           :document="selectedDocument"
-          :campaign-id="campaign?.id || 0"
+          :campaign-id="campaign?.id || ''"
           :module-id="selectedModule.id"
           @close="selectedDocument = null"
           @updated="handleDocumentUpdated"
@@ -92,12 +92,9 @@
                     v-for="doc in moduleDocuments"
                     :key="doc.id"
                     class="document-card"
-                    :class="{ 'user-created': doc.is_user_created }"
                     @click="selectedDocument = doc"
                   >
-                    <span class="doc-title">{{ formatDocumentTitle(doc.template_id || doc.title || 'Untitled') }}</span>
-                    <span v-if="doc.completed_at" class="doc-status complete">Done</span>
-                    <span v-else-if="doc.is_user_created" class="doc-status user">Custom</span>
+                    <span class="doc-title">{{ formatDocumentTitle(doc.title || 'Untitled') }}</span>
                     <button
                       class="doc-delete-btn"
                       @click="confirmDeleteDocument(doc, $event)"
@@ -198,7 +195,7 @@
                             <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">*</span>
                           </div>
                           <button
-                            v-if="monster.id > 0"
+                            v-if="monster.id"
                             class="monster-edit-btn"
                             @click.stop="openMonsterEditModal(monster)"
                             title="Customize monster"
@@ -293,7 +290,7 @@
     <!-- Map Upload Modal -->
     <MapUploadModal
       :visible="showMapUploadModal"
-      :campaign-id="campaign?.id || 0"
+      :campaign-id="campaign?.id || ''"
       :module-id="selectedModule?.id"
       @close="showMapUploadModal = false"
       @uploaded="handleMapUploaded"
@@ -320,8 +317,8 @@
     <!-- NPC Selector Modal -->
     <NpcSelectorModal
       :visible="showNpcSelector"
-      :module-id="selectedModule?.id || 0"
-      :campaign-id="campaign?.id || 0"
+      :module-id="selectedModule?.id || ''"
+      :campaign-id="campaign?.id || ''"
       :existing-npc-ids="existingNpcCharacterIds"
       @close="showNpcSelector = false"
       @added="handleNpcsAdded"
@@ -330,7 +327,7 @@
     <!-- Create Document Modal -->
     <CreateDocumentModal
       :visible="showCreateDocModal"
-      :campaign-id="campaign?.id || 0"
+      :campaign-id="campaign?.id || ''"
       :module-id="selectedModule?.id"
       @close="showCreateDocModal = false"
       @created="handleDocumentCreated"
@@ -434,12 +431,12 @@ import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import AppModal from '@/components/shared/AppModal.vue'
-import type { Campaign, BoardConfig, Module, Document } from '@/types'
+import type { Campaign, Module, Document } from '@/types'
 
 interface MapData {
-  id: number
-  campaign_id: number
-  module_id: number | null
+  id: string
+  campaign_id: string
+  module_id: string | null
   name: string
   image_path: string
   width_px: number
@@ -454,7 +451,6 @@ interface MapData {
 
 const props = defineProps<{
   campaign?: Campaign
-  boardConfig?: BoardConfig
   documents?: any[]
 }>()
 
@@ -474,7 +470,7 @@ const editingTitleValue = ref('')
 const titleInput = ref<HTMLInputElement | null>(null)
 
 // Computed moduleId for monsters composable
-const selectedModuleId = computed(() => selectedModule.value?.id || 0)
+const selectedModuleId = computed(() => selectedModule.value?.id || '')
 
 // Monster state (from composable)
 const {
@@ -531,9 +527,9 @@ const documentToDelete = ref<Document | null>(null)
 
 // NPC state
 interface ModuleNpcWithCharacter {
-  id: number
-  module_id: number
-  character_id: number
+  id: string
+  module_id: string
+  character_id: string
   role: string | null
   encounter_tag: string | null
   notes: string | null
@@ -578,18 +574,15 @@ async function selectModule(mod: Module) {
   selectedDocument.value = null
   selectedTrap.value = null
 
-  // Set up session notes path
-  if (props.campaign?.directory_path && mod.module_number) {
-    setNotesFilePath(buildNotesFilePath(props.campaign.directory_path, mod.module_number))
-  }
+  // Note: Play notes functionality currently disabled - directory_path not available
+  // TODO: Re-enable once campaign directory structure is implemented
 
   await Promise.all([
     loadModuleDocuments(),
     loadModuleMaps(),
     loadModuleMonsters(),
     loadModuleTraps(),
-    loadNpcs(),
-    loadNotes()
+    loadNpcs()
   ])
 }
 
@@ -665,10 +658,10 @@ function handleSelectMonster(monster: any) {
 
 // Load documents for selected module
 async function loadModuleDocuments() {
-  if (!selectedModule.value || !props.campaign?.id) return
+  if (!selectedModule.value) return
 
   try {
-    moduleDocuments.value = await DocumentService.list(selectedModule.value.id, props.campaign.id)
+    moduleDocuments.value = await DocumentService.listForModule(selectedModule.value.id)
   } catch (e) {
     console.error('Failed to load module documents:', e)
   }
@@ -798,8 +791,6 @@ function handleDocumentUpdated(doc: Document) {
 // Handle document created
 async function handleDocumentCreated() {
   showCreateDocModal.value = false
-  // Clear the document cache since we created via a separate command
-  DocumentService.clearCache()
   await loadModuleDocuments()
 }
 
@@ -952,7 +943,7 @@ watch(() => props.campaign?.id, () => {
 // Watch for query param to auto-select module (e.g., from play view back navigation)
 watch(() => route.query.select, async (selectId) => {
   if (selectId && modules.value.length > 0) {
-    const moduleToSelect = modules.value.find(m => m.id === Number(selectId))
+    const moduleToSelect = modules.value.find(m => m.id === String(selectId))
     if (moduleToSelect && selectedModule.value?.id !== moduleToSelect.id) {
       await selectModule(moduleToSelect)
     }
@@ -966,7 +957,7 @@ onMounted(async () => {
   // Check for select query param after modules are loaded
   const selectId = route.query.select
   if (selectId && modules.value.length > 0) {
-    const moduleToSelect = modules.value.find(m => m.id === Number(selectId))
+    const moduleToSelect = modules.value.find(m => m.id === String(selectId))
     if (moduleToSelect) {
       await selectModule(moduleToSelect)
       router.replace({ query: {} })

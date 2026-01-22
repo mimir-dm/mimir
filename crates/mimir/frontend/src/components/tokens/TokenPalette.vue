@@ -213,7 +213,7 @@ interface ModuleMonsterWithData {
 }
 
 interface Props {
-  moduleId?: number | null
+  moduleId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -552,7 +552,7 @@ function emitConfig() {
     visible_to_players: visibleToPlayers.value,
     x: 0, // Will be set on click
     y: 0,
-    map_id: 0 // Will be set by parent
+    map_id: '' // Will be set by parent
   }
 
   // Set image_path and monster info for module_monsters auto-add

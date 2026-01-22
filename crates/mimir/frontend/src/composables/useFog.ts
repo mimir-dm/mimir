@@ -12,8 +12,8 @@ interface ApiResponse<T> {
 }
 
 export interface FogRevealedArea {
-  id: number
-  map_id: number
+  id: string
+  map_id: string
   x: number
   y: number
   width: number
@@ -21,13 +21,13 @@ export interface FogRevealedArea {
 }
 
 export interface FogState {
-  map_id: number
+  map_id: string
   fog_enabled: boolean
   revealed_areas: FogRevealedArea[]
 }
 
 export interface RevealRectRequest {
-  map_id: number
+  map_id: string
   x: number
   y: number
   width: number
@@ -35,13 +35,13 @@ export interface RevealRectRequest {
 }
 
 export interface RevealCircleRequest {
-  map_id: number
+  map_id: string
   center_x: number
   center_y: number
   radius: number
 }
 
-export function useFog(mapId: number) {
+export function useFog(mapId: string) {
   const fogEnabled = ref(false)
   const revealedAreas = ref<FogRevealedArea[]>([])
   const loading = ref(false)
@@ -171,7 +171,7 @@ export function useFog(mapId: number) {
   }
 
   // Delete a revealed area (re-fog)
-  async function deleteRevealedArea(id: number): Promise<boolean> {
+  async function deleteRevealedArea(id: string): Promise<boolean> {
     try {
       const response = await invoke<ApiResponse<void>>('delete_revealed_area', { id })
       if (response.success) {

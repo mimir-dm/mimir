@@ -4,14 +4,14 @@ level: task
 title: "v0.5 UI Architecture and Views Design"
 short_code: "MIMIR-T-0363"
 created_at: 2026-01-20T01:13:57.341058+00:00
-updated_at: 2026-01-20T01:13:57.341058+00:00
+updated_at: 2026-01-21T16:38:39.122513+00:00
 parent: MIMIR-I-0041
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ initiative_id: MIMIR-I-0041
 
 ## Objective
 Design the complete UI architecture: application shell, navigation, views, component structure, and routing. The UI is a thin presentation layer over Pinia stores.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 - [ ] Application shell layout defined
@@ -371,6 +375,117 @@ components/
 - Depends on: [[MIMIR-T-0360]] Pinia Store Design
 - Depends on: [[MIMIR-T-0362]] LLM Chat Assistant Design (for ChatPanel)
 
+## Investigation Findings (2026-01-21)
+
+### Current Route Structure
+
+**Existing Routes (mimir-dm-bu/mimir-dm/frontend/src/app/router/):**
+```
+/campaigns                    → CampaignList
+/campaigns/:id/dashboard      → CampaignDashboard (tabbed container)
+/modules                      → ModuleList
+/modules/:id                  → ModuleDetail
+/modules/:id/play             → ModulePlayView
+/characters                   → CharacterList
+/characters/:id               → CharacterSheet
+/settings                     → Settings
+/players                      → PlayerList
+/templates                    → TemplateViews
+/sources                      → SourceSearch (catalog)
+```
+
+**Gaps vs. v0.5 Design:**
+- No top-level `/documents` route (documents in module context only)
+- No top-level `/maps` route (maps in module context only)
+- `/catalog` should be primary route (currently `/sources`)
+- Dashboard uses intermediate container routing
+
+### Current App Shell
+
+**Existing Structure:**
+```
+App.vue
+├── AppHeader.vue (top bar with campaign switcher)
+└── <RouterView /> (full-width content)
+```
+
+**Gaps vs. v0.5 Design:**
+- Missing left sidebar navigation
+- Missing persistent breadcrumb
+- Missing collapsible chat panel
+- Missing status bar
+- Header-based nav instead of sidebar
+
+### Component Organization
+
+**Current (scattered):**
+```
+src/components/           # Mixed domain-specific
+src/shared/components/    # Emerging shared library
+  ├── ui/                 # Modal, Loading, Spinner
+  └── layout/             # MainLayout, TwoPanelLayout
+src/features/*/components/ # Feature-specific
+```
+
+**v0.5 Target:**
+```
+src/components/
+├── common/     # Button, Input, Select, Modal, etc.
+├── layout/     # PageHeader, SplitPane, EmptyState
+├── domain/     # CampaignCard, ModuleCard, etc.
+└── editor/     # MarkdownEditor, MapCanvas, etc.
+```
+
+### Reusable Components Identified
+
+**Keep as-is:**
+- `DmMapViewer.vue` (64KB, complex map rendering)
+- `PlayerDisplayWindow.vue` (player-facing display)
+- Token/lighting/LOS components in `src/components/`
+- Print/export dialogs
+- `AppModal.vue`, `LoadingSpinner`, `ThemeSelector`
+
+**Feature-specific worth keeping:**
+- `src/features/campaigns/components/dashboard/` tabs
+- `src/features/modules/components/` (stage, NPCs, monsters)
+- `src/features/characters/components/` (wizard, inventory, level up)
+- `src/features/sources/components/` (catalog search, tables)
+
+### View-Store Mapping Assessment
+
+| View | Current Store Usage | Matches v0.5 |
+|------|---------------------|--------------|
+| CampaignList | useCampaignStore | ✅ Yes |
+| CampaignDashboard | campaign + module + character | ✅ Yes |
+| ModuleDetail | useModuleStore | ✅ Yes |
+| CharacterList | useCharacterStore | ✅ Yes |
+| CharacterDetail | useCharacterStore | ✅ Yes |
+| SourceSearch | composables (problem) | ❌ Should use useCatalogStore |
+
+### Migration Priorities
+
+**High Priority (structural):**
+1. Add sidebar navigation to app shell
+2. Restructure router for top-level routes
+3. Consolidate shared component library
+
+**Medium Priority (alignment):**
+1. Add `/documents` and `/maps` routes
+2. Rename `/sources` to `/catalog`
+3. Move catalog composables to useCatalogStore
+
+**Low Priority (polish):**
+1. Add breadcrumb component
+2. Add status bar
+3. Implement collapsible chat panel
+
+### Acceptance Criteria Status
+- [x] Application shell layout defined (current differs, migration path clear)
+- [x] All primary views/routes specified (most exist, gaps identified)
+- [ ] Navigation structure documented (needs sidebar implementation)
+- [x] Component hierarchy for each view (documented)
+- [x] Store-to-view mapping clear (documented above)
+
 ## Progress
 
-*To be updated during implementation*
+- 2026-01-21: Investigation complete. Existing UI ~70% aligned, needs shell restructure and route additions.

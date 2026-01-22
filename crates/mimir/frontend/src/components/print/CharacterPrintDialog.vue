@@ -131,7 +131,7 @@ import { PrintService } from '../../services/PrintService'
 
 interface Props {
   visible: boolean
-  characterId: number | null
+  characterId: string | null
   characterName?: string
 }
 

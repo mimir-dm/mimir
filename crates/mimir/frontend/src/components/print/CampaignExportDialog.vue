@@ -123,7 +123,7 @@ import { PrintService } from '../../services/PrintService'
 
 interface Props {
   visible: boolean
-  campaignId: number | null
+  campaignId: string | null
   campaignName?: string
 }
 

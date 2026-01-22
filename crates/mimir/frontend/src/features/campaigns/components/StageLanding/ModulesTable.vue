@@ -77,7 +77,7 @@ import ModuleExportDialog from '../../../../components/print/ModuleExportDialog.
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 
 interface ModuleData {
-  id: number
+  id: string
   name: string
   module_number: number
   status: string
@@ -88,7 +88,7 @@ const props = withDefaults(defineProps<{
   loading: boolean
   title?: string
   emptyMessage?: string
-  campaignId?: number
+  campaignId?: string
 }>(), {
   title: 'Modules',
   emptyMessage: 'No modules yet. Create your first module to get started!'

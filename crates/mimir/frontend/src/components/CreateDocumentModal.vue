@@ -146,8 +146,8 @@ import AppModal from '@/components/shared/AppModal.vue'
 
 const props = defineProps<{
   visible: boolean
-  campaignId: number
-  moduleId?: number
+  campaignId: string
+  moduleId?: string
 }>()
 
 const emit = defineEmits<{

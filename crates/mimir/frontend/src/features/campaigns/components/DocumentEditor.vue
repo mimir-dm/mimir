@@ -192,7 +192,7 @@ import ImagePreview from '../../../components/ImagePreview.vue'
 
 const props = defineProps<{
   document: any
-  campaignId: number
+  campaignId: string
 }>()
 
 const emit = defineEmits<{

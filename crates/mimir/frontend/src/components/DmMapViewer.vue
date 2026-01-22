@@ -483,16 +483,16 @@ function throttle<T extends (...args: any[]) => void>(fn: T, limit: number): T {
 }
 
 interface Props {
-  mapId: number | null
+  mapId: string | null
   gridType?: string
   gridSizePx?: number | null
   gridOffsetX?: number
   gridOffsetY?: number
   showGrid?: boolean
   /** Campaign ID for UVTT file loading */
-  campaignId?: number | null
+  campaignId?: string | null
   /** Module ID for UVTT file loading (null for campaign-level maps) */
-  moduleId?: number | null
+  moduleId?: string | null
   /** UVTT file path (e.g., "abc123.dd2vtt") */
   uvttFilePath?: string | null
 }
@@ -512,16 +512,16 @@ const { isDisplayOpen, updateViewport } = usePlayerDisplay()
 
 // Token state - will be initialized when mapId is available
 const tokens = ref<Token[]>([])
-const selectedTokenId = ref<number | null>(null)
+const selectedTokenId = ref<string | null>(null)
 
 // Token images cache (token_id -> base64 data URL)
-const tokenImages = ref<Map<number, string>>(new Map())
+const tokenImages = ref<Map<string, string>>(new Map())
 
 // Dead token state (frontend-only, not persisted)
-const deadTokenIds = ref<number[]>([])
+const deadTokenIds = ref<string[]>([])
 
 // Token drag state
-const draggingTokenId = ref<number | null>(null)
+const draggingTokenId = ref<string | null>(null)
 const dragOffset = ref<{ x: number; y: number } | null>(null)
 const dragStartPos = ref<{ x: number; y: number; tokenX: number; tokenY: number } | null>(null)
 const tokenRendererRef = ref<InstanceType<typeof TokenRenderer> | null>(null)
@@ -676,7 +676,7 @@ function handleDoorToggle(portalId: string) {
 }
 
 // Load tokens when map changes
-async function loadTokens(mapId: number) {
+async function loadTokens(mapId: string) {
   try {
     const response = await invoke<{ success: boolean; data?: Token[] }>('list_tokens', { mapId })
     if (response.success && response.data) {
@@ -728,7 +728,7 @@ async function sendTokensToDisplay() {
 }
 
 // Load fog state
-async function loadFogState(mapId: number) {
+async function loadFogState(mapId: string) {
   try {
     const response = await invoke<{ success: boolean; data?: { fog_enabled: boolean } }>('get_fog_state', { mapId })
     if (response.success && response.data) {
@@ -742,7 +742,7 @@ async function loadFogState(mapId: number) {
 }
 
 // Load light sources for the map
-async function loadLightSources(mapId: number) {
+async function loadLightSources(mapId: string) {
   try {
     const response = await invoke<{ success: boolean; data?: LightSourceSummary[] }>('list_light_sources', { mapId })
     if (response.success && response.data) {
@@ -926,7 +926,7 @@ async function toggleSelectedTokenVisibility() {
 }
 
 // Get light source for a token
-function getTokenLightSource(tokenId: number): LightSourceSummary | undefined {
+function getTokenLightSource(tokenId: string): LightSourceSummary | undefined {
   return lightSources.value.find(ls => ls.token_id === tokenId)
 }
 
@@ -1003,7 +1003,7 @@ async function addTorchToToken() {
 }
 
 // Check if a token is dead
-function isTokenDead(tokenId: number): boolean {
+function isTokenDead(tokenId: string): boolean {
   return deadTokenIds.value.includes(tokenId)
 }
 
@@ -1092,11 +1092,11 @@ async function addAllPCsToMap() {
   addingPCs.value = true
 
   try {
-    // Fetch all characters for the campaign
-    const characters = await characterStore.fetchCharactersForCampaign(props.campaignId)
+    // Fetch PCs for the campaign
+    await characterStore.fetchPcs(props.campaignId)
 
-    // Filter to only PCs (not NPCs)
-    const pcs = characters.filter(c => !c.is_npc)
+    // Get PCs from store (is_npc === 0 means PC)
+    const pcs = characterStore.characters.filter(c => c.campaign_id === props.campaignId && c.is_npc === 0)
 
     if (pcs.length === 0) {
       console.log('No player characters found for campaign')
@@ -1132,14 +1132,14 @@ async function addAllPCsToMap() {
       const { x: snappedX, y: snappedY } = snapToGrid(tokenX, tokenY)
 
       // Check if race has darkvision
-      const raceLower = (pc.race || '').toLowerCase()
+      const raceLower = (pc.race_name || '').toLowerCase()
       const hasDarkvision = darkvisionRaces.some(r => raceLower.includes(r))
 
       try {
         const response = await invoke<{ success: boolean; data?: Token; error?: string }>('create_token', {
           request: {
             map_id: props.mapId,
-            name: pc.character_name,
+            name: pc.name,
             token_type: 'pc',
             size: 'medium',
             x: snappedX,
@@ -1168,7 +1168,7 @@ async function addAllPCsToMap() {
           }
         }
       } catch (e) {
-        console.error(`Failed to create token for ${pc.character_name}:`, e)
+        console.error(`Failed to create token for ${pc.name}:`, e)
       }
     }
 
@@ -1450,7 +1450,7 @@ watch(() => props.mapId, async (newId) => {
 let unlistenStateRequest: UnlistenFn | null = null
 
 async function setupStateRequestListener() {
-  unlistenStateRequest = await listen<{ mapId: number }>('player-display:request-state', (event) => {
+  unlistenStateRequest = await listen<{ mapId: string }>('player-display:request-state', (event) => {
     console.log('DmMapViewer: Received state request for map', event.payload.mapId)
     // Only respond if this is our current map
     if (event.payload.mapId === props.mapId) {
@@ -1472,7 +1472,7 @@ watch(isDisplayOpen, async (open) => {
   }
 })
 
-async function loadMapImage(id: number) {
+async function loadMapImage(id: string) {
   console.log('DmMapViewer: Loading map with id:', id)
   loading.value = true
   imageLoaded.value = false

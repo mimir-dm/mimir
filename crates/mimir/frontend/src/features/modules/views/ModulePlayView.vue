@@ -257,7 +257,7 @@ async function handleBlackoutToggle() {
   }
 }
 
-const moduleId = computed(() => parseInt(route.params.id as string))
+const moduleId = computed(() => route.params.id as string)
 const module = ref<Module | null>(null)
 const campaign = ref<Campaign | null>(null)
 const sidebarCollapsed = ref(false)
@@ -334,10 +334,11 @@ async function loadModule() {
       campaign.value = campaignResponse.data
 
       // Build notes file path and load notes
-      if (campaign.value?.directory_path && module.value) {
-        const moduleNumber = (module.value as any).module_number || 1
-        setNotesFilePath(buildNotesFilePath(campaign.value.directory_path, moduleNumber))
-        await loadNotes()
+      // Note: The new backend doesn't have directory_path on Campaign,
+      // so play notes are disabled until a new storage approach is implemented
+      if (module.value) {
+        // For now, skip notes loading - the backend doesn't support file-based notes
+        // Future: Could use a document-based approach or in-DB notes storage
       }
     }
   } catch (error) {

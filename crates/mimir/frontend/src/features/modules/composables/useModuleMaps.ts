@@ -4,9 +4,9 @@ import { dataEvents } from '@/shared/utils/dataEvents'
 
 // Types
 export interface MapSummary {
-  id: number
-  campaign_id: number
-  module_id: number | null
+  id: string
+  campaign_id: string
+  module_id: string | null
   name: string
   grid_type: string
   grid_size_px: number | null
@@ -20,8 +20,8 @@ export interface MapSummary {
 }
 
 interface UseModuleMapsOptions {
-  moduleId: Ref<number>
-  campaignId: ComputedRef<number | null | undefined>
+  moduleId: Ref<string>
+  campaignId: ComputedRef<string | null | undefined>
   isDisplayOpen: Ref<boolean>
 }
 
@@ -33,7 +33,7 @@ export function useModuleMaps({ moduleId, campaignId, isDisplayOpen }: UseModule
   // State
   const allMaps = ref<MapSummary[]>([])
   const mapsLoading = ref(false)
-  const activeMapId = ref<number | null>(null)
+  const activeMapId = ref<string | null>(null)
 
   // Get the active map details for the DmMapViewer
   const activeMap = computed(() => {
@@ -91,7 +91,7 @@ export function useModuleMaps({ moduleId, campaignId, isDisplayOpen }: UseModule
   }
 
   // Set active map without sending to display
-  function setActiveMap(mapId: number | null) {
+  function setActiveMap(mapId: string | null) {
     activeMapId.value = mapId
   }
 

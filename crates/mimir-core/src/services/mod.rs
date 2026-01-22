@@ -3,19 +3,23 @@
 //! Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
 //! Services encapsulate validation, transactions, and orchestration of database operations.
 
+mod asset;
 mod campaign;
 pub mod catalog;
 mod character;
 mod document;
+mod map;
 mod module;
 
 use thiserror::Error;
 
+pub use asset::{AssetService, UploadAssetInput};
 pub use campaign::{CampaignService, CreateCampaignInput, UpdateCampaignInput};
 pub use character::{
     AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
 };
 pub use document::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
+pub use map::{CreateMapInput, MapService, UpdateMapInput};
 pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 pub use catalog::{
     ActionService, BackgroundService, CatalogEntityService, ClassService, ConditionService,

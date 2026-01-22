@@ -1,17 +1,17 @@
 ---
-id: v2-service-layer-api-design
+id: v0-5-service-layer-api-design
 level: task
 title: "v0.5 Service Layer API Design"
 short_code: "MIMIR-T-0358"
 created_at: 2026-01-19T22:06:59.522533+00:00
-updated_at: 2026-01-19T22:06:59.522533+00:00
+updated_at: 2026-01-21T16:08:09.291010+00:00
 parent: MIMIR-I-0041
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -28,10 +28,14 @@ initiative_id: MIMIR-I-0041
 Define Rust trait interfaces for all service layer components. Services own business logic; repositories handle data access. Both MCP and Tauri commands call services.
 
 ## Acceptance Criteria
-- [ ] Trait definitions for all services
-- [ ] Clear separation: Service (business logic) vs Repository (data access)
-- [ ] Async-first design with proper error handling
-- [ ] Services are testable via trait injection
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+- [x] Trait definitions for all services
+- [x] Clear separation: Service (business logic) vs DAL (data access)
+- [x] Sync design with Diesel (async wrapper at Tauri layer)
+- [x] Services are testable with in-memory SQLite
 
 ## Architecture
 
@@ -299,4 +303,22 @@ pub type Result<T> = std::result::Result<T, ServiceError>;
 
 ## Progress
 
-*To be updated during implementation*
+### 2026-01-21 - Completed
+
+Design finalized and implemented via **MIMIR-I-0044** (Implement Service Layer for mimir-core).
+
+**Key design decisions:**
+- Stateful services with `&'a mut SqliteConnection` (per ADR MIMIR-A-0005)
+- Sync Diesel queries (async wrapper at Tauri command layer)
+- `CatalogEntityService` trait for generic catalog access
+- `ServiceError` enum with NotFound, Validation, Database, Io variants
+- Services tested with in-memory SQLite via `test_utils::setup_test_db()`
+
+**Implemented services (9 tasks, 146 tests):**
+- `CampaignService` - CRUD, archive/unarchive, document creation from templates
+- `ModuleService` - CRUD with type-based template selection
+- `DocumentService` - CRUD, move between campaign/module
+- `CharacterService` - PC/NPC CRUD, inventory management
+- `AssetService` - Binary asset upload/storage/retrieval
+- `MapService` - UVTT map upload with asset management
+- `CatalogEntityService` implementations: Monster, Spell, Item, Race, Background, Class, Condition, Feat, Language, Trap, Action, Hazard
