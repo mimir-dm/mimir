@@ -26,11 +26,10 @@ export function useConditions() {
   const catalog = useCatalogSearch<ConditionSummary, ConditionWithDetails, ConditionFilters>({
     name: 'condition',
     searchCommand: 'search_conditions',
-    detailsCommand: 'get_condition',
+    detailsCommand: 'get_condition_by_name',
     transformFilters: (filters) => ({
-      query: filters.query,
-      sources: filters.sources,
-      typeFilter: filters.type_filter
+      name: filters.query || null,
+      sources: filters.sources?.length ? filters.sources : null,
     }),
   })
 

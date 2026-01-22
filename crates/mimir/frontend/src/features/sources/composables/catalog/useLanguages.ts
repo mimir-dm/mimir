@@ -33,52 +33,58 @@ export interface Language {
 
 export function useLanguages() {
   async function initializeLanguageCatalog() {
-    try {
-      await invoke('init_language_catalog')
-    } catch (e) {
-      // Initialization failed silently
-    }
+    // No initialization needed - database-backed
   }
 
   async function searchLanguages(filters: LanguageFilters = {}): Promise<LanguageSummary[]> {
     try {
-      const results = await invoke<LanguageSummary[]>('search_languages', {
-        query: filters.query || null,
-        sources: filters.sources || null,
-        language_types: filters.types || null,
-        scripts: filters.scripts || null
+      const response = await invoke<{ success: boolean; data?: LanguageSummary[]; error?: string }>('search_languages', {
+        filter: {
+          name: filters.query || null,
+          sources: filters.sources?.length ? filters.sources : null,
+          language_types: filters.types?.length ? filters.types : null,
+        },
+        limit: 100,
+        offset: 0
       })
-      return results || []
+      if (response.success && response.data) {
+        return response.data
+      }
+      return []
     } catch (e) {
+      console.error('Failed to search languages:', e)
       return []
     }
   }
 
   async function getLanguageDetails(name: string, source: string): Promise<Language | null> {
     try {
-      const details = await invoke<Language>('get_language_details', { name, source })
-      return details
+      const response = await invoke<{ success: boolean; data?: Language; error?: string }>('get_language_by_name', { name, source })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get language details:', e)
       return null
     }
   }
 
   async function getLanguageTypes(): Promise<string[]> {
     try {
-      const types = await invoke<string[]>('get_language_types')
-      return types || []
+      const response = await invoke<{ success: boolean; data?: string[]; error?: string }>('list_language_sources')
+      if (response.success && response.data) {
+        return response.data
+      }
+      return []
     } catch (e) {
       return []
     }
   }
 
   async function getLanguageScripts(): Promise<string[]> {
-    try {
-      const scripts = await invoke<string[]>('get_language_scripts')
-      return scripts || []
-    } catch (e) {
-      return []
-    }
+    // Scripts not currently supported in backend
+    return []
   }
 
   return {

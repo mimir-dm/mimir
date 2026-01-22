@@ -107,56 +107,51 @@ export interface Class {
 export function useClasses() {
   const classSources = ref<string[]>([])
 
-  const catalog = useCatalogSearch<ClassSummary, ClassWithDetails, ClassFilters>({
+  const catalog = useCatalogSearch<ClassSummary, Class, ClassFilters>({
     name: 'class',
     searchCommand: 'search_classes',
-    detailsCommand: 'get_class_details',
+    detailsCommand: 'get_class_by_name',
     transformFilters: (filters) => ({
-      filters: {
-        name: filters.name || null,
-        sources: filters.sources || null,
-        has_spellcasting: filters.has_spellcasting || null,
-        primary_abilities: filters.primary_abilities || null,
-      }
+      name: filters.name || null,
+      sources: filters.sources || null,
     }),
   })
 
-  // Custom getDetails with different parameter names
+  // Custom getDetails with ApiResponse handling
   async function getClassDetails(name: string, source: string): Promise<ClassWithDetails | null> {
     try {
-      const classDetails = await invoke<ClassWithDetails>('get_class_details', {
-        className: name,
-        classSource: source
+      const response = await invoke<{ success: boolean; data?: Class; error?: string }>('get_class_by_name', {
+        name,
+        source
       })
-      return classDetails
+      if (response.success && response.data) {
+        // Wrap in ClassWithDetails structure
+        return {
+          class: response.data,
+          subclasses: [],
+          features: [],
+          subclass_features: [],
+          fluff: response.data.fluff,
+          subclass_fluff: []
+        }
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get class details:', e)
       return null
     }
   }
 
   async function getSubclassDetails(subclassName: string, className: string, classSource: string): Promise<Subclass | null> {
-    try {
-      const subclassDetails = await invoke<Subclass>('get_subclass_details', {
-        subclassName: subclassName,
-        className: className,
-        classSource: classSource
-      })
-      return subclassDetails
-    } catch (e) {
-      return null
-    }
+    // Subclass details not currently supported in backend
+    console.warn('getSubclassDetails not implemented in backend')
+    return null
   }
 
   async function getClassSubclasses(className: string, classSource: string): Promise<Subclass[]> {
-    try {
-      const subclasses = await invoke<Subclass[]>('get_class_subclasses', {
-        class_name: className,
-        class_source: classSource
-      })
-      return subclasses
-    } catch (e) {
-      return []
-    }
+    // Class subclasses not currently supported in backend
+    console.warn('getClassSubclasses not implemented in backend')
+    return []
   }
 
   return {

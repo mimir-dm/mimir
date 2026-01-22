@@ -18,13 +18,12 @@ export interface BackgroundFilters {
 export function useBackgrounds() {
   const catalog = useCatalogSearch<BackgroundSummary, any, BackgroundFilters>({
     name: 'background',
-    initializeCommand: 'init_background_catalog',
+    // No initialization needed - database-backed
     searchCommand: 'search_backgrounds',
-    detailsCommand: 'get_background_details',
+    detailsCommand: 'get_background_by_name',
     transformFilters: (filters) => ({
-      query: filters.query || null,
+      name: filters.query || null,
       sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
-      hasTools: filters.has_tools !== undefined ? filters.has_tools : null
     }),
   })
 

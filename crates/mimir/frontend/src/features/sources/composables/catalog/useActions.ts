@@ -18,11 +18,10 @@ export function useActions() {
   const catalog = useCatalogSearch<ActionSummary, any, ActionFilters>({
     name: 'action',
     searchCommand: 'search_actions',
-    detailsCommand: 'get_action',
+    detailsCommand: 'get_action_by_name',
     transformFilters: (filters) => ({
-      query: filters.query || null,
+      name: filters.query || null,
       sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
-      timeFilter: filters.time_filter || null
     }),
   })
 

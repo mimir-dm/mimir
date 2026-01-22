@@ -46,9 +46,9 @@ export interface Spell {
 export function useSpells() {
   const catalog = useCatalogSearch<SpellSummary, Spell, SpellFilters>({
     name: 'spell',
-    initializeCommand: 'initialize_spell_catalog',
+    // No initialization needed - database-backed
     searchCommand: 'search_spells',
-    detailsCommand: 'get_spell_details',
+    detailsCommand: 'get_spell_by_name',
   })
 
   return {

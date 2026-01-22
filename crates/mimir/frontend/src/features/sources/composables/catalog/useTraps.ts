@@ -29,21 +29,22 @@ export interface TrapOrHazard {
 export function useTraps() {
   const catalog = useCatalogSearch<TrapSummary, TrapOrHazard, TrapFilters>({
     name: 'trap',
-    initializeCommand: 'init_trap_catalog',
+    // No initialization needed - database-backed
     searchCommand: 'search_traps',
-    detailsCommand: 'get_trap_details',
+    detailsCommand: 'get_trap_by_name',
     transformFilters: (filters) => ({
-      query: filters.query || null,
-      sources: filters.sources || null,
-      categories: filters.categories || null,
-      trap_types: filters.trap_types || null
+      name: filters.query || null,
+      sources: filters.sources?.length ? filters.sources : null,
     }),
   })
 
   async function getTrapTypes(): Promise<string[]> {
     try {
-      const types = await invoke<string[]>('get_trap_types')
-      return types || []
+      const response = await invoke<{ success: boolean; data?: string[]; error?: string }>('list_trap_sources')
+      if (response.success && response.data) {
+        return response.data
+      }
+      return []
     } catch (e) {
       return []
     }

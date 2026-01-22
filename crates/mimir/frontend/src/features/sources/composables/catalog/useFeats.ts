@@ -39,22 +39,33 @@ export interface Feat {
 export function useFeats() {
   async function searchFeats(params: FeatFilters = {}): Promise<FeatSummary[]> {
     try {
-      const results = await invoke<FeatSummary[]>('search_feats', {
-        query: params.query,
-        sources: params.sources,
-        has_prerequisites: params.has_prerequisites
+      const response = await invoke<{ success: boolean; data?: FeatSummary[]; error?: string }>('search_feats', {
+        filter: {
+          name: params.query || null,
+          sources: params.sources?.length ? params.sources : null,
+        },
+        limit: 100,
+        offset: 0
       })
-      return results || []
+      if (response.success && response.data) {
+        return response.data
+      }
+      return []
     } catch (e) {
+      console.error('Failed to search feats:', e)
       return []
     }
   }
 
   async function getFeatDetails(name: string, source: string): Promise<Feat | null> {
     try {
-      const feat = await invoke<Feat>('get_feat_details', { name, source })
-      return feat
+      const response = await invoke<{ success: boolean; data?: Feat; error?: string }>('get_feat_by_name', { name, source })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get feat details:', e)
       return null
     }
   }

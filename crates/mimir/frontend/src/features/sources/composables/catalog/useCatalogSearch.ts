@@ -76,13 +76,23 @@ export function useCatalogSearch<
         ? config.transformFilters(filters)
         : transformDefaultFilters(filters as Record<string, unknown>)
 
-      const searchResults = await invoke<TSummary[]>(
+      // Backend expects { filter, limit, offset } with ApiResponse wrapper
+      const response = await invoke<{ success: boolean; data?: TSummary[]; error?: string }>(
         config.searchCommand,
-        transformedFilters
+        {
+          filter: transformedFilters,
+          limit: 100,
+          offset: 0
+        }
       )
 
-      results.value = searchResults
-      return searchResults
+      if (response.success && response.data) {
+        results.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
       error.value = `Search failed: ${e}`
       return []
@@ -93,9 +103,16 @@ export function useCatalogSearch<
 
   async function getDetails(name: string, source: string): Promise<TDetails | null> {
     try {
-      const details = await invoke<TDetails>(config.detailsCommand, { name, source })
-      return details
+      const response = await invoke<{ success: boolean; data?: TDetails; error?: string }>(
+        config.detailsCommand,
+        { name, source }
+      )
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error(`Failed to get ${config.name} details:`, e)
       return null
     }
   }

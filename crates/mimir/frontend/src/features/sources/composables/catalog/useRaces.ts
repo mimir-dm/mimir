@@ -75,37 +75,36 @@ export interface RaceWithDetails {
 }
 
 export function useRaces() {
-  const catalog = useCatalogSearch<RaceSummary, string | null, RaceFilters>({
+  const catalog = useCatalogSearch<RaceSummary, Race, RaceFilters>({
     name: 'race',
-    initializeCommand: 'init_race_catalog',
+    // No initialization needed - database-backed
     searchCommand: 'search_races',
-    detailsCommand: 'get_race_details',
+    detailsCommand: 'get_race_by_name',
     transformFilters: (filters) => ({
-      search: filters.query || null,
+      name: filters.query || null,
       sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
       sizes: filters.sizes && filters.sizes.length > 0 ? filters.sizes : null,
-      has_darkvision: filters.has_darkvision !== undefined ? filters.has_darkvision : null,
-      has_flight: filters.has_flight !== undefined ? filters.has_flight : null,
     }),
   })
 
-  // Custom getDetails that parses JSON
+  // Custom getDetails that wraps the result
   async function getRaceDetails(name: string, source: string): Promise<RaceWithDetails | null> {
     try {
-      const jsonString = await invoke<string | null>('get_race_details', { name, source })
-      if (!jsonString) {
+      const response = await invoke<{ success: boolean; data?: Race; error?: string }>('get_race_by_name', { name, source })
+      if (!response.success || !response.data) {
         return null
       }
 
-      const raceData = JSON.parse(jsonString)
+      const raceData = response.data
 
       return {
-        race: raceData.name ? raceData : null,
-        subrace: raceData.race_name ? raceData : null,
+        race: raceData,
+        subrace: undefined,
         relatedSubraces: [],
         fluff: null
       } as RaceWithDetails
     } catch (e) {
+      console.error('Failed to get race details:', e)
       return null
     }
   }

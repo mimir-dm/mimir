@@ -49,17 +49,26 @@ export function useItems() {
       isLoading.value = true
       error.value = null
 
-      const results = await invoke<ItemSummary[]>('search_items', {
-        name: filters.query || null,
-        item_types: filters.types?.length ? filters.types : null,
-        rarities: filters.rarities?.length ? filters.rarities : null,
-        sources: filters.sources?.length ? filters.sources : null,
-        min_value: filters.min_value ?? null,
-        max_value: filters.max_value ?? null,
+      const response = await invoke<{ success: boolean; data?: ItemSummary[]; error?: string }>('search_items', {
+        filter: {
+          name: filters.query || null,
+          item_types: filters.types?.length ? filters.types : null,
+          rarities: filters.rarities?.length ? filters.rarities : null,
+          sources: filters.sources?.length ? filters.sources : null,
+          min_value: filters.min_value ?? null,
+          max_value: filters.max_value ?? null,
+        },
+        limit: 100,
+        offset: 0
       })
 
-      items.value = results
-      return results
+      if (response.success && response.data) {
+        items.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
       error.value = `Search failed: ${e}`
       return []
@@ -70,12 +79,16 @@ export function useItems() {
 
   async function getItemDetails(name: string, source: string): Promise<Item | null> {
     try {
-      const item = await invoke<Item>('get_item_details', {
-        item_name: name,
-        item_source: source
+      const response = await invoke<{ success: boolean; data?: Item; error?: string }>('get_item_by_name', {
+        name,
+        source
       })
-      return item
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get item details:', e)
       return null
     }
   }

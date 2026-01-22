@@ -82,8 +82,8 @@ export function useMonsters() {
       isLoading.value = true
       error.value = null
 
-      // Transform to backend MonsterFilters format
-      const backendFilters = {
+      // Transform to backend MonsterFilter format
+      const backendFilter = {
         name: filters.query || null,
         sources: filters.sources?.length ? filters.sources : null,
         creature_types: filters.types?.length ? filters.types : null,
@@ -96,12 +96,19 @@ export function useMonsters() {
         environment: null,
       }
 
-      const results = await invoke<MonsterSummary[]>('search_monsters', {
-        filters: backendFilters
+      const response = await invoke<{ success: boolean; data?: MonsterSummary[]; error?: string }>('search_monsters', {
+        filter: backendFilter,
+        limit: 100,
+        offset: 0
       })
 
-      monsters.value = results
-      return results
+      if (response.success && response.data) {
+        monsters.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
       error.value = `Search failed: ${e}`
       return []
@@ -112,12 +119,16 @@ export function useMonsters() {
 
   async function getMonsterDetails(name: string, source: string): Promise<Monster | null> {
     try {
-      const monster = await invoke<Monster>('get_monster_details', {
-        monsterName: name,
-        monsterSource: source
+      const response = await invoke<{ success: boolean; data?: Monster; error?: string }>('get_monster_by_name', {
+        name,
+        source
       })
-      return monster
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get monster details:', e)
       return null
     }
   }
