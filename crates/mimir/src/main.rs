@@ -11,8 +11,17 @@ use mimir_core::db::init_database;
 use mimir_lib::commands::{asset, campaign, catalog, character, document, map, module, source};
 use mimir_lib::{AppPaths, AppState};
 use tauri::Manager;
+use tracing_subscriber::EnvFilter;
 
 fn main() {
+    // Initialize tracing subscriber for logging
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("mimir=info,mimir_core=info"))
+        )
+        .init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
@@ -177,8 +186,13 @@ fn main() {
             // Source management commands
             source::list_catalog_sources,
             source::import_catalog_from_zip,
+            source::import_catalog_images,
             source::set_source_enabled,
             source::delete_catalog_source,
+            // Book content commands (Reading mode)
+            source::list_library_books,
+            source::get_book_content,
+            source::serve_book_image,
         ])
         .run(tauri::generate_context!())
         .expect("Error running Mimir application");

@@ -70,6 +70,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    books (id) {
+        id -> Nullable<Integer>,
+        source -> Text,
+        name -> Text,
+        data -> Text,
+        contents -> Nullable<Text>,
+        cover_path -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     character_classes (id) {
         id -> Text,
         character_id -> Text,
@@ -549,6 +560,7 @@ diesel::joinable!(campaign_assets -> modules (module_id));
 diesel::joinable!(campaign_sources -> campaigns (campaign_id));
 diesel::joinable!(campaign_sources -> catalog_sources (source_code));
 diesel::joinable!(catalog_tables -> catalog_sources (source));
+diesel::joinable!(books -> catalog_sources (source));
 diesel::joinable!(character_classes -> characters (character_id));
 diesel::joinable!(character_feats -> characters (character_id));
 diesel::joinable!(character_inventory -> characters (character_id));
@@ -600,6 +612,7 @@ diesel::joinable!(vehicles -> catalog_sources (source));
 diesel::allow_tables_to_appear_in_same_query!(
     actions,
     backgrounds,
+    books,
     campaign_assets,
     campaign_sources,
     campaigns,

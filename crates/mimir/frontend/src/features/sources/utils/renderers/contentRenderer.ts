@@ -127,7 +127,37 @@ function renderEntry(entry: BookEntry, index: number = 0, depth: number = 0): st
       </blockquote>
     `
   }
-  
+
+  // Item entries (name/entry pairs, like in lists)
+  if (complexEntry.type === 'item') {
+    return `
+      <div class="item-entry">
+        ${complexEntry.name ? `<strong>${processFormattingTags(complexEntry.name)}:</strong> ` : ''}
+        ${complexEntry.entry ? processFormattingTags(complexEntry.entry) : ''}
+        ${complexEntry.entries ? complexEntry.entries.map((e, i) => renderEntry(e, i, depth + 1)).join('') : ''}
+      </div>
+    `
+  }
+
+  // Options entries (like variant rules or optional content)
+  if (complexEntry.type === 'options') {
+    return `
+      <div class="options-entry">
+        ${complexEntry.entries ? complexEntry.entries.map((e, i) => renderEntry(e, i, depth + 1)).join('') : ''}
+      </div>
+    `
+  }
+
+  // Inline entries (render inline without wrapping div)
+  if (complexEntry.type === 'inline') {
+    return complexEntry.entries ? complexEntry.entries.map((e, i) => renderEntry(e, i, depth)).join('') : ''
+  }
+
+  // Inline block entries
+  if (complexEntry.type === 'inlineBlock') {
+    return `<span class="inline-block">${complexEntry.entries ? complexEntry.entries.map((e, i) => renderEntry(e, i, depth)).join('') : ''}</span>`
+  }
+
   // Default: render as JSON for unknown types (for debugging)
   return `<pre>${JSON.stringify(entry, null, 2)}</pre>`
 }

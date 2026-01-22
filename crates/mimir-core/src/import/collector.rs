@@ -42,6 +42,11 @@ pub struct CollectedEntities {
     pub fluff: HashMap<FluffKey, Value>,
     /// Total count of entities collected.
     pub total_count: usize,
+    /// Book content data (full chapter content for readable books).
+    /// The data array contains all sections/chapters with their entries.
+    pub book_content: Option<Value>,
+    /// Book table of contents from books.json.
+    pub book_contents_toc: Option<Value>,
 }
 
 impl CollectedEntities {
@@ -52,6 +57,8 @@ impl CollectedEntities {
             entities: HashMap::new(),
             fluff: HashMap::new(),
             total_count: 0,
+            book_content: None,
+            book_contents_toc: None,
         }
     }
 
@@ -100,6 +107,21 @@ impl CollectedEntities {
     /// Get fluff count.
     pub fn fluff_count(&self) -> usize {
         self.fluff.len()
+    }
+
+    /// Set book content data.
+    pub fn set_book_content(&mut self, content: Value) {
+        self.book_content = Some(content);
+    }
+
+    /// Set book table of contents.
+    pub fn set_book_toc(&mut self, toc: Value) {
+        self.book_contents_toc = Some(toc);
+    }
+
+    /// Check if book content is available.
+    pub fn has_book_content(&self) -> bool {
+        self.book_content.is_some()
     }
 }
 
@@ -175,6 +197,9 @@ pub fn collect_source_entities(repo_path: &Path, source: &str) -> Result<Collect
 
     // Collect fluff data for all entity types
     collect_fluff(&mut collected, &data_dir, source)?;
+
+    // Collect book content (readable chapter content) if available
+    collect_book_content(&mut collected, &data_dir, source)?;
 
     Ok(collected)
 }
@@ -424,6 +449,55 @@ fn collect_class_fluff(
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Collect book content (readable chapters/sections) for a source.
+///
+/// Book content files are located at `data/book/book-{source}.json` and contain
+/// the full chapter content with entries that can be rendered in a reader view.
+fn collect_book_content(
+    collected: &mut CollectedEntities,
+    data_dir: &Path,
+    source: &str,
+) -> Result<()> {
+    // Book content file path: data/book/book-{source}.json (lowercase)
+    let book_file = data_dir
+        .join("book")
+        .join(format!("book-{}.json", source.to_lowercase()));
+
+    if !book_file.exists() {
+        return Ok(());
+    }
+
+    if let Ok(data) = discovery::load_json_file(&book_file) {
+        // The book content file has a "data" array containing all sections
+        if let Some(book_data) = data.get("data") {
+            collected.set_book_content(book_data.clone());
+        }
+    }
+
+    // Also get the table of contents from books.json metadata
+    let books_file = data_dir.join("books.json");
+    if books_file.exists() {
+        if let Ok(books_data) = discovery::load_json_file(&books_file) {
+            if let Some(books_array) = books_data.get("book").and_then(|v| v.as_array()) {
+                for book in books_array {
+                    // Find the book matching our source
+                    if let Some(book_source) = book.get("source").and_then(|v| v.as_str()) {
+                        if book_source == source {
+                            // Get the contents (table of contents)
+                            if let Some(contents) = book.get("contents") {
+                                collected.set_book_toc(contents.clone());
+                            }
+                            break;
                         }
                     }
                 }

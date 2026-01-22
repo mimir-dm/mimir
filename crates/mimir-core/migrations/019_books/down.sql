@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS idx_books_source;
+DROP TABLE IF EXISTS books;

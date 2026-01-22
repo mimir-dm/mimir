@@ -44,9 +44,10 @@ thiserror = "2"
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 base64 = "0.22"
-zip = "2.2"
-tempfile = "3"
+tar = "0.4"
+flate2 = "1.0"
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [features]
 default = ["custom-protocol"]

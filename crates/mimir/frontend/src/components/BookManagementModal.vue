@@ -77,6 +77,9 @@
         <div v-if="isImporting" class="import-progress">
           Importing: {{ importProgress.currentName }}
         </div>
+        <button @click="handleImportImages" class="btn btn-secondary" :disabled="isImporting || isDeleting">
+          {{ isImporting ? 'Importing...' : 'Import Images' }}
+        </button>
         <button @click="handleImportBook" class="btn btn-primary" :disabled="isImporting || isDeleting">
           {{ isImporting ? 'Importing...' : 'Import 5etools Data' }}
         </button>
@@ -224,10 +227,10 @@ async function handleImportBook() {
     const selected = await open({
       multiple: false,
       filters: [{
-        name: '5etools Archive',
-        extensions: ['zip']
+        name: 'Gzip Archive',
+        extensions: ['gz']
       }],
-      title: 'Select a 5etools zip archive to import'
+      title: 'Select a 5etools tar.gz archive to import'
     })
 
     if (selected && typeof selected === 'string') {
@@ -259,6 +262,45 @@ async function handleImportBook() {
     }
   } catch (error) {
     console.error('Failed to import sources:', error)
+    isImporting.value = false
+  }
+}
+
+async function handleImportImages() {
+  try {
+    const selected = await open({
+      multiple: false,
+      filters: [{
+        name: 'Gzip Archive',
+        extensions: ['gz']
+      }]
+    })
+
+    if (selected && typeof selected === 'string') {
+      const fileName = selected.split('/').pop() || selected
+      isImporting.value = true
+      importProgress.value = { current: 1, total: 1, currentName: fileName }
+
+      try {
+        const response = await invoke<{ success: boolean; data?: ImportResponse; error?: string }>('import_catalog_images', {
+          archivePath: selected
+        })
+
+        isImporting.value = false
+
+        if (response.success && response.data) {
+          alert(response.data.message)
+        } else {
+          alert(`Image import failed: ${response.error || 'Unknown error'}`)
+        }
+      } catch (err) {
+        isImporting.value = false
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        alert(`Image import failed: ${errorMsg}`)
+      }
+    }
+  } catch (error) {
+    console.error('Failed to import images:', error)
     isImporting.value = false
   }
 }

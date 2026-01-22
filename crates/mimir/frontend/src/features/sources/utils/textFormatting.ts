@@ -155,6 +155,17 @@ export function processFormattingTags(text: string | any): string {
   // Books and sources
   processed = processed
     .replace(/{@book ([^|}]+)(?:\|[^}]*)?}/gi, '<span class="book-ref">$1</span>')
+
+  // 5etools images and PDFs - display as links or skip
+  processed = processed
+    .replace(/{@5etoolsImg ([^|}]+)\|([^}]+)}/gi, (match, label, path) => {
+      // For PDFs, show as a note that the file exists
+      if (path.endsWith('.pdf')) {
+        return `<span class="pdf-ref">[PDF: ${label}]</span>`
+      }
+      // For images, they should be handled separately by the image loader
+      return `<span class="external-img-ref">[Image: ${label}]</span>`
+    })
     
   // Chance
   processed = processed

@@ -9,6 +9,8 @@ export interface BookInfo {
   enabled: boolean
   /** ISO 8601 timestamp of when imported */
   imported_at: string
+  /** Number of images (optional, for book archives) */
+  image_count?: number
 }
 
 export interface ImportResponse {

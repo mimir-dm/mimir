@@ -1,19 +1,37 @@
 <template>
   <Panel title="Library" variant="surface">
-    
+
     <div class="library-content">
       <div v-if="isLoadingLibrary" class="loading-message">
         Loading library...
       </div>
-      
+
       <div v-else-if="libraryBooks.length === 0" class="empty-message">
         <p>No books in library</p>
         <p v-if="isDevelopment" class="dev-note">
           Running in development mode
         </p>
       </div>
-      
+
       <div v-else class="book-list">
+        <!-- Select All / Deselect All controls (catalog mode only) -->
+        <div v-if="mode === 'catalog'" class="select-all-controls">
+          <button
+            class="select-all-btn"
+            @click="selectAll"
+            :disabled="allSelected"
+          >
+            Select All
+          </button>
+          <button
+            class="select-all-btn"
+            @click="deselectAll"
+            :disabled="noneSelected"
+          >
+            Deselect All
+          </button>
+          <span class="selection-count">{{ internalSelectedSources.length }}/{{ libraryBooks.length }}</span>
+        </div>
         <!-- Reading Mode: Clickable books -->
         <div 
           v-if="mode === 'reading'"
@@ -92,6 +110,16 @@ const emit = defineEmits<Emits>()
 // Internal tracking of selected sources
 const internalSelectedSources = ref<string[]>([])
 
+// Computed properties for select all / deselect all
+const allSelected = computed(() =>
+  props.libraryBooks.length > 0 &&
+  internalSelectedSources.value.length === props.libraryBooks.length
+)
+
+const noneSelected = computed(() =>
+  internalSelectedSources.value.length === 0
+)
+
 // Initialize sources when books are loaded - select all by default
 watch(() => props.libraryBooks, (books) => {
   if (books.length > 0 && internalSelectedSources.value.length === 0) {
@@ -111,7 +139,17 @@ function toggleSource(bookId: string) {
   } else {
     internalSelectedSources.value.push(bookId)
   }
-  emit('updateSources', [...internalSelectedSources.value]) // Create new array to trigger reactivity
+  emit('updateSources', [...internalSelectedSources.value])
+}
+
+function selectAll() {
+  internalSelectedSources.value = props.libraryBooks.map(b => b.id)
+  emit('updateSources', [...internalSelectedSources.value])
+}
+
+function deselectAll() {
+  internalSelectedSources.value = []
+  emit('updateSources', [])
 }
 </script>
 
@@ -122,6 +160,41 @@ function toggleSource(bookId: string) {
   flex-direction: column;
 }
 
+.select-all-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-bottom: 1px solid var(--color-border, #333);
+  background: var(--color-surface, #1a1a1a);
+}
+
+.select-all-btn {
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  background: var(--color-background, #0d0d0d);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 3px;
+  color: var(--color-text-secondary, #999);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select-all-btn:hover:not(:disabled) {
+  background: var(--color-surface-hover, rgba(255, 255, 255, 0.05));
+  color: var(--color-text, #e0e0e0);
+}
+
+.select-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.selection-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary, #666);
+}
 
 .loading-message,
 .empty-message {

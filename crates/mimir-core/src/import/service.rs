@@ -10,9 +10,12 @@ use crate::models::catalog::*;
 use anyhow::{Context, Result};
 use diesel::connection::SimpleConnection;
 use diesel::SqliteConnection;
+use flate2::read::GzDecoder;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
+use tar::Archive;
 use tracing::{error, info, warn};
 
 /// Result of an import operation.
@@ -232,6 +235,159 @@ impl<'a> CatalogImportService<'a> {
         Ok(result)
     }
 
+    /// Import all sources from a tar.gz archive, streaming directly without extraction.
+    ///
+    /// This reads the tarball once, collecting all JSON files into memory,
+    /// then processes them without writing to disk.
+    pub fn import_from_tarball(&mut self, tarball_path: &Path) -> Result<ImportResult> {
+        let mut result = ImportResult::default();
+
+        info!("Streaming import from tarball: {:?}", tarball_path);
+
+        // Read all JSON files from the tarball into memory
+        let json_files = read_json_from_tarball(tarball_path)
+            .context("Failed to read JSON files from tarball")?;
+
+        info!("Loaded {} JSON files from tarball", json_files.len());
+
+        // Parse books.json to discover available sources
+        let books = parse_books_from_memory(&json_files)
+            .context("Failed to parse books.json")?;
+
+        // Filter by allowed groups
+        let total_books = books.len();
+        let books: Vec<_> = if let Some(ref allowed) = self.allowed_groups {
+            info!(
+                "Filtering to groups: {:?} (from {} total sources)",
+                allowed, total_books
+            );
+            books
+                .into_iter()
+                .filter(|book| {
+                    let dominated = book.group
+                        .as_ref()
+                        .map(|g| allowed.iter().any(|a| a.eq_ignore_ascii_case(g)))
+                        .unwrap_or(false);
+                    if !dominated {
+                        info!(
+                            "Skipping {} ({}) - group: {:?}",
+                            book.name,
+                            book.id,
+                            book.group
+                        );
+                    }
+                    dominated
+                })
+                .collect()
+        } else {
+            books
+        };
+
+        info!("Importing {} source books", books.len());
+
+        for book in &books {
+            let source_code = &book.id;
+            info!("Importing source: {} ({})", book.name, source_code);
+
+            match self.import_source_from_memory(&json_files, source_code, &book.name) {
+                Ok(counts) => {
+                    let total: usize = counts.values().sum();
+                    info!(
+                        "Successfully imported {} entities from {}",
+                        total, source_code
+                    );
+                    result.sources_imported.push(source_code.clone());
+                    result.total_entities += total;
+
+                    for (entity_type, count) in counts {
+                        *result.entity_counts.entry(entity_type).or_insert(0) += count;
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to import {}: {}", source_code, e);
+                    result
+                        .sources_failed
+                        .push((source_code.clone(), e.to_string()));
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Import a single source from in-memory JSON files.
+    fn import_source_from_memory(
+        &mut self,
+        json_files: &HashMap<String, String>,
+        source_code: &str,
+        source_name: &str,
+    ) -> Result<HashMap<String, usize>> {
+        // Start a transaction
+        self.conn
+            .batch_execute("SAVEPOINT import_source")
+            .context("Failed to create savepoint")?;
+
+        let result = self.import_source_from_memory_internal(json_files, source_code, source_name);
+
+        match &result {
+            Ok(_) => {
+                self.conn
+                    .batch_execute("RELEASE SAVEPOINT import_source")
+                    .context("Failed to release savepoint")?;
+            }
+            Err(_) => {
+                self.conn
+                    .batch_execute("ROLLBACK TO SAVEPOINT import_source")
+                    .context("Failed to rollback savepoint")?;
+            }
+        }
+
+        result
+    }
+
+    fn import_source_from_memory_internal(
+        &mut self,
+        json_files: &HashMap<String, String>,
+        source_code: &str,
+        source_name: &str,
+    ) -> Result<HashMap<String, usize>> {
+        let mut counts = HashMap::new();
+
+        // Insert source record
+        let now = chrono::Utc::now().to_rfc3339();
+        let source = NewCatalogSource::new(source_code, source_name, true, &now);
+        insert_source(self.conn, &source).context("Failed to insert source record")?;
+
+        // Collect entities from in-memory JSON files
+        let collected = collect_entities_from_memory(json_files, source_code)
+            .context("Failed to collect entities from memory")?;
+
+        // Import each entity type
+        for entity_type in collected.entity_types() {
+            if let Some(entities) = collected.get(entity_type) {
+                let count = self.import_entities(entity_type, entities, source_code, &collected)?;
+                if count > 0 {
+                    counts.insert(entity_type.to_string(), count);
+                }
+            }
+        }
+
+        // Import book content if available
+        if collected.has_book_content() {
+            match self.import_book(&collected, source_code, source_name) {
+                Ok(_) => {
+                    info!("Imported book content for {}", source_code);
+                    counts.insert("book".to_string(), 1);
+                }
+                Err(e) => {
+                    warn!("Failed to import book content for {}: {}", source_code, e);
+                }
+            }
+        }
+
+        Ok(counts)
+    }
+
     /// Import a single source with transaction handling.
     fn import_source_with_transaction(
         &mut self,
@@ -295,6 +451,19 @@ impl<'a> CatalogImportService<'a> {
         let spell_class_count = self.import_spell_class_associations(repo_path, source_code)?;
         if spell_class_count > 0 {
             info!("Imported {} spell-class associations for {}", spell_class_count, source_code);
+        }
+
+        // Import book content if available
+        if collected.has_book_content() {
+            match self.import_book(&collected, source_code, source_name) {
+                Ok(_) => {
+                    info!("Imported book content for {}", source_code);
+                    counts.insert("book".to_string(), 1);
+                }
+                Err(e) => {
+                    warn!("Failed to import book content for {}: {}", source_code, e);
+                }
+            }
         }
 
         Ok(counts)
@@ -935,6 +1104,65 @@ impl<'a> CatalogImportService<'a> {
         catalog::insert_catalog_table(self.conn, &table).context("Failed to insert catalog table")
     }
 
+    /// Import book content (readable chapters/sections).
+    ///
+    /// This imports the full book content that can be rendered in a reader view.
+    /// Image paths in the content are rewritten to use the local image directory.
+    fn import_book(
+        &mut self,
+        collected: &CollectedEntities,
+        source: &str,
+        name: &str,
+    ) -> Result<i32> {
+        let book_data = collected
+            .book_content
+            .as_ref()
+            .context("No book content available")?;
+
+        // Rewrite image paths if we have an image directory configured
+        let processed_data = if self.dest_img_dir.is_some() {
+            rewrite_book_image_paths(book_data)
+        } else {
+            book_data.clone()
+        };
+
+        let data_str = serde_json::to_string(&processed_data)?;
+
+        // Get table of contents if available
+        let toc_str = collected
+            .book_contents_toc
+            .as_ref()
+            .map(|toc| serde_json::to_string(toc))
+            .transpose()?;
+
+        // Get cover path - books use pattern: book/{source}/cover.webp
+        let cover_path = self.dest_img_dir.as_ref().and_then(|img_dir| {
+            let webp_path = format!("book/{}/cover.webp", source);
+            if crate::import::image_exists(img_dir, &webp_path) {
+                return Some(webp_path);
+            }
+            let jpg_path = format!("book/{}/cover.jpg", source);
+            if crate::import::image_exists(img_dir, &jpg_path) {
+                return Some(jpg_path);
+            }
+            let png_path = format!("book/{}/cover.png", source);
+            if crate::import::image_exists(img_dir, &png_path) {
+                return Some(png_path);
+            }
+            None
+        });
+
+        let mut book = NewBook::new(source, name, &data_str);
+        if let Some(ref toc) = toc_str {
+            book = book.with_contents(toc);
+        }
+        if let Some(ref cover) = cover_path {
+            book = book.with_cover_path(cover);
+        }
+
+        catalog::insert_book(self.conn, &book).context("Failed to insert book")
+    }
+
     // === FTS Indexing ===
 
     fn index_entity_fts(&mut self, entity_type: &str, entity_id: i32, entity: &Value) -> Result<()> {
@@ -979,6 +1207,251 @@ impl<'a> CatalogImportService<'a> {
 
         Ok(())
     }
+}
+
+// === Tarball Streaming Helpers ===
+
+/// Read all JSON files from a tar.gz archive into memory.
+///
+/// Returns a HashMap where keys are relative paths (e.g., "data/bestiary/bestiary-mm.json")
+/// and values are the JSON content as strings.
+fn read_json_from_tarball(tarball_path: &Path) -> Result<HashMap<String, String>> {
+    use std::fs::File;
+
+    let file = File::open(tarball_path)
+        .context("Failed to open tarball")?;
+
+    let decoder = GzDecoder::new(BufReader::new(file));
+    let mut archive = Archive::new(decoder);
+
+    let mut json_files = HashMap::new();
+    let mut prefix_to_strip: Option<String> = None;
+
+    let entries = archive.entries()
+        .context("Failed to read archive entries")?;
+
+    for entry_result in entries {
+        let mut entry = match entry_result {
+            Ok(e) => e,
+            Err(e) => {
+                warn!("Skipping entry: {}", e);
+                continue;
+            }
+        };
+
+        let path = match entry.path() {
+            Ok(p) => p.to_path_buf(),
+            Err(_) => continue,
+        };
+
+        // Detect prefix to strip (e.g., "5etools-2.24.0/")
+        if prefix_to_strip.is_none() && entry.header().entry_type().is_dir() {
+            let path_str = path.to_string_lossy();
+            if path_str.starts_with("5etools-") || path_str.starts_with("5etools-mirror-") {
+                prefix_to_strip = Some(path_str.trim_end_matches('/').to_string());
+                info!("Detected archive prefix: {:?}", prefix_to_strip);
+            }
+        }
+
+        // Skip non-files
+        if !entry.header().entry_type().is_file() {
+            continue;
+        }
+
+        // Only process JSON files in the data directory
+        let path_str = path.to_string_lossy().to_string();
+
+        // Strip prefix if detected
+        let relative_path = if let Some(ref prefix) = prefix_to_strip {
+            if let Some(stripped) = path_str.strip_prefix(prefix) {
+                stripped.trim_start_matches('/').to_string()
+            } else {
+                path_str.clone()
+            }
+        } else {
+            path_str.clone()
+        };
+
+        // Only keep JSON files in data/
+        if !relative_path.starts_with("data/") || !relative_path.ends_with(".json") {
+            continue;
+        }
+
+        // Read the file content
+        let mut content = String::new();
+        if entry.read_to_string(&mut content).is_ok() {
+            json_files.insert(relative_path, content);
+        }
+    }
+
+    info!("Read {} JSON files from tarball", json_files.len());
+    Ok(json_files)
+}
+
+/// Book metadata for source discovery (simplified).
+#[derive(Debug)]
+struct BookMeta {
+    id: String,
+    name: String,
+    group: Option<String>,
+}
+
+/// Parse books.json from in-memory files to discover available sources.
+fn parse_books_from_memory(json_files: &HashMap<String, String>) -> Result<Vec<BookMeta>> {
+    let books_content = json_files
+        .get("data/books.json")
+        .context("books.json not found in archive")?;
+
+    let books_data: Value = serde_json::from_str(books_content)
+        .context("Failed to parse books.json")?;
+
+    let mut books = Vec::new();
+
+    if let Some(book_array) = books_data.get("book").and_then(|b| b.as_array()) {
+        for book in book_array {
+            let id = book.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let name = book.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let group = book.get("group").and_then(|v| v.as_str()).map(|s| s.to_string());
+
+            if !id.is_empty() {
+                books.push(BookMeta { id, name, group });
+            }
+        }
+    }
+
+    Ok(books)
+}
+
+/// Collect entities from in-memory JSON files for a specific source.
+fn collect_entities_from_memory(
+    json_files: &HashMap<String, String>,
+    source_code: &str,
+) -> Result<CollectedEntities> {
+    let mut collected = CollectedEntities::default();
+
+    // Helper to check if an entity belongs to this source
+    let matches_source = |entity: &Value| -> bool {
+        entity.get("source")
+            .and_then(|v| v.as_str())
+            .map(|s| s.eq_ignore_ascii_case(source_code))
+            .unwrap_or(false)
+    };
+
+    // Entity type mappings: (file_pattern, json_key, entity_type)
+    let entity_mappings = [
+        ("data/bestiary/bestiary-", "monster", "monster"),
+        ("data/spells/spells-", "spell", "spell"),
+        ("data/items", "item", "item"),
+        ("data/items", "baseitem", "item"),
+        ("data/items", "magicvariant", "item"),
+        ("data/class/class-", "class", "class"),
+        ("data/class/class-", "subclass", "subclass"),
+        ("data/races.json", "race", "race"),
+        ("data/races.json", "subrace", "subrace"),
+        ("data/backgrounds.json", "background", "background"),
+        ("data/feats.json", "feat", "feat"),
+        ("data/conditionsdiseases.json", "condition", "condition"),
+        ("data/conditionsdiseases.json", "disease", "disease"),
+        ("data/actions.json", "action", "action"),
+        ("data/languages.json", "language", "language"),
+        ("data/vehicles.json", "vehicle", "vehicle"),
+        ("data/objects.json", "object", "object"),
+        ("data/trapshazards.json", "trap", "trap"),
+        ("data/trapshazards.json", "hazard", "hazard"),
+        ("data/cultsboons.json", "cult", "cult"),
+        ("data/cultsboons.json", "boon", "boon"),
+        ("data/deities.json", "deity", "deity"),
+        ("data/senses.json", "sense", "sense"),
+        ("data/skills.json", "skill", "skill"),
+        ("data/optionalfeatures.json", "optionalfeature", "optionalfeature"),
+        ("data/psionics.json", "psionic", "psionic"),
+        ("data/rewards.json", "reward", "reward"),
+        ("data/variantrules.json", "variantrule", "variantrule"),
+        ("data/tables.json", "table", "table"),
+    ];
+
+    // Collect fluff data first
+    for (path, content) in json_files {
+        if path.contains("fluff") {
+            if let Ok(data) = serde_json::from_str::<Value>(content) {
+                // Try to find fluff arrays
+                for key in ["monsterFluff", "spellFluff", "itemFluff", "classFluff",
+                            "raceFluff", "backgroundFluff", "featFluff", "languageFluff",
+                            "vehicleFluff", "objectFluff", "trapFluff", "hazardFluff",
+                            "conditionFluff", "diseaseFluff"] {
+                    if let Some(fluff_array) = data.get(key).and_then(|v| v.as_array()) {
+                        for fluff in fluff_array {
+                            let name = fluff.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                            let source = fluff.get("source").and_then(|v| v.as_str()).unwrap_or("");
+                            if source.eq_ignore_ascii_case(source_code) && !name.is_empty() {
+                                let entity_type = key.trim_end_matches("Fluff");
+                                collected.add_fluff(entity_type, name, source, fluff.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Collect entities
+    for (path, content) in json_files {
+        // Skip fluff files for entity collection
+        if path.contains("fluff") {
+            continue;
+        }
+
+        let data: Value = match serde_json::from_str(content) {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+
+        for (file_pattern, json_key, entity_type) in &entity_mappings {
+            if !path.contains(file_pattern) {
+                continue;
+            }
+
+            if let Some(entities) = data.get(*json_key).and_then(|v| v.as_array()) {
+                let filtered: Vec<Value> = entities
+                    .iter()
+                    .filter(|e| matches_source(e))
+                    .cloned()
+                    .collect();
+
+                if !filtered.is_empty() {
+                    collected.add(entity_type, filtered);
+                }
+            }
+        }
+    }
+
+    // Collect book content if available
+    let book_file = format!("data/book/book-{}.json", source_code.to_lowercase());
+    if let Some(content) = json_files.get(&book_file) {
+        if let Ok(data) = serde_json::from_str::<Value>(content) {
+            if let Some(book_data) = data.get("data") {
+                collected.book_content = Some(book_data.clone());
+            }
+        }
+    }
+
+    // Get TOC from books.json
+    if let Some(books_content) = json_files.get("data/books.json") {
+        if let Ok(books_data) = serde_json::from_str::<Value>(books_content) {
+            if let Some(book_array) = books_data.get("book").and_then(|v| v.as_array()) {
+                for book in book_array {
+                    if book.get("id").and_then(|v| v.as_str()) == Some(source_code) {
+                        if let Some(contents) = book.get("contents") {
+                            collected.book_contents_toc = Some(contents.clone());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(collected)
 }
 
 // === Field Extraction Helpers ===
@@ -1036,6 +1509,51 @@ fn extract_concentration(entity: &Value) -> bool {
                 .any(|d| d.get("concentration").and_then(|c| c.as_bool()).unwrap_or(false))
         })
         .unwrap_or(false)
+}
+
+/// Rewrite image paths in book content to use local asset paths.
+///
+/// 5etools book content contains image references with paths like "img/book/PHB/foo.webp".
+/// This function processes the entire book content recursively and updates these paths
+/// to work with the local image directory.
+fn rewrite_book_image_paths(content: &Value) -> Value {
+    match content {
+        Value::Object(map) => {
+            let mut new_map = serde_json::Map::new();
+            for (key, value) in map {
+                // Check for href objects with path
+                if key == "href" {
+                    if let Some(obj) = value.as_object() {
+                        if obj.get("type").and_then(|t| t.as_str()) == Some("internal") {
+                            if let Some(path) = obj.get("path").and_then(|p| p.as_str()) {
+                                // Rewrite the path - strip "img/" prefix if present
+                                let new_path = if path.starts_with("img/") {
+                                    path.strip_prefix("img/").unwrap_or(path)
+                                } else {
+                                    path
+                                };
+                                let mut new_href = serde_json::Map::new();
+                                new_href.insert("type".to_string(), Value::String("internal".to_string()));
+                                new_href.insert("path".to_string(), Value::String(new_path.to_string()));
+                                // Copy any other fields
+                                for (k, v) in obj {
+                                    if k != "type" && k != "path" {
+                                        new_href.insert(k.clone(), v.clone());
+                                    }
+                                }
+                                new_map.insert(key.clone(), Value::Object(new_href));
+                                continue;
+                            }
+                        }
+                    }
+                }
+                new_map.insert(key.clone(), rewrite_book_image_paths(value));
+            }
+            Value::Object(new_map)
+        }
+        Value::Array(arr) => Value::Array(arr.iter().map(rewrite_book_image_paths).collect()),
+        _ => content.clone(),
+    }
 }
 
 /// Extract class names from an attunement requirement string.

@@ -6,24 +6,33 @@ import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import type { BookInfo } from '../../../types/book'
 
+// Catalog source info from backend
+interface CatalogSourceInfo {
+  id: string
+  name: string
+  enabled: boolean
+  imported_at: string
+}
+
 export function useBookLibrary() {
   const libraryBooks: Ref<BookInfo[]> = ref([])
+  const catalogSources: Ref<BookInfo[]> = ref([])
   const selectedBook: Ref<BookInfo | null> = ref(null)
   const isLoadingLibrary = ref(false)
 
   // Check for development mode
   const isDevelopment = import.meta.env.DEV
-  
 
-  // Load library books from backend
+
+  // Load library books from backend (for reading mode - actual book archives)
   async function loadLibraryBooks() {
     try {
       isLoadingLibrary.value = true
       const response = await invoke<{ success: boolean; data: BookInfo[]; message?: string }>('list_library_books')
-      
+
       if (response.success && response.data) {
         libraryBooks.value = response.data
-        
+
         // Auto-select first book if none selected
         if (!selectedBook.value && response.data.length > 0) {
           selectedBook.value = response.data[0]
@@ -33,6 +42,31 @@ export function useBookLibrary() {
       }
     } catch (error) {
       libraryBooks.value = []
+    } finally {
+      isLoadingLibrary.value = false
+    }
+  }
+
+  // Load catalog sources from backend (for catalog mode - imported 5etools data)
+  async function loadCatalogSources() {
+    try {
+      isLoadingLibrary.value = true
+      const response = await invoke<{ success: boolean; data?: CatalogSourceInfo[]; error?: string }>('list_catalog_sources')
+
+      if (response.success && response.data) {
+        // Convert catalog sources to BookInfo format for compatibility with Library.vue
+        catalogSources.value = response.data.map(source => ({
+          id: source.id,
+          name: source.name,
+          enabled: source.enabled,
+          imported_at: source.imported_at,
+        }))
+      } else {
+        catalogSources.value = []
+      }
+    } catch (error) {
+      console.error('Failed to load catalog sources:', error)
+      catalogSources.value = []
     } finally {
       isLoadingLibrary.value = false
     }
@@ -135,10 +169,12 @@ export function useBookLibrary() {
 
   return {
     libraryBooks,
+    catalogSources,
     selectedBook,
     isLoadingLibrary,
     isDevelopment,
     loadLibraryBooks,
+    loadCatalogSources,
     addBook,
     removeBook,
     selectBook

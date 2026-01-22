@@ -78,7 +78,7 @@ pub fn delete_source(conn: &mut SqliteConnection, code: &str) -> QueryResult<usi
 /// then deletes the source record.
 pub fn delete_source_cascade(conn: &mut SqliteConnection, code: &str) -> QueryResult<usize> {
     use crate::schema::{
-        actions, backgrounds, catalog_tables, classes, conditions, cults, deities, diseases,
+        actions, backgrounds, books, catalog_tables, classes, conditions, cults, deities, diseases,
         feats, hazards, item_attunement_classes, items, languages, monsters, objects,
         optional_features, psionics, races, rewards, senses, skills, spell_classes,
         spell_subclasses, spells, subclasses, traps, variant_rules, vehicles,
@@ -128,6 +128,7 @@ pub fn delete_source_cascade(conn: &mut SqliteConnection, code: &str) -> QueryRe
     // Delete from all entity tables
     diesel::delete(actions::table.filter(actions::source.eq(code))).execute(conn)?;
     diesel::delete(backgrounds::table.filter(backgrounds::source.eq(code))).execute(conn)?;
+    diesel::delete(books::table.filter(books::source.eq(code))).execute(conn)?;
     diesel::delete(catalog_tables::table.filter(catalog_tables::source.eq(code))).execute(conn)?;
     diesel::delete(classes::table.filter(classes::source.eq(code))).execute(conn)?;
     diesel::delete(conditions::table.filter(conditions::source.eq(code))).execute(conn)?;

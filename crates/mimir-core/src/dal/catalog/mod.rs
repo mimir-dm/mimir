@@ -4,6 +4,7 @@
 
 mod action;
 mod background;
+mod book;
 mod class;
 mod condition;
 mod cult;
@@ -33,6 +34,7 @@ mod vehicle;
 
 pub use action::*;
 pub use background::*;
+pub use book::*;
 pub use class::*;
 pub use condition::*;
 pub use cult::*;

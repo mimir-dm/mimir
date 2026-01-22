@@ -22,7 +22,7 @@
     <ThreePanelLayout v-if="currentMode === 'reading'">
       <template #left>
         <BookLibrary
-          :library-books="libraryBooks"
+          :library-books="displayedLibrary"
           :selected-book="selectedBook"
           :is-loading-library="isLoadingLibrary"
           :is-development="isDevelopment"
@@ -62,7 +62,7 @@
     <TwoPanelLayout v-else>
       <template #left>
         <BookLibrary
-          :library-books="libraryBooks"
+          :library-books="displayedLibrary"
           :selected-book="selectedBook"
           :is-loading-library="isLoadingLibrary"
           :is-development="isDevelopment"
@@ -136,13 +136,20 @@ watch(selectedSources, async () => {
 // Book library management
 const {
   libraryBooks,
+  catalogSources,
   selectedBook,
   isLoadingLibrary,
   isDevelopment,
   loadLibraryBooks,
+  loadCatalogSources,
   removeBook,
   selectBook,
 } = useBookLibrary()
+
+// Both modes use catalog sources (books are part of the imported 5etools data)
+// - Reading mode: clickable cards to read book content
+// - Catalog mode: checkboxes for filtering searches
+const displayedLibrary = computed(() => catalogSources.value)
 
 // Book content management
 const {
@@ -219,8 +226,11 @@ onMounted(async () => {
   themeStore.applyTheme()
   await themeStore.initThemeSync()
 
-  // Load library books
-  await loadLibraryBooks()
+  // Load library books and catalog sources
+  await Promise.all([
+    loadLibraryBooks(),
+    loadCatalogSources()
+  ])
 
   // Setup cross-reference handlers
   setupCrossRefHandlers()
