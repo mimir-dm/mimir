@@ -47,6 +47,15 @@ export function renderModalContent(data: any): string {
     case 'class':
       html += renderClassContent(data)
       break
+    case 'classFeature':
+      html += renderClassFeatureContent(data)
+      break
+    case 'subclass':
+      html += renderSubclassContent(data)
+      break
+    case 'subclassFeature':
+      html += renderSubclassFeatureContent(data)
+      break
     default:
       html += renderGenericContent(data)
   }
@@ -511,6 +520,11 @@ function renderClassContent(data: any): string {
     }
   }
 
+  // Subclass title (what subclasses are called for this class)
+  if (data.subclassTitle) {
+    html += `<p><strong>Subclass:</strong> ${data.subclassTitle}</p>`
+  }
+
   // Class features (limited for modal)
   if (data.classFeatures && Array.isArray(data.classFeatures)) {
     html += '<p><strong>Features at 1st Level:</strong></p><ul>'
@@ -528,6 +542,296 @@ function renderClassContent(data: any): string {
   }
 
   html += '</div>'
+  return html
+}
+
+function renderClassFeatureContent(data: any): string {
+  let html = '<div class="class-feature-content">'
+
+  // Show class and level info
+  if (data.className || data.class_name) {
+    const className = data.className || data.class_name
+    const level = data.level
+    if (level) {
+      html += `<p><em>${className} feature (Level ${level})</em></p>`
+    } else {
+      html += `<p><em>${className} feature</em></p>`
+    }
+  }
+
+  // Render entries (main content)
+  if (data.entries && Array.isArray(data.entries)) {
+    html += '<div class="feature-description">'
+    for (const entry of data.entries) {
+      if (typeof entry === 'string') {
+        html += `<p>${processFormattingTags(entry)}</p>`
+      } else if (typeof entry === 'object' && entry !== null) {
+        // Handle entries type (nested entries with name)
+        if (entry.type === 'entries' && entry.name) {
+          html += `<h4>${entry.name}</h4>`
+          if (entry.entries && Array.isArray(entry.entries)) {
+            for (const subEntry of entry.entries) {
+              if (typeof subEntry === 'string') {
+                html += `<p>${processFormattingTags(subEntry)}</p>`
+              } else if (subEntry.type === 'list' && subEntry.items) {
+                html += '<ul>'
+                for (const item of subEntry.items) {
+                  if (typeof item === 'string') {
+                    html += `<li>${processFormattingTags(item)}</li>`
+                  } else if (item.entry) {
+                    html += `<li>${processFormattingTags(item.entry)}</li>`
+                  }
+                }
+                html += '</ul>'
+              }
+            }
+          }
+        }
+        // Handle list type
+        else if (entry.type === 'list' && entry.items) {
+          html += '<ul>'
+          for (const item of entry.items) {
+            if (typeof item === 'string') {
+              html += `<li>${processFormattingTags(item)}</li>`
+            } else if (item.entry) {
+              html += `<li>${processFormattingTags(item.entry)}</li>`
+            }
+          }
+          html += '</ul>'
+        }
+        // Handle table type
+        else if (entry.type === 'table') {
+          html += renderTableEntry(entry)
+        }
+        // Handle inset/quote type
+        else if (entry.type === 'inset' || entry.type === 'quote') {
+          html += '<blockquote>'
+          if (entry.name) html += `<strong>${entry.name}</strong><br/>`
+          if (entry.entries) {
+            for (const subEntry of entry.entries) {
+              if (typeof subEntry === 'string') {
+                html += `<p>${processFormattingTags(subEntry)}</p>`
+              }
+            }
+          }
+          html += '</blockquote>'
+        }
+        // Handle options type (for features with choices)
+        else if (entry.type === 'options' && entry.entries) {
+          html += '<div class="feature-options">'
+          for (const opt of entry.entries) {
+            if (typeof opt === 'object' && opt.name) {
+              html += `<h5>${opt.name}</h5>`
+              if (opt.entries) {
+                for (const optEntry of opt.entries) {
+                  if (typeof optEntry === 'string') {
+                    html += `<p>${processFormattingTags(optEntry)}</p>`
+                  }
+                }
+              }
+            }
+          }
+          html += '</div>'
+        }
+      }
+    }
+    html += '</div>'
+  }
+
+  html += '</div>'
+  return html
+}
+
+function renderSubclassContent(data: any): string {
+  let html = '<div class="subclass-content">'
+
+  // Show parent class info
+  if (data.className || data.class_name) {
+    const className = data.className || data.class_name
+    html += `<p><em>${className} subclass</em></p>`
+  }
+
+  // Show subclass features list
+  if (data.subclassFeatures && Array.isArray(data.subclassFeatures)) {
+    html += '<p><strong>Features:</strong></p><ul>'
+    for (const feature of data.subclassFeatures) {
+      // Features are stored as "FeatureName|ClassName||SubclassName||Level"
+      if (typeof feature === 'string') {
+        const parts = feature.split('|')
+        const name = parts[0]
+        const level = parts[parts.length - 1]
+        html += `<li>${name} (Level ${level})</li>`
+      } else if (feature.name) {
+        html += `<li>${feature.name}${feature.level ? ` (Level ${feature.level})` : ''}</li>`
+      }
+    }
+    html += '</ul>'
+  }
+
+  // Render entries (flavor text/description)
+  if (data.entries && Array.isArray(data.entries)) {
+    html += '<div class="subclass-description">'
+    for (const entry of data.entries) {
+      if (typeof entry === 'string') {
+        html += `<p>${processFormattingTags(entry)}</p>`
+      } else if (typeof entry === 'object' && entry !== null) {
+        if (entry.type === 'entries' && entry.name) {
+          html += `<h4>${entry.name}</h4>`
+          if (entry.entries && Array.isArray(entry.entries)) {
+            for (const subEntry of entry.entries) {
+              if (typeof subEntry === 'string') {
+                html += `<p>${processFormattingTags(subEntry)}</p>`
+              }
+            }
+          }
+        }
+      }
+    }
+    html += '</div>'
+  }
+
+  html += '</div>'
+  return html
+}
+
+function renderSubclassFeatureContent(data: any): string {
+  let html = '<div class="subclass-feature-content">'
+
+  // Show subclass and level info
+  const subclassName = data.subclassShortName || data.subclass_short_name || ''
+  const className = data.className || data.class_name || ''
+  const level = data.level
+
+  if (subclassName || className) {
+    let subtitle = ''
+    if (subclassName && className && level) {
+      subtitle = `${className} (${subclassName}) feature, Level ${level}`
+    } else if (className && level) {
+      subtitle = `${className} feature, Level ${level}`
+    } else if (subclassName && level) {
+      subtitle = `${subclassName} feature, Level ${level}`
+    } else if (subclassName) {
+      subtitle = `${subclassName} feature`
+    }
+    if (subtitle) {
+      html += `<p><em>${subtitle}</em></p>`
+    }
+  }
+
+  // Render entries (main content) - reuse similar logic to classFeature
+  if (data.entries && Array.isArray(data.entries)) {
+    html += '<div class="feature-description">'
+    for (const entry of data.entries) {
+      if (typeof entry === 'string') {
+        html += `<p>${processFormattingTags(entry)}</p>`
+      } else if (typeof entry === 'object' && entry !== null) {
+        // Handle entries type (nested entries with name)
+        if (entry.type === 'entries' && entry.name) {
+          html += `<h4>${entry.name}</h4>`
+          if (entry.entries && Array.isArray(entry.entries)) {
+            for (const subEntry of entry.entries) {
+              if (typeof subEntry === 'string') {
+                html += `<p>${processFormattingTags(subEntry)}</p>`
+              } else if (subEntry.type === 'list' && subEntry.items) {
+                html += '<ul>'
+                for (const item of subEntry.items) {
+                  if (typeof item === 'string') {
+                    html += `<li>${processFormattingTags(item)}</li>`
+                  } else if (item.entry) {
+                    html += `<li>${processFormattingTags(item.entry)}</li>`
+                  }
+                }
+                html += '</ul>'
+              }
+            }
+          }
+        }
+        // Handle list type
+        else if (entry.type === 'list' && entry.items) {
+          html += '<ul>'
+          for (const item of entry.items) {
+            if (typeof item === 'string') {
+              html += `<li>${processFormattingTags(item)}</li>`
+            } else if (item.entry) {
+              html += `<li>${processFormattingTags(item.entry)}</li>`
+            }
+          }
+          html += '</ul>'
+        }
+        // Handle table type
+        else if (entry.type === 'table') {
+          html += renderTableEntry(entry)
+        }
+        // Handle inset/quote type
+        else if (entry.type === 'inset' || entry.type === 'quote') {
+          html += '<blockquote>'
+          if (entry.name) html += `<strong>${entry.name}</strong><br/>`
+          if (entry.entries) {
+            for (const subEntry of entry.entries) {
+              if (typeof subEntry === 'string') {
+                html += `<p>${processFormattingTags(subEntry)}</p>`
+              }
+            }
+          }
+          html += '</blockquote>'
+        }
+        // Handle options type
+        else if (entry.type === 'options' && entry.entries) {
+          html += '<div class="feature-options">'
+          for (const opt of entry.entries) {
+            if (typeof opt === 'object' && opt.name) {
+              html += `<h5>${opt.name}</h5>`
+              if (opt.entries) {
+                for (const optEntry of opt.entries) {
+                  if (typeof optEntry === 'string') {
+                    html += `<p>${processFormattingTags(optEntry)}</p>`
+                  }
+                }
+              }
+            }
+          }
+          html += '</div>'
+        }
+      }
+    }
+    html += '</div>'
+  }
+
+  html += '</div>'
+  return html
+}
+
+function renderTableEntry(table: any): string {
+  let html = '<table class="feature-table">'
+
+  if (table.caption) {
+    html += `<caption>${table.caption}</caption>`
+  }
+
+  if (table.colLabels && Array.isArray(table.colLabels)) {
+    html += '<thead><tr>'
+    for (const label of table.colLabels) {
+      html += `<th>${processFormattingTags(label)}</th>`
+    }
+    html += '</tr></thead>'
+  }
+
+  if (table.rows && Array.isArray(table.rows)) {
+    html += '<tbody>'
+    for (const row of table.rows) {
+      html += '<tr>'
+      if (Array.isArray(row)) {
+        for (const cell of row) {
+          const cellContent = typeof cell === 'string' ? cell : (cell.entry || cell.text || JSON.stringify(cell))
+          html += `<td>${processFormattingTags(cellContent)}</td>`
+        }
+      }
+      html += '</tr>'
+    }
+    html += '</tbody>'
+  }
+
+  html += '</table>'
   return html
 }
 

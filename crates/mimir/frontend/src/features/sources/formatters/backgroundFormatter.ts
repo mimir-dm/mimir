@@ -141,27 +141,63 @@ function formatProficiencies(proficiencies: any[], type: string): string {
   return profs.join(', ') || 'None'
 }
 
+// Format an equipment item reference as a cross-reference link
+function formatEquipmentItem(eq: any): string {
+  if (typeof eq === 'string') {
+    // Check if it's an item reference in "name|source" format (common in equipment lists)
+    // These need to be wrapped in {@item} tags before processing
+    if (eq.includes('|') && !eq.includes('{@')) {
+      // Looks like an item reference - wrap it
+      return processFormattingTags(`{@item ${eq}}`)
+    }
+    // Plain string or already has tags - process as-is
+    return processFormattingTags(eq)
+  } else if (eq.item) {
+    // Item reference - wrap in {@item} tag for cross-referencing
+    // eq.item can be "itemName" or "itemName|source"
+    const itemRef = eq.item
+    const displayName = eq.displayName
+    const quantity = eq.quantity
+
+    // Build the {@item} tag
+    let tag = `{@item ${itemRef}}`
+    if (displayName && displayName !== itemRef.split('|')[0]) {
+      // Use displayName if different from item name
+      tag = `{@item ${itemRef}|${displayName}}`
+    }
+
+    // Process the tag to convert to link
+    const processed = processFormattingTags(tag)
+
+    // Add quantity prefix if present
+    if (quantity && quantity > 1) {
+      return `${quantity}x ${processed}`
+    }
+    return processed
+  } else if (eq.special) {
+    return processFormattingTags(eq.special)
+  }
+  return 'Unknown item'
+}
+
 function formatEquipment(equipment: any[]): string {
   if (!equipment?.length) return '<p>No starting equipment</p>'
-  
+
   let content = '<ul>'
   for (const item of equipment) {
     if (typeof item === 'string') {
-      content += `<li>${item}</li>`
+      // Check if it's an item reference in "name|source" format
+      if (item.includes('|') && !item.includes('{@')) {
+        content += `<li>${processFormattingTags(`{@item ${item}}`)}</li>`
+      } else {
+        content += `<li>${processFormattingTags(item)}</li>`
+      }
     } else if (item._) {
       // Main equipment list
       content += '<li>'
       const items: string[] = []
       for (const eq of item._) {
-        if (typeof eq === 'string') {
-          items.push(eq)
-        } else if (eq.item) {
-          items.push(eq.displayName || eq.item)
-        } else if (eq.special) {
-          items.push(eq.special)
-        } else if (eq.quantity && eq.item) {
-          items.push(`${eq.quantity}x ${eq.item}`)
-        }
+        items.push(formatEquipmentItem(eq))
       }
       content += items.join(', ')
       content += '</li>'
@@ -170,19 +206,13 @@ function formatEquipment(equipment: any[]): string {
       content += '<li>Choose one:<ul>'
       if (item.a) {
         content += '<li>Option A: '
-        const aItems = item.a.map((i: any) => {
-          if (typeof i === 'string') return i
-          return i.displayName || i.item || i.special || 'Unknown item'
-        })
+        const aItems = item.a.map((i: any) => formatEquipmentItem(i))
         content += aItems.join(', ')
         content += '</li>'
       }
       if (item.b) {
         content += '<li>Option B: '
-        const bItems = item.b.map((i: any) => {
-          if (typeof i === 'string') return i
-          return i.displayName || i.item || i.special || 'Unknown item'
-        })
+        const bItems = item.b.map((i: any) => formatEquipmentItem(i))
         content += bItems.join(', ')
         content += '</li>'
       }
@@ -190,7 +220,7 @@ function formatEquipment(equipment: any[]): string {
     }
   }
   content += '</ul>'
-  
+
   return content
 }
 

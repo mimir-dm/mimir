@@ -5,7 +5,7 @@ export interface ColumnDef {
   sortable?: boolean
   width?: string
   type?: 'text' | 'badge' | 'badges' | 'number' | 'array' | 'source' | 'name-with-srd' | 'prerequisites'
-  formatter?: (value: any) => string | string[] | { text: string; variant: string } | { source: string; showSrd: boolean } | { name: string; showSrd: boolean } | { hasPrerequisites: boolean }
+  formatter?: (value: any, row?: any) => string | string[] | { text: string; variant: string } | { source: string; showSrd: boolean } | { name: string; showSrd: boolean } | { hasPrerequisites: boolean }
   badgeType?: string
   className?: string
 }

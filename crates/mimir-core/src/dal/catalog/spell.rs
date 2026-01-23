@@ -42,14 +42,18 @@ pub fn get_spell_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<O
         .optional()
 }
 
-/// Get a spell by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a spell by name and source (case-insensitive name matching).
 pub fn get_spell_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Spell>> {
+    let name_lower = name.to_lowercase();
     spells::table
-        .filter(spells::name.eq(name))
+        .filter(lower(spells::name).eq(&name_lower))
         .filter(spells::source.eq(source))
         .first(conn)
         .optional()

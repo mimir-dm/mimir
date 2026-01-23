@@ -42,14 +42,18 @@ pub fn get_trap_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Op
         .optional()
 }
 
-/// Get a trap by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a trap by name and source (case-insensitive name matching).
 pub fn get_trap_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Trap>> {
+    let name_lower = name.to_lowercase();
     traps::table
-        .filter(traps::name.eq(name))
+        .filter(lower(traps::name).eq(&name_lower))
         .filter(traps::source.eq(source))
         .first(conn)
         .optional()

@@ -22,10 +22,11 @@ pub use document::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
 pub use map::{CreateMapInput, MapService, UpdateMapInput};
 pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 pub use catalog::{
-    ActionService, BackgroundService, CatalogEntityService, CatalogTableService, ClassService,
-    ConditionService, CultService, DeityService, FeatService, HazardService, ItemService,
-    LanguageService, MonsterService, ObjectService, OptionalFeatureService, PsionicService,
-    RaceService, RewardService, SpellService, TrapService, VariantRuleService, VehicleService,
+    ActionService, BackgroundService, CatalogEntityService, CatalogTableService,
+    ClassFeatureService, ClassService, ConditionService, CultService, DeityService, FeatService,
+    HazardService, ItemService, LanguageService, MonsterService, ObjectService,
+    OptionalFeatureService, PsionicService, RaceService, RewardService, SpellService,
+    SubclassFeatureService, SubclassService, TrapService, VariantRuleService, VehicleService,
 };
 
 /// Default query limit to prevent memory issues on large result sets.

@@ -79,7 +79,7 @@ impl ImportResult {
 /// - "screen" - DM Screen supplements
 /// - "homebrew" - Homebrew content
 /// - Other one-offs
-const DEFAULT_ALLOWED_GROUPS: &[&str] = &["core", "supplement", "setting", "adventure"];
+const DEFAULT_ALLOWED_GROUPS: &[&str] = &["core", "supplement"];
 
 /// Catalog import service for importing 5etools data.
 pub struct CatalogImportService<'a> {
@@ -527,7 +527,9 @@ impl<'a> CatalogImportService<'a> {
             "spell" => self.import_spell(entity, name, source, &data, fluff_ref),
             "item" => self.import_item(entity, name, source, &data, fluff_ref),
             "class" => self.import_class(name, source, &data, fluff_ref),
+            "classFeature" => self.import_class_feature(entity, name, source, &data),
             "subclass" => self.import_subclass(entity, name, source, &data, fluff_ref),
+            "subclassFeature" => self.import_subclass_feature(entity, name, source, &data),
             "race" | "subrace" => self.import_race(name, source, &data, fluff_ref),
             "background" => self.import_background(name, source, &data, fluff_ref),
             "feat" => self.import_feat(name, source, &data, fluff_ref),
@@ -823,6 +825,30 @@ impl<'a> CatalogImportService<'a> {
         catalog::insert_class(self.conn, &class).context("Failed to insert class")
     }
 
+    fn import_class_feature(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+    ) -> Result<i32> {
+        let class_name = entity
+            .get("className")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Unknown");
+        let class_source = entity
+            .get("classSource")
+            .and_then(|v| v.as_str())
+            .unwrap_or(source);
+        let level = entity
+            .get("level")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(1) as i32;
+
+        let feature = NewClassFeature::new(name, source, class_name, class_source, level, data);
+        catalog::insert_class_feature(self.conn, &feature).context("Failed to insert class feature")
+    }
+
     fn import_subclass(
         &mut self,
         entity: &Value,
@@ -839,6 +865,41 @@ impl<'a> CatalogImportService<'a> {
         let mut subclass = NewSubclass::new(name, class_name, source, data);
         subclass.fluff = fluff;
         catalog::insert_subclass(self.conn, &subclass).context("Failed to insert subclass")
+    }
+
+    fn import_subclass_feature(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+    ) -> Result<i32> {
+        let class_name = entity
+            .get("className")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Unknown");
+        let class_source = entity
+            .get("classSource")
+            .and_then(|v| v.as_str())
+            .unwrap_or(source);
+        let subclass_name = entity
+            .get("subclassShortName")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Unknown");
+        let subclass_source = entity
+            .get("subclassSource")
+            .and_then(|v| v.as_str())
+            .unwrap_or(source);
+        let level = entity
+            .get("level")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(1) as i32;
+
+        let feature = NewSubclassFeature::new(
+            name, source, class_name, class_source,
+            subclass_name, subclass_source, level, data
+        );
+        catalog::insert_subclass_feature(self.conn, &feature).context("Failed to insert subclass feature")
     }
 
     fn import_race(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
@@ -1346,6 +1407,8 @@ fn collect_entities_from_memory(
         ("data/items", "magicvariant", "item"),
         ("data/class/class-", "class", "class"),
         ("data/class/class-", "subclass", "subclass"),
+        ("data/class/class-", "classFeature", "classFeature"),
+        ("data/class/class-", "subclassFeature", "subclassFeature"),
         ("data/races.json", "race", "race"),
         ("data/races.json", "subrace", "subrace"),
         ("data/backgrounds.json", "background", "background"),

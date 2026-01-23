@@ -20,10 +20,10 @@ export const trapConfig: CatalogConfig = {
       key: 'category',
       label: 'Category',
       type: 'badge',
+      sortable: true,
       className: 'catalog-table__cell-type',
       formatter: (item: any) => {
-        // Return badge configuration for CatalogTable to handle
-        const value = item.category
+        const value = item.category || '—'
         let variant = 'default'
         switch (value) {
           case 'Trap':
@@ -40,18 +40,32 @@ export const trapConfig: CatalogConfig = {
       key: 'trap_type',
       label: 'Type',
       type: 'text',
-      className: 'catalog-table__cell-center'
+      sortable: true,
+      className: 'catalog-table__cell-center',
+      formatter: (value: unknown) => {
+        if (!value || value === '—') return '—'
+        return String(value)
+      }
     },
     {
       key: 'source',
       label: 'Source',
       sortable: true,
       type: 'text',
-      className: 'catalog-table__cell-source',
-      formatter: (value: string) => value
+      className: 'catalog-table__cell-source'
     }
   ],
-  filters: [],
+  filters: [
+    {
+      key: 'category',
+      type: 'checkbox-group',
+      label: 'Category:',
+      options: [
+        { value: 'Trap', label: 'Trap' },
+        { value: 'Hazard', label: 'Hazard' }
+      ]
+    }
+  ],
   emptyMessage: {
     title: 'No traps or hazards found',
     subtitle: 'Search for traps and hazards to see results',

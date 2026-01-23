@@ -30,6 +30,9 @@ export function useCrossReferences() {
     creature: 'get_monster_by_name',
     race: 'get_race_by_name',
     class: 'get_class_by_name',
+    classFeature: 'get_class_feature',
+    subclass: 'get_subclass_by_name',
+    subclassFeature: 'get_subclass_feature',
     background: 'get_background_by_name',
     feat: 'get_feat_by_name',
     condition: 'get_condition_by_name',
@@ -56,8 +59,8 @@ export function useCrossReferences() {
   }
 
   // Lookup reference data from backend
-  async function lookupReference(refType: string, refName: string, refSource?: string): Promise<any> {
-    const cacheKey = `${refType}:${refName}:${refSource || ''}`
+  async function lookupReference(refType: string, refName: string, refSource?: string, className?: string): Promise<any> {
+    const cacheKey = `${refType}:${refName}:${refSource || ''}:${className || ''}`
 
     // Check cache first
     if (referenceCache.has(cacheKey)) {
@@ -68,6 +71,78 @@ export function useCrossReferences() {
     const command = refTypeToCommand[refType]
     if (!command) {
       console.warn(`No backend command for reference type: ${refType}`)
+      return null
+    }
+
+    // Special handling for classFeature - uses class_name instead of source
+    if (refType === 'classFeature' && className) {
+      try {
+        const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
+          name: refName,
+          class_name: className
+        })
+
+        if (response.success && response.data) {
+          const result = {
+            name: response.data.name || refName,
+            data: response.data,
+            preview: null
+          }
+          referenceCache.set(cacheKey, result)
+          return result
+        }
+      } catch (error) {
+        console.error(`Failed to lookup class feature "${refName}":`, error)
+      }
+      return null
+    }
+
+    // Special handling for subclass - uses class_name + source
+    if (refType === 'subclass' && className && refSource) {
+      try {
+        const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
+          name: refName,
+          class_name: className,
+          source: refSource
+        })
+
+        if (response.success && response.data) {
+          const result = {
+            name: response.data.name || refName,
+            data: response.data,
+            preview: null
+          }
+          referenceCache.set(cacheKey, result)
+          return result
+        }
+      } catch (error) {
+        console.error(`Failed to lookup subclass "${refName}":`, error)
+      }
+      return null
+    }
+
+    // Special handling for subclassFeature - uses subclass_name + subclass_source
+    if (refType === 'subclassFeature' && className && refSource) {
+      try {
+        // className here is actually subclassName for subclass features
+        const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
+          name: refName,
+          subclass_name: className,
+          subclass_source: refSource
+        })
+
+        if (response.success && response.data) {
+          const result = {
+            name: response.data.name || refName,
+            data: response.data,
+            preview: null
+          }
+          referenceCache.set(cacheKey, result)
+          return result
+        }
+      } catch (error) {
+        console.error(`Failed to lookup subclass feature "${refName}":`, error)
+      }
       return null
     }
 
@@ -129,20 +204,21 @@ export function useCrossReferences() {
   async function handleCrossRefHover(event: MouseEvent) {
     const target = event.target as HTMLElement
     if (!target.classList.contains('cross-ref-link')) return
-    
+
     const refType = target.dataset.refType
     const refName = target.dataset.refName
     const refSource = target.dataset.refSource
-    
+    const className = target.dataset.className
+
     if (!refType || !refName) return
-    
+
     // Show loading tooltip
     tooltipContent.value = 'Loading...'
     tooltipVisible.value = true
     tooltipPosition.value = { x: event.clientX, y: event.clientY }
-    
+
     // Lookup reference data
-    const refData = await lookupReference(refType, refName, refSource)
+    const refData = await lookupReference(refType, refName, refSource, className)
     
     if (refData) {
       // Check if there's a preview field first
@@ -162,28 +238,29 @@ export function useCrossReferences() {
   async function handleCrossRefClick(event: MouseEvent) {
     const target = event.target as HTMLElement
     if (!target.classList.contains('cross-ref-link')) return
-    
+
     event.preventDefault()
     event.stopPropagation()
-    
+
     const refType = target.dataset.refType
     const refName = target.dataset.refName
     const refSource = target.dataset.refSource
-    
+    const className = target.dataset.className
+
     if (!refType || !refName) return
-    
+
     // Hide tooltip when opening modal
     hideTooltip()
-    
+
     // Show loading modal
     modalContent.value = {
       title: refName,
       content: '<p>Loading...</p>',
       visible: true
     }
-    
+
     // Lookup reference data
-    const refData = await lookupReference(refType, refName, refSource)
+    const refData = await lookupReference(refType, refName, refSource, className)
     
     if (refData) {
       // The backend returns { name, data, preview }
@@ -229,6 +306,29 @@ export function useCrossReferences() {
         return data.name
       case 'class':
         return data.name
+      case 'classFeature': {
+        const className = data.className || data.class_name || ''
+        const level = data.level
+        if (className && level) {
+          return `${data.name} (${className} Level ${level})`
+        }
+        return data.name
+      }
+      case 'subclass': {
+        const className = data.className || data.class_name || ''
+        if (className) {
+          return `${data.name} (${className})`
+        }
+        return data.name
+      }
+      case 'subclassFeature': {
+        const subclassName = data.subclassShortName || data.subclass_short_name || ''
+        const level = data.level
+        if (subclassName && level) {
+          return `${data.name} (${subclassName} Level ${level})`
+        }
+        return data.name
+      }
       case 'background':
         return data.name
       case 'feat':

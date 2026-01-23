@@ -77,8 +77,9 @@ export interface SearchParams {
 export interface DetailFetchParams {
   name: string
   source: string
-  type: 'spell' | 'item' | 'monster' | 'class' | 'subclass' | 'feat' | 'race' | 'background' | 'action' | 'condition' | 'option' | 'deity' | 'object' | 'trap' | 'language' | 'reward' | 'table' | 'variantrule' | 'vehicle' | 'cult' | 'boon' | 'psionic'
+  type: 'spell' | 'item' | 'monster' | 'class' | 'subclass' | 'feat' | 'race' | 'background' | 'action' | 'condition' | 'option' | 'deity' | 'object' | 'trap' | 'language' | 'reward' | 'table' | 'variantrule' | 'vehicle' | 'cult' | 'boon' | 'psionic' | 'classFeature'
   subclassName?: string
+  className?: string
 }
 
 class SearchServiceClass {
@@ -297,7 +298,8 @@ class SearchServiceClass {
   }
   
   private async searchClasses(query?: string): Promise<ClassSummary[]> {
-    return await this.classes.searchClasses({
+    // Use the subclass-merged search for the table view
+    return await this.classes.searchClassesWithSubclasses({
       name: query || undefined
     })
   }
@@ -555,9 +557,17 @@ class SearchServiceClass {
       switch (type) {
         case 'spell':
           return await this.spells.getSpellDetails(name, source)
-        case 'item':
+        case 'item': {
           const { invoke } = await import('@tauri-apps/api/core')
-          return await invoke('get_item_details', { itemName: name, itemSource: source })
+          console.log('SearchService: Looking up item', { name, source })
+          const response = await invoke<{ success: boolean; data?: any; error?: string }>('get_item_by_name', { name, source })
+          console.log('SearchService: Item response', response)
+          if (response.success && response.data) {
+            return response.data
+          }
+          console.log('SearchService: Item not found or error:', response.error)
+          return null
+        }
         case 'monster':
           return await this.monsters.getMonsterDetails(name, source)
         case 'class':
@@ -601,6 +611,18 @@ class SearchServiceClass {
           return await this.cults.getBoonDetails(name, source)
         case 'psionic':
           return await this.psionics.getPsionicDetails(name, source)
+        case 'classFeature': {
+          const { invoke } = await import('@tauri-apps/api/core')
+          const class_name = params.className || ''
+          const response = await invoke<{ success: boolean; data?: any; error?: string }>('get_class_feature', {
+            name,
+            class_name
+          })
+          if (response.success && response.data) {
+            return response.data
+          }
+          return null
+        }
         default:
           return null
       }

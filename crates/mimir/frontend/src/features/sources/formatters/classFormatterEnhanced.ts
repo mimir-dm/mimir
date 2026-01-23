@@ -2,79 +2,395 @@ import { processFormattingTags, formatEntries } from '../utils/textFormatting'
 import { invoke } from '@tauri-apps/api/core'
 import type { Class, ClassWithDetails, ClassSummary, Subclass, ClassFeature, SubclassFeature, ClassFluff, SubclassFluff } from '../composables/catalog'
 
-export async function formatClassDetails(classData: ClassWithDetails | ClassSummary | Subclass): Promise<string> {
+export async function formatClassDetails(
+  classData: ClassWithDetails | ClassSummary | Subclass,
+  selectedSubclassName?: string,
+  subclassDetails?: Subclass | null
+): Promise<string> {
   // Check what type of data we have
-  const isFullClassDetails = 'classFeatures' in classData
-  const isSubclass = 'subclassFeatures' in classData
-  
-  console.log('formatClassDetails - data type check:', {
-    isFullClassDetails,
-    isSubclass,
-    dataKeys: Object.keys(classData),
-    data: classData
-  })
-  
-  if (isSubclass) {
-    console.log('Formatting as subclass')
+  // Handle wrapped ClassWithDetails structure (has 'class' property with actual class data)
+  const isWrappedClassDetails = 'class' in classData && typeof (classData as any).class === 'object'
+  const isSubclass = 'subclassFeatures' in classData || 'className' in classData
+
+  // If we have a selected subclass, show class + subclass combined view
+  if (selectedSubclassName && subclassDetails) {
+    return await formatClassWithSelectedSubclass(classData, subclassDetails)
+  }
+
+  if (isSubclass && !isWrappedClassDetails) {
     return await formatSubclassDetails(classData as Subclass)
-  } else if (!isFullClassDetails) {
-    console.log('Formatting as class summary')
-    return formatClassSummary(classData as ClassSummary)
+  } else if (isWrappedClassDetails) {
+    return await formatFullClassDetails(classData as ClassWithDetails)
   } else {
-    console.log('Formatting as full class details')
-    return await formatFullClassDetails(classData as unknown as ClassWithDetails)
+    // Raw class data (from table row or direct API)
+    return formatClassSummary(classData)
   }
 }
 
-function formatClassSummary(classSummary: ClassSummary): string {
+function formatClassSummary(classData: ClassSummary | any): string {
   let html = '<div class="class-details">'
-  
+
   // Header section
   html += '<div class="class-header-section">'
-  html += `<h2>${classSummary.name}</h2>`
+  html += `<h2>${classData.name || 'Unknown Class'}</h2>`
   html += '</div>'
-  
-  // Basic properties
+
+  // Basic properties - handle both transformed (hitDice) and raw (hd) formats
   html += '<div class="class-properties-grid">'
-  html += `<div class="property-item">
-    <span class="property-label">Hit Dice:</span>
-    <span class="property-value">${classSummary.hitDice}</span>
-  </div>`
-  html += `<div class="property-item">
-    <span class="property-label">Primary Ability:</span>
-    <span class="property-value">${classSummary.primaryAbility}</span>
-  </div>`
-  html += `<div class="property-item">
-    <span class="property-label">Saving Throw Proficiencies:</span>
-    <span class="property-value">${classSummary.proficiency}</span>
-  </div>`
-  
-  if (classSummary.spellcastingAbility) {
+
+  // Hit Dice - handle both formats
+  const hitDice = classData.hitDice || (classData.hd?.faces ? `d${classData.hd.faces}` : null)
+  if (hitDice) {
+    html += `<div class="property-item">
+      <span class="property-label">Hit Dice:</span>
+      <span class="property-value">${hitDice}</span>
+    </div>`
+  }
+
+  // Primary Ability - handle array/object format from raw data
+  let primaryAbility = classData.primaryAbility
+  if (Array.isArray(primaryAbility)) {
+    const abilities = primaryAbility
+      .map((a: any) => Object.keys(a).filter(k => a[k] === true))
+      .flat()
+      .map((s: string) => s.toUpperCase())
+    primaryAbility = abilities.join(' or ')
+  } else if (typeof primaryAbility === 'object' && primaryAbility !== null) {
+    const abilities = Object.keys(primaryAbility).filter(k => primaryAbility[k] === true)
+    primaryAbility = abilities.map(s => s.toUpperCase()).join(' or ')
+  }
+  if (primaryAbility) {
+    html += `<div class="property-item">
+      <span class="property-label">Primary Ability:</span>
+      <span class="property-value">${primaryAbility}</span>
+    </div>`
+  }
+
+  // Saving Throws - handle both formats
+  let savingThrows = classData.proficiency
+  if (Array.isArray(savingThrows)) {
+    savingThrows = savingThrows.map((s: string) => s.toUpperCase()).join(', ')
+  } else if (classData.startingProficiencies?.savingThrows) {
+    savingThrows = classData.startingProficiencies.savingThrows.map((s: string) => s.toUpperCase()).join(', ')
+  }
+  if (savingThrows) {
+    html += `<div class="property-item">
+      <span class="property-label">Saving Throw Proficiencies:</span>
+      <span class="property-value">${savingThrows}</span>
+    </div>`
+  }
+
+  if (classData.spellcastingAbility) {
     html += `<div class="property-item">
       <span class="property-label">Spellcasting Ability:</span>
-      <span class="property-value">${formatAbilityScore(classSummary.spellcastingAbility)}</span>
+      <span class="property-value">${formatAbilityScore(classData.spellcastingAbility)}</span>
     </div>`
   }
-  
-  if (classSummary.subclassTitle) {
+
+  if (classData.subclassTitle) {
     html += `<div class="property-item">
       <span class="property-label">Subclass Type:</span>
-      <span class="property-value">${classSummary.subclassTitle}</span>
+      <span class="property-value">${classData.subclassTitle}</span>
     </div>`
   }
-  
+
   html += '</div>'
-  
+
   // Description
-  if (classSummary.description) {
+  if (classData.description) {
     html += '<div class="class-description">'
-    html += processFormattingTags(classSummary.description)
+    html += processFormattingTags(classData.description)
     html += '</div>'
   }
-  
+
+  // Entries (from raw 5etools data)
+  if (classData.entries && Array.isArray(classData.entries)) {
+    html += '<div class="class-entries">'
+    html += formatEntries(classData.entries)
+    html += '</div>'
+  }
+
   // Source
-  html += `<div class="source-info">Source: ${classSummary.source}${classSummary.page ? `, p. ${classSummary.page}` : ''}</div>`
-  
+  html += `<div class="source-info">Source: ${classData.source || 'Unknown'}${classData.page ? `, p. ${classData.page}` : ''}</div>`
+
+  html += '</div>'
+  return html
+}
+
+/**
+ * Format a class with a specific subclass highlighted/expanded.
+ * Shows full class info with the selected subclass featured prominently.
+ */
+async function formatClassWithSelectedSubclass(
+  classData: ClassWithDetails | ClassSummary | any,
+  selectedSubclass: Subclass
+): Promise<string> {
+  // Extract the actual class data if wrapped
+  const cls = 'class' in classData && typeof classData.class === 'object'
+    ? classData.class
+    : classData
+
+  let html = '<div class="class-details">'
+
+  // Header section with subclass indicator
+  html += '<div class="class-header-section">'
+  html += `<h2>${cls.name}: ${selectedSubclass.name}</h2>`
+  html += '</div>'
+
+  // Basic properties
+  html += '<div class="class-properties-grid">'
+
+  // Format hit dice
+  if (cls.hd) {
+    const hdText = typeof cls.hd === 'object'
+      ? `${cls.hd.number || 1}d${cls.hd.faces || 6}`
+      : '1d6'
+    html += `<div class="property-item">
+      <span class="property-label">Hit Dice:</span>
+      <span class="property-value">${hdText}</span>
+    </div>`
+  }
+
+  // Format proficiencies
+  if (cls.startingProficiencies?.savingThrows) {
+    const saves = cls.startingProficiencies.savingThrows
+      .map((s: string) => s.toUpperCase())
+      .join(', ')
+    html += `<div class="property-item">
+      <span class="property-label">Saving Throw Proficiencies:</span>
+      <span class="property-value">${saves}</span>
+    </div>`
+  }
+
+  // Spellcasting - use subclass's if it has one, otherwise class's
+  const spellcastingAbility = selectedSubclass.spellcastingAbility || cls.spellcastingAbility
+  if (spellcastingAbility) {
+    html += `<div class="property-item">
+      <span class="property-label">Spellcasting Ability:</span>
+      <span class="property-value">${formatAbilityScore(spellcastingAbility)}</span>
+    </div>`
+  }
+
+  // Caster progression if subclass adds it
+  if (selectedSubclass.casterProgression) {
+    html += `<div class="property-item">
+      <span class="property-label">Caster Progression:</span>
+      <span class="property-value">${selectedSubclass.casterProgression}</span>
+    </div>`
+  }
+
+  if (cls.subclassTitle) {
+    html += `<div class="property-item">
+      <span class="property-label">Subclass Type:</span>
+      <span class="property-value">${cls.subclassTitle}</span>
+    </div>`
+  }
+
+  html += '</div>'
+
+  // === CLASS FLUFF SECTION (Description and images) ===
+  if (cls.fluff) {
+    html += '<div class="class-fluff-section">'
+    html += '<h3>Description</h3>'
+
+    // Add images if present
+    if (cls.fluff.images && cls.fluff.images.length > 0) {
+      html += '<div class="class-images">'
+      for (const image of cls.fluff.images) {
+        if (typeof image === 'object' && image.href && image.href.path) {
+          try {
+            const response = await invoke<any>('serve_book_image', {
+              bookId: cls.source,
+              imagePath: image.href.path
+            })
+            if (response && response.success && response.data) {
+              html += `<img src="${response.data}" alt="${cls.name}" class="class-image" style="max-width: 400px; max-height: 400px; width: auto; height: auto; object-fit: contain; display: block; margin: 1rem auto;" />`
+            }
+          } catch (e) {
+            // Silently fail if image can't be loaded
+          }
+        }
+      }
+      html += '</div>'
+    }
+
+    // Add fluff entries
+    if (cls.fluff.entries && cls.fluff.entries.length > 0) {
+      html += '<div class="fluff-entries">'
+      html += formatEntries(cls.fluff.entries)
+      html += '</div>'
+    }
+    html += '</div>'
+  }
+
+  // Class entries (features description from 5etools)
+  if (cls.entries && cls.entries.length > 0) {
+    html += '<div class="class-entries">'
+    html += '<h3>Class Features</h3>'
+    for (const entry of cls.entries) {
+      html += formatEntry(entry)
+    }
+    html += '</div>'
+  }
+
+  // === SELECTED SUBCLASS SECTION (Featured prominently) ===
+  html += '<div class="selected-subclass-section">'
+  html += `<h3>${selectedSubclass.name}</h3>`
+
+  if (selectedSubclass.shortName && selectedSubclass.shortName !== selectedSubclass.name) {
+    html += `<p class="subclass-short-name">(${selectedSubclass.shortName})</p>`
+  }
+
+  // Subclass fluff/description with images
+  if (selectedSubclass.fluff) {
+    html += '<div class="subclass-fluff-section">'
+
+    // Images
+    if (selectedSubclass.fluff.images && selectedSubclass.fluff.images.length > 0) {
+      html += '<div class="subclass-images">'
+      for (const image of selectedSubclass.fluff.images) {
+        if (typeof image === 'object' && image.href && image.href.path) {
+          try {
+            const response = await invoke<any>('serve_book_image', {
+              bookId: selectedSubclass.source,
+              imagePath: image.href.path
+            })
+            if (response && response.success && response.data) {
+              html += `<img src="${response.data}" alt="${selectedSubclass.name}" class="subclass-image" style="max-width: 400px; max-height: 400px; width: auto; height: auto; object-fit: contain; display: block; margin: 1rem auto;" />`
+            }
+          } catch (e) {
+            // Silently fail if image can't be loaded
+          }
+        }
+      }
+      html += '</div>'
+    }
+
+    // Fluff entries - show all of them for richness
+    if (selectedSubclass.fluff.entries && selectedSubclass.fluff.entries.length > 0) {
+      html += '<div class="subclass-description">'
+      html += formatEntries(selectedSubclass.fluff.entries)
+      html += '</div>'
+    }
+    html += '</div>'
+  }
+
+  // Subclass features with full details
+  if (selectedSubclass.subclassFeatures && selectedSubclass.subclassFeatures.length > 0) {
+    html += '<div class="subclass-features-section">'
+    html += '<h4>Subclass Features</h4>'
+
+    // Parse and group features by level
+    const featuresByLevel = new Map<number, string[]>()
+
+    for (const featureRef of selectedSubclass.subclassFeatures) {
+      const parts = typeof featureRef === 'string' ? featureRef.split('|') : []
+      if (parts.length >= 6) {
+        const featureName = parts[0]
+        const level = parseInt(parts[5]) || 1
+
+        if (!featuresByLevel.has(level)) {
+          featuresByLevel.set(level, [])
+        }
+        featuresByLevel.get(level)!.push(featureName)
+      }
+    }
+
+    const levels = Array.from(featuresByLevel.keys()).sort((a, b) => a - b)
+
+    if (levels.length > 0) {
+      html += '<div class="features-list">'
+      for (const level of levels) {
+        const levelFeatures = featuresByLevel.get(level)!
+        html += `<div class="feature-level-group">`
+        html += `<strong>${formatOrdinal(level)} Level:</strong> `
+        html += levelFeatures.join(', ')
+        html += `</div>`
+      }
+      html += '</div>'
+    }
+
+    html += '</div>'
+  }
+
+  // Subclass table groups (e.g., spell slots for Eldritch Knight)
+  if (selectedSubclass.subclassTableGroups && selectedSubclass.subclassTableGroups.length > 0) {
+    html += '<div class="subclass-tables-section">'
+    html += '<h4>Subclass Progression</h4>'
+    for (const tableGroup of selectedSubclass.subclassTableGroups) {
+      html += formatTable(tableGroup)
+    }
+    html += '</div>'
+  }
+
+  html += '</div>' // selected-subclass-section
+
+  // === CLASS FEATURES SECTION ===
+  // Show base class features (these apply to all subclasses)
+  if (cls.classFeatures && cls.classFeatures.length > 0) {
+    html += '<div class="class-features-section">'
+    html += '<h3>Class Features</h3>'
+
+    // Group features by level with full reference info
+    const featuresByLevel: { [key: number]: Array<{ name: string; className: string; source: string; level: number }> } = {}
+
+    for (const feature of cls.classFeatures) {
+      let featureStr = ''
+      if (typeof feature === 'string') {
+        featureStr = feature
+      } else if (typeof feature === 'object' && feature.classFeature) {
+        featureStr = feature.classFeature
+      }
+
+      if (featureStr) {
+        const parts = featureStr.split('|')
+        if (parts.length >= 4) {
+          const featureName = parts[0]
+          const className = parts[1] || cls.name
+          const classSource = parts[2] || cls.source
+          const level = parseInt(parts[3]) || 1
+
+          if (!featuresByLevel[level]) featuresByLevel[level] = []
+          featuresByLevel[level].push({ name: featureName, className, source: classSource, level })
+        }
+      }
+    }
+
+    // Display features by level with clickable links
+    html += '<div class="features-list">'
+    for (let level = 1; level <= 20; level++) {
+      if (featuresByLevel[level] && featuresByLevel[level].length > 0) {
+        html += `<div class="feature-level-group">`
+        html += `<strong>${formatOrdinal(level)} Level:</strong> `
+        const featureLinks = featuresByLevel[level].map(f =>
+          `<a href="#" class="cross-ref-link feature-ref" data-ref-type="classFeature" data-ref-name="${f.name}" data-class-name="${f.className}" data-ref-source="${f.source}" data-level="${f.level}">${f.name}</a>`
+        )
+        html += featureLinks.join(', ')
+        html += `</div>`
+      }
+    }
+    html += '</div>'
+    html += '</div>'
+  }
+
+  // Class Table Groups (includes spell slots for casters)
+  if (cls.classTableGroups && cls.classTableGroups.length > 0) {
+    html += '<div class="class-tables-section">'
+    html += '<h3>Class Progression</h3>'
+    for (const tableGroup of cls.classTableGroups) {
+      html += formatTable(tableGroup)
+    }
+    html += '</div>'
+  }
+
+  // Source info
+  html += `<div class="source-info">`
+  html += `Class: ${cls.source}${cls.page ? `, p. ${cls.page}` : ''}`
+  if (selectedSubclass.source !== cls.source || selectedSubclass.page !== cls.page) {
+    html += ` | Subclass: ${selectedSubclass.source}${selectedSubclass.page ? `, p. ${selectedSubclass.page}` : ''}`
+  }
+  html += `</div>`
+
   html += '</div>'
   return html
 }
@@ -242,46 +558,50 @@ async function formatFullClassDetails(classDetails: ClassWithDetails): Promise<s
     html += '</div>'
   }
   
-  // Class Features
+  // Class Features - parse from string references
+  // Format: "Feature Name|ClassName|ClassSource|Level" or object with classFeature property
   if (classData.classFeatures && classData.classFeatures.length > 0) {
     html += '<div class="class-features-section">'
     html += '<h3>Class Features</h3>'
-    html += '<div class="features-list">'
-    
-    // Group features by level
-    const featuresByLevel: { [key: number]: string[] } = {}
-    
+
+    // Group features by level with full reference info
+    const featuresByLevel: { [key: number]: Array<{ name: string; className: string; source: string; level: number }> } = {}
+
     for (const feature of classData.classFeatures) {
+      let featureStr = ''
       if (typeof feature === 'string') {
-        // Format: "Feature Name|Class||Level"
-        const parts = feature.split('|')
-        if (parts.length >= 4) {
-          const featureName = parts[0]
-          const level = parseInt(parts[3]) || 1
-          if (!featuresByLevel[level]) featuresByLevel[level] = []
-          featuresByLevel[level].push(featureName)
-        }
+        featureStr = feature
       } else if (typeof feature === 'object' && feature.classFeature) {
-        // Handle object format
-        const parts = feature.classFeature.split('|')
+        featureStr = feature.classFeature
+      }
+
+      if (featureStr) {
+        const parts = featureStr.split('|')
         if (parts.length >= 4) {
           const featureName = parts[0]
+          const className = parts[1] || classData.name
+          const classSource = parts[2] || classData.source
           const level = parseInt(parts[3]) || 1
+
           if (!featuresByLevel[level]) featuresByLevel[level] = []
-          featuresByLevel[level].push(featureName)
+          featuresByLevel[level].push({ name: featureName, className, source: classSource, level })
         }
       }
     }
-    
-    // Display features by level
+
+    // Display features by level with clickable links
+    html += '<div class="features-list">'
     for (let level = 1; level <= 20; level++) {
       if (featuresByLevel[level] && featuresByLevel[level].length > 0) {
         html += `<div class="feature-level-group">`
-        html += `<strong>Level ${level}:</strong> ${featuresByLevel[level].join(', ')}`
+        html += `<strong>${formatOrdinal(level)} Level:</strong> `
+        const featureLinks = featuresByLevel[level].map(f =>
+          `<a href="#" class="cross-ref-link feature-ref" data-ref-type="classFeature" data-ref-name="${f.name}" data-class-name="${f.className}" data-ref-source="${f.source}" data-level="${f.level}">${f.name}</a>`
+        )
+        html += featureLinks.join(', ')
         html += `</div>`
       }
     }
-    
     html += '</div>'
     html += '</div>'
   }
@@ -455,35 +775,51 @@ function formatFeaturesTable(features: ClassFeature[]): string {
     }
     featuresByLevel.get(feature.level)!.push(feature)
   }
-  
+
   // Sort levels
   const levels = Array.from(featuresByLevel.keys()).sort((a, b) => a - b)
-  
-  let html = '<table class="entry-table">'
-  html += '<thead><tr><th>Level</th><th>Features</th></tr></thead>'
-  html += '<tbody>'
-  
+
+  let html = '<div class="features-by-level">'
+
   for (const level of levels) {
     const levelFeatures = featuresByLevel.get(level)!
-    html += '<tr>'
-    html += `<td>${formatOrdinal(level)}</td>`
-    html += '<td>'
-    html += levelFeatures.map(f => f.name).join(', ')
-    html += '</td>'
-    html += '</tr>'
+    html += `<div class="level-section">`
+    html += `<h4>${formatOrdinal(level)} Level</h4>`
+
+    for (const feature of levelFeatures) {
+      // Use details/summary for expandable content if feature has entries
+      if (feature.entries && feature.entries.length > 0) {
+        html += `<details class="feature-details">`
+        html += `<summary class="feature-name">${feature.name}</summary>`
+        html += `<div class="feature-content">`
+        html += formatEntries(feature.entries)
+        html += `</div>`
+        html += `</details>`
+      } else {
+        // No entries, just show the name
+        html += `<p class="feature-name-only"><strong>${feature.name}</strong></p>`
+      }
+    }
+
+    html += `</div>`
   }
-  
-  html += '</tbody></table>'
+
+  html += '</div>'
   return html
 }
 function formatTable(table: any): string {
+  // Skip tables without rows - they're incomplete/broken
+  if (!table.rows || table.rows.length === 0) {
+    return ''
+  }
+
   let html = '<table class="entry-table">'
-  
+
   // Caption
   if (table.caption) {
     html += `<caption>${table.caption}</caption>`
   }
-  
+
   // Headers - Add "Level" as first column if not present
   if (table.colLabels) {
     html += '<thead><tr>'
@@ -706,7 +1042,43 @@ async function formatSubclassDetails(subclass: Subclass): Promise<string> {
     html += `, p. ${subclass.page}`
   }
   html += '</div>'
-  
+
+  html += '</div>'
+  return html
+}
+
+/**
+ * Format a class feature for display in a modal.
+ */
+export async function formatClassFeatureDetails(feature: any, className?: string, level?: string): Promise<string> {
+  let html = '<div class="class-feature-details">'
+
+  // Header with level info
+  html += '<div class="feature-header">'
+  if (level) {
+    html += `<span class="feature-level">Level ${level}</span>`
+  }
+  if (className) {
+    html += `<span class="feature-class">${className} Feature</span>`
+  }
+  html += '</div>'
+
+  // Feature entries (the actual description)
+  if (feature.entries && Array.isArray(feature.entries)) {
+    html += '<div class="feature-content">'
+    html += formatEntries(feature.entries)
+    html += '</div>'
+  }
+
+  // Source info
+  if (feature.source) {
+    html += `<div class="source-info">Source: ${feature.source}`
+    if (feature.page) {
+      html += `, p. ${feature.page}`
+    }
+    html += '</div>'
+  }
+
   html += '</div>'
   return html
 }

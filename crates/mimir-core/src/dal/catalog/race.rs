@@ -7,14 +7,23 @@ use crate::schema::races;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
-/// Insert a new race.
+/// Insert a new race, ignoring duplicates.
+///
+/// If a race with the same (name, source) already exists,
+/// returns the existing ID without error.
 pub fn insert_race(conn: &mut SqliteConnection, race: &NewRace) -> QueryResult<i32> {
-    diesel::insert_into(races::table)
+    // Try to insert, ignoring conflicts
+    diesel::insert_or_ignore_into(races::table)
         .values(race)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    // Look up the ID (either newly inserted or existing)
+    races::table
+        .filter(races::name.eq(&race.name))
+        .filter(races::source.eq(&race.source))
+        .select(races::id)
+        .first::<Option<i32>>(conn)?
+        .ok_or(diesel::result::Error::NotFound)
 }
 
 /// Insert multiple races in a batch.
@@ -34,14 +43,18 @@ pub fn get_race_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Op
     races::table.filter(races::id.eq(id)).first(conn).optional()
 }
 
-/// Get a race by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a race by name and source (case-insensitive name matching).
 pub fn get_race_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Race>> {
+    let name_lower = name.to_lowercase();
     races::table
-        .filter(races::name.eq(name))
+        .filter(lower(races::name).eq(&name_lower))
         .filter(races::source.eq(source))
         .first(conn)
         .optional()

@@ -39,7 +39,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@condition ([^|}]+)(?:\|([^}]*))?}/gi, (match, name, source) => {
       const displayName = name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link condition-ref" data-ref-type="condition" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     .replace(/{@status ([^|}]+)(?:\|[^}]*)?}/gi, '<span class="status">$1</span>')
@@ -48,7 +48,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@spell ([^|}]+)(?:\|([^}]*))?}/gi, (match, name, source) => {
       const displayName = name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link spell-ref" data-ref-type="spell" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     
@@ -56,7 +56,8 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@item ([^|}]+)(?:\|([^|}]+))?(?:\|([^}]*))?}/gi, (match, name, source, displayText) => {
       const displayName = displayText || name
-      const actualSource = source || 'PHB'
+      // Sources in 5etools are uppercase (PHB, DMG, etc.) - ensure consistency
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link item-ref" data-ref-type="item" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     
@@ -76,7 +77,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@creature ([^|}]+)(?:\|([^|}]+))?(?:\|([^}]*))?}/gi, (match, name, source, displayText) => {
       const displayName = displayText || name
-      const actualSource = source || 'MM'
+      const actualSource = (source || 'MM').toUpperCase()
       return `<a href="#" class="cross-ref-link creature-ref" data-ref-type="creature" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     
@@ -84,7 +85,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@race ([^|}]+)(?:\|([^|}]+))?(?:\|([^}]*))?}/gi, (match, name, source, displayText) => {
       const displayName = displayText || name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link race-ref" data-ref-type="race" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     
@@ -92,7 +93,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@class ([^|}]+)(?:\|([^|}]+))?(?:\|([^}]*))?}/gi, (match, name, source, displayText) => {
       const displayName = displayText || name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link class-ref" data-ref-type="class" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     .replace(/{@classFeature ([^|}]+)(?:\|([^}]*))?}/gi, (match, name) => {
@@ -104,7 +105,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@feat ([^|}]+)(?:\|([^|}]+))?(?:\|([^}]*))?}/gi, (match, name, source, displayText) => {
       const displayName = displayText || name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link feat-ref" data-ref-type="feat" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
 
@@ -112,7 +113,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@background ([^|}]+)(?:\|([^|}]+))?(?:\|([^}]*))?}/gi, (match, name, source, displayText) => {
       const displayName = displayText || name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link background-ref" data-ref-type="background" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
 
@@ -125,7 +126,7 @@ export function processFormattingTags(text: string | any): string {
   processed = processed
     .replace(/{@action ([^|}]+)(?:\|([^}]*))?}/gi, (match, name, source) => {
       const displayName = name
-      const actualSource = source || 'PHB'
+      const actualSource = (source || 'PHB').toUpperCase()
       return `<a href="#" class="cross-ref-link action-ref" data-ref-type="action" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
     

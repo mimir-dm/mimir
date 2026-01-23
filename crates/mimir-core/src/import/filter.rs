@@ -89,8 +89,6 @@ pub const ENTITY_KEYS: &[&str] = &[
     "cult",
     "boon",
     "psionic",
-    "classFeature",
-    "subclassFeature",
 ];
 
 /// Check if an item matches the given source.

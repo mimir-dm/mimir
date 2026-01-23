@@ -45,14 +45,18 @@ pub fn get_background_optional(
         .optional()
 }
 
-/// Get a background by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a background by name and source (case-insensitive name matching).
 pub fn get_background_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Background>> {
+    let name_lower = name.to_lowercase();
     backgrounds::table
-        .filter(backgrounds::name.eq(name))
+        .filter(lower(backgrounds::name).eq(&name_lower))
         .filter(backgrounds::source.eq(source))
         .first(conn)
         .optional()

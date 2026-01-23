@@ -27,7 +27,7 @@ import type {
 import { formatSpellDetails } from '../formatters/spellFormatterEnhanced'
 import { formatItemDetails } from '../formatters/itemFormatterEnhanced'
 import { formatMonsterDetails } from '../formatters/monsterFormatterEnhanced'
-import { formatClassDetails } from '../formatters/classFormatterEnhanced'
+import { formatClassDetails, formatClassFeatureDetails } from '../formatters/classFormatterEnhanced'
 import { formatFeatDetails } from '../formatters/featFormatter'
 import { formatRaceDetails } from '../formatters/raceFormatter'
 import { formatBackgroundDetails } from '../formatters/backgroundFormatter'
@@ -173,43 +173,39 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
   }
   
   async function selectClass(classItem: ClassSummary) {
-    console.log('selectClass called with:', {
+    // Check if this row has a valid subclass (not '—' which indicates no subclass)
+    const hasValidSubclass = classItem.subclassName &&
+                             classItem.subclassName !== '—' &&
+                             classItem.subclassName.trim() !== ''
+
+    // Always fetch the base class details first
+    const classDetails = await SearchService.getDetails({
       name: classItem.name,
-      rowType: classItem.rowType,
-      subclassName: classItem.subclassName,
       source: classItem.source,
-      allProps: Object.keys(classItem),
-      fullObject: classItem
+      type: 'class'
     })
-    
-    let fullDetails
-    let title
-    
-    if (classItem.rowType === 'subclass' && classItem.subclassName) {
-      console.log('Fetching subclass details for:', classItem.subclassName)
-      // Get subclass details
-      fullDetails = await SearchService.getDetails({
-        name: classItem.name,
-        source: classItem.source,
+
+    let title = classItem.name
+    let subclassDetails = null
+
+    if (hasValidSubclass) {
+      // Also fetch the specific subclass details
+      const subclassSource = (classItem as any).subclassSource || classItem.source
+      subclassDetails = await SearchService.getDetails({
+        name: classItem.name, // class name
+        source: subclassSource,
         type: 'subclass',
         subclassName: classItem.subclassName
       })
-      console.log('Subclass details received:', fullDetails)
       title = `${classItem.name}: ${classItem.subclassName}`
-    } else {
-      console.log('Fetching base class details for:', classItem.name)
-      // Get base class details
-      fullDetails = await SearchService.getDetails({
-        name: classItem.name,
-        source: classItem.source,
-        type: 'class'
-      })
-      console.log('Class details received:', fullDetails)
-      title = classItem.name
     }
-    
-    console.log('About to format with data:', fullDetails || classItem)
-    const formattedContent = await formatClassDetails(fullDetails || classItem)
+
+    // Format with both class and subclass context
+    const formattedContent = await formatClassDetails(
+      classDetails || classItem,
+      hasValidSubclass ? classItem.subclassName : undefined,
+      subclassDetails
+    )
     modalStack.value.push({
       visible: true,
       title,
@@ -233,16 +229,45 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
   }
   
   async function selectRace(race: RaceSummary) {
-    const fullRace = await SearchService.getDetails({
+    const fullRaceResult = await SearchService.getDetails({
       name: race.name,
       source: race.source,
       type: 'race'
     })
-    
-    const formattedContent = await formatRaceDetails(fullRace || race)
+
+    // SearchService returns { race: raceData, subrace: undefined, ... } structure
+    // The actual race data (including raceName for subraces) is inside the 'race' property
+    const raceData = fullRaceResult?.race || fullRaceResult || race
+    const parentRaceName = raceData?.raceName
+    const parentRaceSource = raceData?.raceSource
+
+    let raceDetails: any = fullRaceResult
+
+    if (parentRaceName && parentRaceSource) {
+      // This is a subrace - fetch the parent race too
+      const parentRaceResult = await SearchService.getDetails({
+        name: parentRaceName,
+        source: parentRaceSource,
+        type: 'race'
+      })
+      const parentRaceData = parentRaceResult?.race || parentRaceResult
+
+      // Combine into RaceWithDetails structure with parent as 'race' and this as 'subrace'
+      raceDetails = {
+        race: parentRaceData,
+        subrace: raceData,
+        relatedSubraces: [],
+        fluff: null
+      }
+    }
+
+    // Generate display title (e.g., "Wood Elf" for subraces)
+    const displayTitle = parentRaceName ? `${race.name} ${parentRaceName}` : race.name
+
+    const formattedContent = await formatRaceDetails(raceDetails)
     modalStack.value.push({
       visible: true,
-      title: race.name,
+      title: displayTitle,
       content: formattedContent
     })
   }
@@ -490,7 +515,7 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
     }
   }
   
-  async function handleReferenceClick(event: { type: string; name: string; source?: string }) {
+  async function handleReferenceClick(event: { type: string; name: string; source?: string; className?: string; level?: string }) {
     console.log('Reference clicked:', event)
     let details: any = null
     let formattedContent: string = ''
@@ -669,6 +694,35 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
           visible: true,
           title: event.name,
           content: `<p>Class feature: <strong>${event.name}</strong></p><p class="text-muted">See the class entry for full details.</p>`
+        })
+        break
+      }
+      case 'classFeature': {
+        // Class feature links include class name and level info
+        const className = event.className || 'Unknown Class'
+        const level = event.level || ''
+        const levelInfo = level ? ` (Level ${level})` : ''
+
+        // Try to fetch the feature from the database
+        details = await SearchService.getDetails({
+          name: event.name,
+          source: event.source || 'PHB',
+          type: 'classFeature',
+          className: className
+        })
+
+        if (details && details.entries) {
+          // Format the feature entries
+          formattedContent = await formatClassFeatureDetails(details, className, level)
+        } else {
+          // Fallback to basic info
+          formattedContent = `<p><strong>${event.name}</strong>${levelInfo}</p><p class="text-muted">This is a ${className} class feature. Feature details not available in database.</p>`
+        }
+
+        modalStack.value.push({
+          visible: true,
+          title: event.name,
+          content: formattedContent
         })
         break
       }

@@ -14,7 +14,8 @@ export interface ClassSummary {
   subclassTitle?: string
   description: string
   subclassName?: string
-  rowType: string
+  subclassSource?: string
+  rowType?: string
 }
 
 export interface ClassFilters {
@@ -142,16 +143,87 @@ export function useClasses() {
     }
   }
 
-  async function getSubclassDetails(subclassName: string, className: string, classSource: string): Promise<Subclass | null> {
-    // Subclass details not currently supported in backend
-    console.warn('getSubclassDetails not implemented in backend')
-    return null
+  async function getSubclassDetails(subclassName: string, className: string, source: string): Promise<Subclass | null> {
+    try {
+      const response = await invoke<{ success: boolean; data?: any; error?: string }>('get_subclass_by_name', {
+        name: subclassName,
+        className,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data as Subclass
+      }
+      return null
+    } catch (e) {
+      console.error('Failed to get subclass details:', e)
+      return null
+    }
   }
 
-  async function getClassSubclasses(className: string, classSource: string): Promise<Subclass[]> {
-    // Class subclasses not currently supported in backend
-    console.warn('getClassSubclasses not implemented in backend')
-    return []
+  async function getClassSubclasses(className: string): Promise<Subclass[]> {
+    try {
+      const response = await invoke<{ success: boolean; data?: any[]; error?: string }>('list_subclasses_by_class', {
+        className
+      })
+      if (response.success && response.data) {
+        return response.data as Subclass[]
+      }
+      return []
+    } catch (e) {
+      console.error('Failed to get class subclasses:', e)
+      return []
+    }
+  }
+
+  // Fetch classes with their subclasses merged into a flat list
+  // Groups by source book, then shows each class with subclasses from that book
+  async function searchClassesWithSubclasses(filters?: ClassFilters): Promise<ClassSummary[]> {
+    // First get all classes
+    await catalog.search(filters || {})
+    const classes = catalog.results.value
+
+    // Cache subclasses by class name to avoid duplicate fetches
+    const subclassCache = new Map<string, Subclass[]>()
+
+    // Build results: for each class (from each source), show its subclasses from that source
+    const results: ClassSummary[] = []
+    let prevClassKey = '' // Track class+source combo for grouping
+
+    for (const cls of classes) {
+      // Fetch subclasses if not cached
+      if (!subclassCache.has(cls.name)) {
+        const allSubclasses = await getClassSubclasses(cls.name)
+        subclassCache.set(cls.name, allSubclasses)
+      }
+
+      const allSubclasses = subclassCache.get(cls.name) || []
+
+      // Filter to subclasses from the same source as this class
+      const subclasses = allSubclasses.filter(sc => sc.source === cls.source)
+
+      const classKey = `${cls.name}|${cls.source}`
+
+      // Always add the base class row first (no subclass selected)
+      results.push({
+        ...cls,
+        subclassName: '—',
+        rowType: 'class-base'
+      })
+
+      // Then add rows for each subclass from this source
+      for (const subclass of subclasses) {
+        results.push({
+          ...cls,
+          subclassName: subclass.name,
+          rowType: 'class-subclass',
+          subclassSource: subclass.source,
+        } as ClassSummary & { subclassSource: string })
+      }
+
+      prevClassKey = classKey
+    }
+
+    return results
   }
 
   return {
@@ -162,6 +234,7 @@ export function useClasses() {
     classSources,
     initializeClassCatalog: catalog.initialize,
     searchClasses: catalog.search,
+    searchClassesWithSubclasses,
     getClassDetails,
     getSubclassDetails,
     getClassSubclasses,

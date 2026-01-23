@@ -1,4 +1,19 @@
 import type { CatalogConfig } from './types'
+import { processFormattingTags } from '@/features/sources/utils/textFormatting'
+
+// Helper to check if this is a subclass row (should blank out class-level columns)
+function isSubclassRow(item: unknown): boolean {
+  const rowType = (item as any)?.rowType
+  return rowType === 'class-subclass'
+}
+
+// Wrap a formatter to return empty string for subclass rows (class info shown on base row)
+function skipOnSubclassRow<T>(formatter: (value: unknown, item?: unknown) => T): (value: unknown, item?: unknown) => T | string {
+  return (value: unknown, item?: unknown) => {
+    if (isSubclassRow(item)) return ''
+    return formatter(value, item)
+  }
+}
 
 // Format hit dice from 5etools object format
 function formatHitDice(hd: unknown): string {
@@ -10,8 +25,10 @@ function formatHitDice(hd: unknown): string {
 }
 
 // Format primary ability from 5etools array format
-function formatPrimaryAbility(primaryAbility: unknown): string {
-  if (!primaryAbility) return '—'
+// Note: This receives the full item, not just the primaryAbility field
+function formatPrimaryAbility(item: unknown): string {
+  const data = item as Record<string, unknown>
+  const primaryAbility = data?.primaryAbility
 
   const statNames: Record<string, string> = {
     str: 'Strength',
@@ -22,7 +39,7 @@ function formatPrimaryAbility(primaryAbility: unknown): string {
     cha: 'Charisma'
   }
 
-  // Handle array format (newer 5etools)
+  // Handle array format (newer 5etools / XPHB)
   if (Array.isArray(primaryAbility)) {
     const abilities: string[] = []
     for (const ability of primaryAbility) {
@@ -34,7 +51,9 @@ function formatPrimaryAbility(primaryAbility: unknown): string {
         }
       }
     }
-    return abilities.length > 0 ? abilities.join(' or ') : '—'
+    if (abilities.length > 0) {
+      return abilities.join(' or ')
+    }
   }
 
   // Handle object format
@@ -45,10 +64,19 @@ function formatPrimaryAbility(primaryAbility: unknown): string {
         abilities.push(statNames[stat] || stat)
       }
     }
-    return abilities.length > 0 ? abilities.join(' or ') : '—'
+    if (abilities.length > 0) {
+      return abilities.join(' or ')
+    }
   }
 
-  return '—'
+  // Fallback: For casters without primaryAbility (PHB classes), infer from spellcasting
+  const spellcastingAbility = data?.spellcastingAbility
+  if (typeof spellcastingAbility === 'string') {
+    return statNames[spellcastingAbility] || spellcastingAbility.toUpperCase()
+  }
+
+  // No primary ability info available
+  return ''
 }
 
 // Format starting proficiencies from 5etools object format
@@ -64,9 +92,9 @@ function formatProficiencies(startingProficiencies: unknown): string {
   if (Array.isArray(sp.armor)) {
     const armorTypes = sp.armor
       .map((a: unknown) => {
-        if (typeof a === 'string') return a
+        if (typeof a === 'string') return processFormattingTags(a)
         if (typeof a === 'object' && a !== null && 'proficiency' in a) {
-          return (a as { proficiency: string }).proficiency
+          return processFormattingTags((a as { proficiency: string }).proficiency)
         }
         return null
       })
@@ -80,9 +108,9 @@ function formatProficiencies(startingProficiencies: unknown): string {
   if (Array.isArray(sp.weapons)) {
     const weapons = sp.weapons
       .map((w: unknown) => {
-        if (typeof w === 'string') return w
+        if (typeof w === 'string') return processFormattingTags(w)
         if (typeof w === 'object' && w !== null && 'proficiency' in w) {
-          return (w as { proficiency: string }).proficiency
+          return processFormattingTags((w as { proficiency: string }).proficiency)
         }
         return null
       })
@@ -118,7 +146,8 @@ function formatProficiencies(startingProficiencies: unknown): string {
 // Note: badge type columns receive the full item, not just the field value
 function formatSpellcasting(item: unknown): { text: string; variant: string } | string {
   const spellcastingAbility = (item as any)?.spellcastingAbility
-  if (typeof spellcastingAbility !== 'string') return '—'
+  // Non-casters don't have spellcasting ability - return empty string (not a badge)
+  if (typeof spellcastingAbility !== 'string') return ''
 
   const abilityMap: Record<string, string> = {
     int: 'INT',
@@ -136,43 +165,39 @@ export const classConfig: CatalogConfig = {
   columns: [
     {
       key: 'name',
-      label: 'Name',
+      label: 'Class',
       sortable: true,
-      className: 'catalog-table__cell-name'
+      className: 'catalog-table__cell-name',
+      formatter: skipOnSubclassRow((value: unknown) => String(value || ''))
+    },
+    {
+      key: 'subclassName',
+      label: 'Subclass',
+      type: 'text',
+      className: 'catalog-table__cell-name',
+      formatter: (value: unknown) => {
+        if (typeof value === 'string' && value.trim() && value !== '—') return value
+        return '—'
+      }
     },
     {
       key: 'hd',
       label: 'Hit Dice',
       type: 'text',
       className: 'text-center',
-      formatter: formatHitDice
+      formatter: skipOnSubclassRow(formatHitDice)
     },
     {
       key: 'primaryAbility',
       label: 'Primary Ability',
       type: 'text',
-      formatter: formatPrimaryAbility
-    },
-    {
-      key: 'startingProficiencies',
-      label: 'Proficiencies',
-      type: 'text',
-      formatter: formatProficiencies
+      formatter: skipOnSubclassRow((_value: unknown, item: unknown) => formatPrimaryAbility(item))
     },
     {
       key: 'spellcastingAbility',
       label: 'Spellcasting',
       type: 'badge',
-      formatter: formatSpellcasting
-    },
-    {
-      key: 'subclassTitle',
-      label: 'Subclass',
-      type: 'text',
-      formatter: (value: unknown) => {
-        if (typeof value === 'string') return value
-        return '—'
-      }
+      formatter: skipOnSubclassRow(formatSpellcasting)
     },
     {
       key: 'source',

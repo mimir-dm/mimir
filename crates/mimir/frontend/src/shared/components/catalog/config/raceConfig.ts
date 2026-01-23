@@ -115,6 +115,23 @@ function countTraits(entries: unknown): string {
   return traitCount > 0 ? traitCount.toString() : '—'
 }
 
+// Format race name, combining subrace + parent race when applicable
+function formatRaceName(name: unknown, row: unknown): string {
+  if (typeof name !== 'string') return '—'
+
+  // Check if this is a subrace (has raceName field)
+  if (typeof row === 'object' && row !== null) {
+    const data = row as Record<string, unknown>
+    const parentRace = data.raceName
+    if (typeof parentRace === 'string' && parentRace) {
+      // Combine subrace name with parent race: "Wood" + "Elf" = "Wood Elf"
+      return `${name} ${parentRace}`
+    }
+  }
+
+  return name
+}
+
 export const raceConfig: CatalogConfig = {
   name: 'races',
   title: 'Races',
@@ -128,7 +145,8 @@ export const raceConfig: CatalogConfig = {
       key: 'name',
       label: 'Name',
       sortable: true,
-      className: 'catalog-table__cell-name'
+      className: 'catalog-table__cell-name',
+      formatter: formatRaceName
     },
     {
       key: 'size',

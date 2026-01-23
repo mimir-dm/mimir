@@ -182,6 +182,32 @@ diesel::table! {
 }
 
 diesel::table! {
+    class_features (id) {
+        id -> Nullable<Integer>,
+        name -> Text,
+        source -> Text,
+        class_name -> Text,
+        class_source -> Text,
+        level -> Integer,
+        data -> Text,
+    }
+}
+
+diesel::table! {
+    subclass_features (id) {
+        id -> Nullable<Integer>,
+        name -> Text,
+        source -> Text,
+        class_name -> Text,
+        class_source -> Text,
+        subclass_name -> Text,
+        subclass_source -> Text,
+        level -> Integer,
+        data -> Text,
+    }
+}
+
+diesel::table! {
     conditions (id) {
         id -> Nullable<Integer>,
         name -> Text,

@@ -39,10 +39,11 @@ export async function formatObjectDetails(obj: any): Promise<string> {
   
   // Hit Points
   if (obj.hp !== undefined) {
+    const hpText = formatHP(obj.hp)
     html += `
       <div class="stat-card">
         <div class="stat-label">Hit Points</div>
-        <div class="stat-value hp-value">${obj.hp}</div>
+        <div class="stat-value hp-value">${hpText}</div>
       </div>
     `
   }
@@ -370,8 +371,30 @@ function formatObjectType(type: string): string {
   switch (type) {
     case 'SW': return 'Siege Weapon'
     case 'GEN': return 'Generic Object'
+    case 'U': return 'Unknown'
+    case 'generic': return 'Generic Object'
     default: return type || 'Object'
   }
+}
+
+function formatHP(hp: any): string {
+  if (hp === undefined || hp === null) return '—'
+  if (typeof hp === 'number') return hp.toString()
+  if (typeof hp === 'string') return hp
+  if (typeof hp === 'object') {
+    // Handle {average: X, formula: "XdY+Z"} format
+    if (hp.average !== undefined) {
+      const avg = hp.average
+      const formula = hp.formula
+      if (formula) {
+        return `${avg} (${formula})`
+      }
+      return String(avg)
+    }
+    // Handle {special: "..."} format
+    if (hp.special) return String(hp.special)
+  }
+  return '—'
 }
 
 function formatSizes(sizes: string[]): string {

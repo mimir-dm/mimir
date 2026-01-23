@@ -276,10 +276,11 @@ fn collect_root_level_entities(
     Ok(())
 }
 
-/// Collect classes and subclasses from the class directory.
+/// Collect classes, subclasses, and their features from the class directory.
 ///
 /// Classes are stored as one file per class (e.g., class-fighter.json),
-/// not one file per source. Each class file contains the class with its source.
+/// not one file per source. Each class file contains the class with its source,
+/// along with classFeature and subclassFeature arrays.
 fn collect_classes_from_directory(
     collected: &mut CollectedEntities,
     data_dir: &Path,
@@ -307,6 +308,18 @@ fn collect_classes_from_directory(
                         let subclasses = data.filter_key_by_source("subclass", source);
                         if !subclasses.is_empty() {
                             collected.add("subclass", subclasses);
+                        }
+
+                        // Extract class features matching the source
+                        let class_features = data.filter_key_by_source("classFeature", source);
+                        if !class_features.is_empty() {
+                            collected.add("classFeature", class_features);
+                        }
+
+                        // Extract subclass features matching the source
+                        let subclass_features = data.filter_key_by_source("subclassFeature", source);
+                        if !subclass_features.is_empty() {
+                            collected.add("subclassFeature", subclass_features);
                         }
                     }
                 }

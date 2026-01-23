@@ -1,6 +1,6 @@
 // Cross-reference and game content type definitions
 
-export type ReferenceType = 'spell' | 'item' | 'creature' | 'condition' | 'race' | 'class' | 'background' | 'feat'
+export type ReferenceType = 'spell' | 'item' | 'creature' | 'condition' | 'race' | 'class' | 'classFeature' | 'subclass' | 'subclassFeature' | 'background' | 'feat' | 'action' | 'language' | 'trap' | 'hazard'
 
 export interface ReferenceData {
   success: boolean
@@ -130,4 +130,34 @@ export interface FeatData {
   entries?: any[]
   prerequisite?: any[]
   ability?: any[]
+}
+
+export interface ClassFeatureData {
+  name: string
+  source?: string
+  className?: string
+  classSource?: string
+  level?: number
+  entries?: any[]
+}
+
+export interface SubclassData {
+  name: string
+  source?: string
+  className?: string
+  classSource?: string
+  shortName?: string
+  subclassFeatures?: string[]
+  entries?: any[]
+}
+
+export interface SubclassFeatureData {
+  name: string
+  source?: string
+  className?: string
+  classSource?: string
+  subclassShortName?: string
+  subclassSource?: string
+  level?: number
+  entries?: any[]
 }

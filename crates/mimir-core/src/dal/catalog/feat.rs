@@ -34,14 +34,18 @@ pub fn get_feat_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Op
     feats::table.filter(feats::id.eq(id)).first(conn).optional()
 }
 
-/// Get a feat by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a feat by name and source (case-insensitive name matching).
 pub fn get_feat_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Feat>> {
+    let name_lower = name.to_lowercase();
     feats::table
-        .filter(feats::name.eq(name))
+        .filter(lower(feats::name).eq(&name_lower))
         .filter(feats::source.eq(source))
         .first(conn)
         .optional()

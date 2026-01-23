@@ -97,8 +97,8 @@ export function useBookLibrary() {
         for (const filePath of filePaths) {
           const fileName = filePath.split('/').pop() || filePath
           try {
-            const response = await invoke<{ success: boolean; data?: BookInfo; message?: string }>('upload_book_archive', {
-              archivePath: filePath
+            const response = await invoke<{ success: boolean; data?: BookInfo; message?: string }>('import_catalog_from_zip', {
+              archive_path: filePath
             })
             if (response.success && response.data) {
               successCount++
@@ -138,8 +138,8 @@ export function useBookLibrary() {
     }
 
     try {
-      const response = await invoke<{ success: boolean; message?: string }>('remove_book_from_library', {
-        bookId: book.id
+      const response = await invoke<{ success: boolean; message?: string }>('delete_catalog_source', {
+        source_code: book.id
       })
       
       if (response.success) {

@@ -89,9 +89,20 @@ import SearchResults from '../components/search/SearchResults.vue'
 // Handle clicks on cross-reference links within D&D content
 function handleContentClick(
   event: MouseEvent,
-  callback: (ref: { type: string; name: string; source?: string }) => void
+  callback: (ref: { type: string; name: string; source?: string; className?: string; level?: string }) => void
 ) {
   const target = event.target as HTMLElement
+
+  // Debug: Log all clicks in the content area
+  console.log('handleContentClick fired:', {
+    tagName: target.tagName,
+    className: target.className,
+    classList: Array.from(target.classList),
+    hasDataRefType: target.hasAttribute('data-ref-type'),
+    dataRefType: target.getAttribute('data-ref-type'),
+    dataRefName: target.getAttribute('data-ref-name'),
+    innerHTML: target.innerHTML?.substring(0, 100)
+  })
 
   if (target.classList.contains('cross-ref-link') ||
       target.classList.contains('reference-link') ||
@@ -126,8 +137,16 @@ function handleContentClick(
                    target.getAttribute('data-source') ||
                    undefined
 
+    // Extract additional attributes for class features
+    const className = target.getAttribute('data-class-name') || undefined
+    const level = target.getAttribute('data-level') || undefined
+
+    console.log('handleContentClick - extracted:', { type, name, source, className, level })
     if (name && type) {
-      callback({ type, name, source })
+      console.log('handleContentClick - calling callback with:', { type, name, source, className, level })
+      callback({ type, name, source, className, level })
+    } else {
+      console.log('handleContentClick - no callback: name or type missing')
     }
   }
 }

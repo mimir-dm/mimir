@@ -42,14 +42,18 @@ pub fn get_condition_optional(conn: &mut SqliteConnection, id: i32) -> QueryResu
         .optional()
 }
 
-/// Get a condition by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a condition by name and source (case-insensitive name matching).
 pub fn get_condition_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Condition>> {
+    let name_lower = name.to_lowercase();
     conditions::table
-        .filter(conditions::name.eq(name))
+        .filter(lower(conditions::name).eq(&name_lower))
         .filter(conditions::source.eq(source))
         .first(conn)
         .optional()

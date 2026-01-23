@@ -7,14 +7,23 @@ use crate::schema::classes;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
-/// Insert a new class.
+/// Insert a new class, ignoring duplicates.
+///
+/// If a class with the same (name, source) already exists,
+/// returns the existing ID without error.
 pub fn insert_class(conn: &mut SqliteConnection, class: &NewClass) -> QueryResult<i32> {
-    diesel::insert_into(classes::table)
+    // Try to insert, ignoring conflicts
+    diesel::insert_or_ignore_into(classes::table)
         .values(class)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    // Look up the ID (either newly inserted or existing)
+    classes::table
+        .filter(classes::name.eq(&class.name))
+        .filter(classes::source.eq(&class.source))
+        .select(classes::id)
+        .first::<Option<i32>>(conn)?
+        .ok_or(diesel::result::Error::NotFound)
 }
 
 /// Insert multiple classes in a batch.
@@ -34,14 +43,18 @@ pub fn get_class_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<O
     classes::table.filter(classes::id.eq(id)).first(conn).optional()
 }
 
-/// Get a class by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a class by name and source (case-insensitive name matching).
 pub fn get_class_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Class>> {
+    let name_lower = name.to_lowercase();
     classes::table
-        .filter(classes::name.eq(name))
+        .filter(lower(classes::name).eq(&name_lower))
         .filter(classes::source.eq(source))
         .first(conn)
         .optional()

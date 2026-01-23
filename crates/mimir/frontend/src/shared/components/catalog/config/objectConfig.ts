@@ -1,5 +1,78 @@
 import type { CatalogConfig } from './types'
 
+// Object type code to name mapping
+const objectTypeMap: Record<string, string> = {
+  'SW': 'Siege Weapon',
+  'GEN': 'Generic',
+  'U': 'Unknown',
+  'generic': 'Generic',
+}
+
+// Size code to name mapping
+const sizeMap: Record<string, string> = {
+  'T': 'Tiny',
+  'S': 'Small',
+  'M': 'Medium',
+  'L': 'Large',
+  'H': 'Huge',
+  'G': 'Gargantuan',
+}
+
+// Format object type from code or value
+function formatObjectType(value: unknown): string {
+  if (!value) return '—'
+  if (typeof value === 'string') {
+    return objectTypeMap[value] || value
+  }
+  return '—'
+}
+
+// Format size - handles both single values and arrays
+function formatSize(value: unknown): string {
+  if (!value) return '—'
+  if (Array.isArray(value)) {
+    return value.map(s => sizeMap[s] || s).join('/')
+  }
+  if (typeof value === 'string') {
+    return sizeMap[value] || value
+  }
+  return '—'
+}
+
+// Format AC - can be number or object with special properties
+function formatAC(value: unknown): string {
+  if (value === undefined || value === null) return '—'
+  if (typeof value === 'number') return value.toString()
+  if (typeof value === 'object' && value !== null) {
+    const ac = value as Record<string, unknown>
+    if (ac.special) return String(ac.special)
+    if (ac.ac !== undefined) return String(ac.ac)
+  }
+  return '—'
+}
+
+// Format HP - can be number, string, or object with average/formula
+function formatHP(value: unknown): string {
+  if (value === undefined || value === null) return '—'
+  if (typeof value === 'number') return value.toString()
+  if (typeof value === 'string') return value
+  if (typeof value === 'object' && value !== null) {
+    const hp = value as Record<string, unknown>
+    // Handle {average: X, formula: "XdY+Z"} format
+    if (hp.average !== undefined) {
+      const avg = hp.average
+      const formula = hp.formula
+      if (formula) {
+        return `${avg} (${formula})`
+      }
+      return String(avg)
+    }
+    // Handle {special: "..."} format
+    if (hp.special) return String(hp.special)
+  }
+  return '—'
+}
+
 export const objectConfig: CatalogConfig = {
   name: 'objects',
   title: 'Objects',
@@ -16,15 +89,16 @@ export const objectConfig: CatalogConfig = {
       className: 'catalog-table__cell-name'
     },
     {
-      key: 'object_type',
+      key: 'objectType',
       label: 'Type',
       type: 'badge',
       className: 'catalog-table__cell-type',
       formatter: (item: any) => {
-        // Return badge configuration for CatalogTable to handle
-        const value = item.object_type
+        // Get type from objectType field (camelCase from parsed JSON)
+        const rawType = item.objectType || item.object_type
+        const displayType = formatObjectType(rawType)
         let variant = 'default'
-        switch (value) {
+        switch (displayType) {
           case 'Siege Weapon':
             variant = 'siege'
             break
@@ -32,36 +106,36 @@ export const objectConfig: CatalogConfig = {
             variant = 'generic'
             break
         }
-        return { text: value, variant }
+        return { text: displayType || '—', variant }
       }
     },
     {
       key: 'size',
       label: 'Size',
       type: 'text',
-      className: 'catalog-table__cell-center'
+      className: 'catalog-table__cell-center',
+      formatter: formatSize
     },
     {
       key: 'ac',
       label: 'AC',
       type: 'text',
       className: 'catalog-table__cell-center',
-      formatter: (value: string) => value
+      formatter: formatAC
     },
     {
       key: 'hp',
       label: 'HP',
       type: 'text',
       className: 'catalog-table__cell-center',
-      formatter: (value: string) => value
+      formatter: formatHP
     },
     {
       key: 'source',
       label: 'Source',
       sortable: true,
       type: 'text',
-      className: 'catalog-table__cell-source',
-      formatter: (value: string) => value
+      className: 'catalog-table__cell-source'
     }
   ],
   filters: [],

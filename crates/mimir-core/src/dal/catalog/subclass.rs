@@ -7,14 +7,24 @@ use crate::schema::subclasses;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
-/// Insert a new subclass.
+/// Insert a new subclass, ignoring duplicates.
+///
+/// If a subclass with the same (name, class_name, source) already exists,
+/// returns the existing ID without error.
 pub fn insert_subclass(conn: &mut SqliteConnection, subclass: &NewSubclass) -> QueryResult<i32> {
-    diesel::insert_into(subclasses::table)
+    // Try to insert, ignoring conflicts
+    diesel::insert_or_ignore_into(subclasses::table)
         .values(subclass)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    // Look up the ID (either newly inserted or existing)
+    subclasses::table
+        .filter(subclasses::name.eq(&subclass.name))
+        .filter(subclasses::class_name.eq(&subclass.class_name))
+        .filter(subclasses::source.eq(&subclass.source))
+        .select(subclasses::id)
+        .first::<Option<i32>>(conn)?
+        .ok_or(diesel::result::Error::NotFound)
 }
 
 /// Insert multiple subclasses in a batch.
@@ -32,16 +42,21 @@ pub fn get_subclass(conn: &mut SqliteConnection, id: i32) -> QueryResult<Subclas
     subclasses::table.filter(subclasses::id.eq(id)).first(conn)
 }
 
-/// Get a subclass by name, class, and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a subclass by name, class, and source (case-insensitive name matching).
 pub fn get_subclass_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     class_name: &str,
     source: &str,
 ) -> QueryResult<Option<Subclass>> {
+    let name_lower = name.to_lowercase();
+    let class_name_lower = class_name.to_lowercase();
     subclasses::table
-        .filter(subclasses::name.eq(name))
-        .filter(subclasses::class_name.eq(class_name))
+        .filter(lower(subclasses::name).eq(&name_lower))
+        .filter(lower(subclasses::class_name).eq(&class_name_lower))
         .filter(subclasses::source.eq(source))
         .first(conn)
         .optional()

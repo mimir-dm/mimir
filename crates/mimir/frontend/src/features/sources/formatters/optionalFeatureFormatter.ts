@@ -400,10 +400,17 @@ function formatPrerequisite(prereq: any): string {
   }
   
   if (prereq.spell && prereq.spell.length > 0) {
-    const spells = prereq.spell.map((s: string) => 
-      s.replace('#c', ' cantrip').replace('#', '')
-    )
-    parts.push(spells.join(' or '))
+    const spells = prereq.spell
+      .map((s: unknown) => {
+        if (typeof s === 'string') {
+          return s.replace('#c', ' cantrip').replace('#', '')
+        }
+        return null
+      })
+      .filter(Boolean)
+    if (spells.length > 0) {
+      parts.push(spells.join(' or '))
+    }
   }
   
   if (prereq.feature && prereq.feature.length > 0) {

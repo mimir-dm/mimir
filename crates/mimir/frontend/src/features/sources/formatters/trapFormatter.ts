@@ -1,4 +1,5 @@
 import type { TrapOrHazard } from '../composables/catalog'
+import { processFormattingTags } from '../utils/textFormatting'
 
 export async function formatTrapDetails(trap: TrapOrHazard): Promise<string> {
   if (!trap) return '<div>No trap data available</div>'
@@ -50,19 +51,19 @@ function formatTrapType(type: string): string {
 
 function formatEntry(entry: any): string {
   if (!entry) return ''
-  
-  // String entry
+
+  // String entry - process formatting tags
   if (typeof entry === 'string') {
-    return `<p>${entry}</p>`
+    return `<p>${processFormattingTags(entry)}</p>`
   }
-  
+
   // Object entry with type
   if (entry.type) {
     switch (entry.type) {
       case 'entries':
         let html = ''
         if (entry.name) {
-          html += `<h4>${entry.name}</h4>`
+          html += `<h4>${processFormattingTags(entry.name)}</h4>`
         }
         if (entry.entries) {
           html += '<div class="subsection">'
@@ -72,13 +73,13 @@ function formatEntry(entry: any): string {
           html += '</div>'
         }
         return html
-        
+
       case 'list':
         let listHtml = '<ul>'
         if (entry.items) {
           for (const item of entry.items) {
             if (typeof item === 'string') {
-              listHtml += `<li>${item}</li>`
+              listHtml += `<li>${processFormattingTags(item)}</li>`
             } else {
               listHtml += `<li>${formatEntry(item)}</li>`
             }
@@ -86,43 +87,43 @@ function formatEntry(entry: any): string {
         }
         listHtml += '</ul>'
         return listHtml
-        
+
       case 'table':
         return formatTable(entry)
-        
+
       case 'quote':
         return `<blockquote>${entry.entries?.map((e: any) => formatEntry(e)).join('') || ''}</blockquote>`
-        
+
       default:
         // Generic handling
         if (entry.entries) {
           return entry.entries.map((e: any) => formatEntry(e)).join('')
         }
-        return JSON.stringify(entry)
+        return processFormattingTags(JSON.stringify(entry))
     }
   }
-  
+
   // Array of entries
   if (Array.isArray(entry)) {
     return entry.map(e => formatEntry(e)).join('')
   }
-  
+
   // Unknown format
-  return `<p>${JSON.stringify(entry)}</p>`
+  return `<p>${processFormattingTags(JSON.stringify(entry))}</p>`
 }
 
 function formatTable(table: any): string {
   let html = '<table class="trap-table">'
-  
+
   // Headers
   if (table.colLabels) {
     html += '<thead><tr>'
     for (const label of table.colLabels) {
-      html += `<th>${label}</th>`
+      html += `<th>${processFormattingTags(label)}</th>`
     }
     html += '</tr></thead>'
   }
-  
+
   // Rows
   if (table.rows) {
     html += '<tbody>'
@@ -130,7 +131,7 @@ function formatTable(table: any): string {
       html += '<tr>'
       if (Array.isArray(row)) {
         for (const cell of row) {
-          html += `<td>${typeof cell === 'string' ? cell : formatEntry(cell)}</td>`
+          html += `<td>${typeof cell === 'string' ? processFormattingTags(cell) : formatEntry(cell)}</td>`
         }
       } else {
         html += `<td>${formatEntry(row)}</td>`
@@ -139,7 +140,7 @@ function formatTable(table: any): string {
     }
     html += '</tbody>'
   }
-  
+
   html += '</table>'
   return html
 }

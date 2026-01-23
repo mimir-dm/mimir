@@ -124,6 +124,9 @@
                   </span>
                   <span v-else class="catalog-table__empty">—</span>
                 </template>
+                <template v-else-if="column.type === 'html'">
+                  <span v-html="getCellValue(item, column)"></span>
+                </template>
                 <template v-else>
                   {{ getCellValue(item, column) }}
                 </template>
@@ -367,15 +370,22 @@ function getCellValue(item: any, column: any): any {
       // For badges, badge, source, name-with-srd, and prerequisites types, pass the full item
       return column.formatter(item)
     } else {
-      // For regular cells, format the specific field value
-      return column.formatter(item[column.key])
+      // For regular cells, pass both the field value and full item
+      // This allows formatters to access other fields when needed
+      return column.formatter(item[column.key], item)
     }
   }
-  return item[column.key] || '—'
+  // Return empty string instead of '—' for cleaner display
+  // Specific columns can handle their own empty states via formatters
+  return item[column.key] ?? ''
 }
 
 function getItemKey(item: any): string {
   // Try common key combinations
+  // Include subclassName for class+subclass rows
+  if (item.name && item.source && item.subclassName) {
+    return `${item.name}-${item.source}-${item.subclassName}`
+  }
   if (item.name && item.source) return `${item.name}-${item.source}`
   if (item.id) return String(item.id)
   if (item.name) return item.name

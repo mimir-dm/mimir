@@ -7,14 +7,23 @@ use crate::schema::deities;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
-/// Insert a new deity.
+/// Insert a new deity, ignoring duplicates.
+///
+/// If a deity with the same (name, source) already exists,
+/// returns the existing ID without error.
 pub fn insert_deity(conn: &mut SqliteConnection, deity: &NewDeity) -> QueryResult<i32> {
-    diesel::insert_into(deities::table)
+    // Try to insert, ignoring conflicts
+    diesel::insert_or_ignore_into(deities::table)
         .values(deity)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    // Look up the ID (either newly inserted or existing)
+    deities::table
+        .filter(deities::name.eq(&deity.name))
+        .filter(deities::source.eq(&deity.source))
+        .select(deities::id)
+        .first::<Option<i32>>(conn)?
+        .ok_or(diesel::result::Error::NotFound)
 }
 
 /// Insert multiple deities in a batch.

@@ -147,6 +147,17 @@ fn main() {
             catalog::get_class_by_name,
             catalog::list_class_sources,
             catalog::count_classes,
+            // Catalog commands - class features
+            catalog::get_class_feature,
+            catalog::list_class_features,
+            // Catalog commands - subclasses
+            catalog::get_subclass,
+            catalog::get_subclass_by_name,
+            catalog::list_subclasses_by_class,
+            catalog::count_subclasses,
+            // Catalog commands - subclass features
+            catalog::get_subclass_feature,
+            catalog::list_subclass_features,
             // Catalog commands - feats
             catalog::search_feats,
             catalog::get_feat,

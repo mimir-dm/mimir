@@ -209,6 +209,30 @@ pub const ENTITY_FILE_INFO: &[(&str, EntityFileInfo)] = &[
         },
     ),
     (
+        "classFeature",
+        EntityFileInfo {
+            dir: "class",
+            prefix: "class",
+            json_key: "classFeature",
+        },
+    ),
+    (
+        "subclass",
+        EntityFileInfo {
+            dir: "class",
+            prefix: "class",
+            json_key: "subclass",
+        },
+    ),
+    (
+        "subclassFeature",
+        EntityFileInfo {
+            dir: "class",
+            prefix: "class",
+            json_key: "subclassFeature",
+        },
+    ),
+    (
         "race",
         EntityFileInfo {
             dir: ".",

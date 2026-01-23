@@ -79,6 +79,11 @@ export function useCults() {
     }
   }
 
+  // Boons are stored in the same table as cults
+  async function getBoonDetails(name: string, source: string): Promise<Cult | null> {
+    return getCultDetails(name, source)
+  }
+
   return {
     isCultsInitialized,
     isLoading,
@@ -87,5 +92,6 @@ export function useCults() {
     initializeCultCatalog,
     searchCults,
     getCultDetails,
+    getBoonDetails,
   }
 }

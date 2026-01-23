@@ -6,17 +6,18 @@
 
 use mimir_core::models::catalog::{
     Action, ActionFilter, Background, BackgroundFilter, CatalogTable, CatalogTableFilter, Class,
-    ClassFilter, Condition, ConditionFilter, Cult, CultFilter, Deity, DeityFilter, Feat, FeatFilter,
-    Hazard, HazardFilter, Item, ItemFilter, Language, LanguageFilter, Monster, MonsterFilter,
-    Object, ObjectFilter, OptionalFeature, OptionalFeatureFilter, Psionic, PsionicFilter, Race,
-    RaceFilter, Reward, RewardFilter, Spell, SpellFilter, Trap, TrapFilter, VariantRule,
-    VariantRuleFilter, Vehicle, VehicleFilter,
+    ClassFeature, ClassFilter, Condition, ConditionFilter, Cult, CultFilter, Deity, DeityFilter,
+    Disease, Feat, FeatFilter, Hazard, HazardFilter, Item, ItemFilter, Language, LanguageFilter,
+    Monster, MonsterFilter, Object, ObjectFilter, OptionalFeature, OptionalFeatureFilter, Psionic,
+    PsionicFilter, Race, RaceFilter, Reward, RewardFilter, Spell, SpellFilter, Subclass,
+    SubclassFeature, Trap, TrapFilter, VariantRule, VariantRuleFilter, Vehicle, VehicleFilter,
 };
 use mimir_core::services::{
-    ActionService, BackgroundService, CatalogEntityService, CatalogTableService, ClassService,
-    ConditionService, CultService, DeityService, FeatService, HazardService, ItemService,
-    LanguageService, MonsterService, ObjectService, OptionalFeatureService, PsionicService,
-    RaceService, RewardService, SpellService, TrapService, VariantRuleService, VehicleService,
+    ActionService, BackgroundService, CatalogEntityService, CatalogTableService,
+    ClassFeatureService, ClassService, ConditionService, CultService, DeityService, FeatService,
+    HazardService, ItemService, LanguageService, MonsterService, ObjectService,
+    OptionalFeatureService, PsionicService, RaceService, RewardService, SpellService,
+    SubclassFeatureService, SubclassService, TrapService, VariantRuleService, VehicleService,
 };
 use serde_json::Value;
 use tauri::State;
@@ -76,6 +77,30 @@ impl CatalogEntity for Class {
     fn fluff(&self) -> Option<&str> { self.fluff.as_deref() }
 }
 
+impl CatalogEntity for ClassFeature {
+    fn id(&self) -> Option<i32> { self.id }
+    fn name(&self) -> &str { &self.name }
+    fn source(&self) -> &str { &self.source }
+    fn data(&self) -> &str { &self.data }
+    fn fluff(&self) -> Option<&str> { None }
+}
+
+impl CatalogEntity for Subclass {
+    fn id(&self) -> Option<i32> { self.id }
+    fn name(&self) -> &str { &self.name }
+    fn source(&self) -> &str { &self.source }
+    fn data(&self) -> &str { &self.data }
+    fn fluff(&self) -> Option<&str> { self.fluff.as_deref() }
+}
+
+impl CatalogEntity for SubclassFeature {
+    fn id(&self) -> Option<i32> { self.id }
+    fn name(&self) -> &str { &self.name }
+    fn source(&self) -> &str { &self.source }
+    fn data(&self) -> &str { &self.data }
+    fn fluff(&self) -> Option<&str> { None }
+}
+
 impl CatalogEntity for Feat {
     fn id(&self) -> Option<i32> { self.id }
     fn name(&self) -> &str { &self.name }
@@ -85,6 +110,14 @@ impl CatalogEntity for Feat {
 }
 
 impl CatalogEntity for Condition {
+    fn id(&self) -> Option<i32> { self.id }
+    fn name(&self) -> &str { &self.name }
+    fn source(&self) -> &str { &self.source }
+    fn data(&self) -> &str { &self.data }
+    fn fluff(&self) -> Option<&str> { self.fluff.as_deref() }
+}
+
+impl CatalogEntity for Disease {
     fn id(&self) -> Option<i32> { self.id }
     fn name(&self) -> &str { &self.name }
     fn source(&self) -> &str { &self.source }
@@ -720,6 +753,170 @@ pub fn count_classes(state: State<'_, AppState>) -> ApiResponse<i64> {
 }
 
 // =============================================================================
+// Class Features
+// =============================================================================
+
+/// Get a class feature by name and class.
+#[tauri::command]
+pub fn get_class_feature(
+    state: State<'_, AppState>,
+    name: String,
+    class_name: String,
+) -> ApiResponse<Value> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<Value>::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = ClassFeatureService::new(&mut db).get_by_name_and_class(&name, &class_name);
+    match result {
+        Ok(Some(feature)) => ApiResponse::ok(entity_to_json(&feature)),
+        Ok(None) => ApiResponse::err(format!("Class feature not found: {} ({})", name, class_name)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all class features for a class.
+#[tauri::command]
+pub fn list_class_features(
+    state: State<'_, AppState>,
+    class_name: String,
+    class_source: String,
+) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<Vec<Value>>::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = ClassFeatureService::new(&mut db).list_by_class(&class_name, &class_source);
+    match result {
+        Ok(features) => ApiResponse::ok(entities_to_json(features)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+// =============================================================================
+// Subclasses
+// =============================================================================
+
+/// Get a subclass by database ID.
+#[tauri::command]
+pub fn get_subclass(state: State<'_, AppState>, id: i32) -> ApiResponse<Subclass> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = SubclassService::new(&mut db).get(id);
+    match result {
+        Ok(subclass) => ApiResponse::ok(subclass),
+        Err(e) => ApiResponse::<Subclass>::err(e.to_string()),
+    }
+}
+
+/// Get a subclass by name, class, and source.
+#[tauri::command]
+pub fn get_subclass_by_name(
+    state: State<'_, AppState>,
+    name: String,
+    class_name: String,
+    source: String,
+) -> ApiResponse<Value> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = SubclassService::new(&mut db).get_by_name_and_class(&name, &class_name, &source);
+    match result {
+        Ok(Some(subclass)) => ApiResponse::ok(entity_to_json(&subclass)),
+        Ok(None) => ApiResponse::<Value>::err(format!(
+            "Subclass not found: {} ({}) from {}",
+            name, class_name, source
+        )),
+        Err(e) => ApiResponse::<Value>::err(e.to_string()),
+    }
+}
+
+/// List all subclasses for a class.
+#[tauri::command]
+pub fn list_subclasses_by_class(
+    state: State<'_, AppState>,
+    class_name: String,
+) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<Vec<Value>>::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = SubclassService::new(&mut db).list_by_class(&class_name);
+    match result {
+        Ok(subclasses) => ApiResponse::ok(entities_to_json(subclasses)),
+        Err(e) => ApiResponse::<Vec<Value>>::err(e.to_string()),
+    }
+}
+
+/// Count total subclasses.
+#[tauri::command]
+pub fn count_subclasses(state: State<'_, AppState>) -> ApiResponse<i64> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = SubclassService::new(&mut db).count();
+    to_api_response(result)
+}
+
+// =============================================================================
+// Subclass Features
+// =============================================================================
+
+/// Get a subclass feature by name and subclass.
+#[tauri::command]
+pub fn get_subclass_feature(
+    state: State<'_, AppState>,
+    name: String,
+    subclass_name: String,
+    subclass_source: String,
+) -> ApiResponse<Value> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<Value>::err(format!("Database lock error: {}", e)),
+    };
+
+    let result =
+        SubclassFeatureService::new(&mut db).get_by_name_and_subclass(&name, &subclass_name, &subclass_source);
+    match result {
+        Ok(Some(feature)) => ApiResponse::ok(entity_to_json(&feature)),
+        Ok(None) => ApiResponse::err(format!(
+            "Subclass feature not found: {} ({})",
+            name, subclass_name
+        )),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all subclass features for a subclass.
+#[tauri::command]
+pub fn list_subclass_features(
+    state: State<'_, AppState>,
+    subclass_name: String,
+    subclass_source: String,
+) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<Vec<Value>>::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = SubclassFeatureService::new(&mut db).list_by_subclass(&subclass_name, &subclass_source);
+    match result {
+        Ok(features) => ApiResponse::ok(entities_to_json(features)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+// =============================================================================
 // Feats
 // =============================================================================
 
@@ -812,7 +1009,7 @@ pub fn count_feats(state: State<'_, AppState>) -> ApiResponse<i64> {
 // Conditions
 // =============================================================================
 
-/// Search conditions with optional filters.
+/// Search conditions and diseases with optional filters.
 #[tauri::command]
 pub fn search_conditions(
     state: State<'_, AppState>,
@@ -826,15 +1023,63 @@ pub fn search_conditions(
     };
 
     let filter = filter.unwrap_or_default();
-    let result = ConditionService::new(&mut db).search_paginated(
-        &filter,
-        limit.unwrap_or(100),
-        offset.unwrap_or(0),
-    );
-    match result {
-        Ok(entities) => ApiResponse::ok(entities_to_json(entities)),
-        Err(e) => ApiResponse::err(e.to_string()),
+    let limit = limit.unwrap_or(100);
+    let offset = offset.unwrap_or(0);
+
+    // Fetch conditions
+    let conditions_result = ConditionService::new(&mut db).search_paginated(&filter, limit, offset);
+    let mut results: Vec<Value> = match conditions_result {
+        Ok(entities) => entities
+            .iter()
+            .map(|e| {
+                let mut json = entity_to_json(e);
+                if let Value::Object(ref mut map) = json {
+                    map.insert("item_type".to_string(), Value::String("Condition".to_string()));
+                }
+                json
+            })
+            .collect(),
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    // Fetch diseases and add them
+    let diseases = mimir_core::dal::catalog::list_diseases(&mut db);
+    if let Ok(disease_list) = diseases {
+        for disease in disease_list {
+            // Apply name filter if present
+            if let Some(ref name_filter) = filter.name_contains {
+                if !disease.name.to_lowercase().contains(&name_filter.to_lowercase()) {
+                    continue;
+                }
+            }
+            // Apply source filter if present
+            if let Some(ref sources) = filter.sources {
+                if !sources.is_empty() && !sources.contains(&disease.source) {
+                    continue;
+                }
+            }
+            if let Some(ref source) = filter.source {
+                if &disease.source != source {
+                    continue;
+                }
+            }
+
+            let mut json = entity_to_json(&disease);
+            if let Value::Object(ref mut map) = json {
+                map.insert("item_type".to_string(), Value::String("Disease".to_string()));
+            }
+            results.push(json);
+        }
     }
+
+    // Sort by name
+    results.sort_by(|a, b| {
+        let name_a = a.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        let name_b = b.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        name_a.cmp(name_b)
+    });
+
+    ApiResponse::ok(results)
 }
 
 /// Get a condition by database ID.
@@ -990,7 +1235,7 @@ pub fn count_languages(state: State<'_, AppState>) -> ApiResponse<i64> {
 // Traps
 // =============================================================================
 
-/// Search traps with optional filters.
+/// Search traps and hazards with optional filters.
 #[tauri::command]
 pub fn search_traps(
     state: State<'_, AppState>,
@@ -1004,15 +1249,78 @@ pub fn search_traps(
     };
 
     let filter = filter.unwrap_or_default();
-    let result = TrapService::new(&mut db).search_paginated(
-        &filter,
-        limit.unwrap_or(100),
-        offset.unwrap_or(0),
-    );
-    match result {
-        Ok(entities) => ApiResponse::ok(entities_to_json(entities)),
-        Err(e) => ApiResponse::err(e.to_string()),
+    let limit = limit.unwrap_or(100);
+    let offset = offset.unwrap_or(0);
+
+    // Helper to format trap/hazard type codes
+    fn format_trap_type(type_code: Option<&str>) -> String {
+        match type_code {
+            Some("MAG") => "Magical".to_string(),
+            Some("MECH") => "Mechanical".to_string(),
+            Some("GEN") => "General".to_string(),
+            Some("TRP") => "Trap".to_string(),
+            Some("SMPL") => "Simple".to_string(),
+            Some("CMPX") => "Complex".to_string(),
+            Some("WTH") => "Weather".to_string(),
+            Some("ENV") => "Environmental".to_string(),
+            Some("WLD") => "Wilderness".to_string(),
+            Some("EST") => "Eldritch".to_string(),
+            Some(other) => other.to_string(),
+            None => "—".to_string(),
+        }
     }
+
+    // Fetch traps
+    let traps_result = TrapService::new(&mut db).search_paginated(&filter, limit, offset);
+    let mut results: Vec<Value> = match traps_result {
+        Ok(entities) => entities
+            .iter()
+            .map(|e| {
+                let mut json = entity_to_json(e);
+                if let Value::Object(ref mut map) = json {
+                    map.insert("category".to_string(), Value::String("Trap".to_string()));
+                    // Extract trapHazType from JSON and format it
+                    let trap_type = map
+                        .get("trapHazType")
+                        .and_then(|v| v.as_str());
+                    map.insert("trap_type".to_string(), Value::String(format_trap_type(trap_type)));
+                }
+                json
+            })
+            .collect(),
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    // Fetch hazards and add them
+    let hazard_filter = HazardFilter {
+        name_contains: filter.name_contains.clone(),
+        source: filter.source.clone(),
+        sources: filter.sources.clone(),
+    };
+    let hazards = HazardService::new(&mut db).search_paginated(&hazard_filter, limit, offset);
+    if let Ok(hazard_list) = hazards {
+        for hazard in hazard_list {
+            let mut json = entity_to_json(&hazard);
+            if let Value::Object(ref mut map) = json {
+                map.insert("category".to_string(), Value::String("Hazard".to_string()));
+                // Extract trapHazType from JSON and format it
+                let trap_type = map
+                    .get("trapHazType")
+                    .and_then(|v| v.as_str());
+                map.insert("trap_type".to_string(), Value::String(format_trap_type(trap_type)));
+            }
+            results.push(json);
+        }
+    }
+
+    // Sort by name
+    results.sort_by(|a, b| {
+        let name_a = a.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        let name_b = b.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        name_a.cmp(name_b)
+    });
+
+    ApiResponse::ok(results)
 }
 
 /// Get a trap by database ID.
@@ -1722,7 +2030,42 @@ pub fn search_cults(
         offset.unwrap_or(0),
     );
     match result {
-        Ok(entities) => ApiResponse::ok(entities_to_json(entities)),
+        Ok(entities) => {
+            // Convert entities and add item_type/subtype fields
+            let results: Vec<Value> = entities
+                .iter()
+                .map(|e| {
+                    let mut json = entity_to_json(e);
+                    if let Value::Object(ref mut map) = json {
+                        // Determine item_type from __prop field, or infer from name
+                        let item_type = map
+                            .get("__prop")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_lowercase())
+                            .unwrap_or_else(|| {
+                                // Fallback: check if name starts with "Cult"
+                                let name = map
+                                    .get("name")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("");
+                                if name.to_lowercase().starts_with("cult") {
+                                    "cult".to_string()
+                                } else {
+                                    "boon".to_string()
+                                }
+                            });
+                        map.insert("item_type".to_string(), Value::String(item_type));
+
+                        // Extract subtype from "type" field
+                        if let Some(type_val) = map.get("type").cloned() {
+                            map.insert("subtype".to_string(), type_val);
+                        }
+                    }
+                    json
+                })
+                .collect();
+            ApiResponse::ok(results)
+        }
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -1757,7 +2100,35 @@ pub fn get_cult_by_name(
 
     let result = CultService::new(&mut db).get_by_name_and_source(&name, &source);
     match result {
-        Ok(Some(cult)) => ApiResponse::ok(entity_to_json(&cult)),
+        Ok(Some(cult)) => {
+            let mut json = entity_to_json(&cult);
+            if let Value::Object(ref mut map) = json {
+                // Determine item_type from __prop field, or infer from name
+                let item_type = map
+                    .get("__prop")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_lowercase())
+                    .unwrap_or_else(|| {
+                        // Fallback: check if name starts with "Cult"
+                        let name = map
+                            .get("name")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+                        if name.to_lowercase().starts_with("cult") {
+                            "cult".to_string()
+                        } else {
+                            "boon".to_string()
+                        }
+                    });
+                map.insert("item_type".to_string(), Value::String(item_type));
+
+                // Extract subtype from "type" field
+                if let Some(type_val) = map.get("type").cloned() {
+                    map.insert("subtype".to_string(), type_val);
+                }
+            }
+            ApiResponse::ok(json)
+        }
         Ok(None) => ApiResponse::err(format!("Cult not found: {} ({})", name, source)),
         Err(e) => ApiResponse::err(e.to_string()),
     }

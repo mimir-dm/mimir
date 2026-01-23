@@ -42,14 +42,18 @@ pub fn get_language_optional(conn: &mut SqliteConnection, id: i32) -> QueryResul
         .optional()
 }
 
-/// Get a language by name and source.
+// Define the LOWER SQL function for case-insensitive matching
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// Get a language by name and source (case-insensitive name matching).
 pub fn get_language_by_name(
     conn: &mut SqliteConnection,
     name: &str,
     source: &str,
 ) -> QueryResult<Option<Language>> {
+    let name_lower = name.to_lowercase();
     languages::table
-        .filter(languages::name.eq(name))
+        .filter(lower(languages::name).eq(&name_lower))
         .filter(languages::source.eq(source))
         .first(conn)
         .optional()

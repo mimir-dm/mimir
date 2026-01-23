@@ -497,7 +497,9 @@ function formatSpellcastingFocus(focusType: string): string {
   return focusMap[focusType] || focusType
 }
 
-function formatItemType(type: string): string {
+function formatItemType(type: string | undefined | null): string {
+  if (!type) return 'Unknown'
+
   // Handle complex type formats like "$G|DMG", "EXP|DMG", etc.
   // Extract the base type code before any | separator
   const baseType = type.includes('|') ? type.split('|')[0] : type

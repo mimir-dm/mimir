@@ -41,9 +41,12 @@ const itemTypeMap: Record<string, string> = {
 }
 
 // Format item type - handles string type codes from 5etools
+// Type can be "G" or "G|XPHB" (with source suffix) - strip the source part
 function formatItemType(value: unknown): string {
   if (typeof value === 'string') {
-    return itemTypeMap[value] || value
+    // Strip source suffix if present (e.g., "G|XPHB" -> "G")
+    const typeCode = value.split('|')[0]
+    return itemTypeMap[typeCode] || typeCode
   }
   return '—'
 }
