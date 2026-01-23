@@ -2,7 +2,7 @@
 //!
 //! Database operations for rewards.
 
-use crate::models::catalog::{NewReward, Reward};
+use crate::models::catalog::{NewReward, Reward, RewardFilter};
 use crate::schema::rewards;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -82,6 +82,91 @@ pub fn delete_rewards_by_source(conn: &mut SqliteConnection, source: &str) -> Qu
 /// Count all rewards.
 pub fn count_rewards(conn: &mut SqliteConnection) -> QueryResult<i64> {
     rewards::table.count().get_result(conn)
+}
+
+/// Count rewards from a specific source.
+pub fn count_rewards_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    rewards::table
+        .filter(rewards::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a reward by its ID, returning None if not found.
+pub fn get_reward_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Reward>> {
+    rewards::table
+        .filter(rewards::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have rewards.
+pub fn list_reward_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    rewards::table
+        .select(rewards::source)
+        .distinct()
+        .order(rewards::source.asc())
+        .load(conn)
+}
+
+/// Search rewards with filters.
+pub fn search_rewards(
+    conn: &mut SqliteConnection,
+    filter: &RewardFilter,
+) -> QueryResult<Vec<Reward>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = rewards::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(rewards::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(rewards::source.eq_any(sources));
+    }
+
+    if let Some(ref reward_type) = filter.reward_type {
+        query = query.filter(rewards::reward_type.eq(reward_type));
+    }
+
+    query.order(rewards::name.asc()).load(conn)
+}
+
+/// Search rewards with pagination.
+pub fn search_rewards_paginated(
+    conn: &mut SqliteConnection,
+    filter: &RewardFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Reward>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = rewards::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(rewards::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(rewards::source.eq_any(sources));
+    }
+
+    if let Some(ref reward_type) = filter.reward_type {
+        query = query.filter(rewards::reward_type.eq(reward_type));
+    }
+
+    query
+        .order(rewards::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

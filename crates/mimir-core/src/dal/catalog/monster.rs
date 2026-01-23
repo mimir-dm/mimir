@@ -76,6 +76,11 @@ pub fn search_monsters(
     conn: &mut SqliteConnection,
     filter: &MonsterFilter,
 ) -> QueryResult<Vec<Monster>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = monsters::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -83,8 +88,9 @@ pub fn search_monsters(
         query = query.filter(monsters::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(monsters::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(monsters::source.eq_any(sources));
     }
 
     if let Some(ref cr) = filter.cr {
@@ -109,6 +115,11 @@ pub fn search_monsters_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Monster>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = monsters::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -116,8 +127,9 @@ pub fn search_monsters_paginated(
         query = query.filter(monsters::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(monsters::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(monsters::source.eq_any(sources));
     }
 
     if let Some(ref cr) = filter.cr {

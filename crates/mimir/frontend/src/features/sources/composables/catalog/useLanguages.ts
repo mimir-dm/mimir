@@ -40,11 +40,11 @@ export function useLanguages() {
     try {
       const response = await invoke<{ success: boolean; data?: LanguageSummary[]; error?: string }>('search_languages', {
         filter: {
-          name: filters.query || null,
-          sources: filters.sources?.length ? filters.sources : null,
-          language_types: filters.types?.length ? filters.types : null,
+          name_contains: filters.query || null,
+          sources: filters.sources ?? null,
+          language_type: filters.types?.length ? filters.types[0] : null,  // Backend expects single type
         },
-        limit: 100,
+        limit: 10000,
         offset: 0
       })
       if (response.success && response.data) {

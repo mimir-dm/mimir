@@ -1,25 +1,25 @@
+import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
 export interface PsionicSummary {
   name: string
   source: string
-  psionic_type: string
-  order?: string
-  page?: number
+  psionic_type?: string
+  psionic_order?: string
 }
 
 export interface PsionicFilters {
   query?: string
-  psionic_types?: string[]
-  orders?: string[]
   sources?: string[]
+  psionic_type?: string
+  psionic_order?: string
 }
 
 export interface Psionic {
   name: string
   source: string
-  psionic_type: string
-  order?: string
+  psionic_type?: string
+  psionic_order?: string
   page?: number
   entries?: any[]
   focus?: string
@@ -40,51 +40,72 @@ export interface PsionicMode {
 }
 
 export function usePsionics() {
+  const isPsionicsInitialized = ref(true)
+  const isLoading = ref(false)
+  const error: Ref<string | null> = ref(null)
+  const psionics = ref<PsionicSummary[]>([])
+
+  async function initializePsionicCatalog() {
+    // No initialization needed for DB-backed catalog
+  }
+
   async function searchPsionics(filters: PsionicFilters = {}): Promise<PsionicSummary[]> {
     try {
-      const results = await invoke<PsionicSummary[]>('search_psionics', {
-        query: filters.query || null,
-        psionic_types: filters.psionic_types || null,
-        orders: filters.orders || null,
-        sources: filters.sources || null
+      isLoading.value = true
+      error.value = null
+
+      // Transform to backend PsionicFilter format
+      const backendFilter = {
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+        psionic_type: filters.psionic_type || null,
+        psionic_order: filters.psionic_order || null,
+      }
+
+      const response = await invoke<{ success: boolean; data?: PsionicSummary[]; error?: string }>('search_psionics', {
+        filter: backendFilter,
+        limit: 10000,
+        offset: 0
       })
-      return results || []
+
+      if (response.success && response.data) {
+        psionics.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
+      error.value = `Search failed: ${e}`
       return []
+    } finally {
+      isLoading.value = false
     }
   }
 
   async function getPsionicDetails(name: string, source: string): Promise<Psionic | null> {
     try {
-      const details = await invoke<Psionic>('get_psionic_details', { name, source })
-      return details
+      const response = await invoke<{ success: boolean; data?: Psionic; error?: string }>('get_psionic_by_name', {
+        name,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get psionic details:', e)
       return null
     }
   }
 
-  async function getPsionicOrders(): Promise<string[]> {
-    try {
-      const orders = await invoke<string[]>('get_psionic_orders')
-      return orders || []
-    } catch (e) {
-      return []
-    }
-  }
-
-  async function getPsionicSources(): Promise<string[]> {
-    try {
-      const sources = await invoke<string[]>('get_psionic_sources')
-      return sources || []
-    } catch (e) {
-      return []
-    }
-  }
-
   return {
+    isPsionicsInitialized,
+    isLoading,
+    error,
+    psionics,
+    initializePsionicCatalog,
     searchPsionics,
     getPsionicDetails,
-    getPsionicOrders,
-    getPsionicSources,
   }
 }

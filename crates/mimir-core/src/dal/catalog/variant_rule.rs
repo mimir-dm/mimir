@@ -2,7 +2,7 @@
 //!
 //! Database operations for variant rules.
 
-use crate::models::catalog::{NewVariantRule, VariantRule};
+use crate::models::catalog::{NewVariantRule, VariantRule, VariantRuleFilter};
 use crate::schema::variant_rules;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -84,6 +84,91 @@ pub fn delete_variant_rules_by_source(
 /// Count all variant rules.
 pub fn count_variant_rules(conn: &mut SqliteConnection) -> QueryResult<i64> {
     variant_rules::table.count().get_result(conn)
+}
+
+/// Count variant rules from a specific source.
+pub fn count_variant_rules_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    variant_rules::table
+        .filter(variant_rules::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a variant rule by its ID, returning None if not found.
+pub fn get_variant_rule_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<VariantRule>> {
+    variant_rules::table
+        .filter(variant_rules::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have variant rules.
+pub fn list_variant_rule_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    variant_rules::table
+        .select(variant_rules::source)
+        .distinct()
+        .order(variant_rules::source.asc())
+        .load(conn)
+}
+
+/// Search variant rules with filters.
+pub fn search_variant_rules(
+    conn: &mut SqliteConnection,
+    filter: &VariantRuleFilter,
+) -> QueryResult<Vec<VariantRule>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = variant_rules::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(variant_rules::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(variant_rules::source.eq_any(sources));
+    }
+
+    if let Some(ref rule_type) = filter.rule_type {
+        query = query.filter(variant_rules::rule_type.eq(rule_type));
+    }
+
+    query.order(variant_rules::name.asc()).load(conn)
+}
+
+/// Search variant rules with pagination.
+pub fn search_variant_rules_paginated(
+    conn: &mut SqliteConnection,
+    filter: &VariantRuleFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<VariantRule>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = variant_rules::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(variant_rules::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(variant_rules::source.eq_any(sources));
+    }
+
+    if let Some(ref rule_type) = filter.rule_type {
+        query = query.filter(variant_rules::rule_type.eq(rule_type));
+    }
+
+    query
+        .order(variant_rules::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

@@ -99,6 +99,11 @@ pub fn search_spells(
     conn: &mut SqliteConnection,
     filter: &SpellFilter,
 ) -> QueryResult<Vec<Spell>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = spells::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -106,8 +111,9 @@ pub fn search_spells(
         query = query.filter(spells::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(spells::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(spells::source.eq_any(sources));
     }
 
     if let Some(level) = filter.level {
@@ -140,6 +146,11 @@ pub fn search_spells_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Spell>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = spells::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -147,8 +158,9 @@ pub fn search_spells_paginated(
         query = query.filter(spells::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(spells::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(spells::source.eq_any(sources));
     }
 
     if let Some(level) = filter.level {

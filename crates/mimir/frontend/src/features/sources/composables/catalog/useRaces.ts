@@ -81,8 +81,8 @@ export function useRaces() {
     searchCommand: 'search_races',
     detailsCommand: 'get_race_by_name',
     transformFilters: (filters) => ({
-      name: filters.query || null,
-      sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
+      name_contains: filters.query || null,
+      sources: filters.sources ?? null,
       sizes: filters.sizes && filters.sizes.length > 0 ? filters.sizes : null,
     }),
   })

@@ -41,10 +41,10 @@ export function useFeats() {
     try {
       const response = await invoke<{ success: boolean; data?: FeatSummary[]; error?: string }>('search_feats', {
         filter: {
-          name: params.query || null,
-          sources: params.sources?.length ? params.sources : null,
+          name_contains: params.query || null,
+          sources: params.sources ?? null,
         },
-        limit: 100,
+        limit: 10000,
         offset: 0
       })
       if (response.success && response.data) {

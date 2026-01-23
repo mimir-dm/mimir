@@ -1,3 +1,4 @@
+import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
 export interface Table {
@@ -21,72 +22,79 @@ export interface Table {
 export interface TableSummary {
   name: string
   source: string
-  caption: string
-  columns: number
-  rows: number
-  category: string
+  caption?: string
 }
 
 export interface TableFilters {
   query?: string
   sources?: string[]
-  categories?: string[]
 }
 
 export function useTables() {
+  const isTablesInitialized = ref(true)
+  const isLoading = ref(false)
+  const error: Ref<string | null> = ref(null)
+  const tables = ref<TableSummary[]>([])
+
   async function initializeTableCatalog() {
-    try {
-      await invoke('init_table_catalog')
-    } catch (e) {
-      // Initialization failed silently
-    }
+    // No initialization needed for DB-backed catalog
   }
 
   async function searchTables(filters: TableFilters = {}): Promise<TableSummary[]> {
     try {
-      const results = await invoke<TableSummary[]>('search_tables', {
-        query: filters.query || null,
-        sources: filters.sources || null,
-        categories: filters.categories || null
+      isLoading.value = true
+      error.value = null
+
+      // Transform to backend CatalogTableFilter format
+      const backendFilter = {
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+      }
+
+      const response = await invoke<{ success: boolean; data?: TableSummary[]; error?: string }>('search_tables', {
+        filter: backendFilter,
+        limit: 10000,
+        offset: 0
       })
-      return results || []
+
+      if (response.success && response.data) {
+        tables.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
+      error.value = `Search failed: ${e}`
       return []
+    } finally {
+      isLoading.value = false
     }
   }
 
   async function getTableDetails(name: string, source: string): Promise<Table | null> {
     try {
-      const details = await invoke<Table>('get_table_details', { name, source })
-      return details
+      const response = await invoke<{ success: boolean; data?: Table; error?: string }>('get_table_by_name', {
+        name,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get table details:', e)
       return null
     }
   }
 
-  async function getTableCategories(): Promise<string[]> {
-    try {
-      const categories = await invoke<string[]>('get_table_categories')
-      return categories || []
-    } catch (e) {
-      return []
-    }
-  }
-
-  async function getTableSources(): Promise<string[]> {
-    try {
-      const sources = await invoke<string[]>('get_table_sources')
-      return sources || []
-    } catch (e) {
-      return []
-    }
-  }
-
   return {
+    isTablesInitialized,
+    isLoading,
+    error,
+    tables,
     initializeTableCatalog,
     searchTables,
     getTableDetails,
-    getTableCategories,
-    getTableSources,
   }
 }

@@ -1,3 +1,4 @@
+import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
 export interface Reward {
@@ -18,73 +19,81 @@ export interface Reward {
 export interface RewardSummary {
   name: string
   source: string
-  reward_type: string
-  description: string
-  has_prerequisites: boolean
+  reward_type?: string
 }
 
 export interface RewardFilters {
   query?: string
   sources?: string[]
-  reward_types?: string[]
-  has_prerequisites?: boolean
+  reward_type?: string
 }
 
 export function useRewards() {
+  const isRewardsInitialized = ref(true)
+  const isLoading = ref(false)
+  const error: Ref<string | null> = ref(null)
+  const rewards = ref<RewardSummary[]>([])
+
   async function initializeRewardCatalog() {
-    try {
-      await invoke('initialize_reward_catalog')
-    } catch (e) {
-      // Initialization failed silently
-    }
+    // No initialization needed for DB-backed catalog
   }
 
   async function searchRewards(filters: RewardFilters = {}): Promise<RewardSummary[]> {
     try {
-      const results = await invoke<RewardSummary[]>('search_rewards', {
-        query: filters.query || null,
-        sources: filters.sources || null,
-        reward_types: filters.reward_types || null,
-        has_prerequisites: filters.has_prerequisites
+      isLoading.value = true
+      error.value = null
+
+      // Transform to backend RewardFilter format
+      const backendFilter = {
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+        reward_type: filters.reward_type || null,
+      }
+
+      const response = await invoke<{ success: boolean; data?: RewardSummary[]; error?: string }>('search_rewards', {
+        filter: backendFilter,
+        limit: 10000,
+        offset: 0
       })
-      return results || []
+
+      if (response.success && response.data) {
+        rewards.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
+      error.value = `Search failed: ${e}`
       return []
+    } finally {
+      isLoading.value = false
     }
   }
 
   async function getRewardDetails(name: string, source: string): Promise<Reward | null> {
     try {
-      const details = await invoke<Reward>('get_reward_details', { name, source })
-      return details
+      const response = await invoke<{ success: boolean; data?: Reward; error?: string }>('get_reward_by_name', {
+        name,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get reward details:', e)
       return null
     }
   }
 
-  async function getRewardTypes(): Promise<string[]> {
-    try {
-      const types = await invoke<string[]>('get_reward_types')
-      return types || []
-    } catch (e) {
-      return []
-    }
-  }
-
-  async function getRewardSources(): Promise<string[]> {
-    try {
-      const sources = await invoke<string[]>('get_reward_sources')
-      return sources || []
-    } catch (e) {
-      return []
-    }
-  }
-
   return {
+    isRewardsInitialized,
+    isLoading,
+    error,
+    rewards,
     initializeRewardCatalog,
     searchRewards,
     getRewardDetails,
-    getRewardTypes,
-    getRewardSources,
   }
 }

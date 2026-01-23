@@ -1086,7 +1086,7 @@ impl<'a> CatalogImportService<'a> {
         data: &str,
     ) -> Result<i32> {
         let rule_type = entity
-            .get("type")
+            .get("ruleType")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 

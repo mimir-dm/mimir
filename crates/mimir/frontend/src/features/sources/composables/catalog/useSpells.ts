@@ -49,6 +49,14 @@ export function useSpells() {
     // No initialization needed - database-backed
     searchCommand: 'search_spells',
     detailsCommand: 'get_spell_by_name',
+    transformFilters: (filters) => ({
+      name_contains: filters.query || null,
+      sources: filters.sources ?? null,
+      level: filters.levels?.length === 1 ? filters.levels[0] : null,
+      school: filters.schools?.length === 1 ? filters.schools[0] : null,
+      ritual: filters.ritual ?? null,
+      concentration: filters.concentration ?? null,
+    }),
   })
 
   return {

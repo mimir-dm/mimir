@@ -57,38 +57,63 @@ export function renderModalContent(data: any): string {
 
 function renderSpellContent(data: any): string {
   let html = '<div class="spell-content">'
-  
+
   if (data.level !== undefined) {
     const levelStr = data.level === 0 ? 'Cantrip' : `${data.level}${getOrdinalSuffix(data.level)}-level`
-    html += `<p><strong>${levelStr} ${data.school || ''}</strong></p>`
+    const schoolStr = formatSpellSchool(data.school)
+    html += `<p><strong>${levelStr} ${schoolStr}</strong></p>`
   }
-  
+
   if (data.time) {
-    html += `<p><strong>Casting Time:</strong> ${data.time}</p>`
+    html += `<p><strong>Casting Time:</strong> ${formatSpellTime(data.time)}</p>`
   }
-  
+
   if (data.range) {
-    html += `<p><strong>Range:</strong> ${data.range}</p>`
+    html += `<p><strong>Range:</strong> ${formatSpellRange(data.range)}</p>`
   }
-  
+
   if (data.components) {
-    html += `<p><strong>Components:</strong> ${data.components}</p>`
+    html += `<p><strong>Components:</strong> ${formatSpellComponents(data.components)}</p>`
   }
-  
+
   if (data.duration) {
-    html += `<p><strong>Duration:</strong> ${data.duration}</p>`
+    html += `<p><strong>Duration:</strong> ${formatSpellDuration(data.duration)}</p>`
   }
-  
+
   if (data.entries && Array.isArray(data.entries)) {
     html += '<div class="spell-description">'
     for (const entry of data.entries) {
       if (typeof entry === 'string') {
         html += `<p>${processFormattingTags(entry)}</p>`
+      } else if (entry.type === 'entries' && entry.entries) {
+        if (entry.name) html += `<p><strong>${entry.name}.</strong></p>`
+        for (const subEntry of entry.entries) {
+          if (typeof subEntry === 'string') {
+            html += `<p>${processFormattingTags(subEntry)}</p>`
+          }
+        }
+      } else if (entry.type === 'list' && entry.items) {
+        html += '<ul>'
+        for (const item of entry.items) {
+          html += `<li>${processFormattingTags(typeof item === 'string' ? item : item.entry || '')}</li>`
+        }
+        html += '</ul>'
       }
     }
     html += '</div>'
   }
-  
+
+  // Higher level scaling
+  if (data.entriesHigherLevel && Array.isArray(data.entriesHigherLevel)) {
+    html += '<div class="spell-higher-levels">'
+    for (const entry of data.entriesHigherLevel) {
+      if (entry.entries) {
+        html += `<p><strong>At Higher Levels.</strong> ${processFormattingTags(entry.entries.join(' '))}</p>`
+      }
+    }
+    html += '</div>'
+  }
+
   html += '</div>'
   return html
 }
@@ -105,7 +130,7 @@ function renderItemContent(data: any): string {
   }
   
   if (data.value) {
-    html += `<p><strong>Value:</strong> ${data.value} gp</p>`
+    html += `<p><strong>Value:</strong> ${formatCurrency(data.value)}</p>`
   }
   
   if (data.weight) {
@@ -523,6 +548,179 @@ function renderGenericContent(data: any): string {
   
   html += '</div>'
   return html
+}
+
+// =============================================================================
+// Spell formatting helpers
+// =============================================================================
+
+const SPELL_SCHOOL_MAP: Record<string, string> = {
+  A: 'Abjuration',
+  C: 'Conjuration',
+  D: 'Divination',
+  E: 'Enchantment',
+  V: 'Evocation',
+  I: 'Illusion',
+  N: 'Necromancy',
+  T: 'Transmutation',
+}
+
+function formatSpellSchool(school: any): string {
+  if (!school) return ''
+  if (typeof school === 'string') {
+    return SPELL_SCHOOL_MAP[school.toUpperCase()] || school
+  }
+  return ''
+}
+
+function formatSpellTime(time: any): string {
+  if (!time) return ''
+  if (typeof time === 'string') return time
+
+  if (Array.isArray(time)) {
+    return time.map((t: any) => {
+      if (typeof t === 'string') return t
+      const num = t.number || 1
+      const unit = t.unit || 'action'
+      const condition = t.condition ? `, ${t.condition}` : ''
+      return `${num} ${unit}${num > 1 ? 's' : ''}${condition}`
+    }).join(' or ')
+  }
+
+  if (typeof time === 'object') {
+    const num = time.number || 1
+    const unit = time.unit || 'action'
+    return `${num} ${unit}${num > 1 ? 's' : ''}`
+  }
+
+  return String(time)
+}
+
+function formatSpellRange(range: any): string {
+  if (!range) return ''
+  if (typeof range === 'string') return range
+
+  if (typeof range === 'object') {
+    const type = range.type
+    if (type === 'point') {
+      const dist = range.distance
+      if (!dist) return 'Point'
+      if (dist.type === 'self') return 'Self'
+      if (dist.type === 'touch') return 'Touch'
+      if (dist.type === 'sight') return 'Sight'
+      if (dist.type === 'unlimited') return 'Unlimited'
+      if (dist.amount) return `${dist.amount} ${dist.type || 'feet'}`
+      return dist.type || 'Point'
+    }
+    if (type === 'special') return 'Special'
+    if (type === 'radius' || type === 'sphere' || type === 'cone' || type === 'line' || type === 'cube' || type === 'hemisphere') {
+      const dist = range.distance
+      if (dist && dist.amount) {
+        return `Self (${dist.amount}-${dist.type || 'foot'} ${type})`
+      }
+      return `Self (${type})`
+    }
+    // Fallback for other object structures
+    if (range.distance) {
+      const dist = range.distance
+      if (dist.amount) return `${dist.amount} ${dist.type || 'feet'}`
+      return dist.type || ''
+    }
+  }
+
+  return String(range)
+}
+
+function formatSpellComponents(components: any): string {
+  if (!components) return ''
+  if (typeof components === 'string') return components
+
+  if (typeof components === 'object') {
+    const parts: string[] = []
+    if (components.v) parts.push('V')
+    if (components.s) parts.push('S')
+    if (components.m) {
+      if (typeof components.m === 'string') {
+        parts.push(`M (${components.m})`)
+      } else if (typeof components.m === 'object') {
+        const text = components.m.text || components.m.consume || ''
+        parts.push(`M (${text})`)
+      } else {
+        parts.push('M')
+      }
+    }
+    return parts.join(', ')
+  }
+
+  return String(components)
+}
+
+function formatSpellDuration(duration: any): string {
+  if (!duration) return ''
+  if (typeof duration === 'string') return duration
+
+  if (Array.isArray(duration)) {
+    return duration.map((d: any) => formatSingleDuration(d)).join(' or ')
+  }
+
+  return formatSingleDuration(duration)
+}
+
+function formatSingleDuration(d: any): string {
+  if (typeof d === 'string') return d
+  if (!d || typeof d !== 'object') return ''
+
+  const type = d.type
+  if (type === 'instant') return 'Instantaneous'
+  if (type === 'permanent') {
+    if (d.ends && Array.isArray(d.ends)) {
+      const endings = d.ends.map((e: string) => {
+        if (e === 'dispel') return 'dispelled'
+        if (e === 'trigger') return 'triggered'
+        return e
+      })
+      return `Until ${endings.join(' or ')}`
+    }
+    return 'Permanent'
+  }
+  if (type === 'special') return 'Special'
+  if (type === 'timed') {
+    const amount = d.duration?.amount || d.amount || ''
+    const unit = d.duration?.type || d.unit || ''
+    const conc = d.concentration ? 'Concentration, up to ' : ''
+    return `${conc}${amount} ${unit}${amount > 1 ? 's' : ''}`
+  }
+
+  // Fallback
+  if (d.duration) {
+    const amount = d.duration.amount || ''
+    const unit = d.duration.type || ''
+    return `${amount} ${unit}${amount > 1 ? 's' : ''}`
+  }
+
+  return ''
+}
+
+// =============================================================================
+// Currency formatting
+// =============================================================================
+
+/**
+ * Format a value in copper pieces to the most appropriate denomination.
+ * 5etools stores all values in copper pieces (cp).
+ * 1 pp = 1000 cp, 1 gp = 100 cp, 1 sp = 10 cp
+ */
+function formatCurrency(copperValue: number): string {
+  if (copperValue >= 100) {
+    const gp = copperValue / 100
+    // Show as whole number if no remainder, otherwise 1 decimal
+    return gp % 1 === 0 ? `${gp} gp` : `${gp.toFixed(1)} gp`
+  } else if (copperValue >= 10) {
+    const sp = copperValue / 10
+    return sp % 1 === 0 ? `${sp} sp` : `${sp.toFixed(1)} sp`
+  } else {
+    return `${copperValue} cp`
+  }
 }
 
 function getOrdinalSuffix(num: number): string {

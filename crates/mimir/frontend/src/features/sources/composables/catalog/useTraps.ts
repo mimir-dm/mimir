@@ -33,8 +33,8 @@ export function useTraps() {
     searchCommand: 'search_traps',
     detailsCommand: 'get_trap_by_name',
     transformFilters: (filters) => ({
-      name: filters.query || null,
-      sources: filters.sources?.length ? filters.sources : null,
+      name_contains: filters.query || null,
+      sources: filters.sources ?? null,
     }),
   })
 

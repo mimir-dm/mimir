@@ -25,6 +25,12 @@
             :tooltip="filter.tooltip"
             v-model="filterValues[filter.key]"
           />
+          <CheckboxGroupFilter
+            v-else-if="filter.type === 'checkbox-group'"
+            :label="filter.label"
+            :options="filter.options || []"
+            v-model="filterValues[filter.key]"
+          />
           <RangeFilter
             v-else-if="filter.type === 'range'"
             :label="filter.label"
@@ -39,7 +45,14 @@
     
     <div class="catalog-table__content">
       <div class="catalog-table__results-info">
-        <span class="catalog-table__result-count">{{ filteredData.length }} {{ config.name }}</span>
+        <span class="catalog-table__result-count">
+          <template v-if="totalItems > 0">
+            Showing {{ startIndex }}-{{ endIndex }} of {{ totalItems }} {{ config.name }}
+          </template>
+          <template v-else>
+            0 {{ config.name }}
+          </template>
+        </span>
       </div>
       
       <div class="catalog-table__scroll-container">
@@ -64,7 +77,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-if="filteredData.length === 0" class="catalog-table__empty-row">
+            <tr v-if="totalItems === 0" class="catalog-table__empty-row">
               <td :colspan="config.columns.length">
                 <div class="catalog-table__empty">
                   <h3 v-if="searchPerformed">{{ config.emptyMessage?.title || 'No results found' }}</h3>
@@ -75,7 +88,7 @@
               </td>
             </tr>
             <tr
-              v-for="item in sortedData"
+              v-for="item in paginatedItems"
               :key="getItemKey(item)"
               class="catalog-table__row"
               @click="$emit('select', item)"
@@ -119,6 +132,59 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Controls -->
+      <div v-if="totalPages > 1" class="catalog-table__pagination">
+        <div class="catalog-table__pagination-info">
+          <label class="catalog-table__page-size-label">
+            Show
+            <select v-model.number="pageSize" class="catalog-table__page-size-select">
+              <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
+            </select>
+            per page
+          </label>
+        </div>
+
+        <div class="catalog-table__pagination-controls">
+          <button
+            class="catalog-table__pagination-btn"
+            :disabled="!hasPreviousPage"
+            @click="firstPage"
+            title="First page"
+          >
+            &laquo;
+          </button>
+          <button
+            class="catalog-table__pagination-btn"
+            :disabled="!hasPreviousPage"
+            @click="previousPage"
+            title="Previous page"
+          >
+            &lsaquo;
+          </button>
+
+          <span class="catalog-table__pagination-pages">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+
+          <button
+            class="catalog-table__pagination-btn"
+            :disabled="!hasNextPage"
+            @click="nextPage"
+            title="Next page"
+          >
+            &rsaquo;
+          </button>
+          <button
+            class="catalog-table__pagination-btn"
+            :disabled="!hasNextPage"
+            @click="lastPage"
+            title="Last page"
+          >
+            &raquo;
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -129,7 +195,9 @@ import type { CatalogConfig, FilterValues } from './config/types'
 import MultiSelectFilter from '../ui/MultiSelectFilter.vue'
 import SelectFilter from './filters/SelectFilter.vue'
 import CheckboxFilter from './filters/CheckboxFilter.vue'
+import CheckboxGroupFilter from './filters/CheckboxGroupFilter.vue'
 import RangeFilter from './filters/RangeFilter.vue'
+import { usePagination } from '../../composables/usePagination'
 
 interface Props {
   config: CatalogConfig
@@ -168,6 +236,9 @@ function initializeFilterValues(): FilterValues {
         break
       case 'checkbox':
         values[filter.key] = false
+        break
+      case 'checkbox-group':
+        values[filter.key] = []
         break
       case 'range':
         values[filter.key] = { min: undefined, max: undefined }
@@ -215,7 +286,13 @@ const filteredData = computed(() => {
           filtered = filtered.filter(item => Boolean(item[filter.key]))
         }
         break
-        
+
+      case 'checkbox-group':
+        if (Array.isArray(filterValue) && filterValue.length > 0) {
+          filtered = filtered.filter(item => filterValue.includes(item[filter.key]))
+        }
+        break
+
       case 'range':
         if (filterValue && (filterValue.min !== undefined || filterValue.max !== undefined)) {
           filtered = filtered.filter(item => {
@@ -237,27 +314,52 @@ const sortedData = computed(() => {
   if (!props.sortColumn || !props.config.columns.some(col => col.key === props.sortColumn && col.sortable)) {
     return filteredData.value
   }
-  
+
   const sorted = [...filteredData.value]
   sorted.sort((a, b) => {
     const aVal = a[props.sortColumn]
     const bVal = b[props.sortColumn]
-    
+
     // Handle number sorting
     if (typeof aVal === 'number' && typeof bVal === 'number') {
       const comparison = aVal - bVal
       return props.sortDirection === 'asc' ? comparison : -comparison
     }
-    
+
     // Handle string sorting
     const aStr = String(aVal || '')
     const bStr = String(bVal || '')
     const comparison = aStr.localeCompare(bStr)
     return props.sortDirection === 'asc' ? comparison : -comparison
   })
-  
+
   return sorted
 })
+
+// Pagination
+const {
+  currentPage,
+  pageSize,
+  totalItems,
+  totalPages,
+  paginatedItems,
+  hasPreviousPage,
+  hasNextPage,
+  startIndex,
+  endIndex,
+  goToPage,
+  nextPage,
+  previousPage,
+  firstPage,
+  lastPage,
+  reset: resetPagination,
+  pageSizeOptions
+} = usePagination(sortedData, { defaultPageSize: 50 })
+
+// Reset pagination when filters change
+watch(filterValues, () => {
+  resetPagination()
+}, { deep: true })
 
 function getCellValue(item: any, column: any): any {
   if (column.formatter) {

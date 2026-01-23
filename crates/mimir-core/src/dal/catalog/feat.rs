@@ -103,6 +103,11 @@ pub fn list_feat_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>
 
 /// Search feats with filters.
 pub fn search_feats(conn: &mut SqliteConnection, filter: &FeatFilter) -> QueryResult<Vec<Feat>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = feats::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -110,8 +115,9 @@ pub fn search_feats(conn: &mut SqliteConnection, filter: &FeatFilter) -> QueryRe
         query = query.filter(feats::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(feats::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(feats::source.eq_any(sources));
     }
 
     query.order(feats::name.asc()).load(conn)
@@ -124,6 +130,11 @@ pub fn search_feats_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Feat>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = feats::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -131,8 +142,9 @@ pub fn search_feats_paginated(
         query = query.filter(feats::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(feats::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(feats::source.eq_any(sources));
     }
 
     query

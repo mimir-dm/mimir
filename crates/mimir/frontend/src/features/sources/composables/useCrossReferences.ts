@@ -23,30 +23,105 @@ export function useCrossReferences() {
   // Cache for reference lookups
   const referenceCache = new Map<string, any>()
 
+  // Map reference types to their backend command names (exact lookup)
+  const refTypeToCommand: Record<string, string> = {
+    spell: 'get_spell_by_name',
+    item: 'get_item_by_name',
+    creature: 'get_monster_by_name',
+    race: 'get_race_by_name',
+    class: 'get_class_by_name',
+    background: 'get_background_by_name',
+    feat: 'get_feat_by_name',
+    condition: 'get_condition_by_name',
+    action: 'get_action_by_name',
+    language: 'get_language_by_name',
+    trap: 'get_trap_by_name',
+    hazard: 'get_hazard_by_name',
+  }
+
+  // Map reference types to their search command names (fallback)
+  const refTypeToSearchCommand: Record<string, string> = {
+    spell: 'search_spells',
+    item: 'search_items',
+    creature: 'search_monsters',
+    race: 'search_races',
+    class: 'search_classes',
+    background: 'search_backgrounds',
+    feat: 'search_feats',
+    condition: 'search_conditions',
+    action: 'search_actions',
+    language: 'search_languages',
+    trap: 'search_traps',
+    hazard: 'search_hazards',
+  }
+
   // Lookup reference data from backend
   async function lookupReference(refType: string, refName: string, refSource?: string): Promise<any> {
     const cacheKey = `${refType}:${refName}:${refSource || ''}`
-    
+
     // Check cache first
     if (referenceCache.has(cacheKey)) {
       return referenceCache.get(cacheKey)
     }
-    
-    try {
-      const response = await invoke<ReferenceData>('lookup_reference', {
-        refType,
-        refName,
-        refSource
-      })
-      
-      if (response.success && response.data) {
-        // Cache the result
-        referenceCache.set(cacheKey, response.data)
-        return response.data
-      }
-    } catch (error) {
+
+    // Get the command for this reference type
+    const command = refTypeToCommand[refType]
+    if (!command) {
+      console.warn(`No backend command for reference type: ${refType}`)
+      return null
     }
-    
+
+    // Try exact lookup first (name + source)
+    if (refSource) {
+      try {
+        const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
+          name: refName,
+          source: refSource
+        })
+
+        if (response.success && response.data) {
+          const result = {
+            name: response.data.name || refName,
+            data: response.data,
+            preview: null
+          }
+          referenceCache.set(cacheKey, result)
+          return result
+        }
+      } catch (error) {
+        // Exact lookup failed, will try search fallback
+      }
+    }
+
+    // Fallback: search by name only
+    const searchCommand = refTypeToSearchCommand[refType]
+    if (searchCommand) {
+      try {
+        const searchResponse = await invoke<{ success: boolean; data?: any[]; error?: string }>(searchCommand, {
+          filter: { name_contains: refName },
+          limit: 5,
+          offset: 0
+        })
+
+        if (searchResponse.success && searchResponse.data && searchResponse.data.length > 0) {
+          // Try to find exact name match first, otherwise use first result
+          const exactMatch = searchResponse.data.find(
+            (item: any) => item.name?.toLowerCase() === refName.toLowerCase()
+          )
+          const found = exactMatch || searchResponse.data[0]
+          const result = {
+            name: found.name || refName,
+            data: found,
+            preview: null
+          }
+          referenceCache.set(cacheKey, result)
+          return result
+        }
+      } catch (error) {
+        console.error(`Failed to search ${refType} "${refName}":`, error)
+      }
+    }
+
     return null
   }
 

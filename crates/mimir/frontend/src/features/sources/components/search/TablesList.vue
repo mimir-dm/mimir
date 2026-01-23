@@ -9,12 +9,6 @@
               {{ sortDirection === 'asc' ? '▲' : '▼' }}
             </span>
           </th>
-          <th @click="emit('sort', 'category')" class="sortable">
-            Category
-            <span class="sort-indicator" v-if="sortColumn === 'category'">
-              {{ sortDirection === 'asc' ? '▲' : '▼' }}
-            </span>
-          </th>
           <th>Caption</th>
           <th @click="emit('sort', 'size')" class="sortable">
             Size
@@ -31,18 +25,13 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="table in tables" :key="`${table.name}-${table.source}`" 
+        <tr v-for="table in tables" :key="`${table.name}-${table.source}`"
             @click="emit('select', table)" class="clickable-row">
           <td class="name-cell">{{ table.name }}</td>
-          <td class="category-cell">
-            <span :class="['category-badge', getCategoryClass(table.category)]">
-              {{ table.category }}
-            </span>
-          </td>
-          <td class="caption-cell">{{ table.caption }}</td>
+          <td class="caption-cell">{{ table.caption || '—' }}</td>
           <td class="size-cell">
             <span class="size-info">
-              {{ table.columns }}×{{ table.rows }}
+              {{ getColumnCount(table) }}×{{ getRowCount(table) }}
             </span>
           </td>
           <td class="source-cell">{{ table.source }}</td>
@@ -66,30 +55,20 @@ const emit = defineEmits<{
   select: [table: TableSummary]
 }>()
 
-function getCategoryClass(category: string | undefined): string {
-  if (!category) return 'category-general'
-  switch (category.toLowerCase()) {
-    case 'madness':
-      return 'category-madness'
-    case 'treasure':
-      return 'category-treasure'
-    case 'encounters':
-      return 'category-encounters'
-    case 'trinkets':
-      return 'category-trinkets'
-    case 'wild magic':
-      return 'category-wild-magic'
-    case 'combat':
-      return 'category-combat'
-    case 'npcs':
-      return 'category-npcs'
-    case 'adventures':
-      return 'category-adventures'
-    case 'magic items':
-      return 'category-magic-items'
-    default:
-      return 'category-misc'
+// Get column count from colLabels array (5etools format)
+function getColumnCount(table: any): number {
+  if (Array.isArray(table.colLabels)) {
+    return table.colLabels.length
   }
+  return 0
+}
+
+// Get row count from rows array (5etools format)
+function getRowCount(table: any): number {
+  if (Array.isArray(table.rows)) {
+    return table.rows.length
+  }
+  return 0
 }
 </script>
 
@@ -151,78 +130,6 @@ function getCategoryClass(category: string | undefined): string {
 .name-cell {
   font-weight: 500;
   color: var(--color-primary, #4a9eff);
-}
-
-.category-cell {
-  white-space: nowrap;
-}
-
-.category-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.category-madness {
-  background: rgba(156, 39, 176, 0.2);
-  color: #9c27b0;
-  border: 1px solid rgba(156, 39, 176, 0.4);
-}
-
-.category-treasure {
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
-  border: 1px solid rgba(255, 193, 7, 0.4);
-}
-
-.category-encounters {
-  background: rgba(244, 67, 54, 0.2);
-  color: #f44336;
-  border: 1px solid rgba(244, 67, 54, 0.4);
-}
-
-.category-trinkets {
-  background: rgba(0, 188, 212, 0.2);
-  color: #00bcd4;
-  border: 1px solid rgba(0, 188, 212, 0.4);
-}
-
-.category-wild-magic {
-  background: rgba(103, 58, 183, 0.2);
-  color: #673ab7;
-  border: 1px solid rgba(103, 58, 183, 0.4);
-}
-
-.category-combat {
-  background: rgba(255, 87, 34, 0.2);
-  color: #ff5722;
-  border: 1px solid rgba(255, 87, 34, 0.4);
-}
-
-.category-npcs {
-  background: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
-  border: 1px solid rgba(76, 175, 80, 0.4);
-}
-
-.category-adventures {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-  border: 1px solid rgba(33, 150, 243, 0.4);
-}
-
-.category-magic-items {
-  background: rgba(255, 152, 0, 0.2);
-  color: #ff9800;
-  border: 1px solid rgba(255, 152, 0, 0.4);
-}
-
-.category-misc {
-  background: var(--color-surface, #1a1a1a);
-  color: var(--color-text-secondary, #999);
-  border: 1px solid var(--color-border, #333);
 }
 
 .caption-cell {

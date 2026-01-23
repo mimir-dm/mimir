@@ -2,7 +2,7 @@
 //!
 //! Database operations for vehicles.
 
-use crate::models::catalog::{NewVehicle, Vehicle};
+use crate::models::catalog::{NewVehicle, Vehicle, VehicleFilter};
 use crate::schema::vehicles;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -90,6 +90,91 @@ pub fn delete_vehicles_by_source(
 /// Count all vehicles.
 pub fn count_vehicles(conn: &mut SqliteConnection) -> QueryResult<i64> {
     vehicles::table.count().get_result(conn)
+}
+
+/// Count vehicles from a specific source.
+pub fn count_vehicles_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    vehicles::table
+        .filter(vehicles::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a vehicle by its ID, returning None if not found.
+pub fn get_vehicle_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Vehicle>> {
+    vehicles::table
+        .filter(vehicles::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have vehicles.
+pub fn list_vehicle_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    vehicles::table
+        .select(vehicles::source)
+        .distinct()
+        .order(vehicles::source.asc())
+        .load(conn)
+}
+
+/// Search vehicles with filters.
+pub fn search_vehicles(
+    conn: &mut SqliteConnection,
+    filter: &VehicleFilter,
+) -> QueryResult<Vec<Vehicle>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = vehicles::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(vehicles::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(vehicles::source.eq_any(sources));
+    }
+
+    if let Some(ref vehicle_type) = filter.vehicle_type {
+        query = query.filter(vehicles::vehicle_type.eq(vehicle_type));
+    }
+
+    query.order(vehicles::name.asc()).load(conn)
+}
+
+/// Search vehicles with pagination.
+pub fn search_vehicles_paginated(
+    conn: &mut SqliteConnection,
+    filter: &VehicleFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Vehicle>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = vehicles::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(vehicles::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(vehicles::source.eq_any(sources));
+    }
+
+    if let Some(ref vehicle_type) = filter.vehicle_type {
+        query = query.filter(vehicles::vehicle_type.eq(vehicle_type));
+    }
+
+    query
+        .order(vehicles::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

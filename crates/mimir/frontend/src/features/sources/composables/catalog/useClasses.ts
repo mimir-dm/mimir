@@ -112,7 +112,7 @@ export function useClasses() {
     searchCommand: 'search_classes',
     detailsCommand: 'get_class_by_name',
     transformFilters: (filters) => ({
-      name: filters.name || null,
+      name_contains: filters.name || null,
       sources: filters.sources || null,
     }),
   })

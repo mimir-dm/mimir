@@ -1,20 +1,16 @@
+import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useCatalogSearch } from './useCatalogSearch'
 
 export interface ObjectSummary {
   name: string
   source: string
-  object_type: string
-  size: string
-  ac: string
-  hp: string
+  object_type?: string
 }
 
 export interface ObjectFilters {
   query?: string
   sources?: string[]
-  object_types?: string[]
-  sizes?: string[]
+  object_type?: string
 }
 
 export interface DndObject {
@@ -38,40 +34,71 @@ export interface DndObject {
 }
 
 export function useObjects() {
-  const catalog = useCatalogSearch<ObjectSummary, string | null, ObjectFilters>({
-    name: 'object',
-    initializeCommand: 'init_object_catalog',
-    searchCommand: 'search_objects',
-    detailsCommand: 'get_object_details',
-    transformFilters: (filters) => ({
-      search: filters.query || null,
-      sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
-      object_types: filters.object_types && filters.object_types.length > 0 ? filters.object_types : null,
-      sizes: filters.sizes && filters.sizes.length > 0 ? filters.sizes : null
-    }),
-  })
+  const isObjectsInitialized = ref(true)
+  const isLoading = ref(false)
+  const error: Ref<string | null> = ref(null)
+  const objects = ref<ObjectSummary[]>([])
 
-  // Custom getDetails that parses JSON
-  async function getObjectDetails(name: string, source: string): Promise<DndObject | null> {
+  async function initializeObjectCatalog() {
+    // No initialization needed for DB-backed catalog
+  }
+
+  async function searchObjects(filters: ObjectFilters = {}): Promise<ObjectSummary[]> {
     try {
-      const jsonString = await invoke<string | null>('get_object_details', { name, source })
-      if (!jsonString) {
-        return null
+      isLoading.value = true
+      error.value = null
+
+      // Transform to backend ObjectFilter format
+      const backendFilter = {
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+        object_type: filters.object_type || null,
       }
 
-      const objectData = JSON.parse(jsonString)
-      return objectData as DndObject
+      const response = await invoke<{ success: boolean; data?: ObjectSummary[]; error?: string }>('search_objects', {
+        filter: backendFilter,
+        limit: 10000,
+        offset: 0
+      })
+
+      if (response.success && response.data) {
+        objects.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
+      error.value = `Search failed: ${e}`
+      return []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function getObjectDetails(name: string, source: string): Promise<DndObject | null> {
+    try {
+      const response = await invoke<{ success: boolean; data?: DndObject; error?: string }>('get_object_by_name', {
+        name,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
+    } catch (e) {
+      console.error('Failed to get object details:', e)
       return null
     }
   }
 
   return {
-    isObjectsInitialized: catalog.isInitialized,
-    isLoading: catalog.isLoading,
-    error: catalog.error,
-    initializeObjectCatalog: catalog.initialize,
-    searchObjects: catalog.search,
+    isObjectsInitialized,
+    isLoading,
+    error,
+    objects,
+    initializeObjectCatalog,
+    searchObjects,
     getObjectDetails,
   }
 }

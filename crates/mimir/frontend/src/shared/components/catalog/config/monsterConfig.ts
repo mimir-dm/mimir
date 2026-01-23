@@ -1,22 +1,10 @@
-import { invoke } from '@tauri-apps/api/core'
 import type { CatalogConfig } from './types'
-import { formatMonsterDetails } from '../../../../features/sources/formatters/monsterFormatterEnhanced'
 
-// Challenge Rating mapping for proper sorting
-const crToNumeric = (cr: string): number => {
-  switch (cr) {
-    case '1/8': return 0.125
-    case '1/4': return 0.25  
-    case '1/2': return 0.5
-    default: return parseFloat(cr) || 0
-  }
-}
-
-// Size formatting for display
-const formatSize = (size: string): string => {
+// Size formatting for display - handles both string and array formats from 5etools
+const formatSize = (size: unknown): string => {
   const sizeMap: Record<string, string> = {
     'F': 'Fine',
-    'D': 'Diminutive', 
+    'D': 'Diminutive',
     'T': 'Tiny',
     'S': 'Small',
     'M': 'Medium',
@@ -25,25 +13,107 @@ const formatSize = (size: string): string => {
     'G': 'Gargantuan',
     'C': 'Colossal'
   }
-  return sizeMap[size] || size
+  // Handle array format from 5etools (e.g., ["M"])
+  const sizeStr = Array.isArray(size) ? size[0] : size
+  if (typeof sizeStr === 'string') {
+    return sizeMap[sizeStr] || sizeStr
+  }
+  return 'Unknown'
 }
 
-// Alignment formatting for display
-const formatAlignment = (alignment: string): string => {
+// Type formatting - handles both string and object formats from 5etools
+const formatType = (type: unknown): string => {
+  if (typeof type === 'string') {
+    return type.charAt(0).toUpperCase() + type.slice(1)
+  }
+  if (type && typeof type === 'object' && 'type' in type) {
+    const typeStr = (type as { type: string }).type
+    return typeStr.charAt(0).toUpperCase() + typeStr.slice(1)
+  }
+  return 'Unknown'
+}
+
+// CR formatting - handles both string and object formats from 5etools
+const formatCR = (cr: unknown): string => {
+  if (typeof cr === 'string') {
+    return cr
+  }
+  if (typeof cr === 'number') {
+    return cr.toString()
+  }
+  if (cr && typeof cr === 'object' && 'cr' in cr) {
+    return String((cr as { cr: string | number }).cr)
+  }
+  return '0'
+}
+
+// HP formatting - handles object format from 5etools
+const formatHP = (hp: unknown): string => {
+  if (typeof hp === 'number') {
+    return hp.toString()
+  }
+  if (hp && typeof hp === 'object' && 'average' in hp) {
+    return String((hp as { average: number }).average)
+  }
+  return '—'
+}
+
+// AC formatting - handles array format from 5etools
+const formatAC = (ac: unknown): string => {
+  if (typeof ac === 'number') {
+    return ac.toString()
+  }
+  if (Array.isArray(ac) && ac.length > 0) {
+    const firstAC = ac[0]
+    if (typeof firstAC === 'number') {
+      return firstAC.toString()
+    }
+    if (firstAC && typeof firstAC === 'object' && 'ac' in firstAC) {
+      return String((firstAC as { ac: number }).ac)
+    }
+  }
+  return '10'
+}
+
+// Alignment formatting - handles array format from 5etools
+const formatAlignment = (alignment: unknown): string => {
   const alignmentMap: Record<string, string> = {
+    'L': 'Lawful',
+    'N': 'Neutral',
+    'NX': 'Neutral',
+    'NY': 'Neutral',
+    'C': 'Chaotic',
+    'G': 'Good',
+    'E': 'Evil',
+    'U': 'Unaligned',
+    'A': 'Any',
     'LG': 'Lawful Good',
     'LN': 'Lawful Neutral',
     'LE': 'Lawful Evil',
     'NG': 'Neutral Good',
-    'N': 'Neutral',
-    'NE': 'Neutral Evil', 
+    'NE': 'Neutral Evil',
     'CG': 'Chaotic Good',
     'CN': 'Chaotic Neutral',
-    'CE': 'Chaotic Evil',
-    'U': 'Unaligned',
-    'A': 'Any Alignment'
+    'CE': 'Chaotic Evil'
   }
-  return alignmentMap[alignment] || alignment
+
+  if (typeof alignment === 'string') {
+    return alignmentMap[alignment] || alignment
+  }
+
+  if (Array.isArray(alignment)) {
+    // Handle 5etools format like ["C", "E"] -> "Chaotic Evil"
+    const mapped = alignment
+      .filter((a): a is string => typeof a === 'string')
+      .map(a => alignmentMap[a] || a)
+    if (mapped.length === 2) {
+      // Combine like ["Chaotic", "Evil"] -> "Chaotic Evil"
+      return mapped.join(' ')
+    }
+    return mapped.join(', ')
+  }
+
+  return 'Unknown'
 }
 
 export const monsterConfig: CatalogConfig = {
@@ -62,42 +132,42 @@ export const monsterConfig: CatalogConfig = {
       label: 'Size',
       sortable: true,
       width: '80px',
-      formatter: (value: string) => formatSize(value)
+      formatter: formatSize
     },
     {
       key: 'type',
       label: 'Type',
       sortable: true,
       width: '120px',
-      formatter: (value: string) => value?.charAt(0).toUpperCase() + value?.slice(1) || 'Unknown'
+      formatter: formatType
     },
     {
       key: 'cr',
       label: 'CR',
       sortable: true,
       width: '60px',
-      formatter: (value: string) => value || '0'
+      formatter: formatCR
     },
     {
       key: 'hp',
       label: 'HP',
       sortable: true,
       width: '60px',
-      formatter: (value: number) => value?.toString() || '1'
+      formatter: formatHP
     },
     {
       key: 'ac',
       label: 'AC',
       sortable: true,
       width: '60px',
-      formatter: (value: number) => value?.toString() || '10'
+      formatter: formatAC
     },
     {
       key: 'alignment',
       label: 'Alignment',
       sortable: true,
       width: '120px',
-      formatter: (value: string) => formatAlignment(value)
+      formatter: formatAlignment
     },
     {
       key: 'source',

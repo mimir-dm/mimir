@@ -108,6 +108,11 @@ pub fn list_condition_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<St
 
 /// Search conditions with filters.
 pub fn search_conditions(conn: &mut SqliteConnection, filter: &ConditionFilter) -> QueryResult<Vec<Condition>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = conditions::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -115,8 +120,9 @@ pub fn search_conditions(conn: &mut SqliteConnection, filter: &ConditionFilter) 
         query = query.filter(conditions::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(conditions::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(conditions::source.eq_any(sources));
     }
 
     query.order(conditions::name.asc()).load(conn)
@@ -129,6 +135,11 @@ pub fn search_conditions_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Condition>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = conditions::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -136,8 +147,9 @@ pub fn search_conditions_paginated(
         query = query.filter(conditions::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(conditions::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(conditions::source.eq_any(sources));
     }
 
     query

@@ -2,7 +2,7 @@
 //!
 //! Database operations for psionics.
 
-use crate::models::catalog::{NewPsionic, Psionic};
+use crate::models::catalog::{NewPsionic, Psionic, PsionicFilter};
 use crate::schema::psionics;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -96,6 +96,99 @@ pub fn delete_psionics_by_source(
 /// Count all psionics.
 pub fn count_psionics(conn: &mut SqliteConnection) -> QueryResult<i64> {
     psionics::table.count().get_result(conn)
+}
+
+/// Count psionics from a specific source.
+pub fn count_psionics_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    psionics::table
+        .filter(psionics::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a psionic by its ID, returning None if not found.
+pub fn get_psionic_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Psionic>> {
+    psionics::table
+        .filter(psionics::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have psionics.
+pub fn list_psionic_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    psionics::table
+        .select(psionics::source)
+        .distinct()
+        .order(psionics::source.asc())
+        .load(conn)
+}
+
+/// Search psionics with filters.
+pub fn search_psionics(
+    conn: &mut SqliteConnection,
+    filter: &PsionicFilter,
+) -> QueryResult<Vec<Psionic>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = psionics::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(psionics::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(psionics::source.eq_any(sources));
+    }
+
+    if let Some(ref psionic_type) = filter.psionic_type {
+        query = query.filter(psionics::psionic_type.eq(psionic_type));
+    }
+
+    if let Some(ref psionic_order) = filter.psionic_order {
+        query = query.filter(psionics::psionic_order.eq(psionic_order));
+    }
+
+    query.order(psionics::name.asc()).load(conn)
+}
+
+/// Search psionics with pagination.
+pub fn search_psionics_paginated(
+    conn: &mut SqliteConnection,
+    filter: &PsionicFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Psionic>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = psionics::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(psionics::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(psionics::source.eq_any(sources));
+    }
+
+    if let Some(ref psionic_type) = filter.psionic_type {
+        query = query.filter(psionics::psionic_type.eq(psionic_type));
+    }
+
+    if let Some(ref psionic_order) = filter.psionic_order {
+        query = query.filter(psionics::psionic_order.eq(psionic_order));
+    }
+
+    query
+        .order(psionics::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

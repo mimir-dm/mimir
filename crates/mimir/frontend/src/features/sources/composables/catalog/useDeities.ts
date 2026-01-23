@@ -1,14 +1,14 @@
+import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useCatalogSearch } from './useCatalogSearch'
 
 export interface DeitySummary {
   name: string
   source: string
-  title: string
-  pantheon: string
-  alignment: string
-  domains: string[]
-  symbol: string
+  title?: string
+  pantheon?: string
+  alignment?: string
+  domains?: string[]
+  symbol?: string
 }
 
 export interface Deity {
@@ -30,42 +30,75 @@ export interface Deity {
 export interface DeityFilters {
   query?: string
   sources?: string[]
-  pantheons?: string[]
-  domains?: string[]
+  pantheon?: string
 }
 
 export function useDeities() {
-  const catalog = useCatalogSearch<DeitySummary, Deity, DeityFilters>({
-    name: 'deity',
-    searchCommand: 'search_deities',
-    detailsCommand: 'get_deity_details',
-    transformFilters: (filters) => ({
-      filters: {
-        name: filters.query || null,
-        sources: filters.sources || null,
-        pantheons: filters.pantheons || null,
-        domains: filters.domains || null,
-        alignments: null
-      }
-    }),
-  })
+  const isDeitiesInitialized = ref(true)
+  const isLoading = ref(false)
+  const error: Ref<string | null> = ref(null)
+  const deities = ref<DeitySummary[]>([])
 
-  // Custom getDetails with different parameter names
+  async function initializeDeityCatalog() {
+    // No initialization needed for DB-backed catalog
+  }
+
+  async function searchDeities(filters: DeityFilters): Promise<DeitySummary[]> {
+    try {
+      isLoading.value = true
+      error.value = null
+
+      // Transform to backend DeityFilter format
+      const backendFilter = {
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+        pantheon: filters.pantheon || null,
+      }
+
+      const response = await invoke<{ success: boolean; data?: DeitySummary[]; error?: string }>('search_deities', {
+        filter: backendFilter,
+        limit: 10000,
+        offset: 0
+      })
+
+      if (response.success && response.data) {
+        deities.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
+    } catch (e) {
+      error.value = `Search failed: ${e}`
+      return []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function getDeityDetails(name: string, source: string): Promise<Deity | null> {
     try {
-      const deity = await invoke<Deity>('get_deity_details', { deityName: name, deitySource: source })
-      return deity
+      const response = await invoke<{ success: boolean; data?: Deity; error?: string }>('get_deity_by_name', {
+        name,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data
+      }
+      return null
     } catch (e) {
+      console.error('Failed to get deity details:', e)
       return null
     }
   }
 
   return {
-    isDeitiesInitialized: catalog.isInitialized,
-    isLoading: catalog.isLoading,
-    error: catalog.error,
-    initializeDeityCatalog: catalog.initialize,
-    searchDeities: catalog.search,
+    isDeitiesInitialized,
+    isLoading,
+    error,
+    deities,
+    initializeDeityCatalog,
+    searchDeities,
     getDeityDetails,
   }
 }

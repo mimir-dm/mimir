@@ -2,7 +2,7 @@
 //!
 //! Database operations for objects.
 
-use crate::models::catalog::{NewObject, Object};
+use crate::models::catalog::{NewObject, Object, ObjectFilter};
 use crate::schema::objects;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -90,6 +90,91 @@ pub fn delete_objects_by_source(
 /// Count all objects.
 pub fn count_objects(conn: &mut SqliteConnection) -> QueryResult<i64> {
     objects::table.count().get_result(conn)
+}
+
+/// Count objects from a specific source.
+pub fn count_objects_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    objects::table
+        .filter(objects::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get an object by its ID, returning None if not found.
+pub fn get_object_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Object>> {
+    objects::table
+        .filter(objects::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have objects.
+pub fn list_object_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    objects::table
+        .select(objects::source)
+        .distinct()
+        .order(objects::source.asc())
+        .load(conn)
+}
+
+/// Search objects with filters.
+pub fn search_objects(
+    conn: &mut SqliteConnection,
+    filter: &ObjectFilter,
+) -> QueryResult<Vec<Object>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = objects::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(objects::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(objects::source.eq_any(sources));
+    }
+
+    if let Some(ref object_type) = filter.object_type {
+        query = query.filter(objects::object_type.eq(object_type));
+    }
+
+    query.order(objects::name.asc()).load(conn)
+}
+
+/// Search objects with pagination.
+pub fn search_objects_paginated(
+    conn: &mut SqliteConnection,
+    filter: &ObjectFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Object>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = objects::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(objects::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(objects::source.eq_any(sources));
+    }
+
+    if let Some(ref object_type) = filter.object_type {
+        query = query.filter(objects::object_type.eq(object_type));
+    }
+
+    query
+        .order(objects::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

@@ -1,24 +1,19 @@
+import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
-export interface CultBoonSummary {
+export interface CultSummary {
   name: string
   source: string
-  item_type: string
-  subtype?: string
-  page?: number
 }
 
-export interface CultBoonFilters {
+export interface CultFilters {
   query?: string
-  item_types?: string[]
-  subtypes?: string[]
   sources?: string[]
 }
 
 export interface Cult {
   name: string
   source: string
-  cult_type?: string
   page?: number
   entries?: any[]
   cultists?: { entry: string }
@@ -26,77 +21,71 @@ export interface Cult {
   signature_spells?: { entry: string }
 }
 
-export interface Boon {
-  name: string
-  source: string
-  boon_type?: string
-  page?: number
-  entries?: any[]
-  ability?: { entry: string }
-  signature_spells?: { entry: string }
-}
-
 export function useCults() {
+  const isCultsInitialized = ref(true)
+  const isLoading = ref(false)
+  const error: Ref<string | null> = ref(null)
+  const cults = ref<CultSummary[]>([])
+
   async function initializeCultCatalog() {
-    // Database-backed system - no initialization required
+    // No initialization needed for DB-backed catalog
   }
 
-  async function searchCults(filters: CultBoonFilters = {}): Promise<CultBoonSummary[]> {
+  async function searchCults(filters: CultFilters = {}): Promise<CultSummary[]> {
     try {
-      const results = await invoke<CultBoonSummary[]>('search_cults', {
-        name: filters.query || null,
-        sources: filters.sources || null,
-        categories: filters.subtypes || null,
-        cult_types: filters.item_types || null,
+      isLoading.value = true
+      error.value = null
+
+      // Transform to backend CultFilter format
+      const backendFilter = {
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+      }
+
+      const response = await invoke<{ success: boolean; data?: CultSummary[]; error?: string }>('search_cults', {
+        filter: backendFilter,
+        limit: 10000,
+        offset: 0
       })
-      return results || []
+
+      if (response.success && response.data) {
+        cults.value = response.data
+        return response.data
+      } else {
+        error.value = response.error || 'Search failed'
+        return []
+      }
     } catch (e) {
+      error.value = `Search failed: ${e}`
       return []
+    } finally {
+      isLoading.value = false
     }
   }
 
   async function getCultDetails(name: string, source: string): Promise<Cult | null> {
     try {
-      const details = await invoke<Cult>('get_cult_details', { name, source })
-      return details
-    } catch (e) {
+      const response = await invoke<{ success: boolean; data?: Cult; error?: string }>('get_cult_by_name', {
+        name,
+        source
+      })
+      if (response.success && response.data) {
+        return response.data
+      }
       return null
-    }
-  }
-
-  async function getBoonDetails(name: string, source: string): Promise<Boon | null> {
-    try {
-      const details = await invoke<Boon>('get_boon_details', { name, source })
-      return details
     } catch (e) {
+      console.error('Failed to get cult details:', e)
       return null
-    }
-  }
-
-  async function getCultTypes(): Promise<string[]> {
-    try {
-      const types = await invoke<string[]>('get_cult_types')
-      return types || []
-    } catch (e) {
-      return []
-    }
-  }
-
-  async function getCultSources(): Promise<string[]> {
-    try {
-      const sources = await invoke<string[]>('get_cult_sources')
-      return sources || []
-    } catch (e) {
-      return []
     }
   }
 
   return {
+    isCultsInitialized,
+    isLoading,
+    error,
+    cults,
     initializeCultCatalog,
     searchCults,
     getCultDetails,
-    getBoonDetails,
-    getCultTypes,
-    getCultSources,
   }
 }

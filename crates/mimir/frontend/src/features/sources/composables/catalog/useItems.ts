@@ -51,14 +51,12 @@ export function useItems() {
 
       const response = await invoke<{ success: boolean; data?: ItemSummary[]; error?: string }>('search_items', {
         filter: {
-          name: filters.query || null,
-          item_types: filters.types?.length ? filters.types : null,
-          rarities: filters.rarities?.length ? filters.rarities : null,
-          sources: filters.sources?.length ? filters.sources : null,
-          min_value: filters.min_value ?? null,
-          max_value: filters.max_value ?? null,
+          name_contains: filters.query || null,
+          item_type: filters.types?.length ? filters.types[0] : null,  // Backend expects single type
+          rarity: filters.rarities?.length ? filters.rarities[0] : null,  // Backend expects single rarity
+          sources: filters.sources ?? null,
         },
-        limit: 100,
+        limit: 10000,
         offset: 0
       })
 

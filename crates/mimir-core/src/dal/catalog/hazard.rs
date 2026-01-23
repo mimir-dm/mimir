@@ -108,6 +108,11 @@ pub fn list_hazard_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<Strin
 
 /// Search hazards with filters.
 pub fn search_hazards(conn: &mut SqliteConnection, filter: &HazardFilter) -> QueryResult<Vec<Hazard>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = hazards::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -115,8 +120,9 @@ pub fn search_hazards(conn: &mut SqliteConnection, filter: &HazardFilter) -> Que
         query = query.filter(hazards::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(hazards::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(hazards::source.eq_any(sources));
     }
 
     query.order(hazards::name.asc()).load(conn)
@@ -129,6 +135,11 @@ pub fn search_hazards_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Hazard>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = hazards::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -136,8 +147,9 @@ pub fn search_hazards_paginated(
         query = query.filter(hazards::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(hazards::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(hazards::source.eq_any(sources));
     }
 
     query

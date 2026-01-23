@@ -92,9 +92,11 @@ export function useSearch(initialCategory: string, initialSources: MaybeRef<stri
   async function performSearch() {
     searchPerformed.value = true
 
+    // Pass empty array when no sources selected (shows nothing),
+    // vs undefined which would mean "no filter" (shows everything)
     const sources = selectedSources.value.length > 0
       ? SearchService.mapBookIdsToSources(selectedSources.value)
-      : undefined
+      : []
 
     results.value = await SearchService.search({
       query: searchQuery.value,

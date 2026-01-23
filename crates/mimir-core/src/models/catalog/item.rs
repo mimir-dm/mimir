@@ -123,7 +123,10 @@ impl<'a> NewItem<'a> {
 #[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct ItemFilter {
     pub name_contains: Option<String>,
+    /// Single source filter (legacy).
     pub source: Option<String>,
+    /// Multiple sources filter (preferred).
+    pub sources: Option<Vec<String>>,
     pub item_type: Option<String>,
     pub rarity: Option<String>,
 }
@@ -141,6 +144,28 @@ impl ItemFilter {
     pub fn with_source(mut self, source: impl Into<String>) -> Self {
         self.source = Some(source.into());
         self
+    }
+
+    pub fn with_sources(mut self, sources: Vec<String>) -> Self {
+        self.sources = Some(sources);
+        self
+    }
+
+    /// Returns true if sources filter is explicitly set to an empty array.
+    /// This means "filter by no sources" (return nothing), not "no filter applied".
+    pub fn has_empty_sources_filter(&self) -> bool {
+        matches!(&self.sources, Some(sources) if sources.is_empty())
+    }
+
+    /// Get effective sources list (combines single source and sources array).
+    /// Returns None if no source filter is applied.
+    /// Returns Some(vec![...]) if filtering by specific sources.
+    pub fn effective_sources(&self) -> Option<Vec<String>> {
+        match (&self.sources, &self.source) {
+            (Some(sources), _) if !sources.is_empty() => Some(sources.clone()),
+            (_, Some(source)) => Some(vec![source.clone()]),
+            _ => None,
+        }
     }
 
     pub fn with_type(mut self, item_type: impl Into<String>) -> Self {

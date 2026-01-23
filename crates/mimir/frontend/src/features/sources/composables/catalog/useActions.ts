@@ -20,8 +20,8 @@ export function useActions() {
     searchCommand: 'search_actions',
     detailsCommand: 'get_action_by_name',
     transformFilters: (filters) => ({
-      name: filters.query || null,
-      sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
+      name_contains: filters.query || null,
+      sources: filters.sources ?? null,
     }),
   })
 

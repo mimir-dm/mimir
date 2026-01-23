@@ -2,7 +2,7 @@
 //!
 //! Database operations for catalog tables.
 
-use crate::models::catalog::{CatalogTable, NewCatalogTable};
+use crate::models::catalog::{CatalogTable, CatalogTableFilter, NewCatalogTable};
 use crate::schema::catalog_tables;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -84,6 +84,83 @@ pub fn delete_catalog_tables_by_source(
 /// Count all catalog tables.
 pub fn count_catalog_tables(conn: &mut SqliteConnection) -> QueryResult<i64> {
     catalog_tables::table.count().get_result(conn)
+}
+
+/// Count catalog tables from a specific source.
+pub fn count_catalog_tables_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    catalog_tables::table
+        .filter(catalog_tables::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a catalog table by its ID, returning None if not found.
+pub fn get_catalog_table_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<CatalogTable>> {
+    catalog_tables::table
+        .filter(catalog_tables::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have catalog tables.
+pub fn list_catalog_table_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    catalog_tables::table
+        .select(catalog_tables::source)
+        .distinct()
+        .order(catalog_tables::source.asc())
+        .load(conn)
+}
+
+/// Search catalog tables with filters.
+pub fn search_catalog_tables(
+    conn: &mut SqliteConnection,
+    filter: &CatalogTableFilter,
+) -> QueryResult<Vec<CatalogTable>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = catalog_tables::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(catalog_tables::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(catalog_tables::source.eq_any(sources));
+    }
+
+    query.order(catalog_tables::name.asc()).load(conn)
+}
+
+/// Search catalog tables with pagination.
+pub fn search_catalog_tables_paginated(
+    conn: &mut SqliteConnection,
+    filter: &CatalogTableFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<CatalogTable>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = catalog_tables::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(catalog_tables::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(catalog_tables::source.eq_any(sources));
+    }
+
+    query
+        .order(catalog_tables::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

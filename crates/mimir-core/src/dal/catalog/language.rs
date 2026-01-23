@@ -119,6 +119,11 @@ pub fn list_language_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<Str
 
 /// Search languages with filters.
 pub fn search_languages(conn: &mut SqliteConnection, filter: &LanguageFilter) -> QueryResult<Vec<Language>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = languages::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -126,8 +131,9 @@ pub fn search_languages(conn: &mut SqliteConnection, filter: &LanguageFilter) ->
         query = query.filter(languages::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(languages::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(languages::source.eq_any(sources));
     }
 
     if let Some(ref language_type) = filter.language_type {
@@ -144,6 +150,11 @@ pub fn search_languages_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Language>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = languages::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -151,8 +162,9 @@ pub fn search_languages_paginated(
         query = query.filter(languages::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(languages::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(languages::source.eq_any(sources));
     }
 
     if let Some(ref language_type) = filter.language_type {

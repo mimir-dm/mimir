@@ -2,7 +2,7 @@
 //!
 //! Database operations for optional features.
 
-use crate::models::catalog::{NewOptionalFeature, OptionalFeature};
+use crate::models::catalog::{NewOptionalFeature, OptionalFeature, OptionalFeatureFilter};
 use crate::schema::optional_features;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -96,6 +96,91 @@ pub fn delete_optional_features_by_source(
 /// Count all optional features.
 pub fn count_optional_features(conn: &mut SqliteConnection) -> QueryResult<i64> {
     optional_features::table.count().get_result(conn)
+}
+
+/// Count optional features from a specific source.
+pub fn count_optional_features_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    optional_features::table
+        .filter(optional_features::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get an optional feature by its ID, returning None if not found.
+pub fn get_optional_feature_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<OptionalFeature>> {
+    optional_features::table
+        .filter(optional_features::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have optional features.
+pub fn list_optional_feature_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    optional_features::table
+        .select(optional_features::source)
+        .distinct()
+        .order(optional_features::source.asc())
+        .load(conn)
+}
+
+/// Search optional features with filters.
+pub fn search_optional_features(
+    conn: &mut SqliteConnection,
+    filter: &OptionalFeatureFilter,
+) -> QueryResult<Vec<OptionalFeature>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = optional_features::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(optional_features::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(optional_features::source.eq_any(sources));
+    }
+
+    if let Some(ref feature_type) = filter.feature_type {
+        query = query.filter(optional_features::feature_type.eq(feature_type));
+    }
+
+    query.order(optional_features::name.asc()).load(conn)
+}
+
+/// Search optional features with pagination.
+pub fn search_optional_features_paginated(
+    conn: &mut SqliteConnection,
+    filter: &OptionalFeatureFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<OptionalFeature>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = optional_features::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(optional_features::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(optional_features::source.eq_any(sources));
+    }
+
+    if let Some(ref feature_type) = filter.feature_type {
+        query = query.filter(optional_features::feature_type.eq(feature_type));
+    }
+
+    query
+        .order(optional_features::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

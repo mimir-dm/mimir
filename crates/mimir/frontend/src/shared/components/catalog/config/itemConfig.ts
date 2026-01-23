@@ -1,23 +1,74 @@
 import type { CatalogConfig } from './types'
 import { formatWeight } from '../../../utils/formatters'
 
-// Format cost from copper pieces to appropriate currency
-function formatCost(value: number | null): string {
-  if (!value || value === 0) return '—'
-  
-  if (value >= 100) {
-    return `${value / 100} gp`
-  } else if (value >= 10) {
-    return `${value / 10} sp`
+// Item type code to name mapping
+const itemTypeMap: Record<string, string> = {
+  'A': 'Armor',
+  'AF': 'Ammunition',
+  'AIR': 'Vehicle (Air)',
+  'AT': 'Artisan\'s Tools',
+  'EM': 'Eldritch Machine',
+  'EXP': 'Explosive',
+  'FD': 'Food and Drink',
+  'G': 'Adventuring Gear',
+  'GS': 'Gaming Set',
+  'GV': 'Generic Variant',
+  'HA': 'Heavy Armor',
+  'INS': 'Instrument',
+  'LA': 'Light Armor',
+  'M': 'Melee Weapon',
+  'MA': 'Medium Armor',
+  'MNT': 'Mount',
+  'MR': 'Master Rune',
+  'OTH': 'Other',
+  'P': 'Potion',
+  'R': 'Ranged Weapon',
+  'RD': 'Rod',
+  'RG': 'Ring',
+  'S': 'Shield',
+  'SC': 'Scroll',
+  'SCF': 'Spellcasting Focus',
+  'SHP': 'Vehicle (Water)',
+  'T': 'Tools',
+  'TAH': 'Tack and Harness',
+  'TG': 'Trade Good',
+  'VEH': 'Vehicle (Land)',
+  'WD': 'Wand',
+  '$': 'Treasure',
+  '$A': 'Treasure (Art)',
+  '$C': 'Treasure (Coinage)',
+  '$G': 'Treasure (Gemstone)',
+}
+
+// Format item type - handles string type codes from 5etools
+function formatItemType(value: unknown): string {
+  if (typeof value === 'string') {
+    return itemTypeMap[value] || value
+  }
+  return '—'
+}
+
+// Format cost from 5etools value field (in copper pieces) to appropriate currency
+function formatCost(value: unknown): string {
+  const numValue = typeof value === 'number' ? value : null
+  if (!numValue || numValue === 0) return '—'
+
+  if (numValue >= 100) {
+    return `${numValue / 100} gp`
+  } else if (numValue >= 10) {
+    return `${numValue / 10} sp`
   } else {
-    return `${value} cp`
+    return `${numValue} cp`
   }
 }
 
 // Format rarity for display
-function formatRarity(rarity: string | null): string {
+function formatRarity(rarity: unknown): string {
   if (!rarity || rarity === 'none') return '—'
-  return rarity.charAt(0).toUpperCase() + rarity.slice(1)
+  if (typeof rarity === 'string') {
+    return rarity.charAt(0).toUpperCase() + rarity.slice(1)
+  }
+  return '—'
 }
 
 export const itemConfig: CatalogConfig = {
@@ -31,50 +82,37 @@ export const itemConfig: CatalogConfig = {
       className: 'catalog-table__cell-name'
     },
     {
-      key: 'typeName',
+      key: 'type',
       label: 'Type',
       type: 'text',
-      formatter: (value: any) => {
-        if (!value || typeof value !== 'string') return '—'
-        return value
-      }
+      formatter: formatItemType
     },
     {
       key: 'value',
       label: 'Cost',
       type: 'text',
       sortable: true,
-      formatter: (value: any) => {
-        return formatCost(typeof value === 'number' ? value : null)
-      }
+      formatter: formatCost
     },
     {
       key: 'weight',
       label: 'Weight',
       type: 'text',
       sortable: true,
-      formatter: (value: any) => {
-        return formatWeight(typeof value === 'number' ? value : null)
-      }
+      formatter: (value: unknown) => formatWeight(typeof value === 'number' ? value : null)
     },
     {
       key: 'rarity',
       label: 'Rarity',
       type: 'text',
       sortable: true,
-      formatter: (value: any) => {
-        return formatRarity(typeof value === 'string' ? value : null)
-      }
+      formatter: formatRarity
     },
     {
       key: 'source',
       label: 'Source',
       type: 'text',
-      sortable: true,
-      formatter: (value: any) => {
-        if (!value || typeof value !== 'string') return '—'
-        return value
-      }
+      sortable: true
     }
   ],
   filters: [

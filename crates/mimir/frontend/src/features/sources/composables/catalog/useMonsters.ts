@@ -84,21 +84,16 @@ export function useMonsters() {
 
       // Transform to backend MonsterFilter format
       const backendFilter = {
-        name: filters.query || null,
-        sources: filters.sources?.length ? filters.sources : null,
-        creature_types: filters.types?.length ? filters.types : null,
-        sizes: filters.sizes?.length ? filters.sizes : null,
-        min_cr: filters.min_cr ?? null,
-        max_cr: filters.max_cr ?? null,
-        alignments: null,
-        min_hp: null,
-        max_hp: null,
-        environment: null,
+        name_contains: filters.query || null,
+        sources: filters.sources ?? null,
+        creature_type: filters.types?.length ? filters.types[0] : null,  // Backend expects single type
+        size: filters.sizes?.length ? filters.sizes[0] : null,  // Backend expects single size
+        cr: null,  // Using cr directly instead of min/max for now
       }
 
       const response = await invoke<{ success: boolean; data?: MonsterSummary[]; error?: string }>('search_monsters', {
         filter: backendFilter,
-        limit: 100,
+        limit: 10000,
         offset: 0
       })
 

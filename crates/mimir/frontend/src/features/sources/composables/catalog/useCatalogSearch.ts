@@ -77,11 +77,12 @@ export function useCatalogSearch<
         : transformDefaultFilters(filters as Record<string, unknown>)
 
       // Backend expects { filter, limit, offset } with ApiResponse wrapper
+      // Fetch all results - pagination is handled in the UI layer
       const response = await invoke<{ success: boolean; data?: TSummary[]; error?: string }>(
         config.searchCommand,
         {
           filter: transformedFilters,
-          limit: 100,
+          limit: 10000,
           offset: 0
         }
       )
@@ -130,20 +131,31 @@ export function useCatalogSearch<
 
 /**
  * Default filter transformation:
- * - Converts empty arrays to null
+ * - Keeps 'sources' arrays as-is (empty array = show nothing, null = no filter)
+ * - Converts other empty arrays to null
  * - Converts empty strings to null
  * - Passes undefined values as null
+ * - Renames 'query' and 'name' to 'name_contains' for backend compatibility
  */
 function transformDefaultFilters(filters: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
   for (const [key, value] of Object.entries(filters)) {
+    // Rename 'query' and 'name' to 'name_contains' for backend compatibility
+    const outputKey = (key === 'query' || key === 'name') ? 'name_contains' : key
+
     if (Array.isArray(value)) {
-      result[key] = value.length > 0 ? value : null
+      // For 'sources', keep empty arrays to signal "show nothing"
+      // For other arrays, convert empty to null (no filter)
+      if (key === 'sources') {
+        result[outputKey] = value
+      } else {
+        result[outputKey] = value.length > 0 ? value : null
+      }
     } else if (value === '' || value === undefined) {
-      result[key] = null
+      result[outputKey] = null
     } else {
-      result[key] = value
+      result[outputKey] = value
     }
   }
 

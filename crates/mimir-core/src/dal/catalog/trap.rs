@@ -129,6 +129,11 @@ pub fn list_trap_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>
 
 /// Search traps with filters.
 pub fn search_traps(conn: &mut SqliteConnection, filter: &TrapFilter) -> QueryResult<Vec<Trap>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = traps::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -136,8 +141,9 @@ pub fn search_traps(conn: &mut SqliteConnection, filter: &TrapFilter) -> QueryRe
         query = query.filter(traps::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(traps::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(traps::source.eq_any(sources));
     }
 
     if let Some(ref tier) = filter.tier {
@@ -154,6 +160,11 @@ pub fn search_traps_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Trap>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = traps::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -161,8 +172,9 @@ pub fn search_traps_paginated(
         query = query.filter(traps::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(traps::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(traps::source.eq_any(sources));
     }
 
     if let Some(ref tier) = filter.tier {

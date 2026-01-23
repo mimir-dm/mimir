@@ -95,10 +95,9 @@ export function processFormattingTags(text: string | any): string {
       const actualSource = source || 'PHB'
       return `<a href="#" class="cross-ref-link class-ref" data-ref-type="class" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
     })
-    .replace(/{@classFeature ([^|}]+)(?:\|([^}]*))?}/gi, (match, name, source) => {
-      const displayName = name
-      const actualSource = source || 'PHB'
-      return `<a href="#" class="cross-ref-link feature-ref" data-ref-type="feature" data-ref-name="${name}" data-ref-source="${actualSource}">${displayName}</a>`
+    .replace(/{@classFeature ([^|}]+)(?:\|([^}]*))?}/gi, (match, name) => {
+      // Class features don't have a backend lookup, render as styled text
+      return `<span class="feature-ref">${name}</span>`
     })
 
   // Feats - make them clickable

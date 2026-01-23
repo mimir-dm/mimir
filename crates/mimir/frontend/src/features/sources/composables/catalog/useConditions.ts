@@ -28,8 +28,8 @@ export function useConditions() {
     searchCommand: 'search_conditions',
     detailsCommand: 'get_condition_by_name',
     transformFilters: (filters) => ({
-      name: filters.query || null,
-      sources: filters.sources?.length ? filters.sources : null,
+      name_contains: filters.query || null,
+      sources: filters.sources ?? null,
     }),
   })
 

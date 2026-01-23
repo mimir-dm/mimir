@@ -2,7 +2,7 @@
 //!
 //! Database operations for cults and supernatural gifts.
 
-use crate::models::catalog::{Cult, NewCult};
+use crate::models::catalog::{Cult, CultFilter, NewCult};
 use crate::schema::cults;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -79,6 +79,83 @@ pub fn delete_cults_by_source(
 /// Count all cults.
 pub fn count_cults(conn: &mut SqliteConnection) -> QueryResult<i64> {
     cults::table.count().get_result(conn)
+}
+
+/// Count cults from a specific source.
+pub fn count_cults_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    cults::table
+        .filter(cults::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a cult by its ID, returning None if not found.
+pub fn get_cult_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Cult>> {
+    cults::table
+        .filter(cults::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have cults.
+pub fn list_cult_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    cults::table
+        .select(cults::source)
+        .distinct()
+        .order(cults::source.asc())
+        .load(conn)
+}
+
+/// Search cults with filters.
+pub fn search_cults(
+    conn: &mut SqliteConnection,
+    filter: &CultFilter,
+) -> QueryResult<Vec<Cult>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = cults::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(cults::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(cults::source.eq_any(sources));
+    }
+
+    query.order(cults::name.asc()).load(conn)
+}
+
+/// Search cults with pagination.
+pub fn search_cults_paginated(
+    conn: &mut SqliteConnection,
+    filter: &CultFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Cult>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = cults::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(cults::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(cults::source.eq_any(sources));
+    }
+
+    query
+        .order(cults::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

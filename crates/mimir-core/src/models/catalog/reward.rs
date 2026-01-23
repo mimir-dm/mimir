@@ -71,6 +71,33 @@ impl<'a> NewReward<'a> {
     }
 }
 
+/// Filters for searching rewards.
+#[derive(Debug, Default, Clone, serde::Deserialize)]
+pub struct RewardFilter {
+    pub name_contains: Option<String>,
+    pub source: Option<String>,
+    pub sources: Option<Vec<String>>,
+    pub reward_type: Option<String>,
+}
+
+impl RewardFilter {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn has_empty_sources_filter(&self) -> bool {
+        matches!(&self.sources, Some(sources) if sources.is_empty())
+    }
+
+    pub fn effective_sources(&self) -> Option<Vec<String>> {
+        match (&self.sources, &self.source) {
+            (Some(sources), _) if !sources.is_empty() => Some(sources.clone()),
+            (_, Some(source)) => Some(vec![source.clone()]),
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

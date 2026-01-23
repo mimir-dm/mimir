@@ -12,7 +12,7 @@ export interface ColumnDef {
 
 // Filter definition types
 export interface FilterConfig {
-  type: 'text' | 'select' | 'multiselect' | 'checkbox' | 'range'
+  type: 'text' | 'select' | 'multiselect' | 'checkbox' | 'checkbox-group' | 'range'
   key: string
   label: string
   options?: (string | SelectOption)[]

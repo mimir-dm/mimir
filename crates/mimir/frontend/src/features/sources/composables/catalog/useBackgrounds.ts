@@ -22,8 +22,8 @@ export function useBackgrounds() {
     searchCommand: 'search_backgrounds',
     detailsCommand: 'get_background_by_name',
     transformFilters: (filters) => ({
-      name: filters.query || null,
-      sources: filters.sources && filters.sources.length > 0 ? filters.sources : null,
+      name_contains: filters.query || null,
+      sources: filters.sources ?? null,
     }),
   })
 

@@ -97,6 +97,11 @@ pub fn search_classes(
     conn: &mut SqliteConnection,
     filter: &ClassFilter,
 ) -> QueryResult<Vec<Class>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = classes::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -104,8 +109,9 @@ pub fn search_classes(
         query = query.filter(classes::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(classes::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(classes::source.eq_any(sources));
     }
 
     query.order(classes::name.asc()).load(conn)
@@ -118,6 +124,11 @@ pub fn search_classes_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Class>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = classes::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -125,8 +136,9 @@ pub fn search_classes_paginated(
         query = query.filter(classes::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(classes::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(classes::source.eq_any(sources));
     }
 
     query

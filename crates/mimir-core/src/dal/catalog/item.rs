@@ -76,6 +76,11 @@ pub fn search_items(
     conn: &mut SqliteConnection,
     filter: &ItemFilter,
 ) -> QueryResult<Vec<Item>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = items::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -83,8 +88,9 @@ pub fn search_items(
         query = query.filter(items::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(items::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(items::source.eq_any(sources));
     }
 
     if let Some(ref item_type) = filter.item_type {
@@ -105,6 +111,11 @@ pub fn search_items_paginated(
     limit: i64,
     offset: i64,
 ) -> QueryResult<Vec<Item>> {
+    // If sources filter is explicitly empty, return no results
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
     let mut query = items::table.into_boxed();
 
     if let Some(ref name) = filter.name_contains {
@@ -112,8 +123,9 @@ pub fn search_items_paginated(
         query = query.filter(items::name.like(pattern));
     }
 
-    if let Some(ref source) = filter.source {
-        query = query.filter(items::source.eq(source));
+    // Use effective_sources() to support both single source and sources array
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(items::source.eq_any(sources));
     }
 
     if let Some(ref item_type) = filter.item_type {

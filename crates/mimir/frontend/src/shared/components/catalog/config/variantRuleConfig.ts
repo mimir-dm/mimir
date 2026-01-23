@@ -1,41 +1,51 @@
 import type { CatalogConfig } from './types'
 
+// Format rule type from 5etools format
+// Note: badge type columns receive the full item, not just the field value
+function formatRuleType(item: unknown): { text: string; variant: string } {
+  const ruleType = (item as any)?.ruleType
+  if (typeof ruleType === 'string') {
+    const typeMap: Record<string, string> = {
+      'C': 'Core',
+      'O': 'Optional',
+      'V': 'Variant',
+      'VO': 'Variant Optional',
+      'OV': 'Optional Variant'
+    }
+    const text = typeMap[ruleType] || ruleType
+    return { text, variant: ruleType.toLowerCase() }
+  }
+  return { text: '—', variant: 'none' }
+}
+
 export const variantRuleConfig: CatalogConfig = {
   name: 'variant-rule',
   title: 'Variant Rules',
   columns: [
-    { 
-      key: 'name', 
-      label: 'Name', 
-      sortable: true 
+    {
+      key: 'name',
+      label: 'Name',
+      sortable: true
     },
-    { 
-      key: 'rule_type', 
-      label: 'Type', 
+    {
+      key: 'ruleType',
+      label: 'Type',
       type: 'badge',
-      formatter: (value: any) => {
-        const text = (!value || typeof value !== 'string') ? 'General' : value
-        const variant = text.toLowerCase().replace(/\s+/g, '-')
-        return { text, variant }
-      },
-      sortable: true 
+      formatter: formatRuleType,
+      sortable: true
     },
-    { 
-      key: 'source', 
-      label: 'Source', 
+    {
+      key: 'source',
+      label: 'Source',
       type: 'text',
-      formatter: (value: any) => {
-        if (!value || typeof value !== 'string') return '—'
-        return value
-      },
-      sortable: true 
+      sortable: true
     },
-    { 
-      key: 'page', 
+    {
+      key: 'page',
       label: 'Page',
-      formatter: (value: any) => {
-        if (!value || typeof value !== 'number') return '—'
-        return `p. ${value}`
+      formatter: (value: unknown) => {
+        if (typeof value === 'number') return `p. ${value}`
+        return '—'
       }
     }
   ],
@@ -47,18 +57,15 @@ export const variantRuleConfig: CatalogConfig = {
       placeholder: 'Enter name...'
     },
     {
-      key: 'rule_types',
-      type: 'multiselect',
-      label: 'Types',
-      placeholder: 'Select types...',
-      apiSource: 'get_variant_rule_types'
-    },
-    {
-      key: 'sources',
-      type: 'multiselect', 
-      label: 'Sources',
-      placeholder: 'Select sources...',
-      apiSource: 'get_variant_rule_sources'
+      key: 'ruleType',
+      type: 'checkbox-group',
+      label: 'Type:',
+      options: [
+        { value: 'C', label: 'Core' },
+        { value: 'O', label: 'Optional' },
+        { value: 'V', label: 'Variant' },
+        { value: 'VO', label: 'Var. Opt.' }
+      ]
     }
   ],
   searchCommands: {

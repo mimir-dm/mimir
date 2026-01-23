@@ -2,7 +2,7 @@
 //!
 //! Database operations for deities.
 
-use crate::models::catalog::{Deity, NewDeity};
+use crate::models::catalog::{Deity, DeityFilter, NewDeity};
 use crate::schema::deities;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -90,6 +90,88 @@ pub fn delete_deities_by_source(
 /// Count all deities.
 pub fn count_deities(conn: &mut SqliteConnection) -> QueryResult<i64> {
     deities::table.count().get_result(conn)
+}
+
+/// Count deities from a specific source.
+pub fn count_deities_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+    deities::table
+        .filter(deities::source.eq(source))
+        .count()
+        .get_result(conn)
+}
+
+/// Get a deity by its ID, returning None if not found.
+pub fn get_deity_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Deity>> {
+    deities::table
+        .filter(deities::id.eq(id))
+        .first(conn)
+        .optional()
+}
+
+/// List all distinct sources that have deities.
+pub fn list_deity_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    deities::table
+        .select(deities::source)
+        .distinct()
+        .order(deities::source.asc())
+        .load(conn)
+}
+
+/// Search deities with filters.
+pub fn search_deities(conn: &mut SqliteConnection, filter: &DeityFilter) -> QueryResult<Vec<Deity>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = deities::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(deities::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(deities::source.eq_any(sources));
+    }
+
+    if let Some(ref pantheon) = filter.pantheon {
+        query = query.filter(deities::pantheon.eq(pantheon));
+    }
+
+    query.order(deities::name.asc()).load(conn)
+}
+
+/// Search deities with pagination.
+pub fn search_deities_paginated(
+    conn: &mut SqliteConnection,
+    filter: &DeityFilter,
+    limit: i64,
+    offset: i64,
+) -> QueryResult<Vec<Deity>> {
+    if filter.has_empty_sources_filter() {
+        return Ok(vec![]);
+    }
+
+    let mut query = deities::table.into_boxed();
+
+    if let Some(ref name) = filter.name_contains {
+        let pattern = format!("%{}%", name);
+        query = query.filter(deities::name.like(pattern));
+    }
+
+    if let Some(sources) = filter.effective_sources() {
+        query = query.filter(deities::source.eq_any(sources));
+    }
+
+    if let Some(ref pantheon) = filter.pantheon {
+        query = query.filter(deities::pantheon.eq(pantheon));
+    }
+
+    query
+        .order(deities::name.asc())
+        .limit(limit)
+        .offset(offset)
+        .load(conn)
 }
 
 #[cfg(test)]

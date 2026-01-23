@@ -252,39 +252,31 @@ class SearchServiceClass {
     sources?: string[],
     filters?: SearchFilters['equipment']
   ): Promise<ItemSummary[]> {
-    const { invoke } = await import('@tauri-apps/api/core')
-    const results = await invoke<ItemSummary[]>('search_items', {
-      name: query,
+    const results = await this.items.searchItems({
+      query: query || undefined,
       sources: sources,
-      item_types: filters?.type ? [filters.type] : undefined,
-      rarities: undefined,
-      min_value: undefined,
-      max_value: undefined
+      types: filters?.type ? [filters.type] : undefined,
     })
-    
+
     // Filter out magical items (those with rarities other than 'none')
-    return results.filter(item => 
+    return results.filter(item =>
       !item.rarity || item.rarity === 'none'
     )
   }
-  
+
   private async searchMagicItems(
     query?: string,
     sources?: string[],
     filters?: SearchFilters['magicItems']
   ): Promise<ItemSummary[]> {
-    const { invoke } = await import('@tauri-apps/api/core')
-    const results = await invoke<ItemSummary[]>('search_items', {
-      name: query,
+    const results = await this.items.searchItems({
+      query: query || undefined,
       sources: sources,
-      item_types: undefined,
       rarities: filters?.rarity ? [filters.rarity] : undefined,
-      min_value: undefined,
-      max_value: undefined
     })
-    
+
     // Filter out non-magical items (those with 'none' rarity)
-    return results.filter(item => 
+    return results.filter(item =>
       item.rarity && item.rarity !== 'none'
     )
   }
@@ -352,12 +344,9 @@ class SearchServiceClass {
   }
   
   private async searchOptionalFeatures(query?: string, sources?: string[]): Promise<OptionalFeatureSummary[]> {
-    const { invoke } = await import('@tauri-apps/api/core')
-    const results = await invoke<OptionalFeatureSummary[]>('search_optional_features', {
-      name: query,
+    const results = await this.optionalFeatures.searchOptionalFeatures({
+      query: query || undefined,
       sources: sources,
-      feature_types: undefined,
-      grants_spells: undefined
     })
     return results
   }
