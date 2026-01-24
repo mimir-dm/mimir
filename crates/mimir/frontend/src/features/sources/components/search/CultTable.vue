@@ -11,12 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import type { CultBoonSummary } from '../../composables/catalog'
+import type { CultSummary } from '../../composables/catalog'
 import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
 import { cultConfig } from '../../../../shared/components/catalog/config/cultConfig'
 
 defineProps<{
-  items: CultBoonSummary[]
+  items: CultSummary[]
   searchPerformed: boolean
   sortColumn: string
   sortDirection: 'asc' | 'desc'
@@ -24,6 +24,6 @@ defineProps<{
 
 const emit = defineEmits<{
   sort: [column: string]
-  select: [item: CultBoonSummary]
+  select: [item: CultSummary]
 }>()
 </script>

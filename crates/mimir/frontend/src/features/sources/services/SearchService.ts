@@ -423,14 +423,6 @@ class SearchServiceClass {
     return await this.rewards.getRewardDetails(name, source)
   }
 
-  async getRewardTypes(): Promise<string[]> {
-    return await this.rewards.getRewardTypes()
-  }
-
-  async getRewardSources(): Promise<string[]> {
-    return await this.rewards.getRewardSources()
-  }
-
   async searchTables(params: {
     query?: string
     sources?: string[]
@@ -446,14 +438,6 @@ class SearchServiceClass {
     return await this.tables.getTableDetails(name, source)
   }
 
-  async getTableCategories(): Promise<string[]> {
-    return await this.tables.getTableCategories()
-  }
-
-  async getTableSources(): Promise<string[]> {
-    return await this.tables.getTableSources()
-  }
-
   async searchVariantRules(params: {
     query?: string
     types?: string[]
@@ -465,14 +449,6 @@ class SearchServiceClass {
 
   async getVariantRuleDetails(name: string, source: string): Promise<any> {
     return await this.variantRules.getVariantRuleDetails(name, source)
-  }
-
-  async getVariantRuleTypes(): Promise<string[]> {
-    return await this.variantRules.getVariantRuleTypes()
-  }
-
-  async getVariantRuleSources(): Promise<string[]> {
-    return await this.variantRules.getVariantRuleSources()
   }
 
   async searchVehicles(params: {
@@ -488,18 +464,6 @@ class SearchServiceClass {
 
   async getVehicleDetails(name: string, source: string): Promise<any> {
     return await this.vehicles.getVehicleDetails(name, source)
-  }
-
-  async getVehicleTypes(): Promise<string[]> {
-    return await this.vehicles.getVehicleTypes()
-  }
-
-  async getVehicleTerrains(): Promise<string[]> {
-    return await this.vehicles.getVehicleTerrains()
-  }
-
-  async getVehicleSources(): Promise<string[]> {
-    return await this.vehicles.getVehicleSources()
   }
 
   async searchCults(params: {
@@ -520,14 +484,6 @@ class SearchServiceClass {
     return await this.cults.getBoonDetails(name, source)
   }
 
-  async getCultTypes(): Promise<string[]> {
-    return await this.cults.getCultTypes()
-  }
-
-  async getCultSources(): Promise<string[]> {
-    return await this.cults.getCultSources()
-  }
-
   async searchPsionics(params: {
     query?: string
     psionic_types?: string[]
@@ -542,14 +498,6 @@ class SearchServiceClass {
     return await this.psionics.getPsionicDetails(name, source)
   }
 
-  async getPsionicOrders(): Promise<string[]> {
-    return await this.psionics.getPsionicOrders()
-  }
-
-  async getPsionicSources(): Promise<string[]> {
-    return await this.psionics.getPsionicSources()
-  }
-  
   async getDetails(params: DetailFetchParams): Promise<any> {
     const { name, source, type, subclassName } = params
 
