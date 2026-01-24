@@ -23,6 +23,8 @@ pub struct UploadAssetInput {
     pub module_id: Option<String>,
     /// Original filename
     pub filename: String,
+    /// Optional description/title for the asset
+    pub description: Option<String>,
     /// MIME type (e.g., "image/png")
     pub mime_type: String,
     /// File data
@@ -41,6 +43,7 @@ impl UploadAssetInput {
             campaign_id: Some(campaign_id.into()),
             module_id: None,
             filename: filename.into(),
+            description: None,
             mime_type: mime_type.into(),
             data,
         }
@@ -57,9 +60,16 @@ impl UploadAssetInput {
             campaign_id: None,
             module_id: Some(module_id.into()),
             filename: filename.into(),
+            description: None,
             mime_type: mime_type.into(),
             data,
         }
+    }
+
+    /// Set the description/title for the asset.
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
     }
 }
 
@@ -119,8 +129,9 @@ impl<'a> AssetService<'a> {
         let file_size = input.data.len() as i32;
         let campaign_id_ref = input.campaign_id.as_deref();
         let module_id_ref = input.module_id.as_deref();
+        let description_ref = input.description.as_deref();
 
-        let new_asset = if let Some(campaign_id) = campaign_id_ref {
+        let mut new_asset = if let Some(campaign_id) = campaign_id_ref {
             NewCampaignAsset::for_campaign(
                 &asset_id,
                 campaign_id,
@@ -141,6 +152,11 @@ impl<'a> AssetService<'a> {
         } else {
             unreachable!("Validated above")
         };
+
+        // Add description if provided
+        if let Some(desc) = description_ref {
+            new_asset = new_asset.with_description(desc);
+        }
 
         dal::insert_campaign_asset(self.conn, &new_asset)?;
         dal::get_campaign_asset(self.conn, &asset_id).map_err(ServiceError::from)
@@ -309,6 +325,7 @@ mod tests {
             campaign_id: None,
             module_id: None,
             filename: "orphan.png".to_string(),
+            description: None,
             mime_type: "image/png".to_string(),
             data: vec![],
         };

@@ -25,6 +25,7 @@ diesel::table! {
         campaign_id -> Nullable<Text>,
         module_id -> Nullable<Text>,
         filename -> Text,
+        description -> Nullable<Text>,
         mime_type -> Text,
         blob_path -> Text,
         file_size -> Nullable<Integer>,

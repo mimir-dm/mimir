@@ -29,6 +29,8 @@ pub struct CampaignAsset {
     pub module_id: Option<String>,
     /// Original filename
     pub filename: String,
+    /// Optional user description
+    pub description: Option<String>,
     /// MIME type (e.g., "image/png")
     pub mime_type: String,
     /// Relative path in app data directory
@@ -74,6 +76,7 @@ pub struct NewCampaignAsset<'a> {
     pub campaign_id: Option<&'a str>,
     pub module_id: Option<&'a str>,
     pub filename: &'a str,
+    pub description: Option<&'a str>,
     pub mime_type: &'a str,
     pub blob_path: &'a str,
     pub file_size: Option<i32>,
@@ -93,6 +96,7 @@ impl<'a> NewCampaignAsset<'a> {
             campaign_id: Some(campaign_id),
             module_id: None,
             filename,
+            description: None,
             mime_type,
             blob_path,
             file_size: None,
@@ -112,10 +116,17 @@ impl<'a> NewCampaignAsset<'a> {
             campaign_id: None,
             module_id: Some(module_id),
             filename,
+            description: None,
             mime_type,
             blob_path,
             file_size: None,
         }
+    }
+
+    /// Set the description.
+    pub fn with_description(mut self, description: &'a str) -> Self {
+        self.description = Some(description);
+        self
     }
 
     /// Set the file size.

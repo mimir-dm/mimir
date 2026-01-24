@@ -11,6 +11,7 @@ CREATE TABLE campaign_assets (
 
     -- File metadata
     filename TEXT NOT NULL,           -- Original filename
+    description TEXT,                 -- Optional user description
     mime_type TEXT NOT NULL,          -- e.g., "image/png", "image/svg+xml"
     blob_path TEXT NOT NULL,          -- Relative path in app data dir
     file_size INTEGER,                -- Size in bytes

@@ -16,7 +16,7 @@
           v-if="!isImageDocument"
           class="btn-toolbar"
           @click="exportToPdf"
-          :disabled="exporting || !document?.id || document.id < 0"
+          :disabled="exporting || !document?.id"
           title="Export document to PDF"
         >
           {{ exporting ? 'Exporting...' : 'Export PDF' }}
@@ -176,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -188,6 +188,7 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { invoke } from '@tauri-apps/api/core'
 import { debounce } from '../../../shared/utils/debounce'
 import { PrintService } from '../../../services/PrintService'
+import { DocumentService } from '../../../services/DocumentService'
 import ImagePreview from '../../../components/ImagePreview.vue'
 
 const props = defineProps<{
@@ -262,31 +263,32 @@ const isImageDocument = computed(() => {
 
 // Load document content
 const loadDocument = async () => {
-  if (!props.document?.file_path) {
-    console.warn('No file_path for document:', props.document)
+  if (!props.document?.id) {
+    console.warn('No document to load')
     return
   }
 
   isLoading.value = true // Prevent saves during load
 
   try {
-    const response = await invoke<{ success: boolean; data?: string; error?: string }>('read_document_file', {
-      filePath: props.document.file_path
-    })
+    // Fetch fresh document from database to ensure we have latest content
+    const freshDoc = await DocumentService.get(props.document.id)
+    const content = freshDoc?.content || ''
 
-    if (response.success && response.data) {
-      // Set markdown content - Tiptap will parse it
-      if (editor.value) {
-        editor.value.commands.setContent(response.data, { contentType: 'markdown' })
-      } else {
-        // Store content to set later
-        pendingContent.value = response.data
-      }
+    // Set markdown content - Tiptap will parse it
+    if (editor.value) {
+      editor.value.commands.setContent(content, { contentType: 'markdown' })
     } else {
-      console.error('Failed to load document:', response.error || 'Unknown error', 'Path:', props.document.file_path)
+      // Store content to set later
+      pendingContent.value = content
     }
   } catch (e) {
-    console.error('Error loading document:', e, 'Path:', props.document.file_path)
+    console.error('Failed to load document:', e)
+    // Fallback to props content if fetch fails
+    const content = props.document.content || ''
+    if (editor.value) {
+      editor.value.commands.setContent(content, { contentType: 'markdown' })
+    }
   } finally {
     isLoading.value = false // Re-enable saves
   }
@@ -302,26 +304,27 @@ const getMarkdown = (): string => {
 
 // Save document content
 const saveDocument = async () => {
-  if (!props.document?.file_path) return
+  if (!props.document?.id) return
   if (isLoading.value) return // Don't save while loading
 
   saveStatus.value = 'saving'
-  
+
   try {
     // Get content as markdown
     const markdown = getMarkdown()
-    
-    // Just save the file - no need to update database for every save
-    await invoke('save_document_file', {
-      filePath: props.document.file_path,
-      content: markdown
-    })
-    
+
+    // Save content to database via DocumentService
+    const updatedDoc = await DocumentService.updateContent(props.document.id, markdown)
+
+    // Emit updated document
+    emit('updated', updatedDoc)
+
     saveStatus.value = 'saved'
     setTimeout(() => {
       saveStatus.value = null
     }, 2000)
   } catch (e) {
+    console.error('Failed to save document:', e)
     saveStatus.value = 'error'
     setTimeout(() => {
       saveStatus.value = null
@@ -334,7 +337,7 @@ const debouncedSave = debounce(saveDocument, 1000)
 
 // Export document to PDF
 const exportToPdf = async () => {
-  if (!props.document?.id || props.document.id < 0) return
+  if (!props.document?.id) return
 
   exporting.value = true
 
@@ -436,13 +439,9 @@ const transitionToNextStage = async (nextStage: string) => {
 }
 
 // Watch for document changes
-watch(() => props.document, (newDoc, oldDoc) => {
-  // Load if document changed - check multiple fields since temporary docs have id = -1
-  if (newDoc && (
-    newDoc?.id !== oldDoc?.id ||
-    newDoc?.file_path !== oldDoc?.file_path ||
-    newDoc?.template_id !== oldDoc?.template_id
-  )) {
+watch(() => props.document?.id, (newId, oldId) => {
+  // Load if document changed
+  if (newId && newId !== oldId) {
     if (editor.value) {
       // Prevent saves while switching documents
       isLoading.value = true
@@ -454,7 +453,7 @@ watch(() => props.document, (newDoc, oldDoc) => {
       pendingContent.value = null
     }
   }
-}, { deep: true })
+})
 
 // Load content when component mounts
 onMounted(() => {

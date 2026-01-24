@@ -143,6 +143,7 @@
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
+import { DocumentService } from '@/services/DocumentService'
 
 const props = defineProps<{
   visible: boolean
@@ -257,22 +258,19 @@ async function handleCreate() {
   errorMessage.value = ''
 
   try {
-    const response = await invoke<{ success: boolean; error?: string }>('create_user_document', {
-      campaignId: props.campaignId,
-      moduleId: props.moduleId ?? null,
+    await DocumentService.create({
+      campaign_id: props.campaignId,
+      module_id: props.moduleId,
       title: docTitle.value.trim(),
-      content: null
+      doc_type: 'note',
+      content: ''
     })
 
-    if (response.success) {
-      emit('created')
-      resetForm()
-    } else {
-      errorMessage.value = response.error || 'Failed to create document'
-    }
+    emit('created')
+    resetForm()
   } catch (e) {
     console.error('Create error:', e)
-    errorMessage.value = 'Failed to create document. Please try again.'
+    errorMessage.value = e instanceof Error ? e.message : 'Failed to create document. Please try again.'
   } finally {
     uploading.value = false
   }
@@ -288,36 +286,50 @@ async function handleUpload() {
     const ext = selectedFile.value.name.split('.').pop()?.toLowerCase()
     const isImage = ext ? imageExtensions.includes(ext) : false
 
-    let data: string
-    let isBase64: boolean
-
     if (isImage) {
-      // Read as base64 for images
-      data = await fileToBase64(selectedFile.value)
-      isBase64 = true
+      // Upload images as assets
+      const mimeTypes: Record<string, string> = {
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'webp': 'image/webp',
+        'gif': 'image/gif',
+        'svg': 'image/svg+xml'
+      }
+      const mimeType = mimeTypes[ext || ''] || 'application/octet-stream'
+      const data = await fileToBase64(selectedFile.value)
+
+      const response = await invoke<{ success: boolean; error?: string }>('upload_asset', {
+        request: {
+          campaign_id: props.campaignId,
+          module_id: props.moduleId || null,
+          filename: selectedFile.value.name,
+          description: docTitle.value.trim(),
+          mime_type: mimeType,
+          data_base64: data
+        }
+      })
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to upload asset')
+      }
     } else {
-      // Read as text for markdown
-      data = await fileToText(selectedFile.value)
-      isBase64 = false
+      // Upload markdown files as documents
+      const content = await fileToText(selectedFile.value)
+      await DocumentService.create({
+        campaign_id: props.campaignId,
+        module_id: props.moduleId,
+        title: docTitle.value.trim(),
+        doc_type: 'note',
+        content
+      })
     }
 
-    const response = await invoke<{ success: boolean; error?: string }>('upload_document', {
-      campaignId: props.campaignId,
-      moduleId: props.moduleId ?? null,
-      filename: selectedFile.value.name,
-      data,
-      isBase64
-    })
-
-    if (response.success) {
-      emit('created')
-      resetForm()
-    } else {
-      errorMessage.value = response.error || 'Failed to upload file'
-    }
+    emit('created')
+    resetForm()
   } catch (e) {
     console.error('Upload error:', e)
-    errorMessage.value = 'Failed to upload file. Please try again.'
+    errorMessage.value = e instanceof Error ? e.message : 'Failed to upload file. Please try again.'
   } finally {
     uploading.value = false
   }

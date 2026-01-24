@@ -7,6 +7,7 @@
         :campaign-id="campaign.id"
         :campaign-name="campaign.name"
         @select-document="handleSelectDocument"
+        @select-asset="handleSelectAsset"
       />
 
       <!-- Maps List -->
@@ -67,6 +68,22 @@
         <div class="map-info">
           <span>{{ selectedMap.width_px }} x {{ selectedMap.height_px }}px</span>
           <span v-if="selectedMap.grid_type !== 'none'">{{ selectedMap.grid_type }} grid</span>
+        </div>
+      </div>
+
+      <!-- Asset Preview -->
+      <div v-else-if="selectedAsset" class="asset-preview">
+        <div class="asset-preview-header">
+          <h3>{{ selectedAsset.filename }}</h3>
+          <button class="btn-close" @click="selectedAsset = null; assetImageUrl = null">Close</button>
+        </div>
+        <div class="asset-preview-content">
+          <img v-if="assetImageUrl" :src="assetImageUrl" :alt="selectedAsset.filename" class="asset-image" />
+          <div v-else class="asset-loading">Loading image...</div>
+        </div>
+        <div class="asset-info">
+          <span>{{ selectedAsset.mime_type }}</span>
+          <span v-if="selectedAsset.file_size">{{ Math.round(selectedAsset.file_size / 1024) }} KB</span>
         </div>
       </div>
 
@@ -152,6 +169,21 @@ function getCampaignStatus(campaign: Campaign): string {
 // Document state
 const selectedDocument = ref<any>(null)
 
+// Asset state
+interface CampaignAsset {
+  id: string
+  campaign_id: string | null
+  module_id: string | null
+  filename: string
+  description: string | null
+  mime_type: string
+  blob_path: string
+  file_size: number | null
+  uploaded_at: string
+}
+const selectedAsset = ref<CampaignAsset | null>(null)
+const assetImageUrl = ref<string | null>(null)
+
 // Map state
 const maps = ref<MapData[]>([])
 const selectedMap = ref<MapData | null>(null)
@@ -182,9 +214,20 @@ async function loadMaps() {
 // Load map image
 async function loadMapImage(mapId: string) {
   try {
-    const response = await invoke<{ success: boolean; data?: string }>('read_map_uvtt', { id: mapId })
+    const response = await invoke<{ success: boolean; data?: string }>('read_map_uvtt', { mapId })
     if (response.success && response.data) {
-      mapImageUrl.value = response.data
+      // The response is base64-encoded UVTT data - need to parse and extract image
+      try {
+        const uvttJson = JSON.parse(atob(response.data))
+        let imageData = uvttJson.image || ''
+        if (!imageData.startsWith('data:')) {
+          imageData = `data:image/png;base64,${imageData}`
+        }
+        mapImageUrl.value = imageData
+      } catch {
+        // If not valid JSON, assume it's raw image data
+        mapImageUrl.value = `data:image/png;base64,${response.data}`
+      }
     }
   } catch (e) {
     console.error('Failed to load map image:', e)
@@ -194,15 +237,38 @@ async function loadMapImage(mapId: string) {
 // Select a map
 function selectMap(map: MapData) {
   selectedDocument.value = null
+  selectedAsset.value = null
+  assetImageUrl.value = null
   selectedMap.value = map
   mapImageUrl.value = null
   loadMapImage(map.id)
+}
+
+// Asset handlers
+async function handleSelectAsset(asset: CampaignAsset) {
+  selectedDocument.value = null
+  selectedMap.value = null
+  mapImageUrl.value = null
+  selectedAsset.value = asset
+  assetImageUrl.value = null
+
+  // Load asset image
+  try {
+    const response = await invoke<{ success: boolean; data?: string }>('read_asset_file', { id: asset.id })
+    if (response.success && response.data) {
+      assetImageUrl.value = `data:${asset.mime_type};base64,${response.data}`
+    }
+  } catch (e) {
+    console.error('Failed to load asset:', e)
+  }
 }
 
 // Document handlers
 function handleSelectDocument(document: any) {
   selectedMap.value = null
   mapImageUrl.value = null
+  selectedAsset.value = null
+  assetImageUrl.value = null
   selectedDocument.value = document
 }
 
@@ -447,6 +513,57 @@ onMounted(() => {
 }
 
 .map-info {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* Asset preview */
+.asset-preview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.asset-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.asset-preview-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.asset-preview-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: var(--spacing-md);
+  background: var(--color-background);
+}
+
+.asset-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.asset-loading {
+  color: var(--color-text-muted);
+}
+
+.asset-info {
   display: flex;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-lg);

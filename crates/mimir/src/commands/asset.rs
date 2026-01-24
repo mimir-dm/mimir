@@ -72,6 +72,8 @@ pub struct UploadAssetRequest {
     pub module_id: Option<String>,
     /// Original filename
     pub filename: String,
+    /// Optional description/title for the asset
+    pub description: Option<String>,
     /// MIME type (e.g., "image/png")
     pub mime_type: String,
     /// Base64-encoded file data
@@ -95,13 +97,18 @@ pub fn upload_asset(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let input = if let Some(campaign_id) = request.campaign_id {
+    let mut input = if let Some(campaign_id) = request.campaign_id {
         UploadAssetInput::for_campaign(campaign_id, &request.filename, &request.mime_type, data)
     } else if let Some(module_id) = request.module_id {
         UploadAssetInput::for_module(module_id, &request.filename, &request.mime_type, data)
     } else {
         return ApiResponse::err("Either campaign_id or module_id must be provided");
     };
+
+    // Add description if provided
+    if let Some(desc) = request.description {
+        input = input.with_description(desc);
+    }
 
     let result = AssetService::new(&mut db, &state.paths.app_dir).upload(input);
     to_api_response(result)
