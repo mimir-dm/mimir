@@ -179,10 +179,17 @@ export const monsterConfig: CatalogConfig = {
 
   filters: [
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'sizes',
-      label: 'Size',
-      options: ['F', 'D', 'T', 'S', 'M', 'L', 'H', 'G', 'C']
+      label: 'Size:',
+      options: [
+        { value: 'T', label: 'Tiny' },
+        { value: 'S', label: 'Small' },
+        { value: 'M', label: 'Med' },
+        { value: 'L', label: 'Large' },
+        { value: 'H', label: 'Huge' },
+        { value: 'G', label: 'Garg' }
+      ]
     },
     {
       type: 'multiselect',
@@ -191,10 +198,22 @@ export const monsterConfig: CatalogConfig = {
       options: ['aberration', 'beast', 'celestial', 'construct', 'dragon', 'elemental', 'fey', 'fiend', 'giant', 'humanoid', 'monstrosity', 'ooze', 'plant', 'undead']
     },
     {
-      type: 'multiselect',
-      key: 'alignments', 
-      label: 'Alignment',
-      options: ['LG', 'LN', 'LE', 'NG', 'N', 'NE', 'CG', 'CN', 'CE', 'U', 'A']
+      type: 'checkbox-group',
+      key: 'alignments',
+      label: 'Alignment:',
+      options: [
+        { value: 'LG', label: 'LG' },
+        { value: 'NG', label: 'NG' },
+        { value: 'CG', label: 'CG' },
+        { value: 'LN', label: 'LN' },
+        { value: 'N', label: 'N' },
+        { value: 'CN', label: 'CN' },
+        { value: 'LE', label: 'LE' },
+        { value: 'NE', label: 'NE' },
+        { value: 'CE', label: 'CE' },
+        { value: 'U', label: 'Un' },
+        { value: 'A', label: 'Any' }
+      ]
     }
   ],
 

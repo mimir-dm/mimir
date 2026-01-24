@@ -91,10 +91,20 @@ export const deityConfig: CatalogConfig = {
       apiSource: 'get_deity_pantheons'
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'alignments',
-      label: 'Alignment',
-      apiSource: 'get_deity_alignments'
+      label: 'Alignment:',
+      options: [
+        { value: 'LG', label: 'LG' },
+        { value: 'NG', label: 'NG' },
+        { value: 'CG', label: 'CG' },
+        { value: 'LN', label: 'LN' },
+        { value: 'N', label: 'N' },
+        { value: 'CN', label: 'CN' },
+        { value: 'LE', label: 'LE' },
+        { value: 'NE', label: 'NE' },
+        { value: 'CE', label: 'CE' }
+      ]
     },
     {
       type: 'multiselect',

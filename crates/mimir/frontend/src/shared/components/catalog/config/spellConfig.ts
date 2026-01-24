@@ -121,24 +121,35 @@ export const spellConfig: CatalogConfig = {
   ],
   filters: [
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'level',
-      label: 'Level',
-      options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+      label: 'Level:',
+      options: [
+        { value: '0', label: 'C' },
+        { value: '1', label: '1' },
+        { value: '2', label: '2' },
+        { value: '3', label: '3' },
+        { value: '4', label: '4' },
+        { value: '5', label: '5' },
+        { value: '6', label: '6' },
+        { value: '7', label: '7' },
+        { value: '8', label: '8' },
+        { value: '9', label: '9' }
+      ]
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'school',
-      label: 'School',
+      label: 'School:',
       options: [
-        'Abjuration',
-        'Conjuration',
-        'Divination',
-        'Enchantment',
-        'Evocation',
-        'Illusion',
-        'Necromancy',
-        'Transmutation'
+        { value: 'Abjuration', label: 'Abj' },
+        { value: 'Conjuration', label: 'Con' },
+        { value: 'Divination', label: 'Div' },
+        { value: 'Enchantment', label: 'Enc' },
+        { value: 'Evocation', label: 'Evo' },
+        { value: 'Illusion', label: 'Ill' },
+        { value: 'Necromancy', label: 'Nec' },
+        { value: 'Transmutation', label: 'Tra' }
       ]
     },
     {

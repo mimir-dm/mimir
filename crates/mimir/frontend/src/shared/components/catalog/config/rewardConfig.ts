@@ -61,11 +61,15 @@ export const rewardConfig: CatalogConfig = {
       placeholder: 'Search rewards...'
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'reward_types',
-      label: 'Type',
-      options: [], // Will be populated dynamically from API
-      apiSource: 'get_reward_types'
+      label: 'Type:',
+      options: [
+        { value: 'Blessing', label: 'Blessing' },
+        { value: 'Boon', label: 'Boon' },
+        { value: 'Charm', label: 'Charm' },
+        { value: 'Epic Boon', label: 'Epic Boon' }
+      ]
     },
     {
       type: 'checkbox',

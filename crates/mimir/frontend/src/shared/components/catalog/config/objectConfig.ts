@@ -138,7 +138,31 @@ export const objectConfig: CatalogConfig = {
       className: 'catalog-table__cell-source'
     }
   ],
-  filters: [],
+  filters: [
+    {
+      type: 'checkbox-group',
+      key: 'object_type',
+      label: 'Type:',
+      options: [
+        { value: 'SW', label: 'Siege' },
+        { value: 'GEN', label: 'Generic' },
+        { value: 'U', label: 'Unknown' }
+      ]
+    },
+    {
+      type: 'checkbox-group',
+      key: 'sizes',
+      label: 'Size:',
+      options: [
+        { value: 'T', label: 'Tiny' },
+        { value: 'S', label: 'Small' },
+        { value: 'M', label: 'Med' },
+        { value: 'L', label: 'Large' },
+        { value: 'H', label: 'Huge' },
+        { value: 'G', label: 'Garg' }
+      ]
+    }
+  ],
   emptyMessage: {
     title: 'No objects found',
     subtitle: 'Search for objects to see results',

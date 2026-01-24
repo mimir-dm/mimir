@@ -49,9 +49,9 @@ export const psionicConfig: CatalogConfig = {
   ],
   filters: [
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'psionic_types',
-      label: 'Type',
+      label: 'Type:',
       options: [
         { value: 'D', label: 'Discipline' },
         { value: 'T', label: 'Talent' }
@@ -62,12 +62,6 @@ export const psionicConfig: CatalogConfig = {
       key: 'orders',
       label: 'Order',
       apiSource: 'get_psionic_orders'
-    },
-    {
-      type: 'multiselect',
-      key: 'sources',
-      label: 'Source',
-      apiSource: 'get_psionic_sources'
     }
   ],
   searchCommands: {

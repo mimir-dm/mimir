@@ -64,6 +64,17 @@ export const trapConfig: CatalogConfig = {
         { value: 'Trap', label: 'Trap' },
         { value: 'Hazard', label: 'Hazard' }
       ]
+    },
+    {
+      key: 'trap_type',
+      type: 'checkbox-group',
+      label: 'Type:',
+      options: [
+        { value: 'Mechanical', label: 'Mech' },
+        { value: 'Magical', label: 'Magic' },
+        { value: 'Simple', label: 'Simple' },
+        { value: 'Eldritch', label: 'Eldritch' }
+      ]
     }
   ],
   emptyMessage: {

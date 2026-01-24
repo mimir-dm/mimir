@@ -190,6 +190,16 @@ export const raceConfig: CatalogConfig = {
       key: 'search',
       label: 'Search',
       placeholder: 'Search races...'
+    },
+    {
+      type: 'checkbox-group',
+      key: 'sizes',
+      label: 'Size:',
+      options: [
+        { value: 'S', label: 'Small' },
+        { value: 'M', label: 'Medium' },
+        { value: 'L', label: 'Large' }
+      ]
     }
   ],
   emptyMessage: {

@@ -57,11 +57,15 @@ export const languageConfig: CatalogConfig = {
       placeholder: 'Search languages...'
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'language_types',
-      label: 'Type',
-      options: [], // Will be populated dynamically from API
-      apiSource: 'get_language_types'
+      label: 'Type:',
+      options: [
+        { value: 'Standard', label: 'Standard' },
+        { value: 'Exotic', label: 'Exotic' },
+        { value: 'Secret', label: 'Secret' },
+        { value: 'Dead', label: 'Dead' }
+      ]
     },
     {
       type: 'multiselect',

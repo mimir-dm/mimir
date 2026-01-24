@@ -115,6 +115,12 @@ export const featConfig: CatalogConfig = {
       key: 'search',
       label: 'Search',
       placeholder: 'Search feats...'
+    },
+    {
+      type: 'checkbox',
+      key: 'has_prerequisite',
+      label: 'Has Prerequisites',
+      tooltip: 'Filter feats that have prerequisites'
     }
   ],
   emptyMessage: {

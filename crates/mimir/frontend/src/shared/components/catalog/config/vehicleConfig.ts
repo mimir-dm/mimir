@@ -116,16 +116,25 @@ export const vehicleConfig: CatalogConfig = {
       apiSource: 'get_vehicle_types'
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'sizes',
-      label: 'Size',
-      apiSource: 'get_vehicle_sizes'
+      label: 'Size:',
+      options: [
+        { value: 'L', label: 'Large' },
+        { value: 'H', label: 'Huge' },
+        { value: 'G', label: 'Garg' }
+      ]
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'terrains',
-      label: 'Terrain',
-      apiSource: 'get_vehicle_terrains'
+      label: 'Terrain:',
+      options: [
+        { value: 'land', label: 'Land' },
+        { value: 'water', label: 'Water' },
+        { value: 'air', label: 'Air' },
+        { value: 'space', label: 'Space' }
+      ]
     }
   ],
   searchCommands: {

@@ -219,10 +219,19 @@ export const optionalFeatureConfig: CatalogConfig = {
   ],
   filters: [
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'feature_types',
-      label: 'Feature Type',
-      apiSource: 'get_optional_feature_types'
+      label: 'Type:',
+      options: [
+        { value: 'EI', label: 'Invocation' },
+        { value: 'MM', label: 'Metamagic' },
+        { value: 'FS', label: 'Fighting Style' },
+        { value: 'MV', label: 'Maneuver' },
+        { value: 'AS', label: 'Arcane Shot' },
+        { value: 'PB', label: 'Pact Boon' },
+        { value: 'AI', label: 'Infusion' },
+        { value: 'ED', label: 'Elem. Disc.' }
+      ]
     },
     {
       type: 'checkbox',

@@ -126,10 +126,17 @@ export const itemConfig: CatalogConfig = {
       apiSource: 'get_item_types'
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'rarities',
-      label: 'Rarity',
-      apiSource: 'get_item_rarities'
+      label: 'Rarity:',
+      options: [
+        { value: 'common', label: 'Common' },
+        { value: 'uncommon', label: 'Uncommon' },
+        { value: 'rare', label: 'Rare' },
+        { value: 'very rare', label: 'V. Rare' },
+        { value: 'legendary', label: 'Legend' },
+        { value: 'artifact', label: 'Artifact' }
+      ]
     },
     {
       type: 'range',

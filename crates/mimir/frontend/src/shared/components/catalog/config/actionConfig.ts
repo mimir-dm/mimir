@@ -86,18 +86,16 @@ export const actionConfig: CatalogConfig = {
       placeholder: 'Search actions...'
     },
     {
-      type: 'multiselect',
+      type: 'checkbox-group',
       key: 'time_types',
-      label: 'Time',
-      options: [], // Will be populated dynamically from API
-      apiSource: 'get_action_time_types'
-    },
-    {
-      type: 'multiselect',
-      key: 'sources',
-      label: 'Source',
-      options: [], // Will be populated dynamically from API
-      apiSource: 'get_action_sources'
+      label: 'Time:',
+      options: [
+        { value: 'action', label: 'Action' },
+        { value: 'bonus', label: 'Bonus' },
+        { value: 'reaction', label: 'Reaction' },
+        { value: 'free', label: 'Free' },
+        { value: 'varies', label: 'Varies' }
+      ]
     }
   ]
 }

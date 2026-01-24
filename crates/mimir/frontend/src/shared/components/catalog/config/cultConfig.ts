@@ -82,7 +82,27 @@ export const cultConfig: CatalogConfig = {
       formatter: (item: any) => (item && item.page) ? `p. ${item.page}` : '—'
     }
   ],
-  filters: [],
+  filters: [
+    {
+      type: 'checkbox-group',
+      key: 'item_type',
+      label: 'Category:',
+      options: [
+        { value: 'cult', label: 'Cult' },
+        { value: 'boon', label: 'Boon' }
+      ]
+    },
+    {
+      type: 'checkbox-group',
+      key: 'subtype',
+      label: 'Type:',
+      options: [
+        { value: 'Diabolical', label: 'Diabolical' },
+        { value: 'Demonic', label: 'Demonic' },
+        { value: 'Elder Evil', label: 'Elder Evil' }
+      ]
+    }
+  ],
   emptyMessage: {
     title: 'No cults or boons found',
     subtitle: 'Search for cults and boons to see results',
