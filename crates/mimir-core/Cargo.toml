@@ -41,5 +41,8 @@ walkdir = { workspace = true }
 tar = "0.4"
 flate2 = "1.0"
 
+# Encoding
+base64 = "0.22"
+
 [dev-dependencies]
 tempfile = { workspace = true }

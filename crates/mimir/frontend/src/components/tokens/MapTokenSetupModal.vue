@@ -95,9 +95,11 @@
                   class="token"
                   :class="{
                     'token-hidden': !token.visible_to_players,
-                    'token-selected': selectedTokenId === token.id
+                    'token-selected': selectedTokenId === token.id,
+                    'token-dragging': draggingToken?.id === token.id
                   }"
                   :style="getTokenStyle(token)"
+                  @mousedown.stop="onTokenMouseDown($event, token)"
                   @click.stop="selectToken(token)"
                   @contextmenu.prevent="showTokenContextMenu($event, token)"
                 >
@@ -114,11 +116,50 @@
                   v-for="light in lightSources"
                   :key="'light-' + light.id"
                   class="light-dot"
-                  :class="{ 'light-inactive': !light.is_active }"
+                  :class="{
+                    'light-inactive': !light.is_active,
+                    'light-dragging': draggingLight?.id === light.id
+                  }"
                   :style="getLightStyle(light)"
-                  :title="`${light.name} (${light.bright_radius_ft}/${light.dim_radius_ft}ft) - Right-click to toggle`"
+                  :title="`${light.name} (${light.bright_radius_ft}/${light.dim_radius_ft}ft) - Drag to move, Right-click to toggle`"
+                  @mousedown.stop="onLightMouseDown($event, light)"
                   @contextmenu.prevent="toggleLight(light)"
                 />
+
+                <!-- Map Traps -->
+                <div
+                  v-for="trap in mapTraps"
+                  :key="'trap-' + trap.id"
+                  class="trap-marker"
+                  :class="{
+                    'trap-triggered': trap.triggered === 1,
+                    'trap-visible': trap.visible === 1,
+                    'trap-dragging': draggingTrap?.id === trap.id
+                  }"
+                  :style="getTrapStyle(trap)"
+                  :title="`${trap.name}${trap.dc ? ' (DC ' + trap.dc + ')' : ''} - Drag to move`"
+                  @mousedown.stop="onTrapMouseDown($event, trap)"
+                  @contextmenu.prevent="showTrapContextMenu($event, trap)"
+                >
+                  <span class="trap-icon">⚠️</span>
+                </div>
+
+                <!-- Map POIs (Points of Interest) -->
+                <div
+                  v-for="poi in mapPois"
+                  :key="'poi-' + poi.id"
+                  class="poi-marker"
+                  :class="{
+                    'poi-visible': poi.visible === 1,
+                    'poi-dragging': draggingPoi?.id === poi.id
+                  }"
+                  :style="getPoiStyle(poi)"
+                  :title="`${poi.name} - Drag to move`"
+                  @mousedown.stop="onPoiMouseDown($event, poi)"
+                  @contextmenu.prevent="showPoiContextMenu($event, poi)"
+                >
+                  <span class="poi-icon">{{ getPoiIcon(poi.icon) }}</span>
+                </div>
               </div>
 
               <!-- Placement Preview -->
@@ -204,10 +245,87 @@
                 </button>
               </div>
             </div>
+
+            <!-- Traps Section -->
+            <h4 v-if="mapTraps.length > 0" class="section-header">Traps</h4>
+            <div v-if="mapTraps.length > 0" class="token-list">
+              <div
+                v-for="trap in mapTraps"
+                :key="'trap-list-' + trap.id"
+                class="token-list-item trap-item"
+                :class="{
+                  'trap-triggered': trap.triggered === 1,
+                  'trap-visible-marker': trap.visible === 1
+                }"
+              >
+                <div class="token-list-color trap-color">
+                  <span>⚠️</span>
+                </div>
+                <div class="token-list-info">
+                  <span class="token-list-name">{{ trap.name }}</span>
+                  <span class="token-list-type">
+                    {{ trap.dc ? `DC ${trap.dc}` : '' }}
+                    {{ trap.triggered === 1 ? '(Triggered)' : '' }}
+                  </span>
+                </div>
+                <button
+                  class="trap-toggle-btn"
+                  :class="{ visible: trap.visible === 1 }"
+                  @click.stop="handleToggleTrapVisibilityDirect(trap)"
+                  :title="trap.visible === 1 ? 'Hide from players' : 'Show to players'"
+                >
+                  {{ trap.visible === 1 ? 'Vis' : 'Hid' }}
+                </button>
+                <button
+                  class="token-list-delete"
+                  @click.stop="confirmDeleteTrapDirect(trap)"
+                  title="Delete trap"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <!-- POIs Section -->
+            <h4 v-if="mapPois.length > 0" class="section-header">Points of Interest</h4>
+            <div v-if="mapPois.length > 0" class="token-list">
+              <div
+                v-for="poi in mapPois"
+                :key="'poi-list-' + poi.id"
+                class="token-list-item poi-item"
+                :class="{ 'poi-visible-marker': poi.visible === 1 }"
+              >
+                <div
+                  class="token-list-color poi-color"
+                  :style="{ background: poi.color || '#4488ff' }"
+                >
+                  <span>{{ getPoiIcon(poi.icon) }}</span>
+                </div>
+                <div class="token-list-info">
+                  <span class="token-list-name">{{ poi.name }}</span>
+                  <span class="token-list-type">{{ poi.icon }}</span>
+                </div>
+                <button
+                  class="poi-toggle-btn"
+                  :class="{ visible: poi.visible === 1 }"
+                  @click.stop="handleTogglePoiVisibilityDirect(poi)"
+                  :title="poi.visible === 1 ? 'Hide from players' : 'Show to players'"
+                >
+                  {{ poi.visible === 1 ? 'Vis' : 'Hid' }}
+                </button>
+                <button
+                  class="token-list-delete"
+                  @click.stop="confirmDeletePoiDirect(poi)"
+                  title="Delete POI"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-      <!-- Context Menu -->
+      <!-- Token Context Menu -->
       <div
         v-if="contextMenu.visible"
         class="context-menu"
@@ -219,6 +337,38 @@
           {{ contextMenu.token?.visible_to_players ? 'Hide from Players' : 'Show to Players' }}
         </button>
         <button class="danger" @click="handleDeleteFromContext">Delete</button>
+      </div>
+
+      <!-- Trap Context Menu -->
+      <div
+        v-if="trapContextMenu.visible"
+        class="context-menu"
+        :style="{ left: trapContextMenu.x + 'px', top: trapContextMenu.y + 'px' }"
+        @click.stop
+      >
+        <button @click="handleToggleTrapVisibility">
+          {{ trapContextMenu.trap?.visible === 1 ? 'Hide from Players' : 'Show to Players' }}
+        </button>
+        <button v-if="trapContextMenu.trap?.triggered === 0" @click="handleTriggerTrap">
+          Trigger Trap
+        </button>
+        <button v-if="trapContextMenu.trap?.triggered === 1" @click="handleResetTrap">
+          Reset (Re-arm)
+        </button>
+        <button class="danger" @click="handleDeleteTrap">Delete</button>
+      </div>
+
+      <!-- POI Context Menu -->
+      <div
+        v-if="poiContextMenu.visible"
+        class="context-menu"
+        :style="{ left: poiContextMenu.x + 'px', top: poiContextMenu.y + 'px' }"
+        @click.stop
+      >
+        <button @click="handleTogglePoiVisibility">
+          {{ poiContextMenu.poi?.visible === 1 ? 'Hide from Players' : 'Show to Players' }}
+        </button>
+        <button class="danger" @click="handleDeletePoi">Delete</button>
       </div>
 
     <template #footer>
@@ -307,6 +457,16 @@ const pendingTokenConfig = ref<TokenConfigWithMonster | null>(null)
 const mousePosition = ref<{ x: number; y: number } | null>(null)
 const selectedTokenId = ref<string | null>(null)
 
+// Token dragging state
+const draggingToken = ref<Token | null>(null)
+const dragTokenOffsetX = ref(0)
+const dragTokenOffsetY = ref(0)
+
+// Light source dragging state
+const draggingLight = ref<LightSource | null>(null)
+const dragLightOffsetX = ref(0)
+const dragLightOffsetY = ref(0)
+
 // Light placement state
 const pendingLightType = ref<'' | 'torch' | 'lantern' | 'candle'>('')
 
@@ -324,12 +484,68 @@ interface LightSource {
 }
 const lightSources = ref<LightSource[]>([])
 
+// Map traps on the map
+interface MapTrap {
+  id: string
+  map_id: string
+  grid_x: number
+  grid_y: number
+  name: string
+  description: string | null
+  trigger_description: string | null
+  effect_description: string | null
+  dc: number | null
+  triggered: number
+  visible: number
+}
+const mapTraps = ref<MapTrap[]>([])
+
+// Map POIs (Points of Interest)
+interface MapPoi {
+  id: string
+  map_id: string
+  grid_x: number
+  grid_y: number
+  name: string
+  description: string | null
+  icon: string
+  color: string | null
+  visible: number
+}
+const mapPois = ref<MapPoi[]>([])
+
+// POI dragging state
+const draggingPoi = ref<MapPoi | null>(null)
+const dragPoiOffsetX = ref(0)
+const dragPoiOffsetY = ref(0)
+
+// Trap dragging state
+const draggingTrap = ref<MapTrap | null>(null)
+const dragTrapOffsetX = ref(0)
+const dragTrapOffsetY = ref(0)
+
 // Context menu
 const contextMenu = ref({
   visible: false,
   x: 0,
   y: 0,
   token: null as Token | null
+})
+
+// Trap context menu
+const trapContextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  trap: null as MapTrap | null
+})
+
+// POI context menu
+const poiContextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  poi: null as MapPoi | null
 })
 
 // Grid config modal
@@ -386,7 +602,7 @@ const tokenLayerStyle = computed(() => ({
 // Watch for visibility changes
 watch(() => props.visible, async (visible) => {
   if (visible && props.map.id) {
-    await Promise.all([loadMapImage(), loadUvttData(), loadTokens(), loadLightSources()])
+    await Promise.all([loadMapImage(), loadUvttData(), loadTokens(), loadLightSources(), loadMapTraps(), loadMapPois()])
   }
 }, { immediate: true })
 
@@ -429,13 +645,37 @@ async function loadLightSources() {
   }
 }
 
+async function loadMapTraps() {
+  try {
+    const response = await invoke<{ success: boolean; data?: MapTrap[] }>('list_map_traps', {
+      mapId: props.map.id
+    })
+    if (response.success && response.data) {
+      mapTraps.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load map traps:', e)
+  }
+}
+
+async function loadMapPois() {
+  try {
+    const response = await invoke<{ success: boolean; data?: MapPoi[] }>('list_map_pois', {
+      mapId: props.map.id
+    })
+    if (response.success && response.data) {
+      mapPois.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load map POIs:', e)
+  }
+}
+
 async function loadUvttData() {
   // Load UVTT to get grid size
   try {
     const response = await invoke<{ success: boolean; data?: UvttData }>('get_uvtt_map', {
-      campaignId: props.map.campaign_id,
-      moduleId: props.map.module_id ?? null,
-      filePath: props.map.image_path
+      id: props.map.id
     })
     if (response.success && response.data) {
       uvttGridSize.value = response.data.resolution.pixels_per_grid
@@ -477,8 +717,11 @@ function onMouseDown(event: MouseEvent) {
   // Right-click is for context menu
   if (event.button === 2) return
 
+  // Don't start panning if we're dragging a token, light, trap, or POI
+  if (draggingToken.value || draggingLight.value || draggingTrap.value || draggingPoi.value) return
+
   // Only pan with middle mouse or when holding space
-  if (event.button === 1 || (event.button === 0 && !pendingTokenConfig.value)) {
+  if (event.button === 1 || (event.button === 0 && !pendingTokenConfig.value && !pendingLightType.value)) {
     isDragging.value = true
     dragStartX.value = event.clientX
     dragStartY.value = event.clientY
@@ -487,7 +730,216 @@ function onMouseDown(event: MouseEvent) {
   }
 }
 
+// Start dragging a token
+function onTokenMouseDown(event: MouseEvent, token: Token) {
+  // Only left-click to drag
+  if (event.button !== 0) return
+
+  event.preventDefault()
+  draggingToken.value = token
+  selectedTokenId.value = token.id
+
+  // Calculate offset from mouse to token center
+  if (viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Token position in viewport coordinates
+    const effectiveScale = baseScale.value * zoom.value
+    const tokenViewportX = token.x * baseScale.value + panX.value
+    const tokenViewportY = token.y * baseScale.value + panY.value
+
+    // Store offset so token moves smoothly from where we clicked
+    dragTokenOffsetX.value = mouseX - tokenViewportX * zoom.value
+    dragTokenOffsetY.value = mouseY - tokenViewportY * zoom.value
+  }
+}
+
+// Start dragging a light source
+function onLightMouseDown(event: MouseEvent, light: LightSource) {
+  // Only left-click to drag
+  if (event.button !== 0) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  draggingLight.value = light
+
+  // Calculate offset from mouse to light center
+  if (viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Light position in viewport coordinates
+    const lightViewportX = light.x * baseScale.value + panX.value
+    const lightViewportY = light.y * baseScale.value + panY.value
+
+    // Store offset so light moves smoothly from where we clicked
+    dragLightOffsetX.value = mouseX - lightViewportX * zoom.value
+    dragLightOffsetY.value = mouseY - lightViewportY * zoom.value
+  }
+}
+
+// Start dragging a trap
+function onTrapMouseDown(event: MouseEvent, trap: MapTrap) {
+  // Only left-click to drag
+  if (event.button !== 0) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  draggingTrap.value = trap
+
+  // Calculate offset from mouse to trap center (traps use grid coordinates)
+  if (viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Convert grid coords to pixel coords (center of cell)
+    const trapPixelX = (trap.grid_x + 0.5) * uvttGridSize.value
+    const trapPixelY = (trap.grid_y + 0.5) * uvttGridSize.value
+
+    // Trap position in viewport coordinates
+    const trapViewportX = trapPixelX * baseScale.value + panX.value
+    const trapViewportY = trapPixelY * baseScale.value + panY.value
+
+    // Store offset so trap moves smoothly from where we clicked
+    dragTrapOffsetX.value = mouseX - trapViewportX * zoom.value
+    dragTrapOffsetY.value = mouseY - trapViewportY * zoom.value
+  }
+}
+
+// Start dragging a POI
+function onPoiMouseDown(event: MouseEvent, poi: MapPoi) {
+  // Only left-click to drag
+  if (event.button !== 0) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  draggingPoi.value = poi
+
+  // Calculate offset from mouse to POI center (POIs use grid coordinates)
+  if (viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Convert grid coords to pixel coords (center of cell)
+    const poiPixelX = (poi.grid_x + 0.5) * uvttGridSize.value
+    const poiPixelY = (poi.grid_y + 0.5) * uvttGridSize.value
+
+    // POI position in viewport coordinates
+    const poiViewportX = poiPixelX * baseScale.value + panX.value
+    const poiViewportY = poiPixelY * baseScale.value + panY.value
+
+    // Store offset so POI moves smoothly from where we clicked
+    dragPoiOffsetX.value = mouseX - poiViewportX * zoom.value
+    dragPoiOffsetY.value = mouseY - poiViewportY * zoom.value
+  }
+}
+
 function onMouseMove(event: MouseEvent) {
+  // Handle token dragging
+  if (draggingToken.value && viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Convert to image coordinates
+    const effectiveScale = baseScale.value * zoom.value
+    const imageX = (mouseX - dragTokenOffsetX.value - panX.value * zoom.value) / effectiveScale
+    const imageY = (mouseY - dragTokenOffsetY.value - panY.value * zoom.value) / effectiveScale
+
+    // Update token position locally (will be saved on mouse up)
+    const tokenIndex = tokens.value.findIndex(t => t.id === draggingToken.value?.id)
+    if (tokenIndex !== -1) {
+      tokens.value[tokenIndex] = {
+        ...tokens.value[tokenIndex],
+        x: imageX,
+        y: imageY
+      }
+    }
+    return
+  }
+
+  // Handle light source dragging
+  if (draggingLight.value && viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Convert to image coordinates
+    const effectiveScale = baseScale.value * zoom.value
+    const imageX = (mouseX - dragLightOffsetX.value - panX.value * zoom.value) / effectiveScale
+    const imageY = (mouseY - dragLightOffsetY.value - panY.value * zoom.value) / effectiveScale
+
+    // Update light position locally (will be saved on mouse up)
+    const lightIndex = lightSources.value.findIndex(l => l.id === draggingLight.value?.id)
+    if (lightIndex !== -1) {
+      lightSources.value[lightIndex] = {
+        ...lightSources.value[lightIndex],
+        x: imageX,
+        y: imageY
+      }
+    }
+    return
+  }
+
+  // Handle trap dragging
+  if (draggingTrap.value && viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Convert to image coordinates
+    const effectiveScale = baseScale.value * zoom.value
+    const imageX = (mouseX - dragTrapOffsetX.value - panX.value * zoom.value) / effectiveScale
+    const imageY = (mouseY - dragTrapOffsetY.value - panY.value * zoom.value) / effectiveScale
+
+    // Convert to grid coordinates for local update
+    const gridX = Math.floor(imageX / uvttGridSize.value)
+    const gridY = Math.floor(imageY / uvttGridSize.value)
+
+    // Update trap position locally (will be saved on mouse up)
+    const trapIndex = mapTraps.value.findIndex(t => t.id === draggingTrap.value?.id)
+    if (trapIndex !== -1) {
+      mapTraps.value[trapIndex] = {
+        ...mapTraps.value[trapIndex],
+        grid_x: gridX,
+        grid_y: gridY
+      }
+    }
+    return
+  }
+
+  // Handle POI dragging
+  if (draggingPoi.value && viewportRef.value) {
+    const rect = viewportRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    // Convert to image coordinates
+    const effectiveScale = baseScale.value * zoom.value
+    const imageX = (mouseX - dragPoiOffsetX.value - panX.value * zoom.value) / effectiveScale
+    const imageY = (mouseY - dragPoiOffsetY.value - panY.value * zoom.value) / effectiveScale
+
+    // Convert to grid coordinates for local update
+    const gridX = Math.floor(imageX / uvttGridSize.value)
+    const gridY = Math.floor(imageY / uvttGridSize.value)
+
+    // Update POI position locally (will be saved on mouse up)
+    const poiIndex = mapPois.value.findIndex(p => p.id === draggingPoi.value?.id)
+    if (poiIndex !== -1) {
+      mapPois.value[poiIndex] = {
+        ...mapPois.value[poiIndex],
+        grid_x: gridX,
+        grid_y: gridY
+      }
+    }
+    return
+  }
+
   // Update mouse position for placement preview
   if (pendingTokenConfig.value && viewportRef.value) {
     const rect = viewportRef.value.getBoundingClientRect()
@@ -506,7 +958,111 @@ function onMouseMove(event: MouseEvent) {
   }
 }
 
-function onMouseUp() {
+async function onMouseUp() {
+  // Save token position if we were dragging
+  if (draggingToken.value) {
+    const token = tokens.value.find(t => t.id === draggingToken.value?.id)
+    if (token) {
+      // Snap to grid
+      const gridSize = uvttGridSize.value
+      const snappedX = Math.round(token.x / gridSize) * gridSize + gridSize / 2
+      const snappedY = Math.round(token.y / gridSize) * gridSize + gridSize / 2
+
+      // Convert pixel coordinates to grid coordinates for the backend
+      const gridX = Math.floor(snappedX / gridSize)
+      const gridY = Math.floor(snappedY / gridSize)
+
+      // Update local state with snapped position
+      const tokenIndex = tokens.value.findIndex(t => t.id === token.id)
+      if (tokenIndex !== -1) {
+        tokens.value[tokenIndex] = {
+          ...tokens.value[tokenIndex],
+          x: snappedX,
+          y: snappedY
+        }
+      }
+
+      // Save to backend
+      try {
+        await invoke('update_token_position', {
+          id: token.id,
+          gridX,
+          gridY
+        })
+      } catch (e) {
+        console.error('Failed to save token position:', e)
+        // Reload tokens to restore original position on error
+        await loadTokens()
+      }
+    }
+    draggingToken.value = null
+  }
+
+  // Save light position if we were dragging
+  if (draggingLight.value) {
+    const light = lightSources.value.find(l => l.id === draggingLight.value?.id)
+    if (light) {
+      // Light sources don't snap to grid - they can be positioned freely
+      // Convert to integer pixel coordinates for backend
+      const pixelX = Math.round(light.x)
+      const pixelY = Math.round(light.y)
+
+      // Save to backend
+      try {
+        await invoke('move_light_source', {
+          id: String(light.id),
+          x: pixelX,
+          y: pixelY
+        })
+      } catch (e) {
+        console.error('Failed to save light position:', e)
+        // Reload lights to restore original position on error
+        await loadLightSources()
+      }
+    }
+    draggingLight.value = null
+  }
+
+  // Save trap position if we were dragging
+  if (draggingTrap.value) {
+    const trap = mapTraps.value.find(t => t.id === draggingTrap.value?.id)
+    if (trap) {
+      // Save to backend (trap already has grid coordinates)
+      try {
+        await invoke('move_map_trap', {
+          id: trap.id,
+          gridX: trap.grid_x,
+          gridY: trap.grid_y
+        })
+      } catch (e) {
+        console.error('Failed to save trap position:', e)
+        // Reload traps to restore original position on error
+        await loadMapTraps()
+      }
+    }
+    draggingTrap.value = null
+  }
+
+  // Save POI position if we were dragging
+  if (draggingPoi.value) {
+    const poi = mapPois.value.find(p => p.id === draggingPoi.value?.id)
+    if (poi) {
+      // Save to backend (POI already has grid coordinates)
+      try {
+        await invoke('move_map_poi', {
+          id: poi.id,
+          gridX: poi.grid_x,
+          gridY: poi.grid_y
+        })
+      } catch (e) {
+        console.error('Failed to save POI position:', e)
+        // Reload POIs to restore original position on error
+        await loadMapPois()
+      }
+    }
+    draggingPoi.value = null
+  }
+
   isDragging.value = false
 }
 
@@ -530,9 +1086,17 @@ function handleLightConfigChange(lightType: 'torch' | 'lantern' | 'candle' | nul
 
 // Canvas click for token or light placement
 async function handleCanvasClick(event: MouseEvent) {
-  // Close context menu if open
+  // Close context menus if open
   if (contextMenu.value.visible) {
     contextMenu.value.visible = false
+    return
+  }
+  if (trapContextMenu.value.visible) {
+    trapContextMenu.value.visible = false
+    return
+  }
+  if (poiContextMenu.value.visible) {
+    poiContextMenu.value.visible = false
     return
   }
 
@@ -555,37 +1119,119 @@ async function handleCanvasClick(event: MouseEvent) {
   const imageY = (clickY - panY.value) / effectiveScale
 
   // Snap to grid (all UVTT maps have a grid)
-  let finalX = imageX
-  let finalY = imageY
-
   const gridSize = uvttGridSize.value
-  // UVTT maps don't use grid offsets
-  const offsetX = 0
-  const offsetY = 0
 
-  // Snap to grid cell center
-  finalX = Math.round((imageX - offsetX) / gridSize) * gridSize + offsetX + gridSize / 2
-  finalY = Math.round((imageY - offsetY) / gridSize) * gridSize + offsetY + gridSize / 2
+  // Calculate grid coordinates
+  const gridXVal = Math.floor(imageX / gridSize)
+  const gridYVal = Math.floor(imageY / gridSize)
 
-  // Extract monster info before stripping it for the token request
+  // Snap to grid cell center (for pixel coordinates)
+  const finalX = gridXVal * gridSize + gridSize / 2
+  const finalY = gridYVal * gridSize + gridSize / 2
+
+  // Extract monster/trap info
+  const tokenType = pendingTokenConfig.value.token_type
   const monsterName = pendingTokenConfig.value.monster_name
   const monsterSource = pendingTokenConfig.value.monster_source
 
-  // Create the token (strip monster_name/monster_source as they're frontend-only)
-  const { monster_name, monster_source, ...tokenRequest } = pendingTokenConfig.value
-  const request: CreateTokenRequest = {
-    ...tokenRequest,
-    map_id: props.map.id,
-    x: finalX,
-    y: finalY
+  // For trap tokens, create a map trap
+  if (tokenType === 'trap') {
+    try {
+      const trapResponse = await invoke<{ success: boolean; data?: MapTrap }>('create_map_trap', {
+        request: {
+          mapId: props.map.id,
+          name: pendingTokenConfig.value.name || 'Trap',
+          gridX: gridXVal,
+          gridY: gridYVal,
+          visible: pendingTokenConfig.value.visible_to_players
+        }
+      })
+
+      if (trapResponse.success && trapResponse.data) {
+        mapTraps.value.push(trapResponse.data)
+      } else {
+        console.error('Failed to create trap:', trapResponse)
+      }
+    } catch (e) {
+      console.error('Failed to place trap:', e)
+    }
+    return
   }
 
-  const token = await createToken(request)
-  if (token) {
-    // Auto-add monster to module_monsters if this is a monster token with info
-    if (token.token_type === 'monster' && monsterName && monsterSource && props.map.module_id) {
-      await addMonsterToModule(monsterName, monsterSource, props.map.module_id)
+  // For marker tokens, create a map POI
+  if (tokenType === 'marker') {
+    try {
+      const poiResponse = await invoke<{ success: boolean; data?: MapPoi }>('create_map_poi', {
+        request: {
+          mapId: props.map.id,
+          name: pendingTokenConfig.value.name || 'Point of Interest',
+          gridX: gridXVal,
+          gridY: gridYVal,
+          icon: 'pin',
+          color: pendingTokenConfig.value.color || '#4488ff',
+          visible: pendingTokenConfig.value.visible_to_players
+        }
+      })
+
+      if (poiResponse.success && poiResponse.data) {
+        mapPois.value.push(poiResponse.data)
+      } else {
+        console.error('Failed to create POI:', poiResponse)
+      }
+    } catch (e) {
+      console.error('Failed to place POI:', e)
     }
+    return
+  }
+
+  // For monster tokens, we need to first add to module_monsters, then create token placement
+  if (tokenType === 'monster' && monsterName && monsterSource && props.map.module_id) {
+    try {
+      // First, add monster to module_monsters (or get existing)
+      const addResponse = await invoke<{ success: boolean; data?: { id: string } }>('add_module_monster', {
+        request: {
+          moduleId: props.map.module_id,
+          monsterName: monsterName,
+          monsterSource: monsterSource,
+          quantity: 1
+        }
+      })
+      console.log('add_module_monster response:', addResponse)
+
+      if (!addResponse.success || !addResponse.data) {
+        console.error('Failed to add monster to module:', addResponse)
+        return
+      }
+
+      const moduleMonsterIdStr = addResponse.data.id
+
+      // Now create the token placement with the module_monster_id
+      const tokenResponse = await invoke<{ success: boolean; data?: Token }>('create_token', {
+        request: {
+          mapId: props.map.id,
+          moduleMonsterId: moduleMonsterIdStr,
+          gridX: gridXVal,
+          gridY: gridYVal,
+          label: pendingTokenConfig.value.name || null,
+          factionColor: pendingTokenConfig.value.color || null,
+          hidden: !pendingTokenConfig.value.visible_to_players
+        }
+      })
+      console.log('create_token response:', tokenResponse)
+
+      if (tokenResponse.success && tokenResponse.data) {
+        tokens.value.push(tokenResponse.data)
+        // Refresh the palette's module monsters list
+        paletteRef.value?.loadModuleMonsters()
+      } else {
+        console.error('Failed to create token:', tokenResponse)
+      }
+    } catch (e) {
+      console.error('Failed to place monster token:', e)
+    }
+  } else {
+    // For non-monster/non-trap tokens (markers, NPCs)
+    console.warn('This token type is not yet fully supported by the backend')
   }
 }
 
@@ -716,6 +1362,144 @@ async function confirmDeleteLight(light: LightSource) {
   }
 }
 
+// Trap context menu
+function showTrapContextMenu(event: MouseEvent, trap: MapTrap) {
+  trapContextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    trap
+  }
+}
+
+async function handleToggleTrapVisibility() {
+  if (trapContextMenu.value.trap) {
+    try {
+      await invoke('toggle_map_trap_visibility', { id: trapContextMenu.value.trap.id })
+      await loadMapTraps()
+    } catch (e) {
+      console.error('Failed to toggle trap visibility:', e)
+    }
+  }
+  trapContextMenu.value.visible = false
+}
+
+async function handleTriggerTrap() {
+  if (trapContextMenu.value.trap) {
+    try {
+      await invoke('trigger_map_trap', { id: trapContextMenu.value.trap.id })
+      await loadMapTraps()
+    } catch (e) {
+      console.error('Failed to trigger trap:', e)
+    }
+  }
+  trapContextMenu.value.visible = false
+}
+
+async function handleResetTrap() {
+  if (trapContextMenu.value.trap) {
+    try {
+      await invoke('reset_map_trap', { id: trapContextMenu.value.trap.id })
+      await loadMapTraps()
+    } catch (e) {
+      console.error('Failed to reset trap:', e)
+    }
+  }
+  trapContextMenu.value.visible = false
+}
+
+async function handleDeleteTrap() {
+  if (trapContextMenu.value.trap) {
+    if (confirm(`Delete trap "${trapContextMenu.value.trap.name}"?`)) {
+      try {
+        await invoke('delete_map_trap', { id: trapContextMenu.value.trap.id })
+        await loadMapTraps()
+      } catch (e) {
+        console.error('Failed to delete trap:', e)
+      }
+    }
+  }
+  trapContextMenu.value.visible = false
+}
+
+// Direct trap actions (for list panel buttons)
+async function handleToggleTrapVisibilityDirect(trap: MapTrap) {
+  try {
+    await invoke('toggle_map_trap_visibility', { id: trap.id })
+    await loadMapTraps()
+  } catch (e) {
+    console.error('Failed to toggle trap visibility:', e)
+  }
+}
+
+async function confirmDeleteTrapDirect(trap: MapTrap) {
+  if (confirm(`Delete trap "${trap.name}"?`)) {
+    try {
+      await invoke('delete_map_trap', { id: trap.id })
+      await loadMapTraps()
+    } catch (e) {
+      console.error('Failed to delete trap:', e)
+    }
+  }
+}
+
+// POI context menu
+function showPoiContextMenu(event: MouseEvent, poi: MapPoi) {
+  poiContextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    poi
+  }
+}
+
+async function handleTogglePoiVisibility() {
+  if (poiContextMenu.value.poi) {
+    try {
+      await invoke('toggle_map_poi_visibility', { id: poiContextMenu.value.poi.id })
+      await loadMapPois()
+    } catch (e) {
+      console.error('Failed to toggle POI visibility:', e)
+    }
+  }
+  poiContextMenu.value.visible = false
+}
+
+async function handleDeletePoi() {
+  if (poiContextMenu.value.poi) {
+    if (confirm(`Delete POI "${poiContextMenu.value.poi.name}"?`)) {
+      try {
+        await invoke('delete_map_poi', { id: poiContextMenu.value.poi.id })
+        await loadMapPois()
+      } catch (e) {
+        console.error('Failed to delete POI:', e)
+      }
+    }
+  }
+  poiContextMenu.value.visible = false
+}
+
+// Direct POI actions (for list panel buttons)
+async function handleTogglePoiVisibilityDirect(poi: MapPoi) {
+  try {
+    await invoke('toggle_map_poi_visibility', { id: poi.id })
+    await loadMapPois()
+  } catch (e) {
+    console.error('Failed to toggle POI visibility:', e)
+  }
+}
+
+async function confirmDeletePoiDirect(poi: MapPoi) {
+  if (confirm(`Delete POI "${poi.name}"?`)) {
+    try {
+      await invoke('delete_map_poi', { id: poi.id })
+      await loadMapPois()
+    } catch (e) {
+      console.error('Failed to delete POI:', e)
+    }
+  }
+}
+
 // Token display helpers
 function getTokenColor(token: Token): string {
   return token.color || TOKEN_TYPE_COLORS[token.token_type as keyof typeof TOKEN_TYPE_COLORS] || '#666666'
@@ -749,6 +1533,51 @@ function getLightStyle(light: LightSource) {
     height: dotSize + 'px',
     background: light.color || '#ffcc00'
   }
+}
+
+function getTrapStyle(trap: MapTrap) {
+  const gridSize = uvttGridSize.value
+  // Convert grid coordinates to pixel coordinates (center of cell)
+  const pixelX = (trap.grid_x + 0.5) * gridSize
+  const pixelY = (trap.grid_y + 0.5) * gridSize
+  const markerSize = gridSize * 0.6 // Trap marker is 60% of grid cell
+
+  return {
+    left: (pixelX * baseScale.value - markerSize * baseScale.value / 2) + 'px',
+    top: (pixelY * baseScale.value - markerSize * baseScale.value / 2) + 'px',
+    width: (markerSize * baseScale.value) + 'px',
+    height: (markerSize * baseScale.value) + 'px'
+  }
+}
+
+function getPoiStyle(poi: MapPoi) {
+  const gridSize = uvttGridSize.value
+  // Convert grid coordinates to pixel coordinates (center of cell)
+  const pixelX = (poi.grid_x + 0.5) * gridSize
+  const pixelY = (poi.grid_y + 0.5) * gridSize
+  const markerSize = gridSize * 0.5 // POI marker is 50% of grid cell
+
+  return {
+    left: (pixelX * baseScale.value - markerSize * baseScale.value / 2) + 'px',
+    top: (pixelY * baseScale.value - markerSize * baseScale.value / 2) + 'px',
+    width: (markerSize * baseScale.value) + 'px',
+    height: (markerSize * baseScale.value) + 'px',
+    background: poi.color || '#4488ff'
+  }
+}
+
+function getPoiIcon(iconType: string): string {
+  const icons: Record<string, string> = {
+    'pin': '📍',
+    'star': '⭐',
+    'skull': '💀',
+    'chest': '📦',
+    'door': '🚪',
+    'secret': '🔮',
+    'question': '❓',
+    'exclamation': '❗'
+  }
+  return icons[iconType] || '📍'
 }
 
 async function toggleLight(light: LightSource) {
@@ -790,9 +1619,11 @@ async function handleGridSaved() {
   await loadUvttData()
 }
 
-// Close context menu on click outside
+// Close context menus on click outside
 function handleClickOutside() {
   contextMenu.value.visible = false
+  trapContextMenu.value.visible = false
+  poiContextMenu.value.visible = false
 }
 
 onMounted(() => {
@@ -954,6 +1785,14 @@ onUnmounted(() => {
   opacity: 0.5;
 }
 
+.token-dragging {
+  cursor: grabbing;
+  transform: scale(1.15);
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: none;
+}
+
 .token-label {
   font-weight: 700;
   color: white;
@@ -988,6 +1827,14 @@ onUnmounted(() => {
   opacity: 0.4;
   box-shadow: none;
   border-color: #888;
+}
+
+.light-dot.light-dragging {
+  cursor: grabbing;
+  transform: scale(1.5);
+  z-index: 100;
+  box-shadow: 0 0 16px 6px rgba(255, 204, 0, 0.9);
+  transition: none;
 }
 
 /* Placement Preview */
@@ -1172,5 +2019,158 @@ onUnmounted(() => {
 
 .context-menu button.danger:hover {
   background: var(--color-error-100);
+}
+
+/* Trap Markers */
+.trap-marker {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(255, 100, 100, 0.3);
+  border: 2px dashed #ff4444;
+  border-radius: var(--radius-sm);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.trap-marker:hover {
+  transform: scale(1.1);
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+}
+
+.trap-marker .trap-icon {
+  font-size: 1rem;
+}
+
+.trap-marker.trap-triggered {
+  background: rgba(100, 100, 100, 0.3);
+  border-color: #888;
+  opacity: 0.6;
+}
+
+.trap-marker.trap-visible {
+  border-style: solid;
+  background: rgba(255, 100, 100, 0.5);
+}
+
+.trap-marker.trap-dragging {
+  cursor: grabbing;
+  transform: scale(1.2);
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.6);
+  transition: none;
+}
+
+/* Trap List Items */
+.trap-item {
+  background: rgba(255, 100, 100, 0.05);
+}
+
+.trap-item.trap-triggered {
+  opacity: 0.6;
+}
+
+.trap-item.trap-visible-marker {
+  border-left: 3px solid #ff4444;
+}
+
+.trap-color {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.trap-toggle-btn {
+  padding: 2px 6px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-base-200);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.trap-toggle-btn.visible {
+  background: rgba(255, 100, 100, 0.2);
+  border-color: #ff4444;
+  color: #cc3333;
+}
+
+/* POI (Point of Interest) Markers */
+.poi-marker {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(68, 136, 255, 0.3);
+  border: 2px solid #4488ff;
+  border-radius: 50%;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.poi-marker:hover {
+  transform: scale(1.2);
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(68, 136, 255, 0.6);
+}
+
+.poi-marker .poi-icon {
+  font-size: 1rem;
+}
+
+.poi-marker.poi-visible {
+  border-width: 3px;
+  background: rgba(68, 136, 255, 0.5);
+  box-shadow: 0 0 6px rgba(68, 136, 255, 0.4);
+}
+
+.poi-marker.poi-dragging {
+  cursor: grabbing;
+  transform: scale(1.3);
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(68, 136, 255, 0.7);
+  transition: none;
+}
+
+/* POI List Items */
+.poi-item {
+  background: rgba(68, 136, 255, 0.05);
+}
+
+.poi-item.poi-visible-marker {
+  border-left: 3px solid #4488ff;
+}
+
+.poi-color {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.poi-toggle-btn {
+  padding: 2px 6px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-base-200);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.poi-toggle-btn.visible {
+  background: rgba(68, 136, 255, 0.2);
+  border-color: #4488ff;
+  color: #2266cc;
 }
 </style>

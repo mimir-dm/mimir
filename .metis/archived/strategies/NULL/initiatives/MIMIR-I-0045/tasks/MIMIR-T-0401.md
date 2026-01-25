@@ -7,7 +7,7 @@ created_at: 2026-01-21T16:34:48.441891+00:00
 updated_at: 2026-01-21T18:00:13.558687+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Implement Tauri commands wrapping `mimir-core` CharacterService for PC and NPC management.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

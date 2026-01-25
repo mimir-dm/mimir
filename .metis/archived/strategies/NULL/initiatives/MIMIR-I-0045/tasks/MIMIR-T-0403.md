@@ -7,7 +7,7 @@ created_at: 2026-01-21T16:34:48.859476+00:00
 updated_at: 2026-01-21T18:14:28.565431+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Implement Tauri commands wrapping `mimir-core` MapService and AssetService for map and binary asset management.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

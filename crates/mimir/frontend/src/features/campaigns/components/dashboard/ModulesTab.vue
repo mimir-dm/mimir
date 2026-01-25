@@ -124,7 +124,7 @@
                     class="npc-card"
                     @click="viewModuleNpc(npc)"
                   >
-                    <span class="npc-name">{{ npc.character_name }}</span>
+                    <span class="npc-name">{{ npc.name }}</span>
                     <span class="npc-role">{{ npc.role || 'NPC' }}</span>
                   </div>
                 </div>
@@ -525,24 +525,26 @@ const showCreateDocModal = ref(false)
 const showDeleteDocModal = ref(false)
 const documentToDelete = ref<Document | null>(null)
 
-// NPC state
-interface ModuleNpcWithCharacter {
+// NPC state - Module NPCs are custom DM-created characters
+interface ModuleNpc {
   id: string
   module_id: string
-  character_id: string
+  name: string
   role: string | null
-  encounter_tag: string | null
-  notes: string | null
-  character_name: string
+  description: string | null
+  appearance: string | null
+  personality: string | null
+  motivation: string | null
+  secrets: string | null
 }
 const showNpcSelector = ref(false)
 const showExportDialog = ref(false)
-const moduleNpcs = ref<ModuleNpcWithCharacter[]>([])
+const moduleNpcs = ref<ModuleNpc[]>([])
 const loadingNpcs = ref(false)
 
-// Get character IDs that are already in the module
+// Get NPC IDs that are already in the module
 const existingNpcCharacterIds = computed(() => {
-  return moduleNpcs.value.map(npc => npc.character_id)
+  return moduleNpcs.value.map(npc => npc.id)
 })
 
 // Monster customization modal state
@@ -593,8 +595,8 @@ async function loadModuleTraps() {
   loadingTraps.value = true
   try {
     // Get all maps for this module
-    const mapsResponse = await invoke<{ success: boolean; data?: MapData[] }>('list_maps', {
-      request: { campaign_id: props.campaign.id, module_id: selectedModule.value.id }
+    const mapsResponse = await invoke<{ success: boolean; data?: MapData[] }>('list_module_maps', {
+      moduleId: selectedModule.value.id
     })
 
     if (!mapsResponse.success || !mapsResponse.data) {
@@ -669,12 +671,12 @@ async function loadModuleDocuments() {
 
 // Load maps for selected module
 async function loadModuleMaps() {
-  if (!selectedModule.value || !props.campaign) return
+  if (!selectedModule.value) return
 
   loadingMaps.value = true
   try {
-    const response = await invoke<{ success: boolean; data?: MapData[] }>('list_maps', {
-      request: { campaign_id: props.campaign.id, module_id: selectedModule.value.id }
+    const response = await invoke<{ success: boolean; data?: MapData[] }>('list_module_maps', {
+      moduleId: selectedModule.value.id
     })
     if (response.success && response.data) {
       moduleMaps.value = response.data
@@ -699,13 +701,14 @@ function closeTokenSetup() {
 }
 
 // Create module
-async function handleCreateModule(data: { name: string; type: string; sessions: number }) {
+async function handleCreateModule(data: { name: string; type: string; description?: string }) {
   if (!props.campaign?.id) return
 
   try {
     const newModule = await ModuleService.create({
       campaign_id: props.campaign.id,
       name: data.name,
+      description: data.description,
       module_type: data.type
     })
 
@@ -857,8 +860,10 @@ async function openMonsterReference() {
 }
 
 // View module NPC detail
-function viewModuleNpc(npc: ModuleNpcWithCharacter) {
-  router.push(`/characters/${npc.character_id}`)
+function viewModuleNpc(npc: ModuleNpc) {
+  // Module NPCs are custom DM-created characters, not campaign characters
+  // For now, just log the NPC details (could open a detail modal later)
+  console.log('Selected NPC:', npc)
 }
 
 // Handle NPCs added from selector
@@ -873,7 +878,7 @@ async function loadNpcs() {
 
   loadingNpcs.value = true
   try {
-    const response = await invoke<{ success: boolean; data?: ModuleNpcWithCharacter[] }>('list_module_npcs_with_data', {
+    const response = await invoke<{ success: boolean; data?: ModuleNpc[] }>('list_module_npcs', {
       moduleId: selectedModule.value.id
     })
     if (response.success && response.data) {

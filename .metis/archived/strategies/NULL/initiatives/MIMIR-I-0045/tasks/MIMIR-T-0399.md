@@ -7,7 +7,7 @@ created_at: 2026-01-21T16:13:09.776637+00:00
 updated_at: 2026-01-21T17:24:31.115520+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -28,6 +28,8 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Set up the Tauri v2 Rust backend with `mimir-core` integration and migrate the existing Vue 3 frontend. Investigation (T-0360, T-0363) confirmed ~70% of the existing frontend is reusable.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -4,14 +4,14 @@ level: task
 title: "Implement sidebar navigation shell"
 short_code: "MIMIR-T-0406"
 created_at: 2026-01-21T16:34:58.247360+00:00
-updated_at: 2026-01-21T16:34:58.247360+00:00
+updated_at: 2026-01-25T01:03:02.479185+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,12 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Replace header-based navigation with sidebar navigation per v0.5 design (T-0363). This is a structural change to the app shell.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

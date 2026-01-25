@@ -87,12 +87,12 @@ export function useModuleMonsters(moduleId: Ref<string>) {
 
   // Load monster tokens from all maps in this module
   async function loadMapMonsterTokens(campaignId?: string): Promise<MonsterWithData[]> {
-    if (!campaignId) return []
+    if (!moduleId.value) return []
 
     try {
       // Get maps for this module
-      const mapsResponse = await invoke<{ success: boolean; data?: any[] }>('list_maps', {
-        request: { campaign_id: campaignId, module_id: moduleId.value }
+      const mapsResponse = await invoke<{ success: boolean; data?: any[] }>('list_module_maps', {
+        moduleId: moduleId.value
       })
 
       if (!mapsResponse.success || !mapsResponse.data) return []

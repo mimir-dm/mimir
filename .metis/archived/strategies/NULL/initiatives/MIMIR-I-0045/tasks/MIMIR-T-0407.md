@@ -4,14 +4,14 @@ level: task
 title: "Add missing top-level routes"
 short_code: "MIMIR-T-0407"
 created_at: 2026-01-21T16:34:58.469794+00:00
-updated_at: 2026-01-21T16:34:58.469794+00:00
+updated_at: 2026-01-25T01:03:01.681183+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,12 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Add missing top-level routes per v0.5 design (T-0363). Currently documents and maps are only accessible within module context.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -346,6 +346,22 @@ diesel::table! {
 }
 
 diesel::table! {
+    map_pois (id) {
+        id -> Text,
+        map_id -> Text,
+        grid_x -> Integer,
+        grid_y -> Integer,
+        name -> Text,
+        description -> Nullable<Text>,
+        icon -> Text,
+        color -> Nullable<Text>,
+        visible -> Integer,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
     maps (id) {
         id -> Text,
         campaign_id -> Text,
@@ -355,8 +371,21 @@ diesel::table! {
         sort_order -> Integer,
         uvtt_asset_id -> Text,
         lighting_mode -> Text,
+        fog_enabled -> Integer,
         created_at -> Text,
         updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    fog_revealed_areas (id) {
+        id -> Text,
+        map_id -> Text,
+        x -> Double,
+        y -> Double,
+        width -> Double,
+        height -> Double,
+        created_at -> Text,
     }
 }
 
@@ -602,12 +631,14 @@ diesel::joinable!(diseases -> catalog_sources (source));
 diesel::joinable!(documents -> campaigns (campaign_id));
 diesel::joinable!(documents -> modules (module_id));
 diesel::joinable!(feats -> catalog_sources (source));
+diesel::joinable!(fog_revealed_areas -> maps (map_id));
 diesel::joinable!(hazards -> catalog_sources (source));
 diesel::joinable!(item_attunement_classes -> items (item_id));
 diesel::joinable!(items -> catalog_sources (source));
 diesel::joinable!(languages -> catalog_sources (source));
 diesel::joinable!(light_sources -> maps (map_id));
 diesel::joinable!(map_traps -> maps (map_id));
+diesel::joinable!(map_pois -> maps (map_id));
 diesel::joinable!(maps -> campaign_assets (uvtt_asset_id));
 diesel::joinable!(maps -> campaigns (campaign_id));
 diesel::joinable!(maps -> modules (module_id));
@@ -658,12 +689,14 @@ diesel::allow_tables_to_appear_in_same_query!(
     diseases,
     documents,
     feats,
+    fog_revealed_areas,
     hazards,
     item_attunement_classes,
     items,
     languages,
     light_sources,
     map_traps,
+    map_pois,
     maps,
     module_monsters,
     module_npcs,

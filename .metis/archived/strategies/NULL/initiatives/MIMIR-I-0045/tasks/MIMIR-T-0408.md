@@ -4,14 +4,14 @@ level: task
 title: "Consolidate shared component library"
 short_code: "MIMIR-T-0408"
 created_at: 2026-01-21T16:34:58.690978+00:00
-updated_at: 2026-01-21T16:34:58.690978+00:00
+updated_at: 2026-01-25T01:03:00.972836+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,12 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Consolidate scattered shared components into a centralized library structure per v0.5 design (T-0363). Currently components are spread across `src/components/`, `src/shared/components/`, and feature directories.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

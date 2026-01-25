@@ -4,15 +4,15 @@ level: task
 title: "Implement Book Content Reading Support"
 short_code: "MIMIR-T-0410"
 created_at: 2026-01-22T02:29:59.865276+00:00
-updated_at: 2026-01-22T02:34:49.248219+00:00
+updated_at: 2026-01-25T01:03:03.214153+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
   - "#feature"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -40,6 +40,10 @@ Add backend support for storing and retrieving book content from imported 5etool
 - **User Value**: Users can read full book content (PHB chapters, DMG sections, etc.) directly in the app instead of just searching the catalog
 - **Business Value**: Completes the Reference view functionality - currently only Catalog mode works
 - **Effort Estimate**: M (Medium)
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

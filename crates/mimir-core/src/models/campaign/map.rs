@@ -27,6 +27,8 @@ pub struct Map {
     pub uvtt_asset_id: String,
     /// Initial lighting mode: bright, dim, or dark
     pub lighting_mode: String,
+    /// Whether fog of war is enabled
+    pub fog_enabled: i32,
     /// ISO8601 timestamp of creation
     pub created_at: String,
     /// ISO8601 timestamp of last update
@@ -57,6 +59,11 @@ impl Map {
     /// Check if lighting mode is dark.
     pub fn is_dark(&self) -> bool {
         self.lighting_mode == "dark"
+    }
+
+    /// Check if fog of war is enabled.
+    pub fn is_fog_enabled(&self) -> bool {
+        self.fog_enabled != 0
     }
 }
 
@@ -110,6 +117,7 @@ pub struct NewMap<'a> {
     pub sort_order: i32,
     pub uvtt_asset_id: &'a str,
     pub lighting_mode: &'a str,
+    pub fog_enabled: i32,
 }
 
 impl<'a> NewMap<'a> {
@@ -129,6 +137,7 @@ impl<'a> NewMap<'a> {
             sort_order: 0,
             uvtt_asset_id,
             lighting_mode: LightingMode::default().as_str(),
+            fog_enabled: 0,
         }
     }
 
@@ -149,6 +158,7 @@ impl<'a> NewMap<'a> {
             sort_order: 0,
             uvtt_asset_id,
             lighting_mode: LightingMode::default().as_str(),
+            fog_enabled: 0,
         }
     }
 
@@ -179,6 +189,7 @@ pub struct UpdateMap<'a> {
     pub description: Option<Option<&'a str>>,
     pub sort_order: Option<i32>,
     pub lighting_mode: Option<&'a str>,
+    pub fog_enabled: Option<i32>,
     pub module_id: Option<Option<&'a str>>,
     pub updated_at: Option<&'a str>,
 }
@@ -215,6 +226,33 @@ impl<'a> UpdateMap<'a> {
     pub fn set_lighting_mode(mode: LightingMode, updated_at: &'a str) -> Self {
         Self {
             lighting_mode: Some(mode.as_str()),
+            updated_at: Some(updated_at),
+            ..Default::default()
+        }
+    }
+
+    /// Enable fog of war.
+    pub fn enable_fog(updated_at: &'a str) -> Self {
+        Self {
+            fog_enabled: Some(1),
+            updated_at: Some(updated_at),
+            ..Default::default()
+        }
+    }
+
+    /// Disable fog of war.
+    pub fn disable_fog(updated_at: &'a str) -> Self {
+        Self {
+            fog_enabled: Some(0),
+            updated_at: Some(updated_at),
+            ..Default::default()
+        }
+    }
+
+    /// Set fog enabled state.
+    pub fn set_fog_enabled(enabled: bool, updated_at: &'a str) -> Self {
+        Self {
+            fog_enabled: Some(if enabled { 1 } else { 0 }),
             updated_at: Some(updated_at),
             ..Default::default()
         }

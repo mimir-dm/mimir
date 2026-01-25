@@ -117,7 +117,7 @@
               @click="selectMonster(monster)"
             >
               {{ monster.name }}
-              <span class="monster-cr">CR {{ monster.cr }}</span>
+              <span class="monster-cr">CR {{ formatCr(monster.cr) }}</span>
             </button>
           </div>
         </div>
@@ -182,8 +182,8 @@ interface Monster {
   id: number
   name: string
   source: string
-  size: string
-  cr: string
+  size: string | string[] | unknown  // Can be string, array, or object from 5etools
+  cr: string | string[] | unknown    // Can also be array for variable CR
 }
 
 interface Trap {
@@ -372,7 +372,7 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
   selectedType.value = 'monster'
   tokenName.value = mm.monster_name
 
-  // Get monster size from data (handles both full names and abbreviations)
+  // Get monster size from data (handles various formats: string, array, etc.)
   if (mm.monster_data?.size) {
     const sizeMap: Record<string, TokenSize> = {
       // Abbreviated (5etools format)
@@ -390,8 +390,8 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
       'huge': 'huge',
       'gargantuan': 'gargantuan'
     }
-    const normalizedSize = mm.monster_data.size.toLowerCase()
-    selectedSize.value = sizeMap[normalizedSize] || 'medium'
+    const normalizedSizeStr = normalizeSize(mm.monster_data.size)
+    selectedSize.value = sizeMap[normalizedSizeStr] || 'medium'
   }
 
   // Set linked monster info (for display, not for DB linking)
@@ -436,24 +436,16 @@ async function searchMonsters() {
 
   searchTimeout = setTimeout(async () => {
     try {
-      // Backend expects 'filters' with 'name' field for text search
-      const response = await invoke<any[]>('search_monsters', {
-        filters: {
-          name: monsterSearch.value,
-          sources: null,
-          creature_types: null,
-          sizes: null,
-          alignments: null,
-          min_cr: null,
-          max_cr: null,
-          min_hp: null,
-          max_hp: null,
-          environments: null,
-          limit: 10
-        }
+      // Backend expects 'filter' with 'nameContains' field (Tauri v2 converts to snake_case)
+      const response = await invoke<{ success: boolean; data?: any[] }>('search_monsters', {
+        filter: {
+          nameContains: monsterSearch.value
+        },
+        limit: 10
       })
-      if (response && Array.isArray(response)) {
-        monsterResults.value = response.map(m => ({
+      console.log('Monster search response:', response)
+      if (response.success && response.data && Array.isArray(response.data)) {
+        monsterResults.value = response.data.map(m => ({
           id: m.id || 0,
           name: m.name,
           source: m.source || 'MM',
@@ -465,6 +457,28 @@ async function searchMonsters() {
       console.error('Failed to search monsters:', e)
     }
   }, 300)
+}
+
+// Helper to normalize size from various formats (string, array, etc.)
+function normalizeSize(size: unknown): string {
+  if (!size) return 'm'
+  if (typeof size === 'string') return size.toLowerCase()
+  if (Array.isArray(size) && size.length > 0) return String(size[0]).toLowerCase()
+  return 'm'
+}
+
+// Helper to format CR for display (handles string, array, object formats)
+function formatCr(cr: unknown): string {
+  if (!cr) return 'N/A'
+  if (typeof cr === 'string') return cr
+  if (typeof cr === 'number') return String(cr)
+  if (Array.isArray(cr) && cr.length > 0) return String(cr[0])
+  if (typeof cr === 'object' && cr !== null) {
+    // Handle objects like { cr: "1", lair: "2" }
+    const crObj = cr as Record<string, unknown>
+    if ('cr' in crObj) return String(crObj.cr)
+  }
+  return 'N/A'
 }
 
 function selectMonster(monster: Monster) {
@@ -489,8 +503,8 @@ function selectMonster(monster: Monster) {
     'huge': 'huge',
     'gargantuan': 'gargantuan'
   }
-  const normalizedSize = monster.size?.toLowerCase() || 'm'
-  selectedSize.value = sizeMap[normalizedSize] || 'medium'
+  const normalizedSizeStr = normalizeSize(monster.size)
+  selectedSize.value = sizeMap[normalizedSizeStr] || 'medium'
 
   monsterSearch.value = ''
   monsterResults.value = []
@@ -514,11 +528,21 @@ async function searchTraps() {
 
   trapSearchTimeout = setTimeout(async () => {
     try {
-      const response = await invoke<Trap[]>('search_traps', {
-        search: trapSearch.value
+      // Backend expects 'filter' with 'nameContains' field (Tauri v2 converts to snake_case)
+      const response = await invoke<{ success: boolean; data?: any[] }>('search_traps', {
+        filter: {
+          nameContains: trapSearch.value
+        },
+        limit: 10
       })
-      if (response && Array.isArray(response)) {
-        trapResults.value = response
+      console.log('Trap search response:', response)
+      if (response.success && response.data && Array.isArray(response.data)) {
+        trapResults.value = response.data.map(t => ({
+          name: t.name,
+          source: t.source || 'DMG',
+          trap_type: t.trap_type || t.trapHazType || 'Unknown',
+          category: t.category || 'Trap'
+        }))
       }
     } catch (e) {
       console.error('Failed to search traps:', e)

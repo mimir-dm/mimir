@@ -89,6 +89,13 @@ const routes: RouteRecordRaw[] = [
     name: 'character-sheet',
     component: () => import('../../features/characters/views/CharacterSheetView.vue'),
     props: true
+  },
+  // Player Display Window (separate window for players)
+  {
+    path: '/player-display',
+    name: 'player-display',
+    component: () => import('../../components/PlayerDisplayWindow.vue'),
+    meta: { hideNav: true, isPlayerDisplay: true }
   }
 ]
 

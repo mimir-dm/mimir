@@ -49,6 +49,21 @@
               </li>
             </ul>
           </div>
+
+          <!-- Developer Tools (dev mode only) -->
+          <div v-if="isDevMode" class="sidebar-section">
+            <h3 class="sidebar-section-title">Developer</h3>
+            <ul class="sidebar-nav">
+              <li>
+                <button
+                  @click="activeSection = 'dev-tools'"
+                  :class="['nav-item', { active: activeSection === 'dev-tools' }]"
+                >
+                  Dev Tools
+                </button>
+              </li>
+            </ul>
+          </div>
         </nav>
         
         <!-- Content Area -->
@@ -205,6 +220,66 @@
             </div>
           </div>
 
+          <!-- Dev Tools (dev mode only) -->
+          <div v-else-if="activeSection === 'dev-tools' && isDevMode" class="content-section">
+            <h2 class="content-title">Developer Tools</h2>
+            <p class="content-description">Development-only tools for testing and debugging</p>
+
+            <div class="dev-tools-card">
+              <h3 class="card-title">Test Data Seeder</h3>
+              <p class="card-description">
+                Seed the database with "The Lost Mine of Phandelver" test campaign including modules,
+                characters, monsters, and NPCs for development testing.
+              </p>
+
+              <div class="seed-status">
+                <span class="status-label">Status:</span>
+                <span :class="['status-badge', isDevSeeded ? 'seeded' : 'not-seeded']">
+                  {{ isDevSeeded ? 'Test Data Present' : 'Not Seeded' }}
+                </span>
+              </div>
+
+              <div class="seed-actions">
+                <button
+                  v-if="!isDevSeeded"
+                  @click="handleSeedData"
+                  class="button button-primary"
+                  :disabled="seedActionPending"
+                >
+                  {{ seedActionPending ? 'Seeding...' : 'Seed Test Data' }}
+                </button>
+                <button
+                  v-if="isDevSeeded"
+                  @click="handleReseedData"
+                  class="button button-secondary"
+                  :disabled="seedActionPending"
+                >
+                  {{ seedActionPending ? 'Reseeding...' : 'Reseed (Clear & Recreate)' }}
+                </button>
+                <button
+                  v-if="isDevSeeded"
+                  @click="handleClearData"
+                  class="button button-danger"
+                  :disabled="seedActionPending"
+                >
+                  {{ seedActionPending ? 'Clearing...' : 'Clear Test Data' }}
+                </button>
+              </div>
+
+              <p v-if="seedMessage" :class="['seed-message', seedMessageType]">
+                {{ seedMessage }}
+              </p>
+            </div>
+
+            <div class="dev-info-card">
+              <h3 class="card-title">Prerequisites</h3>
+              <ul class="prereq-list">
+                <li>Import the Monster Manual (MM) via Library for full monster data display</li>
+                <li>Seed assets (maps) are bundled with dev builds</li>
+              </ul>
+            </div>
+          </div>
+
         </main>
       </div>
     </div>
@@ -245,6 +320,13 @@ const copiedText = ref('')
 const databasePath = ref('')
 const skillPath = ref('')
 
+// Dev Tools state
+const isDevMode = ref(false)
+const isDevSeeded = ref(false)
+const seedActionPending = ref(false)
+const seedMessage = ref('')
+const seedMessageType = ref<'success' | 'error'>('success')
+
 // Computed Claude Code CLI command
 const claudeCodeCommand = computed(() => {
   const dbPath = databasePath.value || '/path/to/mimir.db'
@@ -278,6 +360,9 @@ onMounted(async () => {
   // Load app settings (for MCP server)
   await appSettingsStore.loadSettings()
 
+  // Check dev mode and seeded status
+  await checkDevMode()
+
   // Load app info for MCP integration
   try {
     interface AppInfo {
@@ -305,6 +390,95 @@ onMounted(async () => {
     appVersion.value = 'Unknown'
   }
 })
+
+// Dev Tools functions
+async function checkDevMode() {
+  try {
+    const response = await invoke<{ success: boolean; data: boolean }>('is_dev_mode')
+    isDevMode.value = response.success && response.data
+    if (isDevMode.value) {
+      await checkDevSeeded()
+    }
+  } catch (error) {
+    console.error('Failed to check dev mode:', error)
+    isDevMode.value = false
+  }
+}
+
+async function checkDevSeeded() {
+  try {
+    const response = await invoke<{ success: boolean; data: boolean }>('is_dev_seeded')
+    isDevSeeded.value = response.success && response.data
+  } catch (error) {
+    console.error('Failed to check dev seeded status:', error)
+    isDevSeeded.value = false
+  }
+}
+
+async function handleSeedData() {
+  seedActionPending.value = true
+  seedMessage.value = ''
+  try {
+    const response = await invoke<{ success: boolean; data: boolean; error?: string }>('seed_dev_data')
+    if (response.success) {
+      seedMessage.value = response.data
+        ? 'Test data seeded successfully!'
+        : 'Test data already exists.'
+      seedMessageType.value = 'success'
+      await checkDevSeeded()
+    } else {
+      seedMessage.value = response.error || 'Failed to seed data'
+      seedMessageType.value = 'error'
+    }
+  } catch (error) {
+    seedMessage.value = `Error: ${error}`
+    seedMessageType.value = 'error'
+  } finally {
+    seedActionPending.value = false
+  }
+}
+
+async function handleReseedData() {
+  seedActionPending.value = true
+  seedMessage.value = ''
+  try {
+    const response = await invoke<{ success: boolean; data: boolean; error?: string }>('reseed_dev_data')
+    if (response.success) {
+      seedMessage.value = 'Test data reseeded successfully!'
+      seedMessageType.value = 'success'
+      await checkDevSeeded()
+    } else {
+      seedMessage.value = response.error || 'Failed to reseed data'
+      seedMessageType.value = 'error'
+    }
+  } catch (error) {
+    seedMessage.value = `Error: ${error}`
+    seedMessageType.value = 'error'
+  } finally {
+    seedActionPending.value = false
+  }
+}
+
+async function handleClearData() {
+  seedActionPending.value = true
+  seedMessage.value = ''
+  try {
+    const response = await invoke<{ success: boolean; error?: string }>('clear_dev_data')
+    if (response.success) {
+      seedMessage.value = 'Test data cleared successfully!'
+      seedMessageType.value = 'success'
+      await checkDevSeeded()
+    } else {
+      seedMessage.value = response.error || 'Failed to clear data'
+      seedMessageType.value = 'error'
+    }
+  } catch (error) {
+    seedMessage.value = `Error: ${error}`
+    seedMessageType.value = 'error'
+  } finally {
+    seedActionPending.value = false
+  }
+}
 
 // MCP Integration methods
 const copyToClipboard = async (text: string) => {
@@ -862,5 +1036,143 @@ select.form-input {
 .copy-button:hover {
   background: var(--color-gray-600);
   color: white;
+}
+
+/* Dev Tools Styles */
+.dev-tools-card,
+.dev-info-card {
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.card-description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
+}
+
+.seed-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.seed-status .status-label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.seed-status .status-badge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.seed-status .status-badge.seeded {
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+  border: 1px solid var(--color-success-300);
+}
+
+.seed-status .status-badge.not-seeded {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+  border: 1px solid var(--color-gray-300);
+}
+
+.theme-dark .seed-status .status-badge.seeded {
+  background-color: var(--color-success-900);
+  color: var(--color-success-300);
+  border-color: var(--color-success-700);
+}
+
+.theme-dark .seed-status .status-badge.not-seeded {
+  background-color: var(--color-gray-800);
+  color: var(--color-gray-400);
+  border-color: var(--color-gray-600);
+}
+
+.seed-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.button-primary {
+  background-color: var(--color-primary-500);
+  color: white;
+  border: none;
+}
+
+.button-primary:hover {
+  background-color: var(--color-primary-600);
+}
+
+.button-danger {
+  background-color: var(--color-error-500);
+  color: white;
+  border: none;
+}
+
+.button-danger:hover {
+  background-color: var(--color-error-600);
+}
+
+.seed-message {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.seed-message.success {
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+  border: 1px solid var(--color-success-300);
+}
+
+.seed-message.error {
+  background-color: var(--color-error-100);
+  color: var(--color-error-700);
+  border: 1px solid var(--color-error-300);
+}
+
+.theme-dark .seed-message.success {
+  background-color: var(--color-success-900);
+  color: var(--color-success-300);
+  border-color: var(--color-success-700);
+}
+
+.theme-dark .seed-message.error {
+  background-color: var(--color-error-900);
+  color: var(--color-error-300);
+  border-color: var(--color-error-700);
+}
+
+.prereq-list {
+  margin: 0;
+  padding-left: var(--spacing-lg);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.prereq-list li {
+  margin-bottom: var(--spacing-xs);
 }
 </style>

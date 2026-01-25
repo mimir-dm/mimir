@@ -169,6 +169,7 @@ impl<'a> NewMonster<'a> {
 
 /// Filters for searching monsters.
 #[derive(Debug, Default, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MonsterFilter {
     pub name_contains: Option<String>,
     /// Single source filter (legacy).

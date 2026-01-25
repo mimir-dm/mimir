@@ -585,6 +585,7 @@ const tokenOnlyLos = ref(false) // LOS mode: false = Fog (map hidden), true = To
 const revealMap = ref(false) // Master toggle: false = hiding active (safe default), true = everything revealed
 
 // UVTT map data composable
+const mapIdRef = toRef(props, 'mapId')
 const campaignIdRef = toRef(props, 'campaignId')
 const moduleIdRef = toRef(props, 'moduleId')
 const uvttFilePathRef = toRef(props, 'uvttFilePath')
@@ -598,7 +599,7 @@ const {
   togglePortal,
   mapWidthPx: uvttMapWidth,
   mapHeightPx: uvttMapHeight
-} = useUvttMap(campaignIdRef, moduleIdRef, uvttFilePathRef)
+} = useUvttMap(mapIdRef, campaignIdRef, moduleIdRef, uvttFilePathRef)
 
 // Ambient light - initialized from UVTT, can be overridden via UI
 const ambientLightOverride = ref<'bright' | 'dim' | 'darkness' | null>(null)
@@ -675,12 +676,58 @@ function handleDoorToggle(portalId: string) {
   }
 }
 
+// Backend token response type (TokenPlacement + TokenWithData fields)
+interface BackendToken {
+  id: string
+  map_id: string
+  module_monster_id: string | null
+  module_npc_id: string | null
+  grid_x: number
+  grid_y: number
+  label: string | null
+  faction_color: string | null
+  hidden: number
+  created_at: string
+  token_type: string
+  name: string | null
+  monster_source: string | null
+}
+
+// Transform backend token to frontend Token format
+function transformToken(backendToken: BackendToken, gridSize: number): Token {
+  // Convert grid coordinates to pixel coordinates (center of grid cell)
+  const x = backendToken.grid_x * gridSize + gridSize / 2
+  const y = backendToken.grid_y * gridSize + gridSize / 2
+
+  return {
+    id: backendToken.id,
+    map_id: backendToken.map_id,
+    name: backendToken.name || backendToken.label || 'Unknown',
+    token_type: backendToken.token_type as Token['token_type'],
+    size: 'medium', // Default size - backend doesn't track this currently
+    x,
+    y,
+    visible_to_players: backendToken.hidden === 0,
+    color: backendToken.faction_color,
+    image_path: null, // Backend doesn't return this currently
+    monster_id: backendToken.module_monster_id,
+    character_id: null,
+    notes: null,
+    vision_type: 'normal',
+    vision_range_ft: null,
+    created_at: backendToken.created_at,
+    updated_at: backendToken.created_at
+  }
+}
+
 // Load tokens when map changes
 async function loadTokens(mapId: string) {
   try {
-    const response = await invoke<{ success: boolean; data?: Token[] }>('list_tokens', { mapId })
+    const response = await invoke<{ success: boolean; data?: BackendToken[] }>('list_tokens', { mapId })
     if (response.success && response.data) {
-      tokens.value = response.data
+      // Transform backend tokens to frontend format
+      const gridSize = effectiveGridSize.value
+      tokens.value = response.data.map(t => transformToken(t, gridSize))
       // Load token images for tokens that have image_path
       await loadTokenImages()
       // Send visible tokens to player display

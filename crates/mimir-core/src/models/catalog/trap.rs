@@ -58,6 +58,7 @@ impl<'a> NewTrap<'a> {
 
 /// Filters for searching traps.
 #[derive(Debug, Default, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TrapFilter {
     pub name_contains: Option<String>,
     /// Single source filter (legacy).

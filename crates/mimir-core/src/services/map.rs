@@ -322,6 +322,7 @@ impl<'a> MapService<'a> {
             description: description_ref,
             sort_order: input.sort_order,
             lighting_mode: lighting_mode_ref,
+            fog_enabled: None,
             module_id: module_id_ref,
             updated_at: Some(&now),
         };

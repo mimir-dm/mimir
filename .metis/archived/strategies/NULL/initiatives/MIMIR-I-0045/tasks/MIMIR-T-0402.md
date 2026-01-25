@@ -7,7 +7,7 @@ created_at: 2026-01-21T16:34:48.647753+00:00
 updated_at: 2026-01-21T18:03:59.671474+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Implement Tauri commands wrapping `mimir-core` DocumentService for markdown document management. Documents are stored in database (not filesystem).
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

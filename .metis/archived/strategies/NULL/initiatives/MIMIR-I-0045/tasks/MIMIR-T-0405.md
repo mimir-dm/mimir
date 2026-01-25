@@ -4,14 +4,14 @@ level: task
 title: "Migrate Pinia stores to new backend"
 short_code: "MIMIR-T-0405"
 created_at: 2026-01-21T16:34:58.011037+00:00
-updated_at: 2026-01-21T19:06:39.139606+00:00
+updated_at: 2026-01-25T01:03:04.080288+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -30,6 +30,10 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Update migrated Pinia stores to work with new Tauri commands. Handle ApiResponse wrapper differences and update type definitions to match `mimir-core` models.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

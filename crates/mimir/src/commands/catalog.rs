@@ -230,19 +230,26 @@ pub fn search_monsters(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
+    println!("[search_monsters] filter: {:?}, limit: {:?}, offset: {:?}", filter, limit, offset);
+
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
     let filter = filter.unwrap_or_default();
+    println!("[search_monsters] resolved filter: {:?}", filter);
+
     let result = MonsterService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(100),
         offset.unwrap_or(0),
     );
     match result {
-        Ok(entities) => ApiResponse::ok(entities_to_json(entities)),
+        Ok(entities) => {
+            println!("[search_monsters] found {} entities", entities.len());
+            ApiResponse::ok(entities_to_json(entities))
+        },
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }

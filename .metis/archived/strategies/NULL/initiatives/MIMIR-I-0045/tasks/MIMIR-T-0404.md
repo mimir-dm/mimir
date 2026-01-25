@@ -7,7 +7,7 @@ created_at: 2026-01-21T16:34:49.068079+00:00
 updated_at: 2026-01-21T19:04:38.531168+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Implement Tauri commands wrapping `mimir-core` catalog services for searching monsters, items, spells, and other 5e content.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

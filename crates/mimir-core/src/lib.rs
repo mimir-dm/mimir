@@ -9,6 +9,7 @@ pub mod fts;
 pub mod import;
 pub mod models;
 mod schema;
+pub mod seed;
 pub mod services;
 pub mod templates;
 pub mod tokens;

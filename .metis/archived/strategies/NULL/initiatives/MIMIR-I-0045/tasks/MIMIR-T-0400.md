@@ -7,7 +7,7 @@ created_at: 2026-01-21T16:34:48.214810+00:00
 updated_at: 2026-01-21T17:55:34.363765+00:00
 parent: MIMIR-I-0045
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -30,6 +30,8 @@ initiative_id: MIMIR-I-0045
 ## Objective
 
 Implement Tauri commands that wrap `mimir-core` CampaignService and ModuleService. These are the foundational commands needed before frontend can function.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

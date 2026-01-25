@@ -51,11 +51,13 @@ export interface UvttMapState {
 /**
  * Composable for managing UVTT map data.
  *
- * @param campaignId - The campaign ID
- * @param moduleId - Optional module ID (null for campaign-level maps)
- * @param mapFilePath - The UVTT file path (e.g., "abc123.dd2vtt")
+ * @param mapId - The map ID (used for API calls)
+ * @param campaignId - The campaign ID (used for watch dependencies)
+ * @param moduleId - Optional module ID (used for watch dependencies)
+ * @param mapFilePath - The UVTT file path (used for watch dependencies)
  */
 export function useUvttMap(
+  mapId: Ref<string | null>,
   campaignId: Ref<string | null>,
   moduleId: Ref<string | null>,
   mapFilePath: Ref<string | null>
@@ -74,7 +76,7 @@ export function useUvttMap(
 
   /** Fetch UVTT data from the backend */
   async function loadUvttData() {
-    if (!campaignId.value || !mapFilePath.value) {
+    if (!mapId.value) {
       isLoaded.value = false
       return
     }
@@ -84,9 +86,7 @@ export function useUvttMap(
 
     try {
       const response = await invoke<ApiResponse<UvttData>>('get_uvtt_map', {
-        campaignId: campaignId.value,
-        moduleId: moduleId.value,
-        filePath: mapFilePath.value
+        id: mapId.value
       })
 
       if (response.success && response.data) {
@@ -170,12 +170,12 @@ export function useUvttMap(
   const mapWidthPx = computed(() => gridCols.value * pixelsPerGrid.value)
   const mapHeightPx = computed(() => gridRows.value * pixelsPerGrid.value)
 
-  // Watch for map file changes and reload
-  watch([campaignId, moduleId, mapFilePath], () => {
-    if (mapFilePath.value) {
+  // Watch for map changes and reload
+  watch([mapId], () => {
+    if (mapId.value) {
       loadUvttData()
     } else {
-      // Clear state when no map file
+      // Clear state when no map
       uvttData.value = null
       walls.value = []
       portals.value = []

@@ -8,7 +8,7 @@
 )]
 
 use mimir_core::db::init_database;
-use mimir_lib::commands::{asset, campaign, catalog, character, document, map, module, source};
+use mimir_lib::commands::{asset, campaign, catalog, character, dev, document, map, module, player_display, source};
 use mimir_lib::{AppPaths, AppState};
 use tauri::Manager;
 use tracing_subscriber::EnvFilter;
@@ -63,6 +63,21 @@ fn main() {
             module::create_module,
             module::update_module,
             module::delete_module,
+            // Module monster commands
+            module::list_module_monsters_with_data,
+            module::add_module_monster,
+            module::update_module_monster,
+            // Module NPC commands
+            module::list_module_npcs,
+            // Token commands
+            module::list_tokens,
+            module::list_token_summaries,
+            module::create_token,
+            module::update_token,
+            module::update_token_position,
+            module::toggle_token_visibility,
+            module::delete_token,
+            module::serve_token_image,
             // Character commands - list
             character::list_characters,
             character::list_pcs,
@@ -102,6 +117,46 @@ fn main() {
             map::delete_map,
             // Map commands - UVTT data
             map::read_map_uvtt,
+            map::get_uvtt_map,
+            map::serve_map_image,
+            // Map commands - light sources
+            map::list_light_sources,
+            map::create_light_source,
+            map::create_torch,
+            map::create_lantern,
+            map::update_light_source,
+            map::move_light_source,
+            map::toggle_light_source,
+            map::delete_light_source,
+            map::delete_all_light_sources,
+            // Map commands - fog of war
+            map::get_fog_state,
+            map::toggle_fog,
+            map::enable_fog,
+            map::disable_fog,
+            map::reveal_rect,
+            map::reveal_circle,
+            map::reveal_all,
+            map::delete_revealed_area,
+            map::reset_fog,
+            // Map commands - traps
+            map::list_map_traps,
+            map::get_map_trap,
+            map::create_map_trap,
+            map::update_map_trap,
+            map::move_map_trap,
+            map::toggle_map_trap_visibility,
+            map::trigger_map_trap,
+            map::reset_map_trap,
+            map::delete_map_trap,
+            // Map commands - POIs (Points of Interest)
+            map::list_map_pois,
+            map::get_map_poi,
+            map::create_map_poi,
+            map::update_map_poi,
+            map::move_map_poi,
+            map::toggle_map_poi_visibility,
+            map::delete_map_poi,
             // Asset commands - list
             asset::list_campaign_assets,
             asset::list_module_assets,
@@ -258,6 +313,20 @@ fn main() {
             source::list_library_books,
             source::get_book_content,
             source::serve_book_image,
+            // Player display commands
+            player_display::is_player_display_open,
+            player_display::open_player_display_window,
+            player_display::close_player_display_window,
+            player_display::toggle_player_display_fullscreen,
+            player_display::send_map_to_display,
+            player_display::update_display_viewport,
+            player_display::toggle_display_blackout,
+            // Dev tools commands (dev mode only)
+            dev::is_dev_mode,
+            dev::is_dev_seeded,
+            dev::seed_dev_data,
+            dev::reseed_dev_data,
+            dev::clear_dev_data,
         ])
         .run(tauri::generate_context!())
         .expect("Error running Mimir application");
