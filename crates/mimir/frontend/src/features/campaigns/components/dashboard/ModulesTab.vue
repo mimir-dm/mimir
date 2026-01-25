@@ -248,24 +248,6 @@
             </div>
           </div>
 
-          <!-- Play Notes Panel -->
-          <aside class="notes-panel" :class="{ collapsed: notesCollapsed }">
-            <button class="notes-toggle" @click="toggleNotes">
-              <span class="notes-toggle-icon">{{ notesCollapsed ? '▲' : '▼' }}</span>
-              <span class="notes-toggle-label">Play Notes</span>
-              <span v-if="notesSaving" class="notes-saving">Saving...</span>
-              <span v-else-if="notesLastSaved" class="notes-saved">Saved</span>
-            </button>
-
-            <div class="notes-content" v-show="!notesCollapsed">
-              <textarea
-                v-model="notesContent"
-                class="notes-textarea"
-                placeholder="Type your play notes here... (auto-saves)"
-                @input="handleNotesInput"
-              ></textarea>
-            </div>
-          </aside>
         </div>
       </template>
 
@@ -408,6 +390,56 @@
         </button>
       </template>
     </AppModal>
+
+    <!-- NPC Detail Modal -->
+    <AppModal
+      :visible="showNpcDetailModal"
+      :title="selectedNpc?.name || 'NPC Details'"
+      size="md"
+      @close="closeNpcDetailModal"
+    >
+      <div v-if="selectedNpc" class="npc-detail-content">
+        <!-- Role badge -->
+        <div v-if="selectedNpc.role" class="npc-role-badge">{{ selectedNpc.role }}</div>
+
+        <!-- Description -->
+        <div v-if="selectedNpc.description" class="npc-section">
+          <p>{{ selectedNpc.description }}</p>
+        </div>
+
+        <!-- Appearance -->
+        <div v-if="selectedNpc.appearance" class="npc-section">
+          <h4>Appearance</h4>
+          <p>{{ selectedNpc.appearance }}</p>
+        </div>
+
+        <!-- Personality -->
+        <div v-if="selectedNpc.personality" class="npc-section">
+          <h4>Personality</h4>
+          <p>{{ selectedNpc.personality }}</p>
+        </div>
+
+        <!-- Motivation -->
+        <div v-if="selectedNpc.motivation" class="npc-section">
+          <h4>Motivation</h4>
+          <p>{{ selectedNpc.motivation }}</p>
+        </div>
+
+        <!-- Secrets (DM only) -->
+        <div v-if="selectedNpc.secrets" class="npc-section npc-secrets">
+          <h4>Secrets <span class="dm-only-badge">DM Only</span></h4>
+          <p>{{ selectedNpc.secrets }}</p>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="!selectedNpc.description && !selectedNpc.appearance && !selectedNpc.personality && !selectedNpc.motivation && !selectedNpc.secrets" class="npc-empty">
+          <p>No details have been added for this NPC yet.</p>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-secondary" @click="closeNpcDetailModal">Close</button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -418,7 +450,6 @@ import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import { DocumentService } from '@/services/DocumentService'
 import { useModuleMonsters } from '@/features/modules/composables/useModuleMonsters'
-import { usePlayNotes, buildNotesFilePath } from '@/features/modules/composables/usePlayNotes'
 import { openSourcesReference } from '@/shared/utils/windows'
 import { dataEvents } from '@/shared/utils/dataEvents'
 import CreateModuleModal from '../StageLanding/CreateModuleModal.vue'
@@ -486,28 +517,17 @@ const {
 // Monster panel state
 const monsterPanelOpen = ref(true)
 
-// Trap state
+// Trap state - references catalog traps
 interface ModuleTrap {
+  id: string
   name: string
-  source: string
-  count: number
+  source: string  // Catalog source (e.g., "DMG")
+  count: number   // How many of this trap type across all maps
 }
 const moduleTraps = ref<ModuleTrap[]>([])
 const loadingTraps = ref(false)
 const selectedTrap = ref<ModuleTrap | null>(null)
 const trapPanelOpen = ref(true)
-
-// Play notes (from composable)
-const {
-  notesCollapsed,
-  notesContent,
-  notesSaving,
-  notesLastSaved,
-  toggleNotes,
-  setNotesFilePath,
-  loadNotes,
-  handleNotesInput
-} = usePlayNotes()
 
 // Document state
 const moduleDocuments = ref<Document[]>([])
@@ -541,6 +561,10 @@ const showNpcSelector = ref(false)
 const showExportDialog = ref(false)
 const moduleNpcs = ref<ModuleNpc[]>([])
 const loadingNpcs = ref(false)
+
+// NPC detail modal state
+const showNpcDetailModal = ref(false)
+const selectedNpc = ref<ModuleNpc | null>(null)
 
 // Get NPC IDs that are already in the module
 const existingNpcCharacterIds = computed(() => {
@@ -576,9 +600,6 @@ async function selectModule(mod: Module) {
   selectedDocument.value = null
   selectedTrap.value = null
 
-  // Note: Play notes functionality currently disabled - directory_path not available
-  // TODO: Re-enable once campaign directory structure is implemented
-
   await Promise.all([
     loadModuleDocuments(),
     loadModuleMaps(),
@@ -588,7 +609,7 @@ async function selectModule(mod: Module) {
   ])
 }
 
-// Load traps from module maps (trap tokens)
+// Load traps from module maps (from map_traps table)
 async function loadModuleTraps() {
   if (!selectedModule.value || !props.campaign) return
 
@@ -604,24 +625,26 @@ async function loadModuleTraps() {
       return
     }
 
-    // Get tokens from all maps and filter for traps
-    const trapCounts = new Map<string, ModuleTrap>()
+    // Get traps from all maps (from map_traps table)
+    // Group by name for catalog lookup
+    const trapsByName = new Map<string, ModuleTrap>()
 
     for (const map of mapsResponse.data) {
-      const tokensResponse = await invoke<{ success: boolean; data?: any[] }>('list_tokens', {
+      const trapsResponse = await invoke<{ success: boolean; data?: any[] }>('list_map_traps', {
         mapId: map.id
       })
 
-      if (tokensResponse.success && tokensResponse.data) {
-        for (const token of tokensResponse.data) {
-          if (token.token_type === 'trap' && token.name) {
-            const existing = trapCounts.get(token.name)
+      if (trapsResponse.success && trapsResponse.data) {
+        for (const trap of trapsResponse.data) {
+          if (trap.name) {
+            const existing = trapsByName.get(trap.name)
             if (existing) {
               existing.count++
             } else {
-              trapCounts.set(token.name, {
-                name: token.name,
-                source: 'DMG', // Default source for trap tokens
+              trapsByName.set(trap.name, {
+                id: trap.id,
+                name: trap.name,
+                source: 'DMG',  // Default source for catalog lookup
                 count: 1
               })
             }
@@ -630,7 +653,7 @@ async function loadModuleTraps() {
       }
     }
 
-    moduleTraps.value = Array.from(trapCounts.values()).sort((a, b) => a.name.localeCompare(b.name))
+    moduleTraps.value = Array.from(trapsByName.values()).sort((a, b) => a.name.localeCompare(b.name))
   } catch (e) {
     console.error('Failed to load module traps:', e)
     moduleTraps.value = []
@@ -861,9 +884,14 @@ async function openMonsterReference() {
 
 // View module NPC detail
 function viewModuleNpc(npc: ModuleNpc) {
-  // Module NPCs are custom DM-created characters, not campaign characters
-  // For now, just log the NPC details (could open a detail modal later)
-  console.log('Selected NPC:', npc)
+  selectedNpc.value = npc
+  showNpcDetailModal.value = true
+}
+
+// Close NPC detail modal
+function closeNpcDetailModal() {
+  showNpcDetailModal.value = false
+  selectedNpc.value = null
 }
 
 // Handle NPCs added from selector
@@ -1746,89 +1774,6 @@ onMounted(async () => {
   font-size: 0.875rem;
 }
 
-/* Play Notes Panel */
-.notes-panel {
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  transition: height var(--transition-slow);
-  height: 200px;
-  min-height: 36px;
-  flex-shrink: 0;
-}
-
-.notes-panel.collapsed {
-  height: 36px;
-}
-
-.notes-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: var(--color-surface-variant);
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--color-text);
-  text-align: left;
-  width: 100%;
-}
-
-.notes-toggle:hover {
-  background: var(--color-surface-hover);
-}
-
-.notes-toggle-icon {
-  font-size: 0.65rem;
-  color: var(--color-text-secondary);
-}
-
-.notes-toggle-label {
-  flex: 1;
-}
-
-.notes-saving {
-  font-size: 0.7rem;
-  color: var(--color-warning);
-  font-style: italic;
-}
-
-.notes-saved {
-  font-size: 0.7rem;
-  color: var(--color-success);
-}
-
-.notes-content {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-.notes-textarea {
-  flex: 1;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  resize: none;
-  font-family: inherit;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  background: var(--color-surface);
-  color: var(--color-text);
-  overflow-y: auto;
-}
-
-.notes-textarea:focus {
-  outline: none;
-}
-
-.notes-textarea::placeholder {
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
 /* Monster Edit Button */
 .monster-edit-btn {
   display: flex;
@@ -1941,5 +1886,82 @@ onMounted(async () => {
   color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.4;
+}
+
+/* NPC Detail Modal */
+.npc-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.npc-role-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-warning-100, rgba(245, 158, 11, 0.1));
+  color: var(--color-warning, #f59e0b);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+}
+
+.npc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.npc-section h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-primary-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.npc-section p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.npc-secrets {
+  padding: var(--spacing-sm);
+  background: var(--color-error-100, rgba(239, 68, 68, 0.05));
+  border: 1px dashed var(--color-error, #ef4444);
+  border-radius: var(--radius-sm);
+}
+
+.npc-secrets h4 {
+  color: var(--color-error, #ef4444);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.dm-only-badge {
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  background: var(--color-error, #ef4444);
+  color: white;
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.npc-empty {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.npc-empty p {
+  margin: 0;
 }
 </style>

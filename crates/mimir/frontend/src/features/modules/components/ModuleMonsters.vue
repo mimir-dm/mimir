@@ -63,13 +63,14 @@
         v-for="monster in moduleMonsters"
         :key="monster.id"
         class="tagged-monster-item"
+        @click="viewMonster(monster)"
       >
         <div class="monster-details">
-          <span class="monster-name">{{ monster.monster_name }}</span>
+          <span class="monster-name clickable">{{ monster.display_name || monster.monster_name }}</span>
           <span class="monster-source">{{ monster.monster_source }}</span>
         </div>
 
-        <div class="monster-controls">
+        <div class="monster-controls" @click.stop>
           <div class="quantity-control">
             <label>Qty:</label>
             <input
@@ -109,6 +110,23 @@
       title="No monsters tagged yet"
       description="Search above to add monsters to this module."
     />
+
+    <!-- Monster Detail Modal -->
+    <AppModal
+      :visible="showMonsterModal"
+      :title="selectedMonster?.display_name || selectedMonster?.monster_name || 'Monster'"
+      size="md"
+      @close="closeMonsterModal"
+    >
+      <div
+        v-if="monsterDetailContent"
+        class="dnd-content"
+        v-html="monsterDetailContent"
+      ></div>
+      <div v-else class="loading-content">
+        Loading monster details...
+      </div>
+    </AppModal>
   </div>
 </template>
 
@@ -116,7 +134,9 @@
 import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMonsters, type MonsterSummary } from '@/features/sources/composables/catalog/useMonsters'
+import { formatMonsterDetails } from '@/features/sources/formatters/monsterFormatterEnhanced'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 
 interface ModuleMonster {
   id: number
@@ -129,6 +149,8 @@ interface ModuleMonster {
   display_name: string | null
   /** DM notes about customizations or thematic changes */
   notes: string | null
+  /** Full monster data from the catalog (when loaded with _with_data) */
+  monster_data?: any
   created_at: string
   updated_at: string
 }
@@ -149,18 +171,58 @@ const searchResults = ref<MonsterSummary[]>([])
 const isSearching = ref(false)
 const moduleMonsters = ref<ModuleMonster[]>([])
 
+// Monster detail modal state
+const showMonsterModal = ref(false)
+const selectedMonster = ref<ModuleMonster | null>(null)
+const monsterDetailContent = ref<string>('')
+
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-// Load existing module monsters
+// Load existing module monsters with full data
 async function loadModuleMonsters() {
   try {
-    const response = await invoke<{ data: ModuleMonster[] }>('list_module_monsters', {
-      request: { module_id: props.moduleId }
+    const response = await invoke<{ data: ModuleMonster[] }>('list_module_monsters_with_data', {
+      moduleId: props.moduleId
     })
     moduleMonsters.value = response.data || []
   } catch (error) {
     console.error('Failed to load module monsters:', error)
   }
+}
+
+// View monster details in modal
+async function viewMonster(monster: ModuleMonster) {
+  selectedMonster.value = monster
+  showMonsterModal.value = true
+  monsterDetailContent.value = ''
+
+  try {
+    // If we have monster_data, format it directly
+    if (monster.monster_data) {
+      monsterDetailContent.value = await formatMonsterDetails(monster.monster_data)
+    } else {
+      // Fetch the full monster data from catalog
+      const response = await invoke<{ success: boolean; data?: any }>('get_monster_by_name', {
+        name: monster.monster_name,
+        source: monster.monster_source
+      })
+      if (response.success && response.data) {
+        monsterDetailContent.value = await formatMonsterDetails(response.data)
+      } else {
+        monsterDetailContent.value = `<p>Monster data not found for ${monster.monster_name} (${monster.monster_source})</p>`
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load monster details:', error)
+    monsterDetailContent.value = `<p>Error loading monster details</p>`
+  }
+}
+
+// Close monster modal
+function closeMonsterModal() {
+  showMonsterModal.value = false
+  selectedMonster.value = null
+  monsterDetailContent.value = ''
 }
 
 // Debounced search
@@ -541,6 +603,78 @@ onMounted(() => {
 
 .remove-button:hover {
   color: var(--color-error-dark);
+}
+
+/* Clickable monster card */
+.tagged-monster-item {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.tagged-monster-item:hover {
+  background: var(--color-base-200);
+}
+
+.monster-name.clickable {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.monster-name.clickable:hover {
+  text-decoration-style: solid;
+}
+
+/* Modal content */
+.loading-content {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.dnd-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.dnd-content :deep(h1),
+.dnd-content :deep(h2),
+.dnd-content :deep(h3) {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dnd-content :deep(p) {
+  margin-bottom: 0.5rem;
+}
+
+.dnd-content :deep(.stat-block) {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--color-base-100);
+}
+
+.dnd-content :deep(.ability-scores) {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: var(--color-base-200);
+  border-radius: 0.25rem;
+}
+
+.dnd-content :deep(.dice-roll),
+.dnd-content :deep(.damage-roll) {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--color-dnd-damage, #ff6b6b);
+}
+
+.dnd-content :deep(.hit-bonus) {
+  font-weight: 700;
+  color: var(--color-success, #34d399);
 }
 
 </style>

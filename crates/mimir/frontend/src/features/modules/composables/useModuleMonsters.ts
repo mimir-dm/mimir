@@ -35,22 +35,20 @@ export function useModuleMonsters(moduleId: Ref<string>) {
   const selectedMonster = ref<MonsterWithData | null>(null)
   const encountersLoading = ref(true)
 
-  // Load encounters/monsters for this module (including monster tokens from maps)
+  // Load encounters/monsters for this module
   async function loadEncounters(campaignId?: string) {
     encountersLoading.value = true
     try {
-      // Load module monsters
+      // Load module monsters (the source of truth for planned encounters)
       const response = await invoke<{ data: MonsterWithData[] }>('list_module_monsters_with_data', {
         moduleId: moduleId.value
       })
 
       const monsters = response.data || []
 
-      // Also load monster tokens from module maps
-      const mapMonsters = await loadMapMonsterTokens(campaignId)
-
-      // Combine both sources
-      const allMonstersData = [...monsters, ...mapMonsters]
+      // Use module_monsters as the source of truth (no longer loading individual tokens
+      // which caused duplication - e.g., showing "6× Goblin" AND "Goblin 1, Goblin 2...")
+      const allMonstersData = monsters
       allMonsters.value = allMonstersData
 
       // Group monsters by encounter_tag

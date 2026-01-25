@@ -3,10 +3,12 @@
 //! Tauri commands for module CRUD operations and related entities.
 
 use mimir_core::dal::campaign as dal;
+use mimir_core::dal::get_monster_by_name;
 use mimir_core::models::campaign::{
     Module, ModuleMonster, ModuleNpc, NewModuleMonster, NewTokenPlacement, TokenPlacement,
     UpdateModuleMonster, UpdateTokenPlacement,
 };
+use mimir_core::models::catalog::Monster;
 use mimir_core::services::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 use serde::{Deserialize, Serialize};
 use tauri::State;
@@ -163,7 +165,7 @@ pub struct MonsterWithData {
     pub monster_data: Option<serde_json::Value>,
 }
 
-/// List all monsters for a module with optional catalog data.
+/// List all monsters for a module with catalog data.
 #[tauri::command]
 pub fn list_module_monsters_with_data(
     state: State<'_, AppState>,
@@ -180,12 +182,20 @@ pub fn list_module_monsters_with_data(
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    // Convert to MonsterWithData (catalog lookup can be added later)
+    // Convert to MonsterWithData with catalog lookup
     let result: Vec<MonsterWithData> = monsters
         .into_iter()
-        .map(|m| MonsterWithData {
-            monster: m,
-            monster_data: None, // TODO: Join with catalog monsters table
+        .map(|m| {
+            // Look up the monster in the catalog
+            let monster_data = get_monster_by_name(&mut db, &m.monster_name, &m.monster_source)
+                .ok()
+                .flatten()
+                .and_then(|catalog_monster: Monster| catalog_monster.parse_data().ok());
+
+            MonsterWithData {
+                monster: m,
+                monster_data,
+            }
         })
         .collect();
 

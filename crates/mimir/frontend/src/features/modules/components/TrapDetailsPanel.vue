@@ -65,9 +65,15 @@
         Loading trap details...
       </div>
 
+      <!-- Error/not found state -->
+      <div v-else class="trap-not-found">
+        <p>Trap "{{ trap.name }}" not found in catalog.</p>
+        <p class="hint">Check that the trap name matches a catalog entry.</p>
+      </div>
+
       <!-- Source -->
-      <footer class="trap-footer">
-        <span class="source-tag">{{ trap.source }}</span>
+      <footer class="trap-footer" v-if="trapData">
+        <span class="source-tag">{{ trapData.source }}</span>
       </footer>
     </div>
   </aside>
@@ -79,6 +85,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { processFormattingTags } from '@/features/sources/utils/textFormatting'
 
 interface ModuleTrap {
+  id: string
   name: string
   source: string
   count: number
@@ -87,7 +94,7 @@ interface ModuleTrap {
 interface TrapData {
   name: string
   source: string
-  trap_haz_type?: string
+  trapHazType?: string
   entries: any[]
 }
 
@@ -116,7 +123,7 @@ function formatTrapType(): string {
     'ENV': 'Environmental Hazard'
   }
 
-  return typeMap[trapData.value.trap_haz_type || ''] || 'Trap/Hazard'
+  return typeMap[trapData.value.trapHazType || ''] || 'Trap/Hazard'
 }
 
 // Format item entries (for list items with name + entry/entries)
@@ -147,18 +154,20 @@ function formatTableCell(cell: any): string {
   return ''
 }
 
-// Load trap details from backend
+// Load trap details from catalog
 async function loadTrapDetails() {
   loading.value = true
+  trapData.value = null
   try {
-    const result = await invoke<TrapData | null>('get_trap_details', {
+    const result = await invoke<{ success: boolean; data?: TrapData; error?: string }>('get_trap_by_name', {
       name: props.trap.name,
       source: props.trap.source
     })
-    trapData.value = result
+    if (result.success && result.data) {
+      trapData.value = result.data
+    }
   } catch (e) {
     console.error('Failed to load trap details:', e)
-    trapData.value = null
   } finally {
     loading.value = false
   }
@@ -168,12 +177,6 @@ async function loadTrapDetails() {
 watch(() => props.trap, () => {
   loadTrapDetails()
 }, { immediate: true })
-
-onMounted(() => {
-  if (props.trap) {
-    loadTrapDetails()
-  }
-})
 </script>
 
 <style scoped>
@@ -347,6 +350,24 @@ onMounted(() => {
   text-align: center;
   color: var(--color-text-muted);
   font-size: 0.85rem;
+}
+
+/* Not found state */
+.trap-not-found {
+  padding: 1rem;
+  text-align: center;
+}
+
+.trap-not-found p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.trap-not-found .hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 /* Cross-ref styling within trap panel */

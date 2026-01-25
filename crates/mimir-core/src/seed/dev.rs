@@ -607,9 +607,9 @@ fn seed_lights(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize
 fn seed_traps(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize> {
     let mut count = 0;
 
-    // Pit trap near entrance
+    // Pit trap near entrance (catalog name is "Pits" in DMG)
     let pit_trap_id = Uuid::new_v4().to_string();
-    let pit_trap = NewMapTrap::new(&pit_trap_id, map_id, "Pit Trap", 21, 19)
+    let pit_trap = NewMapTrap::new(&pit_trap_id, map_id, "Pits", 21, 19)
         .visible();
     dal::insert_map_trap(conn, &pit_trap)?;
     count += 1;
