@@ -1130,9 +1130,9 @@ async function loadTokens(mapId: string) {
   }
 }
 
-// Load images for all tokens that have image_path
+// Load images for all monster tokens (convention-based paths on backend)
 async function loadTokenImages() {
-  const tokensWithImages = tokens.value.filter(t => t.image_path)
+  const tokensWithImages = tokens.value.filter(t => t.token_type === 'monster')
   const loadPromises = tokensWithImages.map(async (token) => {
     // Skip if already cached
     if (tokenImages.value.has(token.id)) return

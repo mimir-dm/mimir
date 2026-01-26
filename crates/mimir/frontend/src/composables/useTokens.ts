@@ -217,9 +217,9 @@ export function useTokens(mapId: string) {
     }
   }
 
-  // Load images for all tokens that have image_path
+  // Load images for all monster tokens (convention-based paths on backend)
   async function loadAllTokenImages(): Promise<void> {
-    const tokensWithImages = tokens.value.filter(t => t.image_path)
+    const tokensWithImages = tokens.value.filter(t => t.token_type === 'monster')
     await Promise.all(tokensWithImages.map(t => loadTokenImage(t.id)))
   }
 

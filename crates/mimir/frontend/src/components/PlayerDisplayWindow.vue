@@ -345,8 +345,8 @@ onMounted(async () => {
       tokens.value = event.payload.tokens
       deadTokenIds.value = event.payload.deadTokenIds || []
 
-      // Load token images for tokens that have image_path
-      const tokensWithImages = event.payload.tokens.filter(t => t.image_path)
+      // Load token images for monster tokens (convention-based paths on backend)
+      const tokensWithImages = event.payload.tokens.filter(t => t.token_type === 'monster')
       for (const token of tokensWithImages) {
         if (!tokenImages.value.has(token.id)) {
           try {

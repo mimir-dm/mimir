@@ -728,7 +728,7 @@ fn resolve_token_names(
         let monster = dal::get_module_monster_optional(db, monster_id).ok().flatten();
         if let Some(m) = monster {
             // Look up the monster in the catalog to get its size
-            let size = catalog_dal::get_monster_by_name(db, &m.monster_name, &m.monster_source)
+            let size = get_monster_by_name(db, &m.monster_name, &m.monster_source)
                 .ok()
                 .flatten()
                 .and_then(|catalog_monster: mimir_core::models::catalog::Monster| {
@@ -775,18 +775,18 @@ fn normalize_size_code(size: &str) -> String {
 // Token Image Commands
 // =============================================================================
 
-use mimir_core::dal::catalog as catalog_dal;
-use mimir_core::tokens::resolve_token_path;
 
 /// Serve a token's image as a base64 data URL.
 ///
-/// Returns the image data URL for monster tokens that have an associated image.
-/// Returns null for tokens without images (NPCs, markers, or monsters without token images).
+/// Uses convention-based paths: `bestiary/tokens/{source}/{name}.{ext}`
+/// The token_image_path field in the catalog is reserved for custom overrides.
 #[tauri::command]
 pub fn serve_token_image(
     state: State<'_, AppState>,
     token_id: String,
 ) -> ApiResponse<Option<String>> {
+    tracing::debug!("serve_token_image called for token_id: {}", token_id);
+
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
@@ -795,43 +795,76 @@ pub fn serve_token_image(
     // Get the token placement
     let token = match dal::get_token_placement(&mut db, &token_id) {
         Ok(t) => t,
-        Err(e) => return ApiResponse::err(format!("Token not found: {}", e)),
+        Err(e) => {
+            tracing::warn!("Token not found: {} - {}", token_id, e);
+            return ApiResponse::err(format!("Token not found: {}", e));
+        }
     };
 
     // Only monster tokens have images from the catalog
     let Some(ref monster_id) = token.module_monster_id else {
+        tracing::debug!("Token {} has no module_monster_id, skipping image", token_id);
         return ApiResponse::ok(None);
     };
 
     // Get the module monster to find the catalog reference
     let module_monster = match dal::get_module_monster_optional(&mut db, monster_id) {
         Ok(Some(m)) => m,
-        Ok(None) => return ApiResponse::ok(None),
+        Ok(None) => {
+            tracing::warn!("Module monster not found for id: {}", monster_id);
+            return ApiResponse::ok(None);
+        }
         Err(e) => return ApiResponse::err(format!("Failed to get module monster: {}", e)),
     };
 
-    // Look up the catalog monster to get the token_image_path
-    let catalog_monster = match catalog_dal::get_monster_by_name(
-        &mut db,
-        &module_monster.monster_name,
-        &module_monster.monster_source,
-    ) {
-        Ok(Some(m)) => m,
-        Ok(None) => return ApiResponse::ok(None),
-        Err(e) => return ApiResponse::err(format!("Failed to get catalog monster: {}", e)),
-    };
+    tracing::debug!(
+        "Looking for token image: monster_name={}, monster_source={}",
+        module_monster.monster_name,
+        module_monster.monster_source
+    );
 
-    // Check if the monster has a token image path
-    let Some(ref token_image_path) = catalog_monster.token_image_path else {
-        return ApiResponse::ok(None);
-    };
+    // Images are stored in assets/catalog/bestiary/tokens/{source}/{name}.{ext}
+    let img_base = state.paths.assets_dir.join("catalog").join("bestiary").join("tokens");
+    let source_dir = img_base.join(&module_monster.monster_source);
 
-    // Resolve the full path
-    let full_path = resolve_token_path(&state.paths.app_dir, token_image_path);
+    tracing::debug!("Token image source dir: {:?}, exists: {}", source_dir, source_dir.exists());
+
+    // Try different extensions in order of preference
+    let extensions = ["webp", "png", "jpg", "jpeg"];
+    let mut found_path: Option<std::path::PathBuf> = None;
+    let mut found_ext: Option<&str> = None;
+
+    for ext in &extensions {
+        let path = source_dir.join(format!("{}.{}", &module_monster.monster_name, ext));
+        tracing::debug!("Trying path: {:?}, exists: {}", path, path.exists());
+        if path.exists() {
+            found_path = Some(path);
+            found_ext = Some(ext);
+            break;
+        }
+    }
+
+    let (full_path, ext) = match (found_path, found_ext) {
+        (Some(p), Some(e)) => {
+            tracing::debug!("Found token image at: {:?}", p);
+            (p, e)
+        }
+        _ => {
+            tracing::debug!(
+                "No token image found for {}/{}",
+                module_monster.monster_source,
+                module_monster.monster_name
+            );
+            return ApiResponse::ok(None);
+        }
+    };
 
     // Read the image file
     let image_bytes = match std::fs::read(&full_path) {
-        Ok(bytes) => bytes,
+        Ok(bytes) => {
+            tracing::debug!("Read {} bytes from token image", bytes.len());
+            bytes
+        }
         Err(e) => {
             tracing::warn!("Failed to read token image at {:?}: {}", full_path, e);
             return ApiResponse::ok(None);
@@ -839,14 +872,11 @@ pub fn serve_token_image(
     };
 
     // Determine MIME type from extension
-    let mime_type = if token_image_path.ends_with(".webp") {
-        "image/webp"
-    } else if token_image_path.ends_with(".png") {
-        "image/png"
-    } else if token_image_path.ends_with(".jpg") || token_image_path.ends_with(".jpeg") {
-        "image/jpeg"
-    } else {
-        "application/octet-stream"
+    let mime_type = match ext {
+        "webp" => "image/webp",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        _ => "application/octet-stream",
     };
 
     // Encode as base64 data URL
@@ -854,5 +884,6 @@ pub fn serve_token_image(
     let b64 = base64::engine::general_purpose::STANDARD.encode(&image_bytes);
     let data_url = format!("data:{};base64,{}", mime_type, b64);
 
+    tracing::debug!("Returning token image data URL ({} chars)", data_url.len());
     ApiResponse::ok(Some(data_url))
 }
