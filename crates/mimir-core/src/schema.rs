@@ -573,6 +573,10 @@ diesel::table! {
         label -> Nullable<Text>,
         faction_color -> Nullable<Text>,
         hidden -> Integer,
+        vision_bright_ft -> Nullable<Integer>,
+        vision_dim_ft -> Nullable<Integer>,
+        vision_dark_ft -> Integer,
+        light_radius_ft -> Integer,
         created_at -> Text,
     }
 }

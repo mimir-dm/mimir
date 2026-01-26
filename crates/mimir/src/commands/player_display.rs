@@ -10,7 +10,7 @@ use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MapUpdatePayload {
-    pub map_id: i32,
+    pub map_id: String,
     pub grid_type: String,
     pub grid_size_px: Option<i32>,
     pub grid_offset_x: i32,
@@ -97,7 +97,7 @@ pub fn toggle_player_display_fullscreen(app: AppHandle) -> Result<bool, String> 
 #[tauri::command]
 pub fn send_map_to_display(
     app: AppHandle,
-    map_id: i32,
+    map_id: String,
     grid_type: String,
     grid_size_px: Option<i32>,
     grid_offset_x: i32,
@@ -122,7 +122,7 @@ pub fn send_map_to_display(
     };
 
     window
-        .emit("map-update", payload)
+        .emit("player-display:map-update", payload)
         .map_err(|e| format!("Failed to emit map update: {}", e))?;
 
     Ok(())
@@ -138,7 +138,7 @@ pub fn update_display_viewport(app: AppHandle, x: f64, y: f64, zoom: f64) -> Res
     let payload = ViewportPayload { x, y, zoom };
 
     window
-        .emit("viewport-update", payload)
+        .emit("player-display:viewport-update", payload)
         .map_err(|e| format!("Failed to emit viewport update: {}", e))?;
 
     Ok(())
@@ -154,7 +154,7 @@ pub fn toggle_display_blackout(app: AppHandle, is_blackout: bool) -> Result<(), 
     let payload = BlackoutPayload { is_blackout };
 
     window
-        .emit("blackout-update", payload)
+        .emit("player-display:blackout", payload)
         .map_err(|e| format!("Failed to emit blackout update: {}", e))?;
 
     Ok(())

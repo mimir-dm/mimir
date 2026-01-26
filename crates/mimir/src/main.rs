@@ -75,6 +75,7 @@ fn main() {
             module::create_token,
             module::update_token,
             module::update_token_position,
+            module::update_token_vision,
             module::toggle_token_visibility,
             module::delete_token,
             module::serve_token_image,

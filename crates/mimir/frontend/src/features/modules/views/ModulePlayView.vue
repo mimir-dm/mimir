@@ -92,7 +92,7 @@
               >
                 <div class="map-item-info">
                   <span class="map-item-name">{{ map.name }}</span>
-                  <span class="map-item-meta">{{ map.module_name || 'Campaign' }}</span>
+                  <span class="map-item-meta">{{ map.module_id ? 'Module' : 'Campaign' }}</span>
                 </div>
                 <div v-if="activeMapId === map.id" class="map-active-indicator">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="active-icon">
@@ -177,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { usePlayerDisplay } from '@/composables/usePlayerDisplay'
@@ -224,19 +224,19 @@ async function togglePlayerDisplay() {
     // (the display window needs time to mount and set up event listeners)
     if (!wasOpen && isDisplayOpen.value && activeMapId.value) {
       const map = activeMap.value
-      console.log('ModulePlayView: Display just opened, will send map after delay:', map)
       if (map) {
         setTimeout(async () => {
           try {
-            console.log('ModulePlayView: Sending map to display:', map.id)
             await invoke('send_map_to_display', {
               mapId: map.id,
               gridType: map.grid_type,
               gridSizePx: map.grid_size_px,
               gridOffsetX: map.grid_offset_x,
-              gridOffsetY: map.grid_offset_y
+              gridOffsetY: map.grid_offset_y,
+              ambientLight: map.lighting_mode,
+              mapWidth: map.width_px,
+              mapHeight: map.height_px
             })
-            console.log('ModulePlayView: Map sent successfully')
           } catch (err) {
             console.error('Failed to send map after display open:', err)
           }
@@ -257,7 +257,7 @@ async function handleBlackoutToggle() {
   }
 }
 
-const moduleId = computed(() => route.params.id as string)
+const moduleId = computed(() => route.params.moduleId as string)
 const module = ref<Module | null>(null)
 const campaign = ref<Campaign | null>(null)
 const sidebarCollapsed = ref(false)
@@ -288,11 +288,30 @@ const {
   activeMapId,
   activeMap,
   loadMaps,
-  sendMapToPlayerDisplay
+  sendMapToPlayerDisplay,
+  setActiveMap
 } = useModuleMaps({
   moduleId,
   campaignId,
   isDisplayOpen
+})
+
+// Watch for campaignId changes and reload maps
+// This handles the case where campaign loads after the initial loadMaps() call
+watch(campaignId, (newId) => {
+  if (newId && allMaps.value.length === 0 && !mapsLoading.value) {
+    loadMaps()
+  }
+})
+
+// Auto-select the first map when maps are loaded
+watch(allMaps, (maps) => {
+  if (maps.length > 0 && !activeMapId.value) {
+    // Auto-select the first map (preferring module-specific maps over campaign maps)
+    const moduleMap = maps.find(m => m.module_id === moduleId.value)
+    const firstMap = moduleMap || maps[0]
+    setActiveMap(firstMap.id)
+  }
 })
 
 // Select a map and send to display

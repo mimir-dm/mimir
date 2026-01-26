@@ -1,11 +1,14 @@
 /**
- * Composable for calculating composite party vision.
+ * Composable for calculating token vision based on D&D 5e rules.
  *
- * Determines what players can collectively see based on their tokens'
- * positions, vision types, vision ranges, and current lighting conditions.
+ * Uses the new vision fields:
+ * - vision_bright_ft: Vision range in bright light (null = unlimited)
+ * - vision_dim_ft: Vision range in dim light (null = unlimited)
+ * - vision_dark_ft: Vision range in darkness (0 = blind, 60 = darkvision)
+ * - light_radius_ft: Token's light source radius (0 = no light)
  */
 import { computed, type Ref } from 'vue'
-import type { Token, VisionType } from '@/types/api'
+import type { Token } from '@/types/api'
 import type { LightSourceSummary } from './useLightSources'
 
 /** Ambient light levels matching D&D 5e */
@@ -14,181 +17,97 @@ export type AmbientLight = 'bright' | 'dim' | 'darkness'
 /** Light level at a specific point */
 export type LightLevel = 'bright' | 'dim' | 'darkness'
 
-/** Visible area circle for a token */
-export interface VisibleArea {
-  tokenId: string
-  x: number
-  y: number
-  /** Radius in pixels where token has full clear vision */
-  brightVisionRadiusPx: number
-  /** Radius in pixels where token has dim vision (disadvantage on Perception) */
-  dimVisionRadiusPx: number
-  /** Whether this is special vision that ignores light (blindsight, tremorsense) */
-  ignoresLight: boolean
-}
-
-/** Light zone on the map */
+/** Light zone on the map (from map light sources or token lights) */
 export interface LightZone {
-  lightSourceId: string
+  sourceId: string
   x: number
   y: number
   brightRadiusPx: number
   dimRadiusPx: number
 }
 
+/** Vision result for a single token */
+export interface TokenVision {
+  tokenId: string
+  tokenColor: string | null
+  x: number
+  y: number
+  /** Effective vision radius in pixels based on current conditions */
+  visionRadiusPx: number
+  /** Whether vision is treated as dim (disadvantage) */
+  isDimVision: boolean
+  /** Token's own light radius in pixels */
+  lightRadiusPx: number
+}
+
 /** Configuration for vision calculation */
 export interface VisionCalculationConfig {
-  /** Tokens to calculate vision for (typically visible player tokens) */
+  /** All tokens on the map */
   tokens: Ref<Token[]>
-  /** Light sources on the map */
+  /** Map light sources (from database) */
   lightSources: Ref<LightSourceSummary[]>
-  /** Map ambient light level */
+  /** Current ambient light level (DM controlled) */
   ambientLight: Ref<AmbientLight>
-  /** Grid size in pixels (1 grid = 5 feet in D&D) */
+  /** Grid size in pixels (1 grid = 5 feet) */
   gridSizePx: Ref<number>
-  /** Map dimensions for bounds checking */
+  /** Map dimensions for bounds */
   mapWidth: Ref<number>
   mapHeight: Ref<number>
 }
 
-/** Convert feet to pixels based on grid size (1 grid square = 5 feet) */
+/** Convert feet to pixels (1 grid square = 5 feet) */
 function feetToPixels(feet: number, gridSizePx: number): number {
   return (feet / 5) * gridSizePx
 }
 
-/**
- * Calculate visibility radii for a token based on its vision type
- * and the ambient light level.
- */
-function calculateTokenVision(
-  token: Token,
-  ambientLight: AmbientLight,
-  lightZones: LightZone[],
-  gridSizePx: number
-): VisibleArea {
-  const visionType = (token.vision_type || 'normal') as VisionType
-  const visionRangeFt = token.vision_range_ft || 0
-  const visionRangePx = feetToPixels(visionRangeFt, gridSizePx)
-
-  // Default: no special vision
-  let brightVisionRadiusPx = 0
-  let dimVisionRadiusPx = 0
-  let ignoresLight = false
-
-  // Calculate based on vision type
-  switch (visionType) {
-    case 'normal':
-      // Normal vision depends entirely on light sources and ambient light
-      // In bright light: can see normally
-      // In dim light: can see but with disadvantage
-      // In darkness: can't see
-      if (ambientLight === 'bright') {
-        // Can see everything (limited only by map bounds)
-        brightVisionRadiusPx = Infinity
-      } else if (ambientLight === 'dim') {
-        // Can see but with disadvantage
-        dimVisionRadiusPx = Infinity
-      }
-      // In darkness, normal vision sees nothing without light
-      break
-
-    case 'darkvision':
-      // Darkvision: treat dim light as bright, darkness as dim (within range)
-      if (ambientLight === 'bright') {
-        brightVisionRadiusPx = Infinity
-      } else if (ambientLight === 'dim') {
-        // Treat dim as bright within darkvision range
-        brightVisionRadiusPx = visionRangePx
-        dimVisionRadiusPx = Infinity // Beyond range, still dim vision
-      } else {
-        // Darkness: treat as dim within range
-        dimVisionRadiusPx = visionRangePx
-      }
-      break
-
-    case 'blindsight':
-    case 'tremorsense':
-      // These ignore light completely within range
-      ignoresLight = true
-      brightVisionRadiusPx = visionRangePx
-      // Beyond blindsight range, fall back to normal vision
-      if (ambientLight === 'bright') {
-        dimVisionRadiusPx = Infinity
-      } else if (ambientLight === 'dim') {
-        dimVisionRadiusPx = Infinity
-      }
-      break
-
-    case 'truesight':
-      // Truesight: sees through magical darkness, illusions, etc.
-      // Treat as full vision within range
-      ignoresLight = true
-      brightVisionRadiusPx = visionRangePx
-      // Beyond truesight range, normal darkvision-like behavior
-      if (ambientLight !== 'darkness') {
-        dimVisionRadiusPx = Infinity
-      }
-      break
-
-    case 'devils_sight':
-      // Devil's Sight: can see normally in darkness (magical or nonmagical) within range
-      // Effectively darkvision that works in magical darkness too
-      if (ambientLight === 'bright') {
-        brightVisionRadiusPx = Infinity
-      } else {
-        // In dim or darkness, see normally within range
-        brightVisionRadiusPx = visionRangePx
-        if (ambientLight === 'dim') {
-          dimVisionRadiusPx = Infinity
-        }
-      }
-      break
-  }
-
-  return {
-    tokenId: token.id,
-    x: token.x,
-    y: token.y,
-    brightVisionRadiusPx,
-    dimVisionRadiusPx,
-    ignoresLight
-  }
-}
+/** Large radius representing "unlimited" vision */
+const UNLIMITED_RADIUS = 100000
 
 /**
- * Calculate light zones from light sources.
+ * Calculate light zones from map light sources and token lights.
+ * Token lights use the consistent bright=half, dim=full convention.
  */
 function calculateLightZones(
-  lightSources: LightSourceSummary[],
+  mapLightSources: LightSourceSummary[],
   tokens: Token[],
   gridSizePx: number
 ): LightZone[] {
-  return lightSources
-    .filter(light => light.is_active)
-    .map(light => {
-      // Get position (use token position if attached)
-      let x = light.x
-      let y = light.y
-      if (light.token_id) {
-        const token = tokens.find(t => t.id === light.token_id)
-        if (token) {
-          x = token.x
-          y = token.y
-        }
-      }
+  const zones: LightZone[] = []
 
-      return {
-        lightSourceId: light.id,
-        x,
-        y,
-        brightRadiusPx: feetToPixels(light.bright_radius_ft, gridSizePx),
-        dimRadiusPx: feetToPixels(light.dim_radius_ft, gridSizePx)
-      }
+  // Add map light sources
+  for (const light of mapLightSources) {
+    if (!light.is_active) continue
+
+    zones.push({
+      sourceId: `map-${light.id}`,
+      x: light.x,
+      y: light.y,
+      brightRadiusPx: feetToPixels(light.bright_radius_ft, gridSizePx),
+      dimRadiusPx: feetToPixels(light.dim_radius_ft, gridSizePx)
     })
+  }
+
+  // Add token light sources (light_radius_ft is dim radius, bright = half)
+  for (const token of tokens) {
+    if (token.light_radius_ft > 0) {
+      const dimRadiusFt = token.light_radius_ft
+      const brightRadiusFt = dimRadiusFt / 2
+
+      zones.push({
+        sourceId: `token-${token.id}`,
+        x: token.x,
+        y: token.y,
+        brightRadiusPx: feetToPixels(brightRadiusFt, gridSizePx),
+        dimRadiusPx: feetToPixels(dimRadiusFt, gridSizePx)
+      })
+    }
+  }
+
+  return zones
 }
 
 /**
- * Check if a point is within a light zone and return the light level.
+ * Get the effective light level at a point, considering ambient light and light sources.
  */
 function getLightLevelAtPoint(
   x: number,
@@ -204,13 +123,9 @@ function getLightLevelAtPoint(
     const distance = Math.sqrt(dx * dx + dy * dy)
 
     if (distance <= zone.brightRadiusPx) {
-      // In bright light zone
-      return 'bright'
-    } else if (distance <= zone.dimRadiusPx) {
-      // In dim light zone - upgrade from darkness or ambient dim
-      if (bestLight === 'darkness') {
-        bestLight = 'dim'
-      }
+      return 'bright' // Can't get better than bright
+    } else if (distance <= zone.dimRadiusPx && bestLight === 'darkness') {
+      bestLight = 'dim'
     }
   }
 
@@ -218,12 +133,64 @@ function getLightLevelAtPoint(
 }
 
 /**
- * Composable for calculating composite party vision.
+ * Calculate vision for a single token based on the light level at their position.
+ *
+ * Key rule: A token must be INSIDE a light's radius to benefit from it.
+ * We check the light level at the token's position, not at distant points.
+ */
+function calculateTokenVision(
+  token: Token,
+  lightZones: LightZone[],
+  ambientLight: AmbientLight,
+  gridSizePx: number
+): TokenVision {
+  // Get light level at the token's position
+  const lightAtToken = getLightLevelAtPoint(token.x, token.y, lightZones, ambientLight)
+
+  // Determine vision radius based on light level
+  let visionFt: number | null
+  let isDimVision = false
+
+  switch (lightAtToken) {
+    case 'bright':
+      visionFt = token.vision_bright_ft
+      break
+    case 'dim':
+      visionFt = token.vision_dim_ft
+      isDimVision = true
+      break
+    case 'darkness':
+      // In darkness, use dark vision OR own light radius (whichever is greater)
+      const darkVisionFt = token.vision_dark_ft
+      const ownLightFt = token.light_radius_ft
+      visionFt = Math.max(darkVisionFt, ownLightFt)
+      isDimVision = darkVisionFt > 0 // Darkvision sees as dim, not bright
+      break
+  }
+
+  // Convert to pixels (null = unlimited)
+  const visionRadiusPx = visionFt === null
+    ? UNLIMITED_RADIUS
+    : feetToPixels(visionFt, gridSizePx)
+
+  return {
+    tokenId: token.id,
+    tokenColor: token.color,
+    x: token.x,
+    y: token.y,
+    visionRadiusPx,
+    isDimVision,
+    lightRadiusPx: feetToPixels(token.light_radius_ft, gridSizePx)
+  }
+}
+
+/**
+ * Composable for calculating token vision.
  */
 export function useVisionCalculation(config: VisionCalculationConfig) {
   const { tokens, lightSources, ambientLight, gridSizePx, mapWidth, mapHeight } = config
 
-  /** Light zones calculated from light sources */
+  /** All light zones (map lights + token lights) */
   const lightZones = computed<LightZone[]>(() => {
     return calculateLightZones(
       lightSources.value,
@@ -232,77 +199,53 @@ export function useVisionCalculation(config: VisionCalculationConfig) {
     )
   })
 
-  /** Visible areas for each token (only PC tokens create player vision) */
-  const tokenVisibleAreas = computed<VisibleArea[]>(() => {
+  /** Vision calculations for PC tokens only */
+  const pcVision = computed<TokenVision[]>(() => {
     return tokens.value
-      .filter(t => t.visible_to_players && t.token_type === 'pc')
+      .filter(t => t.token_type === 'pc' && t.visible_to_players)
       .map(token => calculateTokenVision(
         token,
-        ambientLight.value,
         lightZones.value,
+        ambientLight.value,
         gridSizePx.value
       ))
   })
 
+  /** Vision calculations for ALL tokens (for DM view boundaries) */
+  const allTokenVision = computed<TokenVision[]>(() => {
+    return tokens.value.map(token => calculateTokenVision(
+      token,
+      lightZones.value,
+      ambientLight.value,
+      gridSizePx.value
+    ))
+  })
+
   /**
-   * Calculate the effective vision radius at a point for a specific token.
-   * This accounts for light sources that might extend vision.
+   * Check if a point is within a token's vision radius.
    */
-  function getEffectiveVisionAtPoint(
-    tokenArea: VisibleArea,
+  function isPointInVision(
     pointX: number,
-    pointY: number
-  ): { canSee: boolean; isDim: boolean } {
-    const dx = pointX - tokenArea.x
-    const dy = pointY - tokenArea.y
+    pointY: number,
+    vision: TokenVision
+  ): boolean {
+    const dx = pointX - vision.x
+    const dy = pointY - vision.y
     const distance = Math.sqrt(dx * dx + dy * dy)
-
-    // Check if token ignores light (blindsight, etc.)
-    if (tokenArea.ignoresLight) {
-      if (distance <= tokenArea.brightVisionRadiusPx) {
-        return { canSee: true, isDim: false }
-      }
-    }
-
-    // Check if within bright vision radius
-    if (tokenArea.brightVisionRadiusPx === Infinity || distance <= tokenArea.brightVisionRadiusPx) {
-      // Check light level at the point
-      const lightLevel = getLightLevelAtPoint(pointX, pointY, lightZones.value, ambientLight.value)
-      if (lightLevel === 'bright') {
-        return { canSee: true, isDim: false }
-      }
-      if (lightLevel === 'dim') {
-        return { canSee: true, isDim: true }
-      }
-    }
-
-    // Check if within dim vision radius
-    if (tokenArea.dimVisionRadiusPx === Infinity || distance <= tokenArea.dimVisionRadiusPx) {
-      const lightLevel = getLightLevelAtPoint(pointX, pointY, lightZones.value, ambientLight.value)
-      if (lightLevel !== 'darkness') {
-        return { canSee: true, isDim: true }
-      }
-      // Darkvision can see in darkness as dim
-      if (tokenArea.dimVisionRadiusPx > 0 && distance <= tokenArea.dimVisionRadiusPx) {
-        return { canSee: true, isDim: true }
-      }
-    }
-
-    return { canSee: false, isDim: false }
+    return distance <= vision.visionRadiusPx
   }
 
   /**
-   * Check if any party member can see a specific point.
+   * Check if any PC can see a specific point.
    */
   function canPartySeePoint(x: number, y: number): { canSee: boolean; isDim: boolean } {
     let canSee = false
     let allDim = true
 
-    for (const area of tokenVisibleAreas.value) {
-      const result = getEffectiveVisionAtPoint(area, x, y)
-      if (result.canSee) {
+    for (const vision of pcVision.value) {
+      if (isPointInVision(x, y, vision)) {
         canSee = true
-        if (!result.isDim) {
+        if (!vision.isDimVision) {
           allDim = false
         }
       }
@@ -312,57 +255,46 @@ export function useVisionCalculation(config: VisionCalculationConfig) {
   }
 
   /**
-   * Generate visibility data for rendering.
-   * Returns circles representing each token's vision range.
+   * Get light level at a specific point.
    */
-  const visibilityCircles = computed(() => {
-    return tokenVisibleAreas.value.map(area => ({
-      tokenId: area.tokenId,
-      x: area.x,
-      y: area.y,
-      // Use the larger of bright/dim radius, capped at reasonable max
-      radiusPx: Math.min(
-        Math.max(area.brightVisionRadiusPx, area.dimVisionRadiusPx),
-        Math.max(mapWidth.value, mapHeight.value) * 2
-      ),
-      brightRadiusPx: area.brightVisionRadiusPx === Infinity
-        ? Math.max(mapWidth.value, mapHeight.value) * 2
-        : area.brightVisionRadiusPx,
-      dimRadiusPx: area.dimVisionRadiusPx === Infinity
-        ? Math.max(mapWidth.value, mapHeight.value) * 2
-        : area.dimVisionRadiusPx,
-      ignoresLight: area.ignoresLight
-    }))
+  function getLightLevel(x: number, y: number): LightLevel {
+    return getLightLevelAtPoint(x, y, lightZones.value, ambientLight.value)
+  }
+
+  /**
+   * Check if we need vision overlay rendering.
+   * In bright ambient light with unlimited vision, no overlay needed.
+   */
+  const needsVisionOverlay = computed(() => {
+    if (ambientLight.value === 'bright') {
+      // Check if any PC has limited bright vision
+      return pcVision.value.some(v => v.visionRadiusPx < UNLIMITED_RADIUS)
+    }
+    return true // Always need overlay in dim/dark
   })
 
   /**
-   * Check if we're in a "lights out" scenario where vision matters.
-   * In bright ambient light with no special requirements, we don't need
-   * to render vision overlays.
+   * Get max vision radius for bounds calculation.
    */
-  const needsVisionOverlay = computed(() => {
-    // If ambient light is bright, no overlay needed unless there are
-    // darkness zones or special vision requirements
-    if (ambientLight.value === 'bright' && lightZones.value.length === 0) {
-      return false
-    }
-    // If any tokens have limited vision, we need overlay
-    return tokenVisibleAreas.value.some(
-      area => area.brightVisionRadiusPx !== Infinity || area.dimVisionRadiusPx !== Infinity
+  const maxVisionRadius = computed(() => {
+    const maxMap = Math.max(mapWidth.value, mapHeight.value) * 2
+    return Math.min(
+      Math.max(...pcVision.value.map(v => v.visionRadiusPx), 0),
+      maxMap
     )
   })
 
   return {
-    // Computed
+    // Computed state
     lightZones,
-    tokenVisibleAreas,
-    visibilityCircles,
+    pcVision,
+    allTokenVision,
     needsVisionOverlay,
+    maxVisionRadius,
     // Methods
-    getEffectiveVisionAtPoint,
+    isPointInVision,
     canPartySeePoint,
-    getLightLevelAtPoint: (x: number, y: number) =>
-      getLightLevelAtPoint(x, y, lightZones.value, ambientLight.value),
+    getLightLevel,
     // Utilities
     feetToPixels: (feet: number) => feetToPixels(feet, gridSizePx.value)
   }

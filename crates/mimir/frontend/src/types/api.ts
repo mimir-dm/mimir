@@ -140,6 +140,11 @@ export interface Token {
   notes: string | null
   vision_type: string
   vision_range_ft: number | null
+  // New D&D 5e vision fields
+  vision_bright_ft: number | null  // Vision range in bright light (null = unlimited)
+  vision_dim_ft: number | null     // Vision range in dim light (null = unlimited)
+  vision_dark_ft: number           // Vision range in darkness (0 = blind, 60 = darkvision)
+  light_radius_ft: number          // Light source dim radius (bright = half)
   created_at: string
   updated_at: string
 }

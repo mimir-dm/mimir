@@ -152,7 +152,7 @@ const mapWidthRef = computed(() => mapState.value.mapWidth || imageRef.value?.na
 const mapHeightRef = computed(() => mapState.value.mapHeight || imageRef.value?.naturalHeight || 0)
 
 const {
-  visibilityCircles,
+  pcVision,
   needsVisionOverlay,
   lightZones
 } = useVisionCalculation({
@@ -701,47 +701,50 @@ function handleResize() {
             <mask id="darknessMask">
               <!-- White background = darkness everywhere by default -->
               <rect width="100%" height="100%" fill="white" />
-              <!-- Cut out (hide darkness) in dim vision areas with gray -->
+              <!-- Cut out (hide darkness) in dim light zones -->
               <circle
                 v-for="zone in lightZones"
-                :key="`dark-light-dim-${zone.lightSourceId}`"
+                :key="`dark-light-dim-${zone.sourceId}`"
                 :cx="zone.x"
                 :cy="zone.y"
                 :r="zone.dimRadiusPx"
                 fill="#666"
               />
+              <!-- Cut out for PC vision (gray for dim vision, black for bright) -->
               <circle
-                v-for="circle in visibilityCircles"
-                :key="`dark-vision-dim-${circle.tokenId}`"
-                :cx="circle.x"
-                :cy="circle.y"
-                :r="circle.dimRadiusPx"
-                fill="#666"
+                v-for="vision in pcVision"
+                :key="`dark-vision-${vision.tokenId}`"
+                :cx="vision.x"
+                :cy="vision.y"
+                :r="vision.visionRadiusPx"
+                :fill="vision.isDimVision ? '#666' : 'black'"
               />
-              <!-- Fully cut out (no darkness) in bright vision areas -->
+              <!-- Fully cut out (no darkness) in bright light zones -->
               <circle
                 v-for="zone in lightZones"
-                :key="`dark-light-bright-${zone.lightSourceId}`"
+                :key="`dark-light-bright-${zone.sourceId}`"
                 :cx="zone.x"
                 :cy="zone.y"
                 :r="zone.brightRadiusPx"
                 fill="black"
               />
-              <circle
-                v-for="circle in visibilityCircles"
-                :key="`dark-vision-bright-${circle.tokenId}`"
-                :cx="circle.x"
-                :cy="circle.y"
-                :r="circle.brightRadiusPx"
-                fill="black"
-              />
+              <!-- Token's own light sources also create visibility -->
+              <template v-for="vision in pcVision" :key="`dark-token-light-${vision.tokenId}`">
+                <circle
+                  v-if="vision.lightRadiusPx > 0"
+                  :cx="vision.x"
+                  :cy="vision.y"
+                  :r="vision.lightRadiusPx"
+                  fill="black"
+                />
+              </template>
             </mask>
 
             <!-- Radial gradients for soft vision edges -->
             <radialGradient
-              v-for="circle in visibilityCircles"
-              :key="`gradient-${circle.tokenId}`"
-              :id="`visionGradient-${circle.tokenId}`"
+              v-for="vision in pcVision"
+              :key="`gradient-${vision.tokenId}`"
+              :id="`visionGradient-${vision.tokenId}`"
             >
               <stop offset="70%" stop-color="black" />
               <stop offset="100%" stop-color="white" />

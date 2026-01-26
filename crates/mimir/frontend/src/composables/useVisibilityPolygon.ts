@@ -69,15 +69,15 @@ export interface Light {
 
 /** UVTT file format */
 export interface UvttData {
-  format: number
+  format?: number
   resolution: {
-    map_origin: UvttPoint
+    map_origin?: UvttPoint
     map_size: UvttPoint
     pixels_per_grid: number
   }
-  line_of_sight: UvttPoint[][]  // Array of wall segments, each segment is array of points
-  portals: UvttPortal[]
-  lights: UvttLight[]
+  line_of_sight?: UvttPoint[][]  // Array of wall segments, each segment is array of points
+  portals?: UvttPortal[]
+  lights?: UvttLight[]
   environment?: UvttEnvironment
 }
 
@@ -110,8 +110,10 @@ export function uvttAmbientToLevel(argb: string | undefined): AmbientLightLevel 
 
 /** Convert UVTT walls (grid units) to pixel coordinates */
 export function uvttWallsToPixels(uvtt: UvttData): Wall[] {
-  const ppg = uvtt.resolution.pixels_per_grid
+  const ppg = uvtt.resolution?.pixels_per_grid || 70
   const walls: Wall[] = []
+
+  if (!uvtt.line_of_sight) return walls
 
   for (const segment of uvtt.line_of_sight) {
     // Each segment is a polyline - convert to wall segments
@@ -128,7 +130,8 @@ export function uvttWallsToPixels(uvtt: UvttData): Wall[] {
 
 /** Convert UVTT portals to Portal objects */
 export function uvttPortalsToPixels(uvtt: UvttData): Portal[] {
-  const ppg = uvtt.resolution.pixels_per_grid
+  if (!uvtt.portals) return []
+  const ppg = uvtt.resolution?.pixels_per_grid || 70
 
   return uvtt.portals.map((p, idx) => ({
     id: `portal-${idx}`,
@@ -163,7 +166,8 @@ function argbToRgba(argb: string): string {
 
 /** Convert UVTT lights to Light objects with pixel coordinates */
 export function uvttLightsToPixels(uvtt: UvttData): Light[] {
-  const ppg = uvtt.resolution.pixels_per_grid
+  if (!uvtt.lights) return []
+  const ppg = uvtt.resolution?.pixels_per_grid || 70
 
   return uvtt.lights.map((light, idx) => ({
     id: `light-${idx}`,

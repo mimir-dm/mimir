@@ -364,6 +364,11 @@ pub struct TokenResponse {
     pub notes: Option<String>,
     pub vision_type: String,
     pub vision_range_ft: Option<i32>,
+    // New vision fields (D&D 5e rules)
+    pub vision_bright_ft: Option<i32>,
+    pub vision_dim_ft: Option<i32>,
+    pub vision_dark_ft: i32,
+    pub light_radius_ft: i32,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -414,6 +419,11 @@ fn transform_token(
         notes: None,
         vision_type: "normal".to_string(),
         vision_range_ft: None,
+        // New vision fields
+        vision_bright_ft: placement.vision_bright_ft,
+        vision_dim_ft: placement.vision_dim_ft,
+        vision_dark_ft: placement.vision_dark_ft,
+        light_radius_ft: placement.light_radius_ft,
         created_at: placement.created_at.clone(),
         updated_at: placement.created_at, // Use created_at as updated_at since we don't track it
     }
@@ -472,12 +482,13 @@ pub fn create_token(
     state: State<'_, AppState>,
     request: CreateTokenRequest,
 ) -> ApiResponse<TokenResponse> {
-    // Validate that exactly one of monster_id or npc_id is provided
-    if request.module_monster_id.is_none() && request.module_npc_id.is_none() {
-        return ApiResponse::err("Either module_monster_id or module_npc_id must be provided".to_string());
-    }
+    // Validate: can't have both monster_id and npc_id
     if request.module_monster_id.is_some() && request.module_npc_id.is_some() {
         return ApiResponse::err("Only one of module_monster_id or module_npc_id can be provided".to_string());
+    }
+    // If neither monster nor npc is provided, a label is required (for PC tokens)
+    if request.module_monster_id.is_none() && request.module_npc_id.is_none() && request.label.is_none() {
+        return ApiResponse::err("A label is required for PC tokens (when no monster_id or npc_id is provided)".to_string());
     }
 
     let mut db = match state.db.lock() {
@@ -506,6 +517,10 @@ pub fn create_token(
         label: label_ref,
         faction_color: color_ref,
         hidden: if request.hidden { 1 } else { 0 },
+        vision_bright_ft: None,    // Default: unlimited in bright light
+        vision_dim_ft: None,       // Default: unlimited in dim light
+        vision_dark_ft: 0,         // Default: blind in darkness
+        light_radius_ft: 0,        // Default: no light source
     };
 
     if let Err(e) = dal::insert_token_placement(&mut db, &placement) {
@@ -561,6 +576,10 @@ pub fn update_token(
         label,
         faction_color,
         hidden: request.hidden.map(|h| if h { 1 } else { 0 }),
+        vision_bright_ft: None,  // Not updated by this command
+        vision_dim_ft: None,     // Not updated by this command
+        vision_dark_ft: None,    // Not updated by this command
+        light_radius_ft: None,   // Not updated by this command
     };
 
     if let Err(e) = dal::update_token_placement(&mut db, &id, &update) {
@@ -592,6 +611,43 @@ pub fn update_token_position(
     };
 
     let update = UpdateTokenPlacement::set_position(grid_x, grid_y);
+
+    if let Err(e) = dal::update_token_placement(&mut db, &id, &update) {
+        return ApiResponse::err(e.to_string());
+    }
+
+    // Fetch and return with resolved names
+    let token = match dal::get_token_placement(&mut db, &id) {
+        Ok(p) => p,
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    let grid_size_px = get_map_grid_size(&mut db, &state.paths.app_dir, &token.map_id);
+    let (token_type, name, size) = resolve_token_names(&mut db, &token);
+    ApiResponse::ok(transform_token(token, token_type, name, size, grid_size_px))
+}
+
+/// Update a token's vision settings (D&D 5e vision rules).
+#[tauri::command]
+pub fn update_token_vision(
+    state: State<'_, AppState>,
+    id: String,
+    vision_bright_ft: Option<i32>,
+    vision_dim_ft: Option<i32>,
+    vision_dark_ft: i32,
+    light_radius_ft: i32,
+) -> ApiResponse<TokenResponse> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let update = UpdateTokenPlacement::set_vision(
+        vision_bright_ft,
+        vision_dim_ft,
+        vision_dark_ft,
+        light_radius_ft,
+    );
 
     if let Err(e) = dal::update_token_placement(&mut db, &id, &update) {
         return ApiResponse::err(e.to_string());
@@ -697,7 +753,8 @@ fn resolve_token_names(
             "medium".to_string(), // NPCs default to medium
         )
     } else {
-        ("unknown".to_string(), None, "medium".to_string())
+        // PC token - use label as name
+        ("pc".to_string(), token.label.clone(), "medium".to_string())
     }
 }
 

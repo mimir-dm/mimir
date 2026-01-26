@@ -1,10 +1,9 @@
--- Token placements for monsters/NPCs on maps
--- (PCs are placed at runtime via frontend state, not persisted here)
+-- Token placements for monsters/NPCs/PCs on maps
 CREATE TABLE token_placements (
     id TEXT PRIMARY KEY NOT NULL,
     map_id TEXT NOT NULL REFERENCES maps(id) ON DELETE CASCADE,
 
-    -- What this token represents (exactly one must be set)
+    -- What this token represents (at most one can be set; neither = PC token)
     module_monster_id TEXT REFERENCES module_monsters(id) ON DELETE CASCADE,
     module_npc_id TEXT REFERENCES module_npcs(id) ON DELETE CASCADE,
 
@@ -13,17 +12,22 @@ CREATE TABLE token_placements (
     grid_y INTEGER NOT NULL,
 
     -- Display options
-    label TEXT,           -- Optional override label
+    label TEXT,           -- Optional override label (required for PC tokens)
     faction_color TEXT,   -- Hex color for faction ring (e.g., "#FF0000" for enemy)
     hidden INTEGER NOT NULL DEFAULT 0,  -- Hidden from players initially (0=visible, 1=hidden)
+
+    -- Vision settings (D&D 5e rules)
+    vision_bright_ft INTEGER,           -- Vision range in bright light (NULL = unlimited)
+    vision_dim_ft INTEGER,              -- Vision range in dim light (NULL = unlimited)
+    vision_dark_ft INTEGER NOT NULL DEFAULT 0,   -- Vision range in darkness (0 = blind, 60 = darkvision)
+    light_radius_ft INTEGER NOT NULL DEFAULT 0,  -- Light source dim radius (bright = half). 0 = no light
 
     -- Timestamps
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
 
-    -- Ensure exactly one entity type is referenced
+    -- Cannot have both monster and NPC set (neither = PC token)
     CHECK (
-        (module_monster_id IS NOT NULL AND module_npc_id IS NULL) OR
-        (module_monster_id IS NULL AND module_npc_id IS NOT NULL)
+        NOT (module_monster_id IS NOT NULL AND module_npc_id IS NOT NULL)
     )
 );
 

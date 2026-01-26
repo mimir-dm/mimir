@@ -29,6 +29,14 @@ pub struct TokenPlacement {
     pub faction_color: Option<String>,
     /// Hidden from players initially (0=visible, 1=hidden)
     pub hidden: i32,
+    /// Vision range in bright light (ft). None = unlimited
+    pub vision_bright_ft: Option<i32>,
+    /// Vision range in dim light (ft). None = unlimited
+    pub vision_dim_ft: Option<i32>,
+    /// Vision range in darkness (ft). 0 = blind, 60 = darkvision
+    pub vision_dark_ft: i32,
+    /// Light source dim radius (ft). Bright = half. 0 = no light
+    pub light_radius_ft: i32,
     /// ISO8601 timestamp of creation
     pub created_at: String,
 }
@@ -63,6 +71,10 @@ pub struct NewTokenPlacement<'a> {
     pub label: Option<&'a str>,
     pub faction_color: Option<&'a str>,
     pub hidden: i32,
+    pub vision_bright_ft: Option<i32>,
+    pub vision_dim_ft: Option<i32>,
+    pub vision_dark_ft: i32,
+    pub light_radius_ft: i32,
 }
 
 impl<'a> NewTokenPlacement<'a> {
@@ -84,6 +96,10 @@ impl<'a> NewTokenPlacement<'a> {
             label: None,
             faction_color: None,
             hidden: 0,
+            vision_bright_ft: None,
+            vision_dim_ft: None,
+            vision_dark_ft: 0,
+            light_radius_ft: 0,
         }
     }
 
@@ -105,6 +121,10 @@ impl<'a> NewTokenPlacement<'a> {
             label: None,
             faction_color: None,
             hidden: 0,
+            vision_bright_ft: None,
+            vision_dim_ft: None,
+            vision_dark_ft: 0,
+            light_radius_ft: 0,
         }
     }
 
@@ -136,6 +156,10 @@ pub struct UpdateTokenPlacement<'a> {
     pub label: Option<Option<&'a str>>,
     pub faction_color: Option<Option<&'a str>>,
     pub hidden: Option<i32>,
+    pub vision_bright_ft: Option<Option<i32>>,
+    pub vision_dim_ft: Option<Option<i32>>,
+    pub vision_dark_ft: Option<i32>,
+    pub light_radius_ft: Option<i32>,
 }
 
 impl<'a> UpdateTokenPlacement<'a> {
@@ -168,6 +192,22 @@ impl<'a> UpdateTokenPlacement<'a> {
     pub fn set_hidden(hidden: bool) -> Self {
         Self {
             hidden: Some(if hidden { 1 } else { 0 }),
+            ..Default::default()
+        }
+    }
+
+    /// Update vision settings.
+    pub fn set_vision(
+        vision_bright_ft: Option<i32>,
+        vision_dim_ft: Option<i32>,
+        vision_dark_ft: i32,
+        light_radius_ft: i32,
+    ) -> Self {
+        Self {
+            vision_bright_ft: Some(vision_bright_ft),
+            vision_dim_ft: Some(vision_dim_ft),
+            vision_dark_ft: Some(vision_dark_ft),
+            light_radius_ft: Some(light_radius_ft),
             ..Default::default()
         }
     }

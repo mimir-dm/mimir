@@ -204,7 +204,7 @@ function getLightColor(light: Light, baseOpacity: number): string {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 6; /* Below fog (8), above map image */
+  z-index: 5; /* Below fog - purely visual decoration */
   pointer-events: none;
 }
 

@@ -312,24 +312,66 @@ pub fn read_map_uvtt(state: State<'_, AppState>, map_id: String) -> ApiResponse<
     }
 }
 
-/// Parsed UVTT data with resolution info.
-#[derive(Debug, Serialize)]
-pub struct UvttData {
-    pub resolution: UvttResolution,
+/// A 2D point in grid units.
+#[derive(Debug, Clone, Serialize)]
+pub struct UvttPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// UVTT portal (door) structure.
+#[derive(Debug, Clone, Serialize)]
+pub struct UvttPortal {
+    pub position: UvttPoint,
+    pub bounds: [UvttPoint; 2],
+    pub rotation: f64,
+    pub closed: bool,
+    pub freestanding: bool,
+}
+
+/// UVTT light source structure.
+#[derive(Debug, Clone, Serialize)]
+pub struct UvttLight {
+    pub position: UvttPoint,
+    pub range: f64,
+    pub intensity: f64,
+    pub color: String,
+    pub shadows: bool,
+}
+
+/// UVTT environment settings.
+#[derive(Debug, Clone, Serialize)]
+pub struct UvttEnvironment {
+    pub baked_lighting: bool,
+    pub ambient_light: String,
+}
+
+/// UVTT map size.
+#[derive(Debug, Clone, Serialize)]
+pub struct UvttMapSize {
+    pub x: f64,
+    pub y: f64,
 }
 
 /// UVTT resolution data.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UvttResolution {
     pub pixels_per_grid: i32,
     pub map_size: UvttMapSize,
 }
 
-/// UVTT map size.
+/// Parsed UVTT data with resolution, walls, portals, lights, and environment.
 #[derive(Debug, Serialize)]
-pub struct UvttMapSize {
-    pub x: f64,
-    pub y: f64,
+pub struct UvttData {
+    pub resolution: UvttResolution,
+    /// Wall segments for line of sight blocking. Each inner Vec is a polyline.
+    pub line_of_sight: Option<Vec<Vec<UvttPoint>>>,
+    /// Portals (doors) that can be opened/closed.
+    pub portals: Option<Vec<UvttPortal>>,
+    /// Light sources embedded in the map.
+    pub lights: Option<Vec<UvttLight>>,
+    /// Environment settings including ambient light.
+    pub environment: Option<UvttEnvironment>,
 }
 
 /// Get parsed UVTT data for a map (resolution, grid size, etc).
@@ -380,6 +422,102 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
         .and_then(|v| v.as_f64())
         .unwrap_or(25.0);
 
+    // Extract line_of_sight (wall segments)
+    let line_of_sight: Option<Vec<Vec<UvttPoint>>> = uvtt_json
+        .get("line_of_sight")
+        .and_then(|los| los.as_array())
+        .map(|segments| {
+            segments
+                .iter()
+                .filter_map(|segment| {
+                    segment.as_array().map(|points| {
+                        points
+                            .iter()
+                            .filter_map(|p| {
+                                let x = p.get("x").and_then(|v| v.as_f64())?;
+                                let y = p.get("y").and_then(|v| v.as_f64())?;
+                                Some(UvttPoint { x, y })
+                            })
+                            .collect()
+                    })
+                })
+                .collect()
+        });
+
+    // Extract portals (doors)
+    let portals: Option<Vec<UvttPortal>> = uvtt_json
+        .get("portals")
+        .and_then(|p| p.as_array())
+        .map(|portals| {
+            portals
+                .iter()
+                .filter_map(|portal| {
+                    let position = portal.get("position")?;
+                    let pos_x = position.get("x").and_then(|v| v.as_f64())?;
+                    let pos_y = position.get("y").and_then(|v| v.as_f64())?;
+
+                    let bounds = portal.get("bounds").and_then(|b| b.as_array())?;
+                    if bounds.len() < 2 {
+                        return None;
+                    }
+                    let b0_x = bounds[0].get("x").and_then(|v| v.as_f64())?;
+                    let b0_y = bounds[0].get("y").and_then(|v| v.as_f64())?;
+                    let b1_x = bounds[1].get("x").and_then(|v| v.as_f64())?;
+                    let b1_y = bounds[1].get("y").and_then(|v| v.as_f64())?;
+
+                    Some(UvttPortal {
+                        position: UvttPoint { x: pos_x, y: pos_y },
+                        bounds: [
+                            UvttPoint { x: b0_x, y: b0_y },
+                            UvttPoint { x: b1_x, y: b1_y },
+                        ],
+                        rotation: portal.get("rotation").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        closed: portal.get("closed").and_then(|v| v.as_bool()).unwrap_or(true),
+                        freestanding: portal.get("freestanding").and_then(|v| v.as_bool()).unwrap_or(false),
+                    })
+                })
+                .collect()
+        });
+
+    // Extract lights
+    let lights: Option<Vec<UvttLight>> = uvtt_json
+        .get("lights")
+        .and_then(|l| l.as_array())
+        .map(|lights| {
+            lights
+                .iter()
+                .filter_map(|light| {
+                    let position = light.get("position")?;
+                    let pos_x = position.get("x").and_then(|v| v.as_f64())?;
+                    let pos_y = position.get("y").and_then(|v| v.as_f64())?;
+
+                    Some(UvttLight {
+                        position: UvttPoint { x: pos_x, y: pos_y },
+                        range: light.get("range").and_then(|v| v.as_f64()).unwrap_or(5.0),
+                        intensity: light.get("intensity").and_then(|v| v.as_f64()).unwrap_or(1.0),
+                        color: light
+                            .get("color")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("ffffffff")
+                            .to_string(),
+                        shadows: light.get("shadows").and_then(|v| v.as_bool()).unwrap_or(true),
+                    })
+                })
+                .collect()
+        });
+
+    // Extract environment
+    let environment: Option<UvttEnvironment> = uvtt_json.get("environment").map(|env| {
+        UvttEnvironment {
+            baked_lighting: env.get("baked_lighting").and_then(|v| v.as_bool()).unwrap_or(false),
+            ambient_light: env
+                .get("ambient_light")
+                .and_then(|v| v.as_str())
+                .unwrap_or("ffffffff")
+                .to_string(),
+        }
+    });
+
     ApiResponse::ok(UvttData {
         resolution: UvttResolution {
             pixels_per_grid,
@@ -388,6 +526,10 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
                 y: map_size_y,
             },
         },
+        line_of_sight,
+        portals,
+        lights,
+        environment,
     })
 }
 
@@ -439,6 +581,9 @@ pub fn serve_map_image(state: State<'_, AppState>, id: String) -> ApiResponse<St
 #[derive(Debug, Serialize)]
 pub struct LightSourceResponse {
     pub id: String,
+    pub map_id: String,
+    pub token_id: Option<String>,
+    pub token_name: Option<String>,
     pub name: String,
     pub light_type: String,
     pub x: f64,
@@ -454,12 +599,15 @@ fn transform_light_source(ls: LightSource, grid_size_px: i32) -> LightSourceResp
     // Convert grid coordinates to pixel coordinates (center of grid cell)
     let x = (ls.grid_x as f64 + 0.5) * grid_size_px as f64;
     let y = (ls.grid_y as f64 + 0.5) * grid_size_px as f64;
-    let is_active = ls.is_active(); // Call before moving fields
+    let is_active = ls.is_active();
 
     LightSourceResponse {
         id: ls.id,
+        map_id: ls.map_id,
+        token_id: None,
+        token_name: None,
         name: ls.name.unwrap_or_else(|| "Light".to_string()),
-        light_type: "custom".to_string(), // We don't store light_type in DB currently
+        light_type: "custom".to_string(),
         x,
         y,
         bright_radius_ft: ls.bright_radius,

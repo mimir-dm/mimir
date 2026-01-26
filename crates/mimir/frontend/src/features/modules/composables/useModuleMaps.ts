@@ -8,14 +8,14 @@ export interface MapSummary {
   campaign_id: string
   module_id: string | null
   name: string
+  description: string | null
   grid_type: string
   grid_size_px: number | null
   grid_offset_x: number
   grid_offset_y: number
-  module_name: string | null
   width_px: number
   height_px: number
-  ambient_light: string
+  lighting_mode: string
   image_path: string
 }
 
@@ -47,7 +47,7 @@ export function useModuleMaps({ moduleId, campaignId, isDisplayOpen }: UseModule
 
     mapsLoading.value = true
     try {
-      const response = await invoke<{ success: boolean; data?: MapSummary[] }>('list_map_summaries', {
+      const response = await invoke<{ success: boolean; data?: MapSummary[] }>('list_campaign_maps', {
         campaignId: campaignId.value
       })
 
@@ -80,7 +80,7 @@ export function useModuleMaps({ moduleId, campaignId, isDisplayOpen }: UseModule
           gridSizePx: map.grid_size_px,
           gridOffsetX: map.grid_offset_x,
           gridOffsetY: map.grid_offset_y,
-          ambientLight: map.ambient_light,
+          ambientLight: map.lighting_mode,
           mapWidth: map.width_px,
           mapHeight: map.height_px
         })

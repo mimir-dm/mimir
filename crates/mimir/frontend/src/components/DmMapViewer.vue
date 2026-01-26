@@ -24,17 +24,6 @@
 
       <div class="toolbar-group">
         <button
-          class="toolbar-btn add-token-btn"
-          @click="showQuickAddModal = true"
-          :disabled="!mapImageUrl"
-          title="Quick add token (monster)"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          <span>Add Token</span>
-        </button>
-        <button
           class="toolbar-btn add-pcs-btn"
           @click="addAllPCsToMap"
           :disabled="!mapImageUrl || !props.campaignId || addingPCs"
@@ -47,40 +36,41 @@
         </button>
       </div>
 
-      <!-- Reveal Map Toggle (danger style - always visible as warning) -->
-      <div class="toolbar-group reveal-controls">
-        <label class="reveal-toggle" :class="{ disabled: !mapImageUrl, active: revealMap }" title="Reveal map to players - use with caution!">
-          <span class="reveal-label">Reveal Map</span>
-          <div class="toggle-switch danger" :class="{ active: revealMap }">
-            <input
-              type="checkbox"
-              :checked="revealMap"
-              @change="toggleRevealMap"
-              :disabled="!mapImageUrl"
-            />
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
+      <!-- Reveal Map Toggle (red eye icon) -->
+      <div class="toolbar-group">
+        <button
+          class="reveal-btn"
+          :class="{ active: revealMap }"
+          @click="toggleRevealMap"
+          :disabled="!mapImageUrl"
+          :title="revealMap ? 'Hide map (restore fog)' : 'Reveal entire map to players'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+            <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
       </div>
 
       <!-- LOS Controls (only when UVTT data available) -->
       <div v-if="uvttLoaded" class="toolbar-group los-controls">
-        <label class="fog-toggle" :class="{ disabled: !mapImageUrl || revealMap }" title="Token: map visible, tokens hidden. Fog: map hidden outside vision.">
-          <span class="fog-label">LOS</span>
-          <div class="toggle-switch-dual">
-            <span class="dual-label" :class="{ active: !tokenOnlyLos && !revealMap }">Fog</span>
-            <div class="toggle-switch" :class="{ active: tokenOnlyLos }">
-              <input
-                type="checkbox"
-                :checked="tokenOnlyLos"
-                @change="tokenOnlyLos = !tokenOnlyLos"
-                :disabled="!mapImageUrl || revealMap"
-              />
-              <span class="toggle-slider"></span>
-            </div>
-            <span class="dual-label" :class="{ active: tokenOnlyLos && !revealMap }">Token</span>
-          </div>
-        </label>
+        <span class="toolbar-label">LOS:</span>
+        <div class="btn-group">
+          <button
+            class="btn-group-item"
+            :class="{ active: !tokenOnlyLos }"
+            @click="tokenOnlyLos = false"
+            :disabled="!mapImageUrl || revealMap"
+            title="Fog mode: hide map outside token vision"
+          >Fog</button>
+          <button
+            class="btn-group-item"
+            :class="{ active: tokenOnlyLos }"
+            @click="tokenOnlyLos = true"
+            :disabled="!mapImageUrl || revealMap"
+            title="Token mode: show map, hide tokens outside vision"
+          >Token</button>
+        </div>
         <button
           class="toolbar-btn"
           :class="{ active: showLosDebug }"
@@ -277,6 +267,17 @@
                   fill="black"
                 />
               </g>
+              <!-- Map lights create visible pools in dim/dark conditions -->
+              <g v-if="currentAmbientLight !== 'bright' && mapLightZones.length > 0" filter="url(#visionBlur)">
+                <circle
+                  v-for="zone in mapLightZones"
+                  :key="'maplight-' + zone.id"
+                  :cx="zone.x"
+                  :cy="zone.y"
+                  :r="zone.radiusPx"
+                  fill="black"
+                />
+              </g>
             </mask>
           </defs>
           <!-- Semi-transparent fog for DM view -->
@@ -342,6 +343,85 @@
           @token-context="handleTokenContext"
           @token-drag-start="handleTokenDragStart"
         />
+
+        <!-- Map Markers Layer (Traps & POIs) -->
+        <svg
+          v-if="imageLoaded && (mapTraps.length > 0 || mapPois.length > 0)"
+          class="markers-overlay"
+          :viewBox="`0 0 ${mapWidth} ${mapHeight}`"
+          :style="{ width: mapWidth + 'px', height: mapHeight + 'px' }"
+        >
+          <!-- Traps -->
+          <g class="trap-markers">
+            <g
+              v-for="trap in mapTraps"
+              :key="'trap-' + trap.id"
+              class="trap-marker"
+              :class="{ selected: selectedTrapId === trap.id }"
+              :transform="`translate(${trap.grid_x * effectiveGridSize + effectiveGridSize / 2}, ${trap.grid_y * effectiveGridSize + effectiveGridSize / 2})`"
+              @click.stop="selectedTrapId = selectedTrapId === trap.id ? null : trap.id"
+            >
+              <!-- Trap icon (warning triangle) -->
+              <polygon
+                points="-12,-10 12,-10 0,12"
+                :fill="trap.visible ? '#ef4444' : '#6b7280'"
+                stroke="#fff"
+                stroke-width="2"
+              />
+              <text
+                y="2"
+                text-anchor="middle"
+                fill="#fff"
+                font-size="12"
+                font-weight="bold"
+              >!</text>
+              <!-- Label on hover/select -->
+              <text
+                v-if="selectedTrapId === trap.id"
+                y="-18"
+                text-anchor="middle"
+                fill="#fff"
+                font-size="11"
+                class="marker-label"
+              >{{ trap.name }}</text>
+            </g>
+          </g>
+
+          <!-- POIs -->
+          <g class="poi-markers">
+            <g
+              v-for="poi in mapPois"
+              :key="'poi-' + poi.id"
+              class="poi-marker"
+              :class="{ selected: selectedPoiId === poi.id }"
+              :transform="`translate(${poi.grid_x * effectiveGridSize + effectiveGridSize / 2}, ${poi.grid_y * effectiveGridSize + effectiveGridSize / 2})`"
+              @click.stop="selectedPoiId = selectedPoiId === poi.id ? null : poi.id"
+            >
+              <!-- POI icon (circle with icon) -->
+              <circle
+                r="14"
+                :fill="poi.color || '#3b82f6'"
+                stroke="#fff"
+                stroke-width="2"
+              />
+              <text
+                y="5"
+                text-anchor="middle"
+                fill="#fff"
+                font-size="14"
+              >{{ getPoiIcon(poi.icon) }}</text>
+              <!-- Label on hover/select -->
+              <text
+                v-if="selectedPoiId === poi.id"
+                y="-20"
+                text-anchor="middle"
+                fill="#fff"
+                font-size="11"
+                class="marker-label"
+              >{{ poi.name }}</text>
+            </g>
+          </g>
+        </svg>
       </div>
     </div>
 
@@ -364,6 +444,14 @@
       <button @click="toggleSelectedTokenVisibility">
         {{ contextMenu.token?.visible_to_players ? 'Hide from Players' : 'Show to Players' }}
         <span class="shortcut">H</span>
+      </button>
+      <!-- Vision settings (PC tokens only) -->
+      <button
+        v-if="contextMenu.token?.token_type === 'pc'"
+        @click="openVisionMenu"
+      >
+        Vision...
+        <span class="shortcut">V</span>
       </button>
       <div class="context-menu-divider"></div>
       <!-- Light source options -->
@@ -397,10 +485,21 @@
 
     <!-- Click outside to close context menu -->
     <div
-      v-if="contextMenu.visible || lightContextMenu.visible"
+      v-if="contextMenu.visible || lightContextMenu.visible || visionMenu.visible"
       class="context-menu-backdrop"
       @click="closeContextMenu"
     ></div>
+
+    <!-- Token Vision Menu -->
+    <TokenVisionMenu
+      v-if="visionMenu.token"
+      :visible="visionMenu.visible"
+      :token="visionMenu.token"
+      :x="visionMenu.x"
+      :y="visionMenu.y"
+      @close="closeVisionMenu"
+      @updated="onVisionUpdated"
+    />
 
     <!-- Light Source Context Menu -->
     <div
@@ -413,16 +512,6 @@
         {{ lightContextMenu.light?.is_active ? 'Extinguish' : 'Ignite' }}
       </button>
     </div>
-
-    <!-- Quick Add Token Modal -->
-    <QuickAddTokenModal
-      v-if="mapId"
-      :visible="showQuickAddModal"
-      :map-id="mapId"
-      :grid-size-px="effectiveGridSize"
-      @close="showQuickAddModal = false"
-      @add-token="handleQuickAddToken"
-    />
 
     <!-- Map Print Dialog -->
     <MapPrintDialog
@@ -437,23 +526,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, toRef } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, toRef, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { usePlayerDisplay } from '@/composables/usePlayerDisplay'
 import { useTokens } from '@/composables/useTokens'
 import { useLightSources, type LightSourceSummary } from '@/composables/useLightSources'
+import { useVisionCalculation, type AmbientLight } from '@/composables/useVisionCalculation'
 import { useUvttMap } from '@/composables/useUvttMap'
 import { useMultiTokenVisibility } from '@/composables/useVisibilityPolygon'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
-import QuickAddTokenModal from '@/components/tokens/QuickAddTokenModal.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LosDebugOverlay from '@/components/los/LosDebugOverlay.vue'
 import DoorInteractionOverlay from '@/components/los/DoorInteractionOverlay.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
+import TokenVisionMenu from '@/components/tokens/TokenVisionMenu.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import type { Token, CreateTokenRequest } from '@/types/api'
+import type { Token } from '@/types/api'
 import { useCharacterStore } from '@/stores/characters'
 
 // Throttle helper for smooth updates
@@ -508,6 +598,11 @@ const props = withDefaults(defineProps<Props>(), {
   uvttFilePath: null
 })
 
+// Computed grid values (with defaults for null)
+const effectiveGridSize = computed(() => props.gridSizePx ?? 70)
+const effectiveGridOffsetX = computed(() => props.gridOffsetX ?? 0)
+const effectiveGridOffsetY = computed(() => props.gridOffsetY ?? 0)
+
 const { isDisplayOpen, updateViewport } = usePlayerDisplay()
 
 // Token state - will be initialized when mapId is available
@@ -552,8 +647,18 @@ const lightContextMenu = ref<{
   light: null
 })
 
-// Quick add modal state
-const showQuickAddModal = ref(false)
+// Token vision menu state
+const visionMenu = ref<{
+  visible: boolean
+  x: number
+  y: number
+  token: Token | null
+}>({
+  visible: false,
+  x: 0,
+  y: 0,
+  token: null
+})
 
 // Add PCs state
 const characterStore = useCharacterStore()
@@ -567,6 +672,42 @@ const fogEnabled = ref(false)
 
 // Light source state
 const lightSources = ref<LightSourceSummary[]>([])
+
+// Map trap and POI types
+interface MapTrap {
+  id: string
+  map_id: string
+  grid_x: number
+  grid_y: number
+  name: string
+  description: string | null
+  trigger_description: string | null
+  effect_description: string | null
+  dc: number | null
+  visible: number
+  created_at: string
+  updated_at: string
+}
+
+interface MapPoi {
+  id: string
+  map_id: string
+  grid_x: number
+  grid_y: number
+  name: string
+  description: string | null
+  icon: string
+  color: string | null
+  visible: number
+  created_at: string
+  updated_at: string
+}
+
+// Map traps and POIs state
+const mapTraps = ref<MapTrap[]>([])
+const mapPois = ref<MapPoi[]>([])
+const selectedTrapId = ref<string | null>(null)
+const selectedPoiId = ref<string | null>(null)
 
 // Computed: token light info for TokenRenderer
 const tokenLightInfo = computed(() => {
@@ -632,23 +773,36 @@ watch([tokenOnlyLos, revealMap], () => {
   sendFogToDisplay()
 })
 
-// Tokens with vision for visibility polygon calculation
-// Depends on: tokens, lightSources, currentAmbientLight for reactivity
-// Only PCs create vision - NPCs do not reveal fog of war
-const tokensWithVision = computed(() => {
-  // Access lightSources to ensure reactivity when lights change
-  const lights = lightSources.value
-  const ambient = currentAmbientLight.value
+// Vision calculation using the proper D&D 5e rules
+// This considers map light sources when determining token vision
+const ambientLightRef = computed<AmbientLight>(() => currentAmbientLight.value)
+const mapWidthForVision = computed(() => mapWidth.value || uvttMapWidth.value)
+const mapHeightForVision = computed(() => mapHeight.value || uvttMapHeight.value)
 
-  return tokens.value
-    .filter(t => t.visible_to_players && t.token_type === 'pc')
-    .map(t => ({
-      id: t.id,
-      x: t.x,
-      y: t.y,
-      visionRadius: getTokenVisionRadiusPx(t)
+const {
+  pcVision,
+  allTokenVision,
+  lightZones: visionLightZones
+} = useVisionCalculation({
+  tokens,
+  lightSources,
+  ambientLight: ambientLightRef,
+  gridSizePx: effectiveGridSize,
+  mapWidth: mapWidthForVision,
+  mapHeight: mapHeightForVision
+})
+
+// Tokens with vision for visibility polygon calculation
+// Uses pcVision from useVisionCalculation which considers map light sources
+const tokensWithVision = computed(() => {
+  return pcVision.value
+    .filter(v => v.visionRadiusPx > 0) // Exclude tokens that can't see
+    .map(v => ({
+      id: v.tokenId,
+      x: v.x,
+      y: v.y,
+      visionRadius: v.visionRadiusPx
     }))
-    .filter(t => t.visionRadius > 0) // Exclude tokens that can't see
 })
 
 // Map dimensions for visibility calculation
@@ -667,6 +821,74 @@ const {
   mapHeightRef
 )
 
+// Point-in-polygon check using ray casting algorithm
+function isPointInPolygon(x: number, y: number, polygon: { x: number; y: number }[]): boolean {
+  if (polygon.length < 3) return false
+
+  let inside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y
+    const xj = polygon[j].x, yj = polygon[j].y
+
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside
+    }
+  }
+  return inside
+}
+
+// Check if a point is visible to any PC (within their visibility polygon)
+function isPointVisibleToAnyPC(x: number, y: number): boolean {
+  // If LOS blocking is disabled, everything is visible
+  if (!useLosBlocking.value) return true
+
+  // Check each PC's visibility polygon
+  for (const vis of visibilityPolygons.value) {
+    if (isPointInPolygon(x, y, vis.polygon)) {
+      return true
+    }
+  }
+  return false
+}
+
+// Map light zones that contribute to visibility
+// Only includes lights that at least one PC can see (has LOS to)
+const mapLightZones = computed(() => {
+  const zones: { id: string; x: number; y: number; radiusPx: number }[] = []
+  const gridSize = effectiveGridSize.value
+
+  // Add UVTT lights (already in pixel coordinates) - only if visible to a PC
+  if (uvttLoaded.value) {
+    for (const light of uvttLights.value) {
+      if (isPointVisibleToAnyPC(light.position.x, light.position.y)) {
+        zones.push({
+          id: `uvtt-${light.id}`,
+          x: light.position.x,
+          y: light.position.y,
+          radiusPx: light.range // Already in pixels
+        })
+      }
+    }
+  }
+
+  // Add active database light sources (convert feet to pixels) - only if visible
+  for (const light of lightSources.value) {
+    if (!light.is_active) continue
+    if (isPointVisibleToAnyPC(light.x, light.y)) {
+      // Use dim radius for the full visible zone
+      const radiusPx = (light.dim_radius_ft / 5) * gridSize
+      zones.push({
+        id: `db-${light.id}`,
+        x: light.x,
+        y: light.y,
+        radiusPx
+      })
+    }
+  }
+
+  return zones
+})
+
 // Handle door toggle
 function handleDoorToggle(portalId: string) {
   togglePortal(portalId)
@@ -676,47 +898,55 @@ function handleDoorToggle(portalId: string) {
   }
 }
 
-// Backend token response type (TokenPlacement + TokenWithData fields)
+// Backend token response type (matches TokenResponse from backend)
 interface BackendToken {
   id: string
   map_id: string
-  module_monster_id: string | null
-  module_npc_id: string | null
-  grid_x: number
-  grid_y: number
-  label: string | null
-  faction_color: string | null
-  hidden: number
-  created_at: string
+  name: string
   token_type: string
-  name: string | null
-  monster_source: string | null
+  size: string
+  x: number
+  y: number
+  visible_to_players: boolean
+  color: string | null
+  image_path: string | null
+  monster_id: string | null
+  character_id: string | null
+  notes: string | null
+  vision_type: string
+  vision_range_ft: number | null
+  vision_bright_ft: number | null
+  vision_dim_ft: number | null
+  vision_dark_ft: number
+  light_radius_ft: number
+  created_at: string
+  updated_at: string
 }
 
 // Transform backend token to frontend Token format
-function transformToken(backendToken: BackendToken, gridSize: number): Token {
-  // Convert grid coordinates to pixel coordinates (center of grid cell)
-  const x = backendToken.grid_x * gridSize + gridSize / 2
-  const y = backendToken.grid_y * gridSize + gridSize / 2
-
+function transformToken(backendToken: BackendToken): Token {
   return {
     id: backendToken.id,
     map_id: backendToken.map_id,
-    name: backendToken.name || backendToken.label || 'Unknown',
+    name: backendToken.name,
     token_type: backendToken.token_type as Token['token_type'],
-    size: 'medium', // Default size - backend doesn't track this currently
-    x,
-    y,
-    visible_to_players: backendToken.hidden === 0,
-    color: backendToken.faction_color,
-    image_path: null, // Backend doesn't return this currently
-    monster_id: backendToken.module_monster_id,
-    character_id: null,
-    notes: null,
-    vision_type: 'normal',
-    vision_range_ft: null,
+    size: backendToken.size as Token['size'],
+    x: backendToken.x,
+    y: backendToken.y,
+    visible_to_players: backendToken.visible_to_players,
+    color: backendToken.color,
+    image_path: backendToken.image_path,
+    monster_id: backendToken.monster_id,
+    character_id: backendToken.character_id,
+    notes: backendToken.notes,
+    vision_type: backendToken.vision_type as Token['vision_type'],
+    vision_range_ft: backendToken.vision_range_ft,
+    vision_bright_ft: backendToken.vision_bright_ft,
+    vision_dim_ft: backendToken.vision_dim_ft,
+    vision_dark_ft: backendToken.vision_dark_ft,
+    light_radius_ft: backendToken.light_radius_ft,
     created_at: backendToken.created_at,
-    updated_at: backendToken.created_at
+    updated_at: backendToken.updated_at
   }
 }
 
@@ -725,9 +955,8 @@ async function loadTokens(mapId: string) {
   try {
     const response = await invoke<{ success: boolean; data?: BackendToken[] }>('list_tokens', { mapId })
     if (response.success && response.data) {
-      // Transform backend tokens to frontend format
-      const gridSize = effectiveGridSize.value
-      tokens.value = response.data.map(t => transformToken(t, gridSize))
+      // Transform backend tokens to frontend format (backend already converts to pixel coordinates)
+      tokens.value = response.data.map(t => transformToken(t))
       // Load token images for tokens that have image_path
       await loadTokenImages()
       // Send visible tokens to player display
@@ -803,6 +1032,32 @@ async function loadLightSources(mapId: string) {
   }
 }
 
+// Load traps for the map
+async function loadMapTraps(mapId: string) {
+  try {
+    const response = await invoke<{ success: boolean; data?: MapTrap[] }>('list_map_traps', { mapId })
+    if (response.success && response.data) {
+      mapTraps.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load map traps:', e)
+    mapTraps.value = []
+  }
+}
+
+// Load POIs for the map
+async function loadMapPois(mapId: string) {
+  try {
+    const response = await invoke<{ success: boolean; data?: MapPoi[] }>('list_map_pois', { mapId })
+    if (response.success && response.data) {
+      mapPois.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load map POIs:', e)
+    mapPois.value = []
+  }
+}
+
 // Send light sources to player display
 async function sendLightSourcesToDisplay() {
   if (!isDisplayOpen.value || !props.mapId) return
@@ -820,8 +1075,6 @@ async function sendLightSourcesToDisplay() {
 }
 
 // Toggle reveal map (master toggle)
-// revealMap ON = everything visible (0,0,0)
-// revealMap OFF = hiding active based on LOS mode (fog or token)
 function toggleRevealMap() {
   revealMap.value = !revealMap.value
   sendFogToDisplay()
@@ -831,12 +1084,13 @@ function toggleRevealMap() {
 async function sendFogToDisplay() {
   if (!isDisplayOpen.value || !props.mapId) return
 
-  // Calculate vision circles for player tokens
-  const visionCircles = playerTokensWithVision.value.map(token => ({
-    tokenId: token.id,
-    x: token.x,
-    y: token.y,
-    radiusPx: getTokenVisionRadiusPx(token)
+  // Calculate vision circles for player tokens using proper D&D 5e vision rules
+  // pcVision considers map light sources when determining token vision
+  const visionCircles = pcVision.value.map(vision => ({
+    tokenId: vision.tokenId,
+    x: vision.x,
+    y: vision.y,
+    radiusPx: vision.visionRadiusPx
   }))
 
   // Include visibility polygon data when UVTT LOS is available
@@ -900,6 +1154,49 @@ function handleTokenContext(event: MouseEvent, token: Token) {
 function closeContextMenu() {
   contextMenu.value.visible = false
   lightContextMenu.value.visible = false
+  visionMenu.value.visible = false
+}
+
+// Open vision settings menu for current token
+function openVisionMenu() {
+  if (!contextMenu.value.token) return
+  const token = contextMenu.value.token
+
+  // Close the context menu and open vision menu at same position
+  const x = contextMenu.value.x
+  const y = contextMenu.value.y
+  contextMenu.value.visible = false
+
+  visionMenu.value = {
+    visible: true,
+    x,
+    y,
+    token
+  }
+}
+
+// Close vision menu
+function closeVisionMenu() {
+  visionMenu.value.visible = false
+}
+
+// Handle vision settings updated
+function onVisionUpdated(updatedToken: Token) {
+  // Update the token in our local array
+  const index = tokens.value.findIndex(t => t.id === updatedToken.id)
+  if (index !== -1) {
+    tokens.value[index] = updatedToken
+  }
+
+  // Update the vision menu's token reference
+  if (visionMenu.value.token?.id === updatedToken.id) {
+    visionMenu.value.token = updatedToken
+  }
+
+  // Trigger fog recalculation when vision changes
+  if (!revealMap.value) {
+    sendFogToDisplay()
+  }
 }
 
 // Handle light source context menu (right-click on light dot)
@@ -1073,65 +1370,6 @@ function toggleTokenDead() {
 }
 
 // Handle quick-add token
-async function handleQuickAddToken(request: CreateTokenRequest) {
-  if (!props.mapId) return
-
-  // Calculate center position in map coordinates
-  // The viewport center is at (0, 0) in pan coordinates
-  // We need to convert that to map pixel coordinates
-  const viewportRect = viewport.value?.getBoundingClientRect()
-  if (!viewportRect) return
-
-  const viewportCenterX = viewportRect.width / 2
-  const viewportCenterY = viewportRect.height / 2
-
-  // Convert viewport center to map coordinates
-  // Account for current pan and zoom
-  const mapX = (viewportCenterX - panX.value) / zoom.value
-  const mapY = (viewportCenterY - panY.value) / zoom.value
-
-  // Snap to grid center
-  const { x: snappedX, y: snappedY } = snapToGrid(mapX, mapY)
-
-  // Create the token with the calculated position
-  try {
-    const response = await invoke<{ success: boolean; data?: Token; error?: string }>('create_token', {
-      request: {
-        ...request,
-        map_id: props.mapId,
-        x: snappedX,
-        y: snappedY
-      }
-    })
-
-    if (response.success && response.data) {
-      // Add to local tokens
-      tokens.value.push(response.data)
-      // Select the new token
-      selectedTokenId.value = response.data.id
-
-      // Load token image if token has one
-      if (response.data.image_path) {
-        try {
-          const imgResponse = await invoke<{ success: boolean; data?: string }>('serve_token_image', { tokenId: response.data.id })
-          if (imgResponse.success && imgResponse.data) {
-            tokenImages.value.set(response.data.id, imgResponse.data)
-          }
-        } catch (e) {
-          console.error('Failed to load token image:', e)
-        }
-      }
-
-      // Sync to player display
-      sendTokensToDisplay()
-    } else {
-      console.error('Failed to create token:', response.error)
-    }
-  } catch (e) {
-    console.error('Failed to create token:', e)
-  }
-}
-
 // Add all player characters to map
 async function addAllPCsToMap() {
   if (!props.mapId || !props.campaignId) return
@@ -1150,69 +1388,35 @@ async function addAllPCsToMap() {
       return
     }
 
-    // Calculate starting position (center of viewport)
-    const viewportRect = viewport.value?.getBoundingClientRect()
-    if (!viewportRect) return
-
-    const viewportCenterX = viewportRect.width / 2
-    const viewportCenterY = viewportRect.height / 2
-
-    // Convert to map coordinates
-    const mapCenterX = (viewportCenterX - panX.value) / zoom.value
-    const mapCenterY = (viewportCenterY - panY.value) / zoom.value
-
-    // Get grid size for spacing (default to 70px if not set)
-    const gridSize = props.gridSizePx || 70
-
-    // Arrange PCs in a row, spaced by grid size
-    const startX = mapCenterX - ((pcs.length - 1) * gridSize) / 2
-
-    // Races with darkvision (D&D 5e)
-    const darkvisionRaces = ['dwarf', 'elf', 'half-elf', 'half-orc', 'gnome', 'tiefling', 'drow']
+    // Place PCs in upper left corner in a 2-column formation
+    // Start at grid position (1, 1) to give a small margin
+    const startGridX = 1
+    const startGridY = 1
+    const columns = 2
 
     for (let i = 0; i < pcs.length; i++) {
       const pc = pcs[i]
-      const tokenX = startX + i * gridSize
-      const tokenY = mapCenterY
-
-      // Snap to grid
-      const { x: snappedX, y: snappedY } = snapToGrid(tokenX, tokenY)
-
-      // Check if race has darkvision
-      const raceLower = (pc.race_name || '').toLowerCase()
-      const hasDarkvision = darkvisionRaces.some(r => raceLower.includes(r))
+      const col = i % columns
+      const row = Math.floor(i / columns)
+      const gridX = startGridX + col
+      const gridY = startGridY + row
 
       try {
-        const response = await invoke<{ success: boolean; data?: Token; error?: string }>('create_token', {
+        const response = await invoke<{ success: boolean; data?: BackendToken; error?: string }>('create_token', {
           request: {
-            map_id: props.mapId,
-            name: pc.name,
-            token_type: 'pc',
-            size: 'medium',
-            x: snappedX,
-            y: snappedY,
-            visible_to_players: true,
-            character_id: pc.id,
-            color: '#4CAF50', // Green for PCs
-            vision_type: hasDarkvision ? 'darkvision' : 'normal',
-            vision_range_ft: hasDarkvision ? 60 : null
+            mapId: props.mapId,
+            gridX,
+            gridY,
+            label: pc.name,
+            factionColor: '#4CAF50', // Green for PCs
+            hidden: false
           }
         })
 
         if (response.success && response.data) {
-          tokens.value.push(response.data)
-
-          // Load token image if available
-          if (response.data.image_path) {
-            try {
-              const imgResponse = await invoke<{ success: boolean; data?: string }>('serve_token_image', { tokenId: response.data.id })
-              if (imgResponse.success && imgResponse.data) {
-                tokenImages.value.set(response.data.id, imgResponse.data)
-              }
-            } catch (e) {
-              console.error('Failed to load token image:', e)
-            }
-          }
+          tokens.value.push(transformToken(response.data))
+        } else {
+          console.error('Failed to create PC token:', response.error)
         }
       } catch (e) {
         console.error(`Failed to create token for ${pc.name}:`, e)
@@ -1221,6 +1425,10 @@ async function addAllPCsToMap() {
 
     // Sync all tokens to player display
     sendTokensToDisplay()
+    // Update fog if hiding is active
+    if (!revealMap.value) {
+      sendFogToDisplay()
+    }
   } catch (e) {
     console.error('Failed to add PCs to map:', e)
   } finally {
@@ -1302,16 +1510,23 @@ async function handleTokenDragEnd(event: MouseEvent) {
 
   // Only update if position changed
   if (snappedX !== token.x || snappedY !== token.y) {
+    // Convert pixel coordinates to grid coordinates
+    const gridSize = effectiveGridSize.value
+    const gridX = Math.floor(snappedX / gridSize)
+    const gridY = Math.floor(snappedY / gridSize)
+
     try {
-      const response = await invoke<{ success: boolean; error?: string }>('update_token', {
+      const response = await invoke<{ success: boolean; data?: BackendToken; error?: string }>('update_token_position', {
         id: token.id,
-        request: { x: snappedX, y: snappedY }
+        gridX,
+        gridY
       })
 
-      if (response.success) {
-        // Update local token position
-        token.x = snappedX
-        token.y = snappedY
+      if (response.success && response.data) {
+        // Update local token position from response (backend returns pixel coords)
+        const updated = transformToken(response.data)
+        token.x = updated.x
+        token.y = updated.y
         // Sync to player display
         sendTokensToDisplay()
         // Update fog/visibility when hiding is active (revealMap OFF)
@@ -1373,11 +1588,6 @@ function snapToGrid(x: number, y: number): { x: number; y: number } {
   return { x: gridX, y: gridY }
 }
 
-// Computed grid values (with defaults for null)
-const effectiveGridSize = computed(() => props.gridSizePx ?? 70)
-const effectiveGridOffsetX = computed(() => props.gridOffsetX ?? 0)
-const effectiveGridOffsetY = computed(() => props.gridOffsetY ?? 0)
-
 // Player tokens that contribute to vision (PCs only - NPCs don't reveal fog for players)
 const playerTokensWithVision = computed(() => {
   return tokens.value.filter(t =>
@@ -1386,49 +1596,33 @@ const playerTokensWithVision = computed(() => {
 })
 
 // Calculate vision radius in pixels for a token based on ambient light
-// In bright light: unlimited vision (no fog needed)
-// In dim light: can see but with slight limitation
-// In darkness: only darkvision/blindsight/etc OR tokens with active light can see
+// Uses the token's vision settings (D&D 5e rules)
 function getTokenVisionRadiusPx(token: Token): number {
   const gridSize = effectiveGridSize.value
   const ambient = currentAmbientLight.value
 
-  // In bright light, vision is unlimited - return very large value
-  if (ambient === 'bright') {
-    // Return map diagonal * 2 to ensure full coverage
-    const maxDim = Math.max(mapWidthRef.value, mapHeightRef.value)
-    return maxDim > 0 ? maxDim * 2 : 10000
+  // Convert feet to pixels (1 grid = 5 feet)
+  const feetToPixels = (feet: number) => (feet / 5) * gridSize
+  const UNLIMITED = 100000
+
+  let visionFt: number | null
+
+  switch (ambient) {
+    case 'bright':
+      visionFt = token.vision_bright_ft
+      break
+    case 'dim':
+      visionFt = token.vision_dim_ft
+      break
+    case 'darkness':
+      // In darkness, use dark vision OR own light radius (whichever is greater)
+      visionFt = Math.max(token.vision_dark_ft, token.light_radius_ft)
+      break
+    default:
+      visionFt = null
   }
 
-  // Vision types that can see in darkness
-  const darkVisionTypes = ['darkvision', 'blindsight', 'tremorsense', 'truesight', 'devils_sight']
-  const hasDarkVision = darkVisionTypes.includes(token.vision_type)
-
-  // Check if token has a light source that is ON
-  // Note: is_active=true means light is ON and emitting
-  const tokenLight = lightSources.value.find(ls => ls.token_id === token.id)
-  const hasActiveLight = tokenLight?.is_active === true
-
-  // In darkness, need darkvision OR a light source
-  if (ambient === 'darkness' && !hasDarkVision && !hasActiveLight) {
-    return 0
-  }
-
-  // In dim light or darkness with special vision:
-  // If token has a light, use the light's range (bright + dim)
-  // Otherwise use darkvision range or default 60ft
-  let visionFeet: number
-  if (hasActiveLight && tokenLight) {
-    // Light provides vision equal to its bright + dim range
-    const lightRange = (tokenLight.bright_radius_ft || 0) + (tokenLight.dim_radius_ft || 0)
-    // Fallback to 40ft (torch) if light has no range defined
-    visionFeet = lightRange > 0 ? lightRange : 40
-  } else {
-    visionFeet = token.vision_range_ft || 60
-  }
-
-  // 1 grid square = 5 feet
-  return (visionFeet / 5) * gridSize
+  return visionFt === null ? UNLIMITED : feetToPixels(visionFt)
 }
 
 // Map state
@@ -1467,6 +1661,29 @@ const mapContainerStyle = computed(() => ({
   backfaceVisibility: 'hidden' as const
 }))
 
+// Get icon character for POI type
+function getPoiIcon(icon: string): string {
+  const iconMap: Record<string, string> = {
+    'star': '★',
+    'flag': '⚑',
+    'door': '🚪',
+    'chest': '📦',
+    'scroll': '📜',
+    'key': '🔑',
+    'skull': '💀',
+    'fire': '🔥',
+    'water': '💧',
+    'tree': '🌲',
+    'mountain': '⛰',
+    'house': '🏠',
+    'castle': '🏰',
+    'eye': '👁',
+    'question': '?',
+    'info': 'ℹ',
+  }
+  return iconMap[icon] || '●'
+}
+
 // Hex grid points calculation
 const hexPoints = computed(() => {
   const size = effectiveGridSize.value
@@ -1481,6 +1698,8 @@ watch(() => props.mapId, async (newId) => {
     await loadTokens(newId)
     await loadFogState(newId)
     await loadLightSources(newId)
+    await loadMapTraps(newId)
+    await loadMapPois(newId)
   } else {
     mapImageUrl.value = null
     mapName.value = ''
@@ -1490,6 +1709,8 @@ watch(() => props.mapId, async (newId) => {
     tokens.value = []
     fogEnabled.value = false
     lightSources.value = []
+    mapTraps.value = []
+    mapPois.value = []
   }
 }, { immediate: true })
 
@@ -1832,16 +2053,6 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.add-token-btn {
-  background: var(--color-success-100);
-  border-color: var(--color-success);
-  color: var(--color-success);
-}
-
-.add-token-btn:hover:not(:disabled) {
-  background: var(--color-success-200);
-}
-
 .sync-btn.active {
   background: var(--color-primary-100);
   border-color: var(--color-primary-500);
@@ -1874,25 +2085,6 @@ onUnmounted(() => {
   font-family: monospace;
   min-width: 40px;
   text-align: center;
-  color: var(--color-text);
-}
-
-/* Fog Toggle Switch */
-.fog-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  cursor: pointer;
-}
-
-.fog-toggle.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.fog-label {
-  font-size: 0.75rem;
-  font-weight: 500;
   color: var(--color-text);
 }
 
@@ -1949,61 +2141,85 @@ onUnmounted(() => {
   background-color: var(--color-primary-600);
 }
 
-/* Danger toggle (Reveal Map) - always styled as warning */
-.reveal-toggle {
+/* Reveal Map Button (red eye icon) */
+.reveal-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background-color: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-}
-
-.reveal-toggle.active {
-  background-color: rgba(220, 38, 38, 0.2);
-  border-color: rgba(220, 38, 38, 0.5);
-}
-
-.reveal-label {
-  font-size: 12px;
-  font-weight: 600;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: var(--radius-sm);
+  background: rgba(220, 38, 38, 0.1);
   color: #dc2626;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.toggle-switch.danger .toggle-slider {
-  background-color: rgba(220, 38, 38, 0.3);
+.reveal-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
-.toggle-switch.danger.active .toggle-slider {
-  background-color: #dc2626;
+.reveal-btn:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: #dc2626;
 }
 
-.toggle-switch.danger:hover .toggle-slider {
-  background-color: rgba(220, 38, 38, 0.4);
+.reveal-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.toggle-switch.danger.active:hover .toggle-slider {
-  background-color: #b91c1c;
+.reveal-btn.active {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+  animation: pulse-danger 1.5s ease-in-out infinite;
 }
 
-/* Dual-label toggle (Fog/Token) */
-.toggle-switch-dual {
+@keyframes pulse-danger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0); }
+}
+
+/* Button Group (Fog/Token selector) */
+.btn-group {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
-.dual-label {
+.btn-group-item {
+  padding: 4px 10px;
+  border: none;
+  background: var(--color-background);
+  color: var(--color-text-muted);
   font-size: 11px;
   font-weight: 500;
-  color: var(--color-base-500);
-  transition: color 0.2s ease;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.dual-label.active {
-  color: var(--color-primary-500);
-  font-weight: 600;
+.btn-group-item:not(:last-child) {
+  border-right: 1px solid var(--color-border);
+}
+
+.btn-group-item:hover:not(:disabled):not(.active) {
+  background: var(--color-base-200);
+  color: var(--color-text);
+}
+
+.btn-group-item.active {
+  background: var(--color-primary-500);
+  color: white;
+}
+
+.btn-group-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .map-viewport {
@@ -2196,6 +2412,7 @@ onUnmounted(() => {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 10; /* Above map, below lights (15) */
   pointer-events: none;
   will-change: transform;
   backface-visibility: hidden;
@@ -2204,5 +2421,39 @@ onUnmounted(() => {
 .fog-overlay.dm-fog {
   /* DM view - semi-transparent so DM can see hidden areas */
   opacity: 1;
+}
+
+/* Map Markers Overlay (Traps & POIs) */
+.markers-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.trap-marker,
+.poi-marker {
+  cursor: pointer;
+  pointer-events: all;
+  transition: transform 0.15s ease;
+}
+
+.trap-marker:hover,
+.poi-marker:hover {
+  transform: scale(1.15);
+}
+
+.trap-marker.selected,
+.poi-marker.selected {
+  transform: scale(1.2);
+}
+
+.marker-label {
+  paint-order: stroke fill;
+  stroke: rgba(0, 0, 0, 0.7);
+  stroke-width: 3px;
+  font-weight: 600;
 }
 </style>
