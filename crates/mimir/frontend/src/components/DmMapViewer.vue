@@ -52,37 +52,40 @@
         </button>
       </div>
 
-      <!-- LOS Controls (only when UVTT data available) -->
-      <div v-if="uvttLoaded" class="toolbar-group los-controls">
-        <span class="toolbar-label">LOS:</span>
-        <div class="btn-group">
-          <button
-            class="btn-group-item"
-            :class="{ active: !tokenOnlyLos }"
-            @click="tokenOnlyLos = false"
-            :disabled="!mapImageUrl || revealMap"
-            title="Fog mode: hide map outside token vision"
-          >Fog</button>
-          <button
-            class="btn-group-item"
-            :class="{ active: tokenOnlyLos }"
-            @click="tokenOnlyLos = true"
-            :disabled="!mapImageUrl || revealMap"
-            title="Token mode: show map, hide tokens outside vision"
-          >Token</button>
-        </div>
+      <!-- Vision Controls (only when UVTT data available) -->
+      <div v-if="uvttLoaded" class="toolbar-group vision-controls">
+        <!-- Fog Toggle -->
         <button
-          class="toolbar-btn"
-          :class="{ active: showLosDebug }"
-          @click="showLosDebug = !showLosDebug"
-          :disabled="!mapImageUrl"
-          title="Toggle LOS debug view"
+          class="toolbar-btn toggle-btn"
+          :class="{ active: fogEnabled }"
+          @click="toggleFog"
+          :disabled="!mapImageUrl || revealMap"
+          title="Fog: Hide map outside party vision"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon">
+            <path fill-rule="evenodd" d="M5.5 17a4.5 4.5 0 01-1.44-8.765 4.5 4.5 0 018.302-3.046 3.5 3.5 0 014.504 4.272A4 4 0 0115 17H5.5zm3.75-2.75a.75.75 0 001.5 0V9.66l1.95 2.1a.75.75 0 101.1-1.02l-3.25-3.5a.75.75 0 00-1.1 0l-3.25 3.5a.75.75 0 101.1 1.02l1.95-2.1v4.59z" clip-rule="evenodd" />
+          </svg>
+          <span class="toggle-label">Fog</span>
+        </button>
+
+        <!-- Token LOS Toggle -->
+        <button
+          class="toolbar-btn toggle-btn"
+          :class="{ active: tokenLosEnabled, forced: fogEnabled }"
+          @click="toggleTokenLos"
+          :disabled="!mapImageUrl || revealMap || fogEnabled"
+          title="Token LOS: Only show tokens within party line of sight"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon">
             <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
             <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
           </svg>
+          <span class="toggle-label">LOS</span>
         </button>
+
+        <!-- Separator -->
+        <div class="toolbar-separator"></div>
+
         <!-- Ambient Light Dropdown -->
         <select
           class="ambient-select"
@@ -95,6 +98,19 @@
           <option value="dim">🌙 Dim</option>
           <option value="darkness">🌑 Dark</option>
         </select>
+
+        <!-- LOS Debug Toggle -->
+        <button
+          class="toolbar-btn"
+          :class="{ active: showLosDebug }"
+          @click="showLosDebug = !showLosDebug"
+          :disabled="!mapImageUrl"
+          title="Toggle LOS debug view"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M6.28 5.22a.75.75 0 010 1.06L2.56 10l3.72 3.72a.75.75 0 01-1.06 1.06L.97 10.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0zm7.44 0a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 010-1.06zM11.377 2.011a.75.75 0 01.612.867l-2.5 14.5a.75.75 0 01-1.478-.255l2.5-14.5a.75.75 0 01.866-.612z" clip-rule="evenodd" />
+          </svg>
+        </button>
       </div>
 
       <div class="toolbar-group">
@@ -667,9 +683,6 @@ const addingPCs = ref(false)
 // Print dialog state
 const showPrintDialog = ref(false)
 
-// Fog of war state
-const fogEnabled = ref(false)
-
 // Light source state
 const lightSources = ref<LightSourceSummary[]>([])
 
@@ -722,8 +735,32 @@ const tokenLightInfo = computed(() => {
 // LOS (Line of Sight) state
 const showLosDebug = ref(false)
 const useLosBlocking = ref(true) // Always use wall-based LOS blocking when UVTT data available
-const tokenOnlyLos = ref(false) // LOS mode: false = Fog (map hidden), true = Token (map visible, tokens filtered)
-const revealMap = ref(false) // Master toggle: false = hiding active (safe default), true = everything revealed
+// Vision mode controls
+const fogEnabled = ref(false) // Fog: hide map outside party vision
+const tokenLosEnabled = ref(false) // Token LOS: filter tokens by line of sight
+const revealMap = ref(false) // Master override: show everything to players
+
+// Computed for backward compatibility with IPC payload
+// tokenOnlyLos: false = Fog mode (map hidden), true = Token mode (map visible)
+const tokenOnlyLos = computed(() => !fogEnabled.value)
+
+// Toggle functions
+function toggleFog() {
+  fogEnabled.value = !fogEnabled.value
+  // When fog is enabled, token LOS is forced on
+  if (fogEnabled.value) {
+    tokenLosEnabled.value = true
+  }
+  sendFogToDisplay()
+}
+
+function toggleTokenLos() {
+  // Can only toggle when fog is disabled (otherwise it's forced on)
+  if (!fogEnabled.value) {
+    tokenLosEnabled.value = !tokenLosEnabled.value
+    sendFogToDisplay()
+  }
+}
 
 // UVTT map data composable
 const mapIdRef = toRef(props, 'mapId')
@@ -768,9 +805,9 @@ watch(lightSources, () => {
 }, { deep: true })
 
 // Send fog updates when visibility settings change
-watch([tokenOnlyLos, revealMap], () => {
-  console.log('Visibility changed - revealMap:', revealMap.value, 'tokenOnlyLos:', tokenOnlyLos.value)
-  sendFogToDisplay()
+watch([fogEnabled, tokenLosEnabled, revealMap], () => {
+  console.log('Visibility changed - fog:', fogEnabled.value, 'tokenLos:', tokenLosEnabled.value, 'reveal:', revealMap.value)
+  // sendFogToDisplay is called by toggle functions, but watch handles revealMap changes
 })
 
 // Vision calculation using the proper D&D 5e rules
@@ -2031,6 +2068,56 @@ onUnmounted(() => {
 .toolbar-btn svg {
   width: 16px;
   height: 16px;
+}
+
+/* Vision toggle buttons */
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.toggle-btn .toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.toggle-btn .toggle-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.toggle-btn.active {
+  background: var(--color-primary-100);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-700);
+}
+
+.toggle-btn.forced {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-300);
+  color: var(--color-primary-600);
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 var(--spacing-xs);
+}
+
+.vision-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 .ambient-select {
