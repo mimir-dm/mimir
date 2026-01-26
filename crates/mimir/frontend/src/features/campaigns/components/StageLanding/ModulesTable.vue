@@ -37,13 +37,14 @@
             </span>
           </td>
           <td class="actions-cell">
-            <router-link
-              :to="`/modules/${module.id}/play`"
+            <button
               class="btn btn-warning btn-sm"
               :class="{ disabled: module.status !== 'ready' && module.status !== 'active' }"
+              :disabled="module.status !== 'ready' && module.status !== 'active'"
+              @click="handlePlayModule(module)"
             >
               Play
-            </router-link>
+            </button>
             <router-link :to="`/modules/${module.id}/board`" class="btn btn-ghost btn-sm">
               Open
             </router-link>
@@ -75,6 +76,7 @@
 import { ref } from 'vue'
 import ModuleExportDialog from '../../../../components/print/ModuleExportDialog.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
+import { useDmMapWindow } from '@/composables/useDmMapWindow'
 
 interface ModuleData {
   id: string
@@ -82,6 +84,9 @@ interface ModuleData {
   module_number: number
   status: string
 }
+
+// DM Map window
+const { openWindow: openDmMapWindow } = useDmMapWindow()
 
 const props = withDefaults(defineProps<{
   modules: ModuleData[]
@@ -110,6 +115,19 @@ function openExportDialog(module: ModuleData) {
 function closeExportDialog() {
   showExportDialog.value = false
   selectedModule.value = null
+}
+
+// Play module - opens DM Map window
+async function handlePlayModule(module: ModuleData) {
+  if (!props.campaignId) return
+  const isReady = module.status === 'ready' || module.status === 'active'
+  if (!isReady) return
+
+  try {
+    await openDmMapWindow(module.id, props.campaignId)
+  } catch (e) {
+    console.error('Failed to open DM Map window:', e)
+  }
 }
 </script>
 

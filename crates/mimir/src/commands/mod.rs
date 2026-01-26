@@ -8,10 +8,11 @@ pub mod campaign;
 pub mod catalog;
 pub mod character;
 pub mod dev;
+pub mod dm_map;
 pub mod document;
 pub mod map;
-pub mod player_display;
 pub mod module;
+pub mod player_display;
 pub mod source;
 
 use serde::Serialize;

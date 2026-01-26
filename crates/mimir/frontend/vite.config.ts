@@ -18,7 +18,8 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         sources: fileURLToPath(new URL('./sources.html', import.meta.url)),
-        playerDisplay: fileURLToPath(new URL('./player-display.html', import.meta.url))
+        playerDisplay: fileURLToPath(new URL('./player-display.html', import.meta.url)),
+        dmMap: fileURLToPath(new URL('./dm-map.html', import.meta.url))
       }
     }
   },

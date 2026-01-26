@@ -99,34 +99,19 @@ interface Props {
 
 defineProps<Props>()
 
-// Get icon character for POI type
+// Get icon character for POI type (matches PoiEditModal icons)
 function getPoiIcon(icon: string): string {
   const icons: Record<string, string> = {
-    'star': '★',
-    'info': 'ℹ',
-    'question': '?',
-    'exclamation': '!',
-    'treasure': '💎',
-    'door': '🚪',
-    'stairs': '⬆',
-    'note': '📜',
+    'pin': '📍',
+    'star': '⭐',
     'skull': '💀',
-    'flag': '⚑',
-    'key': '🔑',
-    'lock': '🔒',
-    'eye': '👁',
-    'book': '📖',
-    'scroll': '📜',
-    'potion': '🧪',
-    'sword': '⚔',
-    'shield': '🛡',
-    'magic': '✨',
-    'fire': '🔥',
-    'water': '💧',
-    'lightning': '⚡',
-    'default': '•'
+    'chest': '📦',
+    'door': '🚪',
+    'secret': '🔮',
+    'question': '❓',
+    'exclamation': '❗'
   }
-  return icons[icon] || icons['default']
+  return icons[icon] || '📍'
 }
 </script>
 

@@ -15,6 +15,7 @@
       :title="token.name"
       @mousedown.stop="handleMouseDown($event, token)"
       @click.stop="handleClick($event, token)"
+      @dblclick.stop="$emit('token-dblclick', token)"
       @contextmenu.prevent="$emit('token-context', $event, token)"
     >
       <!-- Token image (if available) -->
@@ -132,6 +133,7 @@ function isDead(tokenId: string): boolean {
 
 const emit = defineEmits<{
   'token-click': [token: Token]
+  'token-dblclick': [token: Token]
   'token-context': [event: MouseEvent, token: Token]
   'token-drag-start': [event: MouseEvent, token: Token]
 }>()

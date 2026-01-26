@@ -306,6 +306,15 @@
                   <span class="token-list-type">{{ poi.icon }}</span>
                 </div>
                 <button
+                  class="poi-edit-btn"
+                  @click.stop="openPoiEditModalDirect(poi)"
+                  title="Edit POI"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                </button>
+                <button
                   class="poi-toggle-btn"
                   :class="{ visible: poi.visible === 1 }"
                   @click.stop="handleTogglePoiVisibilityDirect(poi)"
@@ -365,6 +374,7 @@
         :style="{ left: poiContextMenu.x + 'px', top: poiContextMenu.y + 'px' }"
         @click.stop
       >
+        <button @click="openPoiEditModal">Edit...</button>
         <button @click="handleTogglePoiVisibility">
           {{ poiContextMenu.poi?.visible === 1 ? 'Hide from Players' : 'Show to Players' }}
         </button>
@@ -383,6 +393,15 @@
     @close="showGridConfigModal = false"
     @saved="handleGridSaved"
   />
+
+  <!-- POI Edit Modal -->
+  <PoiEditModal
+    :visible="showPoiEditModal"
+    :poi="poiToEdit"
+    :map-id="map.id"
+    @close="closePoiEditModal"
+    @saved="handlePoiSaved"
+  />
 </template>
 
 <script setup lang="ts">
@@ -391,6 +410,7 @@ import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import TokenPalette from './TokenPalette.vue'
 import MapGridConfigModal from '@/features/campaigns/components/StageLanding/MapGridConfigModal.vue'
+import PoiEditModal from '@/components/map/PoiEditModal.vue'
 import type { Token, CreateTokenRequest, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
 import { useTokens } from '@/composables/useTokens'
@@ -547,6 +567,10 @@ const poiContextMenu = ref({
   y: 0,
   poi: null as MapPoi | null
 })
+
+// POI edit modal
+const showPoiEditModal = ref(false)
+const poiToEdit = ref<MapPoi | null>(null)
 
 // Grid config modal
 const showGridConfigModal = ref(false)
@@ -1479,6 +1503,35 @@ async function handleDeletePoi() {
   poiContextMenu.value.visible = false
 }
 
+// POI edit modal functions
+function openPoiEditModal() {
+  if (poiContextMenu.value.poi) {
+    poiToEdit.value = poiContextMenu.value.poi
+    showPoiEditModal.value = true
+  }
+  poiContextMenu.value.visible = false
+}
+
+function closePoiEditModal() {
+  showPoiEditModal.value = false
+  poiToEdit.value = null
+}
+
+function handlePoiSaved(updatedPoi: MapPoi) {
+  // Update the POI in our local list
+  const index = mapPois.value.findIndex(p => p.id === updatedPoi.id)
+  if (index !== -1) {
+    mapPois.value[index] = updatedPoi
+  }
+  closePoiEditModal()
+}
+
+// Direct POI edit (for list panel button)
+function openPoiEditModalDirect(poi: MapPoi) {
+  poiToEdit.value = poi
+  showPoiEditModal.value = true
+}
+
 // Direct POI actions (for list panel buttons)
 async function handleTogglePoiVisibilityDirect(poi: MapPoi) {
   try {
@@ -2172,5 +2225,24 @@ onUnmounted(() => {
   background: rgba(68, 136, 255, 0.2);
   border-color: #4488ff;
   color: #2266cc;
+}
+
+.poi-edit-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  padding: 0;
+}
+
+.poi-edit-btn:hover {
+  background: var(--color-base-300);
+  color: var(--color-primary-500);
 }
 </style>

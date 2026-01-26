@@ -160,9 +160,9 @@
                 <div class="section-header">
                   <h3>Dangers</h3>
                 </div>
-                <div v-if="loadingMonsters || loadingTraps" class="section-loading">Loading...</div>
-                <div v-else-if="moduleMonsters.length === 0 && moduleTraps.length === 0" class="section-empty">
-                  No dangers added
+                <div v-if="loadingMonsters || loadingTraps || loadingPois" class="section-loading">Loading...</div>
+                <div v-else-if="moduleMonsters.length === 0 && moduleTraps.length === 0 && modulePois.length === 0" class="section-empty">
+                  No dangers or points of interest added
                 </div>
                 <div v-else class="dangers-list">
                   <!-- Monsters Section -->
@@ -225,6 +225,26 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Points of Interest Section -->
+                  <div v-if="modulePois.length > 0" class="danger-category">
+                    <div class="danger-category-header">Points of Interest</div>
+                    <div class="poi-list">
+                      <div
+                        v-for="poi in modulePois"
+                        :key="poi.name"
+                        class="poi-row"
+                        :class="{ active: selectedPoi?.name === poi.name }"
+                        @click="selectPoiForDetails(poi)"
+                      >
+                        <span class="poi-icon-small" :style="{ backgroundColor: poi.color || '#3b82f6' }">
+                          {{ getPoiIconChar(poi.icon) }}
+                        </span>
+                        <span class="poi-name">{{ poi.name }}</span>
+                        <span class="poi-qty" v-if="poi.count > 1">{{ poi.count }}×</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -244,6 +264,15 @@
                 v-model:panelOpen="trapPanelOpen"
                 @close="clearSelectedTrap"
                 class="module-trap-panel"
+              />
+
+              <!-- POI Details Panel -->
+              <PoiDetailsPanel
+                v-if="selectedPoi"
+                :poi="selectedPoi"
+                v-model:panelOpen="poiPanelOpen"
+                @close="clearSelectedPoi"
+                class="module-poi-panel"
               />
             </div>
           </div>
@@ -450,6 +479,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import { DocumentService } from '@/services/DocumentService'
 import { useModuleMonsters } from '@/features/modules/composables/useModuleMonsters'
+import { useDmMapWindow } from '@/composables/useDmMapWindow'
+import { useDashboardLink } from '@/composables/useDashboardLink'
 import { openSourcesReference } from '@/shared/utils/windows'
 import { dataEvents } from '@/shared/utils/dataEvents'
 import CreateModuleModal from '../StageLanding/CreateModuleModal.vue'
@@ -459,6 +490,7 @@ import DocumentEditor from '../DocumentEditor.vue'
 import NpcSelectorModal from '@/features/modules/components/NpcSelectorModal.vue'
 import MonsterStatsPanel from '@/features/modules/components/MonsterStatsPanel.vue'
 import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue'
+import PoiDetailsPanel from '@/features/modules/components/PoiDetailsPanel.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import AppModal from '@/components/shared/AppModal.vue'
@@ -528,6 +560,23 @@ const moduleTraps = ref<ModuleTrap[]>([])
 const loadingTraps = ref(false)
 const selectedTrap = ref<ModuleTrap | null>(null)
 const trapPanelOpen = ref(true)
+
+// POI state - points of interest on maps
+interface ModulePoi {
+  id: string
+  name: string
+  description: string | null
+  icon: string
+  color: string | null
+  visible: number
+  grid_x: number
+  grid_y: number
+  count: number   // How many of this POI type across all maps
+}
+const modulePois = ref<ModulePoi[]>([])
+const loadingPois = ref(false)
+const selectedPoi = ref<ModulePoi | null>(null)
+const poiPanelOpen = ref(true)
 
 // Document state
 const moduleDocuments = ref<Document[]>([])
@@ -599,12 +648,14 @@ async function selectModule(mod: Module) {
   selectedModule.value = mod
   selectedDocument.value = null
   selectedTrap.value = null
+  selectedPoi.value = null
 
   await Promise.all([
     loadModuleDocuments(),
     loadModuleMaps(),
     loadModuleMonsters(),
     loadModuleTraps(),
+    loadModulePois(),
     loadNpcs()
   ])
 }
@@ -662,10 +713,69 @@ async function loadModuleTraps() {
   }
 }
 
+// Load POIs from module maps (from map_pois table)
+async function loadModulePois() {
+  if (!selectedModule.value || !props.campaign) return
+
+  loadingPois.value = true
+  try {
+    // Get all maps for this module
+    const mapsResponse = await invoke<{ success: boolean; data?: MapData[] }>('list_module_maps', {
+      moduleId: selectedModule.value.id
+    })
+
+    if (!mapsResponse.success || !mapsResponse.data) {
+      modulePois.value = []
+      return
+    }
+
+    // Get POIs from all maps (from map_pois table)
+    // Group by name
+    const poisByName = new Map<string, ModulePoi>()
+
+    for (const map of mapsResponse.data) {
+      const poisResponse = await invoke<{ success: boolean; data?: any[] }>('list_map_pois', {
+        mapId: map.id
+      })
+
+      if (poisResponse.success && poisResponse.data) {
+        for (const poi of poisResponse.data) {
+          if (poi.name) {
+            const existing = poisByName.get(poi.name)
+            if (existing) {
+              existing.count++
+            } else {
+              poisByName.set(poi.name, {
+                id: poi.id,
+                name: poi.name,
+                description: poi.description,
+                icon: poi.icon || 'marker',
+                color: poi.color,
+                visible: poi.visible,
+                grid_x: poi.grid_x,
+                grid_y: poi.grid_y,
+                count: 1
+              })
+            }
+          }
+        }
+      }
+    }
+
+    modulePois.value = Array.from(poisByName.values()).sort((a, b) => a.name.localeCompare(b.name))
+  } catch (e) {
+    console.error('Failed to load module POIs:', e)
+    modulePois.value = []
+  } finally {
+    loadingPois.value = false
+  }
+}
+
 // Select trap for details view
 function selectTrapForDetails(trap: ModuleTrap) {
-  // Clear monster selection when selecting a trap
+  // Clear other selections when selecting a trap
   clearSelectedMonster()
+  clearSelectedPoi()
   selectedTrap.value = trap
   trapPanelOpen.value = true
 }
@@ -675,9 +785,24 @@ function clearSelectedTrap() {
   selectedTrap.value = null
 }
 
-// Wrapper to clear trap when selecting monster
+// Select POI for details view
+function selectPoiForDetails(poi: ModulePoi) {
+  // Clear other selections when selecting a POI
+  clearSelectedMonster()
+  clearSelectedTrap()
+  selectedPoi.value = poi
+  poiPanelOpen.value = true
+}
+
+// Clear selected POI
+function clearSelectedPoi() {
+  selectedPoi.value = null
+}
+
+// Wrapper to clear trap/POI when selecting monster
 function handleSelectMonster(monster: any) {
   clearSelectedTrap()
+  clearSelectedPoi()
   selectMonster(monster)
 }
 
@@ -860,10 +985,76 @@ function formatDocumentTitle(templateId: string): string {
     .join(' ')
 }
 
-// Play module
-function handlePlayModule() {
+// Get POI icon character for display (matches PoiEditModal icons)
+function getPoiIconChar(iconName: string): string {
+  const iconMap: Record<string, string> = {
+    'pin': '📍',
+    'star': '⭐',
+    'skull': '💀',
+    'chest': '📦',
+    'door': '🚪',
+    'secret': '🔮',
+    'question': '❓',
+    'exclamation': '❗'
+  }
+  return iconMap[iconName] || '📍'
+}
+
+// DM Map window
+const { openWindow: openDmMapWindow } = useDmMapWindow()
+
+// Dashboard link - handles entity focus events from DM Map window
+useDashboardLink({
+  onFocusMonster: (monsterId, tokenName) => {
+    // Find the monster by its module_monster ID
+    const monster = moduleMonsters.value.find(m => m.id === monsterId)
+    if (monster) {
+      handleSelectMonster(monster)
+    } else {
+      console.warn(`Monster with ID ${monsterId} not found in module (token: ${tokenName})`)
+    }
+  },
+  onFocusNpc: (characterId, tokenName) => {
+    // Find the NPC by its character ID
+    const npc = moduleNpcs.value.find(n => n.id === characterId)
+    if (npc) {
+      viewModuleNpc(npc)
+    } else {
+      console.warn(`NPC with ID ${characterId} not found in module (token: ${tokenName})`)
+    }
+  },
+  onFocusPc: (characterId, tokenName) => {
+    // PCs don't have a detail modal in the module dashboard, log for now
+    console.log(`PC focus requested: ${tokenName} (ID: ${characterId})`)
+  },
+  onFocusTrap: (trapId, trapName) => {
+    // Find the trap by name (traps are grouped by name in the dashboard)
+    const trap = moduleTraps.value.find(t => t.name === trapName)
+    if (trap) {
+      selectTrapForDetails(trap)
+    } else {
+      console.warn(`Trap "${trapName}" not found in module`)
+    }
+  },
+  onFocusPoi: (poiId, poiName) => {
+    // Find the POI by name (POIs are grouped by name in the dashboard)
+    const poi = modulePois.value.find(p => p.name === poiName)
+    if (poi) {
+      selectPoiForDetails(poi)
+    } else {
+      console.warn(`POI "${poiName}" not found in module`)
+    }
+  }
+})
+
+// Play module - opens DM Map window
+async function handlePlayModule() {
   if (selectedModule.value && props.campaign) {
-    router.push(`/campaigns/${props.campaign.id}/dashboard/modules/${selectedModule.value.id}/play`)
+    try {
+      await openDmMapWindow(selectedModule.value.id, props.campaign.id)
+    } catch (e) {
+      console.error('Failed to open DM Map window:', e)
+    }
   }
 }
 
@@ -1591,6 +1782,58 @@ onMounted(async () => {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--color-text);
+}
+
+/* POI List */
+.poi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.poi-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.poi-row:hover {
+  background: var(--color-primary-100);
+}
+
+.poi-row.active {
+  background: var(--color-primary-100);
+  border-left: 3px solid var(--color-primary);
+  padding-left: calc(var(--spacing-sm) - 3px);
+}
+
+.poi-icon-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.poi-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.poi-qty {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
 }
 
 /* Map Cards */

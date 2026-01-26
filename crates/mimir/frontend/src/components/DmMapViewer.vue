@@ -419,6 +419,7 @@
           :dead-token-ids="deadTokenIds"
           :token-images="tokenImages"
           @token-click="handleTokenClick"
+          @token-dblclick="handleTokenDblClick"
           @token-context="handleTokenContext"
           @token-drag-start="handleTokenDragStart"
         />
@@ -439,6 +440,7 @@
               :class="{ selected: selectedTrapId === trap.id, visible: trap.visible === 1 }"
               :transform="`translate(${trap.grid_x * effectiveGridSize + effectiveGridSize / 2}, ${trap.grid_y * effectiveGridSize + effectiveGridSize / 2})`"
               @click.stop="selectedTrapId = selectedTrapId === trap.id ? null : trap.id"
+              @dblclick.stop="handleTrapDblClick(trap)"
               @contextmenu.prevent="toggleTrapVisibility(trap)"
             >
               <!-- Invisible hit area -->
@@ -488,7 +490,8 @@
               :class="{ selected: selectedPoiId === poi.id, visible: poi.visible === 1 }"
               :transform="`translate(${poi.grid_x * effectiveGridSize + effectiveGridSize / 2}, ${poi.grid_y * effectiveGridSize + effectiveGridSize / 2})`"
               @click.stop="selectedPoiId = selectedPoiId === poi.id ? null : poi.id"
-              @contextmenu.prevent="togglePoiVisibility(poi)"
+              @dblclick.stop="handlePoiDblClick(poi)"
+              @contextmenu.prevent="showPoiContextMenu($event, poi)"
             >
               <!-- Invisible hit area -->
               <circle r="22" fill="transparent" class="hit-area" />
@@ -572,7 +575,7 @@
 
     <!-- Click outside to close context menu -->
     <div
-      v-if="contextMenu.visible || lightContextMenu.visible || visionMenu.visible"
+      v-if="contextMenu.visible || lightContextMenu.visible || visionMenu.visible || poiContextMenu.visible"
       class="context-menu-backdrop"
       @click="closeContextMenu"
     ></div>
@@ -599,6 +602,30 @@
         {{ lightContextMenu.light?.is_active ? 'Extinguish' : 'Ignite' }}
       </button>
     </div>
+
+    <!-- POI Context Menu -->
+    <div
+      v-if="poiContextMenu.visible"
+      class="context-menu"
+      :style="{ left: poiContextMenu.x + 'px', top: poiContextMenu.y + 'px' }"
+      @click.stop
+    >
+      <button @click="openPoiEditModal">Edit...</button>
+      <button @click="togglePoiVisibilityFromContext">
+        {{ poiContextMenu.poi?.visible === 1 ? 'Hide from Players' : 'Show to Players' }}
+      </button>
+      <div class="context-menu-divider"></div>
+      <button class="danger" @click="deletePoiFromContext">Delete</button>
+    </div>
+
+    <!-- POI Edit Modal -->
+    <PoiEditModal
+      :visible="showPoiEditModal"
+      :poi="poiToEdit"
+      :map-id="mapId || undefined"
+      @close="closePoiEditModal"
+      @saved="handlePoiSaved"
+    />
 
     <!-- Map Print Dialog -->
     <MapPrintDialog
@@ -629,6 +656,7 @@ import DoorInteractionOverlay from '@/components/los/DoorInteractionOverlay.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
 import TokenVisionMenu from '@/components/tokens/TokenVisionMenu.vue'
+import PoiEditModal from '@/components/map/PoiEditModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Token } from '@/types/api'
 import { useCharacterStore } from '@/stores/characters'
@@ -766,6 +794,23 @@ const mapTraps = ref<MapTrap[]>([])
 const mapPois = ref<MapPoi[]>([])
 const selectedTrapId = ref<string | null>(null)
 const selectedPoiId = ref<string | null>(null)
+
+// POI context menu state
+const poiContextMenu = ref<{
+  visible: boolean
+  x: number
+  y: number
+  poi: MapPoi | null
+}>({
+  visible: false,
+  x: 0,
+  y: 0,
+  poi: null
+})
+
+// POI edit modal state
+const showPoiEditModal = ref(false)
+const poiToEdit = ref<MapPoi | null>(null)
 
 // Computed: token light info for TokenRenderer
 const tokenLightInfo = computed(() => {
@@ -1201,6 +1246,71 @@ async function togglePoiVisibility(poi: MapPoi) {
   }
 }
 
+// Show POI context menu
+function showPoiContextMenu(event: MouseEvent, poi: MapPoi) {
+  selectedPoiId.value = poi.id
+  poiContextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    poi
+  }
+}
+
+// Open POI edit modal from context menu
+function openPoiEditModal() {
+  if (poiContextMenu.value.poi) {
+    poiToEdit.value = poiContextMenu.value.poi
+    showPoiEditModal.value = true
+  }
+  poiContextMenu.value.visible = false
+}
+
+// Close POI edit modal
+function closePoiEditModal() {
+  showPoiEditModal.value = false
+  poiToEdit.value = null
+}
+
+// Handle POI saved from edit modal
+function handlePoiSaved(updatedPoi: MapPoi) {
+  // Update the POI in our local list
+  const index = mapPois.value.findIndex(p => p.id === updatedPoi.id)
+  if (index !== -1) {
+    mapPois.value[index] = updatedPoi
+  }
+  // Send updated markers to player display
+  sendMarkersToDisplay()
+  closePoiEditModal()
+}
+
+// Toggle POI visibility from context menu
+async function togglePoiVisibilityFromContext() {
+  if (poiContextMenu.value.poi) {
+    await togglePoiVisibility(poiContextMenu.value.poi)
+  }
+  poiContextMenu.value.visible = false
+}
+
+// Delete POI from context menu
+async function deletePoiFromContext() {
+  const poi = poiContextMenu.value.poi
+  if (!poi) return
+
+  if (confirm(`Delete POI "${poi.name}"?`)) {
+    try {
+      await invoke('delete_map_poi', { id: poi.id })
+      if (props.mapId) {
+        await loadMapPois(props.mapId)
+        sendMarkersToDisplay()
+      }
+    } catch (e) {
+      console.error('Failed to delete POI:', e)
+    }
+  }
+  poiContextMenu.value.visible = false
+}
+
 // Send visible markers (traps & POIs) to player display
 async function sendMarkersToDisplay() {
   if (!isDisplayOpen.value || !props.mapId) return
@@ -1294,6 +1404,64 @@ function handleTokenClick(token: Token) {
   selectedTokenId.value = token.id === selectedTokenId.value ? null : token.id
 }
 
+// Handle token double-click - sends event to dashboard to open entity modal
+async function handleTokenDblClick(token: Token) {
+  // Determine entity type and ID based on token
+  let entityType: 'monster' | 'npc' | 'pc' | null = null
+  let entityId: string | null = null
+
+  if (token.token_type === 'monster' && token.monster_id) {
+    entityType = 'monster'
+    entityId = token.monster_id
+  } else if (token.token_type === 'npc' && token.character_id) {
+    entityType = 'npc'
+    entityId = token.character_id
+  } else if (token.token_type === 'pc' && token.character_id) {
+    entityType = 'pc'
+    entityId = token.character_id
+  }
+
+  // Only emit if we have a valid entity reference
+  if (entityType && entityId) {
+    try {
+      await emit('dashboard:focus-entity', {
+        type: entityType,
+        entityId,
+        tokenId: token.id,
+        tokenName: token.name
+      })
+    } catch (e) {
+      console.error('Failed to emit dashboard focus event:', e)
+    }
+  }
+}
+
+// Handle trap double-click - sends event to dashboard to open trap details
+async function handleTrapDblClick(trap: MapTrap) {
+  try {
+    await emit('dashboard:focus-entity', {
+      type: 'trap',
+      entityId: trap.id,
+      entityName: trap.name
+    })
+  } catch (e) {
+    console.error('Failed to emit trap focus event:', e)
+  }
+}
+
+// Handle POI double-click - sends event to dashboard to open POI details
+async function handlePoiDblClick(poi: MapPoi) {
+  try {
+    await emit('dashboard:focus-entity', {
+      type: 'poi',
+      entityId: poi.id,
+      entityName: poi.name
+    })
+  } catch (e) {
+    console.error('Failed to emit POI focus event:', e)
+  }
+}
+
 // Handle token context menu
 function handleTokenContext(event: MouseEvent, token: Token) {
   selectedTokenId.value = token.id
@@ -1310,6 +1478,7 @@ function closeContextMenu() {
   contextMenu.value.visible = false
   lightContextMenu.value.visible = false
   visionMenu.value.visible = false
+  poiContextMenu.value.visible = false
 }
 
 // Open vision settings menu for current token
@@ -1703,27 +1872,19 @@ const mapContainerStyle = computed(() => ({
   backfaceVisibility: 'hidden' as const
 }))
 
-// Get icon character for POI type
+// Get icon character for POI type (matches PoiEditModal icons)
 function getPoiIcon(icon: string): string {
   const iconMap: Record<string, string> = {
-    'star': '★',
-    'flag': '⚑',
-    'door': '🚪',
-    'chest': '📦',
-    'scroll': '📜',
-    'key': '🔑',
+    'pin': '📍',
+    'star': '⭐',
     'skull': '💀',
-    'fire': '🔥',
-    'water': '💧',
-    'tree': '🌲',
-    'mountain': '⛰',
-    'house': '🏠',
-    'castle': '🏰',
-    'eye': '👁',
-    'question': '?',
-    'info': 'ℹ',
+    'chest': '📦',
+    'door': '🚪',
+    'secret': '🔮',
+    'question': '❓',
+    'exclamation': '❗'
   }
-  return iconMap[icon] || '●'
+  return iconMap[icon] || '📍'
 }
 
 // Hex grid points calculation

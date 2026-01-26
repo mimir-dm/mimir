@@ -8,7 +8,7 @@
 )]
 
 use mimir_core::db::init_database;
-use mimir_lib::commands::{asset, campaign, catalog, character, dev, document, map, module, player_display, source};
+use mimir_lib::commands::{asset, campaign, catalog, character, dev, dm_map, document, map, module, player_display, source};
 use mimir_lib::{AppPaths, AppState};
 use tauri::Manager;
 use tracing_subscriber::EnvFilter;
@@ -322,6 +322,11 @@ fn main() {
             player_display::send_map_to_display,
             player_display::update_display_viewport,
             player_display::toggle_display_blackout,
+            // DM map window commands
+            dm_map::is_dm_map_open,
+            dm_map::open_dm_map_window,
+            dm_map::close_dm_map_window,
+            dm_map::toggle_dm_map_fullscreen,
             // Dev tools commands (dev mode only)
             dev::is_dev_mode,
             dev::is_dev_seeded,

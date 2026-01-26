@@ -1,15 +1,16 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import PlayerDisplayWindow from './components/PlayerDisplayWindow.vue'
+import DmMapWindow from './components/DmMapWindow.vue'
 
-// Import styles - minimal for display window, optimized for visibility
+// Import styles
 import './assets/styles/main.css'
 import './assets/styles/themes/dark.css'
 
-// Apply dark theme by default for Player Display window
+// Apply dark theme by default for DM Map window
+// The DM Map window is used during play sessions where dark mode is preferred
 document.body.classList.add('theme-dark')
 
-const app = createApp(PlayerDisplayWindow)
+const app = createApp(DmMapWindow)
 const pinia = createPinia()
 
 app.use(pinia)
