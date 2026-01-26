@@ -1,15 +1,22 @@
-import { ref, type Ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import type { Document } from '@/types/api'
+
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+}
 
 /**
  * Composable for managing play notes with auto-save
- * Handles loading, saving, and debounced auto-save of notes
+ * Uses the documents table to store play notes per module
  */
 export function usePlayNotes() {
   // State
   const notesCollapsed = ref(true)
   const notesContent = ref('')
-  const notesFilePath = ref('')
+  const notesDocumentId = ref<string | null>(null)
   const notesSaving = ref(false)
   const notesLastSaved = ref(false)
   let saveTimeout: ReturnType<typeof setTimeout> | null = null
@@ -19,40 +26,49 @@ export function usePlayNotes() {
     notesCollapsed.value = !notesCollapsed.value
   }
 
-  // Set the file path for notes (call after determining the path)
-  function setNotesFilePath(path: string) {
-    notesFilePath.value = path
-  }
-
-  // Load notes from file
-  async function loadNotes() {
-    if (!notesFilePath.value) return
-
+  // Load play notes document for a module
+  async function loadNotesForModule(moduleId: string): Promise<void> {
     try {
-      const response = await invoke<{ data: string }>('read_document_file', {
-        filePath: notesFilePath.value
+      // Get all documents for the module
+      const response = await invoke<ApiResponse<Document[]>>('list_module_documents', {
+        moduleId
       })
-      if (response.data) {
-        notesContent.value = response.data
+
+      if (response.success && response.data) {
+        // Find the play_notes document
+        const playNotesDoc = response.data.find(doc => doc.doc_type === 'play_notes')
+        if (playNotesDoc) {
+          notesDocumentId.value = playNotesDoc.id
+          notesContent.value = playNotesDoc.content || ''
+        } else {
+          console.log('No play_notes document found for module')
+          notesDocumentId.value = null
+          notesContent.value = ''
+        }
       }
     } catch (error) {
-      // File might not exist yet, that's OK
-      console.log('Notes file not found, will create on first save')
+      console.error('Failed to load play notes:', error)
+      notesDocumentId.value = null
       notesContent.value = ''
     }
   }
 
-  // Save notes to file
-  async function saveNotes() {
-    if (!notesFilePath.value) return
+  // Save notes to database
+  async function saveNotes(): Promise<void> {
+    if (!notesDocumentId.value) {
+      console.warn('No play notes document ID set, cannot save')
+      return
+    }
 
     notesSaving.value = true
     notesLastSaved.value = false
 
     try {
-      await invoke('save_document_file', {
-        filePath: notesFilePath.value,
-        content: notesContent.value
+      await invoke<ApiResponse<Document>>('update_document', {
+        id: notesDocumentId.value,
+        request: {
+          content: notesContent.value
+        }
       })
       notesLastSaved.value = true
       // Clear the "Saved" indicator after 2 seconds
@@ -96,26 +112,14 @@ export function usePlayNotes() {
     // State
     notesCollapsed,
     notesContent,
-    notesFilePath,
+    notesDocumentId,
     notesSaving,
     notesLastSaved,
     // Actions
     toggleNotes,
-    setNotesFilePath,
-    loadNotes,
+    loadNotesForModule,
     saveNotes,
     handleNotesInput,
     cleanup
   }
-}
-
-/**
- * Build the notes file path for a module
- */
-export function buildNotesFilePath(
-  campaignDirectoryPath: string,
-  moduleNumber: number
-): string {
-  const paddedNumber = String(moduleNumber).padStart(2, '0')
-  return `${campaignDirectoryPath}/modules/module_${paddedNumber}/play-notes.md`
 }

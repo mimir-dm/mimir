@@ -188,7 +188,7 @@ import type { Module, Campaign } from '@/types'
 import { useCrossReferences } from '@/features/sources/composables/useCrossReferences'
 import { useModuleMonsters } from '../composables/useModuleMonsters'
 import { useModuleMaps } from '../composables/useModuleMaps'
-import { usePlayNotes, buildNotesFilePath } from '../composables/usePlayNotes'
+import { usePlayNotes } from '../composables/usePlayNotes'
 
 const route = useRoute()
 const router = useRouter()
@@ -332,8 +332,7 @@ const {
   notesSaving,
   notesLastSaved,
   toggleNotes,
-  setNotesFilePath,
-  loadNotes,
+  loadNotesForModule,
   handleNotesInput
 } = usePlayNotes()
 
@@ -345,20 +344,17 @@ async function loadModule() {
     })
     module.value = response.data
 
-    // Load campaign to get directory path
+    // Load campaign data
     if (module.value?.campaign_id) {
       const campaignResponse = await invoke<{ data: Campaign }>('get_campaign', {
         id: module.value.campaign_id
       })
       campaign.value = campaignResponse.data
+    }
 
-      // Build notes file path and load notes
-      // Note: The new backend doesn't have directory_path on Campaign,
-      // so play notes are disabled until a new storage approach is implemented
-      if (module.value) {
-        // For now, skip notes loading - the backend doesn't support file-based notes
-        // Future: Could use a document-based approach or in-DB notes storage
-      }
+    // Load play notes for this module
+    if (moduleId.value) {
+      await loadNotesForModule(moduleId.value)
     }
   } catch (error) {
     console.error('Failed to load module:', error)

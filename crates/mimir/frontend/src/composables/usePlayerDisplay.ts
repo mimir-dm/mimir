@@ -2,7 +2,8 @@
  * Composable for controlling the player display window.
  *
  * Provides reactive state and methods for managing the player display,
- * including opening/closing the window, sending maps, and controlling viewport.
+ * including opening/closing the window and sending maps.
+ * The player display manages its own viewport (pan/zoom) independently.
  */
 
 import { ref, readonly, watch } from 'vue'
@@ -12,11 +13,6 @@ import { invoke } from '@tauri-apps/api/core'
 const isDisplayOpen = ref(false)
 const currentMapId = ref<number | null>(null)
 const isBlackout = ref(false)
-const viewportState = ref({
-  x: 0,
-  y: 0,
-  zoom: 1
-})
 
 /**
  * Check if the player display window is currently open
@@ -116,19 +112,6 @@ async function sendMapToDisplay(
 }
 
 /**
- * Update the viewport on the player display (pan/zoom)
- */
-async function updateViewport(x: number, y: number, zoom: number): Promise<void> {
-  try {
-    await invoke('update_display_viewport', { x, y, zoom })
-    viewportState.value = { x, y, zoom }
-  } catch (err) {
-    console.error('Failed to update viewport:', err)
-    throw err
-  }
-}
-
-/**
  * Toggle blackout mode on the player display
  */
 async function toggleBlackout(): Promise<void> {
@@ -164,7 +147,6 @@ export function usePlayerDisplay() {
     isDisplayOpen: readonly(isDisplayOpen),
     currentMapId: readonly(currentMapId),
     isBlackout: readonly(isBlackout),
-    viewportState: readonly(viewportState),
 
     // Methods
     checkDisplayOpen,
@@ -173,7 +155,6 @@ export function usePlayerDisplay() {
     toggleDisplay,
     toggleFullscreen,
     sendMapToDisplay,
-    updateViewport,
     toggleBlackout,
     setBlackout
   }

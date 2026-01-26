@@ -5,10 +5,12 @@ import { listen, emit, type UnlistenFn } from '@tauri-apps/api/event'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
+import PlayerDoorOverlay from '@/components/los/PlayerDoorOverlay.vue'
+import PlayerMarkerOverlay from '@/components/los/PlayerMarkerOverlay.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Token } from '@/types/api'
 import type { LightSourceSummary } from '@/composables/useLightSources'
-import type { Light, Wall } from '@/composables/useVisibilityPolygon'
+import type { Light, Wall, Portal } from '@/composables/useVisibilityPolygon'
 import { useVisionCalculation, type AmbientLight } from '@/composables/useVisionCalculation'
 
 // Types for map display
@@ -45,6 +47,13 @@ const mapState = ref<MapState>({
   mapHeight: 0
 })
 
+// Independent player view viewport (decoupled from DM)
+const playerPanX = ref(0)
+const playerPanY = ref(0)
+const playerZoom = ref(1)
+const isPanning = ref(false)
+const panStart = ref({ x: 0, y: 0 })
+
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
@@ -73,7 +82,27 @@ const useLosBlocking = ref(false)
 const visibilityPaths = ref<{ tokenId: string; path: string; polygon?: { x: number; y: number }[] }[]>([])
 const blockingWalls = ref<Wall[]>([])
 const uvttLights = ref<Light[]>([])
+const portals = ref<Portal[]>([])
 const tokenOnlyLos = ref(false) // Token LOS mode: map visible but tokens hidden outside LOS
+
+// Visible markers (traps & POIs revealed by DM)
+interface MarkerTrap {
+  id: string
+  grid_x: number
+  grid_y: number
+  name: string
+}
+interface MarkerPoi {
+  id: string
+  grid_x: number
+  grid_y: number
+  name: string
+  icon: string
+  color: string | null
+}
+const visibleTraps = ref<MarkerTrap[]>([])
+const visiblePois = ref<MarkerPoi[]>([])
+const markerGridSize = ref(70)
 
 // Point-in-polygon test using ray casting algorithm
 function isPointInPolygon(point: { x: number; y: number }, polygon: { x: number; y: number }[]): boolean {
@@ -164,22 +193,16 @@ const {
   mapHeight: mapHeightRef
 })
 
-// Combined transform: mirror DM's viewport and fill player screen
+// Combined transform: fit to screen with independent player viewport controls
 const combinedTransform = computed(() => {
   const baseScale = displayScale.value
-  const dmZoom = mapState.value.zoom
-  const dmPanX = mapState.value.viewportX
-  const dmPanY = mapState.value.viewportY
 
-  // Scale to fill player screen: combine fit-to-screen scale with DM's zoom
-  const finalScale = baseScale * dmZoom
+  // Apply player's independent zoom on top of fit-to-screen scale
+  const finalScale = baseScale * playerZoom.value
 
-  // Scale pan values to match the final scale
-  const scaledPanX = dmPanX * baseScale
-  const scaledPanY = dmPanY * baseScale
-
+  // Apply player's pan (already in screen coordinates)
   return {
-    transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${finalScale})`,
+    transform: `translate(${playerPanX.value}px, ${playerPanY.value}px) scale(${finalScale})`,
     transformOrigin: 'center center'
   }
 })
@@ -258,11 +281,11 @@ const hexPattern = computed(() => gridPattern.value?.type === 'hex' ? gridPatter
 
 // Event listeners for IPC from main window
 let unlistenMapUpdate: UnlistenFn | null = null
-let unlistenViewportUpdate: UnlistenFn | null = null
 let unlistenBlackout: UnlistenFn | null = null
 let unlistenTokensUpdate: UnlistenFn | null = null
 let unlistenFogUpdate: UnlistenFn | null = null
 let unlistenLightSourcesUpdate: UnlistenFn | null = null
+let unlistenMarkersUpdate: UnlistenFn | null = null
 
 onMounted(async () => {
   console.log('PlayerDisplayWindow: Setting up event listeners')
@@ -303,17 +326,6 @@ onMounted(async () => {
     // Request current state from DM window now that we're ready
     console.log('PlayerDisplayWindow: Requesting state for map', data.mapId)
     await emit('player-display:request-state', { mapId: data.mapId })
-  })
-
-  // Listen for viewport updates (pan/zoom)
-  unlistenViewportUpdate = await listen<{
-    x: number
-    y: number
-    zoom: number
-  }>('player-display:viewport-update', (event) => {
-    mapState.value.viewportX = event.payload.x
-    mapState.value.viewportY = event.payload.y
-    mapState.value.zoom = event.payload.zoom
   })
 
   // Listen for blackout toggle
@@ -360,19 +372,10 @@ onMounted(async () => {
     visibilityPaths?: { tokenId: string; path: string; polygon?: { x: number; y: number }[] }[]
     blockingWalls?: Wall[]
     uvttLights?: Light[]
+    portals?: Portal[]
     ambientLight?: 'bright' | 'dim' | 'darkness'
   }>('player-display:fog-update', (event) => {
     const payload = event.payload
-    console.log('PlayerDisplayWindow: Received fog-update event:',
-      'revealMap:', payload.revealMap,
-      'tokenOnlyLos:', payload.tokenOnlyLos,
-      'circles:', payload.visionCircles?.length || 0,
-      'los:', payload.useLosBlocking,
-      'paths:', payload.visibilityPaths?.length || 0,
-      'walls:', payload.blockingWalls?.length || 0,
-      'lights:', payload.uvttLights?.length || 0,
-      'ambient:', payload.ambientLight
-    )
     // Accept if it's for the current map OR if we don't have a map yet (initial load)
     if (mapState.value.mapId === null || payload.mapId === mapState.value.mapId) {
       revealMap.value = payload.revealMap ?? false
@@ -383,13 +386,11 @@ onMounted(async () => {
       visibilityPaths.value = payload.visibilityPaths || []
       blockingWalls.value = payload.blockingWalls || []
       uvttLights.value = payload.uvttLights || []
+      portals.value = payload.portals || []
       // Ambient light
       if (payload.ambientLight) {
         mapState.value.ambientLight = payload.ambientLight
       }
-      console.log('PlayerDisplayWindow: State updated - revealMap:', revealMap.value, 'tokenOnlyLos:', tokenOnlyLos.value, 'visibilityPaths:', visibilityPaths.value.length)
-    } else {
-      console.log('PlayerDisplayWindow: Ignoring fog update for different map', payload.mapId, 'vs', mapState.value.mapId)
     }
   })
 
@@ -398,10 +399,24 @@ onMounted(async () => {
     mapId: string
     lightSources: LightSourceSummary[]
   }>('player-display:light-sources-update', (event) => {
-    console.log('PlayerDisplayWindow: Received light-sources-update event:', event.payload.lightSources.length, 'lights')
     // Accept lights if they're for the current map OR if we don't have a map yet (initial load)
     if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
       lightSources.value = event.payload.lightSources
+    }
+  })
+
+  // Listen for marker updates (traps & POIs made visible by DM)
+  unlistenMarkersUpdate = await listen<{
+    mapId: string
+    traps: MarkerTrap[]
+    pois: MarkerPoi[]
+    gridSizePx: number
+  }>('player-display:markers-update', (event) => {
+    // Accept markers if they're for the current map OR if we don't have a map yet
+    if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
+      visibleTraps.value = event.payload.traps || []
+      visiblePois.value = event.payload.pois || []
+      markerGridSize.value = event.payload.gridSizePx || 70
     }
   })
 
@@ -414,11 +429,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
   unlistenMapUpdate?.()
-  unlistenViewportUpdate?.()
   unlistenBlackout?.()
   unlistenTokensUpdate?.()
   unlistenFogUpdate?.()
   unlistenLightSourcesUpdate?.()
+  unlistenMarkersUpdate?.()
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('resize', handleResize)
 })
@@ -434,6 +449,13 @@ async function loadMapImage(mapId: string) {
   visibilityPaths.value = []
   blockingWalls.value = []
   uvttLights.value = []
+  portals.value = []
+  visibleTraps.value = []
+  visiblePois.value = []
+  // Reset player viewport for new map
+  playerPanX.value = 0
+  playerPanY.value = 0
+  playerZoom.value = 1
 
   try {
     const response = await invoke<{ success: boolean; data?: string; error?: string }>(
@@ -493,6 +515,10 @@ function handleKeydown(event: KeyboardEvent) {
       // Just visual feedback, main window controls blackout
     }
   }
+  // R to reset view (fit to screen)
+  if (event.key === 'r' || event.key === 'R') {
+    resetPlayerView()
+  }
 }
 
 // Handle image load to calculate scale
@@ -505,6 +531,54 @@ function handleImageLoad() {
 function handleResize() {
   updateDisplayScale()
 }
+
+// Player-controlled pan (left mouse drag)
+function handleMouseDown(event: MouseEvent) {
+  // Left mouse button for panning
+  if (event.button === 0) {
+    event.preventDefault()
+    isPanning.value = true
+    panStart.value = { x: event.clientX - playerPanX.value, y: event.clientY - playerPanY.value }
+  }
+}
+
+function handleMouseMove(event: MouseEvent) {
+  if (isPanning.value) {
+    playerPanX.value = event.clientX - panStart.value.x
+    playerPanY.value = event.clientY - panStart.value.y
+  }
+}
+
+function handleMouseUp() {
+  isPanning.value = false
+}
+
+// Player-controlled zoom (mouse wheel)
+function handleWheel(event: WheelEvent) {
+  const delta = event.deltaY > 0 ? 0.9 : 1.1
+  const newZoom = Math.max(0.25, Math.min(5, playerZoom.value * delta))
+
+  // Zoom toward mouse position
+  const target = event.currentTarget as HTMLElement
+  if (target) {
+    const rect = target.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left - rect.width / 2
+    const mouseY = event.clientY - rect.top - rect.height / 2
+
+    const zoomRatio = newZoom / playerZoom.value
+    playerPanX.value = mouseX - (mouseX - playerPanX.value) * zoomRatio
+    playerPanY.value = mouseY - (mouseY - playerPanY.value) * zoomRatio
+  }
+
+  playerZoom.value = newZoom
+}
+
+// Reset player viewport to fit screen
+function resetPlayerView() {
+  playerPanX.value = 0
+  playerPanY.value = 0
+  playerZoom.value = 1
+}
 </script>
 
 <template>
@@ -514,8 +588,16 @@ function handleResize() {
       <div class="blackout-text">Display Paused</div>
     </div>
 
-    <!-- Map display area -->
-    <div v-else class="map-viewport">
+    <!-- Map display area (with player-controlled pan/zoom) -->
+    <div
+      v-else
+      class="map-viewport"
+      @mousedown="handleMouseDown"
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
+      @mouseleave="handleMouseUp"
+      @wheel.prevent="handleWheel"
+    >
       <!-- Loading state -->
       <div v-if="isLoading" class="loading-state">
         <div class="loading-spinner"></div>
@@ -536,7 +618,7 @@ function handleResize() {
         description="Select a map from the DM window to display"
       />
 
-      <!-- Map with grid overlay - synced with DM viewport -->
+      <!-- Map with grid overlay - independent player viewport -->
       <div
         v-else
         class="map-container"
@@ -635,6 +717,24 @@ function handleResize() {
           :interactive="false"
           :dead-token-ids="deadTokenIds"
           :token-images="tokenImages"
+        />
+
+        <!-- Door Overlay (shows doors to players) -->
+        <PlayerDoorOverlay
+          v-if="portals.length > 0 && imageNaturalWidth > 0"
+          :portals="portals"
+          :map-width="imageNaturalWidth"
+          :map-height="imageNaturalHeight"
+        />
+
+        <!-- Marker Overlay (traps & POIs made visible by DM) -->
+        <PlayerMarkerOverlay
+          v-if="(visibleTraps.length > 0 || visiblePois.length > 0) && imageNaturalWidth > 0"
+          :traps="visibleTraps"
+          :pois="visiblePois"
+          :grid-size-px="markerGridSize"
+          :map-width="imageNaturalWidth"
+          :map-height="imageNaturalHeight"
         />
 
         <!-- Fog of War Overlay (Fog mode: revealMap OFF + tokenOnlyLos OFF) -->
@@ -763,7 +863,13 @@ function handleResize() {
       </div>
     </div>
 
-    <!-- Minimal status bar (only visible on hover in fullscreen) -->
+    <!-- Instructions overlay (upper left) -->
+    <div v-if="mapState.imageUrl && !mapState.isBlackout" class="instructions-overlay">
+      <div class="instruction"><kbd>Drag</kbd> to pan</div>
+      <div class="instruction"><kbd>Scroll</kbd> to zoom</div>
+      <div class="instruction"><kbd>R</kbd> to reset</div>
+    </div>
+
     <!-- Minimal status bar - hidden by default, shows on hover -->
     <div class="status-bar">
       <span v-if="mapState.mapId">Map loaded</span>
@@ -780,11 +886,10 @@ function handleResize() {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  cursor: none;
 }
 
-.player-display:not(.blackout):hover {
-  cursor: default;
+.player-display.blackout {
+  cursor: none;
 }
 
 /* Blackout mode */
@@ -812,6 +917,11 @@ function handleResize() {
   align-items: center;
   justify-content: center;
   position: relative;
+  cursor: grab;
+}
+
+.map-viewport:active {
+  cursor: grabbing;
 }
 
 .map-container {
@@ -904,6 +1014,46 @@ function handleResize() {
   font-size: 1rem;
   font-family: system-ui, sans-serif;
   max-width: 400px;
+  text-align: center;
+}
+
+/* Instructions overlay */
+.instructions-overlay {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 50;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.instructions-overlay:hover {
+  opacity: 1;
+}
+
+.instruction {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.instruction kbd {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  min-width: 36px;
   text-align: center;
 }
 

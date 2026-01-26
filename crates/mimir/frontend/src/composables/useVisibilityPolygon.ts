@@ -196,15 +196,15 @@ function distance(p1: Point, p2: Point): number {
   return Math.sqrt(dx * dx + dy * dy)
 }
 
-/** Wall margin - negative value extends visibility past wall lines to reveal wall artwork */
-const WALL_MARGIN = -5 // pixels - negative pushes visibility into walls to show wall graphics
+/** Wall margin - extends visibility past wall lines to reveal wall artwork */
+const WALL_EXTENSION_PX = 12 // pixels to extend visibility past UVTT wall lines
 
 /** Find intersection point of ray with line segment */
 function raySegmentIntersection(
   origin: Point,
   angle: number,
   seg: Wall,
-  pullBack: boolean = false
+  extendPastWall: boolean = false
 ): Point | null {
   const dx = Math.cos(angle)
   const dy = Math.sin(angle)
@@ -232,14 +232,12 @@ function raySegmentIntersection(
     let hitX = x1 + t * (x2 - x1)
     let hitY = y1 + t * (y2 - y1)
 
-    // Pull back the hit point slightly toward origin to prevent bleed-through
-    if (pullBack) {
-      const dist = Math.sqrt((hitX - origin.x) ** 2 + (hitY - origin.y) ** 2)
-      if (dist > WALL_MARGIN) {
-        const pullBackRatio = (dist - WALL_MARGIN) / dist
-        hitX = origin.x + (hitX - origin.x) * pullBackRatio
-        hitY = origin.y + (hitY - origin.y) * pullBackRatio
-      }
+    // Extend hit point past the wall to reveal wall artwork
+    // UVTT walls are often drawn at the interior edge of wall graphics
+    if (extendPastWall && WALL_EXTENSION_PX > 0) {
+      // Extend along the ray direction past the wall
+      hitX += dx * WALL_EXTENSION_PX
+      hitY += dy * WALL_EXTENSION_PX
     }
 
     return { x: hitX, y: hitY }
@@ -323,7 +321,7 @@ export function calculateVisibilityPolygon(
       let closestDist = Infinity
       let hitRealWall = false
 
-      // Check real walls first (with pullBack to prevent bleed-through)
+      // Check real walls first (with extension to show wall artwork)
       for (const wall of walls) {
         const intersection = raySegmentIntersection(origin, angle, wall, true)
         if (intersection) {
@@ -336,7 +334,7 @@ export function calculateVisibilityPolygon(
         }
       }
 
-      // Check boundary walls (no pullBack needed)
+      // Check boundary walls (no extension needed)
       for (const wall of boundaryWalls) {
         const intersection = raySegmentIntersection(origin, angle, wall, false)
         if (intersection) {
