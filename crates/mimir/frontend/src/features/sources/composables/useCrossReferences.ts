@@ -74,12 +74,12 @@ export function useCrossReferences() {
       return null
     }
 
-    // Special handling for classFeature - uses class_name instead of source
+    // Special handling for classFeature - uses className instead of source
     if (refType === 'classFeature' && className) {
       try {
         const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
           name: refName,
-          class_name: className
+          className: className
         })
 
         if (response.success && response.data) {
@@ -97,12 +97,12 @@ export function useCrossReferences() {
       return null
     }
 
-    // Special handling for subclass - uses class_name + source
+    // Special handling for subclass - uses className + source
     if (refType === 'subclass' && className && refSource) {
       try {
         const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
           name: refName,
-          class_name: className,
+          className: className,
           source: refSource
         })
 
@@ -121,14 +121,14 @@ export function useCrossReferences() {
       return null
     }
 
-    // Special handling for subclassFeature - uses subclass_name + subclass_source
+    // Special handling for subclassFeature - uses subclassName + subclassSource
     if (refType === 'subclassFeature' && className && refSource) {
       try {
         // className here is actually subclassName for subclass features
         const response = await invoke<{ success: boolean; data?: any; error?: string }>(command, {
           name: refName,
-          subclass_name: className,
-          subclass_source: refSource
+          subclassName: className,
+          subclassSource: refSource
         })
 
         if (response.success && response.data) {
