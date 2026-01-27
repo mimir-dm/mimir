@@ -1,0 +1,53 @@
+[package]
+name = "mimir-print"
+version = "0.5.0"
+edition = "2021"
+description = "Print and PDF generation for Mimir using Typst"
+authors = ["Dylan Storey"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/colliery-io/mimir"
+
+[dependencies]
+# Typst for document compilation
+typst = { workspace = true }
+typst-pdf = { workspace = true }
+ecow = { workspace = true }
+
+# Core dependencies
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+chrono = { workspace = true }
+
+# Markdown processing
+gray_matter = { workspace = true }
+pulldown-cmark = { workspace = true }
+
+# Font handling
+fontdb = { workspace = true }
+
+# File path handling
+walkdir = { workspace = true }
+
+# Image processing for map rendering
+image = { workspace = true }
+imageproc = { workspace = true }
+rusttype = { workspace = true }
+
+# Base64 encoding for Tauri commands
+base64 = { workspace = true }
+
+# Regex for 5etools tag stripping
+regex = { workspace = true }
+
+# Tauri integration
+tauri = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[features]
+default = []
+tauri-commands = ["tauri"]

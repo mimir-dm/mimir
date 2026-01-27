@@ -12,100 +12,77 @@
       </div>
 
       <!-- Content Section -->
-      <div class="section-group">
-        <div class="section-header">Content</div>
-        <div class="mode-card" :class="{ active: options.includeDocuments }">
-          <label class="mode-header" @click.prevent="options.includeDocuments = !options.includeDocuments">
-            <input type="checkbox" v-model="options.includeDocuments" @click.stop />
-            <span class="mode-icon">&#128196;</span>
-            <div class="mode-info">
-              <span class="mode-label">Documents</span>
-              <span class="mode-desc">Module documents and notes</span>
-            </div>
+      <div class="option-section">
+        <label class="section-label">Content</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeDocuments" />
+            <span class="checkbox-label">Documents</span>
+            <span class="checkbox-desc">Module documents and notes</span>
           </label>
-          <div class="mode-checkboxes" v-if="options.includeDocuments">
-            <label class="checkbox-option">
-              <input type="checkbox" v-model="options.includeMonsters" />
-              <span class="checkbox-label">Monsters</span>
-            </label>
-            <label class="checkbox-option">
-              <input type="checkbox" v-model="options.includeTraps" />
-              <span class="checkbox-label">Traps</span>
-            </label>
-            <label class="checkbox-option">
-              <input type="checkbox" v-model="options.includeNpcs" />
-              <span class="checkbox-label">NPCs</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Play Notes (separate from documents for post-play export) -->
-        <div class="mode-card" :class="{ active: options.includePlayNotes }">
-          <label class="mode-header" @click.prevent="options.includePlayNotes = !options.includePlayNotes">
-            <input type="checkbox" v-model="options.includePlayNotes" @click.stop />
-            <span class="mode-icon">&#128221;</span>
-            <div class="mode-info">
-              <span class="mode-label">Play Notes</span>
-              <span class="mode-desc">Notes and summaries from play sessions</span>
-            </div>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeMonsters" />
+            <span class="checkbox-label">Monster Stat Blocks</span>
+            <span class="checkbox-desc">Full stat blocks for tagged monsters</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeTraps" />
+            <span class="checkbox-label">Traps &amp; Hazards</span>
+            <span class="checkbox-desc">Trap and hazard reference cards</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includePois" />
+            <span class="checkbox-label">Points of Interest</span>
+            <span class="checkbox-desc">Location notes and descriptions</span>
           </label>
         </div>
       </div>
 
       <!-- Maps Section -->
-      <div class="section-group">
-        <div class="section-header">Maps</div>
-        <div class="mode-options">
-          <!-- Preview Section -->
-          <div class="mode-card" :class="{ active: options.includePreview }">
-            <label class="mode-header" @click.prevent="options.includePreview = !options.includePreview">
-              <input type="checkbox" v-model="options.includePreview" @click.stop />
-              <span class="mode-icon">&#128196;</span>
-              <div class="mode-info">
-                <span class="mode-label">Preview</span>
-                <span class="mode-desc">Fit to single page</span>
-              </div>
+      <div class="option-section">
+        <label class="section-label">Maps</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includePreview" />
+            <span class="checkbox-label">Map Previews</span>
+            <span class="checkbox-desc">Maps scaled to fit one page</span>
+          </label>
+          <!-- Preview sub-options -->
+          <div v-if="options.includePreview" class="nested-options">
+            <label class="checkbox-option sub-option">
+              <input type="checkbox" v-model="options.previewGrid" />
+              <span class="checkbox-label">Show Grid</span>
             </label>
-            <div class="mode-checkboxes" v-if="options.includePreview">
-              <label class="checkbox-option">
-                <input type="checkbox" v-model="options.previewGrid" />
-                <span class="checkbox-label">Grid</span>
-              </label>
-              <label class="checkbox-option">
-                <input type="checkbox" v-model="options.previewLosWalls" />
-                <span class="checkbox-label">LOS Walls</span>
-              </label>
-              <label class="checkbox-option">
-                <input type="checkbox" v-model="options.previewPositions" />
-                <span class="checkbox-label">Starting Positions</span>
-              </label>
-            </div>
+            <label class="checkbox-option sub-option">
+              <input type="checkbox" v-model="options.previewLosWalls" />
+              <span class="checkbox-label">Show LOS Walls</span>
+            </label>
+            <label class="checkbox-option sub-option">
+              <input type="checkbox" v-model="options.previewPositions" />
+              <span class="checkbox-label">Show Starting Positions</span>
+            </label>
           </div>
 
-          <!-- Play Section -->
-          <div class="mode-card" :class="{ active: options.includePlay }">
-            <label class="mode-header" @click.prevent="options.includePlay = !options.includePlay">
-              <input type="checkbox" v-model="options.includePlay" @click.stop />
-              <span class="mode-icon">&#127922;</span>
-              <div class="mode-info">
-                <span class="mode-label">Play</span>
-                <span class="mode-desc">1" = 5ft scale (tiled)</span>
-              </div>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includePlay" />
+            <span class="checkbox-label">Tiled Maps</span>
+            <span class="checkbox-desc">At 1"=5ft scale for tabletop play</span>
+          </label>
+          <!-- Play sub-options -->
+          <div v-if="options.includePlay" class="nested-options">
+            <label class="checkbox-option sub-option">
+              <input type="checkbox" v-model="options.playGrid" />
+              <span class="checkbox-label">Show Grid</span>
             </label>
-            <div class="mode-checkboxes" v-if="options.includePlay">
-              <label class="checkbox-option">
-                <input type="checkbox" v-model="options.playGrid" />
-                <span class="checkbox-label">Grid</span>
-              </label>
-              <label class="checkbox-option">
-                <input type="checkbox" v-model="options.playLosWalls" />
-                <span class="checkbox-label">LOS Walls</span>
-              </label>
-              <label class="checkbox-option">
-                <input type="checkbox" v-model="options.playCutouts" />
-                <span class="checkbox-label">Token Cutouts</span>
-              </label>
-            </div>
+            <label class="checkbox-option sub-option">
+              <input type="checkbox" v-model="options.playLosWalls" />
+              <span class="checkbox-label">Show LOS Walls</span>
+            </label>
+            <label class="checkbox-option sub-option">
+              <input type="checkbox" v-model="options.playCutouts" />
+              <span class="checkbox-label">Token Cutouts</span>
+              <span class="checkbox-desc">Printable paper standees</span>
+            </label>
           </div>
         </div>
       </div>
@@ -186,8 +163,7 @@ const options = reactive({
   includeDocuments: true,
   includeMonsters: true,
   includeTraps: true,
-  includeNpcs: false,
-  includePlayNotes: false,
+  includePois: true,
   // Map Preview section
   includePreview: true,
   previewGrid: true,
@@ -202,7 +178,12 @@ const options = reactive({
 
 // Computed
 const hasAnySelection = computed(() => {
-  return options.includeDocuments || options.includePlayNotes || options.includePreview || options.includePlay
+  return options.includeDocuments ||
+    options.includeMonsters ||
+    options.includeTraps ||
+    options.includePois ||
+    options.includePreview ||
+    options.includePlay
 })
 
 const defaultFileName = computed(() => {
@@ -215,18 +196,15 @@ const defaultFileName = computed(() => {
 watch(() => props.visible, (newVisible) => {
   if (newVisible) {
     error.value = null
-    // Content section
+    // Reset to defaults
     options.includeDocuments = true
     options.includeMonsters = true
     options.includeTraps = true
-    options.includeNpcs = false
-    options.includePlayNotes = false
-    // Map Preview section
+    options.includePois = true
     options.includePreview = true
     options.previewGrid = true
     options.previewLosWalls = false
     options.previewPositions = false
-    // Map Play section
     options.includePlay = false
     options.playGrid = true
     options.playLosWalls = false
@@ -257,10 +235,9 @@ async function handleExport() {
     // Generate PDF with options
     const result = await PrintService.exportModuleDocuments(props.moduleId, {
       include_documents: options.includeDocuments,
-      include_monsters: options.includeDocuments && options.includeMonsters,
-      include_traps: options.includeDocuments && options.includeTraps,
-      include_npcs: options.includeDocuments && options.includeNpcs,
-      include_play_notes: options.includePlayNotes,
+      include_monsters: options.includeMonsters,
+      include_traps: options.includeTraps,
+      include_pois: options.includePois,
       // Map options
       include_preview: options.includePreview,
       preview_grid: options.previewGrid,
@@ -307,91 +284,34 @@ async function handleExport() {
   color: var(--color-text);
 }
 
-.section-group {
+.option-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
 
-.section-header {
-  font-size: 0.75rem;
+.section-label {
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.mode-options {
+.checkbox-group {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.mode-card {
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  overflow: hidden;
-}
-
-.mode-card:hover:not(.active) {
-  border-color: var(--color-primary-400);
-  background: var(--color-surface-variant);
-}
-
-.mode-card.active {
-  border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
-}
-
-.theme-dark .mode-card.active,
-.theme-hyper .mode-card.active {
-  background: var(--color-primary-900);
-}
-
-.mode-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-}
-
-.mode-icon {
-  font-size: 1.5rem;
-}
-
-.mode-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.mode-label {
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.mode-desc {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-}
-
-.mode-checkboxes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-lg);
-  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
+  gap: var(--spacing-sm);
 }
 
 .checkbox-option {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 0 var(--spacing-sm);
+  align-items: start;
   cursor: pointer;
-  padding: var(--spacing-xs);
+  padding: var(--spacing-sm);
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
 }
@@ -400,16 +320,35 @@ async function handleExport() {
   background: var(--color-surface-variant);
 }
 
+.nested-options {
+  margin-left: var(--spacing-lg);
+  padding-left: var(--spacing-md);
+  border-left: 2px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.checkbox-option.sub-option {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
 .checkbox-option input[type="checkbox"] {
+  grid-row: span 2;
+  margin-top: 2px;
   width: 16px;
   height: 16px;
   cursor: inherit;
 }
 
 .checkbox-label {
-  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text);
+}
+
+.checkbox-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
 }
 
 .warning-message {

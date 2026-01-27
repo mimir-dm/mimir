@@ -26,6 +26,7 @@ tauri-plugin-dialog = "2"
 
 # Core library
 mimir-core = { path = "../mimir-core" }
+mimir-print = { path = "../mimir-print", features = ["tauri-commands"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }

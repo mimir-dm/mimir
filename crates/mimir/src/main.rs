@@ -8,8 +8,9 @@
 )]
 
 use mimir_core::db::init_database;
-use mimir_lib::commands::{asset, campaign, catalog, character, dev, dm_map, document, map, module, player_display, source};
+use mimir_lib::commands::{asset, campaign, catalog, character, dev, dm_map, document, map, module, player_display, print, source};
 use mimir_lib::{AppPaths, AppState};
+use mimir_print::PrintState;
 use tauri::Manager;
 use tracing_subscriber::EnvFilter;
 
@@ -41,8 +42,15 @@ fn main() {
                 .expect("Failed to initialize database");
 
             // Create and manage app state
-            let state = AppState::new(conn, paths);
+            let state = AppState::new(conn, paths.clone());
             app.manage(state);
+
+            // Create and manage print state
+            let print_state = PrintState::new(
+                paths.app_dir.join("templates"),
+                paths.assets_dir.clone(),
+            );
+            app.manage(print_state);
 
             Ok(())
         })
@@ -179,6 +187,7 @@ fn main() {
             catalog::get_spell_by_name,
             catalog::list_spell_sources,
             catalog::count_spells,
+            catalog::get_spells_by_class,
             // Catalog commands - items
             catalog::search_items,
             catalog::get_item,
@@ -333,6 +342,19 @@ fn main() {
             dev::seed_dev_data,
             dev::reseed_dev_data,
             dev::clear_dev_data,
+            // Print/PDF export commands
+            print::list_print_templates,
+            print::export_character,
+            print::export_campaign_document,
+            print::export_campaign_documents,
+            print::export_module_documents,
+            print::print_map,
+            print::generate_character_sheet,
+            print::save_pdf,
+            print::export_module_monsters,
+            print::export_monster_card,
+            print::export_trap_card,
+            print::export_trap_cards,
         ])
         .run(tauri::generate_context!())
         .expect("Error running Mimir application");

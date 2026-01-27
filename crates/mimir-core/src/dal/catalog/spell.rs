@@ -3,7 +3,7 @@
 //! Database operations for spells.
 
 use crate::models::catalog::{NewSpell, Spell, SpellFilter};
-use crate::schema::spells;
+use crate::schema::{spell_classes, spells};
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
@@ -95,6 +95,36 @@ pub fn list_ritual_spells(conn: &mut SqliteConnection) -> QueryResult<Vec<Spell>
     spells::table
         .filter(spells::ritual.eq(1))
         .order((spells::level.asc(), spells::name.asc()))
+        .load(conn)
+}
+
+/// List spells available to a specific class.
+///
+/// Joins the spells table with spell_classes to find all spells
+/// that the given class has access to.
+pub fn list_spells_by_class(conn: &mut SqliteConnection, class_name: &str) -> QueryResult<Vec<Spell>> {
+    spells::table
+        .inner_join(spell_classes::table)
+        .filter(spell_classes::class_name.eq(class_name))
+        .select(Spell::as_select())
+        .distinct()
+        .order((spells::level.asc(), spells::name.asc()))
+        .load(conn)
+}
+
+/// List spells available to a specific class at a specific level.
+pub fn list_spells_by_class_and_level(
+    conn: &mut SqliteConnection,
+    class_name: &str,
+    level: i32,
+) -> QueryResult<Vec<Spell>> {
+    spells::table
+        .inner_join(spell_classes::table)
+        .filter(spell_classes::class_name.eq(class_name))
+        .filter(spells::level.eq(level))
+        .select(Spell::as_select())
+        .distinct()
+        .order(spells::name.asc())
         .load(conn)
 }
 

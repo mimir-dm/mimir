@@ -60,6 +60,8 @@ export interface ModuleExportOptions {
   include_monsters?: boolean
   /** Include trap/hazard cards */
   include_traps?: boolean
+  /** Include points of interest */
+  include_pois?: boolean
   /** Include campaign NPC sheets */
   include_npcs?: boolean
   /** Include play notes (play-notes.md) */

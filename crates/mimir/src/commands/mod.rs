@@ -13,6 +13,7 @@ pub mod document;
 pub mod map;
 pub mod module;
 pub mod player_display;
+pub mod print;
 pub mod source;
 
 use serde::Serialize;

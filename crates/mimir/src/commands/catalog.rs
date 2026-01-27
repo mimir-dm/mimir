@@ -403,6 +403,32 @@ pub fn count_spells(state: State<'_, AppState>) -> ApiResponse<i64> {
     to_api_response(result)
 }
 
+/// Get spells available to a specific class.
+///
+/// Returns all spells on the class's spell list, optionally filtered by level.
+#[tauri::command]
+pub fn get_spells_by_class(
+    state: State<'_, AppState>,
+    class_name: String,
+    level: Option<i32>,
+) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = if let Some(lvl) = level {
+        SpellService::new(&mut db).list_by_class_and_level(&class_name, lvl)
+    } else {
+        SpellService::new(&mut db).list_by_class(&class_name)
+    };
+
+    match result {
+        Ok(entities) => ApiResponse::ok(entities_to_json(entities)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
 // =============================================================================
 // Items
 // =============================================================================

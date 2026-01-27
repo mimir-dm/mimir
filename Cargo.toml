@@ -2,6 +2,7 @@
 members = [
     "crates/mimir",
     "crates/mimir-core",
+    "crates/mimir-print",
 ]
 resolver = "2"
 
@@ -65,6 +66,14 @@ rayon = "1.10"
 
 # Macros
 paste = "1.0"
+
+# Typst (PDF generation)
+typst = "0.12"
+typst-pdf = "0.12"
+ecow = "0.2"
+fontdb = "0.21"
+imageproc = "0.25"
+rusttype = "0.9"
 
 # Testing
 tempfile = "3.10"

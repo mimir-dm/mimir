@@ -45,6 +45,16 @@ impl<'a> SpellService<'a> {
     pub fn list_by_level(&mut self, level: i32) -> ServiceResult<Vec<Spell>> {
         dal::list_spells_by_level(self.conn, level).map_err(ServiceError::from)
     }
+
+    /// List spells available to a specific class.
+    pub fn list_by_class(&mut self, class_name: &str) -> ServiceResult<Vec<Spell>> {
+        dal::list_spells_by_class(self.conn, class_name).map_err(ServiceError::from)
+    }
+
+    /// List spells available to a specific class at a specific level.
+    pub fn list_by_class_and_level(&mut self, class_name: &str, level: i32) -> ServiceResult<Vec<Spell>> {
+        dal::list_spells_by_class_and_level(self.conn, class_name, level).map_err(ServiceError::from)
+    }
 }
 
 impl<'a> CatalogEntityService for SpellService<'a> {
