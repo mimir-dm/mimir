@@ -193,11 +193,23 @@
                   v-for="feature in classFeatures"
                   :key="`${feature.class_name}-${feature.name}-${feature.level}`"
                   class="feature-item"
+                  :class="{ expanded: isFeatureExpanded(feature) }"
                 >
-                  <span class="feature-name">{{ feature.name }}</span>
-                  <span class="feature-meta">
-                    {{ feature.class_name }} {{ feature.level }}
-                  </span>
+                  <div class="feature-header" @click="toggleFeatureExpansion(feature)">
+                    <span class="feature-name">
+                      <span class="expand-icon">{{ isFeatureExpanded(feature) ? '▼' : '▶' }}</span>
+                      {{ feature.name }}
+                    </span>
+                    <span class="feature-meta">
+                      <span v-if="feature.subclass_name" class="subclass-badge">{{ feature.subclass_name }}</span>
+                      {{ feature.class_name }} {{ feature.level }}
+                    </span>
+                  </div>
+                  <div v-if="isFeatureExpanded(feature)" class="feature-details">
+                    <div v-if="isFeatureLoading(feature)" class="feature-loading">Loading...</div>
+                    <div v-else-if="getFeatureDescription(feature)" class="feature-description" v-html="getFeatureDescription(feature)"></div>
+                    <div v-else class="feature-no-desc">No description available</div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -386,7 +398,30 @@
           <!-- Spellcasting Stats -->
           <section class="sheet-section">
             <h2>Spellcasting</h2>
-            <div class="spell-stats-row">
+            <!-- Multiclass: show stats for each spellcasting class -->
+            <template v-if="isMulticlassSpellcaster">
+              <div
+                v-for="stats in allSpellcastingStats"
+                :key="stats.className"
+                class="spell-stats-row multiclass"
+              >
+                <div class="spell-class-label">{{ stats.className }}</div>
+                <div class="spell-stat-box">
+                  <span class="stat-label">Spell Save DC</span>
+                  <span class="stat-value large">{{ stats.saveDC }}</span>
+                </div>
+                <div class="spell-stat-box">
+                  <span class="stat-label">Spell Attack</span>
+                  <span class="stat-value large">{{ formatMod(stats.attackBonus) }}</span>
+                </div>
+                <div class="spell-stat-box">
+                  <span class="stat-label">Ability</span>
+                  <span class="stat-value large">{{ stats.abilityAbbrev }}</span>
+                </div>
+              </div>
+            </template>
+            <!-- Single class: show simple row -->
+            <div v-else class="spell-stats-row">
               <div class="spell-stat-box">
                 <span class="stat-label">Spell Save DC</span>
                 <span class="stat-value large">{{ spellSaveDC }}</span>
@@ -409,6 +444,10 @@
               Maximum slots shown below. Track used slots on paper.
             </p>
             <div class="spell-slots-grid">
+              <div class="spell-slot-row cantrip-row">
+                <span class="slot-level">Cantrips</span>
+                <span class="slot-unlimited">Unlimited</span>
+              </div>
               <div v-for="level in 9" :key="level" class="spell-slot-row">
                 <template v-if="spellSlots[level]">
                   <span class="slot-level">Level {{ level }}</span>
@@ -622,12 +661,6 @@
                   </div>
                 </div>
 
-                <!-- Class Progression Table -->
-                <div v-if="hasClassProgressionTable(cls.class_name)" class="class-progression">
-                  <h4>Class Progression</h4>
-                  <div class="progression-table-wrapper" v-html="renderClassProgressionTables(cls.class_name, cls.level)"></div>
-                </div>
-
                 <!-- Subclass -->
                 <div v-if="cls.subclass_name" class="subclass-section">
                   <h4 class="subclass-header">
@@ -784,6 +817,8 @@ import {
   getSpellAttackBonus,
   getHitDiceString,
   formatClassString,
+  getAllSpellcastingStats,
+  getMulticlassCasterLevel,
 } from '../../../utils/characterUtils'
 import { processFormattingTags } from '../../sources/utils/textFormatting'
 
@@ -841,6 +876,9 @@ const inventory = ref<CharacterInventory[]>([])
 const raceData = ref<Record<string, unknown> | null>(null)
 const classData = ref<Record<string, Record<string, unknown>>>({}) // keyed by class name
 const classFeatures = ref<ClassFeature[]>([])
+const expandedFeatures = ref<Set<string>>(new Set()) // track which features are expanded
+const featureDetails = ref<Record<string, Record<string, unknown>>>({}) // cached feature details by "name|className"
+const loadingFeature = ref<string | null>(null) // currently loading feature key
 const itemDetails = ref<Record<string, ItemDetail>>({}) // keyed by "name|source"
 const expandedItems = ref<Set<string>>(new Set()) // track which items are expanded
 const classSpells = ref<SpellInfo[]>([])
@@ -922,23 +960,32 @@ const spellAttackBonus = computed(() =>
   character.value ? getSpellAttackBonus(character.value) : null
 )
 
-// Spell slots from class data
-// 5etools format: classTableGroups[].colLabels includes spell slot columns
-// This is a simplified version - full casters get slots based on level
+// All spellcasting stats for multiclass characters (one per spellcasting class)
+const allSpellcastingStats = computed(() =>
+  character.value ? getAllSpellcastingStats(character.value) : []
+)
+
+// Whether this is a multiclass spellcaster (has 2+ spellcasting classes)
+const isMulticlassSpellcaster = computed(() => allSpellcastingStats.value.length > 1)
+
+// Spell slots using proper multiclass caster level calculation
+// Per D&D 5e rules: combine caster levels from all Spellcasting classes, then look up slots
 const spellSlots = computed(() => {
   if (!character.value || !characterIsSpellcaster.value) return null
 
   const slots: Record<number, number> = {}
-  const level = totalLevel.value
 
-  // Find the primary spellcasting class
-  const spellcastingClass = character.value.classes?.find((c) =>
-    ['bard', 'cleric', 'druid', 'sorcerer', 'wizard'].includes(c.class_name.toLowerCase())
+  // Check for Warlock first (uses separate Pact Magic)
+  const warlock = character.value.classes?.find(
+    (c) => c.class_name.toLowerCase() === 'warlock'
   )
 
-  if (spellcastingClass) {
-    // Full caster spell slot progression
-    const fullCasterSlots: Record<number, number[]> = {
+  // Get multiclass caster level (excludes Warlock)
+  const casterLevel = getMulticlassCasterLevel(character.value)
+
+  if (casterLevel > 0) {
+    // Multiclass spell slot progression (same as full caster progression)
+    const multiclassSlots: Record<number, number[]> = {
       1: [2],
       2: [3],
       3: [4, 2],
@@ -960,74 +1007,41 @@ const spellSlots = computed(() => {
       19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
       20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
     }
-    const slotArray = fullCasterSlots[spellcastingClass.level] || []
+    const slotArray = multiclassSlots[casterLevel] || []
     slotArray.forEach((count, idx) => {
       if (count > 0) slots[idx + 1] = count
     })
-  } else {
-    // Check for half casters (paladin, ranger) or warlock
-    const halfCaster = character.value.classes?.find((c) =>
-      ['paladin', 'ranger'].includes(c.class_name.toLowerCase())
-    )
-    const warlock = character.value.classes?.find(
-      (c) => c.class_name.toLowerCase() === 'warlock'
-    )
+  }
 
-    if (halfCaster && halfCaster.level >= 2) {
-      // Half caster progression (starts at level 2)
-      const halfCasterSlots: Record<number, number[]> = {
-        2: [2],
-        3: [3],
-        4: [3],
-        5: [4, 2],
-        6: [4, 2],
-        7: [4, 3],
-        8: [4, 3],
-        9: [4, 3, 2],
-        10: [4, 3, 2],
-        11: [4, 3, 3],
-        12: [4, 3, 3],
-        13: [4, 3, 3, 1],
-        14: [4, 3, 3, 1],
-        15: [4, 3, 3, 2],
-        16: [4, 3, 3, 2],
-        17: [4, 3, 3, 3, 1],
-        18: [4, 3, 3, 3, 1],
-        19: [4, 3, 3, 3, 2],
-        20: [4, 3, 3, 3, 2],
-      }
-      const slotArray = halfCasterSlots[halfCaster.level] || []
-      slotArray.forEach((count, idx) => {
-        if (count > 0) slots[idx + 1] = count
-      })
-    } else if (warlock) {
-      // Warlock pact magic (all slots same level)
-      const warlockSlots: Record<number, { count: number; level: number }> = {
-        1: { count: 1, level: 1 },
-        2: { count: 2, level: 1 },
-        3: { count: 2, level: 2 },
-        4: { count: 2, level: 2 },
-        5: { count: 2, level: 3 },
-        6: { count: 2, level: 3 },
-        7: { count: 2, level: 4 },
-        8: { count: 2, level: 4 },
-        9: { count: 2, level: 5 },
-        10: { count: 2, level: 5 },
-        11: { count: 3, level: 5 },
-        12: { count: 3, level: 5 },
-        13: { count: 3, level: 5 },
-        14: { count: 3, level: 5 },
-        15: { count: 3, level: 5 },
-        16: { count: 3, level: 5 },
-        17: { count: 4, level: 5 },
-        18: { count: 4, level: 5 },
-        19: { count: 4, level: 5 },
-        20: { count: 4, level: 5 },
-      }
-      const pactMagic = warlockSlots[warlock.level]
-      if (pactMagic) {
-        slots[pactMagic.level] = pactMagic.count
-      }
+  // Add Warlock Pact Magic slots separately (they're tracked independently)
+  if (warlock) {
+    const warlockSlots: Record<number, { count: number; level: number }> = {
+      1: { count: 1, level: 1 },
+      2: { count: 2, level: 1 },
+      3: { count: 2, level: 2 },
+      4: { count: 2, level: 2 },
+      5: { count: 2, level: 3 },
+      6: { count: 2, level: 3 },
+      7: { count: 2, level: 4 },
+      8: { count: 2, level: 4 },
+      9: { count: 2, level: 5 },
+      10: { count: 2, level: 5 },
+      11: { count: 3, level: 5 },
+      12: { count: 3, level: 5 },
+      13: { count: 3, level: 5 },
+      14: { count: 3, level: 5 },
+      15: { count: 3, level: 5 },
+      16: { count: 3, level: 5 },
+      17: { count: 4, level: 5 },
+      18: { count: 4, level: 5 },
+      19: { count: 4, level: 5 },
+      20: { count: 4, level: 5 },
+    }
+    const pactMagic = warlockSlots[warlock.level]
+    if (pactMagic) {
+      // Note: Warlock pact slots are separate from regular slots
+      // For now we just add them to the display at their level
+      slots[pactMagic.level] = (slots[pactMagic.level] || 0) + pactMagic.count
     }
   }
 
@@ -1164,6 +1178,80 @@ const getSpellDescription = (spell: SpellInfo): string => {
     })
     .filter(Boolean)
     .join('\n\n')
+}
+
+// Class Feature helpers
+const toggleFeatureExpansion = async (feature: ClassFeature) => {
+  const key = `${feature.name}|${feature.class_name}`
+
+  if (expandedFeatures.value.has(key)) {
+    // Collapse
+    expandedFeatures.value.delete(key)
+    expandedFeatures.value = new Set(expandedFeatures.value)
+    return
+  }
+
+  // Expand - fetch details if not cached
+  if (!featureDetails.value[key]) {
+    loadingFeature.value = key
+    try {
+      const result = await invoke<{ success: boolean; data?: Record<string, unknown>; error?: string }>(
+        'get_class_feature',
+        { name: feature.name, className: feature.class_name }
+      )
+      if (result.success && result.data) {
+        featureDetails.value = { ...featureDetails.value, [key]: result.data }
+      }
+    } catch (e) {
+      console.error('Failed to load feature details:', e)
+    } finally {
+      loadingFeature.value = null
+    }
+  }
+
+  expandedFeatures.value.add(key)
+  expandedFeatures.value = new Set(expandedFeatures.value)
+}
+
+const isFeatureExpanded = (feature: ClassFeature): boolean => {
+  return expandedFeatures.value.has(`${feature.name}|${feature.class_name}`)
+}
+
+const getFeatureDescription = (feature: ClassFeature): string => {
+  const key = `${feature.name}|${feature.class_name}`
+  const details = featureDetails.value[key]
+  if (!details) return ''
+
+  // 5etools format: entries array contains the description
+  const entries = details.entries as unknown[] | undefined
+  if (!entries) return ''
+
+  return entries
+    .map((entry) => {
+      if (typeof entry === 'string') return processFormattingTags(entry)
+      if (typeof entry === 'object' && entry !== null) {
+        const e = entry as Record<string, unknown>
+        if (e.type === 'entries' && Array.isArray(e.entries)) {
+          return (e.entries as unknown[])
+            .filter((sub) => typeof sub === 'string')
+            .map((s) => processFormattingTags(s as string))
+            .join(' ')
+        }
+        if (e.type === 'list' && Array.isArray(e.items)) {
+          return (e.items as unknown[])
+            .filter((sub) => typeof sub === 'string')
+            .map((s) => `• ${processFormattingTags(s as string)}`)
+            .join('\n')
+        }
+      }
+      return ''
+    })
+    .filter(Boolean)
+    .join('\n\n')
+}
+
+const isFeatureLoading = (feature: ClassFeature): boolean => {
+  return loadingFeature.value === `${feature.name}|${feature.class_name}`
 }
 
 // Background helpers
@@ -1413,120 +1501,6 @@ const formatOrdinal = (n: number): string => {
   const suffixes = ['th', 'st', 'nd', 'rd']
   const v = n % 100
   return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0])
-}
-
-// Class progression table helpers
-interface ClassTableGroup {
-  colLabels?: string[]
-  rows?: Array<Array<string | number | { type?: string; value?: number; roll?: unknown }>>
-}
-
-const getClassTableGroups = (className: string): ClassTableGroup[] => {
-  const data = classData.value[className.toLowerCase()]
-  if (!data) return []
-  const tableGroups = data.classTableGroups as ClassTableGroup[] | undefined
-  return tableGroups || []
-}
-
-const renderSingleTable = (table: ClassTableGroup, currentLevel: number): string => {
-  if (!table.rows || table.rows.length === 0) return ''
-
-  let html = '<table class="class-progression-table">'
-
-  // Headers
-  if (table.colLabels) {
-    html += '<thead><tr>'
-    // Check if we need to add Level column
-    const hasLevelColumn = table.colLabels[0]?.toLowerCase().includes('level')
-    if (!hasLevelColumn && table.rows.length === 20) {
-      html += '<th>Lvl</th>'
-    }
-    for (const label of table.colLabels) {
-      html += `<th>${processFormattingTags(label)}</th>`
-    }
-    html += '</tr></thead>'
-  }
-
-  html += '<tbody>'
-  const hasLevelColumn = table.colLabels && table.colLabels[0]?.toLowerCase().includes('level')
-  const isProgressionTable = !hasLevelColumn && table.rows.length === 20
-  const maxShow = Math.min(currentLevel + 5, table.rows.length)
-
-  for (let i = 0; i < maxShow; i++) {
-    const row = table.rows[i]
-    const rowLevel = i + 1
-    const isCurrentLevel = rowLevel === currentLevel
-    const isFutureLevel = rowLevel > currentLevel
-
-    html += `<tr class="${isCurrentLevel ? 'current-level' : ''} ${isFutureLevel ? 'future-level' : ''}">`
-
-    if (isProgressionTable) {
-      html += `<td>${rowLevel}</td>`
-    }
-
-    for (const cell of row) {
-      let cellContent = ''
-      if (typeof cell === 'object' && cell !== null) {
-        if ((cell as any).type === 'bonus' && (cell as any).value !== undefined) {
-          cellContent = `+${(cell as any).value}`
-        } else if ((cell as any).roll) {
-          cellContent = String((cell as any).roll)
-        } else {
-          cellContent = ''
-        }
-      } else {
-        cellContent = cell !== undefined && cell !== null ? String(cell) : ''
-      }
-      html += `<td>${processFormattingTags(cellContent)}</td>`
-    }
-    html += '</tr>'
-  }
-
-  if (maxShow < table.rows.length) {
-    const colCount = (table.colLabels?.length || 0) + (isProgressionTable ? 1 : 0)
-    html += `<tr class="more-levels"><td colspan="${colCount}">... levels ${maxShow + 1}-20</td></tr>`
-  }
-
-  html += '</tbody></table>'
-  return html
-}
-
-const renderClassProgressionTables = (className: string, currentLevel: number): string => {
-  const tableGroups = getClassTableGroups(className)
-  if (tableGroups.length === 0) return ''
-
-  let html = ''
-  for (const table of tableGroups) {
-    const tableHtml = renderSingleTable(table, currentLevel)
-    if (tableHtml) {
-      html += tableHtml
-    }
-  }
-  return html
-}
-
-const hasClassProgressionTable = (className: string): boolean => {
-  const tableGroups = getClassTableGroups(className)
-  if (tableGroups.length === 0) return false
-
-  // Check if any table has actual content
-  for (const table of tableGroups) {
-    if (!table.rows) continue
-    for (const row of table.rows) {
-      for (const cell of row) {
-        if (cell !== undefined && cell !== null && cell !== '') {
-          if (typeof cell === 'object') {
-            if ((cell as any).value !== undefined || (cell as any).roll !== undefined) {
-              return true
-            }
-          } else if (String(cell).trim() !== '') {
-            return true
-          }
-        }
-      }
-    }
-  }
-  return false
 }
 
 const getSubclassDescription = (className: string, subclassName: string): string => {
@@ -1864,26 +1838,16 @@ const loadClassSpells = async () => {
           const spellLevel = rawSpell.level as number
           if (spellLevel > maxLevel) continue
 
-          // Parse the data field
-          let spellData: Record<string, unknown> = {}
-          if (typeof rawSpell.data === 'string') {
-            try {
-              spellData = JSON.parse(rawSpell.data)
-            } catch {
-              continue
-            }
-          } else if (rawSpell.data) {
-            spellData = rawSpell.data as Record<string, unknown>
-          }
-
+          // Backend merges data at top level via entity_to_json
+          // Store the whole rawSpell object as data for accessing time, range, etc.
           classSpellList.push({
             name: rawSpell.name as string,
             source: rawSpell.source as string,
             level: spellLevel,
             school: rawSpell.school as string | null,
-            ritual: (rawSpell.ritual as number) !== 0,
-            concentration: (rawSpell.concentration as number) !== 0,
-            data: spellData,
+            ritual: (rawSpell.ritual as number) === 1 || rawSpell.ritual === true,
+            concentration: (rawSpell.concentration as number) === 1 || rawSpell.concentration === true,
+            data: rawSpell as Record<string, unknown>,
           })
         }
         spellsByClassName.set(cls.class_name, classSpellList)
@@ -1891,6 +1855,7 @@ const loadClassSpells = async () => {
     }
 
     // Merge and deduplicate spells from all classes
+    // Keep name|source as key since different sources may have different spell versions
     const seenSpells = new Set<string>()
     const allSpells: SpellInfo[] = []
 
@@ -2189,7 +2154,7 @@ onUnmounted(() => {
   align-self: flex-start;
   padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid #ccc;
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -2289,7 +2254,7 @@ onUnmounted(() => {
 /* Sections */
 .sheet-section {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid #ccc;
   border-radius: var(--radius-lg);
   padding: var(--spacing-md);
 }
@@ -2533,18 +2498,90 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .feature-item {
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+
+.feature-item.expanded {
+  background: var(--color-surface);
+  border: 1px solid #ccc;
+}
+
+.feature-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.feature-header:hover {
+  background: var(--color-surface-hover);
+}
+
+.feature-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: 500;
+}
+
+.feature-name .expand-icon {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  width: 12px;
+}
+
+.feature-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.subclass-badge {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.theme-dark .subclass-badge {
+  background: var(--color-primary-900);
+  color: var(--color-primary-300);
+}
+
+.feature-details {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.feature-loading {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.feature-description {
+  line-height: 1.5;
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+.feature-no-desc {
+  color: var(--color-text-secondary);
+  font-style: italic;
 }
 
 .feature-name {
@@ -2649,7 +2686,7 @@ onUnmounted(() => {
 
 .spell-card {
   background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
+  border: 1px solid #ccc;
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: all 0.2s ease;
@@ -2745,6 +2782,33 @@ onUnmounted(() => {
   justify-content: center;
 }
 
+.spell-stats-row.multiclass {
+  justify-content: flex-start;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.spell-stats-row.multiclass .spell-stat-box {
+  background: var(--color-surface);
+  min-width: 80px;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.spell-stats-row.multiclass .spell-stat-box .stat-value.large {
+  font-size: 1.25rem;
+}
+
+.spell-class-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-primary-500);
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+}
+
 .spell-stat-box {
   display: flex;
   flex-direction: column;
@@ -2777,6 +2841,18 @@ onUnmounted(() => {
   font-weight: 600;
   min-width: 70px;
   color: var(--color-text-secondary);
+}
+
+.cantrip-row {
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-sm);
+}
+
+.slot-unlimited {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-text-tertiary);
 }
 
 .slot-boxes {
@@ -2816,7 +2892,7 @@ onUnmounted(() => {
 
 .item-card {
   background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
+  border: 1px solid #ccc;
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: all 0.2s ease;
@@ -3089,7 +3165,7 @@ onUnmounted(() => {
   background: var(--color-surface-variant);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
-  border: 1px solid var(--color-border);
+  border: 1px solid #ccc;
 }
 
 .class-detail-card .class-header {
@@ -3160,80 +3236,13 @@ onUnmounted(() => {
   color: var(--color-text-secondary);
 }
 
-/* Class Progression Table */
-.class-progression {
-  margin-top: var(--spacing-md);
-}
-
-.class-progression h4 {
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text-secondary);
-}
-
-.progression-table-wrapper {
-  overflow-x: auto;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.class-progression-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-}
-
-.class-progression-table th,
-.class-progression-table td {
-  padding: 4px 8px;
-  border: 1px solid var(--color-border);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.class-progression-table th {
-  background: var(--color-surface-variant);
-  font-weight: 600;
-  font-size: 0.75rem;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.class-progression-table tbody tr:nth-child(even) {
-  background: var(--color-surface-variant);
-}
-
-.class-progression-table tr.current-level {
-  background: var(--color-primary-100) !important;
-  font-weight: 600;
-}
-
-.class-progression-table tr.current-level td {
-  border-color: var(--color-primary-300);
-}
-
-.class-progression-table tr.future-level {
-  opacity: 0.6;
-}
-
-.class-progression-table tr.more-levels td {
-  text-align: center;
-  font-style: italic;
-  color: var(--color-text-secondary);
-  padding: var(--spacing-sm);
-}
-
-/* Links in proficiencies and tables */
-.class-proficiencies :deep(a),
-.class-progression-table :deep(a) {
+/* Links in proficiencies */
+.class-proficiencies :deep(a) {
   color: var(--color-primary-500);
   text-decoration: none;
 }
 
-.class-proficiencies :deep(a:hover),
-.class-progression-table :deep(a:hover) {
+.class-proficiencies :deep(a:hover) {
   text-decoration: underline;
 }
 
