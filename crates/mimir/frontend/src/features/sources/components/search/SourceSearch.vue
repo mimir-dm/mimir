@@ -39,9 +39,7 @@
     
     <!-- Search Results -->
     <div class="search-results">
-      <!-- This will eventually be replaced with unified result components -->
       <div class="results-container">
-        <!-- Temporary: Use existing table components during migration -->
         <SpellTable
           v-if="selectedContentType === 'spells' && spellResults.length > 0"
           :spells="spellResults"
@@ -85,7 +83,7 @@
       </div>
     </div>
     
-    <!-- Content Modal (temporary, will be replaced) -->
+    <!-- Content Modal -->
     <AppModal
       v-for="(modal, index) in modalStack"
       :key="`modal-${index}`"
@@ -131,7 +129,7 @@ const {
   clearSearch
 } = useSourceSearch()
 
-// Modal management (temporary)
+// Modal management
 const modalStack = ref<any[]>([])
 
 // Sort state
@@ -167,7 +165,7 @@ function handleSearchInput() {
 
 // Content selection
 function handleContentSelect(content: any) {
-  // Temporary: just show in modal
+  // Show in modal
   modalStack.value.push({
     visible: true,
     title: content.name,

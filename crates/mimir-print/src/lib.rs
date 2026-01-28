@@ -37,6 +37,8 @@
 //!     .to_pdf()?;
 //! ```
 
+use std::path::PathBuf;
+
 pub mod error;
 pub mod world;
 pub mod service;
@@ -45,9 +47,6 @@ pub mod markdown;
 pub mod map_renderer;
 pub mod sections;
 pub mod embedded_templates;
-
-#[cfg(feature = "tauri-commands")]
-pub mod commands;
 
 pub use error::{PrintError, Result};
 pub use world::MimirTypstWorld;
@@ -64,5 +63,20 @@ pub use sections::{SpellCardsSection};
 pub use sections::{CutoutToken, TokenCutoutSection};
 pub use map_renderer::{MapPrintOptions, RenderMap, RenderToken, RenderedMapForPrint};
 
-#[cfg(feature = "tauri-commands")]
-pub use commands::PrintState;
+/// State for print functionality, managed by Tauri.
+pub struct PrintState {
+    /// Path to templates directory
+    pub templates_dir: PathBuf,
+    /// Path to assets directory
+    pub assets_dir: PathBuf,
+}
+
+impl PrintState {
+    /// Create a new PrintState
+    pub fn new(templates_dir: PathBuf, assets_dir: PathBuf) -> Self {
+        Self {
+            templates_dir,
+            assets_dir,
+        }
+    }
+}

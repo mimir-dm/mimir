@@ -643,8 +643,6 @@ const canProceed = computed(() => {
       return validateAbilities()
     case 'skills':
       return classSkillChoices.value.count === 0 || selectedClassSkills.value.length === classSkillChoices.value.count
-    case 'spells':
-      return true // TODO: validate spell selections
     case 'review':
       return true
     default:
