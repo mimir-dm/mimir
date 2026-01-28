@@ -156,97 +156,22 @@
 
             <!-- Right Column: Dangers (monsters + traps/hazards) -->
             <div class="dashboard-right">
-              <section class="dashboard-section dangers-section">
-                <div class="section-header">
-                  <h3>Dangers</h3>
-                </div>
-                <div v-if="loadingMonsters || loadingTraps || loadingPois" class="section-loading">Loading...</div>
-                <div v-else-if="moduleMonsters.length === 0 && moduleTraps.length === 0 && modulePois.length === 0" class="section-empty">
-                  No dangers or points of interest added
-                </div>
-                <div v-else class="dangers-list">
-                  <!-- Monsters Section -->
-                  <div v-if="moduleMonsters.length > 0" class="danger-category">
-                    <div class="danger-category-header">Monsters</div>
-                    <!-- Grouped by encounter tag -->
-                    <div
-                      v-for="group in encounterGroups"
-                      :key="group.encounter_tag || 'untagged'"
-                      class="monster-group"
-                    >
-                      <div v-if="group.encounter_tag" class="monster-group-header">
-                        {{ group.encounter_tag }}
-                      </div>
-                      <div v-else-if="encounterGroups.length > 1" class="monster-group-header untagged">
-                        Other
-                      </div>
-                      <div class="monster-group-items">
-                        <div
-                          v-for="monster in group.monsters"
-                          :key="monster.id"
-                          class="monster-row"
-                          :class="{ active: selectedMonster?.id === monster.id }"
-                          @click="handleSelectMonster(monster)"
-                        >
-                          <span class="monster-qty">{{ monster.quantity }}×</span>
-                          <div class="monster-info">
-                            <span class="monster-name">{{ monster.display_name || monster.monster_name }}</span>
-                            <span v-if="monster.display_name" class="monster-original">({{ monster.monster_name }})</span>
-                            <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">*</span>
-                          </div>
-                          <button
-                            v-if="monster.id"
-                            class="monster-edit-btn"
-                            @click.stop="openMonsterEditModal(monster)"
-                            title="Customize monster"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Traps/Hazards Section -->
-                  <div v-if="moduleTraps.length > 0" class="danger-category">
-                    <div class="danger-category-header">Traps & Hazards</div>
-                    <div class="trap-list">
-                      <div
-                        v-for="trap in moduleTraps"
-                        :key="trap.name"
-                        class="trap-row"
-                        :class="{ active: selectedTrap?.name === trap.name }"
-                        @click="selectTrapForDetails(trap)"
-                      >
-                        <span class="trap-qty" v-if="trap.count > 1">{{ trap.count }}×</span>
-                        <span class="trap-name">{{ trap.name }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Points of Interest Section -->
-                  <div v-if="modulePois.length > 0" class="danger-category">
-                    <div class="danger-category-header">Points of Interest</div>
-                    <div class="poi-list">
-                      <div
-                        v-for="poi in modulePois"
-                        :key="poi.name"
-                        class="poi-row"
-                        :class="{ active: selectedPoi?.name === poi.name }"
-                        @click="selectPoiForDetails(poi)"
-                      >
-                        <span class="poi-icon-small" :style="{ backgroundColor: poi.color || '#3b82f6' }">
-                          {{ getPoiIconChar(poi.icon) }}
-                        </span>
-                        <span class="poi-name">{{ poi.name }}</span>
-                        <span class="poi-qty" v-if="poi.count > 1">{{ poi.count }}×</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
+              <DangersList
+                :monsters="moduleMonsters"
+                :encounter-groups="encounterGroups"
+                :traps="moduleTraps"
+                :pois="modulePois"
+                :selected-monster-id="selectedMonster?.id"
+                :selected-trap-name="selectedTrap?.name"
+                :selected-poi-name="selectedPoi?.name"
+                :loading-monsters="loadingMonsters"
+                :loading-traps="loadingTraps"
+                :loading-pois="loadingPois"
+                @select-monster="handleSelectMonster"
+                @edit-monster="openMonsterEditModal"
+                @select-trap="selectTrapForDetails"
+                @select-poi="selectPoiForDetails"
+              />
 
               <!-- Monster Stats Panel -->
               <MonsterStatsPanel
@@ -479,10 +404,11 @@ import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
 import { DocumentService } from '@/services/DocumentService'
 import { useModuleMonsters } from '@/features/modules/composables/useModuleMonsters'
-import { useDmMapWindow } from '@/composables/useDmMapWindow'
+import { useModalsState } from '@/features/campaigns/composables/useModalsState'
+import { useDmMapWindow } from '@/composables/windows/useDmMapWindow'
 import { useDashboardLink } from '@/composables/useDashboardLink'
-import { openSourcesReference } from '@/shared/utils/windows'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { openSourcesReference } from '@/utils/windows'
+import { dataEvents } from '@/utils/dataEvents'
 import CreateModuleModal from '../StageLanding/CreateModuleModal.vue'
 import MapUploadModal from '../StageLanding/MapUploadModal.vue'
 import MapTokenSetupModal from '@/components/tokens/MapTokenSetupModal.vue'
@@ -491,8 +417,9 @@ import NpcSelectorModal from '@/features/modules/components/NpcSelectorModal.vue
 import MonsterStatsPanel from '@/features/modules/components/MonsterStatsPanel.vue'
 import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue'
 import PoiDetailsPanel from '@/features/modules/components/PoiDetailsPanel.vue'
+import DangersList from './DangersList.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
-import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
+import CreateDocumentModal from '@/components/dialogs/CreateDocumentModal.vue'
 import AppModal from '@/components/shared/AppModal.vue'
 import type { Campaign, Module, Document } from '@/types'
 
@@ -524,8 +451,20 @@ const route = useRoute()
 const modules = ref<Module[]>([])
 const selectedModule = ref<Module | null>(null)
 const loading = ref(false)
-const showCreateModal = ref(false)
-const showDeleteModuleModal = ref(false)
+
+// Modal state (from composable)
+const {
+  showCreateModal,
+  showDeleteModuleModal,
+  showMapUploadModal,
+  showTokenSetupModal,
+  showCreateDocModal,
+  showDeleteDocModal,
+  showNpcSelector,
+  showExportDialog,
+  showNpcDetailModal,
+  showMonsterEditModal
+} = useModalsState()
 
 // Title editing state
 const isEditingTitle = ref(false)
@@ -585,13 +524,9 @@ const selectedDocument = ref<Document | null>(null)
 // Map state
 const moduleMaps = ref<MapData[]>([])
 const loadingMaps = ref(false)
-const showMapUploadModal = ref(false)
-const showTokenSetupModal = ref(false)
 const selectedMapForTokens = ref<MapData | null>(null)
 
-// Document creation state
-const showCreateDocModal = ref(false)
-const showDeleteDocModal = ref(false)
+// Document deletion state
 const documentToDelete = ref<Document | null>(null)
 
 // NPC state - Module NPCs are custom DM-created characters
@@ -606,13 +541,10 @@ interface ModuleNpc {
   motivation: string | null
   secrets: string | null
 }
-const showNpcSelector = ref(false)
-const showExportDialog = ref(false)
 const moduleNpcs = ref<ModuleNpc[]>([])
 const loadingNpcs = ref(false)
 
-// NPC detail modal state
-const showNpcDetailModal = ref(false)
+// NPC detail state
 const selectedNpc = ref<ModuleNpc | null>(null)
 
 // Get NPC IDs that are already in the module
@@ -620,8 +552,7 @@ const existingNpcCharacterIds = computed(() => {
   return moduleNpcs.value.map(npc => npc.id)
 })
 
-// Monster customization modal state
-const showMonsterEditModal = ref(false)
+// Monster customization state
 const monsterToEdit = ref<any>(null)
 const monsterEditForm = ref({
   display_name: '',
@@ -983,21 +914,6 @@ function formatDocumentTitle(templateId: string): string {
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
-}
-
-// Get POI icon character for display (matches PoiEditModal icons)
-function getPoiIconChar(iconName: string): string {
-  const iconMap: Record<string, string> = {
-    'pin': '📍',
-    'star': '⭐',
-    'skull': '💀',
-    'chest': '📦',
-    'door': '🚪',
-    'secret': '🔮',
-    'question': '❓',
-    'exclamation': '❗'
-  }
-  return iconMap[iconName] || '📍'
 }
 
 // DM Map window
@@ -1603,95 +1519,6 @@ onMounted(async () => {
   color: var(--color-text-secondary);
 }
 
-/* Monster List (grouped by encounter tag) */
-.monster-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  overflow-y: auto;
-  flex: 1;
-}
-
-.monster-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.monster-group-header {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-error);
-  padding: var(--spacing-xs) 0;
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: var(--spacing-xs);
-}
-
-.monster-group-header.untagged {
-  color: var(--color-text-secondary);
-}
-
-.monster-group-items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.monster-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.monster-row:hover {
-  background: var(--color-primary-100);
-}
-
-.monster-row.active {
-  background: var(--color-primary-100);
-  border-left: 3px solid var(--color-error);
-  padding-left: calc(var(--spacing-sm) - 3px);
-}
-
-.monster-qty {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-error);
-  min-width: 24px;
-}
-
-.monster-info {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-xs);
-  flex: 1;
-  min-width: 0;
-}
-
-.monster-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.monster-original {
-  font-size: 0.7rem;
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
-.monster-has-notes {
-  font-size: 0.8rem;
-  color: var(--color-primary-500);
-  font-weight: bold;
-}
-
 /* Monster Stats Panel in Module Dashboard */
 .module-monster-panel {
   position: absolute;
@@ -1710,130 +1537,6 @@ onMounted(async () => {
   bottom: 0;
   z-index: 10;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Dangers Section (combined monsters + traps) */
-.dangers-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.dangers-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  overflow-y: auto;
-  flex: 1;
-}
-
-.danger-category {
-  display: flex;
-  flex-direction: column;
-}
-
-.danger-category-header {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-secondary);
-  padding: var(--spacing-xs) 0;
-  margin-bottom: var(--spacing-xs);
-}
-
-/* Trap List */
-.trap-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.trap-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.trap-row:hover {
-  background: var(--color-primary-100);
-}
-
-.trap-row.active {
-  background: var(--color-primary-100);
-  border-left: 3px solid var(--color-warning);
-  padding-left: calc(var(--spacing-sm) - 3px);
-}
-
-.trap-qty {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-warning);
-  min-width: 24px;
-}
-
-.trap-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-/* POI List */
-.poi-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.poi-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.poi-row:hover {
-  background: var(--color-primary-100);
-}
-
-.poi-row.active {
-  background: var(--color-primary-100);
-  border-left: 3px solid var(--color-primary);
-  padding-left: calc(var(--spacing-sm) - 3px);
-}
-
-.poi-icon-small {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  color: white;
-  flex-shrink: 0;
-}
-
-.poi-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-text);
-  flex: 1;
-}
-
-.poi-qty {
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
 }
 
 /* Map Cards */
@@ -2015,38 +1718,6 @@ onMounted(async () => {
 .empty-state p {
   margin: 0 0 var(--spacing-md) 0;
   font-size: 0.875rem;
-}
-
-/* Monster Edit Button */
-.monster-edit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  opacity: 0;
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.monster-row:hover .monster-edit-btn {
-  opacity: 1;
-}
-
-.monster-edit-btn:hover {
-  background: var(--color-primary-100);
-  color: var(--color-primary-600);
-}
-
-.monster-edit-btn svg {
-  width: 14px;
-  height: 14px;
 }
 
 /* Monster Edit Form */

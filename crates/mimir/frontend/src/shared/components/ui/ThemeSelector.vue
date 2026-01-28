@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useThemeStore } from '../../../stores/theme'
+import { useThemeStore } from '@/stores/theme'
 
 const themeStore = useThemeStore()
 

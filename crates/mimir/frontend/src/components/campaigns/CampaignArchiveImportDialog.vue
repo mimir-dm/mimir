@@ -41,12 +41,20 @@
 
         <div class="preview-stats">
           <div class="stat-item">
-            <span class="stat-value">{{ archivePreview.file_count }}</span>
+            <span class="stat-value">{{ archivePreview.counts.modules }}</span>
+            <span class="stat-label">Modules</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ archivePreview.counts.documents }}</span>
             <span class="stat-label">Documents</span>
           </div>
           <div class="stat-item">
-            <span class="stat-value">{{ archivePreview.asset_count }}</span>
-            <span class="stat-label">Assets</span>
+            <span class="stat-value">{{ archivePreview.counts.characters }}</span>
+            <span class="stat-label">Characters</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ archivePreview.counts.maps }}</span>
+            <span class="stat-label">Maps</span>
           </div>
         </div>
 
@@ -175,11 +183,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import AppModal from '@/components/shared/AppModal.vue'
 import { useCampaignStore } from '@/stores/campaigns'
-import type { Campaign, ApiResponse } from '@/types/api'
+import type { Campaign } from '@/types/api'
 
 interface Props {
   visible: boolean
@@ -190,13 +197,24 @@ interface Emits {
   (e: 'imported', campaign: Campaign): void
 }
 
+interface ArchiveCounts {
+  modules: number
+  documents: number
+  characters: number
+  maps: number
+  tokens: number
+  module_monsters: number
+  module_npcs: number
+  assets: number
+}
+
 interface ArchivePreview {
   campaign_name: string
-  file_count: number
-  asset_count: number
+  counts: ArchiveCounts
   catalog_references: Array<{ type: string; name: string; source: string }>
   mimir_version: string
   created_at: string
+  archive_version: string
 }
 
 const props = defineProps<Props>()
@@ -211,7 +229,6 @@ const importState = ref<ImportState>('idle')
 const archivePath = ref('')
 const archivePreview = ref<ArchivePreview | null>(null)
 const campaignName = ref('')
-const campaignsDirectory = ref('')
 const showAllRefs = ref(false)
 const importedCampaign = ref<Campaign | null>(null)
 const errorMessage = ref<string | null>(null)
@@ -223,19 +240,9 @@ const visibleRefs = computed(() => {
 })
 
 // Reset state when dialog opens
-watch(() => props.visible, async (newVisible) => {
+watch(() => props.visible, (newVisible) => {
   if (newVisible) {
     resetState()
-
-    // Get default campaigns directory
-    try {
-      const response = await invoke<ApiResponse<string>>('get_default_campaigns_directory')
-      if (response.success && response.data) {
-        campaignsDirectory.value = response.data
-      }
-    } catch {
-      // Fall back - will error on import
-    }
   }
 })
 
@@ -288,15 +295,14 @@ async function previewArchive() {
 }
 
 async function handleImport() {
-  if (!archivePath.value || !campaignName.value.trim() || !campaignsDirectory.value) return
+  if (!archivePath.value || !campaignName.value.trim()) return
 
   importState.value = 'importing'
   errorMessage.value = null
 
   const campaign = await campaignStore.importCampaign(
     archivePath.value,
-    campaignName.value.trim(),
-    campaignsDirectory.value
+    campaignName.value.trim()
   )
 
   if (campaign) {

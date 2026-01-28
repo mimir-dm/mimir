@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { listen, emit, type UnlistenFn } from '@tauri-apps/api/event'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
@@ -9,9 +8,11 @@ import PlayerDoorOverlay from '@/components/los/PlayerDoorOverlay.vue'
 import PlayerMarkerOverlay from '@/components/los/PlayerMarkerOverlay.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Token } from '@/types/api'
-import type { LightSourceSummary } from '@/composables/useLightSources'
-import type { Light, Wall, Portal } from '@/composables/useVisibilityPolygon'
-import { useVisionCalculation, type AmbientLight } from '@/composables/useVisionCalculation'
+import type { LightSourceSummary } from '@/composables/map/useLightSources'
+import type { Light, Wall, Portal } from '@/composables/map/useVisibilityPolygon'
+import { useVisionCalculation, type AmbientLight } from '@/composables/map/useVisionCalculation'
+import { usePlayerViewport } from '@/composables/map/usePlayerViewport'
+import { usePlayerDisplayEvents, type MapUpdatePayload, type TokensUpdatePayload, type FogUpdatePayload, type LightSourcesUpdatePayload, type MarkersUpdatePayload } from '@/composables/map/usePlayerDisplayEvents'
 
 // Types for map display
 interface MapState {
@@ -47,12 +48,8 @@ const mapState = ref<MapState>({
   mapHeight: 0
 })
 
-// Independent player view viewport (decoupled from DM)
-const playerPanX = ref(0)
-const playerPanY = ref(0)
-const playerZoom = ref(1)
-const isPanning = ref(false)
-const panStart = ref({ x: 0, y: 0 })
+// Player viewport (pan/zoom)
+const viewport = usePlayerViewport()
 
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
@@ -60,11 +57,6 @@ const imageRef = ref<HTMLImageElement | null>(null)
 const tokens = ref<Token[]>([])
 const deadTokenIds = ref<string[]>([])
 const tokenImages = ref<Map<string, string>>(new Map())
-
-// Track actual display scale and image dimensions
-const displayScale = ref(1)
-const imageNaturalWidth = ref(0)
-const imageNaturalHeight = ref(0)
 
 // Fog of war state (vision-based)
 interface VisionCircle {
@@ -177,8 +169,8 @@ const lightSources = ref<LightSourceSummary[]>([])
 // Vision calculation
 const ambientLightRef = computed(() => mapState.value.ambientLight)
 const gridSizePxRef = computed(() => mapState.value.gridSizePx || 70)
-const mapWidthRef = computed(() => mapState.value.mapWidth || imageRef.value?.naturalWidth || 0)
-const mapHeightRef = computed(() => mapState.value.mapHeight || imageRef.value?.naturalHeight || 0)
+const mapWidthRef = computed(() => mapState.value.mapWidth || viewport.imageNaturalWidth.value || 0)
+const mapHeightRef = computed(() => mapState.value.mapHeight || viewport.imageNaturalHeight.value || 0)
 
 const {
   pcVision,
@@ -191,20 +183,6 @@ const {
   gridSizePx: gridSizePxRef,
   mapWidth: mapWidthRef,
   mapHeight: mapHeightRef
-})
-
-// Combined transform: fit to screen with independent player viewport controls
-const combinedTransform = computed(() => {
-  const baseScale = displayScale.value
-
-  // Apply player's independent zoom on top of fit-to-screen scale
-  const finalScale = baseScale * playerZoom.value
-
-  // Apply player's pan (already in screen coordinates)
-  return {
-    transform: `translate(${playerPanX.value}px, ${playerPanY.value}px) scale(${finalScale})`,
-    transformOrigin: 'center center'
-  }
 })
 
 // Grid overlay types
@@ -279,74 +257,32 @@ const isHexGrid = computed(() => gridPattern.value?.type === 'hex')
 const squarePattern = computed(() => gridPattern.value?.type === 'square' ? gridPattern.value : null)
 const hexPattern = computed(() => gridPattern.value?.type === 'hex' ? gridPattern.value : null)
 
-// Event listeners for IPC from main window
-let unlistenMapUpdate: UnlistenFn | null = null
-let unlistenBlackout: UnlistenFn | null = null
-let unlistenTokensUpdate: UnlistenFn | null = null
-let unlistenFogUpdate: UnlistenFn | null = null
-let unlistenLightSourcesUpdate: UnlistenFn | null = null
-let unlistenMarkersUpdate: UnlistenFn | null = null
-
-onMounted(async () => {
-  console.log('PlayerDisplayWindow: Setting up event listeners')
-
-  // Listen for map updates from main window
-  unlistenMapUpdate = await listen<{
-    mapId: string
-    gridType: string
-    gridSizePx: number | null
-    gridOffsetX: number
-    gridOffsetY: number
-    ambientLight?: string
-    mapWidth?: number
-    mapHeight?: number
-  }>('player-display:map-update', async (event) => {
-    console.log('PlayerDisplayWindow: Received map-update event:', event.payload)
-    const data = event.payload
-    mapState.value.mapId = data.mapId
-    mapState.value.gridType = data.gridType as 'square' | 'hex' | 'none'
-    mapState.value.gridSizePx = data.gridSizePx
-    mapState.value.gridOffsetX = data.gridOffsetX
-    mapState.value.gridOffsetY = data.gridOffsetY
-    // Handle ambient light if provided
-    if (data.ambientLight) {
-      mapState.value.ambientLight = data.ambientLight as AmbientLight
+// IPC event handlers (composable handles setup/cleanup)
+usePlayerDisplayEvents({
+  onMapUpdate: async (payload: MapUpdatePayload) => {
+    mapState.value.mapId = payload.mapId
+    mapState.value.gridType = payload.gridType as 'square' | 'hex' | 'none'
+    mapState.value.gridSizePx = payload.gridSizePx
+    mapState.value.gridOffsetX = payload.gridOffsetX
+    mapState.value.gridOffsetY = payload.gridOffsetY
+    if (payload.ambientLight) {
+      mapState.value.ambientLight = payload.ambientLight as AmbientLight
     }
-    // Handle map dimensions if provided
-    if (data.mapWidth) {
-      mapState.value.mapWidth = data.mapWidth
-    }
-    if (data.mapHeight) {
-      mapState.value.mapHeight = data.mapHeight
-    }
+    if (payload.mapWidth) mapState.value.mapWidth = payload.mapWidth
+    if (payload.mapHeight) mapState.value.mapHeight = payload.mapHeight
+    await loadMapImage(payload.mapId)
+  },
 
-    // Load the map image
-    await loadMapImage(data.mapId)
+  onBlackout: (isBlackout: boolean) => {
+    mapState.value.isBlackout = isBlackout
+  },
 
-    // Request current state from DM window now that we're ready
-    console.log('PlayerDisplayWindow: Requesting state for map', data.mapId)
-    await emit('player-display:request-state', { mapId: data.mapId })
-  })
-
-  // Listen for blackout toggle
-  unlistenBlackout = await listen<{ isBlackout: boolean }>('player-display:blackout', (event) => {
-    mapState.value.isBlackout = event.payload.isBlackout
-  })
-
-  // Listen for token updates
-  unlistenTokensUpdate = await listen<{
-    mapId: string
-    tokens: Token[]
-    deadTokenIds?: string[]
-  }>('player-display:tokens-update', async (event) => {
-    console.log('PlayerDisplayWindow: Received tokens-update event:', event.payload.tokens.length, 'tokens')
-    // Accept tokens if they're for the current map OR if we don't have a map yet (initial load)
-    if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
-      tokens.value = event.payload.tokens
-      deadTokenIds.value = event.payload.deadTokenIds || []
-
-      // Load token images for monster tokens (convention-based paths on backend)
-      const tokensWithImages = event.payload.tokens.filter(t => t.token_type === 'monster')
+  onTokensUpdate: async (payload: TokensUpdatePayload) => {
+    if (mapState.value.mapId === null || payload.mapId === mapState.value.mapId) {
+      tokens.value = payload.tokens
+      deadTokenIds.value = payload.deadTokenIds || []
+      // Load token images for monster tokens
+      const tokensWithImages = payload.tokens.filter(t => t.token_type === 'monster')
       for (const token of tokensWithImages) {
         if (!tokenImages.value.has(token.id)) {
           try {
@@ -360,80 +296,46 @@ onMounted(async () => {
         }
       }
     }
-  })
+  },
 
-  // Listen for fog of war updates (vision-based, with optional LOS data)
-  unlistenFogUpdate = await listen<{
-    mapId: string
-    revealMap: boolean
-    tokenOnlyLos: boolean
-    visionCircles: VisionCircle[]
-    useLosBlocking?: boolean
-    visibilityPaths?: { tokenId: string; path: string; polygon?: { x: number; y: number }[] }[]
-    blockingWalls?: Wall[]
-    uvttLights?: Light[]
-    portals?: Portal[]
-    ambientLight?: 'bright' | 'dim' | 'darkness'
-  }>('player-display:fog-update', (event) => {
-    const payload = event.payload
-    // Accept if it's for the current map OR if we don't have a map yet (initial load)
+  onFogUpdate: (payload: FogUpdatePayload) => {
     if (mapState.value.mapId === null || payload.mapId === mapState.value.mapId) {
       revealMap.value = payload.revealMap ?? false
       tokenOnlyLos.value = payload.tokenOnlyLos ?? false
       visionCircles.value = payload.visionCircles || []
-      // UVTT LOS data
       useLosBlocking.value = payload.useLosBlocking || false
       visibilityPaths.value = payload.visibilityPaths || []
       blockingWalls.value = payload.blockingWalls || []
       uvttLights.value = payload.uvttLights || []
       portals.value = payload.portals || []
-      // Ambient light
       if (payload.ambientLight) {
         mapState.value.ambientLight = payload.ambientLight
       }
     }
-  })
+  },
 
-  // Listen for light source updates
-  unlistenLightSourcesUpdate = await listen<{
-    mapId: string
-    lightSources: LightSourceSummary[]
-  }>('player-display:light-sources-update', (event) => {
-    // Accept lights if they're for the current map OR if we don't have a map yet (initial load)
-    if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
-      lightSources.value = event.payload.lightSources
+  onLightSourcesUpdate: (payload: LightSourcesUpdatePayload) => {
+    if (mapState.value.mapId === null || payload.mapId === mapState.value.mapId) {
+      lightSources.value = payload.lightSources
     }
-  })
+  },
 
-  // Listen for marker updates (traps & POIs made visible by DM)
-  unlistenMarkersUpdate = await listen<{
-    mapId: string
-    traps: MarkerTrap[]
-    pois: MarkerPoi[]
-    gridSizePx: number
-  }>('player-display:markers-update', (event) => {
-    // Accept markers if they're for the current map OR if we don't have a map yet
-    if (mapState.value.mapId === null || event.payload.mapId === mapState.value.mapId) {
-      visibleTraps.value = event.payload.traps || []
-      visiblePois.value = event.payload.pois || []
-      markerGridSize.value = event.payload.gridSizePx || 70
+  onMarkersUpdate: (payload: MarkersUpdatePayload) => {
+    if (mapState.value.mapId === null || payload.mapId === mapState.value.mapId) {
+      visibleTraps.value = payload.traps || []
+      visiblePois.value = payload.pois || []
+      markerGridSize.value = payload.gridSizePx || 70
     }
-  })
+  }
+})
 
-  // Handle keyboard shortcuts
+// Keyboard and resize event listeners
+onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-
-  // Handle window resize to recalculate scale
   window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-  unlistenMapUpdate?.()
-  unlistenBlackout?.()
-  unlistenTokensUpdate?.()
-  unlistenFogUpdate?.()
-  unlistenLightSourcesUpdate?.()
-  unlistenMarkersUpdate?.()
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('resize', handleResize)
 })
@@ -453,9 +355,7 @@ async function loadMapImage(mapId: string) {
   visibleTraps.value = []
   visiblePois.value = []
   // Reset player viewport for new map
-  playerPanX.value = 0
-  playerPanY.value = 0
-  playerZoom.value = 1
+  viewport.reset()
 
   try {
     const response = await invoke<{ success: boolean; data?: string; error?: string }>(
@@ -475,33 +375,6 @@ async function loadMapImage(mapId: string) {
   }
 }
 
-// Calculate the scale needed to fit the image in the viewport
-function updateDisplayScale() {
-  if (!imageRef.value) return
-
-  const naturalWidth = imageRef.value.naturalWidth
-  const naturalHeight = imageRef.value.naturalHeight
-
-  if (naturalWidth === 0 || naturalHeight === 0) return
-
-  // Store for other components
-  imageNaturalWidth.value = naturalWidth
-  imageNaturalHeight.value = naturalHeight
-
-  // Get viewport dimensions
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-
-  // Calculate scale to fill (same as object-fit: cover logic)
-  const scaleX = viewportWidth / naturalWidth
-  const scaleY = viewportHeight / naturalHeight
-
-  // Use the larger scale to fill the viewport (no black bars)
-  displayScale.value = Math.max(scaleX, scaleY)
-  console.log('PlayerDisplayWindow: Updated display scale to', displayScale.value,
-    `(natural: ${naturalWidth}x${naturalHeight}, viewport: ${viewportWidth}x${viewportHeight})`)
-}
-
 // Keyboard shortcuts
 function handleKeydown(event: KeyboardEvent) {
   // F11 to toggle fullscreen
@@ -509,75 +382,21 @@ function handleKeydown(event: KeyboardEvent) {
     event.preventDefault()
     invoke('toggle_player_display_fullscreen')
   }
-  // Escape to exit blackout or close window
-  if (event.key === 'Escape') {
-    if (mapState.value.isBlackout) {
-      // Just visual feedback, main window controls blackout
-    }
-  }
   // R to reset view (fit to screen)
   if (event.key === 'r' || event.key === 'R') {
-    resetPlayerView()
+    viewport.reset()
   }
 }
 
 // Handle image load to calculate scale
 function handleImageLoad() {
   console.log('PlayerDisplayWindow: Image loaded')
-  updateDisplayScale()
+  viewport.updateDisplayScale(imageRef.value)
 }
 
 // Handle window resize to recalculate scale
 function handleResize() {
-  updateDisplayScale()
-}
-
-// Player-controlled pan (left mouse drag)
-function handleMouseDown(event: MouseEvent) {
-  // Left mouse button for panning
-  if (event.button === 0) {
-    event.preventDefault()
-    isPanning.value = true
-    panStart.value = { x: event.clientX - playerPanX.value, y: event.clientY - playerPanY.value }
-  }
-}
-
-function handleMouseMove(event: MouseEvent) {
-  if (isPanning.value) {
-    playerPanX.value = event.clientX - panStart.value.x
-    playerPanY.value = event.clientY - panStart.value.y
-  }
-}
-
-function handleMouseUp() {
-  isPanning.value = false
-}
-
-// Player-controlled zoom (mouse wheel)
-function handleWheel(event: WheelEvent) {
-  const delta = event.deltaY > 0 ? 0.9 : 1.1
-  const newZoom = Math.max(0.25, Math.min(5, playerZoom.value * delta))
-
-  // Zoom toward mouse position
-  const target = event.currentTarget as HTMLElement
-  if (target) {
-    const rect = target.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left - rect.width / 2
-    const mouseY = event.clientY - rect.top - rect.height / 2
-
-    const zoomRatio = newZoom / playerZoom.value
-    playerPanX.value = mouseX - (mouseX - playerPanX.value) * zoomRatio
-    playerPanY.value = mouseY - (mouseY - playerPanY.value) * zoomRatio
-  }
-
-  playerZoom.value = newZoom
-}
-
-// Reset player viewport to fit screen
-function resetPlayerView() {
-  playerPanX.value = 0
-  playerPanY.value = 0
-  playerZoom.value = 1
+  viewport.updateDisplayScale(imageRef.value)
 }
 </script>
 
@@ -592,11 +411,11 @@ function resetPlayerView() {
     <div
       v-else
       class="map-viewport"
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseUp"
-      @wheel.prevent="handleWheel"
+      @mousedown="viewport.handleMouseDown"
+      @mousemove="viewport.handleMouseMove"
+      @mouseup="viewport.handleMouseUp"
+      @mouseleave="viewport.handleMouseUp"
+      @wheel.prevent="viewport.handleWheel"
     >
       <!-- Loading state -->
       <div v-if="isLoading" class="loading-state">
@@ -622,7 +441,7 @@ function resetPlayerView() {
       <div
         v-else
         class="map-container"
-        :style="combinedTransform"
+        :style="viewport.transform.value"
       >
         <img
           ref="imageRef"
@@ -638,8 +457,8 @@ function resetPlayerView() {
           v-if="gridPattern"
           class="grid-overlay"
           :style="{
-            width: imageNaturalWidth + 'px',
-            height: imageNaturalHeight + 'px'
+            width: viewport.imageNaturalWidth.value + 'px',
+            height: viewport.imageNaturalHeight.value + 'px'
           }"
         >
           <defs>
@@ -683,23 +502,23 @@ function resetPlayerView() {
 
         <!-- UVTT Map Lights (embedded in map file, with shadow casting) -->
         <LightOverlay
-          v-if="uvttLights.length > 0 && imageNaturalWidth > 0"
+          v-if="uvttLights.length > 0 && viewport.imageNaturalWidth.value > 0"
           :lights="uvttLights"
           :walls="blockingWalls"
-          :map-width="imageNaturalWidth"
-          :map-height="imageNaturalHeight"
+          :map-width="viewport.imageNaturalWidth.value"
+          :map-height="viewport.imageNaturalHeight.value"
           :show-debug="false"
           blend-mode="soft-light"
         />
 
         <!-- Light Source Layer (only active lights) -->
         <LightSourceRenderer
-          v-if="lightSources.length > 0 && mapState.gridSizePx && imageNaturalWidth > 0"
+          v-if="lightSources.length > 0 && mapState.gridSizePx && viewport.imageNaturalWidth.value > 0"
           :lights="lightSources"
           :tokens="tokens"
           :grid-size-px="mapState.gridSizePx"
-          :map-width="imageNaturalWidth"
-          :map-height="imageNaturalHeight"
+          :map-width="viewport.imageNaturalWidth.value"
+          :map-height="viewport.imageNaturalHeight.value"
           :show-inactive="false"
           :show-bright-border="false"
           :show-center-dot="false"
@@ -721,31 +540,31 @@ function resetPlayerView() {
 
         <!-- Door Overlay (shows doors to players) -->
         <PlayerDoorOverlay
-          v-if="portals.length > 0 && imageNaturalWidth > 0"
+          v-if="portals.length > 0 && viewport.imageNaturalWidth.value > 0"
           :portals="portals"
-          :map-width="imageNaturalWidth"
-          :map-height="imageNaturalHeight"
+          :map-width="viewport.imageNaturalWidth.value"
+          :map-height="viewport.imageNaturalHeight.value"
         />
 
         <!-- Marker Overlay (traps & POIs made visible by DM) -->
         <PlayerMarkerOverlay
-          v-if="(visibleTraps.length > 0 || visiblePois.length > 0) && imageNaturalWidth > 0"
+          v-if="(visibleTraps.length > 0 || visiblePois.length > 0) && viewport.imageNaturalWidth.value > 0"
           :traps="visibleTraps"
           :pois="visiblePois"
           :grid-size-px="markerGridSize"
-          :map-width="imageNaturalWidth"
-          :map-height="imageNaturalHeight"
+          :map-width="viewport.imageNaturalWidth.value"
+          :map-height="viewport.imageNaturalHeight.value"
         />
 
         <!-- Fog of War Overlay (Fog mode: revealMap OFF + tokenOnlyLos OFF) -->
         <svg
-          v-if="!revealMap && !tokenOnlyLos && imageNaturalWidth > 0"
+          v-if="!revealMap && !tokenOnlyLos && viewport.imageNaturalWidth.value > 0"
           class="fog-overlay"
           :style="{
-            width: imageNaturalWidth + 'px',
-            height: imageNaturalHeight + 'px'
+            width: viewport.imageNaturalWidth.value + 'px',
+            height: viewport.imageNaturalHeight.value + 'px'
           }"
-          :viewBox="`0 0 ${imageNaturalWidth} ${imageNaturalHeight}`"
+          :viewBox="`0 0 ${viewport.imageNaturalWidth.value} ${viewport.imageNaturalHeight.value}`"
         >
           <defs>
             <!-- Blur filter for soft vision edges (only used for circle fallback) -->
@@ -788,13 +607,13 @@ function resetPlayerView() {
 
         <!-- Vision/Lighting Overlay (darkness with vision cutouts) -->
         <svg
-          v-if="needsVisionOverlay && imageNaturalWidth > 0"
+          v-if="needsVisionOverlay && viewport.imageNaturalWidth.value > 0"
           class="vision-overlay"
           :style="{
-            width: imageNaturalWidth + 'px',
-            height: imageNaturalHeight + 'px'
+            width: viewport.imageNaturalWidth.value + 'px',
+            height: viewport.imageNaturalHeight.value + 'px'
           }"
-          :viewBox="`0 0 ${imageNaturalWidth} ${imageNaturalHeight}`"
+          :viewBox="`0 0 ${viewport.imageNaturalWidth.value} ${viewport.imageNaturalHeight.value}`"
         >
           <defs>
             <!-- Mask for darkness (white = show darkness, black = hide darkness) -->

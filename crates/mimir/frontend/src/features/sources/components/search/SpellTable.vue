@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { SpellSummary } from '../../composables/catalog'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { spellConfig } from '../../../../shared/components/catalog/config/spellConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { spellConfig } from '@/shared/components/catalog/config/spellConfig'
 
 interface Props {
   spells: SpellSummary[]

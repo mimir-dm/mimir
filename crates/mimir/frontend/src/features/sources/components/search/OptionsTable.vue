@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { OptionalFeatureSummary } from '../../services/SearchService'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { optionalFeatureConfig } from '../../../../shared/components/catalog/config/optionalFeatureConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { optionalFeatureConfig } from '@/shared/components/catalog/config/optionalFeatureConfig'
 
 interface Props {
   options: OptionalFeatureSummary[]

@@ -1,12 +1,13 @@
 // Modal content formatters
 
 import { processFormattingTags } from '../utils/textFormatting'
+import { formatMonsterDetails } from './monsterFormatterEnhanced'
 
 /**
  * Render modal content for a reference.
  * Accepts data object with ref_type field (from useCrossReferences)
  */
-export function renderModalContent(data: any): string {
+export async function renderModalContent(data: any): Promise<string> {
   if (!data) return ''
 
   let html = '<div class="modal-content">'
@@ -27,7 +28,7 @@ export function renderModalContent(data: any): string {
       break
     case 'creature':
     case 'monster':
-      html += renderMonsterContent(data)
+      html += await formatMonsterDetails(data)
       break
     case 'condition':
       html += renderConditionContent(data)

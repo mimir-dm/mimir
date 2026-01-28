@@ -100,7 +100,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useThemeStore } from '../../../../stores/theme'
+import { useThemeStore } from '@/stores/theme'
 import { useBookLibrary } from '../../composables/useBookLibrary'
 import { useBookContent } from '../../composables/useBookContent'
 import { useBookNavigation } from '../../composables/useBookNavigation'
@@ -108,9 +108,9 @@ import { useCrossReferences } from '../../composables/useCrossReferences'
 
 // Components
 import AppModal from '@/components/shared/AppModal.vue'
-import ThreePanelLayout from '../../../../shared/components/layout/ThreePanelLayout.vue'
-import TwoPanelLayout from '../../../../shared/components/layout/TwoPanelLayout.vue'
-import Panel from '../../../../shared/components/layout/Panel.vue'
+import ThreePanelLayout from '@/shared/components/layout/ThreePanelLayout.vue'
+import TwoPanelLayout from '@/shared/components/layout/TwoPanelLayout.vue'
+import Panel from '@/shared/components/layout/Panel.vue'
 import BookLibrary from './Library.vue'
 import BookTableOfContents from './TableOfContents.vue'
 import BookContentViewer from './ContentViewer.vue'

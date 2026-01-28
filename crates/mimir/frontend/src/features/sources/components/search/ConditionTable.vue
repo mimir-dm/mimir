@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import { conditionConfig } from '../../../../shared/components/catalog/config/conditionConfig'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
+import { conditionConfig } from '@/shared/components/catalog/config/conditionConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
 import type { ConditionSummary } from '../../services/SearchService'
 
 interface Props {

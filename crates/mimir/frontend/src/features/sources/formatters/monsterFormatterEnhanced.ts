@@ -1,7 +1,7 @@
 import type { MonsterSummary } from '../composables/catalog'
 import { formatEntries } from '../utils/textFormatting'
 import { invoke } from '@tauri-apps/api/core'
-import { formatCR } from '../../../shared/utils/formatters'
+import { formatCR } from '@/utils/formatters'
 
 interface Monster {
   // Core fields

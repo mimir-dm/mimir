@@ -1,6 +1,6 @@
 // Composable for managing book navigation and table of contents
 
-import type { BookSection, SubEntry } from '../../../types/book'
+import type { BookSection, SubEntry } from '@/types/book'
 
 export function useBookNavigation() {
   

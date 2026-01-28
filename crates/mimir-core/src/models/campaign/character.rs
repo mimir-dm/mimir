@@ -15,8 +15,8 @@ use super::{CharacterClass, CharacterProficiency};
 pub struct Character {
     /// Unique character ID (UUID)
     pub id: String,
-    /// Campaign this character belongs to
-    pub campaign_id: String,
+    /// Campaign this character belongs to (optional - characters can exist without a campaign)
+    pub campaign_id: Option<String>,
     /// Character name
     pub name: String,
     /// Whether this is an NPC (1) or PC (0)
@@ -128,7 +128,7 @@ impl Character {
 #[diesel(table_name = characters)]
 pub struct NewCharacter<'a> {
     pub id: &'a str,
-    pub campaign_id: &'a str,
+    pub campaign_id: Option<&'a str>,
     pub name: &'a str,
     pub is_npc: i32,
     pub player_name: Option<&'a str>,
@@ -158,7 +158,7 @@ pub struct NewCharacter<'a> {
 
 impl<'a> NewCharacter<'a> {
     /// Create a new player character with default ability scores.
-    pub fn new_pc(id: &'a str, campaign_id: &'a str, name: &'a str, player_name: &'a str) -> Self {
+    pub fn new_pc(id: &'a str, campaign_id: Option<&'a str>, name: &'a str, player_name: &'a str) -> Self {
         Self {
             id,
             campaign_id,
@@ -191,7 +191,7 @@ impl<'a> NewCharacter<'a> {
     }
 
     /// Create a new NPC with default ability scores.
-    pub fn new_npc(id: &'a str, campaign_id: &'a str, name: &'a str) -> Self {
+    pub fn new_npc(id: &'a str, campaign_id: Option<&'a str>, name: &'a str) -> Self {
         Self {
             id,
             campaign_id,
@@ -436,7 +436,7 @@ mod tests {
 
     #[test]
     fn test_new_pc() {
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Gandalf", "John");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Gandalf", "John");
         assert_eq!(pc.id, "char-1");
         assert_eq!(pc.name, "Gandalf");
         assert_eq!(pc.is_npc, 0);
@@ -446,7 +446,7 @@ mod tests {
 
     #[test]
     fn test_new_npc() {
-        let npc = NewCharacter::new_npc("char-1", "camp-1", "Shopkeeper");
+        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Shopkeeper");
         assert_eq!(npc.name, "Shopkeeper");
         assert_eq!(npc.is_npc, 1);
         assert!(npc.player_name.is_none());
@@ -454,7 +454,7 @@ mod tests {
 
     #[test]
     fn test_with_ability_scores() {
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Fighter", "John")
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Fighter", "John")
             .with_ability_scores(16, 14, 15, 8, 10, 12);
         assert_eq!(pc.strength, 16);
         assert_eq!(pc.dexterity, 14);
@@ -466,7 +466,7 @@ mod tests {
 
     #[test]
     fn test_with_currency() {
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Rogue", "Jane")
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Rogue", "Jane")
             .with_currency(50, 20, 0, 15, 1);
         assert_eq!(pc.cp, 50);
         assert_eq!(pc.sp, 20);
@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_with_npc_info() {
-        let npc = NewCharacter::new_npc("char-1", "camp-1", "Guard Captain")
+        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Guard Captain")
             .with_npc_info(Some("military"), Some("Waterdeep"), Some("City Watch"));
         assert_eq!(npc.role, Some("military"));
         assert_eq!(npc.location, Some("Waterdeep"));
@@ -527,7 +527,7 @@ mod tests {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterResponse {
     pub id: String,
-    pub campaign_id: String,
+    pub campaign_id: Option<String>,
     pub name: String,
     pub is_npc: i32,
     pub player_name: Option<String>,

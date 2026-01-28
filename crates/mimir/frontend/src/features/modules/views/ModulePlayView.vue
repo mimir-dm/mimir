@@ -180,7 +180,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
-import { usePlayerDisplay } from '@/composables/usePlayerDisplay'
+import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
 import DmMapViewer from '@/components/DmMapViewer.vue'
 import AppModal from '@/components/shared/AppModal.vue'
 import MonsterStatsPanel from '../components/MonsterStatsPanel.vue'

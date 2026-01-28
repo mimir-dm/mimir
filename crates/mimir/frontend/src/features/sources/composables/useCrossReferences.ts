@@ -3,8 +3,8 @@
 import { ref } from 'vue'
 import type { Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { ReferenceData, ReferenceType } from '../../../types/reference'
-import type { TooltipPosition, ModalContent } from '../../../types/content'
+import type { ReferenceData, ReferenceType } from '@/types/reference'
+import type { TooltipPosition, ModalContent } from '@/types/content'
 import { renderModalContent } from '../formatters/modalFormatters'
 
 export function useCrossReferences() {
@@ -268,7 +268,7 @@ export function useCrossReferences() {
       const contentData = refData.data || refData
       modalContent.value = {
         title: refData.name || refName,
-        content: formatModalContent(refType as ReferenceType, contentData),
+        content: await formatModalContent(refType as ReferenceType, contentData),
         visible: true
       }
     } else {
@@ -339,13 +339,13 @@ export function useCrossReferences() {
   }
 
   // Format modal content based on reference type
-  function formatModalContent(type: ReferenceType, data: any): string {
+  async function formatModalContent(type: ReferenceType, data: any): Promise<string> {
     // Add the ref_type to the data for the renderer
     const contentWithType = {
       ...data,
       ref_type: type
     }
-    return renderModalContent(contentWithType)
+    return await renderModalContent(contentWithType)
   }
 
   // Clear cache

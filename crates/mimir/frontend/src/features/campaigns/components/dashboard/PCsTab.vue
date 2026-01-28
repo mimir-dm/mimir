@@ -45,7 +45,7 @@
     <CharacterCreationWizard
       :visible="showCreateWizard"
       :campaign-id="campaign?.id"
-      :start-as-npc="false"
+      :pc-only="true"
       @close="showCreateWizard = false"
       @created="handleCharacterCreated"
     />

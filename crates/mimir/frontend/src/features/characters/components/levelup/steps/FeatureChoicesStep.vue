@@ -15,238 +15,137 @@
     </div>
 
     <!-- Fighting Style (Fighter 1, Paladin 2, Ranger 2) -->
-    <div v-if="showFightingStyle" class="feature-section">
-      <h4 class="section-title">Fighting Style</h4>
-      <p class="section-note">
-        Choose a fighting style specialty. You can't take the same Fighting Style option more than
-        once.
-      </p>
-      <div v-if="fightingStyles.length > 0" class="feature-grid">
-        <button
-          v-for="style in availableFightingStyles"
-          :key="`${style.name}-${style.source}`"
-          type="button"
-          class="feature-card"
-          :class="{ selected: isStyleSelected(style) }"
-          @click="selectFightingStyle(style)"
-        >
-          <div class="feature-name">{{ style.name }}</div>
-          <div class="feature-source">{{ style.source }}</div>
-          <div v-if="style.description" class="feature-description">
-            {{ truncateDescription(style.description) }}
+    <FeatureGridSection
+      v-if="showFightingStyle"
+      title="Fighting Style"
+      description="Choose a fighting style specialty. You can't take the same Fighting Style option more than once."
+      :items="fightingStyleItems"
+      :selected-items="selectedFightingStyle ? [selectedFightingStyle] : []"
+      :max-slots="1"
+      :show-slot-count="false"
+      :is-item-selected="(item) => selectedFightingStyle?.name === item.name"
+      :is-item-disabled="() => false"
+      @select="selectFightingStyle"
+    >
+      <template #empty>
+        <div class="manual-fallback">
+          <div class="form-group">
+            <label class="form-label" for="fighting-style">Fighting Style</label>
+            <select id="fighting-style" v-model="manualFightingStyle" class="form-input">
+              <option value="">Select a Fighting Style</option>
+              <option value="Archery">Archery</option>
+              <option value="Defense">Defense</option>
+              <option value="Dueling">Dueling</option>
+              <option value="Great Weapon Fighting">Great Weapon Fighting</option>
+              <option value="Protection">Protection</option>
+              <option value="Two-Weapon Fighting">Two-Weapon Fighting</option>
+            </select>
           </div>
-        </button>
-      </div>
-      <div v-else class="manual-fallback">
-        <div class="form-group">
-          <label class="form-label" for="fighting-style">Fighting Style</label>
-          <select id="fighting-style" v-model="manualFightingStyle" class="form-input">
-            <option value="">Select a Fighting Style</option>
-            <option value="Archery">Archery</option>
-            <option value="Defense">Defense</option>
-            <option value="Dueling">Dueling</option>
-            <option value="Great Weapon Fighting">Great Weapon Fighting</option>
-            <option value="Protection">Protection</option>
-            <option value="Two-Weapon Fighting">Two-Weapon Fighting</option>
-          </select>
         </div>
-      </div>
-    </div>
+      </template>
+    </FeatureGridSection>
 
     <!-- Metamagic (Sorcerer 3, 10, 17) -->
-    <div v-if="showMetamagic" class="feature-section">
-      <h4 class="section-title">Metamagic ({{ selectedMetamagic.length }}/{{ metamagicSlots }})</h4>
-      <p class="section-note">
-        Choose Metamagic options that allow you to twist your spells to suit your needs.
-      </p>
-      <div v-if="metamagicOptions.length > 0" class="feature-grid compact">
-        <button
-          v-for="meta in metamagicOptions"
-          :key="`${meta.name}-${meta.source}`"
-          type="button"
-          class="feature-card compact"
-          :class="{
-            selected: isMetamagicSelected(meta),
-            disabled: !isMetamagicSelected(meta) && selectedMetamagic.length >= metamagicSlots
-          }"
-          :disabled="!isMetamagicSelected(meta) && selectedMetamagic.length >= metamagicSlots"
-          @click="toggleMetamagic(meta)"
-        >
-          <div class="feature-name">{{ meta.name }}</div>
-          <div class="feature-source">{{ meta.source }}</div>
-          <div v-if="meta.cost" class="feature-cost">{{ meta.cost }} SP</div>
-        </button>
-      </div>
-      <div v-if="selectedMetamagic.length > 0" class="selected-list">
-        <span class="selected-label">Selected:</span>
-        <span v-for="meta in selectedMetamagic" :key="meta.name" class="selected-tag">
-          {{ meta.name }}
-        </span>
-      </div>
-    </div>
+    <FeatureGridSection
+      v-if="showMetamagic"
+      title="Metamagic"
+      description="Choose Metamagic options that allow you to twist your spells to suit your needs."
+      :items="metamagicItems"
+      :selected-items="metamagic.selected.value"
+      :max-slots="metamagicSlots"
+      :compact="true"
+      :is-item-selected="metamagic.isSelected"
+      :is-item-disabled="(item) => !metamagic.isSelected(item) && metamagic.isAtLimit.value"
+      @select="(item) => metamagic.toggle(item)"
+    />
 
     <!-- Maneuvers (Battle Master Fighter) -->
-    <div v-if="showManeuvers" class="feature-section">
-      <h4 class="section-title">
-        Maneuvers ({{ selectedManeuvers.length }}/{{ maneuverSlots }})
-      </h4>
-      <p class="section-note">
-        Choose maneuvers that fuel your martial techniques with superiority dice.
-      </p>
-      <div class="search-box">
-        <input
-          v-model="maneuverSearch"
-          type="text"
-          class="search-input"
-          placeholder="Search maneuvers..."
-        />
-      </div>
-      <div v-if="filteredManeuvers.length > 0" class="feature-grid compact">
-        <button
-          v-for="maneuver in filteredManeuvers"
-          :key="`${maneuver.name}-${maneuver.source}`"
-          type="button"
-          class="feature-card compact"
-          :class="{
-            selected: isManeuverSelected(maneuver),
-            disabled: !isManeuverSelected(maneuver) && selectedManeuvers.length >= maneuverSlots
-          }"
-          :disabled="!isManeuverSelected(maneuver) && selectedManeuvers.length >= maneuverSlots"
-          @click="toggleManeuver(maneuver)"
-        >
-          <div class="feature-name">{{ maneuver.name }}</div>
-          <div class="feature-source">{{ maneuver.source }}</div>
-        </button>
-      </div>
-      <div v-if="selectedManeuvers.length > 0" class="selected-list">
-        <span class="selected-label">Selected:</span>
-        <span v-for="m in selectedManeuvers" :key="m.name" class="selected-tag">
-          {{ m.name }}
-        </span>
-      </div>
-    </div>
+    <FeatureGridSection
+      v-if="showManeuvers"
+      title="Maneuvers"
+      description="Choose maneuvers that fuel your martial techniques with superiority dice."
+      :items="filteredManeuverItems"
+      :selected-items="maneuvers.selected.value"
+      :max-slots="maneuverSlots"
+      :compact="true"
+      :searchable="true"
+      :search-query="maneuverSearch"
+      search-placeholder="Search maneuvers..."
+      :is-item-selected="maneuvers.isSelected"
+      :is-item-disabled="(item) => !maneuvers.isSelected(item) && maneuvers.isAtLimit.value"
+      @select="(item) => maneuvers.toggle(item)"
+      @update:search-query="maneuverSearch = $event"
+    />
 
     <!-- Eldritch Invocations (Warlock 2+) -->
-    <div v-if="showInvocations" class="feature-section">
-      <h4 class="section-title">
-        Eldritch Invocations ({{ selectedInvocations.length }}/{{ invocationSlots }})
-      </h4>
-      <p class="section-note">
-        Choose invocations that grant you supernatural abilities.
-      </p>
-      <div class="search-box">
-        <input
-          v-model="invocationSearch"
-          type="text"
-          class="search-input"
-          placeholder="Search invocations..."
-        />
-      </div>
-      <div v-if="availableInvocations.length > 0" class="feature-grid compact">
-        <button
-          v-for="inv in filteredInvocations"
-          :key="`${inv.name}-${inv.source}`"
-          type="button"
-          class="feature-card compact"
-          :class="{
-            selected: isInvocationSelected(inv),
-            disabled: !isInvocationSelected(inv) && selectedInvocations.length >= invocationSlots,
-            'has-prereq': inv.levelPrereq || inv.pactPrereq
-          }"
-          :disabled="
-            (!isInvocationSelected(inv) && selectedInvocations.length >= invocationSlots) ||
-            !meetsInvocationPrereqs(inv)
-          "
-          @click="toggleInvocation(inv)"
-        >
-          <div class="feature-name">{{ inv.name }}</div>
-          <div class="feature-source">{{ inv.source }}</div>
-          <div v-if="inv.levelPrereq || inv.pactPrereq" class="feature-prereq">
-            <span v-if="inv.levelPrereq" class="prereq-item">Level {{ inv.levelPrereq }}</span>
-            <span v-if="inv.pactPrereq" class="prereq-item">{{ inv.pactPrereq }}</span>
-          </div>
-        </button>
-      </div>
-      <div v-if="selectedInvocations.length > 0" class="selected-list">
-        <span class="selected-label">Selected:</span>
-        <span v-for="inv in selectedInvocations" :key="inv.name" class="selected-tag">
-          {{ inv.name }}
-        </span>
-      </div>
-    </div>
+    <FeatureGridSection
+      v-if="showInvocations"
+      title="Eldritch Invocations"
+      description="Choose invocations that grant you supernatural abilities."
+      :items="filteredInvocationItems"
+      :selected-items="invocations.selected.value"
+      :max-slots="invocationSlots"
+      :compact="true"
+      :searchable="true"
+      :search-query="invocationSearch"
+      search-placeholder="Search invocations..."
+      :is-item-selected="invocations.isSelected"
+      :is-item-disabled="(item) => !invocations.isSelected(item) && invocations.isAtLimit.value"
+      @select="handleInvocationSelect"
+      @update:search-query="invocationSearch = $event"
+    />
 
     <!-- Pact Boon (Warlock 3) -->
-    <div v-if="showPactBoon" class="feature-section">
-      <h4 class="section-title">Pact Boon</h4>
-      <p class="section-note">
-        Your otherworldly patron bestows a gift upon you for your loyal service.
-      </p>
-      <div class="feature-grid">
-        <button
-          v-for="pact in pactBoons"
-          :key="pact.name"
-          type="button"
-          class="feature-card"
-          :class="{ selected: selectedPactBoon?.name === pact.name }"
-          @click="selectPactBoon(pact)"
-        >
-          <div class="feature-name">{{ pact.name }}</div>
-          <div class="feature-description">{{ pact.description }}</div>
-        </button>
-      </div>
-    </div>
+    <FeatureGridSection
+      v-if="showPactBoon"
+      title="Pact Boon"
+      description="Your otherworldly patron bestows a gift upon you for your loyal service."
+      :items="pactBoonItems"
+      :selected-items="selectedPactBoon ? [selectedPactBoon] : []"
+      :max-slots="1"
+      :show-slot-count="false"
+      :is-item-selected="(item) => selectedPactBoon?.name === item.name"
+      :is-item-disabled="() => false"
+      @select="selectPactBoon"
+    />
 
     <!-- Expertise (Rogue 1, 6; Bard 3, 10) -->
-    <div v-if="showExpertise" class="feature-section">
-      <h4 class="section-title">
-        Expertise ({{ selectedExpertise.length }}/{{ expertiseSlots }})
-      </h4>
-      <p class="section-note">
-        Choose skills in which you have proficiency to gain expertise (double proficiency bonus).
-      </p>
-      <div v-if="proficientSkills.length > 0" class="feature-grid compact">
-        <button
-          v-for="skill in proficientSkills"
-          :key="skill"
-          type="button"
-          class="feature-card compact"
-          :class="{
-            selected: selectedExpertise.includes(skill),
-            disabled: !selectedExpertise.includes(skill) && selectedExpertise.length >= expertiseSlots
-          }"
-          :disabled="!selectedExpertise.includes(skill) && selectedExpertise.length >= expertiseSlots"
-          @click="toggleExpertise(skill)"
-        >
-          <div class="feature-name">{{ skill }}</div>
-        </button>
-      </div>
-      <div v-else class="no-proficiencies">
-        <p>No skill proficiencies found. Add skills manually:</p>
-        <div class="manual-entry">
-          <input
-            v-model="manualExpertise"
-            type="text"
-            class="form-input"
-            placeholder="Skill name"
-          />
-          <button
-            type="button"
-            class="btn btn-secondary"
-            :disabled="!manualExpertise.trim() || selectedExpertise.length >= expertiseSlots"
-            @click="addManualExpertise"
-          >
-            Add
-          </button>
+    <FeatureGridSection
+      v-if="showExpertise"
+      title="Expertise"
+      description="Choose skills in which you have proficiency to gain expertise (double proficiency bonus)."
+      :items="expertiseItems"
+      :selected-items="expertise.selected.value"
+      :max-slots="expertiseSlots"
+      :compact="true"
+      :allow-remove="true"
+      :is-item-selected="(item) => expertise.isSelected(item.name)"
+      :is-item-disabled="(item) => !expertise.isSelected(item.name) && expertise.isAtLimit.value"
+      @select="(item) => expertise.toggle(item.name)"
+      @remove="(item) => expertise.deselect(typeof item === 'string' ? item : item.name)"
+    >
+      <template #empty>
+        <div class="no-proficiencies">
+          <p>No skill proficiencies found. Add skills manually:</p>
+          <div class="manual-entry">
+            <input
+              v-model="manualExpertise"
+              type="text"
+              class="form-input"
+              placeholder="Skill name"
+            />
+            <button
+              type="button"
+              class="btn btn-secondary"
+              :disabled="!manualExpertise.trim() || expertise.isAtLimit.value"
+              @click="addManualExpertise"
+            >
+              Add
+            </button>
+          </div>
         </div>
-      </div>
-      <div v-if="selectedExpertise.length > 0" class="selected-list">
-        <span class="selected-label">Selected:</span>
-        <span v-for="skill in selectedExpertise" :key="skill" class="selected-tag">
-          {{ skill }}
-          <button type="button" class="remove-tag" @click="removeExpertise(skill)">&times;</button>
-        </span>
-      </div>
-    </div>
+      </template>
+    </FeatureGridSection>
 
     <!-- Current Selection Summary -->
     <div v-if="hasAnyChoices" class="current-selection">
@@ -282,13 +181,15 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import type { Character } from '@/types/character'
-import type { LevelUpComposable } from '../../../composables/useLevelUp'
+import type { LevelUpComposable } from '@/features/characters/composables/useLevelUp'
+import {
+  useFeatureSelection,
+  useStringFeatureSelection,
+  type FeatureRef,
+  type FeatureItem
+} from '@/features/characters/composables/useFeatureSelection'
+import FeatureGridSection from '../FeatureGridSection.vue'
 import { invoke } from '@tauri-apps/api/core'
-
-interface FeatureRef {
-  name: string
-  source: string
-}
 
 interface FightingStyleOption extends FeatureRef {
   description?: string
@@ -309,9 +210,7 @@ interface InvocationOption extends FeatureRef {
   spellPrereq?: string
 }
 
-interface PactBoon {
-  name: string
-  source: string
+interface PactBoon extends FeatureRef {
   description: string
 }
 
@@ -333,31 +232,25 @@ const invocationOptions = ref<InvocationOption[]>([])
 const maneuverSearch = ref('')
 const invocationSearch = ref('')
 
-// Selections
+// Single-select state (fighting style, pact boon)
 const selectedFightingStyle = ref<FeatureRef | null>(null)
-const selectedMetamagic = ref<FeatureRef[]>([])
-const selectedManeuvers = ref<FeatureRef[]>([])
-const selectedInvocations = ref<FeatureRef[]>([])
 const selectedPactBoon = ref<PactBoon | null>(null)
-const selectedExpertise = ref<string[]>([])
 
 // Manual fallbacks
 const manualFightingStyle = ref('')
 const manualExpertise = ref('')
 
-// Pact boons (static since not in catalog)
+// Pact boons (static)
 const pactBoons: PactBoon[] = [
   {
     name: 'Pact of the Chain',
     source: 'PHB',
-    description:
-      'Learn find familiar spell, and your familiar can take special forms like imp or pseudodragon.'
+    description: 'Learn find familiar spell, and your familiar can take special forms like imp or pseudodragon.'
   },
   {
     name: 'Pact of the Blade',
     source: 'PHB',
-    description:
-      'Create a pact weapon that you are proficient with and counts as magical for resistances.'
+    description: 'Create a pact weapon that you are proficient with and counts as magical for resistances.'
   },
   {
     name: 'Pact of the Tome',
@@ -367,8 +260,7 @@ const pactBoons: PactBoon[] = [
   {
     name: 'Pact of the Talisman',
     source: 'TCE',
-    description:
-      'Receive an amulet that adds d4 to failed ability checks when the wearer lacks proficiency.'
+    description: "Receive an amulet that adds d4 to failed ability checks when the wearer lacks proficiency."
   }
 ]
 
@@ -388,126 +280,218 @@ const showFightingStyle = computed(() => {
   return false
 })
 
-const showMetamagic = computed(() => {
-  return className.value === 'sorcerer' && [3, 10, 17].includes(classLevel.value)
-})
-
-const metamagicSlots = computed(() => {
-  if (classLevel.value === 3) return 2
-  return 1
-})
+const showMetamagic = computed(() => className.value === 'sorcerer' && [3, 10, 17].includes(classLevel.value))
+const metamagicSlots = computed(() => classLevel.value === 3 ? 2 : 1)
 
 const showManeuvers = computed(() => {
-  // Battle Master Fighter or any Fighter at level 3+ with Battle Master subclass
   if (className.value !== 'fighter') return false
   if (classLevel.value < 3) return false
-  // Check if Battle Master
   return subclassName.value.includes('battle master')
 })
-
 const maneuverSlots = computed(() => {
   if (classLevel.value === 3) return 3
   if ([7, 10, 15].includes(classLevel.value)) return 2
   return 0
 })
 
-const showInvocations = computed(() => {
-  return className.value === 'warlock' && classLevel.value >= 2
-})
-
+const showInvocations = computed(() => className.value === 'warlock' && classLevel.value >= 2)
 const invocationSlots = computed(() => {
   if (classLevel.value === 2) return 2
   if ([5, 7, 9, 12, 15, 18].includes(classLevel.value)) return 1
   return 0
 })
 
-const showPactBoon = computed(() => {
-  return className.value === 'warlock' && classLevel.value === 3
-})
+const showPactBoon = computed(() => className.value === 'warlock' && classLevel.value === 3)
 
 const showExpertise = computed(() => {
   if (className.value === 'rogue' && [1, 6].includes(classLevel.value)) return true
   if (className.value === 'bard' && [3, 10].includes(classLevel.value)) return true
   return false
 })
-
 const expertiseSlots = computed(() => 2)
 
 const hasAnySection = computed(() => {
-  return (
-    showFightingStyle.value ||
-    showMetamagic.value ||
-    showManeuvers.value ||
-    showInvocations.value ||
-    showPactBoon.value ||
-    showExpertise.value
-  )
+  return showFightingStyle.value || showMetamagic.value || showManeuvers.value ||
+         showInvocations.value || showPactBoon.value || showExpertise.value
 })
 
 const hasAnyChoices = computed(() => {
   const fc = props.levelUp.featureChoices.value
   if (!fc) return false
-  return (
-    fc.fighting_style ||
-    (fc.metamagic && fc.metamagic.length > 0) ||
-    (fc.maneuvers?.new_maneuvers && fc.maneuvers.new_maneuvers.length > 0) ||
-    (fc.invocations?.new_invocations && fc.invocations.new_invocations.length > 0) ||
-    fc.pact_boon ||
-    (fc.expertise_skills && fc.expertise_skills.length > 0)
-  )
+  return fc.fighting_style || (fc.metamagic && fc.metamagic.length > 0) ||
+         (fc.maneuvers?.new_maneuvers && fc.maneuvers.new_maneuvers.length > 0) ||
+         (fc.invocations?.new_invocations && fc.invocations.new_invocations.length > 0) ||
+         fc.pact_boon || (fc.expertise_skills && fc.expertise_skills.length > 0)
 })
 
-// Fighting styles available to current class
-const availableFightingStyles = computed(() => {
+// Multi-select composables
+const metamagic = useFeatureSelection<FeatureRef>({
+  maxSlots: metamagicSlots,
+  onSelectionChange: updateFeatureChoices
+})
+
+const maneuvers = useFeatureSelection<FeatureRef>({
+  maxSlots: maneuverSlots,
+  onSelectionChange: updateFeatureChoices
+})
+
+const invocations = useFeatureSelection<FeatureRef>({
+  maxSlots: invocationSlots,
+  onSelectionChange: updateFeatureChoices
+})
+
+const expertise = useStringFeatureSelection({
+  maxSlots: expertiseSlots,
+  onSelectionChange: updateFeatureChoices
+})
+
+// Convert catalog data to FeatureItem format
+const fightingStyleItems = computed<FeatureItem[]>(() => {
   const currentClass = className.value.charAt(0).toUpperCase() + className.value.slice(1)
-  return fightingStyles.value.filter((style) => {
-    if (!style.availableToClasses || style.availableToClasses.length === 0) return true
-    return style.availableToClasses.includes(currentClass)
-  })
+  return fightingStyles.value
+    .filter((style) => !style.availableToClasses?.length || style.availableToClasses.includes(currentClass))
+    .map((style) => ({
+      name: style.name,
+      source: style.source,
+      description: style.description
+    }))
 })
 
-// Filtered maneuvers
-const filteredManeuvers = computed(() => {
-  if (!maneuverSearch.value.trim()) return maneuverOptions.value
-  const search = maneuverSearch.value.toLowerCase()
-  return maneuverOptions.value.filter((m) => m.name.toLowerCase().includes(search))
+const metamagicItems = computed<FeatureItem[]>(() =>
+  metamagicOptions.value.map((m) => ({
+    name: m.name,
+    source: m.source,
+    cost: m.cost ? `${m.cost} SP` : undefined
+  }))
+)
+
+const filteredManeuverItems = computed<FeatureItem[]>(() => {
+  let list = maneuverOptions.value
+  if (maneuverSearch.value.trim()) {
+    const search = maneuverSearch.value.toLowerCase()
+    list = list.filter((m) => m.name.toLowerCase().includes(search))
+  }
+  return list.map((m) => ({ name: m.name, source: m.source, description: m.description }))
 })
 
-// Available invocations (filtered by prereqs)
-const availableInvocations = computed(() => {
-  return invocationOptions.value.filter((inv) => meetsInvocationPrereqs(inv))
-})
-
-// Filtered invocations
-const filteredInvocations = computed(() => {
-  let list = availableInvocations.value
+const filteredInvocationItems = computed<FeatureItem[]>(() => {
+  let list = invocationOptions.value.filter((inv) => meetsInvocationPrereqs(inv))
   if (invocationSearch.value.trim()) {
     const search = invocationSearch.value.toLowerCase()
     list = list.filter((i) => i.name.toLowerCase().includes(search))
   }
-  return list
+  return list.map((inv) => ({
+    name: inv.name,
+    source: inv.source,
+    prereqs: formatInvocationPrereqs(inv)
+  }))
 })
 
-// Proficient skills from character
-const proficientSkills = computed(() => {
-  return props.character.proficiencies
+const pactBoonItems = computed<FeatureItem[]>(() =>
+  pactBoons.map((p) => ({ name: p.name, source: p.source, description: p.description }))
+)
+
+const expertiseItems = computed<FeatureItem[]>(() =>
+  props.character.proficiencies
     .filter((p) => p.proficiency_type === 'skill')
-    .map((p) => p.name)
-})
+    .map((p) => ({ name: p.name, source: 'Character' }))
+)
 
-// Load catalog data
+// Helper functions
+function meetsInvocationPrereqs(inv: InvocationOption): boolean {
+  if (inv.levelPrereq && classLevel.value < inv.levelPrereq) return false
+  if (inv.pactPrereq) {
+    const hasPact = selectedPactBoon.value?.name.toLowerCase().includes(inv.pactPrereq.toLowerCase()) ||
+                    props.levelUp.featureChoices.value?.pact_boon?.name.toLowerCase().includes(inv.pactPrereq.toLowerCase())
+    if (!hasPact) return false
+  }
+  return true
+}
+
+function formatInvocationPrereqs(inv: InvocationOption): string | undefined {
+  const parts: string[] = []
+  if (inv.levelPrereq) parts.push(`Level ${inv.levelPrereq}`)
+  if (inv.pactPrereq) parts.push(inv.pactPrereq)
+  return parts.length > 0 ? parts.join(', ') : undefined
+}
+
+function extractSorceryPointCost(name: string): number | undefined {
+  const costs: Record<string, number> = {
+    'Careful Spell': 1, 'Distant Spell': 1, 'Empowered Spell': 1, 'Extended Spell': 1,
+    'Heightened Spell': 3, 'Quickened Spell': 2, 'Seeking Spell': 2, 'Subtle Spell': 1,
+    'Transmuted Spell': 1, 'Twinned Spell': 1
+  }
+  return costs[name]
+}
+
+function extractDescription(entries: unknown[] | undefined): string | undefined {
+  if (!entries || !Array.isArray(entries)) return undefined
+  return entries.find((e) => typeof e === 'string') as string | undefined
+}
+
+// Selection handlers
+function selectFightingStyle(item: FeatureItem) {
+  selectedFightingStyle.value = { name: item.name, source: item.source }
+  updateFeatureChoices()
+}
+
+function selectPactBoon(item: FeatureItem) {
+  const pact = pactBoons.find((p) => p.name === item.name)
+  if (pact) {
+    selectedPactBoon.value = pact
+    updateFeatureChoices()
+  }
+}
+
+function handleInvocationSelect(item: FeatureItem) {
+  const inv = invocationOptions.value.find((i) => i.name === item.name)
+  if (inv && meetsInvocationPrereqs(inv)) {
+    invocations.toggle({ name: inv.name, source: inv.source })
+  }
+}
+
+function addManualExpertise() {
+  if (!manualExpertise.value.trim() || expertise.isAtLimit.value) return
+  expertise.toggle(manualExpertise.value.trim())
+  manualExpertise.value = ''
+}
+
+function updateFeatureChoices() {
+  const choices: NonNullable<typeof props.levelUp.featureChoices.value> = {}
+
+  if (selectedFightingStyle.value) {
+    choices.fighting_style = selectedFightingStyle.value
+  } else if (manualFightingStyle.value) {
+    choices.fighting_style = { name: manualFightingStyle.value, source: 'PHB' }
+  }
+
+  if (metamagic.selected.value.length > 0) {
+    choices.metamagic = metamagic.selected.value
+  }
+
+  if (maneuvers.selected.value.length > 0) {
+    choices.maneuvers = { new_maneuvers: maneuvers.selected.value }
+  }
+
+  if (invocations.selected.value.length > 0) {
+    choices.invocations = { new_invocations: invocations.selected.value }
+  }
+
+  if (selectedPactBoon.value) {
+    choices.pact_boon = { name: selectedPactBoon.value.name, source: selectedPactBoon.value.source }
+  }
+
+  if (expertise.selected.value.length > 0) {
+    choices.expertise_skills = expertise.selected.value
+  }
+
+  props.levelUp.featureChoices.value = Object.keys(choices).length > 0 ? choices : null
+}
+
+// Data loading
 async function loadFightingStyles() {
   try {
-    const result = await invoke<{
-      success: boolean
-      data: Array<{
-        name: string
-        source: string
-        entries?: unknown[]
-        available_to_classes?: string[]
-      }>
-    }>('list_fighting_styles')
-
+    const result = await invoke<{ success: boolean; data: Array<{ name: string; source: string; entries?: unknown[]; available_to_classes?: string[] }> }>('list_fighting_styles')
     if (result.success && result.data) {
       fightingStyles.value = result.data.map((style) => ({
         name: style.name,
@@ -523,25 +507,13 @@ async function loadFightingStyles() {
 
 async function loadMetamagic() {
   try {
-    const result = await invoke<{
-      success: boolean
-      data: Array<{
-        name: string
-        source: string
-        entries?: unknown[]
-      }>
-    }>('list_metamagic')
-
+    const result = await invoke<{ success: boolean; data: Array<{ name: string; source: string }> }>('list_metamagic')
     if (result.success && result.data) {
-      metamagicOptions.value = result.data.map((meta) => {
-        // Parse sorcery point cost from entries if available
-        const cost = extractSorceryPointCost(meta.name)
-        return {
-          name: meta.name,
-          source: meta.source,
-          cost
-        }
-      })
+      metamagicOptions.value = result.data.map((meta) => ({
+        name: meta.name,
+        source: meta.source,
+        cost: extractSorceryPointCost(meta.name)
+      }))
     }
   } catch (e) {
     console.error('Error loading metamagic:', e)
@@ -550,15 +522,7 @@ async function loadMetamagic() {
 
 async function loadManeuvers() {
   try {
-    const result = await invoke<{
-      success: boolean
-      data: Array<{
-        name: string
-        source: string
-        entries?: unknown[]
-      }>
-    }>('list_maneuvers')
-
+    const result = await invoke<{ success: boolean; data: Array<{ name: string; source: string; entries?: unknown[] }> }>('list_maneuvers')
     if (result.success && result.data) {
       maneuverOptions.value = result.data.map((m) => ({
         name: m.name,
@@ -573,17 +537,7 @@ async function loadManeuvers() {
 
 async function loadInvocations() {
   try {
-    const result = await invoke<{
-      success: boolean
-      data: Array<{
-        name: string
-        source: string
-        level_prereq?: number
-        pact_prereq?: string
-        spell_prereq?: string
-      }>
-    }>('list_invocations')
-
+    const result = await invoke<{ success: boolean; data: Array<{ name: string; source: string; level_prereq?: number; pact_prereq?: string; spell_prereq?: string }> }>('list_invocations')
     if (result.success && result.data) {
       invocationOptions.value = result.data.map((inv) => ({
         name: inv.name,
@@ -598,212 +552,27 @@ async function loadInvocations() {
   }
 }
 
-// Helper functions
-function extractDescription(entries: unknown[] | undefined): string | undefined {
-  if (!entries || !Array.isArray(entries)) return undefined
-  const firstEntry = entries.find((e) => typeof e === 'string')
-  return firstEntry as string | undefined
-}
-
-function extractSorceryPointCost(name: string): number | undefined {
-  // Common metamagic costs
-  const costs: Record<string, number> = {
-    'Careful Spell': 1,
-    'Distant Spell': 1,
-    'Empowered Spell': 1,
-    'Extended Spell': 1,
-    'Heightened Spell': 3,
-    'Quickened Spell': 2,
-    'Seeking Spell': 2,
-    'Subtle Spell': 1,
-    'Transmuted Spell': 1,
-    'Twinned Spell': 1 // Variable but minimum 1
-  }
-  return costs[name]
-}
-
-function truncateDescription(text: string | undefined, maxLength = 100): string {
-  if (!text) return ''
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + '...'
-}
-
-function meetsInvocationPrereqs(inv: InvocationOption): boolean {
-  // Check level
-  if (inv.levelPrereq && classLevel.value < inv.levelPrereq) {
-    return false
-  }
-
-  // Check pact boon
-  if (inv.pactPrereq) {
-    const hasPact =
-      selectedPactBoon.value?.name.toLowerCase().includes(inv.pactPrereq.toLowerCase()) ||
-      props.levelUp.featureChoices.value?.pact_boon?.name
-        .toLowerCase()
-        .includes(inv.pactPrereq.toLowerCase())
-    // For existing characters, check their current pact
-    // TODO: Check character's current pact boon if they have one
-    if (!hasPact) return false
-  }
-
-  return true
-}
-
-// Selection handlers
-function isStyleSelected(style: FightingStyleOption): boolean {
-  return selectedFightingStyle.value?.name === style.name
-}
-
-function selectFightingStyle(style: FightingStyleOption) {
-  selectedFightingStyle.value = { name: style.name, source: style.source }
-  updateFeatureChoices()
-}
-
-function isMetamagicSelected(meta: MetamagicOption): boolean {
-  return selectedMetamagic.value.some((m) => m.name === meta.name)
-}
-
-function toggleMetamagic(meta: MetamagicOption) {
-  const index = selectedMetamagic.value.findIndex((m) => m.name === meta.name)
-  if (index >= 0) {
-    selectedMetamagic.value.splice(index, 1)
-  } else if (selectedMetamagic.value.length < metamagicSlots.value) {
-    selectedMetamagic.value.push({ name: meta.name, source: meta.source })
-  }
-  updateFeatureChoices()
-}
-
-function isManeuverSelected(maneuver: ManeuverOption): boolean {
-  return selectedManeuvers.value.some((m) => m.name === maneuver.name)
-}
-
-function toggleManeuver(maneuver: ManeuverOption) {
-  const index = selectedManeuvers.value.findIndex((m) => m.name === maneuver.name)
-  if (index >= 0) {
-    selectedManeuvers.value.splice(index, 1)
-  } else if (selectedManeuvers.value.length < maneuverSlots.value) {
-    selectedManeuvers.value.push({ name: maneuver.name, source: maneuver.source })
-  }
-  updateFeatureChoices()
-}
-
-function isInvocationSelected(inv: InvocationOption): boolean {
-  return selectedInvocations.value.some((i) => i.name === inv.name)
-}
-
-function toggleInvocation(inv: InvocationOption) {
-  if (!meetsInvocationPrereqs(inv)) return
-
-  const index = selectedInvocations.value.findIndex((i) => i.name === inv.name)
-  if (index >= 0) {
-    selectedInvocations.value.splice(index, 1)
-  } else if (selectedInvocations.value.length < invocationSlots.value) {
-    selectedInvocations.value.push({ name: inv.name, source: inv.source })
-  }
-  updateFeatureChoices()
-}
-
-function selectPactBoon(pact: PactBoon) {
-  selectedPactBoon.value = pact
-  updateFeatureChoices()
-}
-
-function toggleExpertise(skill: string) {
-  const index = selectedExpertise.value.indexOf(skill)
-  if (index >= 0) {
-    selectedExpertise.value.splice(index, 1)
-  } else if (selectedExpertise.value.length < expertiseSlots.value) {
-    selectedExpertise.value.push(skill)
-  }
-  updateFeatureChoices()
-}
-
-function addManualExpertise() {
-  if (!manualExpertise.value.trim() || selectedExpertise.value.length >= expertiseSlots.value)
-    return
-  selectedExpertise.value.push(manualExpertise.value.trim())
-  manualExpertise.value = ''
-  updateFeatureChoices()
-}
-
-function removeExpertise(skill: string) {
-  const index = selectedExpertise.value.indexOf(skill)
-  if (index >= 0) {
-    selectedExpertise.value.splice(index, 1)
-    updateFeatureChoices()
-  }
-}
-
-function updateFeatureChoices() {
-  const choices: NonNullable<typeof props.levelUp.featureChoices.value> = {}
-
-  // Fighting style
-  if (selectedFightingStyle.value) {
-    choices.fighting_style = selectedFightingStyle.value
-  } else if (manualFightingStyle.value) {
-    choices.fighting_style = { name: manualFightingStyle.value, source: 'PHB' }
-  }
-
-  // Metamagic
-  if (selectedMetamagic.value.length > 0) {
-    choices.metamagic = selectedMetamagic.value
-  }
-
-  // Maneuvers
-  if (selectedManeuvers.value.length > 0) {
-    choices.maneuvers = { new_maneuvers: selectedManeuvers.value }
-  }
-
-  // Invocations
-  if (selectedInvocations.value.length > 0) {
-    choices.invocations = { new_invocations: selectedInvocations.value }
-  }
-
-  // Pact boon
-  if (selectedPactBoon.value) {
-    choices.pact_boon = { name: selectedPactBoon.value.name, source: selectedPactBoon.value.source }
-  }
-
-  // Expertise
-  if (selectedExpertise.value.length > 0) {
-    choices.expertise_skills = selectedExpertise.value
-  }
-
-  props.levelUp.featureChoices.value = Object.keys(choices).length > 0 ? choices : null
-}
-
 // Initialize from existing state
 watch(
   () => props.levelUp.featureChoices.value,
   (features) => {
     if (features) {
-      if (features.fighting_style) {
-        selectedFightingStyle.value = features.fighting_style
-      }
+      if (features.fighting_style) selectedFightingStyle.value = features.fighting_style
       if (features.pact_boon) {
         selectedPactBoon.value = {
           ...features.pact_boon,
           description: pactBoons.find((p) => p.name === features.pact_boon?.name)?.description || ''
         }
       }
-      if (features.metamagic) {
-        selectedMetamagic.value = [...features.metamagic]
-      }
-      if (features.maneuvers?.new_maneuvers) {
-        selectedManeuvers.value = [...features.maneuvers.new_maneuvers]
-      }
-      if (features.invocations?.new_invocations) {
-        selectedInvocations.value = [...features.invocations.new_invocations]
-      }
-      if (features.expertise_skills) {
-        selectedExpertise.value = [...features.expertise_skills]
-      }
+      if (features.metamagic) metamagic.selected.value = [...features.metamagic]
+      if (features.maneuvers?.new_maneuvers) maneuvers.selected.value = [...features.maneuvers.new_maneuvers]
+      if (features.invocations?.new_invocations) invocations.selected.value = [...features.invocations.new_invocations]
+      if (features.expertise_skills) expertise.selected.value = [...features.expertise_skills]
     }
   },
   { immediate: true }
 )
 
-// Watch manual fighting style for update
 watch(manualFightingStyle, () => {
   if (manualFightingStyle.value) {
     selectedFightingStyle.value = null
@@ -811,7 +580,6 @@ watch(manualFightingStyle, () => {
   }
 })
 
-// Load data on mount
 onMounted(async () => {
   isLoading.value = true
   try {
@@ -865,181 +633,7 @@ onMounted(async () => {
   color: var(--color-text-secondary);
 }
 
-.feature-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-md);
-}
-
-.section-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.section-note {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.search-box {
-  margin-bottom: var(--spacing-sm);
-}
-
-.search-input {
-  width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 0.875rem;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--color-primary-500);
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.feature-grid.compact {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--spacing-sm);
-}
-
-.feature-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  text-align: left;
-}
-
-.feature-card.compact {
-  padding: var(--spacing-sm) var(--spacing-md);
-}
-
-.feature-card:hover:not(.disabled) {
-  border-color: var(--color-primary-300);
-  background: var(--color-surface-variant);
-}
-
-.feature-card.selected {
-  border-color: var(--color-primary-500);
-  background: var(--color-surface-hover);
-}
-
-.feature-card.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.feature-card.has-prereq {
-  border-style: dashed;
-}
-
-.feature-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--color-text);
-}
-
-.feature-source {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-}
-
-.feature-description {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
-}
-
-.feature-cost {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-primary-600);
-}
-
-.feature-prereq {
-  display: flex;
-  gap: var(--spacing-xs);
-  flex-wrap: wrap;
-}
-
-.prereq-item {
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  background: var(--color-warning-bg, #fef3c7);
-  color: var(--color-warning-text, #92400e);
-  border-radius: var(--radius-sm);
-}
-
-.selected-list {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-  padding: var(--spacing-sm);
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-}
-
-.selected-label {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.selected-tag {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  border: 1px solid var(--color-primary-500);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.remove-tag {
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0;
-  opacity: 0.7;
-}
-
-.remove-tag:hover {
-  opacity: 1;
-}
-
-.manual-fallback {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: flex-end;
-}
-
+.manual-fallback,
 .manual-entry {
   display: flex;
   gap: var(--spacing-md);
@@ -1103,5 +697,30 @@ onMounted(async () => {
 .selection-value {
   font-weight: 600;
   color: var(--color-success, #22c55e);
+}
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-base);
+}
+
+.btn-secondary {
+  background: var(--color-surface-variant);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

@@ -43,6 +43,7 @@ flate2 = "1.0"
 
 # Encoding
 base64 = "0.22"
+tempfile.workspace = true
 
 [dev-dependencies]
 tempfile = { workspace = true }

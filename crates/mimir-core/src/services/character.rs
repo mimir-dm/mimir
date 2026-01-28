@@ -20,8 +20,8 @@ use crate::services::{ClassService, ServiceError, ServiceResult};
 /// Input for creating a new character.
 #[derive(Debug, Clone)]
 pub struct CreateCharacterInput {
-    /// Campaign this character belongs to
-    pub campaign_id: String,
+    /// Campaign this character belongs to (optional - characters can exist without a campaign)
+    pub campaign_id: Option<String>,
     /// Character name
     pub name: String,
     /// Whether this is an NPC
@@ -43,12 +43,12 @@ pub struct CreateCharacterInput {
 impl CreateCharacterInput {
     /// Create input for a new player character.
     pub fn new_pc(
-        campaign_id: impl Into<String>,
+        campaign_id: Option<impl Into<String>>,
         name: impl Into<String>,
         player_name: impl Into<String>,
     ) -> Self {
         Self {
-            campaign_id: campaign_id.into(),
+            campaign_id: campaign_id.map(|c| c.into()),
             name: name.into(),
             is_npc: false,
             player_name: Some(player_name.into()),
@@ -61,9 +61,9 @@ impl CreateCharacterInput {
     }
 
     /// Create input for a new NPC.
-    pub fn new_npc(campaign_id: impl Into<String>, name: impl Into<String>) -> Self {
+    pub fn new_npc(campaign_id: Option<impl Into<String>>, name: impl Into<String>) -> Self {
         Self {
-            campaign_id: campaign_id.into(),
+            campaign_id: campaign_id.map(|c| c.into()),
             name: name.into(),
             is_npc: true,
             player_name: None,
@@ -565,13 +565,14 @@ impl<'a> CharacterService<'a> {
         let background_name = input.background_name.as_deref();
         let background_source = input.background_source.as_deref();
         let player_name = input.player_name.as_deref();
+        let campaign_id = input.campaign_id.as_deref();
 
         let mut new_char = if input.is_npc {
-            NewCharacter::new_npc(&char_id, &input.campaign_id, &input.name)
+            NewCharacter::new_npc(&char_id, campaign_id, &input.name)
         } else {
             NewCharacter::new_pc(
                 &char_id,
-                &input.campaign_id,
+                campaign_id,
                 &input.name,
                 player_name.unwrap_or(""),
             )
@@ -1277,7 +1278,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Gandalf", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Gandalf", "John");
         let character = service.create(input).expect("Failed to create character");
 
         assert_eq!(character.name, "Gandalf");
@@ -1292,7 +1293,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_npc(&campaign_id, "Shopkeeper");
+        let input = CreateCharacterInput::new_npc(Some(&campaign_id), "Shopkeeper");
         let character = service.create(input).expect("Failed to create character");
 
         assert_eq!(character.name, "Shopkeeper");
@@ -1307,7 +1308,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Legolas", "Jane")
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Legolas", "Jane")
             .with_race("Elf", "PHB")
             .with_background("Outlander", "PHB");
         let character = service.create(input).expect("Failed to create character");
@@ -1325,7 +1326,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Fighter", "John")
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Fighter", "John")
             .with_ability_scores([16, 14, 15, 8, 10, 12]);
         let character = service.create(input).expect("Failed to create character");
 
@@ -1344,9 +1345,9 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input1 = CreateCharacterInput::new_pc(&campaign_id, "PC1", "John");
-        let input2 = CreateCharacterInput::new_pc(&campaign_id, "PC2", "Jane");
-        let input3 = CreateCharacterInput::new_npc(&campaign_id, "NPC1");
+        let input1 = CreateCharacterInput::new_pc(Some(&campaign_id), "PC1", "John");
+        let input2 = CreateCharacterInput::new_pc(Some(&campaign_id), "PC2", "Jane");
+        let input3 = CreateCharacterInput::new_npc(Some(&campaign_id), "NPC1");
         service.create(input1).expect("Failed to create character");
         service.create(input2).expect("Failed to create character");
         service.create(input3).expect("Failed to create character");
@@ -1370,7 +1371,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let created = service.create(input).expect("Failed to create character");
 
         let retrieved = service
@@ -1399,7 +1400,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Original", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Original", "John");
         let created = service.create(input).expect("Failed to create character");
 
         let update = UpdateCharacterInput::set_name("Updated");
@@ -1417,7 +1418,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let created = service.create(input).expect("Failed to create character");
         assert!(created.race_name.is_none());
 
@@ -1449,7 +1450,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Doomed", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Doomed", "John");
         let created = service.create(input).expect("Failed to create character");
 
         assert!(service.exists(&created.id).expect("Failed to check"));
@@ -1483,9 +1484,9 @@ mod tests {
             0
         );
 
-        let input1 = CreateCharacterInput::new_pc(&campaign_id, "PC", "John");
-        let input2 = CreateCharacterInput::new_npc(&campaign_id, "NPC1");
-        let input3 = CreateCharacterInput::new_npc(&campaign_id, "NPC2");
+        let input1 = CreateCharacterInput::new_pc(Some(&campaign_id), "PC", "John");
+        let input2 = CreateCharacterInput::new_npc(Some(&campaign_id), "NPC1");
+        let input3 = CreateCharacterInput::new_npc(Some(&campaign_id), "NPC2");
         service.create(input1).expect("Failed to create");
         service.create(input2).expect("Failed to create");
         service.create(input3).expect("Failed to create");
@@ -1513,7 +1514,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let character = service.create(input).expect("Failed to create character");
 
         let item_input = AddInventoryInput::new("Longsword", "PHB");
@@ -1535,7 +1536,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let character = service.create(input).expect("Failed to create character");
 
         let item_input = AddInventoryInput::new("Cloak of Protection", "DMG")
@@ -1558,7 +1559,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let character = service.create(input).expect("Failed to create character");
 
         service
@@ -1581,7 +1582,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let character = service.create(input).expect("Failed to create character");
 
         let item = service
@@ -1605,7 +1606,7 @@ mod tests {
 
         let mut service = CharacterService::new(&mut conn);
 
-        let input = CreateCharacterInput::new_pc(&campaign_id, "Hero", "John");
+        let input = CreateCharacterInput::new_pc(Some(&campaign_id), "Hero", "John");
         let character = service.create(input).expect("Failed to create character");
 
         let item = service

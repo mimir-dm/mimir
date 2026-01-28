@@ -93,6 +93,30 @@ pub fn list_npcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse
     ApiResponse::ok(result)
 }
 
+/// List unassigned player characters (no campaign).
+#[tauri::command]
+pub fn list_unassigned_pcs(state: State<'_, AppState>) -> ApiResponse<Vec<CharacterResponse>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let characters = match dal::list_unassigned_pcs(&mut db) {
+        Ok(chars) => chars,
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    let mut result = Vec::with_capacity(characters.len());
+    for character in characters {
+        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
+        let proficiencies =
+            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
+        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    }
+
+    ApiResponse::ok(result)
+}
+
 // =============================================================================
 // CRUD Commands
 // =============================================================================
@@ -121,7 +145,7 @@ pub fn get_character(state: State<'_, AppState>, id: String) -> ApiResponse<Char
 /// Request for creating a new PC.
 #[derive(Debug, serde::Deserialize)]
 pub struct CreatePcRequest {
-    pub campaign_id: String,
+    pub campaign_id: Option<String>,
     pub name: String,
     pub player_name: String,
     pub race_name: Option<String>,
@@ -140,7 +164,7 @@ pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiRes
     };
 
     let mut input =
-        CreateCharacterInput::new_pc(&request.campaign_id, &request.name, &request.player_name);
+        CreateCharacterInput::new_pc(request.campaign_id.as_deref(), &request.name, &request.player_name);
 
     // Set race if both name and source provided
     if let (Some(name), Some(source)) = (&request.race_name, &request.race_source) {
@@ -168,7 +192,7 @@ pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiRes
 /// Request for creating a new NPC.
 #[derive(Debug, serde::Deserialize)]
 pub struct CreateNpcRequest {
-    pub campaign_id: String,
+    pub campaign_id: Option<String>,
     pub name: String,
     pub race_name: Option<String>,
     pub race_source: Option<String>,
@@ -185,7 +209,7 @@ pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiR
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let mut input = CreateCharacterInput::new_npc(&request.campaign_id, &request.name);
+    let mut input = CreateCharacterInput::new_npc(request.campaign_id.as_deref(), &request.name);
 
     // Set race if both name and source provided
     if let (Some(name), Some(source)) = (&request.race_name, &request.race_source) {
@@ -287,6 +311,24 @@ pub fn delete_character(state: State<'_, AppState>, id: String) -> ApiResponse<(
 
     let result = CharacterService::new(&mut db).delete(&id);
     to_api_response(result)
+}
+
+/// Assign a character to a campaign.
+#[tauri::command]
+pub fn assign_character_to_campaign(
+    state: State<'_, AppState>,
+    character_id: String,
+    campaign_id: String,
+) -> ApiResponse<()> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    match dal::assign_character_to_campaign(&mut db, &character_id, &campaign_id) {
+        Ok(_) => ApiResponse::ok(()),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
 }
 
 // =============================================================================

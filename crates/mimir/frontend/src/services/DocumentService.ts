@@ -7,7 +7,7 @@
 
 import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse, Document } from '@/types/api'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { dataEvents } from '@/utils/dataEvents'
 
 // =============================================================================
 // Request Types

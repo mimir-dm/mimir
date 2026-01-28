@@ -95,7 +95,7 @@
 import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { dataEvents } from '@/utils/dataEvents'
 
 const props = defineProps<{
   visible: boolean

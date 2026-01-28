@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { CultSummary } from '../../composables/catalog'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { cultConfig } from '../../../../shared/components/catalog/config/cultConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { cultConfig } from '@/shared/components/catalog/config/cultConfig'
 
 defineProps<{
   items: CultSummary[]

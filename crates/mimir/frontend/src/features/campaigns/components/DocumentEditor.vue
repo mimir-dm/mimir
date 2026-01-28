@@ -186,10 +186,10 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { invoke } from '@tauri-apps/api/core'
-import { debounce } from '../../../shared/utils/debounce'
-import { PrintService } from '../../../services/PrintService'
-import { DocumentService } from '../../../services/DocumentService'
-import ImagePreview from '../../../components/ImagePreview.vue'
+import { debounce } from '@/utils/debounce'
+import { PrintService } from '@/services/PrintService'
+import { DocumentService } from '@/services/DocumentService'
+import ImagePreview from '@/components/ImagePreview.vue'
 
 const props = defineProps<{
   document: any

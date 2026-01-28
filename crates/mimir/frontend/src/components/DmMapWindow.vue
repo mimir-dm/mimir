@@ -93,8 +93,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import DmMapViewer from '@/components/DmMapViewer.vue'
-import { usePlayerDisplay } from '@/composables/usePlayerDisplay'
-import { useDmMapWindow } from '@/composables/useDmMapWindow'
+import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
+import { useDmMapWindow } from '@/composables/windows/useDmMapWindow'
 
 interface MapSummary {
   id: string

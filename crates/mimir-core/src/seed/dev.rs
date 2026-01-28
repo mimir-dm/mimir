@@ -146,7 +146,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Thorin Ironforge - Dwarf Fighter
     let thorin_id = Uuid::new_v4().to_string();
-    let thorin = NewCharacter::new_pc(&thorin_id, campaign_id, "Thorin Ironforge", "Alice")
+    let thorin = NewCharacter::new_pc(&thorin_id, Some(campaign_id), "Thorin Ironforge", "Alice")
         .with_race("Mountain Dwarf", "PHB")
         .with_background("Soldier", "PHB")
         .with_ability_scores(16, 12, 16, 10, 12, 8)
@@ -188,7 +188,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Elara Moonwhisper - Elf Wizard
     let elara_id = Uuid::new_v4().to_string();
-    let elara = NewCharacter::new_pc(&elara_id, campaign_id, "Elara Moonwhisper", "Bob")
+    let elara = NewCharacter::new_pc(&elara_id, Some(campaign_id), "Elara Moonwhisper", "Bob")
         .with_race("High Elf", "PHB")
         .with_background("Sage", "PHB")
         .with_ability_scores(8, 14, 12, 17, 13, 10)
@@ -227,7 +227,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Finn Lightfoot - Halfling Rogue
     let finn_id = Uuid::new_v4().to_string();
-    let finn = NewCharacter::new_pc(&finn_id, campaign_id, "Finn Lightfoot", "Charlie")
+    let finn = NewCharacter::new_pc(&finn_id, Some(campaign_id), "Finn Lightfoot", "Charlie")
         .with_race("Lightfoot Halfling", "PHB")
         .with_background("Criminal", "PHB")
         .with_ability_scores(10, 18, 12, 13, 10, 14)
@@ -266,7 +266,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Sister Helena - Human Cleric
     let helena_id = Uuid::new_v4().to_string();
-    let helena = NewCharacter::new_pc(&helena_id, campaign_id, "Sister Helena", "Diana")
+    let helena = NewCharacter::new_pc(&helena_id, Some(campaign_id), "Sister Helena", "Diana")
         .with_race("Human", "PHB")
         .with_background("Acolyte", "PHB")
         .with_ability_scores(14, 10, 14, 10, 16, 13)
@@ -310,7 +310,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Sildar Hallwinter - Human Fighter (Ally)
     let sildar_id = Uuid::new_v4().to_string();
-    let sildar = NewCharacter::new_npc(&sildar_id, campaign_id, "Sildar Hallwinter")
+    let sildar = NewCharacter::new_npc(&sildar_id, Some(campaign_id), "Sildar Hallwinter")
         .with_race("Human", "PHB")
         .with_background("Soldier", "PHB")
         .with_ability_scores(16, 11, 14, 10, 11, 10)
@@ -348,7 +348,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Gundren Rockseeker - Dwarf Fighter (Quest Giver)
     let gundren_id = Uuid::new_v4().to_string();
-    let gundren = NewCharacter::new_npc(&gundren_id, campaign_id, "Gundren Rockseeker")
+    let gundren = NewCharacter::new_npc(&gundren_id, Some(campaign_id), "Gundren Rockseeker")
         .with_race("Hill Dwarf", "PHB")
         .with_background("Guild Artisan", "PHB")
         .with_ability_scores(12, 10, 14, 13, 12, 10)
@@ -385,7 +385,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Toblen Stonehill - Human Innkeeper
     let toblen_id = Uuid::new_v4().to_string();
-    let toblen = NewCharacter::new_npc(&toblen_id, campaign_id, "Toblen Stonehill")
+    let toblen = NewCharacter::new_npc(&toblen_id, Some(campaign_id), "Toblen Stonehill")
         .with_race("Human", "PHB")
         .with_background("Folk Hero", "PHB")
         .with_ability_scores(10, 10, 12, 10, 14, 13)
@@ -422,7 +422,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Iarno Albrek (Glasstaff) - Human Wizard (Antagonist)
     let iarno_id = Uuid::new_v4().to_string();
-    let iarno = NewCharacter::new_npc(&iarno_id, campaign_id, "Iarno Albrek")
+    let iarno = NewCharacter::new_npc(&iarno_id, Some(campaign_id), "Iarno Albrek")
         .with_race("Human", "PHB")
         .with_background("Criminal", "PHB")
         .with_ability_scores(10, 12, 10, 16, 14, 14)
@@ -462,7 +462,7 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 
     // Klarg - Bugbear Boss
     let klarg_id = Uuid::new_v4().to_string();
-    let klarg = NewCharacter::new_npc(&klarg_id, campaign_id, "Klarg")
+    let klarg = NewCharacter::new_npc(&klarg_id, Some(campaign_id), "Klarg")
         .with_race("Bugbear", "MM")
         .with_background("Outlander", "PHB")
         .with_ability_scores(15, 14, 13, 8, 11, 9)

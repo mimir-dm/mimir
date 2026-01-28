@@ -160,7 +160,7 @@ diesel::table! {
 diesel::table! {
     characters (id) {
         id -> Text,
-        campaign_id -> Text,
+        campaign_id -> Nullable<Text>,
         name -> Text,
         is_npc -> Integer,
         player_name -> Nullable<Text>,

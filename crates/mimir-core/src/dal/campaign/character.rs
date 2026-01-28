@@ -49,6 +49,15 @@ pub fn list_pcs(conn: &mut SqliteConnection, campaign_id: &str) -> QueryResult<V
         .load(conn)
 }
 
+/// List all unassigned player characters (no campaign).
+pub fn list_unassigned_pcs(conn: &mut SqliteConnection) -> QueryResult<Vec<Character>> {
+    characters::table
+        .filter(characters::campaign_id.is_null())
+        .filter(characters::is_npc.eq(0))
+        .order(characters::name.asc())
+        .load(conn)
+}
+
 /// List all NPCs for a campaign.
 pub fn list_npcs(conn: &mut SqliteConnection, campaign_id: &str) -> QueryResult<Vec<Character>> {
     characters::table
@@ -100,6 +109,17 @@ pub fn update_character(
 /// Delete a character by ID.
 pub fn delete_character(conn: &mut SqliteConnection, id: &str) -> QueryResult<usize> {
     diesel::delete(characters::table.find(id)).execute(conn)
+}
+
+/// Assign a character to a campaign.
+pub fn assign_character_to_campaign(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    campaign_id: &str,
+) -> QueryResult<usize> {
+    diesel::update(characters::table.find(character_id))
+        .set(characters::campaign_id.eq(Some(campaign_id)))
+        .execute(conn)
 }
 
 /// Check if a character exists.
@@ -199,7 +219,7 @@ mod tests {
     fn test_insert_and_get_character() {
         let mut conn = setup_test_db();
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Gandalf", "John");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Gandalf", "John");
         let id = insert_character(&mut conn, &pc).expect("Failed to insert");
         assert_eq!(id, "char-1");
 
@@ -214,7 +234,7 @@ mod tests {
     fn test_insert_npc() {
         let mut conn = setup_test_db();
 
-        let npc = NewCharacter::new_npc("char-1", "camp-1", "Shopkeeper")
+        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Shopkeeper")
             .with_npc_info(Some("merchant"), Some("Waterdeep"), Some("Merchants Guild"));
         insert_character(&mut conn, &npc).expect("Failed to insert");
 
@@ -229,9 +249,9 @@ mod tests {
     fn test_list_campaign_characters() {
         let mut conn = setup_test_db();
 
-        let pc1 = NewCharacter::new_pc("char-1", "camp-1", "Aragorn", "John");
-        let pc2 = NewCharacter::new_pc("char-2", "camp-1", "Legolas", "Jane");
-        let npc = NewCharacter::new_npc("char-3", "camp-1", "Innkeeper");
+        let pc1 = NewCharacter::new_pc("char-1", Some("camp-1"), "Aragorn", "John");
+        let pc2 = NewCharacter::new_pc("char-2", Some("camp-1"), "Legolas", "Jane");
+        let npc = NewCharacter::new_npc("char-3", Some("camp-1"), "Innkeeper");
         insert_character(&mut conn, &pc1).expect("Failed to insert");
         insert_character(&mut conn, &pc2).expect("Failed to insert");
         insert_character(&mut conn, &npc).expect("Failed to insert");
@@ -244,11 +264,11 @@ mod tests {
     fn test_list_pcs_and_npcs() {
         let mut conn = setup_test_db();
 
-        let pc1 = NewCharacter::new_pc("char-1", "camp-1", "Fighter", "John");
-        let pc2 = NewCharacter::new_pc("char-2", "camp-1", "Wizard", "Jane");
-        let npc1 = NewCharacter::new_npc("char-3", "camp-1", "Guard");
-        let npc2 = NewCharacter::new_npc("char-4", "camp-1", "Merchant");
-        let npc3 = NewCharacter::new_npc("char-5", "camp-1", "Bard");
+        let pc1 = NewCharacter::new_pc("char-1", Some("camp-1"), "Fighter", "John");
+        let pc2 = NewCharacter::new_pc("char-2", Some("camp-1"), "Wizard", "Jane");
+        let npc1 = NewCharacter::new_npc("char-3", Some("camp-1"), "Guard");
+        let npc2 = NewCharacter::new_npc("char-4", Some("camp-1"), "Merchant");
+        let npc3 = NewCharacter::new_npc("char-5", Some("camp-1"), "Bard");
         insert_character(&mut conn, &pc1).expect("Failed to insert");
         insert_character(&mut conn, &pc2).expect("Failed to insert");
         insert_character(&mut conn, &npc1).expect("Failed to insert");
@@ -266,11 +286,11 @@ mod tests {
     fn test_list_npcs_by_location() {
         let mut conn = setup_test_db();
 
-        let npc1 = NewCharacter::new_npc("char-1", "camp-1", "Guard")
+        let npc1 = NewCharacter::new_npc("char-1", Some("camp-1"), "Guard")
             .with_npc_info(Some("guard"), Some("Waterdeep"), None);
-        let npc2 = NewCharacter::new_npc("char-2", "camp-1", "Merchant")
+        let npc2 = NewCharacter::new_npc("char-2", Some("camp-1"), "Merchant")
             .with_npc_info(Some("merchant"), Some("Waterdeep"), None);
-        let npc3 = NewCharacter::new_npc("char-3", "camp-1", "Farmer")
+        let npc3 = NewCharacter::new_npc("char-3", Some("camp-1"), "Farmer")
             .with_npc_info(Some("commoner"), Some("Phandalin"), None);
         insert_character(&mut conn, &npc1).expect("Failed to insert");
         insert_character(&mut conn, &npc2).expect("Failed to insert");
@@ -289,11 +309,11 @@ mod tests {
     fn test_list_npcs_by_faction() {
         let mut conn = setup_test_db();
 
-        let npc1 = NewCharacter::new_npc("char-1", "camp-1", "Agent")
+        let npc1 = NewCharacter::new_npc("char-1", Some("camp-1"), "Agent")
             .with_npc_info(None, None, Some("Zhentarim"));
-        let npc2 = NewCharacter::new_npc("char-2", "camp-1", "Spy")
+        let npc2 = NewCharacter::new_npc("char-2", Some("camp-1"), "Spy")
             .with_npc_info(None, None, Some("Zhentarim"));
-        let npc3 = NewCharacter::new_npc("char-3", "camp-1", "Paladin")
+        let npc3 = NewCharacter::new_npc("char-3", Some("camp-1"), "Paladin")
             .with_npc_info(None, None, Some("Order of the Gauntlet"));
         insert_character(&mut conn, &npc1).expect("Failed to insert");
         insert_character(&mut conn, &npc2).expect("Failed to insert");
@@ -308,7 +328,7 @@ mod tests {
     fn test_update_character_name() {
         let mut conn = setup_test_db();
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Original", "John");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Original", "John");
         insert_character(&mut conn, &pc).expect("Failed to insert");
 
         let update = UpdateCharacter::set_name("Updated", "2024-01-20T12:00:00Z");
@@ -322,7 +342,7 @@ mod tests {
     fn test_update_ability_scores() {
         let mut conn = setup_test_db();
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Fighter", "John");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Fighter", "John");
         insert_character(&mut conn, &pc).expect("Failed to insert");
 
         let update =
@@ -342,7 +362,7 @@ mod tests {
     fn test_update_currency() {
         let mut conn = setup_test_db();
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Rogue", "Jane");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Rogue", "Jane");
         insert_character(&mut conn, &pc).expect("Failed to insert");
 
         let update = UpdateCharacter::set_currency(500, 100, 50, 25, 10, "2024-01-20T12:00:00Z");
@@ -360,7 +380,7 @@ mod tests {
     fn test_delete_character() {
         let mut conn = setup_test_db();
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Doomed", "John");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Doomed", "John");
         insert_character(&mut conn, &pc).expect("Failed to insert");
 
         assert!(character_exists(&mut conn, "char-1").expect("Failed to check"));
@@ -379,9 +399,9 @@ mod tests {
             0
         );
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "PC", "John");
-        let npc1 = NewCharacter::new_npc("char-2", "camp-1", "NPC1");
-        let npc2 = NewCharacter::new_npc("char-3", "camp-1", "NPC2");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "PC", "John");
+        let npc1 = NewCharacter::new_npc("char-2", Some("camp-1"), "NPC1");
+        let npc2 = NewCharacter::new_npc("char-3", Some("camp-1"), "NPC2");
         insert_character(&mut conn, &pc).expect("Failed to insert");
         insert_character(&mut conn, &npc1).expect("Failed to insert");
         insert_character(&mut conn, &npc2).expect("Failed to insert");
@@ -401,7 +421,7 @@ mod tests {
         let result = get_character_optional(&mut conn, "nonexistent").expect("Failed to query");
         assert!(result.is_none());
 
-        let pc = NewCharacter::new_pc("char-1", "camp-1", "Hero", "John");
+        let pc = NewCharacter::new_pc("char-1", Some("camp-1"), "Hero", "John");
         insert_character(&mut conn, &pc).expect("Failed to insert");
 
         let result = get_character_optional(&mut conn, "char-1").expect("Failed to query");

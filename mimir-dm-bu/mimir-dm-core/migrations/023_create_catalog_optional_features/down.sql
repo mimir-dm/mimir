@@ -1,5 +1,0 @@
-DROP INDEX IF EXISTS idx_catalog_optional_features_grants_spells;
-DROP INDEX IF EXISTS idx_catalog_optional_features_source;
-DROP INDEX IF EXISTS idx_catalog_optional_features_feature_types;
-DROP INDEX IF EXISTS idx_catalog_optional_features_name;
-DROP TABLE IF EXISTS catalog_optional_features;

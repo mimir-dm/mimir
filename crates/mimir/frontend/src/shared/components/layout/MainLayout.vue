@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import AppHeader from '../../../app/AppHeader.vue'
+import AppHeader from '@/app/AppHeader.vue'
 </script>
 
 <style scoped>

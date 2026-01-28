@@ -176,7 +176,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive, onMounted } from 'vue'
 import type { Character } from '@/types/character'
-import type { LevelUpComposable } from '../../../composables/useLevelUp'
+import type { LevelUpComposable } from '@/features/characters/composables/useLevelUp'
 import { invoke } from '@tauri-apps/api/core'
 
 interface FeatOption {

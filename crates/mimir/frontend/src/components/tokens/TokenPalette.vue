@@ -103,15 +103,15 @@
         <label>Link Monster (optional)</label>
         <div class="search-input-wrapper">
           <input
-            v-model="monsterSearch"
+            v-model="monsterSearch.query.value"
             type="text"
             class="form-input"
             placeholder="Search monsters..."
-            @input="searchMonsters"
+            @input="monsterSearch.search()"
           />
-          <div v-if="monsterResults.length > 0" class="search-results">
+          <div v-if="monsterSearch.results.value.length > 0" class="search-results">
             <button
-              v-for="monster in monsterResults"
+              v-for="monster in monsterSearch.results.value"
               :key="monster.id"
               class="search-result-item"
               @click="selectMonster(monster)"
@@ -132,15 +132,15 @@
         <label>Link Trap (optional)</label>
         <div class="search-input-wrapper">
           <input
-            v-model="trapSearch"
+            v-model="trapSearch.query.value"
             type="text"
             class="form-input"
             placeholder="Search traps..."
-            @input="searchTraps"
+            @input="trapSearch.search()"
           />
-          <div v-if="trapResults.length > 0" class="search-results">
+          <div v-if="trapSearch.results.value.length > 0" class="search-results">
             <button
-              v-for="trap in trapResults"
+              v-for="trap in trapSearch.results.value"
               :key="`${trap.name}-${trap.source}`"
               class="search-result-item"
               @click="selectTrap(trap)"
@@ -173,11 +173,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { TokenType, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_TYPE_COLORS } from '@/types/api'
 import { useCampaignStore } from '@/stores/campaigns'
+import { useDebouncedSearch } from '@/composables/useDebouncedSearch'
+import { sizeToTokenSize, normalizeSize } from '@/constants/tokenSizes'
 
 interface Monster {
   id: number
@@ -230,6 +232,36 @@ const emit = defineEmits<{
 
 const campaignStore = useCampaignStore()
 
+// Monster search using debounced composable
+const monsterSearch = useDebouncedSearch<Monster>({
+  command: 'search_monsters',
+  buildFilter: (query) => ({
+    name_contains: query,
+    sources: campaignStore.currentCampaignSources.length > 0
+      ? campaignStore.currentCampaignSources
+      : null
+  }),
+  mapResult: (m: any) => ({
+    id: m.id || 0,
+    name: m.name,
+    source: m.source || 'MM',
+    size: m.size || 'Medium',
+    cr: m.cr || 'N/A'
+  })
+})
+
+// Trap search using debounced composable
+const trapSearch = useDebouncedSearch<Trap>({
+  command: 'search_traps',
+  buildFilter: (query) => ({ nameContains: query }),
+  mapResult: (t: any) => ({
+    name: t.name,
+    source: t.source || 'DMG',
+    trap_type: t.trap_type || t.trapHazType || 'Unknown',
+    category: t.category || 'Trap'
+  })
+})
+
 // Module monsters state
 const moduleMonsters = ref<ModuleMonsterWithData[]>([])
 const selectedModuleMonster = ref<ModuleMonsterWithData | null>(null)
@@ -266,14 +298,8 @@ const selectedSize = ref<TokenSize>('medium')
 const selectedColor = ref(TOKEN_TYPE_COLORS.monster)
 const tokenName = ref('')
 const visibleToPlayers = ref(true)
-const monsterSearch = ref('')
-const monsterResults = ref<Monster[]>([])
 const selectedMonster = ref<Monster | null>(null)
 const selectedMonsterSource = ref<string | null>(null)  // e.g., 'MM' for Monster Manual
-
-// Trap search state
-const trapSearch = ref('')
-const trapResults = ref<Trap[]>([])
 const selectedTrap = ref<Trap | null>(null)
 
 // Update color when type changes
@@ -301,11 +327,9 @@ function selectType(type: TokenType) {
     selectedType.value = type
     tokenName.value = ''
     selectedMonster.value = null
-    monsterSearch.value = ''
-    monsterResults.value = []
+    monsterSearch.clear()
     selectedTrap.value = null
-    trapSearch.value = ''
-    trapResults.value = []
+    trapSearch.clear()
   }
 }
 
@@ -331,12 +355,10 @@ function clearSelection() {
   tokenName.value = ''
   selectedMonster.value = null
   selectedMonsterSource.value = null
-  monsterSearch.value = ''
-  monsterResults.value = []
+  monsterSearch.clear()
   selectedModuleMonster.value = null
   selectedTrap.value = null
-  trapSearch.value = ''
-  trapResults.value = []
+  trapSearch.clear()
   emit('light-config-change', null)
   emit('token-config-change', null)
 }
@@ -377,24 +399,7 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
 
   // Get monster size from data (handles various formats: string, array, etc.)
   if (mm.monster_data?.size) {
-    const sizeMap: Record<string, TokenSize> = {
-      // Abbreviated (5etools format)
-      't': 'tiny',
-      's': 'small',
-      'm': 'medium',
-      'l': 'large',
-      'h': 'huge',
-      'g': 'gargantuan',
-      // Full names
-      'tiny': 'tiny',
-      'small': 'small',
-      'medium': 'medium',
-      'large': 'large',
-      'huge': 'huge',
-      'gargantuan': 'gargantuan'
-    }
-    const normalizedSizeStr = normalizeSize(mm.monster_data.size)
-    selectedSize.value = sizeMap[normalizedSizeStr] || 'medium'
+    selectedSize.value = sizeToTokenSize(mm.monster_data.size)
   }
 
   // Set linked monster info (for display, not for DB linking)
@@ -427,54 +432,6 @@ function getPlaceholderName(): string {
   }
 }
 
-// Monster search
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
-async function searchMonsters() {
-  if (searchTimeout) clearTimeout(searchTimeout)
-
-  if (monsterSearch.value.length < 2) {
-    monsterResults.value = []
-    return
-  }
-
-  searchTimeout = setTimeout(async () => {
-    try {
-      // Get campaign sources for filtering (null means no filter)
-      const sources = campaignStore.currentCampaignSources.length > 0
-        ? campaignStore.currentCampaignSources
-        : null
-
-      const response = await invoke<{ success: boolean; data?: any[] }>('search_monsters', {
-        filter: {
-          name_contains: monsterSearch.value,
-          sources: sources,
-        },
-        limit: 10,
-        offset: 0
-      })
-      console.log('Monster search response:', response)
-      if (response.success && response.data && Array.isArray(response.data)) {
-        monsterResults.value = response.data.map(m => ({
-          id: m.id || 0,
-          name: m.name,
-          source: m.source || 'MM',
-          size: m.size || 'Medium',
-          cr: m.cr || 'N/A'
-        }))
-      }
-    } catch (e) {
-      console.error('Failed to search monsters:', e)
-    }
-  }, 300)
-}
-
-// Helper to normalize size from various formats (string, array, etc.)
-function normalizeSize(size: unknown): string {
-  if (!size) return 'm'
-  if (typeof size === 'string') return size.toLowerCase()
-  if (Array.isArray(size) && size.length > 0) return String(size[0]).toLowerCase()
-  return 'm'
-}
 
 // Helper to format CR for display (handles string, array, object formats)
 function formatCr(cr: unknown): string {
@@ -496,27 +453,9 @@ function selectMonster(monster: Monster) {
   tokenName.value = monster.name
 
   // Set token size based on monster size (handles both full names and abbreviations)
-  const sizeMap: Record<string, TokenSize> = {
-    // Abbreviated (5etools format)
-    't': 'tiny',
-    's': 'small',
-    'm': 'medium',
-    'l': 'large',
-    'h': 'huge',
-    'g': 'gargantuan',
-    // Full names
-    'tiny': 'tiny',
-    'small': 'small',
-    'medium': 'medium',
-    'large': 'large',
-    'huge': 'huge',
-    'gargantuan': 'gargantuan'
-  }
-  const normalizedSizeStr = normalizeSize(monster.size)
-  selectedSize.value = sizeMap[normalizedSizeStr] || 'medium'
+  selectedSize.value = sizeToTokenSize(monster.size)
 
-  monsterSearch.value = ''
-  monsterResults.value = []
+  monsterSearch.clear()
 }
 
 function clearMonster() {
@@ -525,45 +464,10 @@ function clearMonster() {
   tokenName.value = ''
 }
 
-// Trap search
-let trapSearchTimeout: ReturnType<typeof setTimeout> | null = null
-async function searchTraps() {
-  if (trapSearchTimeout) clearTimeout(trapSearchTimeout)
-
-  if (trapSearch.value.length < 2) {
-    trapResults.value = []
-    return
-  }
-
-  trapSearchTimeout = setTimeout(async () => {
-    try {
-      // Backend expects 'filter' with 'nameContains' field (Tauri v2 converts to snake_case)
-      const response = await invoke<{ success: boolean; data?: any[] }>('search_traps', {
-        filter: {
-          nameContains: trapSearch.value
-        },
-        limit: 10
-      })
-      console.log('Trap search response:', response)
-      if (response.success && response.data && Array.isArray(response.data)) {
-        trapResults.value = response.data.map(t => ({
-          name: t.name,
-          source: t.source || 'DMG',
-          trap_type: t.trap_type || t.trapHazType || 'Unknown',
-          category: t.category || 'Trap'
-        }))
-      }
-    } catch (e) {
-      console.error('Failed to search traps:', e)
-    }
-  }, 300)
-}
-
 function selectTrap(trap: Trap) {
   selectedTrap.value = trap
   tokenName.value = trap.name
-  trapSearch.value = ''
-  trapResults.value = []
+  trapSearch.clear()
 }
 
 function clearTrap() {

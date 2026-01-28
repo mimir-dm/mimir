@@ -49,9 +49,6 @@
         <div class="map-preview-header">
           <h3>{{ selectedMap.name }}</h3>
           <div class="map-actions">
-            <button class="btn-action" @click="configureGrid" title="Configure Grid">
-              Grid
-            </button>
             <button class="btn-action" @click="printMap" title="Export PDF">
               PDF
             </button>
@@ -103,15 +100,6 @@
       @uploaded="handleMapUploaded"
     />
 
-    <!-- Grid Config Modal -->
-    <MapGridConfigModal
-      v-if="selectedMap && showGridModal"
-      :visible="showGridModal"
-      :map="selectedMap"
-      @close="showGridModal = false"
-      @saved="handleGridSaved"
-    />
-
     <!-- Print Dialog -->
     <MapPrintDialog
       v-if="selectedMap && showPrintDialog"
@@ -131,7 +119,6 @@ import { invoke } from '@tauri-apps/api/core'
 import DocumentSidebar from '../DocumentSidebar.vue'
 import DocumentEditor from '../DocumentEditor.vue'
 import MapUploadModal from '../StageLanding/MapUploadModal.vue'
-import MapGridConfigModal from '../StageLanding/MapGridConfigModal.vue'
 import MapPrintDialog from '@/components/print/MapPrintDialog.vue'
 import type { Campaign } from '@/types'
 
@@ -190,7 +177,6 @@ const selectedMap = ref<MapData | null>(null)
 const mapImageUrl = ref<string | null>(null)
 const loadingMaps = ref(false)
 const showUploadModal = ref(false)
-const showGridModal = ref(false)
 const showPrintDialog = ref(false)
 
 // Load campaign maps
@@ -291,15 +277,6 @@ function handleStageTransitioned() {
 // Map handlers
 function handleMapUploaded() {
   showUploadModal.value = false
-  loadMaps()
-}
-
-function configureGrid() {
-  showGridModal.value = true
-}
-
-function handleGridSaved() {
-  showGridModal.value = false
   loadMaps()
 }
 

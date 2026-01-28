@@ -93,7 +93,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import AppModal from '@/components/shared/AppModal.vue'
-import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
+import CreateDocumentModal from '@/components/dialogs/CreateDocumentModal.vue'
 
 interface UserDocument {
   id: string

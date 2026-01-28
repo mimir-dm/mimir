@@ -1,7 +1,7 @@
 // Content rendering utilities
 
 import { processFormattingTags } from '../textFormatting'
-import type { BookSection, BookEntry, ComplexEntry } from '../../../../types/book'
+import type { BookSection, BookEntry, ComplexEntry } from '@/types/book'
 
 /**
  * Render a book section to HTML
@@ -156,6 +156,17 @@ function renderEntry(entry: BookEntry, index: number = 0, depth: number = 0): st
   // Inline block entries
   if (complexEntry.type === 'inlineBlock') {
     return `<span class="inline-block">${complexEntry.entries ? complexEntry.entries.map((e, i) => renderEntry(e, i, depth)).join('') : ''}</span>`
+  }
+
+  // Statblock entries - cross-references to creature/item stat blocks
+  if (complexEntry.type === 'statblock') {
+    const name = complexEntry.name || 'Unknown'
+    const source = complexEntry.source || ''
+    const tag = complexEntry.tag || 'creature'
+    if (tag === 'creature') {
+      return `<p class="statblock-ref"><em>See: </em><a href="#" class="cross-ref-link creature-ref" data-ref-type="creature" data-ref-name="${name}" data-ref-source="${source}">${name}</a></p>`
+    }
+    return `<p class="statblock-ref"><em>See: ${name}</em></p>`
   }
 
   // Default: render as JSON for unknown types (for debugging)

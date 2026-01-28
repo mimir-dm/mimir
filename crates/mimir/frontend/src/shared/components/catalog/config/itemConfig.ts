@@ -1,5 +1,5 @@
 import type { CatalogConfig } from './types'
-import { formatWeight } from '../../../utils/formatters'
+import { formatWeight } from '@/utils/formatters'
 
 // Item type code to name mapping
 const itemTypeMap: Record<string, string> = {

@@ -3,6 +3,7 @@
 //! Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
 //! Services encapsulate validation, transactions, and orchestration of database operations.
 
+mod archive;
 mod asset;
 mod campaign;
 pub mod catalog;
@@ -13,6 +14,10 @@ mod module;
 
 use thiserror::Error;
 
+pub use archive::{
+    ArchiveCounts, ArchiveData, ArchiveManifest, ArchivePreview, ArchiveService,
+    CatalogReference, CharacterWithRelated, ImportResult, MapWithRelated, ARCHIVE_EXTENSION,
+};
 pub use asset::{AssetService, UploadAssetInput};
 pub use campaign::{CampaignService, CreateCampaignInput, UpdateCampaignInput};
 pub use character::{

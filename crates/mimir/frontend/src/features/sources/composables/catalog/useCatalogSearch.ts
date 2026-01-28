@@ -137,16 +137,20 @@ export function useCatalogSearch<
  * - Otherwise return null (no filtering)
  */
 function getEffectiveSources(filterSources: unknown): string[] | null {
-  const campaignStore = useCampaignStore()
-
   // If explicit sources provided in filter, use those
   if (Array.isArray(filterSources) && filterSources.length > 0) {
     return filterSources as string[]
   }
 
   // If campaign has sources configured, use those
-  if (campaignStore.currentCampaignSources.length > 0) {
-    return campaignStore.currentCampaignSources
+  // Note: Store access is lazy to avoid Pinia initialization issues
+  try {
+    const campaignStore = useCampaignStore()
+    if (campaignStore.currentCampaignSources.length > 0) {
+      return campaignStore.currentCampaignSources
+    }
+  } catch {
+    // Store not available yet, use no filter
   }
 
   // No filtering - return null to show all

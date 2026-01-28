@@ -1,3 +1,0 @@
--- SQLite doesn't support DROP COLUMN, so we need to recreate the table
--- For simplicity, this migration is not reversible
--- If needed, manually recreate the table without these columns

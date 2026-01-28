@@ -152,8 +152,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { DocumentService } from '@/services/DocumentService'
 import type { Document, ApiResponse } from '@/types/api'
-import CreateDocumentModal from '../../../components/CreateDocumentModal.vue'
-import AppModal from '../../../components/shared/AppModal.vue'
+import CreateDocumentModal from '@/components/dialogs/CreateDocumentModal.vue'
+import AppModal from '@/components/shared/AppModal.vue'
 
 // Asset type matching backend CampaignAsset
 interface CampaignAsset {

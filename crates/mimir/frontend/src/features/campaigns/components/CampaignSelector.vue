@@ -87,10 +87,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCampaignStore } from '../../../stores/campaigns'
+import { useCampaignStore } from '@/stores/campaigns'
 import { storeToRefs } from 'pinia'
-import CampaignArchiveImportDialog from '../../../components/campaigns/CampaignArchiveImportDialog.vue'
-import type { Campaign } from '../../../types/api'
+import CampaignArchiveImportDialog from '@/components/campaigns/CampaignArchiveImportDialog.vue'
+import type { Campaign } from '@/types/api'
 
 const router = useRouter()
 const campaignStore = useCampaignStore()

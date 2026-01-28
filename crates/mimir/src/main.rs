@@ -8,7 +8,7 @@
 )]
 
 use mimir_core::db::init_database;
-use mimir_lib::commands::{asset, campaign, catalog, character, dev, dm_map, document, map, module, player_display, print, source};
+use mimir_lib::commands::{archive, asset, campaign, catalog, character, dev, dm_map, document, map, module, player_display, print, source};
 use mimir_lib::{AppPaths, AppState};
 use mimir_print::PrintState;
 use tauri::Manager;
@@ -68,6 +68,10 @@ fn main() {
             campaign::add_campaign_source,
             campaign::remove_campaign_source,
             campaign::set_campaign_sources,
+            // Archive commands (campaign export/import)
+            archive::export_campaign,
+            archive::preview_archive,
+            archive::import_campaign,
             // Module commands
             module::list_modules,
             module::get_module,
@@ -95,12 +99,14 @@ fn main() {
             character::list_characters,
             character::list_pcs,
             character::list_npcs,
+            character::list_unassigned_pcs,
             // Character commands - CRUD
             character::get_character,
             character::create_pc,
             character::create_npc,
             character::update_character,
             character::delete_character,
+            character::assign_character_to_campaign,
             // Character commands - level up
             character::level_up_character,
             // Character commands - inventory

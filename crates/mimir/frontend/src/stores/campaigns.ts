@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { ApiResponse, Campaign, CreateCampaignRequest, UpdateCampaignRequest } from '../types/api'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import type { ApiResponse, ArchiveCounts, ArchivePreview, Campaign, CreateCampaignRequest, UpdateCampaignRequest } from '../types/api'
+import { dataEvents } from '@/utils/dataEvents'
 
 export const useCampaignStore = defineStore('campaigns', () => {
   const campaigns = ref<Campaign[]>([])
@@ -258,26 +258,83 @@ export const useCampaignStore = defineStore('campaigns', () => {
     error.value = null
   }
 
-  // Export campaign archive (stub - not yet implemented in backend)
-  const exportCampaign = async (campaignId: string, outputDirectory: string): Promise<{ archive_path: string; file_name: string } | null> => {
-    error.value = 'Campaign export is not yet implemented'
-    return null
+  // Export campaign archive
+  const exportCampaign = async (campaignId: string, outputDirectory: string): Promise<{ archive_path: string; size_bytes: number } | null> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await invoke<ApiResponse<{ archive_path: string; size_bytes: number }>>('export_campaign', {
+        campaignId,
+        outputDir: outputDirectory
+      })
+      if (response.success && response.data) {
+        return response.data
+      } else {
+        error.value = response.error || 'Failed to export campaign'
+        return null
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
+      return null
+    } finally {
+      loading.value = false
+    }
   }
 
-  // Import campaign archive (stub - not yet implemented in backend)
-  const importCampaign = async (archivePath: string, campaignName: string, campaignsDirectory: string): Promise<Campaign | null> => {
-    error.value = 'Campaign import is not yet implemented'
-    return null
+  // Import campaign archive
+  const importCampaign = async (archivePath: string, newName?: string): Promise<Campaign | null> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await invoke<ApiResponse<{ campaign_id: string; campaign_name: string; counts: ArchiveCounts }>>('import_campaign', {
+        archivePath,
+        newName: newName || null
+      })
+      if (response.success && response.data) {
+        // Refresh campaigns list to include the new one
+        await fetchCampaigns()
+        // Find and return the newly imported campaign
+        const imported = campaigns.value.find(c => c.id === response.data!.campaign_id)
+        return imported || null
+      } else {
+        error.value = response.error || 'Failed to import campaign'
+        return null
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
+      return null
+    } finally {
+      loading.value = false
+    }
   }
 
-  // Preview archive contents (stub - not yet implemented in backend)
-  const previewArchive = async (archivePath: string): Promise<{ campaign_name: string; file_count: number; asset_count: number; catalog_references: Array<{ type: string; name: string; source: string }>; mimir_version: string; created_at: string } | null> => {
-    error.value = 'Campaign archive preview is not yet implemented'
-    return null
+  // Preview archive contents
+  const previewArchive = async (archivePath: string): Promise<ArchivePreview | null> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await invoke<ApiResponse<ArchivePreview>>('preview_archive', {
+        archivePath
+      })
+      if (response.success && response.data) {
+        return response.data
+      } else {
+        error.value = response.error || 'Failed to read archive'
+        return null
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unknown error occurred'
+      return null
+    } finally {
+      loading.value = false
+    }
   }
 
-  // Get archive file extension (stub - not yet implemented in backend)
-  const getArchiveExtension = async (): Promise<string> => {
+  // Get archive file extension
+  const getArchiveExtension = (): string => {
     return 'mimir-campaign.tar.gz'
   }
 

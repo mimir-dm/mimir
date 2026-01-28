@@ -74,9 +74,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import ModuleExportDialog from '../../../../components/print/ModuleExportDialog.vue'
+import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import { useDmMapWindow } from '@/composables/useDmMapWindow'
+import { useDmMapWindow } from '@/composables/windows/useDmMapWindow'
 
 interface ModuleData {
   id: string

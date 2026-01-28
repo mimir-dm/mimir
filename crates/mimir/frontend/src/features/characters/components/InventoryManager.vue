@@ -237,8 +237,8 @@ import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import { useCharacterStore } from '../../../stores/characters'
-import type { Character, CharacterInventory } from '../../../types/character'
+import { useCharacterStore } from '@/stores/characters'
+import type { Character, CharacterInventory } from '@/types/character'
 
 interface CatalogItem {
   id: string

@@ -257,293 +257,20 @@
         </div>
 
         <!-- Equipment Tab -->
-        <div v-else-if="activeTab === 'equipment'" class="sheet-content single-column">
-          <!-- Currency -->
-          <section class="sheet-section">
-            <h2>Currency</h2>
-            <div class="currency-display">
-              <div class="currency-item large">
-                <span class="currency-icon pp">PP</span>
-                <span class="currency-value">{{ character.pp }}</span>
-              </div>
-              <div class="currency-item large">
-                <span class="currency-icon gp">GP</span>
-                <span class="currency-value">{{ character.gp }}</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-icon ep">EP</span>
-                <span class="currency-value">{{ character.ep }}</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-icon sp">SP</span>
-                <span class="currency-value">{{ character.sp }}</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-icon cp">CP</span>
-                <span class="currency-value">{{ character.cp }}</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- Equipped Items -->
-          <section class="sheet-section">
-            <h2>Equipped Items</h2>
-            <div v-if="equippedItems.length === 0" class="empty-state">
-              No items equipped
-            </div>
-            <div v-else class="item-cards">
-              <div
-                v-for="item in equippedItems"
-                :key="item.id"
-                class="item-card"
-                :class="{ expanded: isItemExpanded(item.item_name, item.item_source) }"
-              >
-                <div
-                  class="item-card-header"
-                  @click="toggleItemDetails(item.item_name, item.item_source)"
-                >
-                  <span class="item-name">{{ item.item_name }}</span>
-                  <span class="item-meta">
-                    <span v-if="item.attuned" class="item-attuned">Attuned</span>
-                    <span class="item-source">{{ item.item_source }}</span>
-                    <span class="expand-icon">{{ isItemExpanded(item.item_name, item.item_source) ? '−' : '+' }}</span>
-                  </span>
-                </div>
-                <div
-                  v-if="isItemExpanded(item.item_name, item.item_source)"
-                  class="item-card-details"
-                >
-                  <template v-if="getItemDetail(item.item_name, item.item_source)">
-                    <div class="item-detail-row" v-if="getItemDetail(item.item_name, item.item_source)?.rarity">
-                      <span class="detail-label">Rarity:</span>
-                      <span class="detail-value rarity" :class="getItemDetail(item.item_name, item.item_source)?.rarity?.toLowerCase()">
-                        {{ getItemDetail(item.item_name, item.item_source)?.rarity }}
-                      </span>
-                    </div>
-                    <div class="item-detail-row" v-if="getItemProperties(getItemDetail(item.item_name, item.item_source)!).length > 0">
-                      <span class="detail-label">Properties:</span>
-                      <span class="detail-value">{{ getItemProperties(getItemDetail(item.item_name, item.item_source)!).join(', ') }}</span>
-                    </div>
-                    <div class="item-description" v-if="getItemDescription(getItemDetail(item.item_name, item.item_source)!)">
-                      {{ getItemDescription(getItemDetail(item.item_name, item.item_source)!) }}
-                    </div>
-                  </template>
-                  <div v-else class="loading-details">Loading details...</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Full Inventory -->
-          <section class="sheet-section">
-            <div class="section-header-row">
-              <h2>Inventory</h2>
-              <button @click="openInventory" class="btn btn-secondary btn-sm">Manage</button>
-            </div>
-            <div v-if="loadingInventory" class="loading-inventory">Loading inventory...</div>
-            <div v-else-if="inventory.length === 0" class="empty-state">
-              No items in inventory
-            </div>
-            <div v-else class="item-cards">
-              <div
-                v-for="item in inventory"
-                :key="item.id"
-                class="item-card"
-                :class="{ expanded: isItemExpanded(item.item_name, item.item_source) }"
-              >
-                <div
-                  class="item-card-header"
-                  @click="toggleItemDetails(item.item_name, item.item_source)"
-                >
-                  <span class="item-name">
-                    {{ item.item_name }}
-                    <span v-if="item.quantity > 1" class="item-qty">x{{ item.quantity }}</span>
-                  </span>
-                  <span class="item-meta">
-                    <span v-if="item.equipped" class="item-equipped-badge">Equipped</span>
-                    <span v-if="item.attuned" class="item-attuned">Attuned</span>
-                    <span class="expand-icon">{{ isItemExpanded(item.item_name, item.item_source) ? '−' : '+' }}</span>
-                  </span>
-                </div>
-                <div
-                  v-if="isItemExpanded(item.item_name, item.item_source)"
-                  class="item-card-details"
-                >
-                  <template v-if="getItemDetail(item.item_name, item.item_source)">
-                    <div class="item-detail-row" v-if="getItemDetail(item.item_name, item.item_source)?.rarity">
-                      <span class="detail-label">Rarity:</span>
-                      <span class="detail-value rarity" :class="getItemDetail(item.item_name, item.item_source)?.rarity?.toLowerCase()">
-                        {{ getItemDetail(item.item_name, item.item_source)?.rarity }}
-                      </span>
-                    </div>
-                    <div class="item-detail-row" v-if="getItemProperties(getItemDetail(item.item_name, item.item_source)!).length > 0">
-                      <span class="detail-label">Properties:</span>
-                      <span class="detail-value">{{ getItemProperties(getItemDetail(item.item_name, item.item_source)!).join(', ') }}</span>
-                    </div>
-                    <div class="item-description" v-if="getItemDescription(getItemDetail(item.item_name, item.item_source)!)">
-                      {{ getItemDescription(getItemDetail(item.item_name, item.item_source)!) }}
-                    </div>
-                    <div v-if="item.notes" class="item-notes">
-                      <span class="detail-label">Notes:</span> {{ item.notes }}
-                    </div>
-                  </template>
-                  <div v-else class="loading-details">Loading details...</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+        <EquipmentSection
+          v-else-if="activeTab === 'equipment'"
+          :character="character"
+          :inventory="inventory"
+          :loading-inventory="loadingInventory"
+          @open-inventory="openInventory"
+        />
 
         <!-- Spells Tab -->
-        <div v-else-if="activeTab === 'spells'" class="sheet-content single-column">
-          <!-- Spellcasting Stats -->
-          <section class="sheet-section">
-            <h2>Spellcasting</h2>
-            <!-- Multiclass: show stats for each spellcasting class -->
-            <template v-if="isMulticlassSpellcaster">
-              <div
-                v-for="stats in allSpellcastingStats"
-                :key="stats.className"
-                class="spell-stats-row multiclass"
-              >
-                <div class="spell-class-label">{{ stats.className }}</div>
-                <div class="spell-stat-box">
-                  <span class="stat-label">Spell Save DC</span>
-                  <span class="stat-value large">{{ stats.saveDC }}</span>
-                </div>
-                <div class="spell-stat-box">
-                  <span class="stat-label">Spell Attack</span>
-                  <span class="stat-value large">{{ formatMod(stats.attackBonus) }}</span>
-                </div>
-                <div class="spell-stat-box">
-                  <span class="stat-label">Ability</span>
-                  <span class="stat-value large">{{ stats.abilityAbbrev }}</span>
-                </div>
-              </div>
-            </template>
-            <!-- Single class: show simple row -->
-            <div v-else class="spell-stats-row">
-              <div class="spell-stat-box">
-                <span class="stat-label">Spell Save DC</span>
-                <span class="stat-value large">{{ spellSaveDC }}</span>
-              </div>
-              <div class="spell-stat-box">
-                <span class="stat-label">Spell Attack</span>
-                <span class="stat-value large">{{ formatMod(spellAttackBonus || 0) }}</span>
-              </div>
-              <div class="spell-stat-box">
-                <span class="stat-label">Spellcasting Ability</span>
-                <span class="stat-value large">{{ spellcastingAbility?.toUpperCase().slice(0, 3) }}</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- Spell Slots -->
-          <section v-if="spellSlots" class="sheet-section">
-            <h2>Spell Slots</h2>
-            <p class="spell-info-note">
-              Maximum slots shown below. Track used slots on paper.
-            </p>
-            <div class="spell-slots-grid">
-              <div class="spell-slot-row cantrip-row">
-                <span class="slot-level">Cantrips</span>
-                <span class="slot-unlimited">Unlimited</span>
-              </div>
-              <div v-for="level in 9" :key="level" class="spell-slot-row">
-                <template v-if="spellSlots[level]">
-                  <span class="slot-level">Level {{ level }}</span>
-                  <div class="slot-boxes">
-                    <span
-                      v-for="n in spellSlots[level]"
-                      :key="n"
-                      class="slot-box"
-                    ></span>
-                  </div>
-                  <span class="slot-count">{{ spellSlots[level] }} slots</span>
-                </template>
-              </div>
-            </div>
-          </section>
-
-          <!-- Available Spells -->
-          <section class="sheet-section">
-            <h2>Available Spells</h2>
-            <p class="spell-info-note">
-              These spells are available to your class. Track prepared/known spells on paper.
-            </p>
-
-            <div v-if="loadingSpells" class="loading-state">Loading spells...</div>
-
-            <div v-else-if="classSpells.length === 0" class="empty-state">
-              No spells available for your class configuration.
-            </div>
-
-            <div v-else class="spell-list-container">
-              <div v-for="level in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]" :key="level">
-                <div v-if="spellsByLevel[level]?.length" class="spell-level-group">
-                  <h3
-                    class="spell-level-header collapsible"
-                    :class="{ collapsed: isSpellLevelCollapsed(level) }"
-                    @click="toggleSpellLevel(level)"
-                  >
-                    <span class="collapse-icon">{{ isSpellLevelCollapsed(level) ? '▶' : '▼' }}</span>
-                    {{ getLevelDisplay(level) }}
-                    <span class="spell-count">({{ spellsByLevel[level].length }})</span>
-                  </h3>
-                  <div v-show="!isSpellLevelCollapsed(level)" class="spell-cards">
-                    <div
-                      v-for="spell in spellsByLevel[level]"
-                      :key="`${spell.name}|${spell.source}`"
-                      class="spell-card"
-                      :class="{ expanded: isSpellExpanded(spell.name, spell.source) }"
-                    >
-                      <div
-                        class="spell-card-header"
-                        @click="toggleSpellDetails(spell.name, spell.source)"
-                      >
-                        <span class="spell-name">
-                          {{ spell.name }}
-                          <span v-if="spell.ritual" class="spell-tag ritual">R</span>
-                          <span v-if="spell.concentration" class="spell-tag conc">C</span>
-                        </span>
-                        <span class="spell-meta">
-                          <span class="spell-school">{{ getSchoolName(spell.school) }}</span>
-                          <span class="expand-icon">{{ isSpellExpanded(spell.name, spell.source) ? '−' : '+' }}</span>
-                        </span>
-                      </div>
-                      <div
-                        v-if="isSpellExpanded(spell.name, spell.source)"
-                        class="spell-card-details"
-                      >
-                        <div class="spell-stats-mini">
-                          <div class="spell-stat-mini">
-                            <span class="label">Casting Time:</span>
-                            <span>{{ getSpellCastingTime(spell) }}</span>
-                          </div>
-                          <div class="spell-stat-mini">
-                            <span class="label">Range:</span>
-                            <span>{{ getSpellRange(spell) }}</span>
-                          </div>
-                          <div class="spell-stat-mini">
-                            <span class="label">Components:</span>
-                            <span>{{ getSpellComponents(spell) }}</span>
-                          </div>
-                          <div class="spell-stat-mini">
-                            <span class="label">Duration:</span>
-                            <span>{{ getSpellDuration(spell) }}</span>
-                          </div>
-                        </div>
-                        <div class="spell-description">
-                          {{ getSpellDescription(spell) }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+        <SpellsSection
+          v-else-if="activeTab === 'spells'"
+          :character="character"
+          :format-mod="formatMod"
+        />
 
         <!-- Details Tab -->
         <div v-else-if="activeTab === 'details'" class="sheet-content single-column">
@@ -743,15 +470,17 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
-import MainLayout from '../../../shared/components/layout/MainLayout.vue'
+import MainLayout from '@/shared/components/layout/MainLayout.vue'
 import InventoryManager from '../components/InventoryManager.vue'
-import { CharacterPrintDialog } from '../../../components/print'
-import { CharacterSourcesModal } from '../../../components/characters'
+import SpellsSection from '../components/sheet/SpellsSection.vue'
+import EquipmentSection from '../components/sheet/EquipmentSection.vue'
+import { CharacterPrintDialog } from '@/components/print'
+import { CharacterSourcesModal } from '@/components/characters'
 import AppModal from '@/components/shared/AppModal.vue'
-import { useCharacterStore } from '../../../stores/characters'
+import { useCharacterStore } from '@/stores/characters'
 import { useCrossReferences } from '../../sources/composables/useCrossReferences'
 import { renderModalContent } from '../../sources/formatters/modalFormatters'
-import type { Character, CharacterInventory } from '../../../types/character'
+import type { Character, CharacterInventory } from '@/types/character'
 
 // Class feature from catalog
 interface ClassFeature {
@@ -765,27 +494,6 @@ interface ClassFeature {
   subclass_name?: string
   subclass_short_name?: string
   subclass_source?: string
-}
-
-// Item detail from catalog
-interface ItemDetail {
-  name: string
-  source: string
-  item_type: string | null
-  rarity: string | null
-  data: Record<string, unknown>
-  fluff: string | null
-}
-
-// Spell info from catalog
-interface SpellInfo {
-  name: string
-  source: string
-  level: number
-  school: string | null
-  ritual: boolean
-  concentration: boolean
-  data: Record<string, unknown>
 }
 
 // Background detail from catalog
@@ -822,15 +530,10 @@ import {
   getWeaponDamage,
   isFinesse,
   isRanged,
-  isSpellcaster,
-  getSpellcastingAbility,
-  getSpellSaveDC,
-  getSpellAttackBonus,
   getHitDiceString,
   formatClassString,
-  getAllSpellcastingStats,
-  getMulticlassCasterLevel,
-} from '../../../utils/characterUtils'
+} from '@/utils/characterUtils'
+import { useSpellManagement, type SpellInfo } from '../composables/useSpellManagement'
 import { processFormattingTags } from '../../sources/utils/textFormatting'
 
 const route = useRoute()
@@ -868,7 +571,7 @@ const openFeatureModal = async (feature: ClassFeature) => {
     const contentWithType = { ...contentData, ref_type: refType }
     modalContent.value = {
       title: refData.name || feature.name,
-      content: renderModalContent(contentWithType),
+      content: await renderModalContent(contentWithType),
       visible: true
     }
   } else {
@@ -890,12 +593,6 @@ const classFeatures = ref<ClassFeature[]>([])
 const expandedFeatures = ref<Set<string>>(new Set()) // track which features are expanded
 const featureDetails = ref<Record<string, Record<string, unknown>>>({}) // cached feature details by "name|className"
 const loadingFeature = ref<string | null>(null) // currently loading feature key
-const itemDetails = ref<Record<string, ItemDetail>>({}) // keyed by "name|source"
-const expandedItems = ref<Set<string>>(new Set()) // track which items are expanded
-const classSpells = ref<SpellInfo[]>([])
-const loadingSpells = ref(false)
-const expandedSpells = ref<Set<string>>(new Set())
-const collapsedSpellLevels = ref<Set<number>>(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])) // start all collapsed
 const backgroundDetails = ref<BackgroundDetail | null>(null)
 const subclassDetails = ref<Record<string, SubclassDetail>>({}) // keyed by "className|subclassName"
 const loading = ref(true)
@@ -960,237 +657,13 @@ const hasExpertise = (skillName: string) =>
 const isSaveProficient = (ability: string) =>
   character.value ? isProficientInSave(character.value, ability) : false
 
-// Spellcasting
-const characterIsSpellcaster = computed(() =>
-  character.value ? isSpellcaster(character.value) : false
-)
-const spellcastingAbility = computed(() =>
-  character.value ? getSpellcastingAbility(character.value) : null
-)
-const spellSaveDC = computed(() => (character.value ? getSpellSaveDC(character.value) : null))
-const spellAttackBonus = computed(() =>
-  character.value ? getSpellAttackBonus(character.value) : null
-)
-
-// All spellcasting stats for multiclass characters (one per spellcasting class)
-const allSpellcastingStats = computed(() =>
-  character.value ? getAllSpellcastingStats(character.value) : []
-)
-
-// Whether this is a multiclass spellcaster (has 2+ spellcasting classes)
-const isMulticlassSpellcaster = computed(() => allSpellcastingStats.value.length > 1)
-
-// Spell slots using proper multiclass caster level calculation
-// Per D&D 5e rules: combine caster levels from all Spellcasting classes, then look up slots
-const spellSlots = computed(() => {
-  if (!character.value || !characterIsSpellcaster.value) return null
-
-  const slots: Record<number, number> = {}
-
-  // Check for Warlock first (uses separate Pact Magic)
-  const warlock = character.value.classes?.find(
-    (c) => c.class_name.toLowerCase() === 'warlock'
-  )
-
-  // Get multiclass caster level (excludes Warlock)
-  const casterLevel = getMulticlassCasterLevel(character.value)
-
-  if (casterLevel > 0) {
-    // Multiclass spell slot progression (same as full caster progression)
-    const multiclassSlots: Record<number, number[]> = {
-      1: [2],
-      2: [3],
-      3: [4, 2],
-      4: [4, 3],
-      5: [4, 3, 2],
-      6: [4, 3, 3],
-      7: [4, 3, 3, 1],
-      8: [4, 3, 3, 2],
-      9: [4, 3, 3, 3, 1],
-      10: [4, 3, 3, 3, 2],
-      11: [4, 3, 3, 3, 2, 1],
-      12: [4, 3, 3, 3, 2, 1],
-      13: [4, 3, 3, 3, 2, 1, 1],
-      14: [4, 3, 3, 3, 2, 1, 1],
-      15: [4, 3, 3, 3, 2, 1, 1, 1],
-      16: [4, 3, 3, 3, 2, 1, 1, 1],
-      17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
-      18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
-      19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
-      20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
-    }
-    const slotArray = multiclassSlots[casterLevel] || []
-    slotArray.forEach((count, idx) => {
-      if (count > 0) slots[idx + 1] = count
-    })
-  }
-
-  // Add Warlock Pact Magic slots separately (they're tracked independently)
-  if (warlock) {
-    const warlockSlots: Record<number, { count: number; level: number }> = {
-      1: { count: 1, level: 1 },
-      2: { count: 2, level: 1 },
-      3: { count: 2, level: 2 },
-      4: { count: 2, level: 2 },
-      5: { count: 2, level: 3 },
-      6: { count: 2, level: 3 },
-      7: { count: 2, level: 4 },
-      8: { count: 2, level: 4 },
-      9: { count: 2, level: 5 },
-      10: { count: 2, level: 5 },
-      11: { count: 3, level: 5 },
-      12: { count: 3, level: 5 },
-      13: { count: 3, level: 5 },
-      14: { count: 3, level: 5 },
-      15: { count: 3, level: 5 },
-      16: { count: 3, level: 5 },
-      17: { count: 4, level: 5 },
-      18: { count: 4, level: 5 },
-      19: { count: 4, level: 5 },
-      20: { count: 4, level: 5 },
-    }
-    const pactMagic = warlockSlots[warlock.level]
-    if (pactMagic) {
-      // Note: Warlock pact slots are separate from regular slots
-      // For now we just add them to the display at their level
-      slots[pactMagic.level] = (slots[pactMagic.level] || 0) + pactMagic.count
-    }
-  }
-
-  return Object.keys(slots).length > 0 ? slots : null
-})
-
-// Spells grouped by level
-const spellsByLevel = computed(() => {
-  const grouped: Record<number, SpellInfo[]> = {}
-  for (const spell of classSpells.value) {
-    if (!grouped[spell.level]) {
-      grouped[spell.level] = []
-    }
-    grouped[spell.level].push(spell)
-  }
-  return grouped
-})
-
-// Spell helper functions
-const getSchoolName = (code: string | null): string => {
-  if (!code) return 'Unknown'
-  const schools: Record<string, string> = {
-    A: 'Abjuration',
-    C: 'Conjuration',
-    D: 'Divination',
-    E: 'Enchantment',
-    V: 'Evocation',
-    I: 'Illusion',
-    N: 'Necromancy',
-    T: 'Transmutation',
-  }
-  return schools[code] || code
-}
-
-const getLevelDisplay = (level: number): string => {
-  if (level === 0) return 'Cantrip'
-  if (level === 1) return '1st Level'
-  if (level === 2) return '2nd Level'
-  if (level === 3) return '3rd Level'
-  return `${level}th Level`
-}
-
-const toggleSpellDetails = (name: string, source: string) => {
-  const key = `${name}|${source}`
-  if (expandedSpells.value.has(key)) {
-    expandedSpells.value.delete(key)
-  } else {
-    expandedSpells.value.add(key)
-  }
-  expandedSpells.value = new Set(expandedSpells.value)
-}
-
-const toggleSpellLevel = (level: number) => {
-  if (collapsedSpellLevels.value.has(level)) {
-    collapsedSpellLevels.value.delete(level)
-  } else {
-    collapsedSpellLevels.value.add(level)
-  }
-  collapsedSpellLevels.value = new Set(collapsedSpellLevels.value)
-}
-
-const isSpellLevelCollapsed = (level: number): boolean => {
-  return collapsedSpellLevels.value.has(level)
-}
-
-const isSpellExpanded = (name: string, source: string): boolean => {
-  return expandedSpells.value.has(`${name}|${source}`)
-}
-
-const getSpellCastingTime = (spell: SpellInfo): string => {
-  const time = spell.data.time as Array<{ number: number; unit: string }> | undefined
-  if (!time || time.length === 0) return 'Unknown'
-  const t = time[0]
-  return `${t.number} ${t.unit}`
-}
-
-const getSpellRange = (spell: SpellInfo): string => {
-  const range = spell.data.range as { type: string; distance?: { type: string; amount?: number } } | undefined
-  if (!range) return 'Unknown'
-  if (range.type === 'point') {
-    if (range.distance?.type === 'self') return 'Self'
-    if (range.distance?.type === 'touch') return 'Touch'
-    if (range.distance?.amount) return `${range.distance.amount} ${range.distance.type}`
-  }
-  if (range.type === 'special') return 'Special'
-  return range.type
-}
-
-const getSpellComponents = (spell: SpellInfo): string => {
-  const comp = spell.data.components as { v?: boolean; s?: boolean; m?: unknown } | undefined
-  if (!comp) return ''
-  const parts: string[] = []
-  if (comp.v) parts.push('V')
-  if (comp.s) parts.push('S')
-  if (comp.m) parts.push('M')
-  return parts.join(', ')
-}
-
-const getSpellDuration = (spell: SpellInfo): string => {
-  const duration = spell.data.duration as Array<{ type: string; duration?: { type: string; amount: number }; concentration?: boolean }> | undefined
-  if (!duration || duration.length === 0) return 'Unknown'
-  const d = duration[0]
-  if (d.type === 'instant') return 'Instantaneous'
-  if (d.type === 'permanent') return 'Permanent'
-  if (d.duration) {
-    const conc = d.concentration ? 'Concentration, ' : ''
-    return `${conc}${d.duration.amount} ${d.duration.type}`
-  }
-  return d.type
-}
-
-const getSpellDescription = (spell: SpellInfo): string => {
-  const entries = spell.data.entries as unknown[] | undefined
-  if (!entries) return ''
-
-  return entries
-    .map((entry) => {
-      if (typeof entry === 'string') return entry
-      if (typeof entry === 'object' && entry !== null) {
-        const e = entry as Record<string, unknown>
-        if (e.type === 'entries' && Array.isArray(e.entries)) {
-          return (e.entries as unknown[])
-            .filter((sub) => typeof sub === 'string')
-            .join(' ')
-        }
-        if (e.type === 'list' && Array.isArray(e.items)) {
-          return (e.items as unknown[])
-            .filter((sub) => typeof sub === 'string')
-            .map((s) => `• ${s}`)
-            .join('\n')
-        }
-      }
-      return ''
-    })
-    .filter(Boolean)
-    .join('\n\n')
-}
+// Spellcasting - using composable (only keep what's used in Character tab summary)
+const {
+  characterIsSpellcaster,
+  spellcastingAbility,
+  spellSaveDC,
+  spellAttackBonus,
+} = useSpellManagement(character, characterId)
 
 // Class Feature helpers
 const toggleFeatureExpansion = async (feature: ClassFeature) => {
@@ -1635,11 +1108,11 @@ const loadCharacter = async () => {
       error.value = 'Character not found'
     } else {
       // Load inventory and catalog data in parallel
+      // Note: Spells are loaded by SpellsSection component when it mounts
       await Promise.all([
         loadInventory(),
         loadRaceData(),
         loadClassData(),
-        loadClassSpells(),
         loadBackgroundDetails(),
         loadSubclassDetails(),
       ])
@@ -1793,127 +1266,6 @@ const loadClassFeatures = () => {
   classFeatures.value = allFeatures
 }
 
-const loadClassSpells = async () => {
-  if (!character.value?.classes?.length) return
-
-  // Find spellcasting classes
-  const spellcastingClasses = ['bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard']
-  const charSpellClasses = character.value.classes.filter((c) =>
-    spellcastingClasses.includes(c.class_name.toLowerCase())
-  )
-
-  if (charSpellClasses.length === 0) return
-
-  loadingSpells.value = true
-
-  try {
-    // Fetch character's allowed sources for filtering
-    let allowedSources: Set<string> | null = null
-    try {
-      const sourcesResult = await invoke<{ success: boolean; data?: string[] }>('list_character_sources', {
-        characterId: characterId.value
-      })
-      if (sourcesResult.success && sourcesResult.data && sourcesResult.data.length > 0) {
-        allowedSources = new Set(sourcesResult.data)
-      }
-      // If no sources configured (empty array), allowedSources stays null = show all
-    } catch (e) {
-      console.warn('Could not load character sources, showing all spells:', e)
-    }
-
-    // Determine max spell level based on class and level
-    const getMaxSpellLevel = (className: string, level: number): number => {
-      const lowerName = className.toLowerCase()
-      if (['paladin', 'ranger'].includes(lowerName)) {
-        // Half casters - spell level = floor((level + 1) / 2) but max 5
-        if (level < 2) return 0
-        return Math.min(5, Math.ceil((level - 1) / 2))
-      }
-      if (lowerName === 'warlock') {
-        // Warlock pact magic
-        if (level < 1) return 0
-        if (level < 3) return 1
-        if (level < 5) return 2
-        if (level < 7) return 3
-        if (level < 9) return 4
-        return 5
-      }
-      // Full casters
-      return Math.min(9, Math.ceil(level / 2))
-    }
-
-    let maxLevel = 0
-    for (const cls of charSpellClasses) {
-      maxLevel = Math.max(maxLevel, getMaxSpellLevel(cls.class_name, cls.level))
-    }
-
-    // Use the new get_spells_by_class command which joins with spell_classes table
-    // Fetch spells for each spellcasting class the character has
-    const spellsByClassName = new Map<string, SpellInfo[]>()
-
-    for (const cls of charSpellClasses) {
-      const result = await invoke<{ success: boolean; data?: Array<Record<string, unknown>>; error?: string }>(
-        'get_spells_by_class',
-        { className: cls.class_name }
-      )
-
-      if (result.success && result.data) {
-        const classSpellList: SpellInfo[] = []
-        for (const rawSpell of result.data) {
-          // Filter by max spell level for this character
-          const spellLevel = rawSpell.level as number
-          if (spellLevel > maxLevel) continue
-
-          // Filter by character's allowed sources (if configured)
-          const spellSource = rawSpell.source as string
-          if (allowedSources && !allowedSources.has(spellSource)) continue
-
-          // Backend merges data at top level via entity_to_json
-          // Store the whole rawSpell object as data for accessing time, range, etc.
-          classSpellList.push({
-            name: rawSpell.name as string,
-            source: spellSource,
-            level: spellLevel,
-            school: rawSpell.school as string | null,
-            ritual: (rawSpell.ritual as number) === 1 || rawSpell.ritual === true,
-            concentration: (rawSpell.concentration as number) === 1 || rawSpell.concentration === true,
-            data: rawSpell as Record<string, unknown>,
-          })
-        }
-        spellsByClassName.set(cls.class_name, classSpellList)
-      }
-    }
-
-    // Merge and deduplicate spells from all classes
-    // Keep name|source as key since different sources may have different spell versions
-    const seenSpells = new Set<string>()
-    const allSpells: SpellInfo[] = []
-
-    for (const spellList of spellsByClassName.values()) {
-      for (const spell of spellList) {
-        const key = `${spell.name}|${spell.source}`
-        if (!seenSpells.has(key)) {
-          seenSpells.add(key)
-          allSpells.push(spell)
-        }
-      }
-    }
-
-    // Sort by level, then name
-    allSpells.sort((a, b) => {
-      if (a.level !== b.level) return a.level - b.level
-      return a.name.localeCompare(b.name)
-    })
-
-    classSpells.value = allSpells
-  } catch (e) {
-    console.error('Failed to load class spells:', e)
-    classSpells.value = []
-  } finally {
-    loadingSpells.value = false
-  }
-}
-
 const loadBackgroundDetails = async () => {
   if (!character.value?.background_name) return
 
@@ -2001,132 +1353,6 @@ const openInventory = () => {
 
 const printCharacter = () => {
   showPrintDialog.value = true
-}
-
-// Item details
-const getItemKey = (name: string, source: string) => `${name}|${source}`
-
-const isItemExpanded = (name: string, source: string) => {
-  return expandedItems.value.has(getItemKey(name, source))
-}
-
-const toggleItemDetails = async (name: string, source: string) => {
-  const key = getItemKey(name, source)
-
-  if (expandedItems.value.has(key)) {
-    expandedItems.value.delete(key)
-    expandedItems.value = new Set(expandedItems.value) // trigger reactivity
-    return
-  }
-
-  // Fetch item details if not already loaded
-  if (!itemDetails.value[key]) {
-    try {
-      const result = await invoke<{ success: boolean; data?: Record<string, unknown> }>(
-        'get_item_by_name',
-        { name, source }
-      )
-      if (result.success && result.data) {
-        // Parse the data field if it's a string
-        const rawItem = result.data as unknown as {
-          name: string
-          source: string
-          item_type: string | null
-          rarity: string | null
-          data: string | Record<string, unknown>
-          fluff: string | null
-        }
-        const item: ItemDetail = {
-          name: rawItem.name,
-          source: rawItem.source,
-          item_type: rawItem.item_type,
-          rarity: rawItem.rarity,
-          data: typeof rawItem.data === 'string' ? JSON.parse(rawItem.data) : rawItem.data,
-          fluff: rawItem.fluff,
-        }
-        itemDetails.value[key] = item
-      }
-    } catch (e) {
-      console.error('Failed to load item details:', e)
-      return
-    }
-  }
-
-  expandedItems.value.add(key)
-  expandedItems.value = new Set(expandedItems.value) // trigger reactivity
-}
-
-const getItemDetail = (name: string, source: string): ItemDetail | null => {
-  return itemDetails.value[getItemKey(name, source)] || null
-}
-
-// Helper to extract item description from 5etools data
-const getItemDescription = (item: ItemDetail): string => {
-  if (!item.data) return ''
-
-  const entries = item.data.entries as unknown[]
-  if (!entries || !Array.isArray(entries)) return ''
-
-  // Flatten entries to text
-  return entries
-    .map((entry) => {
-      if (typeof entry === 'string') return entry
-      if (typeof entry === 'object' && entry !== null) {
-        const e = entry as Record<string, unknown>
-        if (e.type === 'entries' && Array.isArray(e.entries)) {
-          return (e.entries as unknown[])
-            .filter((sub) => typeof sub === 'string')
-            .join(' ')
-        }
-        if (e.type === 'list' && Array.isArray(e.items)) {
-          return (e.items as unknown[])
-            .filter((sub) => typeof sub === 'string')
-            .join(', ')
-        }
-      }
-      return ''
-    })
-    .filter(Boolean)
-    .join(' ')
-}
-
-// Helper to get item properties
-const getItemProperties = (item: ItemDetail): string[] => {
-  if (!item.data) return []
-
-  const props: string[] = []
-  const data = item.data
-
-  // Weapon properties
-  if (data.property && Array.isArray(data.property)) {
-    const propMap: Record<string, string> = {
-      'F': 'Finesse',
-      'H': 'Heavy',
-      'L': 'Light',
-      'R': 'Reach',
-      'T': 'Thrown',
-      '2H': 'Two-Handed',
-      'V': 'Versatile',
-      'A': 'Ammunition',
-      'LD': 'Loading',
-      'S': 'Special',
-    }
-    for (const p of data.property as string[]) {
-      if (propMap[p]) props.push(propMap[p])
-    }
-  }
-
-  // Armor properties
-  if (data.stealth) props.push('Stealth Disadvantage')
-  if (data.strength) props.push(`Str ${data.strength}+ required`)
-
-  // Magic item properties
-  if (data.reqAttune) {
-    if (data.reqAttune === true) props.push('Requires Attunement')
-    else if (typeof data.reqAttune === 'string') props.push(`Attunement: ${data.reqAttune}`)
-  }
-
-  return props
 }
 
 onMounted(() => {
@@ -2650,259 +1876,6 @@ onUnmounted(() => {
   font-style: italic;
 }
 
-.spell-info-note {
-  color: var(--color-text-secondary);
-  font-style: italic;
-  margin-bottom: var(--spacing-md);
-}
-
-/* Spell List */
-.spell-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.spell-level-group {
-  margin-bottom: var(--spacing-md);
-}
-
-.spell-level-header {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-primary-600);
-  margin-bottom: var(--spacing-sm);
-  padding-bottom: var(--spacing-xs);
-  border-bottom: 2px solid var(--color-primary-200);
-}
-
-.spell-level-header.collapsible {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  user-select: none;
-  transition: color 0.15s ease;
-}
-
-.spell-level-header.collapsible:hover {
-  color: var(--color-primary-700);
-}
-
-.spell-level-header .collapse-icon {
-  font-size: 0.75rem;
-  width: 1rem;
-  text-align: center;
-  transition: transform 0.15s ease;
-}
-
-.spell-level-header .spell-count {
-  font-weight: 400;
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  margin-left: auto;
-}
-
-.spell-level-header.collapsed {
-  margin-bottom: 0;
-  border-bottom-color: var(--color-border);
-}
-
-.spell-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.spell-card {
-  background: var(--color-surface-variant);
-  border: 1px solid #ccc;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.spell-card.expanded {
-  border-color: var(--color-primary-300);
-}
-
-.spell-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.spell-card-header:hover {
-  background: var(--color-surface-hover);
-}
-
-.spell-card-header .spell-name {
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.spell-tag {
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 1px 4px;
-  border-radius: 3px;
-  text-transform: uppercase;
-}
-
-.spell-tag.ritual {
-  background: var(--color-success-100);
-  color: var(--color-success-700);
-}
-
-.spell-tag.conc {
-  background: var(--color-warning-100);
-  color: var(--color-warning-700);
-}
-
-.spell-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-size: 0.85rem;
-}
-
-.spell-school {
-  color: var(--color-text-secondary);
-}
-
-.spell-card-details {
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: 0.9rem;
-}
-
-.spell-stats-mini {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-xs) var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-}
-
-.spell-stat-mini {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.spell-stat-mini .label {
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-.spell-description {
-  line-height: 1.5;
-  white-space: pre-wrap;
-  color: var(--color-text);
-}
-
-/* Spells Tab */
-.spell-stats-row {
-  display: flex;
-  gap: var(--spacing-lg);
-  justify-content: center;
-}
-
-.spell-stats-row.multiclass {
-  justify-content: flex-start;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-sm);
-}
-
-.spell-stats-row.multiclass .spell-stat-box {
-  background: var(--color-surface);
-  min-width: 80px;
-  padding: var(--spacing-sm) var(--spacing-md);
-}
-
-.spell-stats-row.multiclass .spell-stat-box .stat-value.large {
-  font-size: 1.25rem;
-}
-
-.spell-class-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--color-primary-500);
-  min-width: 80px;
-  display: flex;
-  align-items: center;
-}
-
-.spell-stat-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--spacing-md);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-md);
-  min-width: 100px;
-}
-
-.spell-stat-box .stat-value.large {
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-.spell-slots-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.spell-slot-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
-}
-
-.slot-level {
-  font-weight: 600;
-  min-width: 70px;
-  color: var(--color-text-secondary);
-}
-
-.cantrip-row {
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: var(--spacing-xs);
-  padding-bottom: var(--spacing-sm);
-}
-
-.slot-unlimited {
-  font-size: 0.85rem;
-  font-style: italic;
-  color: var(--color-text-tertiary);
-}
-
-.slot-boxes {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.slot-box {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-primary-500);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
-
-.slot-count {
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-}
-
 /* Personality */
 .personality-item {
   margin-bottom: var(--spacing-sm);
@@ -3347,47 +2320,6 @@ onUnmounted(() => {
 
 .feature-links a.subclass-feature:hover {
   color: var(--color-secondary-600, #7b1fa2);
-}
-
-/* Inventory */
-.equipped-list,
-.inventory-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.equipped-item,
-.inventory-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border-radius: var(--radius-sm);
-}
-
-.item-name {
-  flex: 1;
-  font-weight: 500;
-}
-
-.item-source {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
-.item-qty {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-}
-
-.item-equipped {
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
-  border-radius: var(--radius-sm);
 }
 
 /* Classes */

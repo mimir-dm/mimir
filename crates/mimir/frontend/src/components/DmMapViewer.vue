@@ -643,12 +643,14 @@
 import { ref, computed, watch, onMounted, onUnmounted, toRef, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event'
-import { usePlayerDisplay } from '@/composables/usePlayerDisplay'
-import { useTokens } from '@/composables/useTokens'
-import { useLightSources, type LightSourceSummary } from '@/composables/useLightSources'
-import { useVisionCalculation, type AmbientLight } from '@/composables/useVisionCalculation'
-import { useUvttMap } from '@/composables/useUvttMap'
-import { useMultiTokenVisibility } from '@/composables/useVisibilityPolygon'
+import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
+import { useTokens } from '@/composables/map/useTokens'
+import { useLightSources, type LightSourceSummary } from '@/composables/map/useLightSources'
+import { useVisionCalculation, type AmbientLight } from '@/composables/map/useVisionCalculation'
+import { useUvttMap } from '@/composables/map/useUvttMap'
+import { useMultiTokenVisibility } from '@/composables/map/useVisibilityPolygon'
+import { useTokenDrag, transformToken, type BackendToken } from '@/composables/map/useTokenDrag'
+import { useMapMarkers, type MapTrap, type MapPoi } from '@/composables/map/useMapMarkers'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LosDebugOverlay from '@/components/los/LosDebugOverlay.vue'
@@ -759,58 +761,35 @@ const showPrintDialog = ref(false)
 // Light source state
 const lightSources = ref<LightSourceSummary[]>([])
 
-// Map trap and POI types
-interface MapTrap {
-  id: string
-  map_id: string
-  grid_x: number
-  grid_y: number
-  name: string
-  description: string | null
-  trigger_description: string | null
-  effect_description: string | null
-  dc: number | null
-  visible: number
-  created_at: string
-  updated_at: string
-}
-
-interface MapPoi {
-  id: string
-  map_id: string
-  grid_x: number
-  grid_y: number
-  name: string
-  description: string | null
-  icon: string
-  color: string | null
-  visible: number
-  created_at: string
-  updated_at: string
-}
-
-// Map traps and POIs state
-const mapTraps = ref<MapTrap[]>([])
-const mapPois = ref<MapPoi[]>([])
-const selectedTrapId = ref<string | null>(null)
-const selectedPoiId = ref<string | null>(null)
-
-// POI context menu state
-const poiContextMenu = ref<{
-  visible: boolean
-  x: number
-  y: number
-  poi: MapPoi | null
-}>({
-  visible: false,
-  x: 0,
-  y: 0,
-  poi: null
+// Map markers (traps and POIs) - using composable
+const mapIdComputed = computed(() => props.mapId)
+const {
+  mapTraps,
+  mapPois,
+  selectedTrapId,
+  selectedPoiId,
+  poiContextMenu,
+  showPoiEditModal,
+  poiToEdit,
+  loadMapTraps,
+  loadMapPois,
+  toggleTrapVisibility,
+  togglePoiVisibility,
+  showPoiContextMenuAt: showPoiContextMenu,
+  openPoiEditModal,
+  closePoiEditModal,
+  handlePoiSaved,
+  togglePoiVisibilityFromContext,
+  deletePoiFromContext,
+  sendMarkersToDisplay,
+  closePoiContextMenu,
+  clearMarkers,
+  getPoiIcon
+} = useMapMarkers({
+  mapId: mapIdComputed,
+  gridSizePx: effectiveGridSize,
+  isDisplayOpen
 })
-
-// POI edit modal state
-const showPoiEditModal = ref(false)
-const poiToEdit = ref<MapPoi | null>(null)
 
 // Computed: token light info for TokenRenderer
 const tokenLightInfo = computed(() => {
@@ -1060,57 +1039,7 @@ function handleDoorToggle(portalId: string) {
   }
 }
 
-// Backend token response type (matches TokenResponse from backend)
-interface BackendToken {
-  id: string
-  map_id: string
-  name: string
-  token_type: string
-  size: string
-  x: number
-  y: number
-  visible_to_players: boolean
-  color: string | null
-  image_path: string | null
-  monster_id: string | null
-  character_id: string | null
-  notes: string | null
-  vision_type: string
-  vision_range_ft: number | null
-  vision_bright_ft: number | null
-  vision_dim_ft: number | null
-  vision_dark_ft: number
-  light_radius_ft: number
-  created_at: string
-  updated_at: string
-}
-
-// Transform backend token to frontend Token format
-function transformToken(backendToken: BackendToken): Token {
-  return {
-    id: backendToken.id,
-    map_id: backendToken.map_id,
-    name: backendToken.name,
-    token_type: backendToken.token_type as Token['token_type'],
-    size: backendToken.size as Token['size'],
-    x: backendToken.x,
-    y: backendToken.y,
-    visible_to_players: backendToken.visible_to_players,
-    color: backendToken.color,
-    image_path: backendToken.image_path,
-    monster_id: backendToken.monster_id,
-    character_id: backendToken.character_id,
-    notes: backendToken.notes,
-    vision_type: backendToken.vision_type as Token['vision_type'],
-    vision_range_ft: backendToken.vision_range_ft,
-    vision_bright_ft: backendToken.vision_bright_ft,
-    vision_dim_ft: backendToken.vision_dim_ft,
-    vision_dark_ft: backendToken.vision_dark_ft,
-    light_radius_ft: backendToken.light_radius_ft,
-    created_at: backendToken.created_at,
-    updated_at: backendToken.updated_at
-  }
-}
+// BackendToken interface and transformToken are imported from useTokenDrag
 
 // Load tokens when map changes
 async function loadTokens(mapId: string) {
@@ -1194,141 +1123,7 @@ async function loadLightSources(mapId: string) {
   }
 }
 
-// Load traps for the map
-async function loadMapTraps(mapId: string) {
-  try {
-    const response = await invoke<{ success: boolean; data?: MapTrap[] }>('list_map_traps', { mapId })
-    if (response.success && response.data) {
-      mapTraps.value = response.data
-    }
-  } catch (e) {
-    console.error('Failed to load map traps:', e)
-    mapTraps.value = []
-  }
-}
-
-// Load POIs for the map
-async function loadMapPois(mapId: string) {
-  try {
-    const response = await invoke<{ success: boolean; data?: MapPoi[] }>('list_map_pois', { mapId })
-    if (response.success && response.data) {
-      mapPois.value = response.data
-    }
-  } catch (e) {
-    console.error('Failed to load map POIs:', e)
-    mapPois.value = []
-  }
-}
-
-// Toggle trap visibility (right-click)
-async function toggleTrapVisibility(trap: MapTrap) {
-  try {
-    await invoke('toggle_map_trap_visibility', { id: trap.id })
-    if (props.mapId) {
-      await loadMapTraps(props.mapId)
-      sendMarkersToDisplay()
-    }
-  } catch (e) {
-    console.error('Failed to toggle trap visibility:', e)
-  }
-}
-
-// Toggle POI visibility (right-click)
-async function togglePoiVisibility(poi: MapPoi) {
-  try {
-    await invoke('toggle_map_poi_visibility', { id: poi.id })
-    if (props.mapId) {
-      await loadMapPois(props.mapId)
-      sendMarkersToDisplay()
-    }
-  } catch (e) {
-    console.error('Failed to toggle POI visibility:', e)
-  }
-}
-
-// Show POI context menu
-function showPoiContextMenu(event: MouseEvent, poi: MapPoi) {
-  selectedPoiId.value = poi.id
-  poiContextMenu.value = {
-    visible: true,
-    x: event.clientX,
-    y: event.clientY,
-    poi
-  }
-}
-
-// Open POI edit modal from context menu
-function openPoiEditModal() {
-  if (poiContextMenu.value.poi) {
-    poiToEdit.value = poiContextMenu.value.poi
-    showPoiEditModal.value = true
-  }
-  poiContextMenu.value.visible = false
-}
-
-// Close POI edit modal
-function closePoiEditModal() {
-  showPoiEditModal.value = false
-  poiToEdit.value = null
-}
-
-// Handle POI saved from edit modal
-function handlePoiSaved(updatedPoi: MapPoi) {
-  // Update the POI in our local list
-  const index = mapPois.value.findIndex(p => p.id === updatedPoi.id)
-  if (index !== -1) {
-    mapPois.value[index] = updatedPoi
-  }
-  // Send updated markers to player display
-  sendMarkersToDisplay()
-  closePoiEditModal()
-}
-
-// Toggle POI visibility from context menu
-async function togglePoiVisibilityFromContext() {
-  if (poiContextMenu.value.poi) {
-    await togglePoiVisibility(poiContextMenu.value.poi)
-  }
-  poiContextMenu.value.visible = false
-}
-
-// Delete POI from context menu
-async function deletePoiFromContext() {
-  const poi = poiContextMenu.value.poi
-  if (!poi) return
-
-  if (confirm(`Delete POI "${poi.name}"?`)) {
-    try {
-      await invoke('delete_map_poi', { id: poi.id })
-      if (props.mapId) {
-        await loadMapPois(props.mapId)
-        sendMarkersToDisplay()
-      }
-    } catch (e) {
-      console.error('Failed to delete POI:', e)
-    }
-  }
-  poiContextMenu.value.visible = false
-}
-
-// Send visible markers (traps & POIs) to player display
-async function sendMarkersToDisplay() {
-  if (!isDisplayOpen.value || !props.mapId) return
-
-  const visibleTraps = mapTraps.value.filter(t => t.visible === 1)
-  const visiblePois = mapPois.value.filter(p => p.visible === 1)
-
-  try {
-    await emit('player-display:markers-update', {
-      mapId: props.mapId,
-      traps: visibleTraps,
-      pois: visiblePois,
-      gridSizePx: effectiveGridSize.value
-    })
-  } catch (e) {
-    console.error('Failed to send markers to display:', e)
-  }
-}
+// Marker functions (loadMapTraps, loadMapPois, etc.) provided by useMapMarkers composable
 
 // Send light sources to player display
 async function sendLightSourcesToDisplay() {
@@ -1872,20 +1667,7 @@ const mapContainerStyle = computed(() => ({
   backfaceVisibility: 'hidden' as const
 }))
 
-// Get icon character for POI type (matches PoiEditModal icons)
-function getPoiIcon(icon: string): string {
-  const iconMap: Record<string, string> = {
-    'pin': '📍',
-    'star': '⭐',
-    'skull': '💀',
-    'chest': '📦',
-    'door': '🚪',
-    'secret': '🔮',
-    'question': '❓',
-    'exclamation': '❗'
-  }
-  return iconMap[icon] || '📍'
-}
+// getPoiIcon provided by useMapMarkers composable
 
 // Hex grid points calculation
 const hexPoints = computed(() => {
@@ -1912,8 +1694,7 @@ watch(() => props.mapId, async (newId) => {
     tokens.value = []
     fogEnabled.value = false
     lightSources.value = []
-    mapTraps.value = []
-    mapPois.value = []
+    clearMarkers()
   }
 }, { immediate: true })
 

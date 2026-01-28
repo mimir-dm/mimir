@@ -26,7 +26,6 @@
                 <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
                 <button class="ctrl-btn" @click="zoomIn" :disabled="zoom >= 4">+</button>
                 <button class="ctrl-btn" @click="resetView">Fit</button>
-                <button class="ctrl-btn" @click="showGridConfigModal = true">Grid</button>
               </div>
               <div class="token-count">
                 {{ tokens.length }} tokens
@@ -99,7 +98,7 @@
                     'token-dragging': draggingToken?.id === token.id
                   }"
                   :style="getTokenStyle(token)"
-                  @mousedown.stop="onTokenMouseDown($event, token)"
+                  @mousedown.stop="handleTokenMouseDown($event, token)"
                   @click.stop="selectToken(token)"
                   @contextmenu.prevent="showTokenContextMenu($event, token)"
                 >
@@ -386,14 +385,6 @@
     </template>
   </AppModal>
 
-  <!-- Grid Configuration Modal -->
-  <MapGridConfigModal
-    :visible="showGridConfigModal"
-    :map="map"
-    @close="showGridConfigModal = false"
-    @saved="handleGridSaved"
-  />
-
   <!-- POI Edit Modal -->
   <PoiEditModal
     :visible="showPoiEditModal"
@@ -409,11 +400,11 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import TokenPalette from './TokenPalette.vue'
-import MapGridConfigModal from '@/features/campaigns/components/StageLanding/MapGridConfigModal.vue'
 import PoiEditModal from '@/components/map/PoiEditModal.vue'
 import type { Token, CreateTokenRequest, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
-import { useTokens } from '@/composables/useTokens'
+import { useTokens } from '@/composables/map/useTokens'
+import { useEntityDragDrop } from '@/composables/map/useEntityDragDrop'
 
 interface Map {
   id: string
@@ -477,15 +468,7 @@ const pendingTokenConfig = ref<TokenConfigWithMonster | null>(null)
 const mousePosition = ref<{ x: number; y: number } | null>(null)
 const selectedTokenId = ref<string | null>(null)
 
-// Token dragging state
-const draggingToken = ref<Token | null>(null)
-const dragTokenOffsetX = ref(0)
-const dragTokenOffsetY = ref(0)
-
-// Light source dragging state
-const draggingLight = ref<LightSource | null>(null)
-const dragLightOffsetX = ref(0)
-const dragLightOffsetY = ref(0)
+// Entity drag state is managed by useEntityDragDrop composables below
 
 // Light placement state
 const pendingLightType = ref<'' | 'torch' | 'lantern' | 'candle'>('')
@@ -536,15 +519,6 @@ interface MapPoi {
 }
 const mapPois = ref<MapPoi[]>([])
 
-// POI dragging state
-const draggingPoi = ref<MapPoi | null>(null)
-const dragPoiOffsetX = ref(0)
-const dragPoiOffsetY = ref(0)
-
-// Trap dragging state
-const draggingTrap = ref<MapTrap | null>(null)
-const dragTrapOffsetX = ref(0)
-const dragTrapOffsetY = ref(0)
 
 // Context menu
 const contextMenu = ref({
@@ -574,8 +548,6 @@ const poiContextMenu = ref({
 const showPoiEditModal = ref(false)
 const poiToEdit = ref<MapPoi | null>(null)
 
-// Grid config modal
-const showGridConfigModal = ref(false)
 
 // Container dimensions
 const containerWidth = 700
@@ -624,6 +596,88 @@ const tokenLayerStyle = computed(() => ({
   top: 0,
   left: 0
 }))
+
+// Entity drag-and-drop handlers using composable
+const tokenDrag = useEntityDragDrop<Token>({
+  viewportRef,
+  baseScale,
+  zoom,
+  panX,
+  panY,
+  uvttGridSize,
+  entities: tokens,
+  coordType: 'pixel',
+  coordFields: { x: 'x', y: 'y' },
+  savePosition: async (token) => {
+    const gridSize = uvttGridSize.value
+    const gridX = Math.floor(token.x / gridSize)
+    const gridY = Math.floor(token.y / gridSize)
+    await invoke('update_token_position', { id: token.id, gridX, gridY })
+  },
+  reload: loadTokens,
+  snapToGrid: true,
+  stopPropagation: false // Token drag doesn't stop propagation to allow selection
+})
+const draggingToken = tokenDrag.draggingEntity
+const onTokenMouseDown = tokenDrag.onMouseDown
+
+const lightDrag = useEntityDragDrop<LightSource>({
+  viewportRef,
+  baseScale,
+  zoom,
+  panX,
+  panY,
+  uvttGridSize,
+  entities: lightSources,
+  coordType: 'pixel',
+  coordFields: { x: 'x', y: 'y' },
+  savePosition: async (light) => {
+    await invoke('move_light_source', {
+      id: String(light.id),
+      x: Math.round(light.x),
+      y: Math.round(light.y)
+    })
+  },
+  reload: loadLightSources
+})
+const draggingLight = lightDrag.draggingEntity
+const onLightMouseDown = lightDrag.onMouseDown
+
+const trapDrag = useEntityDragDrop<MapTrap>({
+  viewportRef,
+  baseScale,
+  zoom,
+  panX,
+  panY,
+  uvttGridSize,
+  entities: mapTraps,
+  coordType: 'grid',
+  coordFields: { x: 'grid_x', y: 'grid_y' },
+  savePosition: async (trap) => {
+    await invoke('move_map_trap', { id: trap.id, gridX: trap.grid_x, gridY: trap.grid_y })
+  },
+  reload: loadMapTraps
+})
+const draggingTrap = trapDrag.draggingEntity
+const onTrapMouseDown = trapDrag.onMouseDown
+
+const poiDrag = useEntityDragDrop<MapPoi>({
+  viewportRef,
+  baseScale,
+  zoom,
+  panX,
+  panY,
+  uvttGridSize,
+  entities: mapPois,
+  coordType: 'grid',
+  coordFields: { x: 'grid_x', y: 'grid_y' },
+  savePosition: async (poi) => {
+    await invoke('move_map_poi', { id: poi.id, gridX: poi.grid_x, gridY: poi.grid_y })
+  },
+  reload: loadMapPois
+})
+const draggingPoi = poiDrag.draggingEntity
+const onPoiMouseDown = poiDrag.onMouseDown
 
 // Watch for visibility changes
 watch(() => props.visible, async (visible) => {
@@ -756,215 +810,21 @@ function onMouseDown(event: MouseEvent) {
   }
 }
 
-// Start dragging a token
-function onTokenMouseDown(event: MouseEvent, token: Token) {
-  // Only left-click to drag
-  if (event.button !== 0) return
+// Entity mousedown handlers are provided by useEntityDragDrop composables above:
+// onTokenMouseDown, onLightMouseDown, onTrapMouseDown, onPoiMouseDown
 
-  event.preventDefault()
-  draggingToken.value = token
+// Special handling for token selection
+function handleTokenMouseDown(event: MouseEvent, token: Token) {
   selectedTokenId.value = token.id
-
-  // Calculate offset from mouse to token center
-  if (viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Token position in viewport coordinates
-    const effectiveScale = baseScale.value * zoom.value
-    const tokenViewportX = token.x * baseScale.value + panX.value
-    const tokenViewportY = token.y * baseScale.value + panY.value
-
-    // Store offset so token moves smoothly from where we clicked
-    dragTokenOffsetX.value = mouseX - tokenViewportX * zoom.value
-    dragTokenOffsetY.value = mouseY - tokenViewportY * zoom.value
-  }
-}
-
-// Start dragging a light source
-function onLightMouseDown(event: MouseEvent, light: LightSource) {
-  // Only left-click to drag
-  if (event.button !== 0) return
-
-  event.preventDefault()
-  event.stopPropagation()
-  draggingLight.value = light
-
-  // Calculate offset from mouse to light center
-  if (viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Light position in viewport coordinates
-    const lightViewportX = light.x * baseScale.value + panX.value
-    const lightViewportY = light.y * baseScale.value + panY.value
-
-    // Store offset so light moves smoothly from where we clicked
-    dragLightOffsetX.value = mouseX - lightViewportX * zoom.value
-    dragLightOffsetY.value = mouseY - lightViewportY * zoom.value
-  }
-}
-
-// Start dragging a trap
-function onTrapMouseDown(event: MouseEvent, trap: MapTrap) {
-  // Only left-click to drag
-  if (event.button !== 0) return
-
-  event.preventDefault()
-  event.stopPropagation()
-  draggingTrap.value = trap
-
-  // Calculate offset from mouse to trap center (traps use grid coordinates)
-  if (viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Convert grid coords to pixel coords (center of cell)
-    const trapPixelX = (trap.grid_x + 0.5) * uvttGridSize.value
-    const trapPixelY = (trap.grid_y + 0.5) * uvttGridSize.value
-
-    // Trap position in viewport coordinates
-    const trapViewportX = trapPixelX * baseScale.value + panX.value
-    const trapViewportY = trapPixelY * baseScale.value + panY.value
-
-    // Store offset so trap moves smoothly from where we clicked
-    dragTrapOffsetX.value = mouseX - trapViewportX * zoom.value
-    dragTrapOffsetY.value = mouseY - trapViewportY * zoom.value
-  }
-}
-
-// Start dragging a POI
-function onPoiMouseDown(event: MouseEvent, poi: MapPoi) {
-  // Only left-click to drag
-  if (event.button !== 0) return
-
-  event.preventDefault()
-  event.stopPropagation()
-  draggingPoi.value = poi
-
-  // Calculate offset from mouse to POI center (POIs use grid coordinates)
-  if (viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Convert grid coords to pixel coords (center of cell)
-    const poiPixelX = (poi.grid_x + 0.5) * uvttGridSize.value
-    const poiPixelY = (poi.grid_y + 0.5) * uvttGridSize.value
-
-    // POI position in viewport coordinates
-    const poiViewportX = poiPixelX * baseScale.value + panX.value
-    const poiViewportY = poiPixelY * baseScale.value + panY.value
-
-    // Store offset so POI moves smoothly from where we clicked
-    dragPoiOffsetX.value = mouseX - poiViewportX * zoom.value
-    dragPoiOffsetY.value = mouseY - poiViewportY * zoom.value
-  }
+  onTokenMouseDown(event, token)
 }
 
 function onMouseMove(event: MouseEvent) {
-  // Handle token dragging
-  if (draggingToken.value && viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Convert to image coordinates
-    const effectiveScale = baseScale.value * zoom.value
-    const imageX = (mouseX - dragTokenOffsetX.value - panX.value * zoom.value) / effectiveScale
-    const imageY = (mouseY - dragTokenOffsetY.value - panY.value * zoom.value) / effectiveScale
-
-    // Update token position locally (will be saved on mouse up)
-    const tokenIndex = tokens.value.findIndex(t => t.id === draggingToken.value?.id)
-    if (tokenIndex !== -1) {
-      tokens.value[tokenIndex] = {
-        ...tokens.value[tokenIndex],
-        x: imageX,
-        y: imageY
-      }
-    }
-    return
-  }
-
-  // Handle light source dragging
-  if (draggingLight.value && viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Convert to image coordinates
-    const effectiveScale = baseScale.value * zoom.value
-    const imageX = (mouseX - dragLightOffsetX.value - panX.value * zoom.value) / effectiveScale
-    const imageY = (mouseY - dragLightOffsetY.value - panY.value * zoom.value) / effectiveScale
-
-    // Update light position locally (will be saved on mouse up)
-    const lightIndex = lightSources.value.findIndex(l => l.id === draggingLight.value?.id)
-    if (lightIndex !== -1) {
-      lightSources.value[lightIndex] = {
-        ...lightSources.value[lightIndex],
-        x: imageX,
-        y: imageY
-      }
-    }
-    return
-  }
-
-  // Handle trap dragging
-  if (draggingTrap.value && viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Convert to image coordinates
-    const effectiveScale = baseScale.value * zoom.value
-    const imageX = (mouseX - dragTrapOffsetX.value - panX.value * zoom.value) / effectiveScale
-    const imageY = (mouseY - dragTrapOffsetY.value - panY.value * zoom.value) / effectiveScale
-
-    // Convert to grid coordinates for local update
-    const gridX = Math.floor(imageX / uvttGridSize.value)
-    const gridY = Math.floor(imageY / uvttGridSize.value)
-
-    // Update trap position locally (will be saved on mouse up)
-    const trapIndex = mapTraps.value.findIndex(t => t.id === draggingTrap.value?.id)
-    if (trapIndex !== -1) {
-      mapTraps.value[trapIndex] = {
-        ...mapTraps.value[trapIndex],
-        grid_x: gridX,
-        grid_y: gridY
-      }
-    }
-    return
-  }
-
-  // Handle POI dragging
-  if (draggingPoi.value && viewportRef.value) {
-    const rect = viewportRef.value.getBoundingClientRect()
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-
-    // Convert to image coordinates
-    const effectiveScale = baseScale.value * zoom.value
-    const imageX = (mouseX - dragPoiOffsetX.value - panX.value * zoom.value) / effectiveScale
-    const imageY = (mouseY - dragPoiOffsetY.value - panY.value * zoom.value) / effectiveScale
-
-    // Convert to grid coordinates for local update
-    const gridX = Math.floor(imageX / uvttGridSize.value)
-    const gridY = Math.floor(imageY / uvttGridSize.value)
-
-    // Update POI position locally (will be saved on mouse up)
-    const poiIndex = mapPois.value.findIndex(p => p.id === draggingPoi.value?.id)
-    if (poiIndex !== -1) {
-      mapPois.value[poiIndex] = {
-        ...mapPois.value[poiIndex],
-        grid_x: gridX,
-        grid_y: gridY
-      }
-    }
-    return
-  }
+  // Delegate entity drag handling to composables
+  if (tokenDrag.onMouseMove(event)) return
+  if (lightDrag.onMouseMove(event)) return
+  if (trapDrag.onMouseMove(event)) return
+  if (poiDrag.onMouseMove(event)) return
 
   // Update mouse position for placement preview
   if (pendingTokenConfig.value && viewportRef.value) {
@@ -985,109 +845,11 @@ function onMouseMove(event: MouseEvent) {
 }
 
 async function onMouseUp() {
-  // Save token position if we were dragging
-  if (draggingToken.value) {
-    const token = tokens.value.find(t => t.id === draggingToken.value?.id)
-    if (token) {
-      // Snap to grid
-      const gridSize = uvttGridSize.value
-      const snappedX = Math.round(token.x / gridSize) * gridSize + gridSize / 2
-      const snappedY = Math.round(token.y / gridSize) * gridSize + gridSize / 2
-
-      // Convert pixel coordinates to grid coordinates for the backend
-      const gridX = Math.floor(snappedX / gridSize)
-      const gridY = Math.floor(snappedY / gridSize)
-
-      // Update local state with snapped position
-      const tokenIndex = tokens.value.findIndex(t => t.id === token.id)
-      if (tokenIndex !== -1) {
-        tokens.value[tokenIndex] = {
-          ...tokens.value[tokenIndex],
-          x: snappedX,
-          y: snappedY
-        }
-      }
-
-      // Save to backend
-      try {
-        await invoke('update_token_position', {
-          id: token.id,
-          gridX,
-          gridY
-        })
-      } catch (e) {
-        console.error('Failed to save token position:', e)
-        // Reload tokens to restore original position on error
-        await loadTokens()
-      }
-    }
-    draggingToken.value = null
-  }
-
-  // Save light position if we were dragging
-  if (draggingLight.value) {
-    const light = lightSources.value.find(l => l.id === draggingLight.value?.id)
-    if (light) {
-      // Light sources don't snap to grid - they can be positioned freely
-      // Convert to integer pixel coordinates for backend
-      const pixelX = Math.round(light.x)
-      const pixelY = Math.round(light.y)
-
-      // Save to backend
-      try {
-        await invoke('move_light_source', {
-          id: String(light.id),
-          x: pixelX,
-          y: pixelY
-        })
-      } catch (e) {
-        console.error('Failed to save light position:', e)
-        // Reload lights to restore original position on error
-        await loadLightSources()
-      }
-    }
-    draggingLight.value = null
-  }
-
-  // Save trap position if we were dragging
-  if (draggingTrap.value) {
-    const trap = mapTraps.value.find(t => t.id === draggingTrap.value?.id)
-    if (trap) {
-      // Save to backend (trap already has grid coordinates)
-      try {
-        await invoke('move_map_trap', {
-          id: trap.id,
-          gridX: trap.grid_x,
-          gridY: trap.grid_y
-        })
-      } catch (e) {
-        console.error('Failed to save trap position:', e)
-        // Reload traps to restore original position on error
-        await loadMapTraps()
-      }
-    }
-    draggingTrap.value = null
-  }
-
-  // Save POI position if we were dragging
-  if (draggingPoi.value) {
-    const poi = mapPois.value.find(p => p.id === draggingPoi.value?.id)
-    if (poi) {
-      // Save to backend (POI already has grid coordinates)
-      try {
-        await invoke('move_map_poi', {
-          id: poi.id,
-          gridX: poi.grid_x,
-          gridY: poi.grid_y
-        })
-      } catch (e) {
-        console.error('Failed to save POI position:', e)
-        // Reload POIs to restore original position on error
-        await loadMapPois()
-      }
-    }
-    draggingPoi.value = null
-  }
+  // Delegate entity save handling to composables
+  await tokenDrag.onMouseUp()
+  await lightDrag.onMouseUp()
+  await trapDrag.onMouseUp()
+  await poiDrag.onMouseUp()
 
   isDragging.value = false
 }
@@ -1665,13 +1427,6 @@ function getPlacementPreviewStyle() {
 function handleClose() {
   contextMenu.value.visible = false
   emit('close')
-}
-
-// Handle grid config saved - refresh grid data
-async function handleGridSaved() {
-  showGridConfigModal.value = false
-  // Reload UVTT data to get updated grid settings
-  await loadUvttData()
 }
 
 // Close context menus on click outside

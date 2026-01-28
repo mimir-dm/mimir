@@ -76,7 +76,7 @@ import { invoke } from '@tauri-apps/api/core'
 import NpcSelectorModal from './NpcSelectorModal.vue'
 import CharacterPrintDialog from '@/components/print/CharacterPrintDialog.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { dataEvents } from '@/utils/dataEvents'
 import type { ApiResponse } from '@/types/api'
 
 interface ModuleNpcWithCharacter {

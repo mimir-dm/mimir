@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { RaceSummary } from '../../composables/catalog'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { raceConfig } from '../../../../shared/components/catalog/config/raceConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { raceConfig } from '@/shared/components/catalog/config/raceConfig'
 
 defineProps<{
   races: RaceSummary[]

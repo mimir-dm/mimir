@@ -3,7 +3,7 @@
 import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { BookInfo, BookContent, BookSection } from '../../../types/book'
+import type { BookInfo, BookContent, BookSection } from '@/types/book'
 
 export function useBookContent() {
   const bookContent: Ref<any | null> = ref(null)

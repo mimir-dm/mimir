@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Wall, Portal, Point } from '@/composables/useVisibilityPolygon'
+import type { Wall, Portal, Point } from '@/composables/map/useVisibilityPolygon'
 
 interface Props {
   walls: Wall[]

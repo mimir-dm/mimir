@@ -75,7 +75,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, provide } from 'vue'
 import { DocumentService } from '@/services/DocumentService'
-import { useApiCall } from '@/shared/composables/useApiCall'
+import { useApiCall } from '@/composables/useApiCall'
 import MainLayout from '@/shared/components/layout/MainLayout.vue'
 import DashboardTabs from '../components/dashboard/DashboardTabs.vue'
 import CampaignArchiveExportDialog from '@/components/campaigns/CampaignArchiveExportDialog.vue'

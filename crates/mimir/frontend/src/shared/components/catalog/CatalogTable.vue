@@ -200,7 +200,7 @@ import SelectFilter from './filters/SelectFilter.vue'
 import CheckboxFilter from './filters/CheckboxFilter.vue'
 import CheckboxGroupFilter from './filters/CheckboxGroupFilter.vue'
 import RangeFilter from './filters/RangeFilter.vue'
-import { usePagination } from '../../composables/usePagination'
+import { usePagination } from '@/composables/usePagination'
 
 interface Props {
   config: CatalogConfig

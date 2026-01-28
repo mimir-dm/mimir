@@ -1,5 +1,5 @@
 import type { CatalogConfig } from './types'
-import { formatSpellLevel, formatSpellTags } from '../../../utils/formatters'
+import { formatSpellLevel, formatSpellTags } from '@/utils/formatters'
 
 // School code to full name mapping
 const schoolMap: Record<string, string> = {

@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { monsterConfig } from '../../../../shared/components/catalog/config/monsterConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { monsterConfig } from '@/shared/components/catalog/config/monsterConfig'
 import type { MonsterSummary } from '../../composables/catalog'
 
 interface Props {

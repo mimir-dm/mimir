@@ -232,6 +232,38 @@ export function formatEntries(entries: any[]): string {
           html += formatEntries(entry.entries)
         }
         html += '</div>'
+      } else if (entry.type === 'statblock') {
+        // Statblock entries are cross-references to other creatures
+        // Render as a clickable reference
+        if (entry.name && entry.source) {
+          const tag = entry.tag || 'creature'
+          if (tag === 'creature') {
+            html += `<p class="statblock-ref"><em>See: </em><a href="#" class="cross-ref-link creature-ref" data-ref-type="creature" data-ref-name="${entry.name}" data-ref-source="${entry.source}">${entry.name}</a></p>`
+          } else {
+            html += `<p class="statblock-ref"><em>See: ${entry.name}</em></p>`
+          }
+        }
+      } else if (entry.type === 'image') {
+        // Skip embedded images in entries - they're handled separately
+        // Could add image rendering here if needed
+      } else if (entry.type === 'section') {
+        // Section entries have a name and nested entries
+        if (entry.name) {
+          html += `<h4>${entry.name}</h4>`
+        }
+        if (entry.entries) {
+          html += formatEntries(entry.entries)
+        }
+      } else if (entry.type === 'quote') {
+        // Quote entries
+        html += '<blockquote>'
+        if (entry.entries) {
+          html += formatEntries(entry.entries)
+        }
+        if (entry.by) {
+          html += `<footer>— ${entry.by}</footer>`
+        }
+        html += '</blockquote>'
       } else if (entry.entries) {
         html += formatEntries(entry.entries)
       } else if (entry.text) {

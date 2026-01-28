@@ -33,10 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import WelcomeMessage from '../../../../shared/components/ui/WelcomeMessage.vue'
-import LoadingSpinner from '../../../../shared/components/ui/LoadingSpinner.vue'
+import WelcomeMessage from '@/shared/components/ui/WelcomeMessage.vue'
+import LoadingSpinner from '@/shared/components/ui/LoadingSpinner.vue'
 import ContentRenderer from '../content/ContentRenderer.vue'
-import type { BookInfo, BookSection } from '../../../../types/book'
+import type { BookInfo, BookSection } from '@/types/book'
 
 interface Props {
   selectedBook: BookInfo | null

@@ -113,7 +113,7 @@ type ExportState = 'idle' | 'exporting' | 'success' | 'error'
 
 const exportState = ref<ExportState>('idle')
 const outputDirectory = ref('')
-const exportResult = ref<{ archive_path: string; file_name: string } | null>(null)
+const exportResult = ref<{ archive_path: string; size_bytes: number } | null>(null)
 const errorMessage = ref<string | null>(null)
 
 // Load default directory when dialog opens

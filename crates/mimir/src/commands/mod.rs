@@ -3,6 +3,7 @@
 //! This module contains all Tauri commands that bridge the Vue.js frontend
 //! with the mimir-core service layer.
 
+pub mod archive;
 pub mod asset;
 pub mod campaign;
 pub mod catalog;

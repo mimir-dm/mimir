@@ -32,6 +32,8 @@ Define the complete information model for Mimir v0.5, starting from ontology (wh
 ## Acceptance Criteria
 
 ## Acceptance Criteria
+
+## Acceptance Criteria
 - [ ] Complete ontology defining all entities and relationships
 - [ ] DDL for all tables with proper constraints
 - [ ] Rust types for all entities and value objects

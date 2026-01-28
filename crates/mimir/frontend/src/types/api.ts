@@ -43,6 +43,39 @@ export interface UpdateCampaignRequest {
 }
 
 // =============================================================================
+// Campaign Archive types - matches mimir-core archive service
+// =============================================================================
+
+/** Counts of entities in an archive */
+export interface ArchiveCounts {
+  modules: number
+  documents: number
+  characters: number
+  maps: number
+  tokens: number
+  module_monsters: number
+  module_npcs: number
+  assets: number
+}
+
+/** A reference to a catalog item found in campaign content */
+export interface CatalogReference {
+  type: string
+  name: string
+  source: string
+}
+
+/** Preview information about an archive without importing */
+export interface ArchivePreview {
+  campaign_name: string
+  counts: ArchiveCounts
+  catalog_references: CatalogReference[]
+  mimir_version: string
+  created_at: string
+  archive_version: string
+}
+
+// =============================================================================
 // Module types - matches mimir-core Module model
 // =============================================================================
 export interface Module {

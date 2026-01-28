@@ -36,19 +36,24 @@ export interface Item {
 }
 
 export function useItems() {
-  const campaignStore = useCampaignStore()
   const isItemsInitialized = ref(true)
   const isLoading = ref(false)
   const error: Ref<string | null> = ref(null)
   const items = ref<ItemSummary[]>([])
 
   // Get effective sources: explicit filter sources, or campaign sources if configured
+  // Note: Store access is lazy to avoid Pinia initialization issues
   const getEffectiveSources = (filterSources?: string[]): string[] | null => {
     if (filterSources && filterSources.length > 0) {
       return filterSources
     }
-    if (campaignStore.currentCampaignSources.length > 0) {
-      return campaignStore.currentCampaignSources
+    try {
+      const campaignStore = useCampaignStore()
+      if (campaignStore.currentCampaignSources.length > 0) {
+        return campaignStore.currentCampaignSources
+      }
+    } catch {
+      // Store not available yet, use no filter
     }
     return null
   }

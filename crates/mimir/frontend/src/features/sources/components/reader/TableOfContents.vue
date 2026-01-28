@@ -72,11 +72,11 @@
 </template>
 
 <script setup lang="ts">
-import Panel from '../../../../shared/components/layout/Panel.vue'
+import Panel from '@/shared/components/layout/Panel.vue'
 import { ref } from 'vue'
 import { useBookNavigation } from '../../composables/useBookNavigation'
 import { useBookContent } from '../../composables/useBookContent'
-import type { BookSection } from '../../../../types/book'
+import type { BookSection } from '@/types/book'
 
 interface Props {
   sections: BookSection[]

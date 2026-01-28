@@ -144,7 +144,7 @@ export interface CharacterInventory {
  * Request for creating a new player character.
  */
 export interface CreatePcRequest {
-  campaign_id: string
+  campaign_id?: string
   name: string
   player_name: string
   race_name?: string
@@ -159,7 +159,7 @@ export interface CreatePcRequest {
  * Request for creating a new NPC.
  */
 export interface CreateNpcRequest {
-  campaign_id: string
+  campaign_id?: string
   name: string
   race_name?: string
   race_source?: string

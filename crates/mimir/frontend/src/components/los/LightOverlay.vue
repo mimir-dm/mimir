@@ -109,7 +109,7 @@ import {
   type Wall,
   calculateVisibilityPolygon,
   polygonToSvgPath
-} from '@/composables/useVisibilityPolygon'
+} from '@/composables/map/useVisibilityPolygon'
 
 interface Props {
   lights: Light[]

@@ -80,7 +80,7 @@ import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse } from '../types/api'
 import CampaignSelector from '../features/campaigns/components/CampaignSelector.vue'
 import AppModal from '@/components/shared/AppModal.vue'
-import { openSourcesReference } from '../shared/utils/windows'
+import { openSourcesReference } from '@/utils/windows'
 // Gear icons
 import lightGear from '../assets/images/themes/light/gear.png'
 import darkGear from '../assets/images/themes/dark/gear.png'

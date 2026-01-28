@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { Token } from '@/types/api'
-import { useTokenVision, VISION_PRESETS, type VisionPresetKey } from '@/composables/useTokenVision'
+import { useTokenVision, VISION_PRESETS, type VisionPresetKey } from '@/composables/map/useTokenVision'
 
 interface Props {
   visible: boolean

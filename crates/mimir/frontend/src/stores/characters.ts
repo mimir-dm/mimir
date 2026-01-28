@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { dataEvents } from '@/utils/dataEvents'
 import type { ApiResponse } from '@/types/api'
 import type {
   Character,
@@ -88,6 +88,43 @@ export const useCharacterStore = defineStore('characters', () => {
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to fetch player characters'
       console.error('Error fetching PCs:', e)
+      return []
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Fetch all PCs across all campaigns, including unassigned
+   */
+  const fetchAllPcs = async (campaignIds: string[]) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const allPcs: Character[] = []
+
+      // Fetch PCs from each campaign
+      for (const campaignId of campaignIds) {
+        const response = await invoke<ApiResponse<Character[]>>('list_pcs', {
+          campaignId
+        })
+        if (response.success && response.data) {
+          allPcs.push(...response.data)
+        }
+      }
+
+      // Fetch unassigned PCs (no campaign)
+      const unassignedResponse = await invoke<ApiResponse<Character[]>>('list_unassigned_pcs')
+      if (unassignedResponse.success && unassignedResponse.data) {
+        allPcs.push(...unassignedResponse.data)
+      }
+
+      characters.value = allPcs
+      return allPcs
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to fetch player characters'
+      console.error('Error fetching all PCs:', e)
       return []
     } finally {
       loading.value = false
@@ -503,6 +540,7 @@ export const useCharacterStore = defineStore('characters', () => {
     // List actions
     fetchCharacters,
     fetchPcs,
+    fetchAllPcs,
     fetchNpcs,
 
     // CRUD actions

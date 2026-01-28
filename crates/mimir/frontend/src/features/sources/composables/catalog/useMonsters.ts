@@ -69,21 +69,26 @@ export interface Monster {
 }
 
 export function useMonsters() {
-  const campaignStore = useCampaignStore()
   const isMonstersInitialized = ref(true)
   const isLoading = ref(false)
   const error: Ref<string | null> = ref(null)
   const monsters = ref<MonsterSummary[]>([])
 
   // Get effective sources: explicit filter sources, or campaign sources if configured
+  // Note: Store access is lazy to avoid Pinia initialization issues
   const getEffectiveSources = (filterSources?: string[]): string[] | null => {
     // If explicit sources provided in filter, use those
     if (filterSources && filterSources.length > 0) {
       return filterSources
     }
     // If campaign has sources configured, use those
-    if (campaignStore.currentCampaignSources.length > 0) {
-      return campaignStore.currentCampaignSources
+    try {
+      const campaignStore = useCampaignStore()
+      if (campaignStore.currentCampaignSources.length > 0) {
+        return campaignStore.currentCampaignSources
+      }
+    } catch {
+      // Store not available yet, use no filter
     }
     // No filtering - return null to show all
     return null

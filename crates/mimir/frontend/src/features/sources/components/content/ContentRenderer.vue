@@ -6,8 +6,8 @@
 import { computed, watch, nextTick, inject } from 'vue'
 import { renderSection } from '../../utils/renderers/contentRenderer'
 import { useImageLoader } from '../../composables/useImageLoader'
-import type { BookSection } from '../../../../types/book'
-import type { BookInfo } from '../../../../types/book'
+import type { BookSection } from '@/types/book'
+import type { BookInfo } from '@/types/book'
 
 interface Props {
   content: BookSection

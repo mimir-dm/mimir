@@ -1,5 +1,5 @@
 import { processFormattingTags } from '../utils/textFormatting'
-import { formatSpellLevel } from '../../../shared/utils/formatters'
+import { formatSpellLevel } from '@/utils/formatters'
 
 interface SpellDetails {
   name: string

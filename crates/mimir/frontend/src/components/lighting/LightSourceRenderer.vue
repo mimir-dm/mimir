@@ -93,7 +93,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { LightSourceSummary } from '@/composables/useLightSources'
+import type { LightSourceSummary } from '@/composables/map/useLightSources'
 
 interface Props {
   lights: LightSourceSummary[]

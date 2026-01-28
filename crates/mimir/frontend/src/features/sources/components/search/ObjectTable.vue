@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { ObjectSummary } from '../../composables/catalog'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { objectConfig } from '../../../../shared/components/catalog/config/objectConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { objectConfig } from '@/shared/components/catalog/config/objectConfig'
 
 defineProps<{
   objects: ObjectSummary[]

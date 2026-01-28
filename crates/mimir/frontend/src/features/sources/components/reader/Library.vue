@@ -85,8 +85,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import Panel from '../../../../shared/components/layout/Panel.vue'
-import type { BookInfo } from '../../../../types/book'
+import Panel from '@/shared/components/layout/Panel.vue'
+import type { BookInfo } from '@/types/book'
 
 interface Props {
   libraryBooks: BookInfo[]

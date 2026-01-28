@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Portal } from '@/composables/useVisibilityPolygon'
+import type { Portal } from '@/composables/map/useVisibilityPolygon'
 
 interface Props {
   portals: Portal[]

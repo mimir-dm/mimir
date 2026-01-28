@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { FeatSummary } from '../../composables/catalog'
-import CatalogTable from '../../../../shared/components/catalog/CatalogTable.vue'
-import { featConfig } from '../../../../shared/components/catalog/config/featConfig'
+import CatalogTable from '@/shared/components/catalog/CatalogTable.vue'
+import { featConfig } from '@/shared/components/catalog/config/featConfig'
 
 defineProps<{
   feats: FeatSummary[]

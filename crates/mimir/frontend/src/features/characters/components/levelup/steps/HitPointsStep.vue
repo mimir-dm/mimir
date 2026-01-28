@@ -119,7 +119,7 @@
 import { ref, computed, watch } from 'vue'
 import type { Character } from '@/types/character'
 import { abilityModifier } from '@/types/character'
-import type { LevelUpComposable } from '../../../composables/useLevelUp'
+import type { LevelUpComposable } from '@/features/characters/composables/useLevelUp'
 
 const props = defineProps<{
   levelUp: LevelUpComposable

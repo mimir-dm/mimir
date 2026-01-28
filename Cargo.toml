@@ -2,6 +2,7 @@
 members = [
     "crates/mimir",
     "crates/mimir-core",
+    "crates/mimir-mcp",
     "crates/mimir-print",
 ]
 resolver = "2"

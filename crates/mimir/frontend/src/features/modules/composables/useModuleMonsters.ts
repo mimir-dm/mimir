@@ -1,7 +1,7 @@
 import { ref, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { processFormattingTags } from '@/features/sources/utils/textFormatting'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { dataEvents } from '@/utils/dataEvents'
 
 // Types
 export interface MonsterWithData {

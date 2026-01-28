@@ -1,9 +1,9 @@
 -- Characters table for player characters and NPCs
--- Characters always belong to a campaign
+-- Characters can optionally belong to a campaign
 
 CREATE TABLE characters (
     id TEXT PRIMARY KEY NOT NULL,
-    campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    campaign_id TEXT REFERENCES campaigns(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     is_npc INTEGER NOT NULL DEFAULT 0,
     player_name TEXT,

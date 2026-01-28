@@ -1,0 +1,52 @@
+[package]
+name = "mimir-mcp"
+version = "0.5.0"
+edition = "2021"
+description = "MCP server for Mimir campaign management"
+
+[[bin]]
+name = "mimir-mcp"
+path = "src/main.rs"
+
+[dependencies]
+# Internal crates
+mimir-core = { path = "../mimir-core" }
+
+# MCP SDK
+rust-mcp-sdk = { version = "0.8", default-features = false, features = [
+    "server",
+    "macros",
+    "hyper-server",
+    "streamable-http",
+    "stdio",
+] }
+async-trait = { workspace = true }
+
+# URL with serde support (needed for rust-mcp-sdk)
+url = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Database
+diesel = { workspace = true }
+
+# Utilities
+chrono = { workspace = true }
+uuid = { workspace = true }
+directories = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

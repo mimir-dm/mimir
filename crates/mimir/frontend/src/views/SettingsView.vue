@@ -51,7 +51,7 @@
           </div>
 
           <!-- Developer Tools (dev mode only) -->
-          <div v-if="isDevMode" class="sidebar-section">
+          <div v-if="devTools.isDevMode.value" class="sidebar-section">
             <h3 class="sidebar-section-title">Developer</h3>
             <ul class="sidebar-nav">
               <li>
@@ -97,11 +97,11 @@
                   <code>{{ databasePath || 'Loading...' }}</code>
                   <button
                     v-if="databasePath"
-                    @click="copyToClipboard(databasePath)"
+                    @click="clipboard.copy(databasePath)"
                     class="copy-button"
                     title="Copy to clipboard"
                   >
-                    {{ copiedText === databasePath ? 'Copied!' : 'Copy' }}
+                    {{ clipboard.wasCopied(databasePath) ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
               </div>
@@ -113,11 +113,11 @@
                 <div class="code-block code-block-multiline">
                   <pre>{{ claudeCodeCommand }}</pre>
                   <button
-                    @click="copyToClipboard(claudeCodeCommand)"
+                    @click="clipboard.copy(claudeCodeCommand)"
                     class="copy-button"
                     title="Copy to clipboard"
                   >
-                    {{ copiedText === claudeCodeCommand ? 'Copied!' : 'Copy' }}
+                    {{ clipboard.wasCopied(claudeCodeCommand) ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
               </div>
@@ -132,11 +132,11 @@
                 <div class="code-block code-block-multiline">
                   <pre>{{ claudeDesktopConfig }}</pre>
                   <button
-                    @click="copyToClipboard(claudeDesktopConfig)"
+                    @click="clipboard.copy(claudeDesktopConfig)"
                     class="copy-button"
                     title="Copy to clipboard"
                   >
-                    {{ copiedText === claudeDesktopConfig ? 'Copied!' : 'Copy' }}
+                    {{ clipboard.wasCopied(claudeDesktopConfig) ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
               </div>
@@ -156,7 +156,7 @@
           </div>
 
           <!-- Dev Tools (dev mode only) -->
-          <div v-else-if="activeSection === 'dev-tools' && isDevMode" class="content-section">
+          <div v-else-if="activeSection === 'dev-tools' && devTools.isDevMode.value" class="content-section">
             <h2 class="content-title">Developer Tools</h2>
             <p class="content-description">Development-only tools for testing and debugging</p>
 
@@ -169,40 +169,40 @@
 
               <div class="seed-status">
                 <span class="status-label">Status:</span>
-                <span :class="['status-badge', isDevSeeded ? 'seeded' : 'not-seeded']">
-                  {{ isDevSeeded ? 'Test Data Present' : 'Not Seeded' }}
+                <span :class="['status-badge', devTools.isDevSeeded.value ? 'seeded' : 'not-seeded']">
+                  {{ devTools.isDevSeeded.value ? 'Test Data Present' : 'Not Seeded' }}
                 </span>
               </div>
 
               <div class="seed-actions">
                 <button
-                  v-if="!isDevSeeded"
-                  @click="handleSeedData"
+                  v-if="!devTools.isDevSeeded.value"
+                  @click="devTools.seed"
                   class="button button-primary"
-                  :disabled="seedActionPending"
+                  :disabled="devTools.isPending.value"
                 >
-                  {{ seedActionPending ? 'Seeding...' : 'Seed Test Data' }}
+                  {{ devTools.isPending.value ? 'Seeding...' : 'Seed Test Data' }}
                 </button>
                 <button
-                  v-if="isDevSeeded"
-                  @click="handleReseedData"
+                  v-if="devTools.isDevSeeded.value"
+                  @click="devTools.reseed"
                   class="button button-secondary"
-                  :disabled="seedActionPending"
+                  :disabled="devTools.isPending.value"
                 >
-                  {{ seedActionPending ? 'Reseeding...' : 'Reseed (Clear & Recreate)' }}
+                  {{ devTools.isPending.value ? 'Reseeding...' : 'Reseed (Clear & Recreate)' }}
                 </button>
                 <button
-                  v-if="isDevSeeded"
-                  @click="handleClearData"
+                  v-if="devTools.isDevSeeded.value"
+                  @click="devTools.clear"
                   class="button button-danger"
-                  :disabled="seedActionPending"
+                  :disabled="devTools.isPending.value"
                 >
-                  {{ seedActionPending ? 'Clearing...' : 'Clear Test Data' }}
+                  {{ devTools.isPending.value ? 'Clearing...' : 'Clear Test Data' }}
                 </button>
               </div>
 
-              <p v-if="seedMessage" :class="['seed-message', seedMessageType]">
-                {{ seedMessage }}
+              <p v-if="devTools.message.value" :class="['seed-message', devTools.messageType.value]">
+                {{ devTools.message.value }}
               </p>
             </div>
 
@@ -241,22 +241,18 @@ import MainLayout from '../shared/components/layout/MainLayout.vue'
 import ThemeSelector from '../shared/components/ui/ThemeSelector.vue'
 import BookManagementModal from '@/components/dialogs/BookManagementModal.vue'
 import CampaignManagementModal from '@/components/dialogs/CampaignManagementModal.vue'
+import { useClipboard } from '@/composables/useClipboard'
+import { useDevTools } from '@/composables/useDevTools'
 
 const showBookManagementModal = ref(false)
 const showCampaignManagementModal = ref(false)
 const activeSection = ref('theme')
 const appVersion = ref('')
-
-// MCP Integration state
-const copiedText = ref('')
 const databasePath = ref('')
 
-// Dev Tools state
-const isDevMode = ref(false)
-const isDevSeeded = ref(false)
-const seedActionPending = ref(false)
-const seedMessage = ref('')
-const seedMessageType = ref<'success' | 'error'>('success')
+// Composables
+const clipboard = useClipboard()
+const devTools = useDevTools()
 
 // Computed Claude Code CLI command
 const claudeCodeCommand = computed(() => {
@@ -283,8 +279,8 @@ const claudeDesktopConfig = computed(() => {
 
 // Load app info on mount
 onMounted(async () => {
-  // Check dev mode and seeded status
-  await checkDevMode()
+  // Initialize dev tools (checks dev mode and seeded status)
+  await devTools.initialize()
 
   // Load app info for MCP integration
   try {
@@ -310,108 +306,6 @@ onMounted(async () => {
     appVersion.value = 'Unknown'
   }
 })
-
-// Dev Tools functions
-async function checkDevMode() {
-  try {
-    const response = await invoke<{ success: boolean; data: boolean }>('is_dev_mode')
-    isDevMode.value = response.success && response.data
-    if (isDevMode.value) {
-      await checkDevSeeded()
-    }
-  } catch (error) {
-    console.error('Failed to check dev mode:', error)
-    isDevMode.value = false
-  }
-}
-
-async function checkDevSeeded() {
-  try {
-    const response = await invoke<{ success: boolean; data: boolean }>('is_dev_seeded')
-    isDevSeeded.value = response.success && response.data
-  } catch (error) {
-    console.error('Failed to check dev seeded status:', error)
-    isDevSeeded.value = false
-  }
-}
-
-async function handleSeedData() {
-  seedActionPending.value = true
-  seedMessage.value = ''
-  try {
-    const response = await invoke<{ success: boolean; data: boolean; error?: string }>('seed_dev_data')
-    if (response.success) {
-      seedMessage.value = response.data
-        ? 'Test data seeded successfully!'
-        : 'Test data already exists.'
-      seedMessageType.value = 'success'
-      await checkDevSeeded()
-    } else {
-      seedMessage.value = response.error || 'Failed to seed data'
-      seedMessageType.value = 'error'
-    }
-  } catch (error) {
-    seedMessage.value = `Error: ${error}`
-    seedMessageType.value = 'error'
-  } finally {
-    seedActionPending.value = false
-  }
-}
-
-async function handleReseedData() {
-  seedActionPending.value = true
-  seedMessage.value = ''
-  try {
-    const response = await invoke<{ success: boolean; data: boolean; error?: string }>('reseed_dev_data')
-    if (response.success) {
-      seedMessage.value = 'Test data reseeded successfully!'
-      seedMessageType.value = 'success'
-      await checkDevSeeded()
-    } else {
-      seedMessage.value = response.error || 'Failed to reseed data'
-      seedMessageType.value = 'error'
-    }
-  } catch (error) {
-    seedMessage.value = `Error: ${error}`
-    seedMessageType.value = 'error'
-  } finally {
-    seedActionPending.value = false
-  }
-}
-
-async function handleClearData() {
-  seedActionPending.value = true
-  seedMessage.value = ''
-  try {
-    const response = await invoke<{ success: boolean; error?: string }>('clear_dev_data')
-    if (response.success) {
-      seedMessage.value = 'Test data cleared successfully!'
-      seedMessageType.value = 'success'
-      await checkDevSeeded()
-    } else {
-      seedMessage.value = response.error || 'Failed to clear data'
-      seedMessageType.value = 'error'
-    }
-  } catch (error) {
-    seedMessage.value = `Error: ${error}`
-    seedMessageType.value = 'error'
-  } finally {
-    seedActionPending.value = false
-  }
-}
-
-// MCP Integration methods
-const copyToClipboard = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-    copiedText.value = text
-    setTimeout(() => {
-      copiedText.value = ''
-    }, 2000)
-  } catch (error) {
-    console.error('Failed to copy to clipboard:', error)
-  }
-}
 
 // Open modals based on section selection
 watch(activeSection, (newSection) => {

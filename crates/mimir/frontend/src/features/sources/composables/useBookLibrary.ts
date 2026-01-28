@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import type { Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
-import type { BookInfo } from '../../../types/book'
+import type { BookInfo } from '@/types/book'
 
 // Catalog source info from backend
 interface CatalogSourceInfo {

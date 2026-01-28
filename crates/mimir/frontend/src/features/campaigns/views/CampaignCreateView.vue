@@ -50,8 +50,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
-import MainLayout from '../../../shared/components/layout/MainLayout.vue'
-import type { ApiResponse } from '../../../types/api'
+import MainLayout from '@/shared/components/layout/MainLayout.vue'
+import type { ApiResponse } from '@/types/api'
 
 const router = useRouter()
 

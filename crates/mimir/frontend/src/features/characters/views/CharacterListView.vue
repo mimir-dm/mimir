@@ -2,34 +2,9 @@
   <MainLayout>
     <div class="character-list-view">
       <div class="header">
-        <h1 class="page-title">Characters</h1>
+        <h1 class="page-title">Player Characters</h1>
         <button @click="createCharacter" class="btn btn-primary">
           Create Character
-        </button>
-      </div>
-
-      <!-- Filter Tabs -->
-      <div class="filter-tabs">
-        <button
-          class="btn-tab"
-          :class="{ 'btn-tab--active': characterFilter === 'all' }"
-          @click="characterFilter = 'all'"
-        >
-          All ({{ allCharactersCount }})
-        </button>
-        <button
-          class="btn-tab"
-          :class="{ 'btn-tab--active': characterFilter === 'pc' }"
-          @click="characterFilter = 'pc'"
-        >
-          Player Characters ({{ pcCount }})
-        </button>
-        <button
-          class="btn-tab"
-          :class="{ 'btn-tab--active': characterFilter === 'npc' }"
-          @click="characterFilter = 'npc'"
-        >
-          NPCs ({{ npcCount }})
         </button>
       </div>
 
@@ -44,8 +19,8 @@
       <EmptyState
         v-else-if="characters.length === 0"
         variant="characters"
-        title="No characters yet"
-        description="Create your first character to get started on your adventure"
+        title="No player characters yet"
+        description="Create your first player character to get started on your adventure. NPCs can be managed from each campaign's dashboard."
       >
         <template #action>
           <button @click="createCharacter" class="btn btn-primary">
@@ -112,6 +87,7 @@
     <!-- Character Creation Wizard -->
     <CharacterCreationWizard
       :visible="showWizard"
+      :pc-only="true"
       @close="handleWizardClose"
       @created="handleCharacterCreated"
     />
@@ -170,52 +146,31 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
-import MainLayout from '../../../shared/components/layout/MainLayout.vue'
+import MainLayout from '@/shared/components/layout/MainLayout.vue'
 import CharacterCreationWizard from '../components/CharacterCreationWizard.vue'
 import LevelUpDialog from '../components/levelup/LevelUpDialog.vue'
-import { CharacterPrintDialog } from '../../../components/print'
-import { CharacterCard } from '../../../components/characters'
+import { CharacterPrintDialog } from '@/components/print'
+import { CharacterCard } from '@/components/characters'
 import AppModal from '@/components/shared/AppModal.vue'
-import EmptyState from '../../../shared/components/ui/EmptyState.vue'
-import { useCharacterStore } from '../../../stores/characters'
-import { useCampaignStore } from '../../../stores/campaigns'
-import type { Character } from '../../../types/character'
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
+import { useCharacterStore } from '@/stores/characters'
+import { useCampaignStore } from '@/stores/campaigns'
+import type { Character } from '@/types/character'
 
 const router = useRouter()
 const characterStore = useCharacterStore()
 const campaignStore = useCampaignStore()
 
 onMounted(async () => {
-  // Load campaigns first, then characters for each campaign
+  // Load campaigns first, then fetch all PCs across all campaigns
   await campaignStore.fetchCampaigns()
-
-  // Fetch characters for all campaigns
-  for (const campaign of campaignStore.campaigns) {
-    await characterStore.fetchCharacters(campaign.id)
-  }
+  const campaignIds = campaignStore.campaigns.map(c => c.id)
+  await characterStore.fetchAllPcs(campaignIds)
 })
 
-// Filter state
-type CharacterFilter = 'all' | 'pc' | 'npc'
-const characterFilter = ref<CharacterFilter>('all')
-
-// Counts for filter tabs (is_npc: 0 = PC, 1 = NPC)
-const allCharactersCount = computed(() => characterStore.characters.length)
-const pcCount = computed(() => characterStore.characters.filter(c => c.is_npc === 0).length)
-const npcCount = computed(() => characterStore.characters.filter(c => c.is_npc === 1).length)
-
-// Filtered characters based on selected filter (is_npc: 0 = PC, 1 = NPC)
-const characters = computed(() => {
-  const all = characterStore.characters
-  switch (characterFilter.value) {
-    case 'pc':
-      return all.filter(c => c.is_npc === 0)
-    case 'npc':
-      return all.filter(c => c.is_npc === 1)
-    default:
-      return all
-  }
-})
+// Characters are already PCs only (fetched via fetchAllPcs)
+// NPCs are managed from the campaign dashboard's NPC tab
+const characters = computed(() => characterStore.characters)
 
 // Sort characters: PCs first, then NPCs, then alphabetically
 const sortCharacters = (chars: Character[]) => {
@@ -269,12 +224,14 @@ const handleWizardClose = () => {
   showWizard.value = false
 }
 
+const reloadAllPcs = async () => {
+  const campaignIds = campaignStore.campaigns.map(c => c.id)
+  await characterStore.fetchAllPcs(campaignIds)
+}
+
 const handleCharacterCreated = async () => {
   showWizard.value = false
-  // Reload characters for all campaigns
-  for (const campaign of campaignStore.campaigns) {
-    await characterStore.fetchCharacters(campaign.id)
-  }
+  await reloadAllPcs()
 }
 
 const viewCharacter = (character: Character) => {
@@ -292,8 +249,7 @@ const assignToCampaign = async (characterId: string, event: Event) => {
       characterId,
       campaignId
     })
-    // Reload characters for the target campaign
-    await characterStore.fetchCharacters(campaignId)
+    await reloadAllPcs()
   } catch (error) {
     console.error('Failed to assign character to campaign:', error)
     characterStore.error = `Failed to assign character: ${error}`
@@ -344,10 +300,7 @@ const closeLevelUpDialog = () => {
 
 const handleLevelUpCompleted = async () => {
   closeLevelUpDialog()
-  // Reload characters for all campaigns
-  for (const campaign of campaignStore.campaigns) {
-    await characterStore.fetchCharacters(campaign.id)
-  }
+  await reloadAllPcs()
 }
 
 // Delete dialog state
@@ -370,10 +323,8 @@ const confirmDelete = async () => {
 
   deleting.value = true
   try {
-    const campaignId = characterToDelete.value.campaign_id
     await characterStore.deleteCharacter(characterToDelete.value.id)
-    // Reload characters for the character's campaign
-    await characterStore.fetchCharacters(campaignId)
+    await reloadAllPcs()
     closeDeleteDialog()
   } catch (error) {
     console.error('Failed to delete character:', error)
@@ -445,13 +396,6 @@ const confirmDelete = async () => {
   border: 1px solid var(--color-error) / 0.2;
   border-radius: var(--radius-md);
   color: var(--color-error);
-}
-
-/* Filter Tabs */
-.filter-tabs {
-  display: flex;
-  gap: var(--spacing-sm);
-  border-bottom: 1px solid var(--color-border);
 }
 
 /* Extended actions for CharacterCard slot */

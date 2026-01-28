@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { dataEvents } from '@/shared/utils/dataEvents'
+import { dataEvents } from '@/utils/dataEvents'
 
 // Types
 export interface MapSummary {
