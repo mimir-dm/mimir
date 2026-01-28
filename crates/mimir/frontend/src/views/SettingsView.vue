@@ -78,76 +78,33 @@
 
             <div class="form-divider"></div>
 
-            <h2 class="content-title">Integrations</h2>
-            <p class="content-description">Connect Mimir with external tools and services</p>
-
-            <div class="form-group">
-              <label class="toggle-option">
-                <input
-                  type="checkbox"
-                  :checked="appSettingsStore.mcpServerEnabled"
-                  :disabled="appSettingsStore.mcpActionPending"
-                  @change="appSettingsStore.setMcpServerEnabled(($event.target as HTMLInputElement).checked)"
-                />
-                <div class="toggle-content">
-                  <span class="toggle-label">Enable MCP Server</span>
-                  <span class="toggle-description">
-                    Allow Claude Code and Claude Desktop to manage campaigns via the Model Context Protocol.
-                    The server will start automatically when the app launches.
-                  </span>
-                </div>
-              </label>
-            </div>
-
-            <div v-if="appSettingsStore.mcpServerEnabled" class="mcp-status-card">
-              <div class="status-header">
-                <span class="status-label">MCP Server Status</span>
-                <span :class="['status-badge', appSettingsStore.mcpServerRunning ? 'running' : 'stopped']">
-                  {{ appSettingsStore.mcpServerRunning ? 'Running' : 'Stopped' }}
-                </span>
-              </div>
-              <div class="status-actions">
-                <button
-                  v-if="!appSettingsStore.mcpServerRunning"
-                  @click="appSettingsStore.startMcpServer"
-                  class="button button-secondary"
-                  :disabled="appSettingsStore.mcpActionPending"
-                >
-                  {{ appSettingsStore.mcpActionPending ? 'Starting...' : 'Start Server' }}
-                </button>
-                <button
-                  v-else
-                  @click="appSettingsStore.stopMcpServer"
-                  class="button button-secondary"
-                  :disabled="appSettingsStore.mcpActionPending"
-                >
-                  {{ appSettingsStore.mcpActionPending ? 'Stopping...' : 'Stop Server' }}
-                </button>
-                <button
-                  v-if="appSettingsStore.mcpServerRunning"
-                  @click="appSettingsStore.restartMcpServer"
-                  class="button button-secondary"
-                  :disabled="appSettingsStore.mcpActionPending"
-                >
-                  {{ appSettingsStore.mcpActionPending ? 'Restarting...' : 'Restart' }}
-                </button>
-                <button
-                  @click="appSettingsStore.refreshMcpServerStatus"
-                  class="button button-secondary"
-                  :disabled="appSettingsStore.mcpActionPending"
-                  title="Refresh status"
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
+            <h2 class="content-title">Claude Integration</h2>
+            <p class="content-description">Connect Mimir with Claude Code or Claude Desktop for AI-assisted campaign management</p>
 
             <!-- MCP Integration Instructions -->
-            <div v-if="appSettingsStore.mcpServerEnabled" class="mcp-integration-section">
+            <div class="mcp-integration-section">
               <h3 class="integration-title">Connect Claude to Mimir</h3>
               <p class="integration-description">
                 Use Claude Code or Claude Desktop to manage your campaigns with AI assistance.
+                Claude handles starting the MCP server automatically.
               </p>
+
+              <!-- Database Path Info -->
+              <div class="integration-method">
+                <h4 class="method-title">Your Database Path</h4>
+                <p class="method-description">This is where Mimir stores your campaign data:</p>
+                <div class="code-block">
+                  <code>{{ databasePath || 'Loading...' }}</code>
+                  <button
+                    v-if="databasePath"
+                    @click="copyToClipboard(databasePath)"
+                    class="copy-button"
+                    title="Copy to clipboard"
+                  >
+                    {{ copiedText === databasePath ? 'Copied!' : 'Copy' }}
+                  </button>
+                </div>
+              </div>
 
               <!-- Claude Code CLI -->
               <div class="integration-method">
@@ -180,28 +137,6 @@
                     title="Copy to clipboard"
                   >
                     {{ copiedText === claudeDesktopConfig ? 'Copied!' : 'Copy' }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Skill File -->
-              <div class="integration-method">
-                <h4 class="method-title">Mimir Skill (Optional)</h4>
-                <p class="method-description">
-                  Install the Mimir skill to teach Claude best practices for campaign authoring.
-                </p>
-                <p class="input-help">
-                  Copy the skill folder to <code>~/.claude/skills/</code> for Claude Code,
-                  or upload as a ZIP to Claude Desktop Settings.
-                </p>
-                <div class="code-block">
-                  <code>{{ skillInstallPath }}</code>
-                  <button
-                    @click="copyToClipboard(skillInstallPath)"
-                    class="copy-button"
-                    title="Copy to clipboard"
-                  >
-                    {{ copiedText === skillInstallPath ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
               </div>
@@ -304,11 +239,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { getVersion } from '@tauri-apps/api/app'
 import MainLayout from '../shared/components/layout/MainLayout.vue'
 import ThemeSelector from '../shared/components/ui/ThemeSelector.vue'
-import BookManagementModal from '@/components/BookManagementModal.vue'
-import CampaignManagementModal from '@/components/CampaignManagementModal.vue'
-import { useAppSettingsStore } from '@/stores/appSettings'
-
-const appSettingsStore = useAppSettingsStore()
+import BookManagementModal from '@/components/dialogs/BookManagementModal.vue'
+import CampaignManagementModal from '@/components/dialogs/CampaignManagementModal.vue'
 
 const showBookManagementModal = ref(false)
 const showCampaignManagementModal = ref(false)
@@ -318,7 +250,6 @@ const appVersion = ref('')
 // MCP Integration state
 const copiedText = ref('')
 const databasePath = ref('')
-const skillPath = ref('')
 
 // Dev Tools state
 const isDevMode = ref(false)
@@ -350,16 +281,8 @@ const claudeDesktopConfig = computed(() => {
   }, null, 2)
 })
 
-// Computed skill install command
-const skillInstallPath = computed(() => {
-  return `cp -r "${skillPath.value}" ~/.claude/skills/`
-})
-
 // Load app info on mount
 onMounted(async () => {
-  // Load app settings (for MCP server)
-  await appSettingsStore.loadSettings()
-
   // Check dev mode and seeded status
   await checkDevMode()
 
@@ -375,9 +298,6 @@ onMounted(async () => {
     const appInfoResponse = await invoke<{ success: boolean; data: AppInfo }>('get_app_info')
     if (appInfoResponse.success && appInfoResponse.data) {
       databasePath.value = appInfoResponse.data.database_path
-      // Skill path is in the bundled resources directory
-      const resourcesDir = appInfoResponse.data.resources_dir || appInfoResponse.data.app_dir
-      skillPath.value = resourcesDir + '/skills/mimir-campaign'
     }
   } catch (error) {
     console.error('Failed to load app info:', error)
@@ -857,69 +777,6 @@ select.form-input {
 .toggle-description {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
-}
-
-/* MCP Status Card */
-.mcp-status-card {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-lg);
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.status-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.status-label {
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.status-badge {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.status-badge.running {
-  background-color: var(--color-success-100);
-  color: var(--color-success-700);
-  border: 1px solid var(--color-success-300);
-}
-
-.status-badge.stopped {
-  background-color: var(--color-gray-100);
-  color: var(--color-gray-600);
-  border: 1px solid var(--color-gray-300);
-}
-
-.theme-dark .status-badge.running {
-  background-color: var(--color-success-900);
-  color: var(--color-success-300);
-  border-color: var(--color-success-700);
-}
-
-.theme-dark .status-badge.stopped {
-  background-color: var(--color-gray-800);
-  color: var(--color-gray-400);
-  border-color: var(--color-gray-600);
-}
-
-.status-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.status-actions .button {
-  flex-shrink: 0;
 }
 
 /* MCP Integration Section */
