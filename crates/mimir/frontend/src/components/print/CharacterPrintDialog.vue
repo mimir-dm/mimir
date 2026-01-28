@@ -1,83 +1,63 @@
 <template>
   <AppModal
     :visible="visible"
-    title="Print Character"
+    title="Export Character"
     size="md"
     @close="handleClose"
   >
-    <div class="print-dialog">
+    <div class="export-dialog">
       <!-- Character Info -->
       <div class="character-info" v-if="characterName">
         <h3 class="character-name">{{ characterName }}</h3>
       </div>
 
-      <!-- Sections -->
-      <div class="section-group">
-        <div class="section-header">Select sections to include:</div>
-
-        <!-- Compact Sheet -->
-        <div class="mode-card" :class="{ active: options.includeCompactSheet }">
-          <label class="mode-header" @click.prevent="options.includeCompactSheet = !options.includeCompactSheet">
-            <input type="checkbox" v-model="options.includeCompactSheet" @click.stop />
-            <div class="mode-info">
-              <span class="mode-label">Compact Sheet (2-page)</span>
-              <span class="mode-desc">Stats, combat, skills, equipment summary</span>
-            </div>
+      <!-- Character Sheets Section -->
+      <div class="option-section">
+        <label class="section-label">Character Sheets</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeCompactSheet" />
+            <span class="checkbox-label">Compact Sheet (2-page)</span>
+            <span class="checkbox-desc">Stats, combat, skills, equipment summary</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeLongForm" />
+            <span class="checkbox-label">Long Form</span>
+            <span class="checkbox-desc">Appearance, personality, backstory, RP notes</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeBattleCard" />
+            <span class="checkbox-label">Battle Card</span>
+            <span class="checkbox-desc">Half-page combat reference (AC, HP, attacks, saves)</span>
           </label>
         </div>
+      </div>
 
-        <!-- Long Form -->
-        <div class="mode-card" :class="{ active: options.includeLongForm }">
-          <label class="mode-header" @click.prevent="options.includeLongForm = !options.includeLongForm">
-            <input type="checkbox" v-model="options.includeLongForm" @click.stop />
-            <div class="mode-info">
-              <span class="mode-label">Long Form</span>
-              <span class="mode-desc">Appearance, personality, backstory, RP notes</span>
-            </div>
+      <!-- Cards Section -->
+      <div class="option-section">
+        <label class="section-label">Cards</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeSpellCards" />
+            <span class="checkbox-label">Spell Cards</span>
+            <span class="checkbox-desc">Printable cards for all spells (if caster)</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeEquipmentCards" />
+            <span class="checkbox-label">Equipment Cards</span>
+            <span class="checkbox-desc">Cards for weapons, magic items, special ammo</span>
           </label>
         </div>
+      </div>
 
-        <!-- Battle Card -->
-        <div class="mode-card" :class="{ active: options.includeBattleCard }">
-          <label class="mode-header" @click.prevent="options.includeBattleCard = !options.includeBattleCard">
-            <input type="checkbox" v-model="options.includeBattleCard" @click.stop />
-            <div class="mode-info">
-              <span class="mode-label">Battle Card</span>
-              <span class="mode-desc">Half-page combat reference card (AC, HP, attacks, saves)</span>
-            </div>
-          </label>
-        </div>
-
-        <!-- Spell Cards -->
-        <div class="mode-card" :class="{ active: options.includeSpellCards }">
-          <label class="mode-header" @click.prevent="options.includeSpellCards = !options.includeSpellCards">
-            <input type="checkbox" v-model="options.includeSpellCards" @click.stop />
-            <div class="mode-info">
-              <span class="mode-label">Spell Cards</span>
-              <span class="mode-desc">Printable cards for all spells (if caster)</span>
-            </div>
-          </label>
-        </div>
-
-        <!-- Equipment Cards -->
-        <div class="mode-card" :class="{ active: options.includeEquipmentCards }">
-          <label class="mode-header" @click.prevent="options.includeEquipmentCards = !options.includeEquipmentCards">
-            <input type="checkbox" v-model="options.includeEquipmentCards" @click.stop />
-            <div class="mode-info">
-              <span class="mode-label">Equipment Cards</span>
-              <span class="mode-desc">Printable cards for weapons, magic items, special ammo</span>
-            </div>
-          </label>
-        </div>
-
-        <!-- Equipment Detail -->
-        <div class="mode-card" :class="{ active: options.includeEquipmentDetail }">
-          <label class="mode-header" @click.prevent="options.includeEquipmentDetail = !options.includeEquipmentDetail">
-            <input type="checkbox" v-model="options.includeEquipmentDetail" @click.stop />
-            <div class="mode-info">
-              <span class="mode-label">Equipment Detail</span>
-              <span class="mode-desc">Full inventory with descriptions and special rules</span>
-            </div>
+      <!-- Detailed Sections -->
+      <div class="option-section">
+        <label class="section-label">Detailed Sections</label>
+        <div class="checkbox-group">
+          <label class="checkbox-option">
+            <input type="checkbox" v-model="options.includeEquipmentDetail" />
+            <span class="checkbox-label">Equipment Detail</span>
+            <span class="checkbox-desc">Full inventory with descriptions and special rules</span>
           </label>
         </div>
       </div>
@@ -107,7 +87,7 @@
         :disabled="isLoading || !characterId || !hasAnySelection"
       >
         <span v-if="isLoading" class="spinner-sm"></span>
-        {{ isLoading ? 'Generating...' : 'Export' }}
+        {{ isLoading ? 'Generating...' : 'Export PDF' }}
       </button>
     </template>
   </AppModal>
@@ -232,7 +212,7 @@ async function handleExport() {
 </script>
 
 <style scoped>
-.print-dialog {
+.export-dialog {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
@@ -251,61 +231,56 @@ async function handleExport() {
   color: var(--color-text);
 }
 
-.section-group {
+.option-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
 
-.section-header {
+.section-label {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.mode-card {
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.checkbox-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 0 var(--spacing-sm);
+  align-items: start;
   cursor: pointer;
-  transition: all 0.2s ease;
-  overflow: hidden;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
 }
 
-.mode-card:hover:not(.active) {
-  border-color: var(--color-primary-400);
+.checkbox-option:hover {
   background: var(--color-surface-variant);
 }
 
-.mode-card.active {
-  border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
+.checkbox-option input[type="checkbox"] {
+  grid-row: span 2;
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  cursor: inherit;
 }
 
-.theme-dark .mode-card.active,
-.theme-hyper .mode-card.active {
-  background: var(--color-primary-900);
-}
-
-.mode-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-}
-
-.mode-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.mode-label {
-  font-weight: 600;
+.checkbox-label {
+  font-weight: 500;
   color: var(--color-text);
 }
 
-.mode-desc {
+.checkbox-desc {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
 }

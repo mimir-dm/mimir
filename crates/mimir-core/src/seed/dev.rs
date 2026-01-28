@@ -9,8 +9,9 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Character, Module, NewCampaignAsset, NewCharacter, NewLightSource, NewMap, NewMapPoi,
-    NewMapTrap, NewModuleMonster, NewModuleNpc, NewTokenPlacement,
+    Character, Module, NewCampaignAsset, NewCharacter, NewCharacterClass, NewCharacterInventory,
+    NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModuleMonster, NewModuleNpc,
+    NewTokenPlacement,
 };
 use crate::services::{
     CampaignService, CreateCampaignInput, CreateModuleInput, ModuleService, ModuleType,
@@ -143,44 +144,358 @@ fn seed_campaign(conn: &mut SqliteConnection) -> ServiceResult<crate::models::ca
 fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<Vec<Character>> {
     let mut characters = Vec::new();
 
-    // Player Characters
-    let pcs = [
-        ("Thorin Ironforge", "Alice", "Dwarf", 14, 12, 16, 10, 12, 8),
-        ("Elara Moonwhisper", "Bob", "Elf", 8, 14, 12, 17, 13, 10),
-        ("Finn Lightfoot", "Charlie", "Halfling", 10, 18, 12, 13, 10, 14),
-        ("Sister Helena", "Diana", "Human", 14, 10, 14, 10, 16, 13),
-    ];
+    // Thorin Ironforge - Dwarf Fighter
+    let thorin_id = Uuid::new_v4().to_string();
+    let thorin = NewCharacter::new_pc(&thorin_id, campaign_id, "Thorin Ironforge", "Alice")
+        .with_race("Mountain Dwarf", "PHB")
+        .with_background("Soldier", "PHB")
+        .with_ability_scores(16, 12, 16, 10, 12, 8)
+        .with_currency(0, 30, 0, 85, 0)
+        .with_roleplay(
+            Some("I face problems head-on. A direct approach is best."),
+            Some("My honor is my life. I will protect the innocent."),
+            Some("I fight for those who cannot fight for themselves."),
+            Some("I have little respect for those who show weakness in battle."),
+        );
+    dal::insert_character(conn, &thorin)?;
 
-    for (name, player, race, str, dex, con, int, wis, cha) in pcs {
-        let id = Uuid::new_v4().to_string();
-        let character = NewCharacter::new_pc(&id, campaign_id, name, player)
-            .with_race(race, "PHB")
-            .with_ability_scores(str, dex, con, int, wis, cha)
-            .with_currency(0, 0, 0, 50, 0);
+    // Add class
+    let thorin_class_id = Uuid::new_v4().to_string();
+    let thorin_class = NewCharacterClass::starting(&thorin_class_id, &thorin_id, "Fighter", "PHB")
+        .with_level(5)
+        .with_subclass("Champion", "PHB");
+    dal::insert_character_class(conn, &thorin_class)?;
 
-        dal::insert_character(conn, &character)?;
-        characters.push(dal::get_character(conn, &id)?);
+    // Add inventory
+    for (name, qty, is_equipped) in [
+        ("Plate Armor", 1, true),
+        ("Shield", 1, true),
+        ("Longsword", 1, true),
+        ("Handaxe", 2, false),
+        ("Potion of Healing", 2, false),
+        ("Backpack", 1, false),
+        ("Bedroll", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &thorin_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
     }
+    characters.push(dal::get_character(conn, &thorin_id)?);
 
-    // NPCs
-    let npcs = [
-        ("Sildar Hallwinter", "Human", "Ally"),
-        ("Gundren Rockseeker", "Dwarf", "Quest Giver"),
-        ("Toblen Stonehill", "Human", "Innkeeper"),
-        ("Iarno Albrek", "Human", "Antagonist"),
-        ("Klarg", "Bugbear", "Boss"),
-    ];
+    // Elara Moonwhisper - Elf Wizard
+    let elara_id = Uuid::new_v4().to_string();
+    let elara = NewCharacter::new_pc(&elara_id, campaign_id, "Elara Moonwhisper", "Bob")
+        .with_race("High Elf", "PHB")
+        .with_background("Sage", "PHB")
+        .with_ability_scores(8, 14, 12, 17, 13, 10)
+        .with_currency(0, 50, 0, 120, 0)
+        .with_roleplay(
+            Some("I use polysyllabic words to impress people."),
+            Some("Knowledge is the path to power and self-improvement."),
+            Some("I sold my soul for knowledge. I hope to do great deeds to win it back."),
+            Some("Most people scream and run when they see a demon. I stop and take notes."),
+        );
+    dal::insert_character(conn, &elara)?;
 
-    for (name, race, role) in npcs {
-        let id = Uuid::new_v4().to_string();
-        let character = NewCharacter::new_npc(&id, campaign_id, name)
-            .with_race(race, "PHB")
-            .with_ability_scores(14, 12, 14, 10, 10, 10)
-            .with_npc_info(Some(role), None, None);
+    let elara_class_id = Uuid::new_v4().to_string();
+    let elara_class = NewCharacterClass::starting(&elara_class_id, &elara_id, "Wizard", "PHB")
+        .with_level(5)
+        .with_subclass("School of Evocation", "PHB");
+    dal::insert_character_class(conn, &elara_class)?;
 
-        dal::insert_character(conn, &character)?;
-        characters.push(dal::get_character(conn, &id)?);
+    for (name, qty, is_equipped) in [
+        ("Quarterstaff", 1, true),
+        ("Spellbook", 1, false),
+        ("Component Pouch", 1, false),
+        ("Dagger", 2, false),
+        ("Scroll of Identify", 1, false),
+        ("Potion of Healing", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &elara_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
     }
+    characters.push(dal::get_character(conn, &elara_id)?);
+
+    // Finn Lightfoot - Halfling Rogue
+    let finn_id = Uuid::new_v4().to_string();
+    let finn = NewCharacter::new_pc(&finn_id, campaign_id, "Finn Lightfoot", "Charlie")
+        .with_race("Lightfoot Halfling", "PHB")
+        .with_background("Criminal", "PHB")
+        .with_ability_scores(10, 18, 12, 13, 10, 14)
+        .with_currency(45, 80, 0, 25, 0)
+        .with_roleplay(
+            Some("I always have a plan for what to do when things go wrong."),
+            Some("Freedom. Chains are meant to be broken."),
+            Some("Someone I loved died because of a mistake I made."),
+            Some("I turn tail and run when things look bad."),
+        );
+    dal::insert_character(conn, &finn)?;
+
+    let finn_class_id = Uuid::new_v4().to_string();
+    let finn_class = NewCharacterClass::starting(&finn_class_id, &finn_id, "Rogue", "PHB")
+        .with_level(3)
+        .with_subclass("Thief", "PHB");
+    dal::insert_character_class(conn, &finn_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Leather Armor", 1, true),
+        ("Shortsword", 1, true),
+        ("Dagger", 3, false),
+        ("Shortbow", 1, false),
+        ("Arrows", 20, false),
+        ("Thieves' Tools", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &finn_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &finn_id)?);
+
+    // Sister Helena - Human Cleric
+    let helena_id = Uuid::new_v4().to_string();
+    let helena = NewCharacter::new_pc(&helena_id, campaign_id, "Sister Helena", "Diana")
+        .with_race("Human", "PHB")
+        .with_background("Acolyte", "PHB")
+        .with_ability_scores(14, 10, 14, 10, 16, 13)
+        .with_currency(0, 25, 0, 200, 5)
+        .with_roleplay(
+            Some("I see omens in every event and action. The gods try to speak to us."),
+            Some("Charity. I always try to help those in need."),
+            Some("I will do anything to protect the temple where I served."),
+            Some("I am suspicious of strangers and expect the worst of them."),
+        );
+    dal::insert_character(conn, &helena)?;
+
+    let helena_class_id = Uuid::new_v4().to_string();
+    let helena_class = NewCharacterClass::starting(&helena_class_id, &helena_id, "Cleric", "PHB")
+        .with_level(7)
+        .with_subclass("Life Domain", "PHB");
+    dal::insert_character_class(conn, &helena_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Chain Mail", 1, true),
+        ("Shield", 1, true),
+        ("Mace", 1, true),
+        ("Holy Symbol", 1, false),
+        ("Healer's Kit", 1, false),
+        ("Potion of Healing", 4, false),
+        ("Holy Water", 2, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &helena_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &helena_id)?);
+
+    // =========================================================================
+    // NPCs - Fully seeded with personality and inventory
+    // =========================================================================
+
+    // Sildar Hallwinter - Human Fighter (Ally)
+    let sildar_id = Uuid::new_v4().to_string();
+    let sildar = NewCharacter::new_npc(&sildar_id, campaign_id, "Sildar Hallwinter")
+        .with_race("Human", "PHB")
+        .with_background("Soldier", "PHB")
+        .with_ability_scores(16, 11, 14, 10, 11, 10)
+        .with_currency(0, 20, 0, 50, 0)
+        .with_npc_info(Some("Ally"), Some("Phandalin"), Some("Lords' Alliance"))
+        .with_roleplay(
+            Some("I'm always polite and respectful, even to my enemies."),
+            Some("Greater Good. Our lot is to protect the civilized lands."),
+            Some("I would still lay down my life for the people I served with."),
+            Some("I made a terrible mistake in battle that cost many lives."),
+        );
+    dal::insert_character(conn, &sildar)?;
+
+    let sildar_class_id = Uuid::new_v4().to_string();
+    let sildar_class = NewCharacterClass::starting(&sildar_class_id, &sildar_id, "Fighter", "PHB")
+        .with_level(5);
+    dal::insert_character_class(conn, &sildar_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Chain Mail", 1, true),
+        ("Longsword", 1, true),
+        ("Shield", 1, true),
+        ("Dagger", 1, false),
+        ("Potion of Healing", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &sildar_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &sildar_id)?);
+
+    // Gundren Rockseeker - Dwarf Fighter (Quest Giver)
+    let gundren_id = Uuid::new_v4().to_string();
+    let gundren = NewCharacter::new_npc(&gundren_id, campaign_id, "Gundren Rockseeker")
+        .with_race("Hill Dwarf", "PHB")
+        .with_background("Guild Artisan", "PHB")
+        .with_ability_scores(12, 10, 14, 13, 12, 10)
+        .with_currency(0, 50, 0, 150, 10)
+        .with_npc_info(Some("Quest Giver"), Some("Wave Echo Cave"), None)
+        .with_roleplay(
+            Some("I believe that anything worth doing is worth doing right."),
+            Some("Aspiration. I work hard to be the best there is at my craft."),
+            Some("I owe my guild a great debt for forging me into the person I am."),
+            Some("I'm never satisfied with what I have - I always want more."),
+        );
+    dal::insert_character(conn, &gundren)?;
+
+    let gundren_class_id = Uuid::new_v4().to_string();
+    let gundren_class = NewCharacterClass::starting(&gundren_class_id, &gundren_id, "Fighter", "PHB")
+        .with_level(3);
+    dal::insert_character_class(conn, &gundren_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Traveler's Clothes", 1, true),
+        ("Miner's Pick", 1, false),
+        ("Map Case", 1, false),
+        ("Pouch", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &gundren_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &gundren_id)?);
+
+    // Toblen Stonehill - Human Innkeeper
+    let toblen_id = Uuid::new_v4().to_string();
+    let toblen = NewCharacter::new_npc(&toblen_id, campaign_id, "Toblen Stonehill")
+        .with_race("Human", "PHB")
+        .with_background("Folk Hero", "PHB")
+        .with_ability_scores(10, 10, 12, 10, 14, 13)
+        .with_currency(250, 100, 0, 30, 0)
+        .with_npc_info(Some("Innkeeper"), Some("Stonehill Inn, Phandalin"), None)
+        .with_roleplay(
+            Some("I judge people by their actions, not their words."),
+            Some("Sincerity. There's no good in pretending to be something I'm not."),
+            Some("I protect those who cannot protect themselves."),
+            Some("I have trouble trusting in my allies."),
+        );
+    dal::insert_character(conn, &toblen)?;
+
+    let toblen_class_id = Uuid::new_v4().to_string();
+    let toblen_class = NewCharacterClass::starting(&toblen_class_id, &toblen_id, "Commoner", "PHB")
+        .with_level(1);
+    dal::insert_character_class(conn, &toblen_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Common Clothes", 1, true),
+        ("Apron", 1, true),
+        ("Dagger", 1, false),
+        ("Key Ring", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &toblen_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &toblen_id)?);
+
+    // Iarno Albrek (Glasstaff) - Human Wizard (Antagonist)
+    let iarno_id = Uuid::new_v4().to_string();
+    let iarno = NewCharacter::new_npc(&iarno_id, campaign_id, "Iarno Albrek")
+        .with_race("Human", "PHB")
+        .with_background("Criminal", "PHB")
+        .with_ability_scores(10, 12, 10, 16, 14, 14)
+        .with_currency(0, 30, 0, 75, 0)
+        .with_npc_info(Some("Antagonist"), Some("Tresendar Manor"), Some("Redbrands"))
+        .with_roleplay(
+            Some("I am incredibly slow to trust. Those who seem fair often have hidden motives."),
+            Some("Power. I will do whatever it takes to become powerful."),
+            Some("I will become the greatest wizard the world has ever seen."),
+            Some("An innocent person is in prison for a crime I committed."),
+        );
+    dal::insert_character(conn, &iarno)?;
+
+    let iarno_class_id = Uuid::new_v4().to_string();
+    let iarno_class = NewCharacterClass::starting(&iarno_class_id, &iarno_id, "Wizard", "PHB")
+        .with_level(4);
+    dal::insert_character_class(conn, &iarno_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Robes", 1, true),
+        ("Staff of Defense", 1, true),
+        ("Spellbook", 1, false),
+        ("Component Pouch", 1, false),
+        ("Dagger", 1, false),
+        ("Potion of Invisibility", 1, false),
+        ("Scroll of Fireball", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &iarno_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &iarno_id)?);
+
+    // Klarg - Bugbear Boss
+    let klarg_id = Uuid::new_v4().to_string();
+    let klarg = NewCharacter::new_npc(&klarg_id, campaign_id, "Klarg")
+        .with_race("Bugbear", "MM")
+        .with_background("Outlander", "PHB")
+        .with_ability_scores(15, 14, 13, 8, 11, 9)
+        .with_currency(0, 0, 0, 25, 0)
+        .with_npc_info(Some("Boss"), Some("Cragmaw Hideout"), Some("Cragmaw Tribe"))
+        .with_roleplay(
+            Some("I watch over my friends as if they were newborn pups."),
+            Some("Might. The strongest are meant to rule."),
+            Some("My tribe is the most important thing in my life."),
+            Some("Violence is my answer to almost any challenge."),
+        );
+    dal::insert_character(conn, &klarg)?;
+
+    let klarg_class_id = Uuid::new_v4().to_string();
+    let klarg_class = NewCharacterClass::starting(&klarg_class_id, &klarg_id, "Fighter", "PHB")
+        .with_level(3);
+    dal::insert_character_class(conn, &klarg_class)?;
+
+    for (name, qty, is_equipped) in [
+        ("Hide Armor", 1, true),
+        ("Morningstar", 1, true),
+        ("Javelin", 3, false),
+        ("Belt Pouch", 1, false),
+    ] {
+        let item_id = Uuid::new_v4().to_string();
+        let mut item = NewCharacterInventory::new(&item_id, &klarg_id, name, "PHB")
+            .with_quantity(qty);
+        if is_equipped {
+            item = item.equipped();
+        }
+        dal::insert_character_inventory(conn, &item)?;
+    }
+    characters.push(dal::get_character(conn, &klarg_id)?);
 
     Ok(characters)
 }

@@ -412,11 +412,7 @@ function closeModal() {
 }
 
 .source-table tbody tr.selected {
-  background: var(--color-primary-100);
-}
-
-.theme-dark .source-table tbody tr.selected {
-  background: var(--color-primary-900);
+  background: var(--color-surface-hover);
 }
 
 .source-table tbody tr:last-child td {

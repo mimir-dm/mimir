@@ -2,9 +2,14 @@
 //!
 //! Tauri commands for campaign CRUD operations.
 
-use mimir_core::models::campaign::Campaign;
+use mimir_core::dal::campaign::{
+    delete_all_campaign_sources, delete_campaign_source_by_code, get_campaign_source,
+    insert_campaign_source, list_campaign_source_codes,
+};
+use mimir_core::models::campaign::{Campaign, CampaignSource, NewCampaignSource};
 use mimir_core::services::{CampaignService, CreateCampaignInput, UpdateCampaignInput};
 use tauri::State;
+use uuid::Uuid;
 
 use crate::state::AppState;
 use super::{to_api_response, ApiResponse};
@@ -183,5 +188,98 @@ pub fn delete_campaign(
 
     // Note: delete_files is not implemented yet - campaigns don't have external files in v0.5
     let result = CampaignService::new(&mut db).delete(&request.campaign_id);
+    to_api_response(result)
+}
+
+// =============================================================================
+// Campaign Sources
+// =============================================================================
+
+/// List all source codes enabled for a campaign.
+#[tauri::command]
+pub fn list_campaign_sources(
+    state: State<'_, AppState>,
+    campaign_id: String,
+) -> ApiResponse<Vec<String>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = list_campaign_source_codes(&mut db, &campaign_id);
+    to_api_response(result)
+}
+
+/// Add a source to a campaign's allowed sources.
+#[tauri::command]
+pub fn add_campaign_source(
+    state: State<'_, AppState>,
+    campaign_id: String,
+    source_code: String,
+) -> ApiResponse<CampaignSource> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let id = Uuid::new_v4().to_string();
+    let source = NewCampaignSource::new(&id, &campaign_id, &source_code);
+
+    match insert_campaign_source(&mut db, &source) {
+        Ok(_) => match get_campaign_source(&mut db, &id) {
+            Ok(s) => ApiResponse::ok(s),
+            Err(e) => ApiResponse::<CampaignSource>::err(e.to_string()),
+        },
+        Err(e) => ApiResponse::<CampaignSource>::err(e.to_string()),
+    }
+}
+
+/// Remove a source from a campaign's allowed sources.
+#[tauri::command]
+pub fn remove_campaign_source(
+    state: State<'_, AppState>,
+    campaign_id: String,
+    source_code: String,
+) -> ApiResponse<()> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = delete_campaign_source_by_code(&mut db, &campaign_id, &source_code);
+    match result {
+        Ok(_) => ApiResponse::ok(()),
+        Err(e) => ApiResponse::<()>::err(e.to_string()),
+    }
+}
+
+/// Set all sources for a campaign (replaces existing).
+#[tauri::command]
+pub fn set_campaign_sources(
+    state: State<'_, AppState>,
+    campaign_id: String,
+    source_codes: Vec<String>,
+) -> ApiResponse<Vec<String>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    // Delete all existing sources
+    if let Err(e) = delete_all_campaign_sources(&mut db, &campaign_id) {
+        return ApiResponse::<Vec<String>>::err(e.to_string());
+    }
+
+    // Insert new sources one by one (NewCampaignSource uses borrowed strings)
+    for code in &source_codes {
+        let id = Uuid::new_v4().to_string();
+        let source = NewCampaignSource::new(&id, &campaign_id, code);
+        if let Err(e) = insert_campaign_source(&mut db, &source) {
+            return ApiResponse::<Vec<String>>::err(e.to_string());
+        }
+    }
+
+    // Return the updated list
+    let result = list_campaign_source_codes(&mut db, &campaign_id);
     to_api_response(result)
 }

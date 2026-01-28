@@ -315,6 +315,7 @@ fn truncate_name(name: &str, max_len: usize) -> String {
 }
 
 /// Detect image format from magic bytes
+#[allow(dead_code)]
 fn detect_image_format(bytes: &[u8]) -> &'static str {
     if bytes.len() >= 8 {
         // PNG magic: 89 50 4E 47 0D 0A 1A 0A

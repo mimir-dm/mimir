@@ -21,6 +21,12 @@
             <h1>{{ campaign.name }}</h1>
           </div>
           <div class="header-actions">
+            <button @click="showSourcesDialog = true" class="btn btn-secondary btn-sm">
+              Sources
+            </button>
+            <button @click="showPdfDialog = true" class="btn btn-secondary btn-sm">
+              PDF
+            </button>
             <button @click="showExportDialog = true" class="btn btn-secondary btn-sm">
               Export Archive
             </button>
@@ -40,11 +46,27 @@
         </main>
       </template>
 
-      <!-- Export Dialog -->
+      <!-- PDF Export Dialog -->
+      <CampaignExportDialog
+        :visible="showPdfDialog"
+        :campaign-id="id"
+        :campaign-name="campaign?.name"
+        @close="showPdfDialog = false"
+      />
+
+      <!-- Archive Export Dialog -->
       <CampaignArchiveExportDialog
         :visible="showExportDialog"
         :campaign="campaign"
         @close="showExportDialog = false"
+      />
+
+      <!-- Campaign Sources Modal -->
+      <CampaignSourcesModal
+        :visible="showSourcesDialog"
+        :campaign-id="id"
+        @close="showSourcesDialog = false"
+        @saved="campaignStore.refreshCampaignSources()"
       />
     </div>
   </MainLayout>
@@ -57,11 +79,16 @@ import { useApiCall } from '@/shared/composables/useApiCall'
 import MainLayout from '@/shared/components/layout/MainLayout.vue'
 import DashboardTabs from '../components/dashboard/DashboardTabs.vue'
 import CampaignArchiveExportDialog from '@/components/campaigns/CampaignArchiveExportDialog.vue'
+import CampaignExportDialog from '@/components/print/CampaignExportDialog.vue'
+import CampaignSourcesModal from '@/components/campaigns/CampaignSourcesModal.vue'
+import { useCampaignStore } from '@/stores/campaigns'
 import type { Campaign } from '@/types'
 
 const props = defineProps<{
   id: string
 }>()
+
+const campaignStore = useCampaignStore()
 
 // Local state
 const campaign = ref<Campaign | null>(null)
@@ -69,6 +96,8 @@ const documents = ref<any[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const showExportDialog = ref(false)
+const showPdfDialog = ref(false)
+const showSourcesDialog = ref(false)
 
 // API call helpers
 const { execute: loadCampaignApi } = useApiCall<Campaign>()

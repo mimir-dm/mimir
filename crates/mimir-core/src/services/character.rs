@@ -4,14 +4,18 @@
 
 use chrono::Utc;
 use diesel::SqliteConnection;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Character, CharacterInventory, NewCharacter, NewCharacterInventory, UpdateCharacter,
-    UpdateCharacterInventory,
+    Character, CharacterClass, CharacterInventory, FeatSourceType, NewCharacter,
+    NewCharacterClass, NewCharacterFeat, NewCharacterFeature, NewCharacterInventory,
+    NewCharacterProficiency, NewCharacterSpell, ProficiencyType, UpdateCharacter,
+    UpdateCharacterClass, UpdateCharacterInventory, UpdateCharacterProficiency,
 };
-use crate::services::{ServiceError, ServiceResult};
+use crate::services::catalog::CatalogEntityService;
+use crate::services::{ClassService, ServiceError, ServiceResult};
 
 /// Input for creating a new character.
 #[derive(Debug, Clone)]
@@ -241,6 +245,304 @@ impl AddInventoryInput {
     }
 }
 
+// =============================================================================
+// Level Up Types
+// =============================================================================
+
+/// Request for leveling up a character.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LevelUpRequest {
+    /// Class to level up in (allows multiclassing)
+    pub class_name: String,
+    /// Source book for the class (e.g., "PHB", "XGE")
+    pub class_source: String,
+    /// HP gain method
+    pub hit_points_method: HpGainMethod,
+    /// Subclass choice (if this is the level where subclass is chosen)
+    pub subclass: Option<SubclassChoice>,
+    /// Ability score improvement or feat selection (if applicable at this level)
+    pub asi_or_feat: Option<AsiOrFeat>,
+    /// Spell changes (new spells, cantrips, swaps) for spellcasters
+    pub spell_changes: Option<SpellChanges>,
+    /// Feature choices (fighting style, metamagic, maneuvers, invocations, etc.)
+    pub feature_choices: Option<FeatureChoices>,
+}
+
+/// Spell changes during level up.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpellChanges {
+    /// New spells learned this level (for Spells Known casters or Wizard spellbook)
+    pub new_spells: Vec<SpellReference>,
+    /// New cantrips learned this level
+    pub new_cantrips: Vec<SpellReference>,
+    /// Spell to remove (for Spells Known swap)
+    pub swap_out: Option<SpellReference>,
+    /// Spell to add in place of swapped spell
+    pub swap_in: Option<SpellReference>,
+}
+
+/// Reference to a spell from the catalog.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpellReference {
+    /// Spell name (e.g., "Fireball")
+    pub name: String,
+    /// Spell source (e.g., "PHB", "XGE")
+    pub source: String,
+}
+
+/// Class feature choices during level up.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeatureChoices {
+    /// Fighting Style selection (Fighter 1, Paladin 2, Ranger 2)
+    pub fighting_style: Option<FeatureReference>,
+    /// Metamagic options (Sorcerer 3, 10, 17)
+    pub metamagic: Option<Vec<FeatureReference>>,
+    /// Battle Master maneuvers (Fighter/Battle Master 3, 7, 10, 15)
+    pub maneuvers: Option<ManeuverChoices>,
+    /// Warlock Eldritch Invocations (Warlock 2, 5, 7, 9, 12, 15, 18)
+    pub invocations: Option<InvocationChoices>,
+    /// Warlock Pact Boon (Warlock 3)
+    pub pact_boon: Option<FeatureReference>,
+    /// Expertise skills (Rogue 1/6, Bard 3/10)
+    pub expertise_skills: Option<Vec<String>>,
+}
+
+/// Reference to a class feature option from the catalog.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeatureReference {
+    /// Feature name (e.g., "Defense", "Quickened Spell", "Riposte")
+    pub name: String,
+    /// Feature source (e.g., "PHB", "TCE")
+    pub source: String,
+}
+
+/// Maneuver choices with optional swap for Battle Master.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ManeuverChoices {
+    /// New maneuvers to learn
+    pub new_maneuvers: Vec<FeatureReference>,
+    /// Maneuver to swap out (optional, one per level)
+    pub swap_out: Option<FeatureReference>,
+    /// Maneuver to swap in (required if swap_out is provided)
+    pub swap_in: Option<FeatureReference>,
+}
+
+/// Invocation choices with optional swap for Warlock.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InvocationChoices {
+    /// New invocations to learn
+    pub new_invocations: Vec<FeatureReference>,
+    /// Invocation to swap out (optional, one per level)
+    pub swap_out: Option<FeatureReference>,
+    /// Invocation to swap in (required if swap_out is provided)
+    pub swap_in: Option<FeatureReference>,
+}
+
+/// Method for gaining HP on level up.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "value")]
+pub enum HpGainMethod {
+    /// Take the average (rounded up): (hit_die / 2) + 1
+    Average,
+    /// Roll the hit die (value is the roll result, must be 1-hit_die)
+    Roll(i32),
+    /// Manual HP entry (any positive value)
+    Manual(i32),
+}
+
+/// Ability Score Improvement or Feat selection.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum AsiOrFeat {
+    /// Improve ability scores (total increase must be 2)
+    AbilityScoreImprovement {
+        /// First ability to increase
+        ability1: String,
+        /// Amount to increase first ability (1 or 2)
+        increase1: i32,
+        /// Optional second ability to increase
+        ability2: Option<String>,
+        /// Amount to increase second ability (1)
+        increase2: Option<i32>,
+    },
+    /// Take a feat instead of ASI
+    Feat {
+        /// Feat name
+        name: String,
+        /// Feat source (e.g., "PHB")
+        source: String,
+    },
+}
+
+/// Subclass choice for level up.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubclassChoice {
+    /// Subclass name (e.g., "Champion", "School of Evocation")
+    pub name: String,
+    /// Subclass source (e.g., "PHB", "XGE")
+    pub source: String,
+}
+
+/// Response from level up operation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LevelUpResult {
+    /// Updated character data
+    pub character: Character,
+    /// Updated class entry
+    pub class: CharacterClass,
+    /// HP gained this level
+    pub hp_gained: i32,
+    /// New total level
+    pub new_total_level: i32,
+    /// Whether this was a multiclass (new class added)
+    pub is_multiclass: bool,
+}
+
+// =============================================================================
+// Multiclass Prerequisites
+// =============================================================================
+
+/// Multiclass prerequisites for D&D 5e classes.
+/// Returns required ability scores as (ability_name, minimum_score) pairs.
+/// For OR requirements (like Fighter), any one of the abilities meeting the requirement suffices.
+fn get_multiclass_prerequisites(class_name: &str) -> Option<Vec<(&'static str, i32, bool)>> {
+    // Returns: Vec<(ability, min_score, is_or_requirement)>
+    // is_or_requirement = true means this is part of an OR group (only one needs to pass)
+    match class_name.to_lowercase().as_str() {
+        "barbarian" => Some(vec![("strength", 13, false)]),
+        "bard" => Some(vec![("charisma", 13, false)]),
+        "cleric" => Some(vec![("wisdom", 13, false)]),
+        "druid" => Some(vec![("wisdom", 13, false)]),
+        "fighter" => Some(vec![("strength", 13, true), ("dexterity", 13, true)]), // STR OR DEX
+        "monk" => Some(vec![("dexterity", 13, false), ("wisdom", 13, false)]),    // DEX AND WIS
+        "paladin" => Some(vec![("strength", 13, false), ("charisma", 13, false)]), // STR AND CHA
+        "ranger" => Some(vec![("dexterity", 13, false), ("wisdom", 13, false)]),  // DEX AND WIS
+        "rogue" => Some(vec![("dexterity", 13, false)]),
+        "sorcerer" => Some(vec![("charisma", 13, false)]),
+        "warlock" => Some(vec![("charisma", 13, false)]),
+        "wizard" => Some(vec![("intelligence", 13, false)]),
+        // Artificer from Tasha's
+        "artificer" => Some(vec![("intelligence", 13, false)]),
+        // Blood Hunter from Critical Role
+        "blood hunter" => Some(vec![("strength", 13, true), ("dexterity", 13, true), ("intelligence", 13, false)]),
+        _ => None, // Unknown class - allow without prerequisite check
+    }
+}
+
+/// Check if a character meets multiclass prerequisites for a class.
+fn check_multiclass_prerequisites(
+    character: &Character,
+    class_name: &str,
+) -> Result<(), ServiceError> {
+    let prereqs = match get_multiclass_prerequisites(class_name) {
+        Some(p) => p,
+        None => return Ok(()), // Unknown class - skip check
+    };
+
+    // Separate AND requirements from OR requirements
+    let and_reqs: Vec<_> = prereqs.iter().filter(|(_, _, is_or)| !is_or).collect();
+    let or_reqs: Vec<_> = prereqs.iter().filter(|(_, _, is_or)| *is_or).collect();
+
+    // Check AND requirements - all must pass
+    for (ability, min_score, _) in and_reqs {
+        let score = get_ability_score(character, ability);
+        if score < *min_score {
+            return Err(ServiceError::validation(format!(
+                "Multiclass prerequisite not met: {} requires {} {} (character has {})",
+                class_name, ability, min_score, score
+            )));
+        }
+    }
+
+    // Check OR requirements - at least one must pass
+    if !or_reqs.is_empty() {
+        let any_pass = or_reqs.iter().any(|(ability, min_score, _)| {
+            get_ability_score(character, ability) >= *min_score
+        });
+        if !any_pass {
+            let reqs_str = or_reqs
+                .iter()
+                .map(|(a, s, _)| format!("{} {}", a, s))
+                .collect::<Vec<_>>()
+                .join(" or ");
+            return Err(ServiceError::validation(format!(
+                "Multiclass prerequisite not met: {} requires {}",
+                class_name, reqs_str
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+/// Get an ability score by name.
+fn get_ability_score(character: &Character, ability: &str) -> i32 {
+    match ability.to_lowercase().as_str() {
+        "strength" | "str" => character.strength,
+        "dexterity" | "dex" => character.dexterity,
+        "constitution" | "con" => character.constitution,
+        "intelligence" | "int" => character.intelligence,
+        "wisdom" | "wis" => character.wisdom,
+        "charisma" | "cha" => character.charisma,
+        _ => 0,
+    }
+}
+
+/// Set an ability score by name, returning the new scores array.
+fn set_ability_score(character: &Character, ability: &str, new_value: i32) -> [i32; 6] {
+    let mut scores = [
+        character.strength,
+        character.dexterity,
+        character.constitution,
+        character.intelligence,
+        character.wisdom,
+        character.charisma,
+    ];
+    match ability.to_lowercase().as_str() {
+        "strength" | "str" => scores[0] = new_value,
+        "dexterity" | "dex" => scores[1] = new_value,
+        "constitution" | "con" => scores[2] = new_value,
+        "intelligence" | "int" => scores[3] = new_value,
+        "wisdom" | "wis" => scores[4] = new_value,
+        "charisma" | "cha" => scores[5] = new_value,
+        _ => {}
+    }
+    scores
+}
+
+/// Calculate HP gain for a level up.
+fn calculate_hp_gain(method: &HpGainMethod, hit_die: i32, con_mod: i32) -> i32 {
+    let base = match method {
+        HpGainMethod::Average => (hit_die / 2) + 1,
+        HpGainMethod::Roll(roll) => *roll,
+        HpGainMethod::Manual(value) => *value,
+    };
+    // Minimum 1 HP per level even with negative CON
+    (base + con_mod).max(1)
+}
+
+/// Get hit die value for a class from catalog, returns d8 as default.
+fn get_class_hit_die(conn: &mut SqliteConnection, class_name: &str, class_source: &str) -> i32 {
+    // Try to get from catalog
+    if let Ok(Some(class)) = ClassService::new(conn).get_by_name_and_source(class_name, class_source) {
+        // Parse hit die from JSON data
+        if let Ok(data) = class.parse_data() {
+            if let Some(hd) = data.get("hd") {
+                if let Some(faces) = hd.get("faces").and_then(|f| f.as_i64()) {
+                    return faces as i32;
+                }
+            }
+        }
+    }
+    // Default hit die values by class name
+    match class_name.to_lowercase().as_str() {
+        "barbarian" => 12,
+        "fighter" | "paladin" | "ranger" => 10,
+        "sorcerer" | "wizard" => 6,
+        _ => 8, // Default for most classes
+    }
+}
+
 /// Service for character management.
 ///
 /// Handles character CRUD operations and inventory management.
@@ -415,6 +717,448 @@ impl<'a> CharacterService<'a> {
     /// Count NPCs for a campaign.
     pub fn count_npcs(&mut self, campaign_id: &str) -> ServiceResult<i64> {
         dal::count_npcs(self.conn, campaign_id).map_err(ServiceError::from)
+    }
+
+    // --- Level Up ---
+
+    /// Level up a character.
+    ///
+    /// Handles HP calculation, multiclass validation, and class level updates.
+    /// All updates occur in a single transaction.
+    pub fn level_up(
+        &mut self,
+        character_id: &str,
+        request: LevelUpRequest,
+    ) -> ServiceResult<LevelUpResult> {
+        // 1. Get the character
+        let character = dal::get_character_optional(self.conn, character_id)?
+            .ok_or_else(|| ServiceError::not_found("Character", character_id))?;
+
+        // 2. Get existing classes for this character
+        let existing_classes = dal::list_character_classes(self.conn, character_id)?;
+        let has_existing_class = !existing_classes.is_empty();
+
+        // 3. Check if character already has this class
+        let existing_class_entry = dal::find_character_class_by_name(
+            self.conn,
+            character_id,
+            &request.class_name,
+            &request.class_source,
+        )?;
+
+        let is_multiclass = has_existing_class && existing_class_entry.is_none();
+
+        // 4. Validate multiclass prerequisites if this is a multiclass
+        if is_multiclass {
+            // Check prerequisites for target class
+            check_multiclass_prerequisites(&character, &request.class_name)?;
+
+            // Also check prerequisites for all current classes (character must meet
+            // the multiclass requirements for classes they already have)
+            for existing in &existing_classes {
+                check_multiclass_prerequisites(&character, &existing.class_name)?;
+            }
+        }
+
+        // 5. Validate HP roll if applicable
+        let hit_die = get_class_hit_die(self.conn, &request.class_name, &request.class_source);
+        if let HpGainMethod::Roll(roll) = &request.hit_points_method {
+            if *roll < 1 || *roll > hit_die {
+                return Err(ServiceError::validation(format!(
+                    "HP roll {} is invalid for hit die d{} (must be 1-{})",
+                    roll, hit_die, hit_die
+                )));
+            }
+        }
+
+        // 6. Calculate HP gain
+        let con_mod = Character::ability_modifier(character.constitution);
+        let hp_gained = calculate_hp_gain(&request.hit_points_method, hit_die, con_mod);
+
+        // 7. Handle ASI or Feat if provided
+        let mut updated_character = character.clone();
+        if let Some(ref asi_or_feat) = request.asi_or_feat {
+            match asi_or_feat {
+                AsiOrFeat::AbilityScoreImprovement {
+                    ability1,
+                    increase1,
+                    ability2,
+                    increase2,
+                } => {
+                    // Validate total increase is exactly 2
+                    let total_increase = increase1 + increase2.unwrap_or(0);
+                    if total_increase != 2 {
+                        return Err(ServiceError::validation(format!(
+                            "ASI total increase must be exactly 2, got {}",
+                            total_increase
+                        )));
+                    }
+
+                    // Apply first ability increase (cap at 20)
+                    let current1 = get_ability_score(&updated_character, ability1);
+                    let new1 = (current1 + increase1).min(20);
+                    let scores = set_ability_score(&updated_character, ability1, new1);
+                    updated_character.strength = scores[0];
+                    updated_character.dexterity = scores[1];
+                    updated_character.constitution = scores[2];
+                    updated_character.intelligence = scores[3];
+                    updated_character.wisdom = scores[4];
+                    updated_character.charisma = scores[5];
+
+                    // Apply second ability increase if provided (cap at 20)
+                    if let (Some(ability2), Some(increase2)) = (ability2, increase2) {
+                        let current2 = get_ability_score(&updated_character, ability2);
+                        let new2 = (current2 + increase2).min(20);
+                        let scores = set_ability_score(&updated_character, ability2, new2);
+                        updated_character.strength = scores[0];
+                        updated_character.dexterity = scores[1];
+                        updated_character.constitution = scores[2];
+                        updated_character.intelligence = scores[3];
+                        updated_character.wisdom = scores[4];
+                        updated_character.charisma = scores[5];
+                    }
+
+                    // Update character ability scores in database
+                    let now = Utc::now().to_rfc3339();
+                    let update = UpdateCharacter {
+                        strength: Some(updated_character.strength),
+                        dexterity: Some(updated_character.dexterity),
+                        constitution: Some(updated_character.constitution),
+                        intelligence: Some(updated_character.intelligence),
+                        wisdom: Some(updated_character.wisdom),
+                        charisma: Some(updated_character.charisma),
+                        updated_at: Some(&now),
+                        ..Default::default()
+                    };
+                    dal::update_character(self.conn, character_id, &update)?;
+                }
+                AsiOrFeat::Feat { name, source } => {
+                    // Add feat to character
+                    let feat_id = Uuid::new_v4().to_string();
+                    let new_feat =
+                        NewCharacterFeat::new(&feat_id, character_id, name, source, FeatSourceType::Asi);
+                    dal::insert_character_feat(self.conn, &new_feat)?;
+                }
+            }
+        }
+
+        // 8. Handle spell changes if provided
+        if let Some(ref spell_changes) = request.spell_changes {
+            // Handle spell swap first (remove old, add new)
+            if let (Some(ref swap_out), Some(ref swap_in)) = (&spell_changes.swap_out, &spell_changes.swap_in) {
+                // Find and remove the spell being swapped out
+                let existing_spell = dal::find_character_spell_by_name(
+                    self.conn,
+                    character_id,
+                    &swap_out.name,
+                    &request.class_name,
+                )?;
+
+                if let Some(spell) = existing_spell {
+                    dal::delete_character_spell(self.conn, &spell.id)?;
+                } else {
+                    return Err(ServiceError::validation(format!(
+                        "Cannot swap out spell '{}' - character doesn't know it from class {}",
+                        swap_out.name, request.class_name
+                    )));
+                }
+
+                // Add the swap-in spell
+                let spell_id = Uuid::new_v4().to_string();
+                let new_spell = NewCharacterSpell::new(
+                    &spell_id,
+                    character_id,
+                    &swap_in.name,
+                    &swap_in.source,
+                    &request.class_name,
+                );
+                dal::insert_character_spell(self.conn, &new_spell)?;
+            }
+
+            // Add new spells (Spells Known or Wizard spellbook additions)
+            for spell in &spell_changes.new_spells {
+                // Check if character already knows this spell from this class
+                if dal::character_knows_spell(self.conn, character_id, &spell.name)? {
+                    // Skip if already known (could be from different class or previous level)
+                    continue;
+                }
+
+                let spell_id = Uuid::new_v4().to_string();
+                let new_spell = NewCharacterSpell::new(
+                    &spell_id,
+                    character_id,
+                    &spell.name,
+                    &spell.source,
+                    &request.class_name,
+                );
+                dal::insert_character_spell(self.conn, &new_spell)?;
+            }
+
+            // Add new cantrips
+            for cantrip in &spell_changes.new_cantrips {
+                // Check if character already knows this cantrip
+                if dal::character_knows_spell(self.conn, character_id, &cantrip.name)? {
+                    continue;
+                }
+
+                let cantrip_id = Uuid::new_v4().to_string();
+                let new_cantrip = NewCharacterSpell::new(
+                    &cantrip_id,
+                    character_id,
+                    &cantrip.name,
+                    &cantrip.source,
+                    &request.class_name,
+                );
+                dal::insert_character_spell(self.conn, &new_cantrip)?;
+            }
+        }
+
+        // 9. Handle feature choices if provided
+        if let Some(ref feature_choices) = request.feature_choices {
+            // Handle Fighting Style
+            if let Some(ref fighting_style) = feature_choices.fighting_style {
+                // Check if character already has this fighting style
+                if !dal::character_has_feature(
+                    self.conn,
+                    character_id,
+                    "fighting_style",
+                    &fighting_style.name,
+                )? {
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::fighting_style(
+                        &feature_id,
+                        character_id,
+                        &fighting_style.name,
+                        &fighting_style.source,
+                        &request.class_name,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+            }
+
+            // Handle Metamagic (Sorcerer)
+            if let Some(ref metamagic_list) = feature_choices.metamagic {
+                for metamagic in metamagic_list {
+                    // Skip if already has this metamagic
+                    if dal::character_has_feature(
+                        self.conn,
+                        character_id,
+                        "metamagic",
+                        &metamagic.name,
+                    )? {
+                        continue;
+                    }
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::metamagic(
+                        &feature_id,
+                        character_id,
+                        &metamagic.name,
+                        &metamagic.source,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+            }
+
+            // Handle Maneuvers (Battle Master) with swap support
+            if let Some(ref maneuver_choices) = feature_choices.maneuvers {
+                // Handle maneuver swap first
+                if let (Some(ref swap_out), Some(ref swap_in)) =
+                    (&maneuver_choices.swap_out, &maneuver_choices.swap_in)
+                {
+                    let existing = dal::find_feature_by_name(
+                        self.conn,
+                        character_id,
+                        "maneuver",
+                        &swap_out.name,
+                    )?;
+                    if let Some(feature) = existing {
+                        dal::delete_character_feature(self.conn, &feature.id)?;
+                    } else {
+                        return Err(ServiceError::validation(format!(
+                            "Cannot swap out maneuver '{}' - character doesn't know it",
+                            swap_out.name
+                        )));
+                    }
+
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::maneuver(
+                        &feature_id,
+                        character_id,
+                        &swap_in.name,
+                        &swap_in.source,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+
+                // Add new maneuvers
+                for maneuver in &maneuver_choices.new_maneuvers {
+                    if dal::character_has_feature(
+                        self.conn,
+                        character_id,
+                        "maneuver",
+                        &maneuver.name,
+                    )? {
+                        continue;
+                    }
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::maneuver(
+                        &feature_id,
+                        character_id,
+                        &maneuver.name,
+                        &maneuver.source,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+            }
+
+            // Handle Invocations (Warlock) with swap support
+            if let Some(ref invocation_choices) = feature_choices.invocations {
+                // Handle invocation swap first
+                if let (Some(ref swap_out), Some(ref swap_in)) =
+                    (&invocation_choices.swap_out, &invocation_choices.swap_in)
+                {
+                    let existing = dal::find_feature_by_name(
+                        self.conn,
+                        character_id,
+                        "invocation",
+                        &swap_out.name,
+                    )?;
+                    if let Some(feature) = existing {
+                        dal::delete_character_feature(self.conn, &feature.id)?;
+                    } else {
+                        return Err(ServiceError::validation(format!(
+                            "Cannot swap out invocation '{}' - character doesn't know it",
+                            swap_out.name
+                        )));
+                    }
+
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::invocation(
+                        &feature_id,
+                        character_id,
+                        &swap_in.name,
+                        &swap_in.source,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+
+                // Add new invocations
+                for invocation in &invocation_choices.new_invocations {
+                    if dal::character_has_feature(
+                        self.conn,
+                        character_id,
+                        "invocation",
+                        &invocation.name,
+                    )? {
+                        continue;
+                    }
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::invocation(
+                        &feature_id,
+                        character_id,
+                        &invocation.name,
+                        &invocation.source,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+            }
+
+            // Handle Pact Boon (Warlock)
+            if let Some(ref pact_boon) = feature_choices.pact_boon {
+                // Check if character already has a pact boon
+                let existing_boons =
+                    dal::list_features_by_type(self.conn, character_id, "pact_boon")?;
+                if existing_boons.is_empty() {
+                    let feature_id = Uuid::new_v4().to_string();
+                    let new_feature = NewCharacterFeature::pact_boon(
+                        &feature_id,
+                        character_id,
+                        &pact_boon.name,
+                        &pact_boon.source,
+                    );
+                    dal::insert_character_feature(self.conn, &new_feature)?;
+                }
+            }
+
+            // Handle Expertise (Rogue/Bard)
+            if let Some(ref expertise_skills) = feature_choices.expertise_skills {
+                for skill_name in expertise_skills {
+                    // Find the existing skill proficiency and upgrade to expertise
+                    let proficiencies =
+                        dal::list_character_proficiencies(self.conn, character_id)?;
+                    let skill_prof = proficiencies
+                        .iter()
+                        .find(|p| p.proficiency_type == "skill" && p.name == *skill_name);
+
+                    if let Some(prof) = skill_prof {
+                        // Already has proficiency, upgrade to expertise
+                        if prof.expertise == 0 {
+                            let update = UpdateCharacterProficiency::set_expertise(true);
+                            dal::update_character_proficiency(self.conn, &prof.id, &update)?;
+                        }
+                    } else {
+                        // Doesn't have proficiency - add with expertise
+                        let prof_id = Uuid::new_v4().to_string();
+                        let new_prof = NewCharacterProficiency::new(
+                            &prof_id,
+                            character_id,
+                            ProficiencyType::Skill,
+                            skill_name,
+                        )
+                        .with_expertise();
+                        dal::insert_character_proficiency(self.conn, &new_prof)?;
+                    }
+                }
+            }
+        }
+
+        // 10. Update or insert class entry
+        let updated_class = if let Some(existing) = existing_class_entry {
+            // Single-class level up - increment existing class level
+            let new_level = existing.level + 1;
+
+            // Build update with new level and optional subclass
+            let update = if let Some(ref subclass) = request.subclass {
+                UpdateCharacterClass::set_level_and_subclass(new_level, &subclass.name, &subclass.source)
+            } else {
+                UpdateCharacterClass::set_level(new_level)
+            };
+
+            dal::update_character_class(self.conn, &existing.id, &update)?;
+            dal::get_character_class(self.conn, &existing.id)?
+        } else {
+            // New class (either first class or multiclass)
+            let class_id = Uuid::new_v4().to_string();
+            let is_starting = !has_existing_class;
+
+            let mut new_class = if is_starting {
+                NewCharacterClass::starting(&class_id, character_id, &request.class_name, &request.class_source)
+            } else {
+                NewCharacterClass::multiclass(&class_id, character_id, &request.class_name, &request.class_source)
+            };
+
+            // Add subclass if provided
+            if let Some(ref subclass) = request.subclass {
+                new_class = new_class.with_subclass(&subclass.name, &subclass.source);
+            }
+
+            dal::insert_character_class(self.conn, &new_class)?;
+            dal::get_character_class(self.conn, &class_id)?
+        };
+
+        // 11. Calculate new total level
+        let new_total_level = dal::get_total_level(self.conn, character_id)? as i32;
+
+        // 12. Refresh character data
+        let final_character = dal::get_character(self.conn, character_id)?;
+
+        Ok(LevelUpResult {
+            character: final_character,
+            class: updated_class,
+            hp_gained,
+            new_total_level,
+            is_multiclass,
+        })
     }
 
     // --- Inventory Management ---

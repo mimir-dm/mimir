@@ -6,7 +6,10 @@ use crate::schema::characters;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use super::{CharacterClass, CharacterProficiency};
+
 /// A character - either a player character or NPC in a campaign.
+/// This is the database model - use `CharacterResponse` for API responses with classes.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
 #[diesel(table_name = characters)]
 pub struct Character {
@@ -513,5 +516,113 @@ mod tests {
         let update = UpdateCharacter::set_currency(100, 50, 25, 10, 5, "2024-01-20T12:00:00Z");
         assert_eq!(update.cp, Some(100));
         assert_eq!(update.pp, Some(5));
+    }
+}
+
+// =============================================================================
+// API Response Type
+// =============================================================================
+
+/// Character with classes included - used for API responses.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CharacterResponse {
+    pub id: String,
+    pub campaign_id: String,
+    pub name: String,
+    pub is_npc: i32,
+    pub player_name: Option<String>,
+    pub race_name: Option<String>,
+    pub race_source: Option<String>,
+    pub background_name: Option<String>,
+    pub background_source: Option<String>,
+    pub strength: i32,
+    pub dexterity: i32,
+    pub constitution: i32,
+    pub intelligence: i32,
+    pub wisdom: i32,
+    pub charisma: i32,
+    pub cp: i32,
+    pub sp: i32,
+    pub ep: i32,
+    pub gp: i32,
+    pub pp: i32,
+    pub traits: Option<String>,
+    pub ideals: Option<String>,
+    pub bonds: Option<String>,
+    pub flaws: Option<String>,
+    pub role: Option<String>,
+    pub location: Option<String>,
+    pub faction: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    /// Character classes (populated from character_classes table)
+    pub classes: Vec<CharacterClass>,
+    /// Character proficiencies (populated from character_proficiencies table)
+    pub proficiencies: Vec<CharacterProficiency>,
+}
+
+impl CharacterResponse {
+    /// Create from a Character, its classes, and proficiencies.
+    pub fn from_character(
+        character: Character,
+        classes: Vec<CharacterClass>,
+        proficiencies: Vec<CharacterProficiency>,
+    ) -> Self {
+        Self {
+            id: character.id,
+            campaign_id: character.campaign_id,
+            name: character.name,
+            is_npc: character.is_npc,
+            player_name: character.player_name,
+            race_name: character.race_name,
+            race_source: character.race_source,
+            background_name: character.background_name,
+            background_source: character.background_source,
+            strength: character.strength,
+            dexterity: character.dexterity,
+            constitution: character.constitution,
+            intelligence: character.intelligence,
+            wisdom: character.wisdom,
+            charisma: character.charisma,
+            cp: character.cp,
+            sp: character.sp,
+            ep: character.ep,
+            gp: character.gp,
+            pp: character.pp,
+            traits: character.traits,
+            ideals: character.ideals,
+            bonds: character.bonds,
+            flaws: character.flaws,
+            role: character.role,
+            location: character.location,
+            faction: character.faction,
+            created_at: character.created_at,
+            updated_at: character.updated_at,
+            classes,
+            proficiencies,
+        }
+    }
+
+    /// Get total character level across all classes.
+    pub fn total_level(&self) -> i32 {
+        self.classes.iter().map(|c| c.level).sum()
+    }
+
+    /// Format class string (e.g., "Fighter 5 / Rogue 3").
+    pub fn class_string(&self) -> String {
+        if self.classes.is_empty() {
+            return "No Class".to_string();
+        }
+        self.classes
+            .iter()
+            .map(|c| {
+                if let Some(ref sub) = c.subclass_name {
+                    format!("{} ({}) {}", c.class_name, sub, c.level)
+                } else {
+                    format!("{} {}", c.class_name, c.level)
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" / ")
     }
 }

@@ -155,6 +155,7 @@ impl CharacterSection {
     }
 
     /// Calculate total gold value
+    #[allow(dead_code)]
     fn total_gold(&self) -> f64 {
         (self.character.cp as f64 / 100.0)
             + (self.character.sp as f64 / 10.0)

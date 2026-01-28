@@ -105,6 +105,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    character_features (id) {
+        id -> Text,
+        character_id -> Text,
+        feature_type -> Text,
+        feature_name -> Text,
+        feature_source -> Text,
+        source_class -> Text,
+    }
+}
+
+diesel::table! {
     character_inventory (id) {
         id -> Text,
         character_id -> Text,
@@ -124,6 +135,14 @@ diesel::table! {
         proficiency_type -> Text,
         name -> Text,
         expertise -> Integer,
+    }
+}
+
+diesel::table! {
+    character_sources (id) {
+        id -> Text,
+        character_id -> Text,
+        source_code -> Text,
     }
 }
 
@@ -623,8 +642,11 @@ diesel::joinable!(catalog_tables -> catalog_sources (source));
 diesel::joinable!(books -> catalog_sources (source));
 diesel::joinable!(character_classes -> characters (character_id));
 diesel::joinable!(character_feats -> characters (character_id));
+diesel::joinable!(character_features -> characters (character_id));
 diesel::joinable!(character_inventory -> characters (character_id));
 diesel::joinable!(character_proficiencies -> characters (character_id));
+diesel::joinable!(character_sources -> characters (character_id));
+diesel::joinable!(character_sources -> catalog_sources (source_code));
 diesel::joinable!(character_spells -> characters (character_id));
 diesel::joinable!(characters -> campaigns (campaign_id));
 diesel::joinable!(classes -> catalog_sources (source));
@@ -682,8 +704,10 @@ diesel::allow_tables_to_appear_in_same_query!(
     catalog_tables,
     character_classes,
     character_feats,
+    character_features,
     character_inventory,
     character_proficiencies,
+    character_sources,
     character_spells,
     characters,
     classes,

@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { useCatalogSearch } from './useCatalogSearch'
+import { useCampaignStore } from '@/stores/campaigns'
 
 export interface TrapSummary {
   name: string
@@ -27,6 +28,19 @@ export interface TrapOrHazard {
 }
 
 export function useTraps() {
+  const campaignStore = useCampaignStore()
+
+  // Get effective sources: explicit filter sources, or campaign sources if configured
+  const getEffectiveSources = (filterSources?: string[]): string[] | null => {
+    if (filterSources && filterSources.length > 0) {
+      return filterSources
+    }
+    if (campaignStore.currentCampaignSources.length > 0) {
+      return campaignStore.currentCampaignSources
+    }
+    return null
+  }
+
   const catalog = useCatalogSearch<TrapSummary, TrapOrHazard, TrapFilters>({
     name: 'trap',
     // No initialization needed - database-backed
@@ -34,7 +48,7 @@ export function useTraps() {
     detailsCommand: 'get_trap_by_name',
     transformFilters: (filters) => ({
       name_contains: filters.query || null,
-      sources: filters.sources ?? null,
+      sources: getEffectiveSources(filters.sources),
     }),
   })
 

@@ -531,6 +531,8 @@ interface MapPoi {
   icon: string
   color: string | null
   visible: number
+  created_at: string
+  updated_at: string
 }
 const mapPois = ref<MapPoi[]>([])
 

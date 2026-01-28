@@ -3,7 +3,7 @@
 //! Copies images from 5etools source directory to application data directory,
 //! preserving the directory structure so paths in imported data work as-is.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::fs;
 use std::path::Path;
 use tracing::{debug, info, warn};

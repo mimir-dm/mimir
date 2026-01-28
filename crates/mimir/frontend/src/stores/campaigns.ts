@@ -8,6 +8,7 @@ export const useCampaignStore = defineStore('campaigns', () => {
   const campaigns = ref<Campaign[]>([])
   const archivedCampaigns = ref<Campaign[]>([])
   const currentCampaign = ref<Campaign | null>(null)
+  const currentCampaignSources = ref<string[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -217,9 +218,39 @@ export const useCampaignStore = defineStore('campaigns', () => {
     }
   }
 
-  // Set current campaign
-  const setCurrentCampaign = (campaign: Campaign | null) => {
+  // Fetch campaign sources
+  const fetchCampaignSources = async (campaignId: string) => {
+    try {
+      const response = await invoke<ApiResponse<string[]>>('list_campaign_sources', { campaignId })
+      if (response.success && response.data) {
+        currentCampaignSources.value = response.data
+        return response.data
+      }
+      // If no sources configured, empty array means "allow all"
+      currentCampaignSources.value = []
+      return []
+    } catch (e) {
+      console.error('Failed to fetch campaign sources:', e)
+      currentCampaignSources.value = []
+      return []
+    }
+  }
+
+  // Set current campaign (also loads sources)
+  const setCurrentCampaign = async (campaign: Campaign | null) => {
     currentCampaign.value = campaign
+    if (campaign) {
+      await fetchCampaignSources(campaign.id)
+    } else {
+      currentCampaignSources.value = []
+    }
+  }
+
+  // Refresh campaign sources (call after editing sources)
+  const refreshCampaignSources = async () => {
+    if (currentCampaign.value) {
+      await fetchCampaignSources(currentCampaign.value.id)
+    }
   }
 
   // Clear error
@@ -254,6 +285,7 @@ export const useCampaignStore = defineStore('campaigns', () => {
     campaigns,
     archivedCampaigns,
     currentCampaign,
+    currentCampaignSources,
     loading,
     error,
     fetchCampaigns,
@@ -265,6 +297,8 @@ export const useCampaignStore = defineStore('campaigns', () => {
     unarchiveCampaign,
     deleteCampaign,
     setCurrentCampaign,
+    fetchCampaignSources,
+    refreshCampaignSources,
     clearError,
     exportCampaign,
     importCampaign,

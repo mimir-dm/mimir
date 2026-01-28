@@ -137,6 +137,35 @@ pub fn count_character_spells(conn: &mut SqliteConnection, character_id: &str) -
         .get_result(conn)
 }
 
+/// Find a character spell by name and source class.
+/// Used for spell swap operations during level up.
+pub fn find_character_spell_by_name(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    spell_name: &str,
+    source_class: &str,
+) -> QueryResult<Option<CharacterSpell>> {
+    character_spells::table
+        .filter(character_spells::character_id.eq(character_id))
+        .filter(character_spells::spell_name.eq(spell_name))
+        .filter(character_spells::source_class.eq(source_class))
+        .first(conn)
+        .optional()
+}
+
+/// Count spells for a character by source class.
+pub fn count_spells_by_class(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    source_class: &str,
+) -> QueryResult<i64> {
+    character_spells::table
+        .filter(character_spells::character_id.eq(character_id))
+        .filter(character_spells::source_class.eq(source_class))
+        .count()
+        .get_result(conn)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

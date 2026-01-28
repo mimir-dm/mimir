@@ -30,30 +30,15 @@
 
     <!-- Character Grid -->
     <div v-else class="character-grid">
-      <div
+      <CharacterCard
         v-for="character in pcs"
         :key="character.id"
-        class="character-card"
-        @click="viewCharacter(character)"
-      >
-        <div class="card-header">
-          <h3 class="character-name">{{ character.name }}</h3>
-        </div>
-        <div class="character-details">
-          {{ formatCharacterDetails(character) }}
-        </div>
-        <div class="character-player">
-          {{ character.player_name || 'No player assigned' }}
-        </div>
-        <div class="card-actions" @click.stop>
-          <button @click="viewCharacter(character)" class="btn btn-sm btn-ghost">
-            View
-          </button>
-          <button @click="printCharacter(character)" class="btn btn-sm btn-ghost">
-            Print
-          </button>
-        </div>
-      </div>
+        :character="character"
+        :show-player="true"
+        @click="viewCharacter"
+        @view="viewCharacter"
+        @print="printCharacter"
+      />
     </div>
 
     <!-- Character Creation Wizard -->
@@ -92,6 +77,7 @@ import { useRouter } from 'vue-router'
 import { useCharacterStore } from '@/stores/characters'
 import CharacterCreationWizard from '@/features/characters/components/CharacterCreationWizard.vue'
 import { CharacterPrintDialog } from '@/components/print'
+import { CharacterCard } from '@/components/characters'
 import AddCharacterModal from './AddCharacterModal.vue'
 import type { Campaign } from '@/types'
 import type { Character } from '@/types/character'
@@ -118,18 +104,6 @@ const pcs = computed(() => {
     c.campaign_id === props.campaign!.id && c.is_npc === 0
   )
 })
-
-// Format character details
-function formatCharacterDetails(character: Character): string {
-  const parts: string[] = []
-  if (character.race_name) {
-    parts.push(character.race_name)
-  }
-  if (character.background_name) {
-    parts.push(character.background_name)
-  }
-  return parts.join(' ') || 'No details'
-}
 
 // Load characters
 async function loadCharacters() {
@@ -244,57 +218,5 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--spacing-md);
-}
-
-.character-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.character-card:hover {
-  border-color: var(--color-primary-500);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--spacing-xs);
-}
-
-.character-name {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.character-details {
-  font-size: 0.875rem;
-  color: var(--color-primary-500);
-  margin-bottom: var(--spacing-xs);
-}
-
-.character-player {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.card-actions {
-  display: flex;
-  gap: var(--spacing-xs);
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--color-border);
-}
-
-.card-actions .btn {
-  flex: 1;
 }
 </style>

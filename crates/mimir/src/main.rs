@@ -64,6 +64,10 @@ fn main() {
             campaign::archive_campaign,
             campaign::unarchive_campaign,
             campaign::delete_campaign,
+            campaign::list_campaign_sources,
+            campaign::add_campaign_source,
+            campaign::remove_campaign_source,
+            campaign::set_campaign_sources,
             // Module commands
             module::list_modules,
             module::get_module,
@@ -97,6 +101,8 @@ fn main() {
             character::create_npc,
             character::update_character,
             character::delete_character,
+            // Character commands - level up
+            character::level_up_character,
             // Character commands - inventory
             character::get_character_inventory,
             character::get_equipped_items,
@@ -104,6 +110,11 @@ fn main() {
             character::add_inventory_item,
             character::remove_inventory_item,
             character::update_inventory_item,
+            // Character commands - sources
+            character::list_character_sources,
+            character::add_character_source,
+            character::remove_character_source,
+            character::set_character_sources,
             // Document commands - list
             document::list_campaign_documents,
             document::list_module_documents,
@@ -313,6 +324,14 @@ fn main() {
             catalog::get_object_by_name,
             catalog::list_object_sources,
             catalog::count_objects,
+            // Catalog commands - level-up helpers
+            catalog::get_class_info,
+            catalog::get_class_spellcasting,
+            catalog::list_fighting_styles,
+            catalog::list_metamagic,
+            catalog::list_maneuvers,
+            catalog::list_invocations,
+            catalog::list_feats_with_prereqs,
             // Source management commands
             source::list_catalog_sources,
             source::import_catalog_from_zip,

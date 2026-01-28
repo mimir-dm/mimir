@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { useCampaignStore } from '@/stores/campaigns'
 
 export interface ItemSummary {
   name: string
@@ -35,10 +36,22 @@ export interface Item {
 }
 
 export function useItems() {
+  const campaignStore = useCampaignStore()
   const isItemsInitialized = ref(true)
   const isLoading = ref(false)
   const error: Ref<string | null> = ref(null)
   const items = ref<ItemSummary[]>([])
+
+  // Get effective sources: explicit filter sources, or campaign sources if configured
+  const getEffectiveSources = (filterSources?: string[]): string[] | null => {
+    if (filterSources && filterSources.length > 0) {
+      return filterSources
+    }
+    if (campaignStore.currentCampaignSources.length > 0) {
+      return campaignStore.currentCampaignSources
+    }
+    return null
+  }
 
   async function initializeItemCatalog() {
     // No initialization needed for DB-backed catalog
@@ -54,7 +67,7 @@ export function useItems() {
           name_contains: filters.query || null,
           item_type: filters.types?.length ? filters.types[0] : null,  // Backend expects single type
           rarity: filters.rarities?.length ? filters.rarities[0] : null,  // Backend expects single rarity
-          sources: filters.sources ?? null,
+          sources: getEffectiveSources(filters.sources),
         },
         limit: 10000,
         offset: 0

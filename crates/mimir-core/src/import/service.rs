@@ -372,6 +372,12 @@ impl<'a> CatalogImportService<'a> {
             }
         }
 
+        // Import spell-class associations from sources.json
+        let spell_class_count = self.import_spell_class_associations_from_memory(json_files, source_code)?;
+        if spell_class_count > 0 {
+            info!("Imported {} spell-class associations for {}", spell_class_count, source_code);
+        }
+
         // Import book content if available
         if collected.has_book_content() {
             match self.import_book(&collected, source_code, source_name) {
@@ -694,6 +700,104 @@ impl<'a> CatalogImportService<'a> {
         let content = std::fs::read_to_string(&sources_file)
             .context("Failed to read spells/sources.json")?;
         let sources_data: Value = serde_json::from_str(&content)
+            .context("Failed to parse spells/sources.json")?;
+
+        let mut count = 0;
+
+        // sources.json structure: { "SOURCE_CODE": { "Spell Name": { "class": [...], "subclass": [...] } } }
+        if let Some(source_spells) = sources_data.get(source_code).and_then(|v| v.as_object()) {
+            for (spell_name, spell_data) in source_spells {
+                // Look up the spell in the database
+                let spell = match catalog::get_spell_by_name(self.conn, spell_name, source_code) {
+                    Ok(Some(s)) => s,
+                    Ok(None) => continue, // Spell not found, skip
+                    Err(e) => {
+                        warn!("Failed to look up spell '{}': {}", spell_name, e);
+                        continue;
+                    }
+                };
+
+                let spell_id = match spell.id {
+                    Some(id) => id,
+                    None => continue,
+                };
+
+                // Import class associations
+                if let Some(classes) = spell_data.get("class").and_then(|v| v.as_array()) {
+                    for class_entry in classes {
+                        if let Some(class_name) = class_entry.get("name").and_then(|n| n.as_str()) {
+                            let class_source = class_entry
+                                .get("source")
+                                .and_then(|s| s.as_str())
+                                .unwrap_or(source_code);
+
+                            let spell_class = NewSpellClass {
+                                spell_id,
+                                class_name,
+                                source: class_source,
+                            };
+
+                            if catalog::insert_spell_class(self.conn, &spell_class).is_ok() {
+                                count += 1;
+                            }
+                        }
+                    }
+                }
+
+                // Import subclass associations
+                if let Some(subclasses) = spell_data.get("subclass").and_then(|v| v.as_array()) {
+                    for subclass_entry in subclasses {
+                        if let (Some(class_obj), Some(subclass_obj)) = (
+                            subclass_entry.get("class"),
+                            subclass_entry.get("subclass"),
+                        ) {
+                            let class_name = class_obj.get("name").and_then(|n| n.as_str());
+                            let subclass_name = subclass_obj.get("name").and_then(|n| n.as_str());
+                            let subclass_source = subclass_obj
+                                .get("source")
+                                .and_then(|s| s.as_str())
+                                .unwrap_or(source_code);
+
+                            if let (Some(class_name), Some(subclass_name)) = (class_name, subclass_name) {
+                                let spell_subclass = NewSpellSubclass {
+                                    spell_id,
+                                    subclass_name,
+                                    class_name,
+                                    source: subclass_source,
+                                };
+
+                                let _ = catalog::insert_spell_subclass(self.conn, &spell_subclass);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(count)
+    }
+
+    /// Import spell-class associations from in-memory JSON files.
+    ///
+    /// This is the in-memory version used when importing from tarballs.
+    fn import_spell_class_associations_from_memory(
+        &mut self,
+        json_files: &HashMap<String, String>,
+        source_code: &str,
+    ) -> Result<usize> {
+        // Look for data/spells/sources.json in the in-memory files
+        let sources_key = json_files.keys().find(|k| k.ends_with("data/spells/sources.json"));
+        let content = match sources_key {
+            Some(key) => json_files.get(key),
+            None => return Ok(0),
+        };
+
+        let content = match content {
+            Some(c) => c,
+            None => return Ok(0),
+        };
+
+        let sources_data: Value = serde_json::from_str(content)
             .context("Failed to parse spells/sources.json")?;
 
         let mut count = 0;

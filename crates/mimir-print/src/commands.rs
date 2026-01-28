@@ -223,7 +223,7 @@ pub fn generate_character_sheet(
     _state: State<'_, PrintState>,
     character_id: String,
     template: Option<String>,
-    include_spell_cards: Option<bool>,
+    _include_spell_cards: Option<bool>,
 ) -> ApiResponse<PrintResult> {
     ApiResponse::err(format!(
         "Character sheet generation not yet implemented (character_id: {}, template: {:?})",

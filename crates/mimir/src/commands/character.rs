@@ -2,9 +2,11 @@
 //!
 //! Tauri commands for character management (PCs and NPCs).
 
-use mimir_core::models::campaign::{Character, CharacterInventory};
+use mimir_core::dal::campaign as dal;
+use mimir_core::models::campaign::{CharacterInventory, CharacterResponse};
 use mimir_core::services::{
-    AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
+    AddInventoryInput, CharacterService, CreateCharacterInput, LevelUpRequest, LevelUpResult,
+    UpdateCharacterInput,
 };
 use tauri::State;
 
@@ -15,52 +17,89 @@ use crate::state::AppState;
 // List Commands
 // =============================================================================
 
-/// List all characters for a campaign.
+/// List all characters for a campaign (with classes).
 #[tauri::command]
 pub fn list_characters(
     state: State<'_, AppState>,
     campaign_id: String,
-) -> ApiResponse<Vec<Character>> {
+) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let result = CharacterService::new(&mut db).list_for_campaign(&campaign_id);
-    to_api_response(result)
+    let characters = match CharacterService::new(&mut db).list_for_campaign(&campaign_id) {
+        Ok(chars) => chars,
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    // Fetch classes and proficiencies for each character
+    let mut result = Vec::with_capacity(characters.len());
+    for character in characters {
+        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
+        let proficiencies =
+            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
+        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    }
+
+    ApiResponse::ok(result)
 }
 
-/// List only player characters for a campaign.
+/// List only player characters for a campaign (with classes).
 #[tauri::command]
-pub fn list_pcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<Character>> {
+pub fn list_pcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let result = CharacterService::new(&mut db).list_pcs(&campaign_id);
-    to_api_response(result)
+    let characters = match CharacterService::new(&mut db).list_pcs(&campaign_id) {
+        Ok(chars) => chars,
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    let mut result = Vec::with_capacity(characters.len());
+    for character in characters {
+        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
+        let proficiencies =
+            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
+        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    }
+
+    ApiResponse::ok(result)
 }
 
-/// List only NPCs for a campaign.
+/// List only NPCs for a campaign (with classes).
 #[tauri::command]
-pub fn list_npcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<Character>> {
+pub fn list_npcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let result = CharacterService::new(&mut db).list_npcs(&campaign_id);
-    to_api_response(result)
+    let characters = match CharacterService::new(&mut db).list_npcs(&campaign_id) {
+        Ok(chars) => chars,
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    let mut result = Vec::with_capacity(characters.len());
+    for character in characters {
+        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
+        let proficiencies =
+            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
+        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    }
+
+    ApiResponse::ok(result)
 }
 
 // =============================================================================
 // CRUD Commands
 // =============================================================================
 
-/// Get a character by ID.
+/// Get a character by ID (with classes).
 #[tauri::command]
-pub fn get_character(state: State<'_, AppState>, id: String) -> ApiResponse<Character> {
+pub fn get_character(state: State<'_, AppState>, id: String) -> ApiResponse<CharacterResponse> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
@@ -68,7 +107,12 @@ pub fn get_character(state: State<'_, AppState>, id: String) -> ApiResponse<Char
 
     let result = CharacterService::new(&mut db).get(&id);
     match result {
-        Ok(Some(character)) => ApiResponse::ok(character),
+        Ok(Some(character)) => {
+            let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
+            let proficiencies =
+                dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
+            ApiResponse::ok(CharacterResponse::from_character(character, classes, proficiencies))
+        }
         Ok(None) => ApiResponse::err(format!("Character not found: {}", id)),
         Err(e) => ApiResponse::err(e.to_string()),
     }
@@ -89,7 +133,7 @@ pub struct CreatePcRequest {
 
 /// Create a new player character.
 #[tauri::command]
-pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<Character> {
+pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<CharacterResponse> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
@@ -113,8 +157,12 @@ pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiRes
         input = input.with_ability_scores(scores);
     }
 
-    let result = CharacterService::new(&mut db).create(input);
-    to_api_response(result)
+    match CharacterService::new(&mut db).create(input) {
+        Ok(character) => {
+            ApiResponse::ok(CharacterResponse::from_character(character, vec![], vec![]))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
 }
 
 /// Request for creating a new NPC.
@@ -131,7 +179,7 @@ pub struct CreateNpcRequest {
 
 /// Create a new NPC.
 #[tauri::command]
-pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<Character> {
+pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<CharacterResponse> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
@@ -145,8 +193,7 @@ pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiR
     }
 
     // Create the NPC first
-    let result = CharacterService::new(&mut db).create(input);
-    let character = match result {
+    let character = match CharacterService::new(&mut db).create(input) {
         Ok(c) => c,
         Err(e) => return ApiResponse::err(e.to_string()),
     };
@@ -158,11 +205,15 @@ pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiR
             request.location,
             request.faction,
         );
-        let result = CharacterService::new(&mut db).update(&character.id, update);
-        return to_api_response(result);
+        match CharacterService::new(&mut db).update(&character.id, update) {
+            Ok(updated) => {
+                return ApiResponse::ok(CharacterResponse::from_character(updated, vec![], vec![]))
+            }
+            Err(e) => return ApiResponse::err(e.to_string()),
+        }
     }
 
-    ApiResponse::ok(character)
+    ApiResponse::ok(CharacterResponse::from_character(character, vec![], vec![]))
 }
 
 /// Request for updating a character.
@@ -191,7 +242,7 @@ pub fn update_character(
     state: State<'_, AppState>,
     id: String,
     request: UpdateCharacterRequest,
-) -> ApiResponse<Character> {
+) -> ApiResponse<CharacterResponse> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
@@ -215,8 +266,15 @@ pub fn update_character(
         faction: request.faction,
     };
 
-    let result = CharacterService::new(&mut db).update(&id, input);
-    to_api_response(result)
+    match CharacterService::new(&mut db).update(&id, input) {
+        Ok(character) => {
+            let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
+            let proficiencies =
+                dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
+            ApiResponse::ok(CharacterResponse::from_character(character, classes, proficiencies))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
 }
 
 /// Delete a character permanently.
@@ -228,6 +286,28 @@ pub fn delete_character(state: State<'_, AppState>, id: String) -> ApiResponse<(
     };
 
     let result = CharacterService::new(&mut db).delete(&id);
+    to_api_response(result)
+}
+
+// =============================================================================
+// Level Up Commands
+// =============================================================================
+
+/// Level up a character.
+///
+/// Handles HP calculation, multiclass validation, class level updates, ASI/feats, and subclass selection.
+#[tauri::command]
+pub fn level_up_character(
+    state: State<'_, AppState>,
+    character_id: String,
+    request: LevelUpRequest,
+) -> ApiResponse<LevelUpResult> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = CharacterService::new(&mut db).level_up(&character_id, request);
     to_api_response(result)
 }
 
@@ -361,5 +441,104 @@ pub fn update_inventory_item(
         request.attuned,
     );
     to_api_response(result)
+}
+
+// =============================================================================
+// Character Source Commands
+// =============================================================================
+
+use mimir_core::dal::campaign::{
+    delete_all_character_sources, delete_character_source_by_code, insert_character_source,
+    list_character_source_codes,
+};
+use mimir_core::models::campaign::{CharacterSource, NewCharacterSource};
+
+/// List allowed source codes for a character.
+#[tauri::command]
+pub fn list_character_sources(
+    state: State<'_, AppState>,
+    character_id: String,
+) -> ApiResponse<Vec<String>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    match list_character_source_codes(&mut db, &character_id) {
+        Ok(codes) => ApiResponse::ok(codes),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Add a source to a character's allowed sources.
+#[tauri::command]
+pub fn add_character_source(
+    state: State<'_, AppState>,
+    character_id: String,
+    source_code: String,
+) -> ApiResponse<CharacterSource> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<CharacterSource>::err(format!("Database lock error: {}", e)),
+    };
+
+    let id = uuid::Uuid::new_v4().to_string();
+    let source = NewCharacterSource::new(&id, &character_id, &source_code);
+
+    match insert_character_source(&mut db, &source) {
+        Ok(_) => ApiResponse::ok(CharacterSource {
+            id,
+            character_id,
+            source_code,
+        }),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Remove a source from a character's allowed sources.
+#[tauri::command]
+pub fn remove_character_source(
+    state: State<'_, AppState>,
+    character_id: String,
+    source_code: String,
+) -> ApiResponse<()> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    match delete_character_source_by_code(&mut db, &character_id, &source_code) {
+        Ok(_) => ApiResponse::ok(()),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Set the complete list of allowed sources for a character (replaces existing).
+#[tauri::command]
+pub fn set_character_sources(
+    state: State<'_, AppState>,
+    character_id: String,
+    source_codes: Vec<String>,
+) -> ApiResponse<Vec<String>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::<Vec<String>>::err(format!("Database lock error: {}", e)),
+    };
+
+    // Delete all existing sources
+    if let Err(e) = delete_all_character_sources(&mut db, &character_id) {
+        return ApiResponse::err(format!("Failed to clear sources: {}", e));
+    }
+
+    // Insert all new sources
+    for source_code in &source_codes {
+        let id = uuid::Uuid::new_v4().to_string();
+        let source = NewCharacterSource::new(&id, &character_id, source_code);
+        if let Err(e) = insert_character_source(&mut db, &source) {
+            return ApiResponse::err(format!("Failed to add source {}: {}", source_code, e));
+        }
+    }
+
+    ApiResponse::ok(source_codes)
 }
 

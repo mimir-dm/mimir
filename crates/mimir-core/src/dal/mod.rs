@@ -6,6 +6,8 @@
 //! Diesel connections. Higher-level service layers should use these
 //! functions to implement business logic.
 
+#![allow(ambiguous_glob_reexports)]
+
 pub mod campaign;
 pub mod catalog;
 

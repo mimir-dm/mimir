@@ -46,3 +46,14 @@ CREATE TABLE characters (
 
 CREATE INDEX idx_characters_campaign ON characters(campaign_id);
 CREATE INDEX idx_characters_is_npc ON characters(is_npc);
+
+-- Character sources: which source books a character can use
+-- If empty, inherits from campaign sources
+CREATE TABLE character_sources (
+    id TEXT PRIMARY KEY NOT NULL,
+    character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+    source_code TEXT NOT NULL REFERENCES catalog_sources(code),
+    UNIQUE(character_id, source_code)
+);
+
+CREATE INDEX idx_character_sources_character ON character_sources(character_id);

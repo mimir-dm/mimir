@@ -407,7 +407,7 @@ pub fn get_book_content(
 #[tauri::command]
 pub fn serve_book_image(
     state: State<'_, AppState>,
-    book_id: String,
+    _book_id: String,
     image_path: String,
 ) -> ApiResponse<String> {
     // Build the full path to the image

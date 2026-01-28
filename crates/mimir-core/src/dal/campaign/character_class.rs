@@ -113,6 +113,22 @@ pub fn count_character_classes(
         .get_result(conn)
 }
 
+/// Find a character's class entry by class name and source.
+/// Used for level up to determine if this is a new multiclass or existing class.
+pub fn find_character_class_by_name(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    class_name: &str,
+    class_source: &str,
+) -> QueryResult<Option<CharacterClass>> {
+    character_classes::table
+        .filter(character_classes::character_id.eq(character_id))
+        .filter(character_classes::class_name.eq(class_name))
+        .filter(character_classes::class_source.eq(class_source))
+        .first(conn)
+        .optional()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

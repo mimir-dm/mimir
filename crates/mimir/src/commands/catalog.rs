@@ -2457,3 +2457,676 @@ pub fn count_objects(state: State<'_, AppState>) -> ApiResponse<i64> {
     let result = ObjectService::new(&mut db).count();
     to_api_response(result)
 }
+
+// =============================================================================
+// Level-Up Catalog Commands
+// =============================================================================
+
+/// Get class information needed for level-up decisions.
+///
+/// Returns structured data including hit die, subclass level, ASI levels,
+/// multiclass prerequisites, and spellcasting type.
+#[tauri::command]
+pub fn get_class_info(
+    state: State<'_, AppState>,
+    name: String,
+    source: String,
+) -> ApiResponse<Value> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = ClassService::new(&mut db).get_by_name_and_source(&name, &source);
+    match result {
+        Ok(Some(class)) => {
+            // Parse the class data JSON
+            let data: Value = match serde_json::from_str(&class.data) {
+                Ok(d) => d,
+                Err(e) => return ApiResponse::err(format!("Failed to parse class data: {}", e)),
+            };
+
+            // Extract hit die
+            let hit_die = data.get("hd")
+                .and_then(|hd| hd.get("faces"))
+                .and_then(|f| f.as_i64())
+                .unwrap_or(8) as i32;
+
+            // Determine subclass level by looking for gainSubclassFeature in classFeatures
+            let subclass_level = find_subclass_level(&data);
+
+            // Extract spellcasting type from casterProgression
+            let spellcasting_type = data.get("casterProgression")
+                .and_then(|p| p.as_str())
+                .map(|s| match s {
+                    "full" => "Full",
+                    "1/2" | "half" => "Half",
+                    "1/3" | "third" => "Third",
+                    "pact" => "PactMagic",
+                    _ => "None",
+                });
+
+            // Extract spellcasting ability
+            let spellcasting_ability = data.get("spellcastingAbility")
+                .and_then(|a| a.as_str())
+                .map(|s| s.to_string());
+
+            // Extract multiclass prerequisites
+            let multiclass_prereqs = extract_multiclass_prereqs(&data);
+
+            // Standard ASI levels (most classes)
+            // Some classes like Fighter/Rogue have more
+            let asi_levels = determine_asi_levels(&name, &data);
+
+            // Build the response
+            let mut response = serde_json::json!({
+                "name": class.name,
+                "source": class.source,
+                "hit_die": hit_die,
+                "subclass_level": subclass_level,
+                "asi_levels": asi_levels,
+                "multiclass_prereqs": multiclass_prereqs,
+                "spellcasting_type": spellcasting_type,
+                "spellcasting_ability": spellcasting_ability,
+            });
+
+            // Add optional feature progression if present (invocations, metamagic, etc.)
+            if let Some(opt_prog) = data.get("optionalfeatureProgression") {
+                response.as_object_mut().unwrap()
+                    .insert("optional_feature_progression".to_string(), opt_prog.clone());
+            }
+
+            // Add cantrip/spells known progression if present
+            if let Some(cantrips) = data.get("cantripProgression") {
+                response.as_object_mut().unwrap()
+                    .insert("cantrip_progression".to_string(), cantrips.clone());
+            }
+            if let Some(spells_known) = data.get("spellsKnownProgression") {
+                response.as_object_mut().unwrap()
+                    .insert("spells_known_progression".to_string(), spells_known.clone());
+            }
+
+            ApiResponse::ok(response)
+        }
+        Ok(None) => ApiResponse::err(format!("Class not found: {} ({})", name, source)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Get spellcasting progression for a class.
+///
+/// Returns spell slots per level and spells known (if applicable).
+#[tauri::command]
+pub fn get_class_spellcasting(
+    state: State<'_, AppState>,
+    name: String,
+    source: String,
+) -> ApiResponse<Value> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = ClassService::new(&mut db).get_by_name_and_source(&name, &source);
+    match result {
+        Ok(Some(class)) => {
+            let data: Value = match serde_json::from_str(&class.data) {
+                Ok(d) => d,
+                Err(e) => return ApiResponse::err(format!("Failed to parse class data: {}", e)),
+            };
+
+            let caster_type = data.get("casterProgression")
+                .and_then(|p| p.as_str());
+
+            if caster_type.is_none() {
+                return ApiResponse::ok(serde_json::json!({
+                    "name": class.name,
+                    "source": class.source,
+                    "is_spellcaster": false,
+                }));
+            }
+
+            let mut response = serde_json::json!({
+                "name": class.name,
+                "source": class.source,
+                "is_spellcaster": true,
+                "caster_type": caster_type,
+                "spellcasting_ability": data.get("spellcastingAbility"),
+            });
+
+            // Add cantrip progression
+            if let Some(cantrips) = data.get("cantripProgression") {
+                response.as_object_mut().unwrap()
+                    .insert("cantrip_progression".to_string(), cantrips.clone());
+            }
+
+            // Add spells known progression (for known casters like Bard, Sorcerer)
+            if let Some(spells_known) = data.get("spellsKnownProgression") {
+                response.as_object_mut().unwrap()
+                    .insert("spells_known_progression".to_string(), spells_known.clone());
+            }
+
+            // Add prepared spell formula (for prepared casters like Cleric, Druid)
+            if let Some(prepared) = data.get("preparedSpells") {
+                response.as_object_mut().unwrap()
+                    .insert("prepared_spells".to_string(), prepared.clone());
+            }
+
+            // Extract spell slots from classTableGroups
+            if let Some(table_groups) = data.get("classTableGroups").and_then(|g| g.as_array()) {
+                let spell_slots = extract_spell_slots_from_table(table_groups);
+                if !spell_slots.is_empty() {
+                    response.as_object_mut().unwrap()
+                        .insert("spell_slots_by_level".to_string(), spell_slots.into());
+                }
+            }
+
+            // Generate standard spell slot progression based on caster type if not in tables
+            if response.get("spell_slots_by_level").is_none() {
+                if let Some(ct) = caster_type {
+                    let slots = generate_spell_slot_progression(ct);
+                    response.as_object_mut().unwrap()
+                        .insert("spell_slots_by_level".to_string(), slots.into());
+                }
+            }
+
+            ApiResponse::ok(response)
+        }
+        Ok(None) => ApiResponse::err(format!("Class not found: {} ({})", name, source)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all fighting styles.
+#[tauri::command]
+pub fn list_fighting_styles(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    // Get all optional features and filter for fighting styles
+    let result = OptionalFeatureService::new(&mut db).list_all();
+    match result {
+        Ok(features) => {
+            let fighting_styles: Vec<Value> = features
+                .into_iter()
+                .filter(|f| {
+                    f.feature_type.as_ref()
+                        .map(|t| t.starts_with("FS"))
+                        .unwrap_or(false)
+                })
+                .map(|f| {
+                    let mut json = entity_to_json(&f);
+                    // Add which classes can use this style
+                    if let Value::Object(ref mut map) = json {
+                        let classes = extract_fighting_style_classes(f.feature_type.as_deref());
+                        map.insert("available_to_classes".to_string(), classes.into());
+                    }
+                    json
+                })
+                .collect();
+            ApiResponse::ok(fighting_styles)
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all metamagic options.
+#[tauri::command]
+pub fn list_metamagic(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = OptionalFeatureService::new(&mut db).list_by_type("MM");
+    match result {
+        Ok(features) => ApiResponse::ok(entities_to_json(features)),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all Battle Master maneuvers.
+#[tauri::command]
+pub fn list_maneuvers(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    // Maneuvers can be MV or MV:B
+    let result = OptionalFeatureService::new(&mut db).list_all();
+    match result {
+        Ok(features) => {
+            let maneuvers: Vec<Value> = features
+                .into_iter()
+                .filter(|f| {
+                    f.feature_type.as_ref()
+                        .map(|t| t.starts_with("MV"))
+                        .unwrap_or(false)
+                })
+                .map(|f| entity_to_json(&f))
+                .collect();
+            ApiResponse::ok(maneuvers)
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all Eldritch Invocations with their prerequisites.
+#[tauri::command]
+pub fn list_invocations(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = OptionalFeatureService::new(&mut db).list_by_type("EI");
+    match result {
+        Ok(features) => {
+            let invocations: Vec<Value> = features
+                .into_iter()
+                .map(|f| {
+                    let mut json = entity_to_json(&f);
+                    // Parse prerequisites to extract level and pact requirements
+                    if let Value::Object(ref mut map) = json {
+                        let (level_prereq, pact_prereq, spell_prereq) =
+                            extract_invocation_prereqs(map.get("prerequisite"));
+                        if let Some(level) = level_prereq {
+                            map.insert("level_prereq".to_string(), Value::Number(level.into()));
+                        }
+                        if let Some(pact) = pact_prereq {
+                            map.insert("pact_prereq".to_string(), Value::String(pact));
+                        }
+                        if let Some(spell) = spell_prereq {
+                            map.insert("spell_prereq".to_string(), Value::String(spell));
+                        }
+                    }
+                    json
+                })
+                .collect();
+            ApiResponse::ok(invocations)
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// List all feats with their prerequisites parsed.
+#[tauri::command]
+pub fn list_feats_with_prereqs(
+    state: State<'_, AppState>,
+    filter: Option<FeatFilter>,
+    limit: Option<i64>,
+    offset: Option<i64>,
+) -> ApiResponse<Vec<Value>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let filter = filter.unwrap_or_default();
+    let result = FeatService::new(&mut db).search_paginated(
+        &filter,
+        limit.unwrap_or(200),
+        offset.unwrap_or(0),
+    );
+    match result {
+        Ok(feats) => {
+            let feats_with_prereqs: Vec<Value> = feats
+                .into_iter()
+                .map(|f| {
+                    let mut json = entity_to_json(&f);
+                    // Parse prerequisites from the data
+                    if let Value::Object(ref mut map) = json {
+                        let prereqs = extract_feat_prereqs(map.get("prerequisite"));
+                        if !prereqs.is_empty() {
+                            map.insert("parsed_prereqs".to_string(), prereqs.into());
+                        }
+                    }
+                    json
+                })
+                .collect();
+            ApiResponse::ok(feats_with_prereqs)
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+/// Find the level at which a class gains its subclass.
+fn find_subclass_level(data: &Value) -> i32 {
+    if let Some(features) = data.get("classFeatures").and_then(|f| f.as_array()) {
+        for feature in features {
+            // Check if this feature grants subclass
+            let grants_subclass = match feature {
+                Value::Object(obj) => obj.get("gainSubclassFeature")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false),
+                Value::String(_) => false, // Simple string refs don't grant subclass
+                _ => false,
+            };
+
+            if grants_subclass {
+                // Parse the level from the classFeature string or object
+                if let Value::Object(obj) = feature {
+                    if let Some(cf) = obj.get("classFeature").and_then(|v| v.as_str()) {
+                        // Format: "FeatureName|ClassName|ClassSource|Level"
+                        let parts: Vec<&str> = cf.split('|').collect();
+                        if parts.len() >= 4 {
+                            if let Ok(level) = parts[3].parse::<i32>() {
+                                return level;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Default subclass levels by class name patterns
+    3 // Most classes get subclass at 3
+}
+
+/// Extract multiclass prerequisites from class data.
+fn extract_multiclass_prereqs(data: &Value) -> Value {
+    if let Some(mc) = data.get("multiclassing") {
+        if let Some(reqs) = mc.get("requirements") {
+            return reqs.clone();
+        }
+    }
+    Value::Null
+}
+
+/// Determine ASI levels for a class.
+fn determine_asi_levels(class_name: &str, data: &Value) -> Vec<i32> {
+    // Standard ASI levels
+    let standard = vec![4, 8, 12, 16, 19];
+
+    // Fighter and Rogue get extra ASIs
+    let fighter_levels = vec![4, 6, 8, 12, 14, 16, 19];
+    let rogue_levels = vec![4, 8, 10, 12, 16, 19];
+
+    match class_name.to_lowercase().as_str() {
+        "fighter" => fighter_levels,
+        "rogue" => rogue_levels,
+        _ => {
+            // Try to find ASI levels from class features
+            if let Some(features) = data.get("classFeatures").and_then(|f| f.as_array()) {
+                let mut asi_levels = Vec::new();
+                for feature in features {
+                    let feature_str = match feature {
+                        Value::String(s) => s.clone(),
+                        Value::Object(obj) => obj.get("classFeature")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                        _ => continue,
+                    };
+
+                    if feature_str.to_lowercase().contains("ability score improvement") {
+                        // Parse level from format: "Feature|Class|Source|Level"
+                        let parts: Vec<&str> = feature_str.split('|').collect();
+                        if parts.len() >= 4 {
+                            if let Ok(level) = parts[3].parse::<i32>() {
+                                asi_levels.push(level);
+                            }
+                        }
+                    }
+                }
+                if !asi_levels.is_empty() {
+                    return asi_levels;
+                }
+            }
+            standard
+        }
+    }
+}
+
+/// Extract spell slot progression from class table groups.
+fn extract_spell_slots_from_table(table_groups: &[Value]) -> Vec<Value> {
+    for group in table_groups {
+        if let Some(labels) = group.get("colLabels").and_then(|l| l.as_array()) {
+            // Look for spell slot columns (1st, 2nd, 3rd, etc.)
+            let has_spell_slots = labels.iter().any(|l| {
+                l.as_str().map(|s| s.contains("st") || s.contains("nd") || s.contains("rd") || s.contains("th")).unwrap_or(false)
+            });
+
+            if has_spell_slots {
+                if let Some(rows) = group.get("rows").and_then(|r| r.as_array()) {
+                    // Return the rows which contain spell slot data per level
+                    return rows.clone();
+                }
+            }
+        }
+    }
+    Vec::new()
+}
+
+/// Generate standard spell slot progression based on caster type.
+fn generate_spell_slot_progression(caster_type: &str) -> Vec<Vec<i32>> {
+    match caster_type {
+        "full" => vec![
+            // Level 1-20 spell slots [1st, 2nd, 3rd, 4th, 5th, 6th, 7th, 8th, 9th]
+            vec![2, 0, 0, 0, 0, 0, 0, 0, 0], // 1
+            vec![3, 0, 0, 0, 0, 0, 0, 0, 0], // 2
+            vec![4, 2, 0, 0, 0, 0, 0, 0, 0], // 3
+            vec![4, 3, 0, 0, 0, 0, 0, 0, 0], // 4
+            vec![4, 3, 2, 0, 0, 0, 0, 0, 0], // 5
+            vec![4, 3, 3, 0, 0, 0, 0, 0, 0], // 6
+            vec![4, 3, 3, 1, 0, 0, 0, 0, 0], // 7
+            vec![4, 3, 3, 2, 0, 0, 0, 0, 0], // 8
+            vec![4, 3, 3, 3, 1, 0, 0, 0, 0], // 9
+            vec![4, 3, 3, 3, 2, 0, 0, 0, 0], // 10
+            vec![4, 3, 3, 3, 2, 1, 0, 0, 0], // 11
+            vec![4, 3, 3, 3, 2, 1, 0, 0, 0], // 12
+            vec![4, 3, 3, 3, 2, 1, 1, 0, 0], // 13
+            vec![4, 3, 3, 3, 2, 1, 1, 0, 0], // 14
+            vec![4, 3, 3, 3, 2, 1, 1, 1, 0], // 15
+            vec![4, 3, 3, 3, 2, 1, 1, 1, 0], // 16
+            vec![4, 3, 3, 3, 2, 1, 1, 1, 1], // 17
+            vec![4, 3, 3, 3, 3, 1, 1, 1, 1], // 18
+            vec![4, 3, 3, 3, 3, 2, 1, 1, 1], // 19
+            vec![4, 3, 3, 3, 3, 2, 2, 1, 1], // 20
+        ],
+        "1/2" | "half" => vec![
+            // Half casters start at level 2
+            vec![0, 0, 0, 0, 0], // 1
+            vec![2, 0, 0, 0, 0], // 2
+            vec![3, 0, 0, 0, 0], // 3
+            vec![3, 0, 0, 0, 0], // 4
+            vec![4, 2, 0, 0, 0], // 5
+            vec![4, 2, 0, 0, 0], // 6
+            vec![4, 3, 0, 0, 0], // 7
+            vec![4, 3, 0, 0, 0], // 8
+            vec![4, 3, 2, 0, 0], // 9
+            vec![4, 3, 2, 0, 0], // 10
+            vec![4, 3, 3, 0, 0], // 11
+            vec![4, 3, 3, 0, 0], // 12
+            vec![4, 3, 3, 1, 0], // 13
+            vec![4, 3, 3, 1, 0], // 14
+            vec![4, 3, 3, 2, 0], // 15
+            vec![4, 3, 3, 2, 0], // 16
+            vec![4, 3, 3, 3, 1], // 17
+            vec![4, 3, 3, 3, 1], // 18
+            vec![4, 3, 3, 3, 2], // 19
+            vec![4, 3, 3, 3, 2], // 20
+        ],
+        "1/3" | "third" => vec![
+            // Third casters (Eldritch Knight, Arcane Trickster) start at level 3
+            vec![0, 0, 0, 0], // 1
+            vec![0, 0, 0, 0], // 2
+            vec![2, 0, 0, 0], // 3
+            vec![3, 0, 0, 0], // 4
+            vec![3, 0, 0, 0], // 5
+            vec![3, 0, 0, 0], // 6
+            vec![4, 2, 0, 0], // 7
+            vec![4, 2, 0, 0], // 8
+            vec![4, 2, 0, 0], // 9
+            vec![4, 3, 0, 0], // 10
+            vec![4, 3, 0, 0], // 11
+            vec![4, 3, 0, 0], // 12
+            vec![4, 3, 2, 0], // 13
+            vec![4, 3, 2, 0], // 14
+            vec![4, 3, 2, 0], // 15
+            vec![4, 3, 3, 0], // 16
+            vec![4, 3, 3, 0], // 17
+            vec![4, 3, 3, 0], // 18
+            vec![4, 3, 3, 1], // 19
+            vec![4, 3, 3, 1], // 20
+        ],
+        "pact" => vec![
+            // Warlock pact magic - slots per short rest at highest available level
+            // Format: [slots, slot_level]
+            vec![1, 1], // 1
+            vec![2, 1], // 2
+            vec![2, 2], // 3
+            vec![2, 2], // 4
+            vec![2, 3], // 5
+            vec![2, 3], // 6
+            vec![2, 4], // 7
+            vec![2, 4], // 8
+            vec![2, 5], // 9
+            vec![2, 5], // 10
+            vec![3, 5], // 11
+            vec![3, 5], // 12
+            vec![3, 5], // 13
+            vec![3, 5], // 14
+            vec![3, 5], // 15
+            vec![3, 5], // 16
+            vec![4, 5], // 17
+            vec![4, 5], // 18
+            vec![4, 5], // 19
+            vec![4, 5], // 20
+        ],
+        _ => Vec::new(),
+    }
+}
+
+/// Extract which classes can use a fighting style based on its type code.
+fn extract_fighting_style_classes(feature_type: Option<&str>) -> Vec<String> {
+    match feature_type {
+        Some(t) => {
+            let mut classes = Vec::new();
+            if t.contains("FS:F") || t == "FS" {
+                classes.push("Fighter".to_string());
+            }
+            if t.contains("FS:P") || t == "FS" {
+                classes.push("Paladin".to_string());
+            }
+            if t.contains("FS:R") || t == "FS" {
+                classes.push("Ranger".to_string());
+            }
+            if t.contains("FS:B") {
+                classes.push("Bard".to_string());
+            }
+            classes
+        }
+        None => Vec::new(),
+    }
+}
+
+/// Extract invocation prerequisites (level, pact boon, spell requirements).
+fn extract_invocation_prereqs(prereq: Option<&Value>) -> (Option<i32>, Option<String>, Option<String>) {
+    let mut level_prereq = None;
+    let mut pact_prereq = None;
+    let mut spell_prereq = None;
+
+    if let Some(Value::Array(prereqs)) = prereq {
+        for p in prereqs {
+            if let Value::Object(obj) = p {
+                // Level requirement
+                if let Some(lvl) = obj.get("level") {
+                    if let Some(warlock_level) = lvl.get("warlock") {
+                        level_prereq = warlock_level.as_i64().map(|l| l as i32);
+                    } else if let Some(l) = lvl.as_i64() {
+                        level_prereq = Some(l as i32);
+                    }
+                }
+
+                // Pact boon requirement
+                if let Some(pact) = obj.get("pact") {
+                    pact_prereq = pact.as_str().map(|s| s.to_string());
+                }
+
+                // Spell requirement
+                if let Some(spell) = obj.get("spell") {
+                    if let Some(spells) = spell.as_array() {
+                        spell_prereq = spells.first()
+                            .and_then(|s| s.as_str())
+                            .map(|s| s.replace("#c", "").to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    (level_prereq, pact_prereq, spell_prereq)
+}
+
+/// Extract feat prerequisites into a simple list.
+fn extract_feat_prereqs(prereq: Option<&Value>) -> Vec<String> {
+    let mut prereqs = Vec::new();
+
+    if let Some(Value::Array(arr)) = prereq {
+        for p in arr {
+            if let Value::Object(obj) = p {
+                // Ability score requirements
+                if let Some(ability) = obj.get("ability") {
+                    if let Value::Array(abilities) = ability {
+                        for a in abilities {
+                            if let Value::Object(ab) = a {
+                                for (stat, val) in ab {
+                                    if let Some(v) = val.as_i64() {
+                                        prereqs.push(format!("{} {}", stat.to_uppercase(), v));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Race requirements
+                if let Some(race) = obj.get("race") {
+                    if let Value::Array(races) = race {
+                        for r in races {
+                            if let Some(name) = r.get("name").and_then(|n| n.as_str()) {
+                                prereqs.push(format!("Race: {}", name));
+                            }
+                        }
+                    }
+                }
+
+                // Spellcasting requirement
+                if obj.get("spellcasting").is_some() || obj.get("spellcastingFeature").is_some() {
+                    prereqs.push("Spellcasting".to_string());
+                }
+
+                // Proficiency requirements
+                if let Some(prof) = obj.get("proficiency") {
+                    if let Value::Array(profs) = prof {
+                        for pr in profs {
+                            if let Value::Object(po) = pr {
+                                for (key, _) in po {
+                                    prereqs.push(format!("Proficiency: {}", key));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Level requirement
+                if let Some(level) = obj.get("level") {
+                    if let Some(l) = level.as_i64() {
+                        prereqs.push(format!("Level {}", l));
+                    }
+                }
+            }
+        }
+    }
+
+    prereqs
+}

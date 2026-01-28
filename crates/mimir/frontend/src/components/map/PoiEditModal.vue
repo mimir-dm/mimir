@@ -114,6 +114,8 @@ interface MapPoi {
   icon: string
   color: string | null
   visible: number
+  created_at: string
+  updated_at: string
 }
 
 interface Props {

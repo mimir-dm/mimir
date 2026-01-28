@@ -59,53 +59,29 @@
         <div v-if="unassignedCharacters.length > 0" class="character-section">
           <h2 class="section-title">Unassigned Characters</h2>
           <div class="character-grid">
-            <div
+            <CharacterCard
               v-for="character in unassignedCharacters"
               :key="character.id"
-              class="card-interactive character-card"
-              :class="{ 'is-npc': character.is_npc === 1 }"
-              @click="viewCharacter(character)"
+              :character="character"
+              @click="viewCharacter"
             >
-              <div class="character-header">
-                <h3 class="character-name">{{ character.name }}</h3>
-                <span v-if="character.is_npc === 1" class="npc-badge">NPC</span>
-              </div>
-              <div class="character-class-race">
-                {{ character.race_name || 'Unknown Race' }}
-              </div>
-              <div class="character-meta">
-                <span class="character-player">{{ character.player_name || 'NPC' }}</span>
-              </div>
-              <div class="character-actions" @click.stop>
-                <div class="action-buttons">
-                  <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Edit">
-                    Edit
-                  </button>
-                  <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Print PDF">
-                    Print
-                  </button>
-                  <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Level Up">
-                    Level Up
-                  </button>
-                  <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs" title="Delete">
-                    Delete
-                  </button>
+              <template #actions>
+                <div class="extended-actions">
+                  <div class="action-buttons">
+                    <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Edit</button>
+                    <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Print</button>
+                    <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Level Up</button>
+                    <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs">Delete</button>
+                  </div>
+                  <select class="campaign-select" @change="assignToCampaign(character.id, $event)">
+                    <option value="">Add to Campaign...</option>
+                    <option v-for="campaign in campaignStore.campaigns" :key="campaign.id" :value="campaign.id">
+                      {{ campaign.name }}
+                    </option>
+                  </select>
                 </div>
-                <select
-                  class="campaign-select"
-                  @change="assignToCampaign(character.id, $event)"
-                >
-                  <option value="">Add to Campaign...</option>
-                  <option
-                    v-for="campaign in campaignStore.campaigns"
-                    :key="campaign.id"
-                    :value="campaign.id"
-                  >
-                    {{ campaign.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
+              </template>
+            </CharacterCard>
           </div>
         </div>
 
@@ -113,40 +89,21 @@
         <div v-for="(chars, campaignId) in charactersByCampaign" :key="campaignId" class="character-section">
           <h2 class="section-title">{{ getCampaignName(String(campaignId)) }}</h2>
           <div class="character-grid">
-            <div
+            <CharacterCard
               v-for="character in chars"
               :key="character.id"
-              class="card-interactive character-card"
-              :class="{ 'is-npc': character.is_npc === 1 }"
-              @click="viewCharacter(character)"
+              :character="character"
+              @click="viewCharacter"
             >
-              <div class="character-header">
-                <h3 class="character-name">{{ character.name }}</h3>
-                <span v-if="character.is_npc === 1" class="npc-badge">NPC</span>
-              </div>
-              <div class="character-class-race">
-                {{ character.race_name || 'Unknown Race' }}
-              </div>
-              <div class="character-meta">
-                <span class="character-player">{{ character.player_name || 'NPC' }}</span>
-              </div>
-              <div class="character-actions" @click.stop>
+              <template #actions>
                 <div class="action-buttons">
-                  <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Edit">
-                    Edit
-                  </button>
-                  <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Print PDF">
-                    Print
-                  </button>
-                  <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs" title="Level Up">
-                    Level Up
-                  </button>
-                  <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs" title="Delete">
-                    Delete
-                  </button>
+                  <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Edit</button>
+                  <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Print</button>
+                  <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Level Up</button>
+                  <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs">Delete</button>
                 </div>
-              </div>
-            </div>
+              </template>
+            </CharacterCard>
           </div>
         </div>
       </div>
@@ -215,8 +172,9 @@ import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
 import CharacterCreationWizard from '../components/CharacterCreationWizard.vue'
-import LevelUpDialog from '../components/LevelUpDialog.vue'
+import LevelUpDialog from '../components/levelup/LevelUpDialog.vue'
 import { CharacterPrintDialog } from '../../../components/print'
+import { CharacterCard } from '../../../components/characters'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '../../../shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '../../../stores/characters'
@@ -481,36 +439,35 @@ const confirmDelete = async () => {
   gap: var(--spacing-lg);
 }
 
-/* Character card content styles - base styling from .card-interactive */
-
-.character-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-xs);
+.error-message {
+  padding: var(--spacing-md);
+  background-color: var(--color-error) / 0.1;
+  border: 1px solid var(--color-error) / 0.2;
+  border-radius: var(--radius-md);
+  color: var(--color-error);
 }
 
-.character-class-race {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-primary-500);
-  margin-bottom: var(--spacing-sm);
-}
-
-.character-meta {
+/* Filter Tabs */
+.filter-tabs {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.character-player {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
+/* Extended actions for CharacterCard slot */
+.extended-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
-.character-actions {
-  margin-top: var(--spacing-sm);
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--color-border);
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.action-buttons .btn {
+  flex: 1;
 }
 
 .campaign-select {
@@ -532,63 +489,6 @@ const confirmDelete = async () => {
   outline: none;
   border-color: var(--color-primary-500);
   box-shadow: 0 0 0 2px var(--color-primary-500) / 0.2;
-}
-
-.error-message {
-  padding: var(--spacing-md);
-  background-color: var(--color-error) / 0.1;
-  border: 1px solid var(--color-error) / 0.2;
-  border-radius: var(--radius-md);
-  color: var(--color-error);
-}
-
-/* Filter Tabs */
-.filter-tabs {
-  display: flex;
-  gap: var(--spacing-sm);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* Character Card Header */
-.character-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--spacing-sm);
-}
-
-.character-header .character-name {
-  margin-bottom: 0;
-}
-
-/* NPC Badge */
-.npc-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: 0.625rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background-color: var(--color-warning, #f59e0b);
-  color: white;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-
-/* NPC card styling */
-.character-card.is-npc {
-  border-left: 3px solid var(--color-warning, #f59e0b);
-}
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-sm);
-}
-
-.action-buttons .btn {
-  flex: 1;
 }
 
 /* Delete dialog */

@@ -16,7 +16,9 @@ use thiserror::Error;
 pub use asset::{AssetService, UploadAssetInput};
 pub use campaign::{CampaignService, CreateCampaignInput, UpdateCampaignInput};
 pub use character::{
-    AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
+    AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput, FeatureChoices,
+    FeatureReference, HpGainMethod, InvocationChoices, LevelUpRequest, LevelUpResult,
+    ManeuverChoices, SpellChanges, SpellReference, SubclassChoice, UpdateCharacterInput,
 };
 pub use document::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
 pub use map::{CreateMapInput, MapService, UpdateMapInput};

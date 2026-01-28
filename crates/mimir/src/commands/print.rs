@@ -1642,9 +1642,26 @@ pub fn export_character(
         has_content = true;
     }
 
-    // Add spell cards - get spells available to character's classes (filtered by level)
+    // Add spell cards - get spells available to character's classes (filtered by level and sources)
     if include_spell_cards {
         info!("[SECTION] Spell cards requested - looking up class spell lists...");
+
+        // Get character's allowed sources for filtering
+        let allowed_sources: Option<std::collections::HashSet<String>> =
+            match dal::list_character_source_codes(&mut db, &character_id) {
+                Ok(sources) if !sources.is_empty() => {
+                    info!("  Character has {} allowed sources configured", sources.len());
+                    Some(sources.into_iter().collect())
+                }
+                Ok(_) => {
+                    info!("  No source restrictions - showing all spells");
+                    None
+                }
+                Err(e) => {
+                    info!("  Could not load character sources ({}), showing all spells", e);
+                    None
+                }
+            };
 
         let mut spell_data: Vec<Value> = Vec::new();
         let mut seen_spells: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -1665,14 +1682,22 @@ pub fn export_character(
                 Ok(class_spells) => {
                     let filtered_count = class_spells.iter()
                         .filter(|s| s.level <= max_spell_level)
+                        .filter(|s| allowed_sources.as_ref().is_none_or(|sources| sources.contains(&s.source)))
                         .count();
-                    info!("    Found {} spells total, {} at level {} or below",
-                        class_spells.len(), filtered_count, max_spell_level);
+                    info!("    Found {} spells total, {} after level/source filtering",
+                        class_spells.len(), filtered_count);
 
                     for spell in class_spells {
                         // Filter by max spell level (cantrips are level 0)
                         if spell.level > max_spell_level {
                             continue;
+                        }
+
+                        // Filter by character's allowed sources (if configured)
+                        if let Some(ref sources) = allowed_sources {
+                            if !sources.contains(&spell.source) {
+                                continue;
+                            }
                         }
 
                         // Create unique key to avoid duplicates (same spell on multiple class lists)

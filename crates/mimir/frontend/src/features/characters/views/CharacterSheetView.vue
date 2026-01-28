@@ -26,6 +26,7 @@
             <span v-else-if="character.player_name" class="player-name">
               Player: {{ character.player_name }}
             </span>
+            <button @click="showSourcesModal = true" class="btn btn-secondary">Sources</button>
             <button @click="printCharacter" class="btn btn-secondary">Print PDF</button>
           </div>
         </div>
@@ -717,6 +718,15 @@
       @close="showPrintDialog = false"
     />
 
+    <!-- Character Sources Modal -->
+    <CharacterSourcesModal
+      v-if="character"
+      :visible="showSourcesModal"
+      :character-id="characterId"
+      @close="showSourcesModal = false"
+      @saved="loadCharacter"
+    />
+
     <!-- Cross-Reference Modal -->
     <AppModal
       :visible="modalContent.visible"
@@ -736,6 +746,7 @@ import { invoke } from '@tauri-apps/api/core'
 import MainLayout from '../../../shared/components/layout/MainLayout.vue'
 import InventoryManager from '../components/InventoryManager.vue'
 import { CharacterPrintDialog } from '../../../components/print'
+import { CharacterSourcesModal } from '../../../components/characters'
 import AppModal from '@/components/shared/AppModal.vue'
 import { useCharacterStore } from '../../../stores/characters'
 import { useCrossReferences } from '../../sources/composables/useCrossReferences'
@@ -892,6 +903,7 @@ const loadingInventory = ref(false)
 const error = ref<string | null>(null)
 const showInventory = ref(false)
 const showPrintDialog = ref(false)
+const showSourcesModal = ref(false)
 const activeTab = ref<'character' | 'equipment' | 'spells' | 'details'>('character')
 
 // Computed properties
@@ -1795,6 +1807,20 @@ const loadClassSpells = async () => {
   loadingSpells.value = true
 
   try {
+    // Fetch character's allowed sources for filtering
+    let allowedSources: Set<string> | null = null
+    try {
+      const sourcesResult = await invoke<{ success: boolean; data?: string[] }>('list_character_sources', {
+        characterId: characterId.value
+      })
+      if (sourcesResult.success && sourcesResult.data && sourcesResult.data.length > 0) {
+        allowedSources = new Set(sourcesResult.data)
+      }
+      // If no sources configured (empty array), allowedSources stays null = show all
+    } catch (e) {
+      console.warn('Could not load character sources, showing all spells:', e)
+    }
+
     // Determine max spell level based on class and level
     const getMaxSpellLevel = (className: string, level: number): number => {
       const lowerName = className.toLowerCase()
@@ -1838,11 +1864,15 @@ const loadClassSpells = async () => {
           const spellLevel = rawSpell.level as number
           if (spellLevel > maxLevel) continue
 
+          // Filter by character's allowed sources (if configured)
+          const spellSource = rawSpell.source as string
+          if (allowedSources && !allowedSources.has(spellSource)) continue
+
           // Backend merges data at top level via entity_to_json
           // Store the whole rawSpell object as data for accessing time, range, etc.
           classSpellList.push({
             name: rawSpell.name as string,
-            source: rawSpell.source as string,
+            source: spellSource,
             level: spellLevel,
             school: rawSpell.school as string | null,
             ritual: (rawSpell.ritual as number) === 1 || rawSpell.ritual === true,

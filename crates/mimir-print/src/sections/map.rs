@@ -152,6 +152,7 @@ enum TiledMapSource {
     /// Render from map data (does its own tiling)
     FromMap {
         map: RenderMap,
+        #[allow(dead_code)]
         tokens: Vec<RenderToken>,
         options: MapPrintOptions,
         base_path: PathBuf,
@@ -359,8 +360,6 @@ impl Renderable for TiledMapSection {
                 image_bytes,
                 grid_size_px,
             } => {
-                use image::GenericImageView;
-
                 // Load the image to get its actual dimensions
                 let img = image::load_from_memory(image_bytes).map_err(|e| {
                     crate::error::PrintError::IoError(std::io::Error::new(

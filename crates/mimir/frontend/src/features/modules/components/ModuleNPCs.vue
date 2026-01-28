@@ -38,6 +38,14 @@
         <div class="npc-details">
           <span v-if="npc.role" class="npc-role">{{ npc.role }}</span>
         </div>
+        <div class="card-actions" @click.stop>
+          <button @click="viewNpc(npc)" class="btn btn-sm btn-ghost">
+            View
+          </button>
+          <button @click="printNpc(npc)" class="btn btn-sm btn-ghost">
+            PDF
+          </button>
+        </div>
       </div>
     </div>
 
@@ -50,6 +58,14 @@
       @close="showSelector = false"
       @added="handleNpcsAdded"
     />
+
+    <!-- Character Print Dialog -->
+    <CharacterPrintDialog
+      :visible="showPrintDialog"
+      :character-id="printCharacterId"
+      :character-name="printCharacterName"
+      @close="showPrintDialog = false"
+    />
   </div>
 </template>
 
@@ -58,6 +74,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import NpcSelectorModal from './NpcSelectorModal.vue'
+import CharacterPrintDialog from '@/components/print/CharacterPrintDialog.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { dataEvents } from '@/shared/utils/dataEvents'
 import type { ApiResponse } from '@/types/api'
@@ -80,6 +97,9 @@ const props = defineProps<{
 const router = useRouter()
 
 const showSelector = ref(false)
+const showPrintDialog = ref(false)
+const printCharacterId = ref<string | null>(null)
+const printCharacterName = ref('')
 const loading = ref(false)
 const moduleNpcs = ref<ModuleNpcWithCharacter[]>([])
 
@@ -122,6 +142,12 @@ const removeNpc = async (npc: ModuleNpcWithCharacter) => {
   } catch (e) {
     console.error('Failed to remove NPC:', e)
   }
+}
+
+const printNpc = (npc: ModuleNpcWithCharacter) => {
+  printCharacterId.value = npc.character_id
+  printCharacterName.value = npc.character_name
+  showPrintDialog.value = true
 }
 
 const handleNpcsAdded = () => {

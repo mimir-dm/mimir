@@ -146,6 +146,7 @@ import type { TokenSize, CreateTokenRequest, VisionType } from '@/types/api'
 import { VISION_PRESETS } from '@/types/api'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
+import { useCampaignStore } from '@/stores/campaigns'
 
 interface MonsterResult {
   id: string
@@ -168,6 +169,7 @@ const emit = defineEmits<{
   'add-token': [request: CreateTokenRequest]
 }>()
 
+const campaignStore = useCampaignStore()
 const searchInput = ref<HTMLInputElement | null>(null)
 const searchQuery = ref('')
 const searchResults = ref<MonsterResult[]>([])
@@ -212,15 +214,25 @@ function handleSearch() {
 
   searchTimeout = setTimeout(async () => {
     try {
+      // Get campaign sources for filtering (null means no filter)
+      const sources = campaignStore.currentCampaignSources.length > 0
+        ? campaignStore.currentCampaignSources
+        : null
+
       const response = await invoke<{ success: boolean; data?: any[] }>('search_monsters', {
-        request: { query: searchQuery.value, limit: 15 }
+        filter: {
+          name_contains: searchQuery.value,
+          sources: sources,
+        },
+        limit: 15,
+        offset: 0
       })
 
       if (response.success && response.data) {
         searchResults.value = response.data.map(m => ({
           id: m.id,
           name: m.name,
-          cr: m.challenge_rating || 'N/A',
+          cr: m.challenge_rating || m.cr || 'N/A',
           size: m.size || 'Medium',
           type: m.type || 'Unknown'
         }))

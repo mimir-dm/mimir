@@ -4,14 +4,14 @@ level: task
 title: "v1 to v2 Migration Strategy"
 short_code: "MIMIR-T-0361"
 created_at: 2026-01-19T22:07:00.004569+00:00
-updated_at: 2026-01-19T22:07:00.004569+00:00
+updated_at: 2026-01-26T19:41:11.485472+00:00
 parent: MIMIR-I-0041
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ initiative_id: MIMIR-I-0041
 
 ## Objective
 Define strategy for migrating existing Mimir data to v0.5 schema. This is a separate effort from the rewrite itself - v0.5 can launch without migration, but we need a path for existing users.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 - [ ] Migration script specification

@@ -8,8 +8,10 @@ mod campaign_source;
 mod character;
 mod character_class;
 mod character_feat;
+mod character_feature;
 mod character_inventory;
 mod character_proficiency;
+mod character_source;
 mod character_spell;
 mod document;
 mod fog;
@@ -28,13 +30,15 @@ pub use campaign_asset::{
     ALLOWED_MIME_TYPES,
 };
 pub use campaign_source::{CampaignSource, NewCampaignSource};
-pub use character::{Character, NewCharacter, UpdateCharacter};
+pub use character::{Character, CharacterResponse, NewCharacter, UpdateCharacter};
 pub use character_class::{CharacterClass, NewCharacterClass, UpdateCharacterClass};
 pub use character_feat::{CharacterFeat, FeatSourceType, NewCharacterFeat};
+pub use character_feature::{CharacterFeature, FeatureType, NewCharacterFeature};
 pub use character_inventory::{CharacterInventory, NewCharacterInventory, UpdateCharacterInventory};
 pub use character_proficiency::{
     CharacterProficiency, NewCharacterProficiency, ProficiencyType, UpdateCharacterProficiency,
 };
+pub use character_source::{CharacterSource, NewCharacterSource};
 pub use character_spell::{CharacterSpell, NewCharacterSpell, UpdateCharacterSpell};
 pub use document::{Document, NewDocument, UpdateDocument};
 pub use fog::{FogRevealedArea, FogState, NewFogRevealedArea};

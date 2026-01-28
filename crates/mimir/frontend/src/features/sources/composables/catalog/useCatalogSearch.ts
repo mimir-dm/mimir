@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { useCampaignStore } from '@/stores/campaigns'
 
 export interface CatalogConfig<TSummary, TDetails, TFilters extends object> {
   /** Name of the catalog (for error messages) */
@@ -130,8 +131,31 @@ export function useCatalogSearch<
 }
 
 /**
+ * Get effective sources for filtering:
+ * - If explicit sources provided, use those
+ * - If campaign has sources configured, use those
+ * - Otherwise return null (no filtering)
+ */
+function getEffectiveSources(filterSources: unknown): string[] | null {
+  const campaignStore = useCampaignStore()
+
+  // If explicit sources provided in filter, use those
+  if (Array.isArray(filterSources) && filterSources.length > 0) {
+    return filterSources as string[]
+  }
+
+  // If campaign has sources configured, use those
+  if (campaignStore.currentCampaignSources.length > 0) {
+    return campaignStore.currentCampaignSources
+  }
+
+  // No filtering - return null to show all
+  return null
+}
+
+/**
  * Default filter transformation:
- * - Keeps 'sources' arrays as-is (empty array = show nothing, null = no filter)
+ * - Applies campaign source filtering when no explicit sources provided
  * - Converts other empty arrays to null
  * - Converts empty strings to null
  * - Passes undefined values as null
@@ -144,19 +168,22 @@ function transformDefaultFilters(filters: Record<string, unknown>): Record<strin
     // Rename 'query' and 'name' to 'name_contains' for backend compatibility
     const outputKey = (key === 'query' || key === 'name') ? 'name_contains' : key
 
-    if (Array.isArray(value)) {
-      // For 'sources', keep empty arrays to signal "show nothing"
+    if (key === 'sources') {
+      // Apply campaign source filtering
+      result[outputKey] = getEffectiveSources(value)
+    } else if (Array.isArray(value)) {
       // For other arrays, convert empty to null (no filter)
-      if (key === 'sources') {
-        result[outputKey] = value
-      } else {
-        result[outputKey] = value.length > 0 ? value : null
-      }
+      result[outputKey] = value.length > 0 ? value : null
     } else if (value === '' || value === undefined) {
       result[outputKey] = null
     } else {
       result[outputKey] = value
     }
+  }
+
+  // If sources wasn't in filters at all, still apply campaign filtering
+  if (!('sources' in filters)) {
+    result['sources'] = getEffectiveSources(undefined)
   }
 
   return result

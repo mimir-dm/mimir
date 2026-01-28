@@ -2,6 +2,8 @@
 //!
 //! Database operations for catalog entities.
 
+#![allow(ambiguous_glob_reexports)]
+
 mod action;
 mod background;
 mod book;

@@ -52,8 +52,8 @@
             <button class="btn-action" @click="configureGrid" title="Configure Grid">
               Grid
             </button>
-            <button class="btn-action" @click="printMap" title="Print Map">
-              Print
+            <button class="btn-action" @click="printMap" title="Export PDF">
+              PDF
             </button>
             <button class="btn-action btn-danger" @click="deleteMap" title="Delete Map">
               Delete

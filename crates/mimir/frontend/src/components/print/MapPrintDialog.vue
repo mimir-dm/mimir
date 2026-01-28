@@ -1,7 +1,7 @@
 <template>
   <AppModal
     :visible="visible"
-    title="Print Map"
+    title="Export Map PDF"
     size="md"
     @close="handleClose"
   >

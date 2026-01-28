@@ -807,9 +807,13 @@ function formatFeaturesTable(features: ClassFeature[]): string {
   html += '</div>'
   return html
 }
-function formatTable(table: any): string {
-  // Skip tables without rows - they're incomplete/broken
-  if (!table.rows || table.rows.length === 0) {
+export function formatTable(table: any): string {
+  // Handle both 'rows' format and 'rowsSpellProgression' format (spell slots)
+  const hasRows = table.rows && table.rows.length > 0
+  const hasSpellProgressionRows = table.rowsSpellProgression && table.rowsSpellProgression.length > 0
+
+  // Skip tables without any row data
+  if (!hasRows && !hasSpellProgressionRows) {
     return ''
   }
 
@@ -820,12 +824,16 @@ function formatTable(table: any): string {
     html += `<caption>${table.caption}</caption>`
   }
 
+  // Determine data source and row count
+  const dataRows = hasRows ? table.rows : table.rowsSpellProgression
+  const rowCount = dataRows.length
+
   // Headers - Add "Level" as first column if not present
   if (table.colLabels) {
     html += '<thead><tr>'
     // Check if first label is for level column
     const hasLevelColumn = table.colLabels[0]?.toLowerCase().includes('level')
-    if (!hasLevelColumn && table.rows && table.rows.length === 20) {
+    if (!hasLevelColumn && rowCount === 20) {
       // This is likely a class progression table, add Level header
       html += '<th>Level</th>'
     }
@@ -835,67 +843,68 @@ function formatTable(table: any): string {
     }
     html += '</tr></thead>'
   }
-  
+
   // Body
-  if (table.rows) {
-    html += '<tbody>'
-    const hasLevelColumn = table.colLabels && table.colLabels[0]?.toLowerCase().includes('level')
-    const isProgressionTable = !hasLevelColumn && table.rows.length === 20
-    
-    // Check if first column is a dice roll column
-    const isDiceColumn = table.colLabels && table.colLabels[0]?.includes('{@dice')
-    
-    for (let i = 0; i < table.rows.length; i++) {
-      const row = table.rows[i]
-      html += '<tr>'
-      
-      // Add level column if this is a progression table without level column
-      if (isProgressionTable) {
-        html += `<td>${i + 1}</td>`
-      }
-      
-      for (let j = 0; j < row.length; j++) {
-        const cell = row[j]
-        // Handle various cell types
-        let cellContent = ''
-        
-        // If this is the first column and it's a dice column, and the cell is empty/undefined,
-        // fill it with the row number
-        if (j === 0 && isDiceColumn && (!cell || cell === '')) {
-          cellContent = String(i + 1)
-        } else if (typeof cell === 'object' && cell !== null) {
-          // Handle bonus objects like {"type":"bonus","value":2}
-          if (cell.type === 'bonus' && cell.value !== undefined) {
-            cellContent = `+${cell.value}`
-          } 
-          // Handle cell objects with roll property {"roll": {"exact": 1}, "type": "cell"}
-          else if (cell.type === 'cell' && cell.roll) {
-            if (cell.roll.exact !== undefined) {
-              cellContent = String(cell.roll.exact)
-            } else if (cell.roll.min !== undefined && cell.roll.max !== undefined) {
-              cellContent = `${cell.roll.min}-${cell.roll.max}`
-            } else {
-              cellContent = JSON.stringify(cell.roll)
-            }
-          }
-          // Handle simple roll property
-          else if (cell.roll) {
-            cellContent = cell.roll
-          }
-          // Handle other object types
-          else {
-            cellContent = JSON.stringify(cell)
-          }
-        } else {
-          cellContent = cell || ''
-        }
-        html += `<td>${processFormattingTags(cellContent)}</td>`
-      }
-      html += '</tr>'
+  html += '<tbody>'
+  const hasLevelColumn = table.colLabels && table.colLabels[0]?.toLowerCase().includes('level')
+  const isProgressionTable = !hasLevelColumn && rowCount === 20
+
+  // Check if first column is a dice roll column
+  const isDiceColumn = table.colLabels && table.colLabels[0]?.includes('{@dice')
+
+  for (let i = 0; i < rowCount; i++) {
+    const row = dataRows[i]
+    html += '<tr>'
+
+    // Add level column if this is a progression table without level column
+    if (isProgressionTable) {
+      html += `<td>${i + 1}</td>`
     }
-    html += '</tbody>'
+
+    for (let j = 0; j < row.length; j++) {
+      const cell = row[j]
+      // Handle various cell types
+      let cellContent = ''
+
+      // If this is the first column and it's a dice column, and the cell is empty/undefined,
+      // fill it with the row number
+      if (j === 0 && isDiceColumn && (!cell || cell === '')) {
+        cellContent = String(i + 1)
+      } else if (typeof cell === 'object' && cell !== null) {
+        // Handle bonus objects like {"type":"bonus","value":2}
+        if (cell.type === 'bonus' && cell.value !== undefined) {
+          cellContent = `+${cell.value}`
+        }
+        // Handle cell objects with roll property {"roll": {"exact": 1}, "type": "cell"}
+        else if (cell.type === 'cell' && cell.roll) {
+          if (cell.roll.exact !== undefined) {
+            cellContent = String(cell.roll.exact)
+          } else if (cell.roll.min !== undefined && cell.roll.max !== undefined) {
+            cellContent = `${cell.roll.min}-${cell.roll.max}`
+          } else {
+            cellContent = JSON.stringify(cell.roll)
+          }
+        }
+        // Handle simple roll property
+        else if (cell.roll) {
+          cellContent = cell.roll
+        }
+        // Handle other object types
+        else {
+          cellContent = JSON.stringify(cell)
+        }
+      } else if (typeof cell === 'number') {
+        // For spell progression, 0 means no slots - display as '-'
+        cellContent = cell === 0 ? '—' : String(cell)
+      } else {
+        cellContent = cell || ''
+      }
+      html += `<td>${processFormattingTags(cellContent)}</td>`
+    }
+    html += '</tr>'
   }
-  
+  html += '</tbody>'
+
   html += '</table>'
   return html
 }

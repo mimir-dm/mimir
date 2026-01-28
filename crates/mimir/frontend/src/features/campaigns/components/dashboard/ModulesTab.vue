@@ -66,7 +66,7 @@
                 Play
               </button>
               <button class="btn btn-secondary" @click="showExportDialog = true">
-                Print
+                PDF
               </button>
               <button class="btn btn-danger" @click="confirmDeleteModule" title="Delete module">
                 Delete

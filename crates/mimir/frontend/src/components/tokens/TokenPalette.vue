@@ -177,6 +177,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { TokenType, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_TYPE_COLORS } from '@/types/api'
+import { useCampaignStore } from '@/stores/campaigns'
 
 interface Monster {
   id: number
@@ -226,6 +227,8 @@ const emit = defineEmits<{
   'token-config-change': [config: TokenConfigWithMonster | null]
   'light-config-change': [lightType: LightType | null]
 }>()
+
+const campaignStore = useCampaignStore()
 
 // Module monsters state
 const moduleMonsters = ref<ModuleMonsterWithData[]>([])
@@ -436,12 +439,18 @@ async function searchMonsters() {
 
   searchTimeout = setTimeout(async () => {
     try {
-      // Backend expects 'filter' with 'nameContains' field (Tauri v2 converts to snake_case)
+      // Get campaign sources for filtering (null means no filter)
+      const sources = campaignStore.currentCampaignSources.length > 0
+        ? campaignStore.currentCampaignSources
+        : null
+
       const response = await invoke<{ success: boolean; data?: any[] }>('search_monsters', {
         filter: {
-          nameContains: monsterSearch.value
+          name_contains: monsterSearch.value,
+          sources: sources,
         },
-        limit: 10
+        limit: 10,
+        offset: 0
       })
       console.log('Monster search response:', response)
       if (response.success && response.data && Array.isArray(response.data)) {
