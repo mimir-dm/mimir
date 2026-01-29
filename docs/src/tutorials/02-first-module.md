@@ -38,29 +38,21 @@ You'll see the module sidebar (left) and the main panel (right).
 
 ## Step 2: Create a Module
 
-1. Click the **+** button next to "Modules" in the sidebar header
+1. Click the **+** button in the Modules section
 2. In the Create Module dialog:
-   - **Module Number** - Automatically assigned (1, 2, 3...)
-   - **Name** - Enter a descriptive name (e.g., "The Lost Mine - Cragmaw Hideout")
+   - **Module Name** - Enter a descriptive name (e.g., "The Lost Mine - Cragmaw Hideout")
+   - **Module Type** - Select the type (Standard Adventure, Mystery, Dungeon Crawl, Heist, Horror, Political Intrigue)
+   - **Description** (optional) - Add notes about the module
 3. Click **Create**
 
-Your new module appears in the sidebar. Click it to select it.
+Your new module appears in the modules list.
 
 ## Step 3: Explore the Module Dashboard
 
-When you select a module, the main panel shows its dashboard with several sections:
-
-### Left Column
-- **Documents** - Session prep documents and notes
-- **NPCs** - Non-player characters in this module
-- **Maps** - Battle maps and area maps
-
-### Right Column
-- **Dangers** - Monsters and traps for encounters
-
-The header shows the module name and two action buttons:
-- **Play** - Enter Play Mode for this module
-- **Print** - Export maps and materials to PDF
+The modules table shows each module with action buttons:
+- **Play** - Enter Play Mode for this module (enabled when module is ready or active)
+- **Open** - Open the module board for prep
+- **PDF** - Export maps and materials to PDF
 
 ## Step 4: Upload a Map
 

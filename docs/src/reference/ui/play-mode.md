@@ -6,7 +6,7 @@ Play Mode is the interface for running game sessions. It provides tactical map d
 
 ## Entering Play Mode
 
-From the Module Prep View, click the **Play** button in the module header.
+From the Modules tab, click the **Play** button in the module's table row.
 
 ## Layout
 

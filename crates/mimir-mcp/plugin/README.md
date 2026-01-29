@@ -6,8 +6,8 @@ Mimir is a campaign management tool for Dungeon Masters running D&D 5e games. Th
 
 ### Prerequisites
 
-1. **Mimir Desktop App**: Install from [mimir releases](https://github.com/your-repo/mimir/releases)
-2. **mimir-mcp binary**: Build from source or install via Homebrew
+1. **Mimir Desktop App**: Install from [mimir releases](https://github.com/mimir-dm/mimir/releases)
+2. **mimir-mcp binary**: Build from source or install via the Mimir installer
 
 ### Building from Source
 
@@ -19,11 +19,17 @@ The binary will be at `target/release/mimir-mcp`.
 
 ### Environment Setup
 
-The MCP server automatically finds the Mimir database in the Tauri app's data directory. To override, set:
+The MCP server **requires** the `MIMIR_DATABASE_PATH` environment variable pointing to your Mimir database file:
 
 ```bash
+# macOS (production)
 export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db"
+
+# macOS (dev mode)
+export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/dev/data/mimir.db"
 ```
+
+You can find your exact database path in Mimir's Settings > Integrations tab.
 
 ### Claude Code Plugin Installation
 
@@ -31,24 +37,18 @@ export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data
 claude plugin add /path/to/mimir/crates/mimir-mcp/plugin
 ```
 
+Or add the MCP server directly:
+```bash
+claude mcp add mimir \
+  -e MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db" \
+  -- mimir-mcp
+```
+
 ## Available Commands
 
 - `/mimir-campaigns` - List all available campaigns
 - `/create-module <name>` - Create a new module in the active campaign
 - `/search-monsters [query] [--cr <rating>]` - Search the monster catalog
-
-## Campaign Authoring Skills
-
-These skills provide intelligent assistance for campaign quality and verification:
-
-| Skill | Trigger Phrases | Purpose |
-|-------|-----------------|---------|
-| **Pressure Test** | "pressure test my campaign", "find plot holes", "what if players do X" | Stress test scenarios with adversarial player thinking |
-| **Continuity Check** | "check continuity", "find contradictions", "verify NPC references" | Verify internal consistency across all documents |
-| **NPC Network** | "map NPC relationships", "who knows who", "faction relationships" | Analyze and visualize character connections |
-| **Encounter Balance** | "check encounter balance", "is this too hard", "CR review" | Verify fights against D&D 5e encounter math |
-| **Session Prep** | "prep for session", "am I ready to run this", "game prep" | Pre-session checklist and gap analysis |
-| **Loot Audit** | "audit loot", "treasure distribution", "magic item balance" | Analyze wealth and item progression |
 
 ## Getting Started
 
@@ -63,6 +63,9 @@ These skills provide intelligent assistance for campaign quality and verificatio
 - `set_active_campaign` - Set the active campaign for subsequent operations
 - `get_campaign_details` - Get full campaign info including modules and characters
 - `get_campaign_sources` - Get enabled source books for the campaign
+- `export_campaign` - Export campaign as a shareable archive
+- `import_campaign` - Import a campaign from an archive
+- `preview_archive` - Preview archive contents without importing
 
 ### Module Management
 - `create_module` - Create a new module (adventure chapter)
@@ -135,7 +138,7 @@ Modules support various document types for organizing content:
 - `read_aloud` - Text to read to players
 - `dm_notes` - DM-only information
 - `description` - Location or encounter descriptions
-- `user_document` - Custom documents
+- `custom` - Custom documents
 
 ## Tips
 

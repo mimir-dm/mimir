@@ -1,7 +1,9 @@
 # Magic Variant Implementation Summary
 
+> **Note**: The dedicated 5etools splitter crate was removed in v0.5.0. Source data archives are now pre-processed externally. This document is retained as a reference for understanding the magic variant expansion logic.
+
 ## Overview
-We have successfully implemented the 5etools magic variant expansion system in the Mimir 5etools splitter. This system dynamically generates thousands of magic item variants by combining base items with generic variant templates.
+The 5etools magic variant expansion system was implemented in the Mimir 5etools splitter. This system dynamically generates thousands of magic item variants by combining base items with generic variant templates.
 
 ## Implementation Status
 

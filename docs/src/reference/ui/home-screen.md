@@ -6,38 +6,29 @@ The Home Screen is your starting point in Mimir. From here you can access campai
 
 ## Layout
 
-### Header
+### Header Bar
 
-- **Mimir Logo** - Returns to this screen from anywhere
-- **Search** - Global search across all content
+The header bar is consistent across the application:
+
+- **Mimir Logo** (skull icon) - Returns to the home screen from anywhere
+- **Campaign Selector** - Switch between campaigns
+- **Characters** - View and manage all characters
+- **Reference** - D&D 5e reference materials (monsters, spells, items)
+- **Settings** (gear icon) - Configure application preferences
 
 ### Main Content
 
-The home screen displays your campaigns in a grid layout:
-
-- **Campaign Cards** - Each campaign shows its name and description
-- **Create Campaign** - Button to start a new campaign
-- **Import Campaign** - Import a `.tar.gz` campaign archive
-
-### Sidebar
-
-The left sidebar provides quick access to:
-
-- **Campaigns** - Return to campaign list
-- **Characters** - View and manage all characters
-- **Reference** - D&D 5e reference materials (monsters, spells, items)
-- **PDF** - Generate PDF documents
+The home screen displays the Mimir landing with the floating skull and tagline.
 
 ## Actions
 
 | Action | How To |
 |--------|--------|
-| Open campaign | Click a campaign card |
-| Create campaign | Click "Create Campaign" button |
-| Import campaign | Click "Import Campaign", select `.tar.gz` file |
-| Search | Use the search bar in the header |
-| Access reference | Click "Reference" in sidebar |
-| Generate PDFs | Click "PDF" in sidebar |
+| Open campaign | Campaign Selector dropdown → select campaign |
+| Create campaign | Campaign Selector → + New Campaign |
+| Access characters | Click "Characters" in header |
+| Access reference | Click "Reference" in header |
+| Open settings | Click gear icon in header |
 
 ## See Also
 

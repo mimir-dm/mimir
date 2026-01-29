@@ -1,6 +1,6 @@
 # PDF Export
 
-Mimir generates PDF documents from campaign data using [Typst](https://typst.app/), a modern typesetting system. The PDF export functionality lives in the mimir-dm-print crate and supports character sheets, spell cards, and campaign documents.
+Mimir generates PDF documents from campaign data using [Typst](https://typst.app/), a modern typesetting system. The PDF export functionality lives in the mimir-print crate and supports character sheets, spell cards, and campaign documents.
 
 ## Template System
 

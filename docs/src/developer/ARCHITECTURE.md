@@ -4,28 +4,23 @@ This document provides a high-level overview of the Mimir codebase architecture 
 
 ## Crate Overview
 
-Mimir is organized as a Cargo workspace with 7 crates:
+Mimir is organized as a Cargo workspace with 4 crates:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    mimir-dm (Main App)                  │
-│                   Tauri Desktop Application             │
+│                    mimir (Main App)                      │
+│                   Tauri Desktop Application              │
 └─────────────────────────┬───────────────────────────────┘
                           │
         ┌─────────────────┼─────────────────┐
         ▼                 ▼                 ▼
 ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│ mimir-dm-core │ │ mimir-dm-llm  │ │ mimir-dm-print│
-│  Core Logic   │ │  LLM Layer    │ │  PDF Export   │
+│  mimir-core   │ │  mimir-mcp    │ │  mimir-print  │
+│  Core Logic   │ │  MCP Server   │ │  PDF Export   │
 └───────────────┘ └───────────────┘ └───────────────┘
-
-Standalone Utilities:
-├── mimir-dm-agent-test    (Agent test harness)
-├── mimir-5etools-splitter (Data processing)
-└── mimir-llm-eval         (LLM benchmarking)
 ```
 
-### mimir-dm-core
+### mimir-core
 
 The heart of the system containing:
 - **Models**: Domain types for campaigns, characters, D&D catalog data
@@ -33,21 +28,20 @@ The heart of the system containing:
 - **DAL**: Data Access Layer with repository traits
 - **Migrations**: 35 Diesel migrations for SQLite schema
 
-### mimir-dm-llm
+### mimir-mcp
 
-LLM provider abstraction layer:
-- **Traits**: `LlmProvider` interface for chat operations
-- **Providers**: Ollama implementation (OpenAI-compatible)
-- **Config**: Model configuration, rate limiting
+MCP (Model Context Protocol) server for Claude Code integration:
+- Campaign, module, character, and catalog tools
+- Uses DAL directly for database access
 
-### mimir-dm-print
+### mimir-print
 
 PDF generation using Typst:
 - Character sheets
 - Campaign documents
 - Markdown to Typst conversion
 
-### mimir-dm
+### mimir
 
 Tauri desktop application:
 - **Commands**: 50+ Tauri command handlers
@@ -65,7 +59,7 @@ Tauri desktop application:
      │                ▼                   │
      │         ┌─────────────┐           │
      └─────────│  AppState   │◀──────────┘
-               │  (db, llm)  │
+               │  (db, paths) │
                └─────────────┘
 ```
 
@@ -143,27 +137,6 @@ impl<'a> SpellService<'a> {
 | Character | CharacterService, CharacterCreationService | PC/NPC management |
 | Content | DocumentService, TemplateService | Document management |
 
-## LLM Integration
-
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  LlmService  │───▶│ ChatProcessor│───▶│   Provider   │
-│  (Tauri)     │    │  (Tools)     │    │  (Ollama)    │
-└──────────────┘    └──────────────┘    └──────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │ ToolRegistry │
-                    │ (15+ tools)  │
-                    └─────────────┘
-```
-
-### Tool System
-
-Tools enable the LLM to interact with the application:
-- **Character Tools**: Cast spells, check slots, manage inventory
-- **Query Tools**: Search spells, monsters, items
-- **Campaign Tools**: Access session notes, module info
-
 ## Key Patterns
 
 ### Error Handling
@@ -195,9 +168,6 @@ pub enum DbError {
 pub struct AppState {
     pub db: Arc<DatabaseService>,       // Database connection pool
     pub paths: Arc<AppPaths>,           // Application paths
-    pub context: ContextState,          // Conversation context
-    pub sessions: SessionManager,       // Chat sessions
-    pub llm: Arc<Mutex<Option<LlmService>>>, // LLM service
 }
 ```
 
@@ -205,7 +175,7 @@ pub struct AppState {
 
 ```
 crates/
-├── mimir-dm/                    # Main Tauri app
+├── mimir/                    # Main Tauri app
 │   ├── src/
 │   │   ├── main.rs             # Entry point
 │   │   ├── state.rs            # AppState
@@ -219,7 +189,7 @@ crates/
 │   │       └── tools/          # LLM tool implementations
 │   └── frontend/               # Vue 3 frontend
 │
-├── mimir-dm-core/              # Core business logic
+├── mimir-core/              # Core business logic
 │   ├── src/
 │   │   ├── models/             # Domain models
 │   │   │   ├── catalog/        # D&D entity types
@@ -228,31 +198,26 @@ crates/
 │   │   ├── dal/                # Data access layer
 │   │   └── migrations/         # Database migrations
 │
-├── mimir-dm-llm/               # LLM abstraction
-│   └── src/
-│       ├── providers/          # Provider implementations
-│       └── traits/             # Provider interface
+├── mimir-mcp/                  # MCP server for Claude Code
+│   ├── src/
+│   │   ├── context.rs          # Database context
+│   │   └── tools/              # MCP tool handlers
+│   └── plugin/                 # Claude Code plugin definition
 │
-└── mimir-dm-print/             # PDF generation
+└── mimir-print/                # PDF generation
     └── src/
-        └── templates/          # Typst templates
+        └── sections/           # PDF section renderers
 ```
 
 ## Development Guidelines
 
 ### Adding a New Catalog Entity
 
-1. Create model in `mimir-dm-core/src/models/catalog/`
-2. Add migration in `mimir-dm-core/migrations/`
-3. Create service in `mimir-dm-core/src/services/`
-4. Add Tauri commands in `mimir-dm/src/commands/catalog/`
+1. Create model in `mimir-core/src/models/catalog/`
+2. Add migration in `mimir-core/migrations/`
+3. Create service in `mimir-core/src/services/`
+4. Add Tauri commands in `mimir/src/commands/catalog/`
 5. Update schema.rs after migration
-
-### Adding a New Tool
-
-1. Implement tool trait in `mimir-dm/src/services/tools/`
-2. Register in `ToolRegistry`
-3. Add tests in corresponding `*_test.rs` file
 
 ### Testing
 
@@ -261,7 +226,7 @@ crates/
 cargo test --workspace
 
 # Run core tests only
-cargo test -p mimir-dm-core
+cargo test -p mimir-core
 
 # Run specific test
 cargo test test_name

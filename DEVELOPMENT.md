@@ -41,7 +41,7 @@ sudo apt-get install -y \
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/colliery-io/mimir.git
+git clone https://github.com/mimir-dm/mimir.git
 cd mimir
 ```
 
@@ -56,7 +56,7 @@ This will download and compile all Rust dependencies. First build may take sever
 ### 3. Install Frontend Dependencies
 
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm install
 cd ../../..
 ```
@@ -78,7 +78,7 @@ cargo install tauri-cli
 From the project root:
 
 ```bash
-cd crates/mimir-dm
+cd crates/mimir
 cargo tauri dev
 ```
 
@@ -93,7 +93,7 @@ This will:
 If you only need to work on the UI:
 
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm run dev
 ```
 
@@ -108,7 +108,7 @@ This starts the Vite development server on http://localhost:5173, but Tauri comm
 cargo test --workspace
 
 # Frontend tests
-cd crates/mimir-dm/frontend && npm test
+cd crates/mimir/frontend && npm test
 
 # Run tests with coverage
 npm run test:coverage
@@ -121,8 +121,8 @@ npm run test:coverage
 angreal test unit
 
 # Specific crate tests
-cargo test -p mimir-dm-core
-cargo test -p mimir-dm-llm
+cargo test -p mimir-core
+cargo test -p mimir-print
 
 # Specific test file
 cargo test --test integration_test
@@ -131,7 +131,7 @@ cargo test --test integration_test
 ### Frontend Testing
 
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 
 # Run tests
 npm test
@@ -151,7 +151,7 @@ npm run test:coverage
 ### Full Build
 
 ```bash
-cd crates/mimir-dm
+cd crates/mimir
 cargo tauri build
 ```
 
@@ -160,35 +160,36 @@ This creates platform-specific installers in `target/release/bundle/`.
 ### Frontend Build Only
 
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm run build
 ```
 
-Output goes to `crates/mimir-dm/frontend/dist/`.
+Output goes to `crates/mimir/frontend/dist/`.
 
 ## Project Structure
 
 ```
 mimir/
 ├── crates/                          # Rust workspace
-│   ├── mimir-dm/                   # Main Tauri application
+│   ├── mimir/                      # Main Tauri application
 │   │   ├── src/                    # Rust backend
 │   │   │   ├── main.rs            # Application entry point
 │   │   │   ├── commands/          # Tauri command handlers
-│   │   │   └── services/          # Business logic services
+│   │   │   └── state.rs           # Application state & paths
 │   │   ├── frontend/               # Vue 3 frontend
 │   │   │   ├── src/
 │   │   │   │   ├── app/           # App setup and routing
 │   │   │   │   ├── components/    # Reusable components
-│   │   │   │   ├── features/      # Feature modules
-│   │   │   │   ├── stores/        # Pinia stores
-│   │   │   │   └── services/      # API services
+│   │   │   │   ├── composables/   # Vue composables
+│   │   │   │   ├── views/         # Page views
+│   │   │   │   ├── services/      # API services
+│   │   │   │   ├── shared/        # Shared UI components
+│   │   │   │   └── stores/        # Pinia stores
 │   │   │   └── package.json
-│   │   ├── icons/                  # App icons
 │   │   ├── tauri.conf.json        # Tauri configuration
 │   │   └── Cargo.toml
 │   │
-│   ├── mimir-dm-core/              # Core business logic
+│   ├── mimir-core/                 # Core business logic
 │   │   ├── src/
 │   │   │   ├── models/            # Domain models
 │   │   │   ├── services/          # Business services
@@ -196,20 +197,21 @@ mimir/
 │   │   │   └── migrations/        # Database migrations
 │   │   └── Cargo.toml
 │   │
-│   ├── mimir-dm-llm/               # LLM provider abstraction
+│   ├── mimir-mcp/                  # MCP server for Claude integration
 │   │   ├── src/
-│   │   │   ├── providers/         # LLM providers (Ollama, etc.)
-│   │   │   └── traits/            # Provider traits
+│   │   │   ├── context.rs         # Database context
+│   │   │   └── tools/             # MCP tool handlers
+│   │   ├── plugin/                # Claude Code plugin definition
 │   │   └── Cargo.toml
 │   │
-│   └── mimir-5etools-splitter/     # Data processing utility
+│   └── mimir-print/                # PDF export via Typst
 │       ├── src/
+│       │   └── sections/          # PDF section renderers
 │       └── Cargo.toml
 │
-├── docs/                            # Documentation
+├── docs/                            # Documentation (mdBook)
 │   └── src/                        # mdBook source
 │
-├── data/                            # D&D reference data
 ├── .metis/                         # Project management
 └── Cargo.toml                      # Workspace configuration
 ```
@@ -218,7 +220,7 @@ mimir/
 
 ### Adding a New Tauri Command
 
-1. Create command handler in `crates/mimir-dm/src/commands/`:
+1. Create command handler in `crates/mimir/src/commands/`:
 ```rust
 #[tauri::command]
 pub async fn my_command(param: String) -> Result<String, String> {
@@ -227,7 +229,7 @@ pub async fn my_command(param: String) -> Result<String, String> {
 }
 ```
 
-2. Register in `crates/mimir-dm/src/main.rs`:
+2. Register in `crates/mimir/src/main.rs`:
 ```rust
 .invoke_handler(tauri::generate_handler![
     commands::my_command,
@@ -245,7 +247,7 @@ const result = await invoke<string>('my_command', { param: 'value' });
 ### Adding a Database Migration
 
 ```bash
-cd crates/mimir-dm-core
+cd crates/mimir-core
 
 # Create new migration
 diesel migration generate migration_name
@@ -262,7 +264,7 @@ diesel migration redo
 ### Adding a Frontend Component
 
 ```bash
-cd crates/mimir-dm/frontend/src/components
+cd crates/mimir/frontend/src/components
 # Create MyComponent.vue
 ```
 
@@ -286,23 +288,6 @@ const message = ref('Hello');
 </style>
 ```
 
-### Working with LLM Integration
-
-```bash
-# Install and start Ollama
-brew install ollama  # macOS
-# or download from ollama.ai
-
-# Start Ollama server
-ollama serve
-
-# Pull a model
-ollama pull llama3
-
-# Test in Mimir
-# LLM features will now be available in the UI
-```
-
 ## Troubleshooting
 
 ### Build Errors
@@ -314,7 +299,7 @@ ollama pull llama3
 
 **Frontend build fails**
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 rm -rf node_modules package-lock.json
 npm install
 ```
@@ -330,10 +315,10 @@ cargo build
 **Database migration errors**
 ```bash
 # Delete development database (macOS)
-rm -rf ~/Library/Application\ Support/com.mimir.mimir-test/
+rm -rf ~/Library/Application\ Support/com.mimir.app/dev/
 
 # Delete development database (Linux)
-rm -rf ~/.local/share/com.mimir.mimir-test/
+rm -rf ~/.local/share/com.mimir.app/dev/
 
 # Restart the app to recreate
 ```
@@ -350,7 +335,7 @@ Force development mode with environment variable:
 MIMIR_DEV=1 cargo tauri dev
 ```
 
-This uses a separate test database and enables debug logging.
+This uses a separate database at `com.mimir.app/dev/data/mimir.db` and enables debug logging.
 
 ## Code Style and Linting
 
@@ -373,7 +358,7 @@ cargo clippy --fix
 ### TypeScript/Vue
 
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 
 # Lint
 npm run lint
@@ -406,7 +391,7 @@ Use browser DevTools:
 
 ```bash
 # Connect to development database (macOS)
-sqlite3 ~/Library/Application\ Support/com.mimir.mimir-test/mimir.db
+sqlite3 ~/Library/Application\ Support/com.mimir.app/dev/data/mimir.db
 
 # Run SQL queries
 .tables
@@ -423,6 +408,6 @@ SELECT * FROM campaigns;
 
 ## Getting Help
 
-- Check existing [GitHub Issues](https://github.com/colliery-io/mimir/issues)
+- Check existing [GitHub Issues](https://github.com/mimir-dm/mimir/issues)
 - Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide
 - Review crate-specific READMEs in `crates/*/README.md`

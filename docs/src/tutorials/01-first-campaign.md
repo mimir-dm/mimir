@@ -13,7 +13,7 @@ This tutorial walks you through creating your first campaign in Mimir. By the en
 ## Prerequisites
 
 - Mimir installed and running
-- A folder on your computer where you want to store campaign files
+- No additional setup required
 
 ## Step 1: Launch Mimir
 
@@ -24,7 +24,6 @@ When you launch Mimir, you'll see the home screen with the floating Mimir skull 
 The header bar contains:
 - **Mimir logo** (skull icon) - Click to return home
 - **Campaign selector** - Switch between campaigns
-- **Players** - Manage your player roster
 - **Characters** - Create and manage PCs and NPCs
 - **Reference** - Open the D&D 5e reference library
 - **Settings** (gear icon) - Configure application preferences
@@ -44,7 +43,7 @@ Either method opens the **Create New Campaign** form.
 
 ## Step 3: Fill in Campaign Details
 
-The campaign creation form has three fields:
+The campaign creation form has two fields:
 
 ### Campaign Name (Required)
 Enter a descriptive name for your campaign. This appears throughout Mimir and in exported materials.
@@ -56,21 +55,11 @@ Add notes about your campaign concept, themes, or setting. This is for your refe
 
 **Example:** "Gothic horror campaign set in the domain of Barovia. Players are trapped and must defeat the vampire Strahd von Zarovich."
 
-### Campaign Directory Location (Required)
-Choose where Mimir stores your campaign files (maps, documents, exports). Click **Browse...** to select a folder.
-
-Mimir creates a subdirectory using a kebab-case version of your campaign name. For example:
-- Campaign name: "Curse of Strahd"
-- Directory created: `/your-path/curse-of-strahd/`
-
-> **Tip:** Keep campaign folders organized in a parent "Campaigns" directory for easy backup and management.
-
 ## Step 4: Create the Campaign
 
 Click **Create Campaign**. Mimir will:
-1. Create the campaign directory structure
-2. Initialize the campaign database entry
-3. Redirect you to the Campaign Dashboard
+1. Create the campaign in the database
+2. Redirect you to the Campaign Dashboard
 
 ## Step 5: Explore the Campaign Dashboard
 

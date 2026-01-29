@@ -41,4 +41,4 @@ Generate circular token images:
 ## See Also
 
 - [Upload a Map](./upload-map.md)
-- [Export to PDF](../campaigns/export-campaign-pdf.md)
+- [Export Campaign](../campaigns/export-campaign.md)

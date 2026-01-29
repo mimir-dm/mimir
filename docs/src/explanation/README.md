@@ -16,9 +16,6 @@ How Mimir's stage-based document system helps you track preparation progress.
 ### [Vision System](./vision-system.md)
 How D&D 5e vision rules (darkvision, light sources, fog of war) work in Mimir.
 
-### [Player Display Architecture](./player-display-architecture.md)
-How Mimir synchronizes between the DM view and the player display.
-
 ---
 
 These explanations complement the practical [How-To Guides](../how-to/README.md) by providing deeper context.

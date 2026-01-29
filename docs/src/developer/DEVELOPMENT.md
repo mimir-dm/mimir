@@ -6,7 +6,7 @@ This comprehensive guide covers everything you need to know about developing Mim
 
 - [Main Development Guide](../../DEVELOPMENT.md) - Quick reference for development
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
-- [GitHub Repository](https://github.com/mimir-dm/mimir)
+- [GitHub Repository](https://github.com/mimir/mimir)
 
 ## Table of Contents
 
@@ -170,14 +170,14 @@ Settings:
 
 ```bash
 # Clone repository
-git clone https://github.com/mimir-dm/mimir.git
+git clone https://github.com/mimir/mimir.git
 cd mimir
 
 # Build Rust workspace
 cargo build
 
 # Install frontend dependencies
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm install
 cd ../../..
 ```
@@ -186,11 +186,11 @@ cd ../../..
 
 ```bash
 # Run with hot reload (from project root)
-cd crates/mimir-dm
+cd crates/mimir
 cargo tauri dev
 
 # Or using installed tauri-cli
-cd crates/mimir-dm
+cd crates/mimir
 tauri dev
 ```
 
@@ -203,7 +203,7 @@ This starts:
 
 ```bash
 # Build optimized release
-cd crates/mimir-dm
+cd crates/mimir
 cargo tauri build
 
 # Output locations:
@@ -220,10 +220,10 @@ cargo tauri build
 mimir/
 ├── Cargo.toml                 # Workspace configuration
 ├── crates/
-│   ├── mimir-dm/             # Main application
-│   ├── mimir-dm-core/        # Business logic
-│   ├── mimir-dm-llm/         # LLM abstraction
-│   └── mimir-5etools-splitter/ # Data processing
+│   ├── mimir/             # Main application
+│   ├── mimir-core/        # Business logic
+│   ├── mimir-mcp/         # MCP server for Claude Code
+│   └── mimir-print/       # PDF generation
 ├── docs/                      # Documentation
 ├── data/                      # D&D reference data
 └── .metis/                   # Project management
@@ -242,7 +242,7 @@ mimir/
 - Services: Application-level business logic
 - State: Application state management
 
-**Domain Layer (mimir-dm-core)**
+**Domain Layer (mimir-core)**
 - Models: Domain entities
 - Services: Business logic
 - DAL: Data access layer
@@ -283,14 +283,14 @@ git checkout -b feature/my-feature
 ```
 
 2. **Implement Feature**
-- Add backend logic in `mimir-dm-core`
-- Add Tauri command in `mimir-dm/src/commands`
-- Add frontend UI in `mimir-dm/frontend/src`
+- Add backend logic in `mimir-core`
+- Add Tauri command in `mimir/src/commands`
+- Add frontend UI in `mimir/frontend/src`
 
 3. **Test Locally**
 ```bash
 cargo test --workspace
-cd crates/mimir-dm/frontend && npm test
+cd crates/mimir/frontend && npm test
 ```
 
 4. **Commit and Push**
@@ -320,13 +320,13 @@ git push origin feature/my-feature
 
 1. **Create Vue Component**
 ```bash
-# In crates/mimir-dm/frontend/src/views/
+# In crates/mimir/frontend/src/views/
 touch MyNewView.vue
 ```
 
 2. **Add Route**
 ```typescript
-// In crates/mimir-dm/frontend/src/app/router.ts
+// In crates/mimir/frontend/src/app/router.ts
 {
   path: '/my-new-page',
   name: 'MyNewPage',
@@ -344,7 +344,7 @@ touch MyNewView.vue
 
 1. **Create Command Function**
 ```rust
-// In crates/mimir-dm/src/commands/my_commands.rs
+// In crates/mimir/src/commands/my_commands.rs
 #[tauri::command]
 pub async fn my_new_command(
     db_service: State<'_, Arc<DatabaseService>>,
@@ -360,7 +360,7 @@ pub async fn my_new_command(
 
 2. **Register Command**
 ```rust
-// In crates/mimir-dm/src/main.rs
+// In crates/mimir/src/main.rs
 .invoke_handler(tauri::generate_handler![
     commands::my_new_command,
     // ... other commands
@@ -416,7 +416,7 @@ fn test_database_workflow() {
 cargo test --workspace
 
 # Specific crate
-cargo test -p mimir-dm-core
+cargo test -p mimir-core
 
 # Specific test
 cargo test test_campaign_creation
@@ -432,7 +432,7 @@ angreal test unit
 
 #### Component Tests
 ```typescript
-// In crates/mimir-dm/frontend/src/components/__tests__/
+// In crates/mimir/frontend/src/components/__tests__/
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import MyComponent from '../MyComponent.vue';
@@ -449,7 +449,7 @@ describe('MyComponent', () => {
 
 #### Running Frontend Tests
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 
 # Run tests
 npm test
@@ -490,7 +490,7 @@ error!("Operation failed: {}", err);
       "request": "launch",
       "name": "Debug Tauri",
       "cargo": {
-        "args": ["build", "--manifest-path=crates/mimir-dm/Cargo.toml"]
+        "args": ["build", "--manifest-path=crates/mimir/Cargo.toml"]
       },
       "cwd": "${workspaceFolder}"
     }
@@ -517,7 +517,7 @@ console.error('Error:', error);
 
 ```bash
 # Open development database (macOS)
-sqlite3 ~/Library/Application\ Support/com.mimir.mimir-test/mimir.db
+sqlite3 ~/Library/Application\ Support/com.mimir.app/dev/mimir.db
 
 # Common commands
 .tables                # List tables
@@ -532,7 +532,7 @@ SELECT * FROM campaigns;  # Query data
 
 #### Creating a Migration
 ```bash
-cd crates/mimir-dm-core
+cd crates/mimir-core
 diesel migration generate add_new_feature
 
 # Edit migrations/YYYY-MM-DD-HHMMSS_add_new_feature/up.sql
@@ -553,21 +553,21 @@ diesel migration redo
 
 #### Development Database Location
 
-- **macOS**: `~/Library/Application Support/com.mimir.mimir-test/mimir.db`
-- **Linux**: `~/.local/share/com.mimir.mimir-test/mimir.db`
-- **Windows**: `%APPDATA%\com.mimir.mimir-test\mimir.db`
+- **macOS**: `~/Library/Application Support/com.mimir.app/dev/mimir.db`
+- **Linux**: `~/.local/share/com.mimir.app/dev/mimir.db`
+- **Windows**: `%APPDATA%\com.mimir.app/dev\mimir.db`
 
 ### Resetting Development Database
 
 ```bash
 # macOS
-rm -rf ~/Library/Application\ Support/com.mimir.mimir-test/
+rm -rf ~/Library/Application\ Support/com.mimir.app/dev/
 
 # Linux
-rm -rf ~/.local/share/com.mimir.mimir-test/
+rm -rf ~/.local/share/com.mimir.app/dev/
 
 # Windows
-# Delete folder: %APPDATA%\com.mimir.mimir-test\
+# Delete folder: %APPDATA%\com.mimir.app/dev\
 
 # Restart app to recreate
 cargo tauri dev
@@ -656,7 +656,7 @@ await appWindow.maximize();
 cargo update
 
 # Frontend dependencies
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm update
 ```
 
@@ -667,7 +667,7 @@ npm update
 cargo fmt
 
 # TypeScript/Vue
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm run lint
 ```
 
@@ -683,7 +683,7 @@ cargo clippy --fix
 ### Type Checking Frontend
 
 ```bash
-cd crates/mimir-dm/frontend
+cd crates/mimir/frontend
 npm run type-check
 ```
 
@@ -713,6 +713,6 @@ cargo build --release --profile=profiling
 ## Getting Help
 
 - Check [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines
-- Search [GitHub Issues](https://github.com/mimir-dm/mimir/issues)
+- Search [GitHub Issues](https://github.com/mimir/mimir/issues)
 - Review crate READMEs for detailed architecture info
 - Ask questions in pull request comments

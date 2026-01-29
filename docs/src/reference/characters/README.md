@@ -46,6 +46,6 @@ Casting uses the `cast_spell` command with character ID, spell ID, and the slot 
 
 The frontend provides a character creation wizard that guides users through race and class selection, ability score assignment, and initial equipment choices. The character sheet view displays all statistics, abilities, and equipment in a format familiar to tabletop players. Spell management includes a preparation interface supporting drag-and-drop organization of known spells into prepared slots.
 
-## LLM Tool Integration
+## MCP Integration
 
-The AI assistant accesses character data through dedicated tools that wrap the Tauri commands. Natural language requests like "What are Thorin's hit points?" or "Cast fireball at 4th level" are translated into appropriate tool calls. The assistant can create characters, modify statistics, manage spells, and handle rests through conversational interaction. See the LLM Tools documentation for the complete list of character-related tools.
+Character data is accessible through the Mimir MCP server for Claude Code integration. The MCP tools support listing characters, viewing details, creating PCs and NPCs, and managing inventory. See the [MCP Plugin README](https://github.com/mimir-dm/mimir/tree/main/crates/mimir-mcp/plugin) for setup instructions.

@@ -12,11 +12,11 @@ Rich text editing uses Tiptap 3, a headless editor built on ProseMirror. The con
 
 ## Directory Structure
 
-The src/ directory contains an app/ folder for bootstrap code including the Vue app initialization in main.ts, the root App.vue component, and the router configuration. The features/ folder contains nine feature modules: campaigns, modules, sessions, chat, characters, players, sources, templates, and context. Each feature is self-contained with its own views, components, and composables.
+The src/ directory contains an app/ folder for bootstrap code including the Vue app initialization in main.ts, the root App.vue component, and the router configuration. The features/ folder contains four feature modules: campaigns, modules, characters, and sources. Each feature is self-contained with its own views, components, and composables.
 
 Shared infrastructure lives in the shared/ directory with reusable components organized into layout/, ui/, and catalog/ subdirectories. Shared composables provide common logic patterns, shared types define interfaces used across features, and shared utils contain helper functions.
 
-The stores/ directory contains Pinia stores for global state, with the chat store being particularly complex due to its composition of multiple sub-stores. The services/ directory holds business logic services that coordinate between stores and the Tauri backend. Root-level types/ contains the main type definitions exported for use throughout the application.
+The stores/ directory contains Pinia stores for global state (campaigns, characters, theme). The services/ directory holds business logic services (DocumentService, ModuleService, PrintService) that coordinate between stores and the Tauri backend. Root-level types/ contains the main type definitions exported for use throughout the application.
 
 ## Feature Organization
 
@@ -46,8 +46,6 @@ export const useCampaignsStore = defineStore('campaigns', () => {
   return { campaigns, loading, error, loadCampaigns }
 })
 ```
-
-The chat store demonstrates advanced composition by creating multiple sub-stores for messages, sessions, tokens, todos, and tool confirmations. The parent store coordinates initialization and provides a unified API while keeping internal concerns separated.
 
 ## Tauri Integration
 

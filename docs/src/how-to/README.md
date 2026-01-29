@@ -7,7 +7,7 @@ These practical guides help you accomplish specific tasks in Mimir. Unlike tutor
 ### Campaigns
 - [Create a Campaign](./campaigns/create-campaign.md)
 - [Manage Documents](./campaigns/manage-documents.md)
-- [Export to PDF](./campaigns/export-campaign-pdf.md)
+- [Export Campaign](./campaigns/export-campaign.md)
 
 ### Maps
 - [Upload a Map](./maps/upload-map.md)
@@ -32,11 +32,6 @@ These practical guides help you accomplish specific tasks in Mimir. Unlike tutor
 - [Manage Encounters](./play-mode/manage-encounters.md)
 - [Fog of War](./play-mode/fog-of-war.md)
 - [Use Player Display](./play-mode/use-player-display.md)
-
-### Reference Search
-- [Search Monsters](./reference-search/search-monsters.md)
-- [Search Spells](./reference-search/search-spells.md)
-- [Search Items](./reference-search/search-items.md)
 
 ---
 

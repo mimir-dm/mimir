@@ -4,7 +4,7 @@
   <img src="assets/hyper-mimir.png" alt="Mimir" width="512" height="512">
 </p>
 
-Mimir is a local-first desktop application for managing D&D campaigns. Built with Rust and Tauri, it provides campaign workflow management, a searchable D&D 5e catalog, AI assistance via local LLMs, and PDF export capabilities. All data stays on your machine.
+Mimir is a local-first desktop application for managing D&D campaigns. Built with Rust and Tauri, it provides campaign workflow management, a searchable D&D 5e catalog, and PDF export capabilities. All data stays on your machine.
 
 ## Installation
 
@@ -21,16 +21,16 @@ Mimir includes a [Claude Code](https://claude.ai/code) plugin for AI-assisted ca
 
 **Install from GitHub:**
 ```bash
-claude plugins add github:colliery/mimir/crates/mimir-dm-mcp/plugin
+claude plugins add github:mimir-dm/mimir/crates/mimir-mcp/plugin
 ```
 
 **Or manually:**
 ```bash
 # Build the MCP server
-cargo build --release -p mimir-dm-mcp
+cargo build --release -p mimir-mcp
 
 # Set your database path
-export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.mimir/mimir.db"
+export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db"
 ```
 
 Once installed, use natural language or slash commands:
@@ -38,7 +38,7 @@ Once installed, use natural language or slash commands:
 - `/create-module "The Haunted Manor" mystery` - Create a new module
 - `/search-monsters undead CR 5` - Search the monster catalog
 
-See [plugin documentation](crates/mimir-dm-mcp/plugin/README.md) for full setup instructions.
+See [plugin documentation](crates/mimir-mcp/plugin/README.md) for full setup instructions.
 
 ## Documentation
 

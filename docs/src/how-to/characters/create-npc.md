@@ -8,29 +8,14 @@ Create non-player characters for your campaigns and modules.
 2. Click **+ New Character**
 3. Select **NPC**
 
-## NPC Properties
+## NPC Creation
 
-NPCs have simplified creation:
+NPC creation is simplified — only a name is required:
 
-- **Name** - Character name
-- **Role** - Their function (shopkeeper, quest giver, villain)
-- **Description** - Physical appearance, personality
-- **Notes** - Background, secrets, motivations
+1. Enter the NPC **Name**
+2. Click **Create**
 
-## Quick NPC Creation
-
-For NPCs that don't need full stats:
-1. Enter name and role
-2. Add a brief description
-3. Skip the full character wizard
-4. Create immediately
-
-## NPCs from Stat Blocks
-
-For combat-ready NPCs:
-1. Start with a monster stat block
-2. Customize name and appearance
-3. Add to module as an NPC token
+Additional details like race, class, role, and location can be edited after creation on the character detail view.
 
 ## Assigning NPCs
 

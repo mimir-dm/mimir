@@ -194,6 +194,8 @@ Properties that are NOT inherited:
 }
 ```
 
+> **Note**: The dedicated 5etools splitter crate was removed in v0.5.0. Source data archives are now pre-processed externally. This document is retained as a reference for understanding the archive format and item processing logic.
+
 ## Implementation Considerations for Splitter
 
 For the Mimir 5etools splitter, we need to:

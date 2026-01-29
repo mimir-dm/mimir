@@ -38,7 +38,7 @@ Available for:
 
 ### Archive Export
 Campaign backup format:
-- ZIP file containing all campaign data
+- `.tar.gz` archive containing all campaign data
 - Maps, documents, characters
 - Use for backup or transfer
 
@@ -48,17 +48,6 @@ Characters are stored in the Mimir database:
 - Not exported as separate files
 - Use campaign archive for backup
 - PDF export for printable sheets
-
-## Campaign Directory
-
-Each campaign creates a directory structure:
-```
-campaign-name/
-├── maps/           # Uploaded map images
-├── tokens/         # Token images
-├── exports/        # Generated PDFs
-└── notes/          # Session note files
-```
 
 ## Import Sources
 
@@ -78,5 +67,5 @@ Content is stored in the catalog database.
 
 ### Backup
 1. Use Export Archive regularly
-2. Store ZIP files externally
+2. Store `.tar.gz` files externally
 3. Import on new installations

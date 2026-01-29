@@ -17,22 +17,16 @@ Each module has its own maps, monsters, NPCs, and documents.
 
 1. Open your campaign dashboard
 2. Go to the **Modules** tab
-3. Click the **+** button next to "Modules"
-4. Enter the module name
+3. Click the **+** button
+4. Fill in the module details:
+   - **Module Name** - Descriptive title for the adventure
+   - **Module Type** - Select type (Standard Adventure, Mystery, Dungeon Crawl, Heist, Horror, Political Intrigue)
+   - **Description** (optional) - Notes about the module
 5. Click **Create**
-
-## Module Properties
-
-- **Module Number** - Automatically assigned (1, 2, 3...)
-- **Name** - Descriptive title for the adventure
 
 ## After Creation
 
-Your new module appears in the sidebar. Click it to see:
-- Documents section
-- NPCs section
-- Maps section
-- Dangers section
+Your new module appears in the modules table with action buttons for Play, Open, and PDF export.
 
 ## Organizing Modules
 

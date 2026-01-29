@@ -6,8 +6,8 @@ Welcome to the Mimir contributor guide! This comprehensive guide covers everythi
 
 - [Main Contributing Guide](../../CONTRIBUTING.md) - Quick reference for contributors
 - [Development Setup](DEVELOPMENT.md) - Detailed development environment setup
-- [GitHub Repository](https://github.com/mimir-dm/mimir)
-- [Issue Tracker](https://github.com/mimir-dm/mimir/issues)
+- [GitHub Repository](https://github.com/mimir/mimir)
+- [Issue Tracker](https://github.com/mimir/mimir/issues)
 
 ## Table of Contents
 
@@ -256,7 +256,7 @@ describe('CampaignCard', () => {
 ```bash
 # All tests
 cargo test --workspace
-cd crates/mimir-dm/frontend && npm test
+cd crates/mimir/frontend && npm test
 
 # Unit tests only
 angreal test unit
@@ -340,7 +340,7 @@ Mimir follows a clean architecture pattern with clear separation of concerns:
 └─────────────────┼───────────────────────┘
                   │
 ┌─────────────────▼───────────────────────┐
-│      mimir-dm-core (Business Logic)    │
+│      mimir-core (Business Logic)    │
 │  ┌──────────────────────────────────┐  │
 │  │ Services, DAL, Domain Models     │  │
 │  └──────────────┬───────────────────┘  │
@@ -353,12 +353,10 @@ Mimir follows a clean architecture pattern with clear separation of concerns:
 
 ### Key Crates
 
-- **mimir-dm** - Tauri app shell and command handlers
-- **mimir-dm-core** - Business logic, domain models, database
-- **mimir-dm-llm** - LLM provider abstraction
-- **mimir-5etools-splitter** - Data processing utility
-
-See individual crate READMEs for detailed information.
+- **mimir** - Tauri app shell and command handlers
+- **mimir-core** - Business logic, domain models, database
+- **mimir-mcp** - MCP server for Claude Code integration
+- **mimir-print** - PDF generation via Typst
 
 ## Design Principles
 

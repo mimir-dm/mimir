@@ -10,33 +10,26 @@ Create player characters using the character creation wizard.
 
 ## Character Creation Wizard
 
-The wizard guides you through:
+The wizard guides you through five steps:
 
-### Step 1: Basic Info
+### Step 1: Basics
 - Character name
 - Player name (who plays this character)
-- Background
 
 ### Step 2: Race
-- Select race (Human, Elf, Dwarf, etc.)
-- Choose racial traits and options
-- Set ability score increases
+- Select race from the campaign's enabled sources
+- Race determines racial traits and ability score options
 
 ### Step 3: Class
 - Select class (Fighter, Wizard, Rogue, etc.)
-- Choose subclass (if starting above level 1)
-- Select class features
+- Set starting level
+- Choose subclass if applicable
 
 ### Step 4: Abilities
-- Roll or use standard array
-- Assign ability scores
-- Calculate modifiers
+- Set ability scores
+- See computed modifiers
 
-### Step 5: Equipment
-- Starting equipment from class/background
-- Add additional items
-
-### Step 6: Review
+### Step 5: Review
 - Review all selections
 - Make final adjustments
 - Click **Create**

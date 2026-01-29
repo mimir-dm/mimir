@@ -22,7 +22,7 @@ The cross-reference system supports spells, creatures, items, conditions, action
 
 ## Storage Location
 
-Imported books are stored in the application data directory alongside the SQLite database. On macOS this is `~/Library/Application Support/com.mimir.mimir/`, with equivalent locations on Windows and Linux. Each book occupies its own subdirectory under books/, preserving the original archive structure for image serving and content retrieval.
+Imported books are stored in the application data directory alongside the SQLite database. On macOS this is `~/Library/Application Support/com.mimir.app/`, with equivalent locations on Windows and Linux. Each book occupies its own subdirectory under books/, preserving the original archive structure for image serving and content retrieval.
 
 ## Tauri Commands
 

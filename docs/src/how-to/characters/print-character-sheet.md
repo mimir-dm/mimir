@@ -10,30 +10,35 @@ Export character sheets to PDF for printing.
 4. Configure print options
 5. Save the PDF
 
-## What's Included
-
-The character sheet PDF contains:
-- Character name and basic info
-- Ability scores and modifiers
-- Skills and proficiencies
-- Combat stats (AC, HP, attacks)
-- Features and traits
-- Equipment and inventory
-- Spells (if applicable)
-
 ## Print Options
 
-- **Page Size** - Letter, A4, etc.
-- **Include Inventory** - List all items
-- **Include Spells** - Spell list with descriptions
-- **Include Notes** - Character backstory and notes
+The export dialog lets you select which sections to include:
+
+- **Compact Sheet** (2-page) - Stats, combat, skills, equipment summary
+- **Spell Cards** - Printable cards for all spells (if the character is a caster)
+
+Both options are enabled by default. At least one must be selected to export.
+
+## Compact Sheet
+
+The 2-page character sheet includes:
+- Character name, race, class, and level
+- Ability scores and modifiers
+- Combat stats (AC, HP, speed, initiative)
+- All 18 skills with computed bonuses
+- Saving throws
+- Attacks and equipment
+- Proficiencies
+- Personality traits, ideals, bonds, flaws
+- Spellcasting info and spell slots (if applicable)
+- Full inventory
+- Currency
 
 ## Spell Cards
 
-For spellcasters:
-1. Enable spell card export
-2. Each spell becomes a printable card
-3. Cut and use as physical references
+For spellcasters, spell cards are printed in a 3x3 grid:
+- Each spell gets a card with name, level, school, casting time, range, components, and description
+- Cut and use as physical references during play
 
 ## Tips
 
@@ -45,4 +50,4 @@ For spellcasters:
 ## See Also
 
 - [Create a Player Character](./create-pc.md)
-- [Export to PDF](../campaigns/export-campaign-pdf.md)
+- [Export Campaign](../campaigns/export-campaign.md)

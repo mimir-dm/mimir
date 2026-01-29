@@ -11,8 +11,8 @@ Enter Play Mode to run your game session.
 
 1. Open your campaign
 2. Go to the **Modules** tab
-3. Select your module from the sidebar
-4. Click the **Play** button in the module header
+3. Find your module in the modules table
+4. Click the **Play** button in the module's row
 
 You're now in Play Mode.
 

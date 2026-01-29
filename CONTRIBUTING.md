@@ -40,12 +40,12 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed instructions on setting up you
 Quick start:
 ```bash
 # Clone the repository
-git clone https://github.com/colliery-io/mimir.git
+git clone https://github.com/mimir-dm/mimir.git
 cd mimir
 
 # Install dependencies
 cargo build
-cd crates/mimir-dm/frontend && npm install
+cd crates/mimir/frontend && npm install
 
 # Run in development mode
 cd ../.. && cargo tauri dev
@@ -82,9 +82,9 @@ Before submitting a pull request:
 cargo test --workspace
 
 # Run frontend tests
-cd crates/mimir-dm/frontend && npm test
+cd crates/mimir/frontend && npm test
 
-# Run unit tests only (faster)
+# Run unit tests only (faster, via angreal)
 angreal test unit
 ```
 
@@ -123,27 +123,19 @@ Added feature
 ```
 mimir/
 ├── crates/                      # Rust workspace
-│   ├── mimir-dm/               # Main Tauri app
-│   ├── mimir-dm-core/          # Core business logic
-│   ├── mimir-dm-llm/           # LLM abstraction
-│   └── mimir-5etools-splitter/ # Data processing utility
-├── docs/                        # Documentation
-├── data/                        # D&D reference data
+│   ├── mimir/                  # Main Tauri app (lib name: mimir_lib)
+│   ├── mimir-core/             # Core business logic, DAL, models
+│   ├── mimir-mcp/              # MCP server for Claude integration
+│   └── mimir-print/            # PDF export / Typst rendering
+├── docs/                        # Documentation (mdBook)
 └── .metis/                     # Project management
 ```
-
-See individual crate READMEs for detailed architecture information:
-- [mimir-dm](crates/mimir-dm/README.md)
-- [mimir-dm-core](crates/mimir-dm-core/README.md)
-- [mimir-dm-llm](crates/mimir-dm-llm/README.md)
-- [mimir-5etools-splitter](crates/mimir-5etools-splitter/README.md)
 
 ## Documentation
 
 - Update relevant documentation when adding or changing features
 - Keep README files up to date
 - Add doc comments to new public APIs
-- Update the changelog for notable changes
 
 ## Questions?
 
@@ -154,4 +146,4 @@ If you have questions about contributing, feel free to:
 
 ## License
 
-By contributing to Mimir, you agree that your contributions will be licensed under the same license as the project (Apache-2.0 OR MIT).
+By contributing to Mimir, you agree that your contributions will be licensed under the same license as the project (MIT).
