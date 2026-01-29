@@ -32,3 +32,9 @@ pub fn init_database(db_url: &str) -> Result<SqliteConnection, Box<dyn std::erro
 
     Ok(conn)
 }
+
+/// Create an in-memory SQLite connection for testing.
+#[cfg(test)]
+pub fn test_connection() -> SqliteConnection {
+    init_database(":memory:").expect("Failed to create test database")
+}

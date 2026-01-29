@@ -8,6 +8,7 @@ description = "Mimir v0.5 core library - models, services, and data access"
 # Database
 diesel = { workspace = true }
 diesel_migrations = { workspace = true }
+libsqlite3-sys = { workspace = true }
 
 # Serialization
 serde = { workspace = true }

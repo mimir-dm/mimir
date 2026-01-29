@@ -74,10 +74,10 @@ mod tests {
     use crate::models::campaign::{NewCampaign, NewCampaignAsset, NewMap};
 
     fn setup_test_map(conn: &mut SqliteConnection) -> String {
-        let campaign = NewCampaign::new("camp-test", "Test Campaign", "Default");
+        let campaign = NewCampaign::new("camp-test", "Test Campaign");
         insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        let asset = NewCampaignAsset::new("asset-test", "camp-test", "test.uvtt", "application/octet-stream", "/path/to/test.uvtt");
+        let asset = NewCampaignAsset::for_campaign("asset-test", "camp-test", "test.uvtt", "application/octet-stream", "/path/to/test.uvtt");
         insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
         let map = NewMap::for_campaign("map-test", "camp-test", "Test Map", "asset-test");
