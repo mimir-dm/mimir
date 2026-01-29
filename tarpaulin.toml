@@ -3,7 +3,7 @@
 
 [general]
 # Workspace members to cover (exclude the Tauri UI crate)
-packages = ["mimir-dm-core", "mimir-dm-llm"]
+packages = ["mimir-core"]
 
 # Run tests single-threaded to avoid SQLite locking issues
 implicit-test-threads = true

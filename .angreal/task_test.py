@@ -17,7 +17,7 @@ import sys
 
 # Get the project root directory
 PROJECT_ROOT = Path(angreal.get_root()).parent
-FRONTEND_DIR = PROJECT_ROOT / "crates" / "mimir-dm" / "frontend"
+FRONTEND_DIR = PROJECT_ROOT / "crates" / "mimir" / "frontend"
 
 # Create a test command group
 test = angreal.command_group(name="test", about="Testing commands for the Mimir workspace")
@@ -50,7 +50,7 @@ def unit(watch: bool = False, core: bool = False, ui: bool = False, all: bool = 
     if run_core:
         print("\nRunning Rust tests (unit + integration) for core crates...")
         result = subprocess.run(
-            ["cargo", "test", "--workspace", "--exclude", "mimir-dm", "--exclude", "mimir-dm-agent-test", "--", "--test-threads=1"],
+            ["cargo", "test", "--workspace", "--exclude", "mimir", "--", "--test-threads=1"],
             cwd=PROJECT_ROOT,
             capture_output=False
         )
@@ -159,9 +159,9 @@ def coverage(core: bool = False, ui: bool = False, all: bool = False, open: bool
         if result.returncode != 0:
             failures.append("UI coverage")
         else:
-            print("UI coverage report: crates/mimir-dm/frontend/coverage/index.html")
+            print("UI coverage report: crates/mimir/frontend/coverage/index.html")
             if open:
-                subprocess.run(["open", "crates/mimir-dm/frontend/coverage/index.html"], cwd=PROJECT_ROOT)
+                subprocess.run(["open", "crates/mimir/frontend/coverage/index.html"], cwd=PROJECT_ROOT)
     
     # Summary
     if not failures:

@@ -46,14 +46,14 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: install frontend dependencies
-        working-directory: ./crates/mimir-dm/frontend
+        working-directory: ./crates/mimir/frontend
         run: npm ci
 
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: ./crates/mimir-dm
+          projectPath: ./crates/mimir
           args: ${{ matrix.args }}
 
   test-other-crates:
@@ -95,7 +95,7 @@ jobs:
 
       - name: Run Rust coverage
         run: |
-          cargo tarpaulin -p mimir-dm-core -p mimir-dm-llm \
+          cargo tarpaulin -p mimir-core \
             --out Html --out Xml \
             --output-dir target/coverage \
             --ignore-tests \
