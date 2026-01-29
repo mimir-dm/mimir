@@ -317,20 +317,22 @@ fn truncate_name(name: &str, max_len: usize) -> String {
 /// Detect image format from magic bytes
 #[allow(dead_code)]
 fn detect_image_format(bytes: &[u8]) -> &'static str {
+    if bytes.len() >= 3 {
+        // JPEG magic: FF D8 FF
+        if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
+            return "jpg";
+        }
+    }
     if bytes.len() >= 8 {
         // PNG magic: 89 50 4E 47 0D 0A 1A 0A
         if bytes.starts_with(&[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) {
             return "png";
         }
-        // JPEG magic: FF D8 FF
-        if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
-            return "jpg";
-        }
+    }
+    if bytes.len() >= 12 {
         // WebP magic: RIFF....WEBP
-        if bytes.starts_with(&[0x52, 0x49, 0x46, 0x46]) && bytes.len() >= 12 {
-            if &bytes[8..12] == b"WEBP" {
-                return "webp";
-            }
+        if bytes.starts_with(&[0x52, 0x49, 0x46, 0x46]) && &bytes[8..12] == b"WEBP" {
+            return "webp";
         }
     }
     "png" // Default to PNG

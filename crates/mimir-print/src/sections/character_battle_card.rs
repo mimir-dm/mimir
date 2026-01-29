@@ -516,7 +516,7 @@ fn render_tens_and_ones(hp: i32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sections::character::{ClassInfo, InventoryItem};
+    use crate::sections::character::{ClassInfo, InventoryItem, Proficiencies};
 
     fn test_character() -> CharacterData {
         CharacterData {
@@ -555,20 +555,44 @@ mod tests {
                     quantity: 1,
                     equipped: true,
                     attuned: false,
+                    item_type: Some("M".to_string()),
+                    damage: Some("1d8".to_string()),
+                    damage_type: Some("S".to_string()),
+                    armor_ac: None,
+                    finesse: false,
                 },
                 InventoryItem {
                     name: "Chain Mail".to_string(),
                     quantity: 1,
                     equipped: true,
                     attuned: false,
+                    item_type: Some("HA".to_string()),
+                    damage: None,
+                    damage_type: None,
+                    armor_ac: Some(16),
+                    finesse: false,
                 },
                 InventoryItem {
                     name: "Shield".to_string(),
                     quantity: 1,
                     equipped: true,
                     attuned: false,
+                    item_type: Some("S".to_string()),
+                    damage: None,
+                    damage_type: None,
+                    armor_ac: Some(2),
+                    finesse: false,
                 },
             ],
+            proficiencies: Proficiencies::default(),
+            speed: 25,
+            ac: 18, // Chain Mail 16 + Shield 2
+            hit_points_max: 49,
+            hit_die: "5d10".to_string(),
+            spellcasting_ability: None,
+            spell_save_dc: None,
+            spell_attack_bonus: None,
+            spell_slots: vec![0; 9],
         }
     }
 

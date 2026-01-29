@@ -90,16 +90,12 @@ export interface ModuleExportOptions {
 export interface CharacterExportOptions {
   /** Include compact 2-page character sheet */
   include_compact_sheet?: boolean
-  /** Include long form character details (personality, background, RP notes) */
-  include_long_form?: boolean
   /** Include battle card (half-page combat reference card) */
   include_battle_card?: boolean
   /** Include spell cards (silently no-op if no spells) */
   include_spell_cards?: boolean
   /** Include equipment cards (weapons, magic items, special ammo) */
   include_equipment_cards?: boolean
-  /** Include detailed equipment list with descriptions */
-  include_equipment_detail?: boolean
 }
 
 /** Options for exporting a campaign to PDF */

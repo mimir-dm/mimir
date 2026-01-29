@@ -55,8 +55,8 @@ pub use builder::{DocumentBuilder, DocumentConfig, Renderable, RenderContext, Vi
 pub use markdown::{ParsedDocument, parse_campaign_document, markdown_to_typst};
 pub use sections::MarkdownSection;
 pub use sections::{CharacterData, CharacterSection, ClassInfo, InventoryItem};
-pub use sections::{CharacterBattleCardSection, CharacterLongFormSection};
-pub use sections::{is_card_worthy, EquipmentCardsSection, EquipmentDetailSection};
+pub use sections::CharacterBattleCardSection;
+pub use sections::{is_card_worthy, EquipmentCardsSection};
 pub use sections::{MapPreview, TileData, TiledMapSection};
 pub use sections::{MonsterCardSection, TrapCardSection};
 pub use sections::{SpellCardsSection};

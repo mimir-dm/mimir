@@ -21,11 +21,6 @@
             <span class="checkbox-desc">Stats, combat, skills, equipment summary</span>
           </label>
           <label class="checkbox-option">
-            <input type="checkbox" v-model="options.includeLongForm" />
-            <span class="checkbox-label">Long Form</span>
-            <span class="checkbox-desc">Appearance, personality, backstory, RP notes</span>
-          </label>
-          <label class="checkbox-option">
             <input type="checkbox" v-model="options.includeBattleCard" />
             <span class="checkbox-label">Battle Card</span>
             <span class="checkbox-desc">Half-page combat reference (AC, HP, attacks, saves)</span>
@@ -46,18 +41,6 @@
             <input type="checkbox" v-model="options.includeEquipmentCards" />
             <span class="checkbox-label">Equipment Cards</span>
             <span class="checkbox-desc">Cards for weapons, magic items, special ammo</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Detailed Sections -->
-      <div class="option-section">
-        <label class="section-label">Detailed Sections</label>
-        <div class="checkbox-group">
-          <label class="checkbox-option">
-            <input type="checkbox" v-model="options.includeEquipmentDetail" />
-            <span class="checkbox-label">Equipment Detail</span>
-            <span class="checkbox-desc">Full inventory with descriptions and special rules</span>
           </label>
         </div>
       </div>
@@ -132,18 +115,16 @@ const pdfPreviewRef = ref<InstanceType<typeof PdfPreviewModal> | null>(null)
 // Options - defaults per wireframe spec
 const options = reactive({
   includeCompactSheet: true,
-  includeLongForm: false,
   includeBattleCard: false,
   includeSpellCards: true,
   includeEquipmentCards: false,
-  includeEquipmentDetail: false,
 })
 
 // Computed
 const hasAnySelection = computed(() => {
-  return options.includeCompactSheet || options.includeLongForm ||
+  return options.includeCompactSheet ||
          options.includeBattleCard || options.includeSpellCards ||
-         options.includeEquipmentCards || options.includeEquipmentDetail
+         options.includeEquipmentCards
 })
 
 const defaultFileName = computed(() => {
@@ -158,11 +139,9 @@ watch(() => props.visible, (newVisible) => {
     error.value = null
     // Reset to defaults
     options.includeCompactSheet = true
-    options.includeLongForm = false
     options.includeBattleCard = false
     options.includeSpellCards = true
     options.includeEquipmentCards = false
-    options.includeEquipmentDetail = false
   }
 })
 
@@ -189,11 +168,9 @@ async function handleExport() {
     // Generate PDF with options
     const result = await PrintService.generateCharacterExport(props.characterId, {
       include_compact_sheet: options.includeCompactSheet,
-      include_long_form: options.includeLongForm,
       include_battle_card: options.includeBattleCard,
       include_spell_cards: options.includeSpellCards,
       include_equipment_cards: options.includeEquipmentCards,
-      include_equipment_detail: options.includeEquipmentDetail,
     })
 
     // Display result

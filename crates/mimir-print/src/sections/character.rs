@@ -56,6 +56,19 @@ pub struct CharacterData {
 
     // Speed (from race, defaults to 30)
     pub speed: i32,
+
+    // Armor Class (computed from equipped armor + DEX)
+    pub ac: i32,
+
+    // Hit points and hit dice
+    pub hit_points_max: i32,
+    pub hit_die: String, // e.g. "5d10 + 3d8"
+
+    // Spellcasting (None if non-caster)
+    pub spellcasting_ability: Option<String>, // "WIS" / "INT" / "CHA"
+    pub spell_save_dc: Option<i32>,
+    pub spell_attack_bonus: Option<i32>,
+    pub spell_slots: Vec<i32>, // 9 entries for spell levels 1-9
 }
 
 /// Class level information
@@ -68,12 +81,27 @@ pub struct ClassInfo {
 }
 
 /// Inventory item for display
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct InventoryItem {
     pub name: String,
     pub quantity: i32,
     pub equipped: bool,
     pub attuned: bool,
+    /// Item type code from catalog (e.g., "M" = melee weapon, "HA" = heavy armor, "S" = shield)
+    #[serde(default)]
+    pub item_type: Option<String>,
+    /// Damage dice (e.g., "1d8") for weapons
+    #[serde(default)]
+    pub damage: Option<String>,
+    /// Damage type code (e.g., "S" = slashing) for weapons
+    #[serde(default)]
+    pub damage_type: Option<String>,
+    /// Base AC for armor/shields
+    #[serde(default)]
+    pub armor_ac: Option<i32>,
+    /// Whether this is a finesse weapon
+    #[serde(default)]
+    pub finesse: bool,
 }
 
 /// Proficiencies grouped by type
@@ -163,6 +191,7 @@ impl CharacterSection {
             + (self.character.gp as f64)
             + (self.character.pp as f64 * 10.0)
     }
+
 }
 
 impl Renderable for CharacterSection {
@@ -174,330 +203,578 @@ impl Renderable for CharacterSection {
         let prof = self.prof_bonus();
         let classes = self.class_string();
 
-        // Calculate derived stats
-        let dex_mod = Self::modifier(char.dexterity);
-        // Basic AC calculation: 10 + DEX mod (armor would modify this)
-        let ac = 10 + dex_mod;
+        // =====================================================================
+        // HELPERS — Three tiers of section treatment
+        // =====================================================================
 
-        // =========================================================================
-        // HEADER
-        // =========================================================================
+        // Primary: heavier border, prominent header (Combat, Abilities, Personality)
+        fn primary_box(title: &str, content: &str, markup: bool) -> String {
+            let outer = if markup { "#" } else { "" };
+            format!(
+                r#"{outer}block(width: 100%, stroke: 1pt + colors.border, radius: 2pt, clip: true)[
+#block(width: 100%, fill: luma(60), inset: (x: spacing.sm, y: spacing.xs))[
+  #text(fill: white, weight: "bold", size: sizes.base, tracking: 1pt)[{title}]
+]
+  #block(width: 100%, inset: spacing.sm)[
+{content}  ]
+]
+"#,
+                outer = outer,
+                title = title,
+                content = content,
+            )
+        }
+
+        // Secondary: standard border, mid-gray header (Weapons, Proficiencies, Spellcasting)
+        fn secondary_box(title: &str, content: &str, markup: bool) -> String {
+            let outer = if markup { "#" } else { "" };
+            format!(
+                r#"{outer}block(width: 100%, stroke: 0.5pt + colors.border-light, radius: 2pt, clip: true)[
+#block(width: 100%, fill: luma(60), inset: (x: spacing.sm, y: spacing.xs))[
+  #text(fill: white, weight: "bold", size: sizes.sm, tracking: 0.5pt)[{title}]
+]
+  #block(width: 100%, inset: spacing.sm)[
+{content}  ]
+]
+"#,
+                outer = outer,
+                title = title,
+                content = content,
+            )
+        }
+
+        // Tertiary: minimal — just a label and a line, no box (Notes, Currency)
+        fn tertiary_label(title: &str, content: &str, markup: bool) -> String {
+            let outer = if markup { "#" } else { "" };
+            format!(
+                r#"{outer}block(width: 100%)[
+  #text(weight: "bold", size: sizes.sm, tracking: 0.5pt, fill: colors.text-secondary)[{title}]
+  #v(spacing.xs)
+  #line(length: 100%, stroke: 0.5pt + colors.border-light)
+  #v(spacing.xs)
+{content}]
+"#,
+                outer = outer,
+                title = title,
+                content = content,
+            )
+        }
+
+        // Ability block: compact inline — no box border, just header line + skills
+        let ability_block = |abbrev: &str,
+                             full_name: &str,
+                             score: i32,
+                             skills: &[(&str, &str)]|
+         -> String {
+            let modifier = Self::modifier(score);
+            let mod_str = Self::modifier_str(score);
+            let is_save_prof = char.proficiencies.saves.iter().any(|s| s == full_name);
+            let save_total = modifier + if is_save_prof { prof } else { 0 };
+            let save_sign = if save_total >= 0 { "+" } else { "" };
+            let save_bullet = if is_save_prof { "●" } else { "○" };
+            let save_weight = if is_save_prof {
+                ", weight: \"bold\""
+            } else {
+                ""
+            };
+
+            let mut s = String::new();
+
+            // Compact header: ABR score (mod) — Save ±N  all on one line
+            s.push_str(&format!(
+                r#"    block(width: 100%, inset: (x: 0pt, y: 0pt))[
+      #grid(columns: (auto, 1fr, auto), column-gutter: spacing.xs,
+        text(weight: "bold", size: sizes.sm, tracking: 0.5pt)[{abbrev}],
+        text(size: sizes.sm)[{score} #text(fill: colors.text-secondary, size: sizes.xs)[({mod_str})]],
+        text(size: sizes.xs{save_weight})[{save_bullet} Save {save_sign}{save_total}],
+      )
+      #line(length: 100%, stroke: 0.5pt + colors.border-light)
+"#,
+                abbrev = abbrev,
+                score = score,
+                mod_str = mod_str,
+                save_weight = save_weight,
+                save_bullet = save_bullet,
+                save_sign = save_sign,
+                save_total = save_total,
+            ));
+
+            // Skills — compact list, no rules between
+            for (skill_name, _ability) in skills.iter() {
+                let ability_mod = Self::modifier(score);
+                let prof_entry = char
+                    .proficiencies
+                    .skills
+                    .iter()
+                    .find(|p| &p.name == skill_name);
+                let is_prof = prof_entry.is_some();
+                let is_expert = prof_entry.map_or(false, |p| p.expertise);
+                let bonus = ability_mod
+                    + if is_expert {
+                        prof * 2
+                    } else if is_prof {
+                        prof
+                    } else {
+                        0
+                    };
+                let sign = if bonus >= 0 { "+" } else { "" };
+                let bullet = if is_expert {
+                    "◆"
+                } else if is_prof {
+                    "●"
+                } else {
+                    "○"
+                };
+                let weight = if is_prof || is_expert {
+                    ", weight: \"bold\""
+                } else {
+                    ""
+                };
+                s.push_str(&format!(
+                    "      #text(size: sizes.xs{})[{} {} #h(1fr) {}{}]\n",
+                    weight, bullet, skill_name, sign, bonus
+                ));
+            }
+
+            s.push_str("    ]\n    v(spacing.xs)\n");
+            s
+        };
+
+        // =================================================================
+        // PAGE 1: Stats & Combat
+        // =================================================================
+
+        // --- HEADER: Large uppercase name ---
+        let race = char.race_name.as_deref().unwrap_or("");
+        let bg = char.background_name.as_deref().unwrap_or("");
+        let player_line = char.player_name.as_deref().unwrap_or("");
+
         typst.push_str(&format!(
-            r#"// Character: {}
-#block(
-  width: 100%,
-  inset: spacing.md,
-  stroke: (bottom: 2pt + colors.accent),
-  {{
-    grid(
-      columns: (1fr, auto),
-      column-gutter: spacing.sm,
-      text(size: sizes.xl, weight: "bold")[{}],
-      {}
-    )
-    v(spacing.xs)
-    text(size: sizes.md)[Level {} {} {}]
-    {}
-  }}
-)
+            r#"// Character: {name}
+#block(width: 100%, inset: (x: spacing.sm, y: spacing.sm), stroke: (bottom: 2pt + colors.accent))[
+  #grid(columns: (1fr, auto), column-gutter: spacing.sm,
+    text(size: sizes.title, weight: "bold", font: font-heading, tracking: -0.5pt)[{name_upper}],
+    {npc_badge}
+  )
+  #v(spacing.xs)
+  #text(size: sizes.base)[{race} · {classes} · Level {level}]
+  #h(spacing.md)
+  #text(size: sizes.sm, fill: colors.text-secondary)[{bg}{player_sep}{player}]
+]
+
+#v(spacing.sm)
 
 "#,
-            escape_typst_string(&char.name),
-            escape_typst_string(&char.name),
-            if char.is_npc {
-                r#"box(fill: colors.accent, radius: 4pt, inset: (x: spacing.sm, y: spacing.xs))[
-        #text(fill: white, weight: "bold", size: sizes.sm)[NPC]
-      ]"#
+            name = escape_typst_string(&char.name),
+            name_upper = escape_typst_string(&char.name.to_uppercase()),
+            npc_badge = if char.is_npc {
+                r#"box(fill: colors.accent, radius: 2pt, inset: (x: spacing.sm, y: spacing.xs))[
+      #text(fill: white, weight: "bold", size: sizes.sm, tracking: 1pt)[NPC]
+    ]"#
             } else {
                 ""
             },
-            level,
-            char.race_name.as_deref().map(|r| escape_typst_string(r)).unwrap_or_default(),
-            escape_typst_string(&classes),
-            if char.background_name.is_some() || char.player_name.is_some() {
-                let mut extra = String::new();
-                extra.push_str("linebreak()\nsmall-text[");
-                if let Some(ref bg) = char.background_name {
-                    extra.push_str(&escape_typst_string(bg));
-                }
-                if let Some(ref player) = char.player_name {
-                    if char.background_name.is_some() {
-                        extra.push_str(" · ");
-                    }
-                    extra.push_str("Player: ");
-                    extra.push_str(&escape_typst_string(player));
-                }
-                extra.push(']');
-                extra
+            race = escape_typst_string(race),
+            classes = escape_typst_string(&classes),
+            level = level,
+            bg = escape_typst_string(bg),
+            player_sep = if !bg.is_empty() && !player_line.is_empty() {
+                " · "
+            } else {
+                ""
+            },
+            player = if !player_line.is_empty() {
+                format!("Player: {}", escape_typst_string(player_line))
             } else {
                 String::new()
-            }
+            },
         ));
 
-        // =========================================================================
-        // NPC INFO (if applicable)
-        // =========================================================================
+        // --- COMBAT STATS: 2-row × 4-column grid, AC+HP dominant ---
+        let passive_perception = {
+            let wis_mod = Self::modifier(char.wisdom);
+            let perc_prof = char
+                .proficiencies
+                .skills
+                .iter()
+                .find(|s| s.name == "Perception");
+            let perc_bonus = wis_mod
+                + if perc_prof.map_or(false, |p| p.expertise) {
+                    prof * 2
+                } else if perc_prof.is_some() {
+                    prof
+                } else {
+                    0
+                };
+            10 + perc_bonus
+        };
+
+        let combat_content = format!(
+            r#"    #grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm, row-gutter: spacing.sm,
+      [#align(center)[#text(size: sizes.xxl, weight: "bold")[{ac}] #linebreak() #label-text("ARMOR CLASS")]],
+      [#align(center)[#text(size: sizes.xxl, weight: "bold")[{hp}] #linebreak() #label-text("HIT POINTS")]],
+      [#align(center)[#text(size: sizes.xl, weight: "bold")[{init}] #linebreak() #label-text("INITIATIVE")]],
+      [#align(center)[#text(size: sizes.xl, weight: "bold")[{speed} ft] #linebreak() #label-text("SPEED")]],
+      [#align(center)[#text(size: sizes.lg, weight: "bold")[+{prof}] #linebreak() #label-text("PROF BONUS")]],
+      [#align(center)[#text(size: sizes.lg, weight: "bold")[{hit_die}] #linebreak() #label-text("HIT DICE")]],
+      [#align(center)[#text(size: sizes.lg, weight: "bold")[{pp}] #linebreak() #label-text("PASSIVE")]],
+      [#align(center)[
+        #grid(columns: (1fr, 1fr, 1fr), column-gutter: 2pt,
+          box(width: 100%, stroke: 0.5pt + colors.border-light, radius: 2pt, inset: spacing.xs)[#align(center)[#text(size: sizes.xs, fill: luma(200))[S]]],
+          box(width: 100%, stroke: 0.5pt + colors.border-light, radius: 2pt, inset: spacing.xs)[#align(center)[#text(size: sizes.xs, fill: luma(200))[S]]],
+          box(width: 100%, stroke: 0.5pt + colors.border-light, radius: 2pt, inset: spacing.xs)[#align(center)[#text(size: sizes.xs, fill: luma(200))[F]]],
+        )
+        #label-text("DEATH SAVES")
+      ]],
+    )
+"#,
+            ac = char.ac,
+            hp = char.hit_points_max,
+            init = Self::modifier_str(char.dexterity),
+            speed = char.speed,
+            prof = prof,
+            hit_die = escape_typst_string(&char.hit_die),
+            pp = passive_perception,
+        );
+        typst.push_str(&primary_box("COMBAT", &combat_content, true));
+        typst.push_str("#v(spacing.sm)\n\n");
+
+        // --- MAIN TWO-COLUMN LAYOUT (35% | 65%) ---
+        typst.push_str("#grid(\n  columns: (35%, 1fr),\n  column-gutter: spacing.md,\n\n");
+
+        // ===== LEFT COLUMN: Ability Score Blocks =====
+        typst.push_str("  // Ability Scores with grouped skills\n  {\n");
+
+        typst.push_str(&ability_block("STR", "Strength", char.strength, &[("Athletics", "STR")]));
+        typst.push_str(&ability_block("DEX", "Dexterity", char.dexterity, &[
+            ("Acrobatics", "DEX"), ("Sleight of Hand", "DEX"), ("Stealth", "DEX"),
+        ]));
+        typst.push_str(&ability_block("CON", "Constitution", char.constitution, &[]));
+        typst.push_str(&ability_block("INT", "Intelligence", char.intelligence, &[
+            ("Arcana", "INT"), ("History", "INT"), ("Investigation", "INT"),
+            ("Nature", "INT"), ("Religion", "INT"),
+        ]));
+        typst.push_str(&ability_block("WIS", "Wisdom", char.wisdom, &[
+            ("Animal Handling", "WIS"), ("Insight", "WIS"), ("Medicine", "WIS"),
+            ("Perception", "WIS"), ("Survival", "WIS"),
+        ]));
+        typst.push_str(&ability_block("CHA", "Charisma", char.charisma, &[
+            ("Deception", "CHA"), ("Intimidation", "CHA"),
+            ("Performance", "CHA"), ("Persuasion", "CHA"),
+        ]));
+
+        typst.push_str("  },\n\n");
+
+        // ===== RIGHT COLUMN: Weapons + Proficiencies + Your Turn + Conditions =====
+        typst.push_str("  // Weapons, Proficiencies, Actions\n  {\n");
+
+        // Weapons & Damage table
+        let weapons: Vec<_> = char
+            .inventory
+            .iter()
+            .filter(|i| i.equipped && matches!(i.item_type.as_deref(), Some("M") | Some("R")))
+            .collect();
+
+        if !weapons.is_empty() {
+            let mut wpn_content = String::new();
+            wpn_content.push_str(
+                "    #grid(columns: (1fr, auto, auto), column-gutter: spacing.md, row-gutter: spacing.xs,\n",
+            );
+            wpn_content.push_str("      text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[NAME], text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[ATK], text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[DAMAGE],\n");
+
+            for item in &weapons {
+                let str_mod = Self::modifier(char.strength);
+                let dex_mod_val = Self::modifier(char.dexterity);
+                let is_ranged = item.item_type.as_deref() == Some("R");
+                let is_finesse = item.finesse;
+
+                let atk_mod = if is_ranged {
+                    dex_mod_val + prof
+                } else if is_finesse {
+                    std::cmp::max(str_mod, dex_mod_val) + prof
+                } else {
+                    str_mod + prof
+                };
+                let dmg_mod = if is_ranged {
+                    dex_mod_val
+                } else if is_finesse {
+                    std::cmp::max(str_mod, dex_mod_val)
+                } else {
+                    str_mod
+                };
+
+                let atk_sign = if atk_mod >= 0 { "+" } else { "" };
+                let dmg_suffix = if dmg_mod != 0 {
+                    let dmg_sign = if dmg_mod > 0 { "+" } else { "" };
+                    format!("{}{}", dmg_sign, dmg_mod)
+                } else {
+                    String::new()
+                };
+                let dmg_str = if let Some(ref dice) = item.damage {
+                    format!("{}{}", dice, dmg_suffix)
+                } else {
+                    format!("1{}", dmg_suffix)
+                };
+
+                let dmg_type = item
+                    .damage_type
+                    .as_deref()
+                    .map(|t| match t {
+                        "S" => " slashing",
+                        "P" => " piercing",
+                        "B" => " bludgeoning",
+                        _ => "",
+                    })
+                    .unwrap_or("");
+
+                wpn_content.push_str(&format!(
+                    "      text(size: sizes.sm, weight: \"bold\")[{}], text(size: sizes.sm)[{}{}], text(size: sizes.sm)[{}{}],\n",
+                    escape_typst_string(&item.name), atk_sign, atk_mod, dmg_str, dmg_type
+                ));
+            }
+            wpn_content.push_str("    )\n");
+            typst.push_str(&secondary_box("WEAPONS & DAMAGE", &wpn_content, false));
+            typst.push_str("    v(spacing.xs)\n\n");
+        }
+
+        // Proficiencies & Languages
+        let mut prof_content = String::new();
+        if !char.proficiencies.armor.is_empty() {
+            prof_content.push_str(&format!(
+                "    #text(size: sizes.xs, weight: \"bold\")[Armor:] #text(size: sizes.xs)[ {}] #linebreak()\n",
+                escape_typst_string(&char.proficiencies.armor.join(", "))
+            ));
+        }
+        if !char.proficiencies.weapons.is_empty() {
+            prof_content.push_str(&format!(
+                "    #text(size: sizes.xs, weight: \"bold\")[Weapons:] #text(size: sizes.xs)[ {}] #linebreak()\n",
+                escape_typst_string(&char.proficiencies.weapons.join(", "))
+            ));
+        }
+        if !char.proficiencies.tools.is_empty() {
+            prof_content.push_str(&format!(
+                "    #text(size: sizes.xs, weight: \"bold\")[Tools:] #text(size: sizes.xs)[ {}] #linebreak()\n",
+                escape_typst_string(&char.proficiencies.tools.join(", "))
+            ));
+        }
+        if !char.proficiencies.languages.is_empty() {
+            prof_content.push_str(&format!(
+                "    #text(size: sizes.xs, weight: \"bold\")[Languages:] #text(size: sizes.xs)[ {}] #linebreak()\n",
+                escape_typst_string(&char.proficiencies.languages.join(", "))
+            ));
+        }
+        if !prof_content.is_empty() {
+            typst.push_str(&secondary_box("PROFICIENCIES & LANGUAGES", &prof_content, false));
+            typst.push_str("    v(spacing.xs)\n\n");
+        }
+
+        // Your Turn reference
+        let actions_content = r#"    #text(size: sizes.xs, weight: "bold")[MOVE] #text(size: sizes.xs)[ — Up to your Speed (can split around actions)]
+    #linebreak()
+    #text(size: sizes.xs, weight: "bold")[ACTION] #text(size: sizes.xs)[ — Attack · Cast a Spell · Dash · Disengage · Dodge · Help · Hide · Ready · Use Object]
+    #linebreak()
+    #text(size: sizes.xs, weight: "bold")[BONUS ACTION] #text(size: sizes.xs)[ — Class/spell features (e.g. offhand attack, Cunning Action)]
+    #linebreak()
+    #text(size: sizes.xs, weight: "bold")[REACTION] #text(size: sizes.xs)[ — Opportunity Attack · Readied action · Shield, Counterspell, etc.]
+    #linebreak()
+    #text(size: sizes.xs, weight: "bold")[FREE] #text(size: sizes.xs)[ — Interact with one object · Drop an item · Speak briefly]
+"#;
+        typst.push_str(&secondary_box("YOUR TURN", actions_content, false));
+        typst.push_str("    v(spacing.xs)\n\n");
+
+        // Spellcasting (if caster) — on page 1 right column
+        let has_slots = char.spell_slots.iter().any(|&s| s > 0);
+        if has_slots {
+            let mut spell_content = String::new();
+            spell_content.push_str("    #grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm,\n");
+            if let Some(ref ability) = char.spellcasting_ability {
+                spell_content.push_str(&format!("      labeled-value(\"Ability\", [{}]),\n", ability));
+            }
+            if let Some(dc) = char.spell_save_dc {
+                spell_content.push_str(&format!("      labeled-value(\"Save DC\", str({})),\n", dc));
+            }
+            if let Some(atk) = char.spell_attack_bonus {
+                let sign = if atk >= 0 { "+" } else { "" };
+                spell_content.push_str(&format!("      labeled-value(\"Attack\", [{}{}]),\n", sign, atk));
+            }
+            spell_content.push_str(&format!("      labeled-value(\"Hit Die\", [{}]),\n", escape_typst_string(&char.hit_die)));
+            spell_content.push_str("    )\n    #v(spacing.sm)\n");
+
+            // Slot grid: header row, total row, then checkbox rows for tracking
+            spell_content.push_str("    #grid(columns: (");
+            spell_content.push_str(&vec!["1fr"; 9].join(", "));
+            spell_content.push_str("), column-gutter: 2pt, row-gutter: 2pt,\n");
+
+            // Row 1: level headers
+            for lvl in 1..=9 {
+                let suffix = match lvl { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+                spell_content.push_str(&format!(
+                    "      align(center, block(width: 100%, fill: luma(60), inset: spacing.xs)[#text(size: sizes.xs, weight: \"bold\", fill: white)[{}{}]]),\n",
+                    lvl, suffix
+                ));
+            }
+
+            // Row 2: total slots
+            for i in 0..9 {
+                let count = char.spell_slots.get(i).copied().unwrap_or(0);
+                let display = if count > 0 { format!("{}", count) } else { "—".to_string() };
+                spell_content.push_str(&format!(
+                    "      align(center, block(width: 100%, stroke: 0.5pt + colors.border-light, inset: spacing.xs)[#text(size: sizes.md, weight: \"bold\")[{}]]),\n",
+                    display
+                ));
+            }
+
+            // Row 3+: empty circle checkboxes for tracking cast spells
+            // Number of rows = max slots across all levels
+            let max_slots = char.spell_slots.iter().copied().max().unwrap_or(0);
+            for row in 0..max_slots {
+                for i in 0..9 {
+                    let count = char.spell_slots.get(i).copied().unwrap_or(0);
+                    if row < count {
+                        spell_content.push_str(
+                            "      align(center, block(width: 100%, inset: spacing.xs)[#text(size: sizes.sm)[○]]),\n",
+                        );
+                    } else {
+                        spell_content.push_str(
+                            "      align(center, block(width: 100%, inset: spacing.xs)[]),\n",
+                        );
+                    }
+                }
+            }
+            spell_content.push_str("    )\n");
+
+            typst.push_str(&secondary_box("SPELLCASTING", &spell_content, false));
+        }
+
+        typst.push_str("  }\n)\n\n");
+
+        // --- Page 1 footer ---
+        typst.push_str("#v(1fr)\n#align(center)[#text(size: sizes.xs, fill: luma(180))[Generated by Mimir]]\n\n");
+
+        // =================================================================
+        // PAGE 2: Backstory & Reference
+        // =================================================================
+        typst.push_str("#pagebreak()\n\n");
+
+        // Page 2 header
+        typst.push_str(&format!(
+            r#"#block(width: 100%, inset: (x: spacing.sm, y: spacing.sm), stroke: (bottom: 2pt + colors.accent))[
+  #text(size: sizes.xl, weight: "bold", font: font-heading, tracking: -0.5pt)[{name_upper}]
+  #h(spacing.md)
+  #text(size: sizes.sm, fill: colors.text-secondary)[Backstory & Reference]
+]
+
+#v(spacing.sm)
+
+"#,
+            name_upper = escape_typst_string(&char.name.to_uppercase()),
+        ));
+
+        // --- PERSONALITY: 2×2 grid (full width) ---
+        let mut personality_cells = String::new();
+        for (label, value) in [
+            ("TRAITS", &char.traits),
+            ("IDEALS", &char.ideals),
+            ("BONDS", &char.bonds),
+            ("FLAWS", &char.flaws),
+        ] {
+            let text = value
+                .as_ref()
+                .map(|t| escape_typst_string(t))
+                .unwrap_or_default();
+            personality_cells.push_str(&format!(
+                "    box(width: 100%, stroke: 0.5pt + colors.border-light, radius: 2pt, inset: spacing.sm)[\n      #text(weight: \"bold\", size: sizes.xs, tracking: 0.5pt, fill: colors.text-secondary)[{}]\n      #v(spacing.xs)\n      #text(size: sizes.xs)[{}]\n    ],\n",
+                label, text
+            ));
+        }
+        let personality_content = format!(
+            "    #grid(columns: (1fr, 1fr), column-gutter: spacing.sm, row-gutter: spacing.sm,\n{}\n    )\n",
+            personality_cells
+        );
+        typst.push_str(&primary_box("PERSONALITY", &personality_content, true));
+        typst.push_str("#v(spacing.sm)\n\n");
+
+        // --- Two-column: Spellcasting+NPC (left) | Currency+Inventory (right) ---
+        typst.push_str("#grid(\n  columns: (1fr, 1fr),\n  column-gutter: spacing.md,\n\n");
+
+        // ===== LEFT COLUMN =====
+        typst.push_str("  // Left column\n  [\n");
+
+        // NPC info
         if char.is_npc && (char.role.is_some() || char.location.is_some() || char.faction.is_some()) {
-            typst.push_str(r##"#v(spacing.md)
-
-#block(
-  width: 100%,
-  fill: rgb("#fff8e1"),
-  stroke: 1pt + colors.accent,
-  radius: 4pt,
-  inset: spacing.md,
-)[
-  #text(weight: "bold", size: sizes.md)[NPC Information]
-  #v(spacing.sm)
-
-  #grid(
-    columns: (1fr, 1fr),
-    column-gutter: spacing.lg,
-    row-gutter: spacing.sm,
-"##);
-
+            let mut npc_content = String::new();
             if let Some(ref role) = char.role {
-                typst.push_str(&format!(
-                    "    [#label-text(\"Role\")#linebreak()#text(size: sizes.sm)[{}]],\n",
+                npc_content.push_str(&format!(
+                    "    #text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt, fill: colors.text-secondary)[ROLE] #linebreak() #text(size: sizes.sm)[{}] #v(spacing.sm)\n",
                     escape_typst_string(role)
                 ));
             }
             if let Some(ref loc) = char.location {
-                typst.push_str(&format!(
-                    "    [#label-text(\"Location\")#linebreak()#text(size: sizes.sm)[{}]],\n",
+                npc_content.push_str(&format!(
+                    "    #text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt, fill: colors.text-secondary)[LOCATION] #linebreak() #text(size: sizes.sm)[{}] #v(spacing.sm)\n",
                     escape_typst_string(loc)
                 ));
             }
             if let Some(ref faction) = char.faction {
-                typst.push_str(&format!(
-                    "    [#label-text(\"Faction\")#linebreak()#text(size: sizes.sm)[{}]],\n",
+                npc_content.push_str(&format!(
+                    "    #text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt, fill: colors.text-secondary)[FACTION] #linebreak() #text(size: sizes.sm)[{}] #v(spacing.sm)\n",
                     escape_typst_string(faction)
                 ));
             }
-
-            typst.push_str("  )\n]\n\n");
+            typst.push_str(&secondary_box("NPC INFORMATION", &npc_content, true));
+            typst.push_str("#v(spacing.sm)\n\n");
         }
 
-        typst.push_str("#v(spacing.md)\n\n");
+        // Notes (fills remaining left column)
+        let notes_content = "    #v(1fr)\n";
+        typst.push_str(&secondary_box("NOTES", notes_content, true));
 
-        // =========================================================================
-        // MAIN STATS ROW: Ability Scores + Combat/Saves
-        // =========================================================================
-        typst.push_str(&format!(
-            r#"#grid(
-  columns: (2fr, 1fr),
-  column-gutter: spacing.md,
+        typst.push_str("  ],\n\n");
 
-  // Ability Scores
-  ability-scores(
-    str: {},
-    dex: {},
-    con: {},
-    int: {},
-    wis: {},
-    cha: {},
-    layout: "grid"
-  ),
+        // ===== RIGHT COLUMN =====
+        typst.push_str("  // Right column\n  [\n");
 
-  // Combat Stats + Saves
-  {{
-    info-box(title: "Combat")[
-      #grid(
-        columns: (1fr, 1fr),
-        row-gutter: spacing.sm,
-        column-gutter: spacing.md,
-        labeled-value("AC", str({})),
-        labeled-value("Speed", [{} ft]),
-        labeled-value("Prof", [+{}]),
-        labeled-value("Init", [{}]),
-      )
-    ]
-
-    v(spacing.sm)
-
-    // Saving Throws
-    info-box(title: "Saving Throws")[
-"#,
-            char.strength, char.dexterity, char.constitution,
-            char.intelligence, char.wisdom, char.charisma,
-            ac, char.speed, prof,
-            Self::modifier_str(char.dexterity)
-        ));
-
-        // Generate saving throws with proficiency
-        let prof_saves = &char.proficiencies.saves;
-
-        for (abbrev, full, score) in [
-            ("STR", "Strength", char.strength),
-            ("DEX", "Dexterity", char.dexterity),
-            ("CON", "Constitution", char.constitution),
-            ("INT", "Intelligence", char.intelligence),
-            ("WIS", "Wisdom", char.wisdom),
-            ("CHA", "Charisma", char.charisma),
-        ] {
-            let modifier = Self::modifier(score);
-            let is_prof = prof_saves.iter().any(|s| s == full);
-            let total = modifier + if is_prof { prof } else { 0 };
-            let sign = if total >= 0 { "+" } else { "" };
-
-            typst.push_str(&format!(
-                "      #text(size: sizes.sm)[{}#h(1fr){}{}]\n      #linebreak()\n",
-                if is_prof {
-                    format!("#text(weight: \"bold\")[{}]", abbrev)
-                } else {
-                    abbrev.to_string()
-                },
-                sign,
-                total
+        // Currency — tertiary (minimal)
+        let mut currency_content = String::new();
+        currency_content.push_str("    #grid(columns: (1fr, 1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm,\n");
+        for (label, val) in [("PP", char.pp), ("GP", char.gp), ("EP", char.ep), ("SP", char.sp), ("CP", char.cp)] {
+            currency_content.push_str(&format!(
+                "      align(center, box(stroke: 0.5pt + colors.border-light, width: 100%, radius: 2pt, inset: spacing.xs)[#align(center)[#text(size: sizes.md, weight: \"bold\")[{}] #linebreak() #text(size: sizes.xs, fill: colors.text-secondary, tracking: 0.5pt)[{}]]]),",
+                val, label
             ));
         }
+        currency_content.push_str("\n    )\n");
+        typst.push_str(&tertiary_label("CURRENCY", &currency_content, true));
+        typst.push_str("#v(spacing.sm)\n\n");
 
-        typst.push_str("    ]\n  }\n)\n\n#v(spacing.md)\n\n");
+        // Inventory — zebra-striped table
+        let mut inv_content = String::new();
+        if char.inventory.is_empty() {
+            inv_content.push_str("    #text(size: sizes.sm, fill: colors.text-secondary)[No items]\n");
+        } else {
+            inv_content.push_str("    #grid(columns: (auto, 1fr, auto), column-gutter: spacing.md, row-gutter: spacing.xs,\n");
+            inv_content.push_str("      text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[QTY], text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[ITEM], text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[STATUS],\n");
 
-        // =========================================================================
-        // PROFICIENCIES AND EQUIPMENT ROW
-        // =========================================================================
-        typst.push_str(r#"#grid(
-  columns: (1fr, 1fr),
-  column-gutter: spacing.md,
-
-  // Proficiencies
-  {
-    info-box(title: "Proficiencies")[
-"#);
-
-        // Skills
-        if !char.proficiencies.skills.is_empty() {
-            let skill_str: Vec<String> = char.proficiencies.skills.iter()
-                .map(|s| if s.expertise { format!("{}*", s.name) } else { s.name.clone() })
-                .collect();
-            typst.push_str(&format!(
-                "      #label-text(\"Skills\")\n      #linebreak()\n      #text(size: sizes.sm)[{}]\n      #v(spacing.sm)\n",
-                escape_typst_string(&skill_str.join(", "))
-            ));
+            for (i, item) in char.inventory.iter().enumerate() {
+                let status = match (item.equipped, item.attuned) {
+                    (true, true) => "E ★",
+                    (true, false) => "E",
+                    _ => "—",
+                };
+                let fill = if i % 2 == 0 { "fill: colors.background-alt, " } else { "" };
+                inv_content.push_str(&format!(
+                    "      block({}inset: spacing.xs)[#text(size: sizes.xs)[{}]], block({}inset: spacing.xs)[#text(size: sizes.xs)[{}]], block({}inset: spacing.xs)[#text(size: sizes.xs)[{}]],\n",
+                    fill, item.quantity, fill, escape_typst_string(&item.name), fill, status
+                ));
+            }
+            inv_content.push_str("    )\n");
         }
+        typst.push_str(&tertiary_label("INVENTORY", &inv_content, true));
 
-        // Languages
-        if !char.proficiencies.languages.is_empty() {
-            let lang_str = char.proficiencies.languages.join(", ");
-            typst.push_str(&format!(
-                "      #label-text(\"Languages\")\n      #linebreak()\n      #text(size: sizes.sm)[{}]\n      #v(spacing.sm)\n",
-                escape_typst_string(&lang_str)
-            ));
-        }
+        typst.push_str("  ]\n)\n\n");
 
-        // Armor/Weapons/Tools
-        if !char.proficiencies.armor.is_empty() || !char.proficiencies.weapons.is_empty() {
-            let mut combat_profs = Vec::new();
-            combat_profs.extend(char.proficiencies.armor.iter().cloned());
-            combat_profs.extend(char.proficiencies.weapons.iter().cloned());
-            if !combat_profs.is_empty() {
-                typst.push_str(&format!(
-                    "      #label-text(\"Combat\")\n      #linebreak()\n      #text(size: sizes.sm)[{}]\n      #v(spacing.sm)\n",
-                    escape_typst_string(&combat_profs.join(", "))
-                ));
-            }
-        }
-
-        if !char.proficiencies.tools.is_empty() {
-            let tool_str = char.proficiencies.tools.join(", ");
-            typst.push_str(&format!(
-                "      #label-text(\"Tools\")\n      #linebreak()\n      #text(size: sizes.sm)[{}]\n",
-                escape_typst_string(&tool_str)
-            ));
-        }
-
-        typst.push_str("    ]\n  },\n\n  // Equipment\n  {\n    info-box(title: \"Equipment\")[\n");
-
-        // Equipped items
-        let equipped: Vec<_> = char.inventory.iter().filter(|i| i.equipped).collect();
-        let other: Vec<_> = char.inventory.iter().filter(|i| !i.equipped).take(8).collect();
-
-        if !equipped.is_empty() {
-            typst.push_str("      #label-text(\"Equipped\")\n      #linebreak()\n");
-            for item in &equipped {
-                let qty = if item.quantity > 1 { format!(" (x{})", item.quantity) } else { String::new() };
-                let attuned = if item.attuned { " ★" } else { "" };
-                typst.push_str(&format!(
-                    "      #text(size: sizes.sm)[- {}{}{}]\n      #linebreak()\n",
-                    escape_typst_string(&item.name),
-                    qty,
-                    attuned
-                ));
-            }
-            typst.push_str("      #v(spacing.sm)\n");
-        }
-
-        if !other.is_empty() {
-            typst.push_str("      #label-text(\"Other Items\")\n      #linebreak()\n");
-            for item in &other {
-                let qty = if item.quantity > 1 { format!(" (x{})", item.quantity) } else { String::new() };
-                typst.push_str(&format!(
-                    "      #text(size: sizes.sm)[- {}{}]\n      #linebreak()\n",
-                    escape_typst_string(&item.name),
-                    qty
-                ));
-            }
-
-            let remaining = char.inventory.iter().filter(|i| !i.equipped).count() - other.len();
-            if remaining > 0 {
-                typst.push_str(&format!(
-                    "      #text(fill: colors.text-secondary, size: sizes.sm)[...and {} more]\n      #linebreak()\n",
-                    remaining
-                ));
-            }
-        }
-
-        // Currency
-        typst.push_str("      #v(spacing.sm)\n      #label-text(\"Currency\")\n      #linebreak()\n      #text(size: sizes.sm)[");
-        let mut parts = Vec::new();
-        if char.pp > 0 { parts.push(format!("{} pp", char.pp)); }
-        if char.gp > 0 { parts.push(format!("{} gp", char.gp)); }
-        if char.ep > 0 { parts.push(format!("{} ep", char.ep)); }
-        if char.sp > 0 { parts.push(format!("{} sp", char.sp)); }
-        if char.cp > 0 { parts.push(format!("{} cp", char.cp)); }
-        if parts.is_empty() { parts.push("None".to_string()); }
-        typst.push_str(&parts.join(" "));
-        typst.push_str("]\n    ]\n  }\n)\n\n#v(spacing.md)\n\n");
-
-        // =========================================================================
-        // PERSONALITY SECTION
-        // =========================================================================
-        if char.traits.is_some() || char.ideals.is_some() || char.bonds.is_some() || char.flaws.is_some() {
-            typst.push_str("info-box(title: \"Personality\")[\n");
-
-            if let Some(ref traits) = char.traits {
-                typst.push_str(&format!(
-                    "  #label-text(\"Traits\")\n  #linebreak()\n  #text(size: sizes.sm)[{}]\n  #v(spacing.sm)\n",
-                    escape_typst_string(traits)
-                ));
-            }
-            if let Some(ref ideals) = char.ideals {
-                typst.push_str(&format!(
-                    "  #label-text(\"Ideals\")\n  #linebreak()\n  #text(size: sizes.sm)[{}]\n  #v(spacing.sm)\n",
-                    escape_typst_string(ideals)
-                ));
-            }
-            if let Some(ref bonds) = char.bonds {
-                typst.push_str(&format!(
-                    "  #label-text(\"Bonds\")\n  #linebreak()\n  #text(size: sizes.sm)[{}]\n  #v(spacing.sm)\n",
-                    escape_typst_string(bonds)
-                ));
-            }
-            if let Some(ref flaws) = char.flaws {
-                typst.push_str(&format!(
-                    "  #label-text(\"Flaws\")\n  #linebreak()\n  #text(size: sizes.sm)[{}]\n",
-                    escape_typst_string(flaws)
-                ));
-            }
-
-            typst.push_str("]\n\n");
-        }
-
-        // =========================================================================
-        // FOOTER
-        // =========================================================================
-        typst.push_str("#v(1fr)\n#align(center)[\n  #small-text[Generated by Mimir]\n]\n");
+        // --- Page 2 footer ---
+        typst.push_str("#v(1fr)\n#align(center)[#text(size: sizes.xs, fill: luma(180))[Generated by Mimir]]\n");
 
         Ok(typst)
     }
@@ -560,12 +837,22 @@ mod tests {
                     quantity: 1,
                     equipped: true,
                     attuned: false,
+                    item_type: Some("M".to_string()),
+                    damage: Some("1d8".to_string()),
+                    damage_type: Some("S".to_string()),
+                    armor_ac: None,
+                    finesse: false,
                 },
                 InventoryItem {
                     name: "Chain Mail".to_string(),
                     quantity: 1,
                     equipped: true,
                     attuned: false,
+                    item_type: Some("HA".to_string()),
+                    damage: None,
+                    damage_type: None,
+                    armor_ac: Some(16),
+                    finesse: false,
                 },
             ],
             proficiencies: Proficiencies {
@@ -581,6 +868,93 @@ mod tests {
                 tools: vec![],
             },
             speed: 30,
+            ac: 16, // Chain Mail
+            hit_points_max: 67,
+            hit_die: "5d10 + 3d8".to_string(),
+            spellcasting_ability: None,
+            spell_save_dc: None,
+            spell_attack_bonus: None,
+            spell_slots: vec![0; 9],
+        }
+    }
+
+    fn test_spellcaster() -> CharacterData {
+        CharacterData {
+            name: "Gandalf".to_string(),
+            player_name: Some("Jane".to_string()),
+            is_npc: false,
+            race_name: Some("Human".to_string()),
+            background_name: Some("Sage".to_string()),
+            strength: 8,
+            dexterity: 14,
+            constitution: 12,
+            intelligence: 20,
+            wisdom: 14,
+            charisma: 10,
+            cp: 0,
+            sp: 0,
+            ep: 0,
+            gp: 500,
+            pp: 10,
+            traits: Some("Always curious".to_string()),
+            ideals: Some("Knowledge is power".to_string()),
+            bonds: Some("My spellbook is my life".to_string()),
+            flaws: Some("I overlook obvious solutions in favor of complicated ones".to_string()),
+            role: None,
+            location: None,
+            faction: None,
+            classes: vec![
+                ClassInfo {
+                    class_name: "Wizard".to_string(),
+                    level: 9,
+                    subclass_name: Some("Evocation".to_string()),
+                    is_starting: true,
+                },
+            ],
+            inventory: vec![
+                InventoryItem {
+                    name: "Staff of Power".to_string(),
+                    quantity: 1,
+                    equipped: true,
+                    attuned: true,
+                    item_type: Some("M".to_string()),
+                    damage: Some("1d6".to_string()),
+                    damage_type: Some("B".to_string()),
+                    armor_ac: None,
+                    finesse: false,
+                },
+                InventoryItem {
+                    name: "Spellbook".to_string(),
+                    quantity: 1,
+                    equipped: false,
+                    attuned: false,
+                    item_type: None,
+                    damage: None,
+                    damage_type: None,
+                    armor_ac: None,
+                    finesse: false,
+                },
+            ],
+            proficiencies: Proficiencies {
+                skills: vec![
+                    ProficiencyEntry { name: "Arcana".to_string(), expertise: false },
+                    ProficiencyEntry { name: "History".to_string(), expertise: false },
+                    ProficiencyEntry { name: "Investigation".to_string(), expertise: false },
+                ],
+                saves: vec!["Intelligence".to_string(), "Wisdom".to_string()],
+                languages: vec!["Common".to_string(), "Draconic".to_string(), "Elvish".to_string()],
+                armor: vec![],
+                weapons: vec!["Daggers".to_string(), "Quarterstaffs".to_string()],
+                tools: vec![],
+            },
+            speed: 30,
+            ac: 10,
+            hit_points_max: 45,
+            hit_die: "9d6".to_string(),
+            spellcasting_ability: Some("INT".to_string()),
+            spell_save_dc: Some(17),
+            spell_attack_bonus: Some(9),
+            spell_slots: vec![4, 3, 3, 3, 1, 0, 0, 0, 0],
         }
     }
 
@@ -617,7 +991,6 @@ mod tests {
     fn test_total_gold() {
         let char = test_character();
         let section = CharacterSection::new(char);
-        // 50cp/100 + 20sp/10 + 0ep/2 + 150gp + 5pp*10 = 0.5 + 2 + 0 + 150 + 50 = 202.5
         assert!((section.total_gold() - 202.5).abs() < 0.01);
     }
 
@@ -626,5 +999,54 @@ mod tests {
         let char = test_character();
         let section = CharacterSection::new(char);
         assert_eq!(section.toc_title(), Some("Aragorn".to_string()));
+    }
+
+    #[test]
+    fn test_spellcaster_renders_spell_slots() {
+        let char = test_spellcaster();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("SPELLCASTING"));
+        assert!(typst.contains("Save DC"));
+        assert!(typst.contains("1st"));
+        assert!(typst.contains("9th"));
+        assert!(typst.contains("pagebreak()"));
+    }
+
+    #[test]
+    fn test_non_caster_no_spell_section() {
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(!typst.contains("SPELLCASTING"));
+        assert!(typst.contains("pagebreak()"));
+    }
+
+    #[test]
+    fn test_all_18_skills_rendered() {
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("Athletics"));
+        assert!(typst.contains("Acrobatics"));
+        assert!(typst.contains("Arcana"));
+        assert!(typst.contains("Perception"));
+        assert!(typst.contains("Stealth"));
+        assert!(typst.contains("Persuasion"));
+    }
+
+    #[test]
+    fn test_actions_reference() {
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("Attack"));
+        assert!(typst.contains("Dash"));
+        assert!(typst.contains("Dodge"));
+        assert!(typst.contains("YOUR TURN"));
     }
 }

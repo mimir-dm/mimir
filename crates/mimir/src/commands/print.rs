@@ -8,8 +8,8 @@ use mimir_core::dal::catalog as catalog_dal;
 use mimir_core::services::{CampaignService, CharacterService, DocumentService, MapService};
 use mimir_print::map_renderer::{MapPrintOptions as RenderMapPrintOptions, RenderMap};
 use mimir_print::sections::{
-    CharacterBattleCardSection, CharacterData, CharacterLongFormSection, CharacterSection,
-    ClassInfo, CutoutToken, EquipmentCardsSection, EquipmentDetailSection, InventoryItem,
+    CharacterBattleCardSection, CharacterData, CharacterSection,
+    ClassInfo, CutoutToken, EquipmentCardsSection, InventoryItem,
     MapPreview, MonsterCardSection, Proficiencies, ProficiencyEntry, SpellCardsSection,
     TiledMapSection, TokenCutoutSection, is_card_worthy,
 };
@@ -69,11 +69,9 @@ pub struct PrintResult {
 #[derive(Debug, Deserialize, Default)]
 pub struct CharacterExportOptions {
     pub include_compact_sheet: Option<bool>,
-    pub include_long_form: Option<bool>,
     pub include_battle_card: Option<bool>,
     pub include_spell_cards: Option<bool>,
     pub include_equipment_cards: Option<bool>,
-    pub include_equipment_detail: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -127,8 +125,194 @@ pub struct PrintTemplateInfo {
 }
 
 // =============================================================================
-// Spell Level Helpers
+// Character Sheet Computation Helpers
 // =============================================================================
+
+/// Get the hit die size for a class (e.g. "Fighter" -> 10)
+fn hit_die_for_class(class_name: &str) -> i32 {
+    match class_name {
+        "Barbarian" => 12,
+        "Fighter" | "Paladin" | "Ranger" => 10,
+        "Artificer" | "Bard" | "Cleric" | "Druid" | "Monk" | "Rogue" | "Warlock" => 8,
+        "Sorcerer" | "Wizard" => 6,
+        _ => 8, // default to d8
+    }
+}
+
+/// Get the spellcasting ability abbreviation for a class, if it's a caster
+fn spellcasting_ability_for_class(class_name: &str) -> Option<&'static str> {
+    match class_name {
+        "Artificer" | "Wizard" => Some("INT"),
+        "Cleric" | "Druid" | "Ranger" => Some("WIS"),
+        "Bard" | "Paladin" | "Sorcerer" | "Warlock" => Some("CHA"),
+        _ => None,
+    }
+}
+
+/// Get the caster level multiplier for multiclass spell slot calculation
+fn caster_level_multiplier(class_name: &str) -> f64 {
+    match class_name {
+        "Bard" | "Cleric" | "Druid" | "Sorcerer" | "Wizard" => 1.0,
+        "Artificer" | "Paladin" | "Ranger" => 0.5,
+        // Third casters (subclass-based, but handle if they appear)
+        "Eldritch Knight" | "Arcane Trickster" => 1.0 / 3.0,
+        _ => 0.0,
+    }
+}
+
+/// Standard 5e spell slot table indexed by caster level (1-20), returning slots for levels 1-9
+fn spell_slots_for_caster_level(caster_level: i32) -> Vec<i32> {
+    match caster_level {
+        1  => vec![2, 0, 0, 0, 0, 0, 0, 0, 0],
+        2  => vec![3, 0, 0, 0, 0, 0, 0, 0, 0],
+        3  => vec![4, 2, 0, 0, 0, 0, 0, 0, 0],
+        4  => vec![4, 3, 0, 0, 0, 0, 0, 0, 0],
+        5  => vec![4, 3, 2, 0, 0, 0, 0, 0, 0],
+        6  => vec![4, 3, 3, 0, 0, 0, 0, 0, 0],
+        7  => vec![4, 3, 3, 1, 0, 0, 0, 0, 0],
+        8  => vec![4, 3, 3, 2, 0, 0, 0, 0, 0],
+        9  => vec![4, 3, 3, 3, 1, 0, 0, 0, 0],
+        10 => vec![4, 3, 3, 3, 2, 0, 0, 0, 0],
+        11 => vec![4, 3, 3, 3, 2, 1, 0, 0, 0],
+        12 => vec![4, 3, 3, 3, 2, 1, 0, 0, 0],
+        13 => vec![4, 3, 3, 3, 2, 1, 1, 0, 0],
+        14 => vec![4, 3, 3, 3, 2, 1, 1, 0, 0],
+        15 => vec![4, 3, 3, 3, 2, 1, 1, 1, 0],
+        16 => vec![4, 3, 3, 3, 2, 1, 1, 1, 0],
+        17 => vec![4, 3, 3, 3, 2, 1, 1, 1, 1],
+        18 => vec![4, 3, 3, 3, 3, 1, 1, 1, 1],
+        19 => vec![4, 3, 3, 3, 3, 2, 1, 1, 1],
+        20 => vec![4, 3, 3, 3, 3, 2, 2, 1, 1],
+        _ if caster_level < 1 => vec![0, 0, 0, 0, 0, 0, 0, 0, 0],
+        _ => vec![4, 3, 3, 3, 3, 2, 2, 1, 1], // cap at 20
+    }
+}
+
+/// Compute hit points max: level 1 = max die + CON mod, subsequent = avg die + CON mod
+fn compute_hp_max(classes: &[mimir_print::sections::ClassInfo], con_mod: i32) -> i32 {
+    if classes.is_empty() {
+        return 0;
+    }
+
+    let mut hp = 0;
+    let mut is_first_level = true;
+
+    // Find starting class for first-level HP
+    let starting = classes.iter().find(|c| c.is_starting).unwrap_or(&classes[0]);
+    let starting_die = hit_die_for_class(&starting.class_name);
+    // Level 1: max die + CON mod
+    hp += starting_die + con_mod;
+    let starting_remaining = starting.level - 1;
+    // Remaining levels of starting class: avg + CON mod
+    hp += starting_remaining * (starting_die / 2 + 1 + con_mod);
+
+    for class in classes {
+        if class.is_starting || (!is_first_level && std::ptr::eq(class, &classes[0])) {
+            is_first_level = false;
+            continue;
+        }
+        is_first_level = false;
+        let die = hit_die_for_class(&class.class_name);
+        hp += class.level * (die / 2 + 1 + con_mod);
+    }
+
+    hp.max(1)
+}
+
+/// Build hit die string like "5d10 + 3d8"
+fn compute_hit_die_string(classes: &[mimir_print::sections::ClassInfo]) -> String {
+    classes
+        .iter()
+        .map(|c| format!("{}d{}", c.level, hit_die_for_class(&c.class_name)))
+        .collect::<Vec<_>>()
+        .join(" + ")
+}
+
+/// Enrich an inventory item with catalog data (weapon stats, armor AC, etc.)
+fn enrich_inventory_item(
+    db: &mut diesel::SqliteConnection,
+    inv_item: &mimir_core::models::CharacterInventory,
+) -> InventoryItem {
+    let equipped = inv_item.is_equipped();
+    let attuned = inv_item.is_attuned();
+
+    // Try to look up catalog item for weapon/armor stats
+    let (item_type, damage, damage_type, armor_ac, finesse) =
+        match catalog_dal::get_item_by_name(db, &inv_item.item_name, &inv_item.item_source) {
+            Ok(Some(catalog_item)) => {
+                if let Ok(data) = catalog_item.parse_data() {
+                    let it = data.get("type")
+                        .or_else(|| data.get("item_type"))
+                        .and_then(|v| v.as_str())
+                        .map(String::from);
+                    let dmg = data.get("dmg1").and_then(|v| v.as_str()).map(String::from);
+                    let dt = data.get("dmg_type")
+                        .or_else(|| data.get("dmgType"))
+                        .and_then(|v| v.as_str())
+                        .map(String::from);
+                    let ac = data.get("ac").and_then(|v| v.as_i64()).map(|v| v as i32);
+                    let fin = data.get("property")
+                        .and_then(|v| v.as_array())
+                        .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("F")));
+                    (it, dmg, dt, ac, fin)
+                } else {
+                    (None, None, None, None, false)
+                }
+            }
+            _ => (None, None, None, None, false),
+        };
+
+    InventoryItem {
+        name: inv_item.item_name.clone(),
+        quantity: inv_item.quantity,
+        equipped,
+        attuned,
+        item_type,
+        damage,
+        damage_type,
+        armor_ac,
+        finesse,
+    }
+}
+
+/// Compute AC from equipped armor and DEX modifier
+fn compute_ac(inventory: &[InventoryItem], dex_mod: i32) -> i32 {
+    let mut base_ac = 10 + dex_mod; // Default: no armor
+    let mut shield_bonus = 0;
+
+    for item in inventory {
+        if !item.equipped {
+            continue;
+        }
+        match item.item_type.as_deref() {
+            Some("LA") => {
+                // Light armor: base AC + DEX mod
+                if let Some(ac) = item.armor_ac {
+                    base_ac = ac + dex_mod;
+                }
+            }
+            Some("MA") => {
+                // Medium armor: base AC + DEX mod (max 2)
+                if let Some(ac) = item.armor_ac {
+                    base_ac = ac + dex_mod.min(2);
+                }
+            }
+            Some("HA") => {
+                // Heavy armor: flat AC, no DEX
+                if let Some(ac) = item.armor_ac {
+                    base_ac = ac;
+                }
+            }
+            Some("S") => {
+                // Shield: +2 (or whatever the AC value is)
+                shield_bonus = item.armor_ac.unwrap_or(2);
+            }
+            _ => {}
+        }
+    }
+
+    base_ac + shield_bonus
+}
 
 /// Calculate the maximum spell level a class can cast at a given class level.
 /// Returns 0 if the class has no spellcasting at that level.
@@ -615,7 +799,7 @@ pub fn export_campaign_documents(
                 profs
             };
 
-            let char_data = CharacterData {
+            let mut char_data = CharacterData {
                 name: npc.name.clone(),
                 player_name: npc.player_name.clone(),
                 is_npc: npc.is_npc(),
@@ -652,21 +836,29 @@ pub fn export_campaign_documents(
                     })
                     .collect(),
                 inventory: inventory
-                    .into_iter()
-                    .map(|i| {
-                        let equipped = i.is_equipped();
-                        let attuned = i.is_attuned();
-                        InventoryItem {
-                            name: i.item_name,
-                            quantity: i.quantity,
-                            equipped,
-                            attuned,
-                        }
-                    })
+                    .iter()
+                    .map(|i| enrich_inventory_item(&mut db, i))
                     .collect(),
                 proficiencies,
                 speed: 30,
+                ac: 10, // computed below
+                hit_points_max: 0,
+                hit_die: String::new(),
+                spellcasting_ability: None,
+                spell_save_dc: None,
+                spell_attack_bonus: None,
+                spell_slots: vec![0; 9],
             };
+
+            // Compute AC from equipped armor
+            let npc_dex_mod = (npc.dexterity - 10).div_euclid(2);
+            char_data.ac = compute_ac(&char_data.inventory, npc_dex_mod);
+
+            // Compute HP and hit dice for NPC
+            let con_mod = (npc.constitution - 10).div_euclid(2);
+            let mut char_data = char_data;
+            char_data.hit_points_max = compute_hp_max(&char_data.classes, con_mod);
+            char_data.hit_die = compute_hit_die_string(&char_data.classes);
 
             info!("    Adding CharacterSection for NPC: {}", char_data.name);
             builder = builder.append(CharacterSection::new(char_data));
@@ -1533,7 +1725,7 @@ pub fn export_character(
     };
 
     // Build CharacterData for the section
-    let char_data = CharacterData {
+    let mut char_data = CharacterData {
         name: character.name.clone(),
         player_name: character.player_name.clone(),
         is_npc: character.is_npc(),
@@ -1577,40 +1769,78 @@ pub fn export_character(
             .collect(),
 
         inventory: inventory
-            .into_iter()
-            .map(|i| {
-                let equipped = i.is_equipped();
-                let attuned = i.is_attuned();
-                InventoryItem {
-                    name: i.item_name,
-                    quantity: i.quantity,
-                    equipped,
-                    attuned,
-                }
-            })
+            .iter()
+            .map(|i| enrich_inventory_item(&mut db, i))
             .collect(),
 
         proficiencies,
         speed: 30, // Default speed - could be looked up from race catalog
+        ac: 10, // computed below
+
+        hit_points_max: 0,  // computed below
+        hit_die: String::new(),  // computed below
+        spellcasting_ability: None,
+        spell_save_dc: None,
+        spell_attack_bonus: None,
+        spell_slots: vec![0; 9],
     };
+
+    // Compute AC from equipped armor
+    let dex_mod = (character.dexterity - 10).div_euclid(2);
+    char_data.ac = compute_ac(&char_data.inventory, dex_mod);
+
+    // Compute derived fields
+    let con_mod = (character.constitution - 10).div_euclid(2);
+    char_data.hit_points_max = compute_hp_max(&char_data.classes, con_mod);
+    char_data.hit_die = compute_hit_die_string(&char_data.classes);
+
+    // Compute spellcasting: find primary caster class
+    let primary_caster = char_data.classes.iter()
+        .find_map(|c| spellcasting_ability_for_class(&c.class_name).map(|a| (a, &c.class_name)));
+
+    if let Some((ability_abbrev, _class_name)) = primary_caster {
+        let ability_mod = match ability_abbrev {
+            "INT" => (character.intelligence - 10).div_euclid(2),
+            "WIS" => (character.wisdom - 10).div_euclid(2),
+            "CHA" => (character.charisma - 10).div_euclid(2),
+            _ => 0,
+        };
+        let prof_bonus = {
+            let total_level: i32 = char_data.classes.iter().map(|c| c.level).sum();
+            if total_level <= 4 { 2 } else if total_level <= 8 { 3 }
+            else if total_level <= 12 { 4 } else if total_level <= 16 { 5 } else { 6 }
+        };
+
+        char_data.spellcasting_ability = Some(ability_abbrev.to_string());
+        char_data.spell_save_dc = Some(8 + prof_bonus + ability_mod);
+        char_data.spell_attack_bonus = Some(prof_bonus + ability_mod);
+
+        // Compute combined caster level for multiclass spell slots
+        let caster_level: f64 = char_data.classes.iter()
+            .map(|c| c.level as f64 * caster_level_multiplier(&c.class_name))
+            .sum();
+        let caster_level = caster_level.floor() as i32;
+
+        if caster_level > 0 {
+            char_data.spell_slots = spell_slots_for_caster_level(caster_level);
+        }
+    }
+
+    let char_data = char_data;
 
     // Get export options with defaults
     let opts = options.unwrap_or_default();
     let include_compact = opts.include_compact_sheet.unwrap_or(true);
-    let include_long_form = opts.include_long_form.unwrap_or(false);
     let include_battle_card = opts.include_battle_card.unwrap_or(false);
     let include_spell_cards = opts.include_spell_cards.unwrap_or(false);
     let include_equipment_cards = opts.include_equipment_cards.unwrap_or(false);
-    let include_equipment_detail = opts.include_equipment_detail.unwrap_or(false);
 
     // Log received options
     info!("=== Character Export Options ===");
     info!("  include_compact_sheet: {}", include_compact);
-    info!("  include_long_form: {}", include_long_form);
     info!("  include_battle_card: {}", include_battle_card);
     info!("  include_spell_cards: {}", include_spell_cards);
     info!("  include_equipment_cards: {}", include_equipment_cards);
-    info!("  include_equipment_detail: {}", include_equipment_detail);
     info!("================================");
 
     // Build PDF with selected sections
@@ -1625,13 +1855,6 @@ pub fn export_character(
     if include_compact {
         info!("[SECTION] Adding CharacterSection (compact sheet)");
         builder = builder.append(CharacterSection::new(char_data.clone()));
-        has_content = true;
-    }
-
-    // Add long form section
-    if include_long_form {
-        info!("[SECTION] Adding CharacterLongFormSection");
-        builder = builder.append(CharacterLongFormSection::new(char_data.clone()));
         has_content = true;
     }
 
@@ -1804,22 +2027,6 @@ pub fn export_character(
         }
     } else {
         info!("[SECTION] Equipment cards NOT requested");
-    }
-
-    // Add equipment detail (simple inventory list - doesn't need catalog lookup)
-    if include_equipment_detail {
-        if !char_data.inventory.is_empty() {
-            info!("[SECTION] Adding EquipmentDetailSection with {} items", char_data.inventory.len());
-            builder = builder.append(EquipmentDetailSection::new(
-                char_data.name.clone(),
-                char_data.inventory.clone(),
-            ));
-            has_content = true;
-        } else {
-            info!("[SECTION] Equipment detail requested but inventory is empty");
-        }
-    } else {
-        info!("[SECTION] Equipment detail NOT requested");
     }
 
     if !has_content {
