@@ -1,39 +1,18 @@
-# Loot & Treasure Audit
+---
+name: loot-audit
+description: >-
+  This skill should be used when the user asks to "audit loot",
+  "check treasure distribution", "review magic items", "is loot balanced",
+  "treasure by level", "too much gold", "not enough magic items",
+  "wealth check", or mentions "treasure placement", "loot tables",
+  or "magic item distribution".
+---
 
-This skill should be used when the user asks to "audit loot", "check treasure distribution", "review magic items", "is loot balanced", "treasure by level", "too much gold", "not enough magic items", "wealth check", or mentions "treasure placement", "loot tables", or "magic item distribution".
+# Loot & Treasure Audit
 
 ## Purpose
 
-Analyze treasure and magic item distribution across the campaign to ensure appropriate wealth and power progression. Identifies modules with no loot, excessive rewards, or missing item types.
-
-## D&D 5e Treasure Guidelines
-
-### Gold by Level (Individual)
-
-| Level | Low | Typical | High |
-|-------|-----|---------|------|
-| 1-4 | 50-100 gp | 100-500 gp | 500-1,000 gp |
-| 5-10 | 500-1,000 gp | 1,000-5,000 gp | 5,000-25,000 gp |
-| 11-16 | 5,000-10,000 gp | 10,000-50,000 gp | 50,000-200,000 gp |
-| 17-20 | 20,000-50,000 gp | 50,000-200,000 gp | 200,000+ gp |
-
-### Magic Items by Tier
-
-| Tier | Levels | Expected Items |
-|------|--------|----------------|
-| 1 | 1-4 | Few common/uncommon consumables |
-| 2 | 5-10 | Uncommon permanent, some rare |
-| 3 | 11-16 | Rare permanent, some very rare |
-| 4 | 17-20 | Very rare/legendary |
-
-### Item Type Distribution
-
-Balanced parties need:
-- Weapons for martial characters
-- Armor/defensive items
-- Spellcasting focuses/components
-- Utility items
-- Consumables (potions, scrolls)
+Analyze treasure and magic item distribution across the campaign to ensure appropriate wealth and power progression. Identify modules with no loot, excessive rewards, or missing item types.
 
 ## Analysis Process
 
@@ -58,11 +37,7 @@ For each item found:
 search_items(name: item_name)
 ```
 
-Extract:
-- Rarity
-- Type (weapon, armor, wondrous, etc.)
-- Attunement required?
-- Value
+Extract rarity, type (weapon, armor, wondrous, etc.), attunement requirement, and value.
 
 ### 3. Distribution Analysis
 
@@ -124,11 +99,11 @@ Calculate:
 |--------|------|-------------|--------|
 | [Name] | [X] gp | [List] | [Issues] |
 
-## 🚨 Loot Deserts (No Treasure)
+## Loot Deserts (No Treasure)
 - [Module]: No loot defined
   - Suggestion: Add [appropriate items] based on CR [X] monsters
 
-## ⚠️ Balance Concerns
+## Balance Concerns
 - [Module]: [Issue description]
   - Suggestion: [Fix]
 
@@ -148,7 +123,9 @@ Calculate:
 
 1. Analyze full campaign loot
 2. Present summary findings
-3. For loot deserts, offer to:
-   - Search catalog for appropriate items
-   - Add items to modules via `add_item_to_module`
+3. For loot deserts, offer to search the catalog and add items via `add_item_to_module`
 4. For balance issues, suggest specific swaps
+
+## Reference Data
+
+For gold-by-level guidelines and magic item tier expectations, see references/5e-treasure-guidelines.md.

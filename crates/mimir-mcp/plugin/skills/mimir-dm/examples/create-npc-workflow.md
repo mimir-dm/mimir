@@ -22,19 +22,7 @@ edit_character(
 )
 ```
 
-## Step 3: Add Personality
-
-```
-edit_character(
-  character_id: "character-id",
-  traits: "Speaks in a gruff, military manner. Never forgets a face.",
-  ideals: "The law must be upheld equally for all citizens.",
-  bonds: "Lost his daughter to criminals; now hunts them relentlessly.",
-  flaws: "Trusts no one outside the Watch."
-)
-```
-
-## Step 4: Equip the NPC
+## Step 3: Equip the NPC
 
 ```
 add_item_to_character(
@@ -56,7 +44,7 @@ add_item_to_character(
 )
 ```
 
-## Step 5: Verify
+## Step 4: Verify
 
 ```
 get_character(character_id: "character-id")

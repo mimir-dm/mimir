@@ -1,10 +1,24 @@
-# Session Prep Review
+---
+name: session-prep
+description: >-
+  This skill should be used when the user asks to "prep for session",
+  "review before game night", "session checklist", "am I ready to run this",
+  "pre-session review", "game prep", "DM prep check", or mentions
+  "running tonight", "session tomorrow", or "game day prep".
+---
 
-This skill should be used when the user asks to "prep for session", "review before game night", "session checklist", "am I ready to run this", "pre-session review", "game prep", "DM prep check", or mentions "running tonight", "session tomorrow", or "game day prep".
+# Session Prep Review
 
 ## Purpose
 
-Comprehensive pre-session review that combines continuity checking, encounter balance, NPC readiness, and identifies gaps that need attention before game time.
+Comprehensive pre-session review that combines continuity checking, encounter balance, NPC readiness, and gap identification before game time.
+
+For deeper analysis of specific areas, see the related skills:
+- **continuity-check** — Full plot consistency audit
+- **encounter-balance** — Detailed CR and XP math
+- **loot-audit** — Treasure distribution analysis
+- **npc-network** — Relationship mapping
+- **pressure-test** — Adversarial scenario testing
 
 ## Pre-Session Checklist
 
@@ -18,7 +32,7 @@ list_documents(module_id)
 ```
 
 Verify:
-- [ ] Module overview document exists and is complete
+- [ ] Backstory or description document exists and is complete
 - [ ] Read-aloud text prepared for key moments
 - [ ] DM notes cover contingencies
 - [ ] Maps/handouts referenced are available
@@ -31,8 +45,7 @@ list_characters(character_type: "npc", module_id: module_id)
 
 For each NPC players will likely encounter:
 - [ ] Name, role, location defined
-- [ ] Personality traits filled in (for roleplay)
-- [ ] Motivation/goals clear
+- [ ] Motivation and goals clear
 - [ ] Key information they know documented
 - [ ] Voice/mannerism notes (optional)
 
@@ -63,26 +76,26 @@ Review module monsters:
 ```markdown
 # Session Prep Report: [Module Name]
 
-## ✅ Ready
+## Ready
 - [List of complete elements]
 
-## ⚠️ Needs Attention
-- [Element]: [What's missing] → [Quick fix suggestion]
+## Needs Attention
+- [Element]: [What's missing] -> [Quick fix suggestion]
 
-## 🚨 Critical Gaps
-- [Element]: [Why it's critical] → [Action needed]
+## Critical Gaps
+- [Element]: [Why it's critical] -> [Action needed]
 
 ## NPCs for This Session
 
 | NPC | Location | Ready? | Missing |
 |-----|----------|--------|---------|
-| [Name] | [Location] | ✅/⚠️ | [What's missing] |
+| [Name] | [Location] | [OK/WARN] | [What's missing] |
 
 ## Encounters
 
 | Encounter | Difficulty | Ready? | Notes |
 |-----------|------------|--------|-------|
-| [Name] | [Difficulty] | ✅/⚠️ | [Notes] |
+| [Name] | [Difficulty] | [OK/WARN] | [Notes] |
 
 ## Quick Reference
 
@@ -105,7 +118,7 @@ Review module monsters:
 2. Run through checklist categories
 3. For each gap, offer to:
    - Create missing NPC details
-   - Add DM notes
+   - Add DM notes via `create_document`
    - Generate read-aloud text
    - Suggest encounter adjustments
-4. Generate a condensed "cheat sheet" for the session
+4. Generate a condensed cheat sheet for the session

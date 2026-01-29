@@ -1,10 +1,18 @@
-# Plot Continuity Check
+---
+name: continuity-check
+description: >-
+  This skill should be used when the user asks to "check continuity",
+  "verify plot consistency", "find contradictions", "audit my campaign",
+  "check for inconsistencies", "verify NPC references", "timeline check",
+  "fact check my module", "continuity audit", or mentions "plot holes",
+  "contradictions", or "consistency issues".
+---
 
-This skill should be used when the user asks to "check continuity", "verify plot consistency", "find contradictions", "audit my campaign", "check for inconsistencies", "verify NPC references", "timeline check", "fact check my module", "continuity audit", or mentions "plot holes", "contradictions", or "consistency issues".
+# Plot Continuity Check
 
 ## Purpose
 
-Systematically verify that all references in campaign documents are internally consistent - NPCs exist, locations are established, timelines align, and facts don't contradict each other.
+Systematically verify that all references in campaign documents are internally consistent — NPCs exist, locations are established, timelines align, and facts do not contradict each other.
 
 ## Continuity Check Process
 
@@ -27,32 +35,27 @@ read_document(document_id)
 Extract and catalog all named entities:
 
 #### Characters
-- NPC names mentioned in documents
+- Extract NPC names mentioned in documents
 - Cross-reference with `list_characters(character_type: "npc")`
-- Note: roles, locations, relationships
+- Note roles, locations, and relationships
 
 #### Locations
-- Places mentioned in read-aloud text
-- Places mentioned in backstory
-- Places in NPC locations field
-- Check for consistent spelling/naming
+- Extract places mentioned in read-aloud text, backstory, and NPC locations
+- Check for consistent spelling and naming
 
 #### Items
-- Named items in documents
-- Module loot items
-- Character inventory items
-- Verify catalog references exist
+- Extract named items in documents, module loot, and character inventories
+- Verify catalog references exist via `search_items`
 
 #### Timeline Events
-- Dates/times mentioned in backstory
-- Sequence of events
-- "X days ago" references
-- Character ages vs event dates
+- Extract dates, times, and relative references ("X days ago")
+- Check character ages against event dates
+- Verify sequence consistency
 
 #### Factions/Organizations
-- Groups mentioned in documents
-- NPC faction assignments
-- Relationships between factions
+- Extract groups mentioned in documents
+- Map NPC faction assignments
+- Document inter-faction relationships
 
 ### 3. Cross-Reference Check
 
@@ -96,7 +99,7 @@ Provide a structured continuity report:
 ### Verified NPCs
 | Name | Location | Role | Status |
 |------|----------|------|--------|
-| [Name] | [Location] | [Role] | ✓ Consistent |
+| [Name] | [Location] | [Role] | [OK] Consistent |
 
 ### Orphan References
 - "[Name]" mentioned in [Document] but no character record exists
@@ -132,7 +135,7 @@ Provide a structured continuity report:
 
 When checking interactively:
 
-1. Start with high-level scan
+1. Start with a high-level scan
 2. Report findings by category
 3. Ask: "Should I investigate [specific issue] further?"
 4. Offer to create missing NPCs or update documents to fix inconsistencies

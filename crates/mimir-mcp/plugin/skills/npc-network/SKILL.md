@@ -1,10 +1,18 @@
-# NPC Network Analysis
+---
+name: npc-network
+description: >-
+  This skill should be used when the user asks to "map NPC relationships",
+  "show character connections", "analyze NPC network", "who knows who",
+  "faction relationships", "visualize NPCs", "NPC web",
+  "character relationship map", or mentions "NPC connections",
+  "social network", or "faction dynamics".
+---
 
-This skill should be used when the user asks to "map NPC relationships", "show character connections", "analyze NPC network", "who knows who", "faction relationships", "visualize NPCs", "NPC web", "character relationship map", or mentions "NPC connections", "social network", or "faction dynamics".
+# NPC Network Analysis
 
 ## Purpose
 
-Analyze and visualize the relationships between NPCs, their faction affiliations, knowledge networks, and social connections. Identify isolated NPCs, missing connections, and opportunities for richer storytelling.
+Analyze and visualize relationships between NPCs, their faction affiliations, knowledge networks, and social connections. Identify isolated NPCs, missing connections, and opportunities for richer storytelling.
 
 ## Analysis Process
 
@@ -16,11 +24,7 @@ list_characters(character_type: "npc")
 get_character(character_id)
 ```
 
-Extract from each NPC:
-- Name, role, location
-- Faction affiliation
-- Personality (traits, ideals, bonds, flaws)
-- Module assignment
+Extract from each NPC: name, role, location, faction affiliation, and module assignment.
 
 ### 2. Extract Implicit Relationships
 
@@ -34,8 +38,8 @@ read_document(document_id)
 
 Look for:
 - Direct relationships: "X is Y's brother"
-- Implied connections: Characters in same location
-- Faction ties: Members of same organization
+- Implied connections: Characters in the same location
+- Faction ties: Members of the same organization
 - Conflict relationships: Enemies, rivals
 - Knowledge chains: Who knows what secrets
 
@@ -57,50 +61,36 @@ Categorize relationships:
 
 Identify:
 
-#### Hub NPCs
-- Characters with many connections
-- These are high-value targets for players
-- Consider: Are they protected? What if they die?
+**Hub NPCs** — Characters with many connections. These are high-value targets for players. Consider: Are they protected? What happens if they die?
 
-#### Isolated NPCs
-- Characters with no connections
-- Missed storytelling opportunities
-- Consider: How do players encounter them?
+**Isolated NPCs** — Characters with no connections. These represent missed storytelling opportunities. Consider: How do players encounter them?
 
-#### Faction Clusters
-- Groups of connected NPCs
-- Internal faction dynamics
-- Cross-faction connections
+**Faction Clusters** — Groups of connected NPCs. Map internal faction dynamics and cross-faction connections.
 
-#### Information Flow
-- How does news travel?
-- Who would know if X happened?
-- Rumor mill paths
+**Information Flow** — How does news travel? Who would know if X happened? Trace rumor mill paths.
 
 ## Output Format
-
-### Text Relationship Map
 
 ```markdown
 # NPC Network: [Campaign Name]
 
 ## Faction: [Faction Name]
-├── [Leader NPC] (Leader)
-│   ├── employs → [NPC]
-│   └── rivals → [NPC from other faction]
-├── [Member NPC]
-│   └── siblings → [NPC]
-└── [Member NPC]
++-- [Leader NPC] (Leader)
+|   +-- employs -> [NPC]
+|   +-- rivals -> [NPC from other faction]
++-- [Member NPC]
+|   +-- siblings -> [NPC]
++-- [Member NPC]
 
 ## Location: [Location Name]
-├── [NPC] - [Role]
-├── [NPC] - [Role]
-└── [NPC] - [Role]
++-- [NPC] - [Role]
++-- [NPC] - [Role]
++-- [NPC] - [Role]
 
 ## Key Relationships
-- [NPC] ←secret lovers→ [NPC]
-- [NPC] ←owes debt→ [NPC]
-- [NPC] ←seeking revenge→ [NPC]
+- [NPC] <-secret lovers-> [NPC]
+- [NPC] <-owes debt-> [NPC]
+- [NPC] <-seeking revenge-> [NPC]
 
 ## Isolated NPCs (No Connections)
 - [NPC]: Consider connecting to [suggestion]
@@ -125,6 +115,6 @@ graph TD
 
 1. Present overall network structure
 2. Ask: "Which relationships would you like to explore?"
-3. Deep dive into specific factions or characters
-4. Suggest missing connections: "These NPCs are in the same location but have no relationship defined. Should they know each other?"
+3. Deep-dive into specific factions or characters
+4. Suggest missing connections: "These NPCs share a location but have no defined relationship. Should they know each other?"
 5. Offer to update NPC records with discovered relationships
