@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "mimir": {
+      "command": "mimir-mcp",
+      "args": [],
+      "env": {
+        "MIMIR_DATABASE_PATH": "${MIMIR_DATABASE_PATH:-$HOME/Library/Application Support/com.mimir.app/data/mimir.db}"
+      }
+    }
+  }
+}

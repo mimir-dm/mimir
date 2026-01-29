@@ -1,17 +1,5 @@
 {
   "name": "mimir-dm",
   "version": "0.5.0",
-  "description": "D&D 5e Campaign Management for Dungeon Masters. Create modules, manage NPCs, populate encounters, and search the 5etools catalog.",
-  "mcp": {
-    "servers": {
-      "mimir": {
-        "command": "mimir-mcp",
-        "args": [],
-        "transport": "stdio",
-        "env": {
-          "MIMIR_DATABASE_PATH": "${MIMIR_DATABASE_PATH}"
-        }
-      }
-    }
-  }
+  "description": "D&D 5e Campaign Management for Dungeon Masters. Create modules, manage NPCs, populate encounters, and search the 5etools catalog."
 }

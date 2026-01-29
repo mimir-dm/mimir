@@ -100,7 +100,8 @@ const reseedError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    isDevMode.value = await invoke<boolean>('is_dev_mode')
+    const response = await invoke<{ success: boolean; data: boolean }>('is_dev_mode')
+    isDevMode.value = response.success && response.data
   } catch (error) {
     // Dev mode command not available - that's fine, isDevMode stays false
   }

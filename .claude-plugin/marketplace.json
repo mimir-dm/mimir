@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Mimir D&D 5e campaign management tools for Claude Code",
-    "version": "0.2.3"
+    "version": "0.5.0"
   },
   "plugins": [
     {
       "name": "mimir-dm",
-      "source": "./crates/mimir-dm-mcp/plugin",
+      "source": "./crates/mimir-mcp/plugin",
       "description": "D&D 5e campaign authoring tools for Mimir. Create campaigns, modules, NPCs, and documents.",
-      "version": "0.2.3",
+      "version": "0.5.0",
       "author": {
         "name": "Colliery",
         "email": "contact@colliery.io"
