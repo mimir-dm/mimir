@@ -19,10 +19,10 @@ The binary will be at `target/release/mimir-mcp`.
 
 ### Environment Setup
 
-Set the database path:
+The MCP server automatically finds the Mimir database in the Tauri app's data directory. To override, set:
 
 ```bash
-export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/mimir.db"
+export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db"
 ```
 
 ### Claude Code Plugin Installation

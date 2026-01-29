@@ -46,7 +46,6 @@ diesel = { workspace = true }
 # Utilities
 chrono = { workspace = true }
 uuid = { workspace = true }
-directories = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

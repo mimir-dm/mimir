@@ -41,6 +41,14 @@
               </li>
               <li>
                 <button
+                  @click="activeSection = 'integrations'"
+                  :class="['nav-item', { active: activeSection === 'integrations' }]"
+                >
+                  Integrations
+                </button>
+              </li>
+              <li>
+                <button
                   @click="activeSection = 'about'"
                   :class="['nav-item', { active: activeSection === 'about' }]"
                 >
@@ -75,9 +83,10 @@
             <div class="form-group">
               <ThemeSelector />
             </div>
+          </div>
 
-            <div class="form-divider"></div>
-
+          <!-- Integrations -->
+          <div v-else-if="activeSection === 'integrations'" class="content-section">
             <h2 class="content-title">Claude Integration</h2>
             <p class="content-description">Connect Mimir with Claude Code or Claude Desktop for AI-assisted campaign management</p>
 

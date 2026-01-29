@@ -333,7 +333,7 @@ pub async fn export_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
 
     let mut db = ctx.db()?;
     let output_dir = Path::new(output_path);
-    let assets_dir = &ctx.paths.assets_dir;
+    let assets_dir = &ctx.assets_dir;
 
     let archive_path = ArchiveService::new(&mut db)
         .export_campaign(&campaign_id, output_dir, assets_dir)
@@ -363,7 +363,7 @@ pub async fn import_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
 
     let mut db = ctx.db()?;
     let archive = Path::new(archive_path);
-    let assets_dir = &ctx.paths.assets_dir;
+    let assets_dir = &ctx.assets_dir;
 
     let result = ArchiveService::new(&mut db)
         .import_campaign(archive, assets_dir, new_name)

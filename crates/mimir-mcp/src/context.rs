@@ -9,59 +9,53 @@ use std::sync::Mutex;
 
 use crate::McpError;
 
-/// Application paths for data storage.
-#[derive(Debug, Clone)]
-pub struct AppPaths {
-    /// Directory containing the database
-    pub data_dir: PathBuf,
-    /// Directory for asset files (images, etc.)
-    pub assets_dir: PathBuf,
-}
-
-impl AppPaths {
-    /// Create paths using standard locations.
-    pub fn standard() -> Self {
-        let data_dir = directories::ProjectDirs::from("io", "colliery", "mimir")
-            .map(|dirs| dirs.data_dir().to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("."));
-
-        Self {
-            assets_dir: data_dir.join("assets"),
-            data_dir,
-        }
-    }
-}
-
 /// Shared context for the MCP server.
 ///
 /// Contains database connection and state that persists across tool calls.
 pub struct McpContext {
     /// Database connection (wrapped in Mutex for thread safety)
     pub db: Mutex<SqliteConnection>,
-    /// Application paths
-    pub paths: AppPaths,
+    /// Directory for asset files (images, etc.)
+    pub assets_dir: PathBuf,
     /// Currently active campaign ID
     pub active_campaign_id: Mutex<Option<String>>,
 }
 
 impl McpContext {
-    /// Create a new context with standard paths.
+    /// Create a new context from `MIMIR_DATABASE_PATH` environment variable.
+    ///
+    /// The env var must point to the SQLite database file
+    /// (e.g. `~/Library/Application Support/com.mimir.app/data/mimir.db`).
     pub fn new() -> Result<Self, McpError> {
-        let paths = AppPaths::standard();
+        let db_path = std::env::var("MIMIR_DATABASE_PATH")
+            .ok()
+            .filter(|p| !p.is_empty() && !p.starts_with("${"))
+            .map(PathBuf::from)
+            .ok_or_else(|| {
+                McpError::Initialization(
+                    "MIMIR_DATABASE_PATH environment variable is required. \
+                     Set it to the path of your Mimir database file \
+                     (e.g. ~/Library/Application Support/com.mimir.app/data/mimir.db)"
+                        .to_string(),
+                )
+            })?;
 
-        // Ensure data directory exists
-        std::fs::create_dir_all(&paths.data_dir).map_err(|e| {
-            McpError::Initialization(format!("Failed to create data directory: {}", e))
-        })?;
+        let assets_dir = db_path
+            .parent()
+            .map(|p| p.join("assets"))
+            .unwrap_or_else(|| PathBuf::from("assets"));
 
-        let db_path = paths.data_dir.join("mimir.db");
         let db = init_database(db_path.to_str().unwrap_or("mimir.db")).map_err(|e| {
-            McpError::Initialization(format!("Failed to connect to database: {}", e))
+            McpError::Initialization(format!(
+                "Failed to connect to database at {}: {}",
+                db_path.display(),
+                e
+            ))
         })?;
 
         Ok(Self {
             db: Mutex::new(db),
-            paths,
+            assets_dir,
             active_campaign_id: Mutex::new(None),
         })
     }

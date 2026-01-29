@@ -4,10 +4,25 @@
 //! These commands check for dev mode before executing.
 
 use mimir_core::seed;
+use serde::Serialize;
 use tauri::State;
 
 use super::{to_api_response, ApiResponse};
 use crate::state::AppState;
+
+/// Application info returned to the frontend.
+#[derive(Serialize)]
+pub struct AppInfo {
+    pub database_path: String,
+}
+
+/// Get application info (database path, etc.) for the settings UI.
+#[tauri::command]
+pub fn get_app_info(state: State<'_, AppState>) -> ApiResponse<AppInfo> {
+    ApiResponse::ok(AppInfo {
+        database_path: state.paths.database_path.to_string_lossy().to_string(),
+    })
+}
 
 /// Check if the application is running in development mode.
 #[tauri::command]

@@ -361,6 +361,8 @@ fn main() {
             dm_map::open_dm_map_window,
             dm_map::close_dm_map_window,
             dm_map::toggle_dm_map_fullscreen,
+            // App info commands
+            dev::get_app_info,
             // Dev tools commands (dev mode only)
             dev::is_dev_mode,
             dev::is_dev_seeded,
