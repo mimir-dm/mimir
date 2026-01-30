@@ -30,11 +30,12 @@ impl McpContext {
         let db_path = std::env::var("MIMIR_DATABASE_PATH")
             .ok()
             .filter(|p| !p.is_empty() && !p.starts_with("${"))
-            .map(PathBuf::from)
+            .or_else(|| Self::default_db_path())
+            .map(|p| Self::expand_path(&p))
             .ok_or_else(|| {
                 McpError::Initialization(
-                    "MIMIR_DATABASE_PATH environment variable is required. \
-                     Set it to the path of your Mimir database file \
+                    "Could not determine database path. Set MIMIR_DATABASE_PATH \
+                     to the path of your Mimir database file \
                      (e.g. ~/Library/Application Support/com.mimir.app/data/mimir.db)"
                         .to_string(),
                 )
@@ -58,6 +59,40 @@ impl McpContext {
             assets_dir,
             active_campaign_id: Mutex::new(None),
         })
+    }
+
+    /// Expand `~` and `$HOME` in a path string.
+    fn expand_path(path: &str) -> PathBuf {
+        let home = std::env::var("HOME").ok();
+        if path.starts_with("~/") {
+            if let Some(h) = &home {
+                return PathBuf::from(h).join(&path[2..]);
+            }
+        } else if path.starts_with("$HOME/") {
+            if let Some(h) = &home {
+                return PathBuf::from(h).join(&path[6..]);
+            }
+        }
+        PathBuf::from(path)
+    }
+
+    /// Return the default database path for the current platform.
+    fn default_db_path() -> Option<String> {
+        let home = std::env::var("HOME").ok()?;
+        #[cfg(target_os = "macos")]
+        {
+            Some(format!("{}/Library/Application Support/com.mimir.app/data/mimir.db", home))
+        }
+        #[cfg(target_os = "linux")]
+        {
+            let data = std::env::var("XDG_DATA_HOME")
+                .unwrap_or_else(|_| format!("{}/.local/share", home));
+            Some(format!("{}/com.mimir.app/data/mimir.db", data))
+        }
+        #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+        {
+            None
+        }
     }
 
     /// Get the active campaign ID, if set.
