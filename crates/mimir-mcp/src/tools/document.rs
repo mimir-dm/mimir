@@ -1,6 +1,6 @@
 //! Document Tools
 //!
-//! MCP tools for managing module documents (narrative content).
+//! MCP tools for managing documents (campaign-level and module-level narrative content).
 
 use mimir_core::services::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
@@ -18,10 +18,15 @@ use crate::McpError;
 pub fn list_documents_tool() -> Tool {
     Tool {
         name: "list_documents".to_string(),
-        description: Some("List all documents in a module".to_string()),
+        description: Some(
+            "List all documents in a module. If module_id is omitted, lists campaign-level documents (requires active campaign)."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string()],
-            create_properties(vec![("module_id", "string", "The ID of the module")]),
+            vec![],
+            create_properties(vec![
+                ("module_id", "string", "The ID of the module (optional — omit for campaign-level documents)"),
+            ]),
             None,
         ),
         title: None,
@@ -54,15 +59,17 @@ pub fn read_document_tool() -> Tool {
 pub fn create_document_tool() -> Tool {
     Tool {
         name: "create_document".to_string(),
-        description: Some("Create a new document in a module".to_string()),
+        description: Some(
+            "Create a new document in a module or at the campaign level. Omit module_id for a campaign-level document."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
             vec![
-                "module_id".to_string(),
                 "title".to_string(),
                 "document_type".to_string(),
             ],
             create_properties(vec![
-                ("module_id", "string", "The ID of the module"),
+                ("module_id", "string", "The ID of the module (optional — omit for campaign-level documents)"),
                 ("title", "string", "Title of the document"),
                 (
                     "document_type",
@@ -113,17 +120,23 @@ pub fn edit_document_tool() -> Tool {
 // =============================================================================
 
 pub async fn list_documents(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
+    let module_id = args.get("module_id").and_then(|v| v.as_str());
 
     let mut db = ctx.db()?;
     let mut service = DocumentService::new(&mut db);
 
-    let documents = service
-        .list_for_module(module_id)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let documents = if let Some(mid) = module_id {
+        service
+            .list_for_module(mid)
+            .map_err(|e| McpError::Internal(e.to_string()))?
+    } else {
+        let campaign_id = ctx
+            .get_active_campaign_id()
+            .ok_or(McpError::NoActiveCampaign)?;
+        service
+            .list_for_campaign(&campaign_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?
+    };
 
     let doc_data: Vec<Value> = documents
         .iter()
@@ -131,7 +144,8 @@ pub async fn list_documents(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
             json!({
                 "id": d.id,
                 "title": d.title,
-                "doc_type": d.doc_type
+                "doc_type": d.doc_type,
+                "module_id": d.module_id
             })
         })
         .collect();
@@ -172,10 +186,7 @@ pub async fn create_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
+    let module_id = args.get("module_id").and_then(|v| v.as_str());
 
     let title = args
         .get("title")
@@ -192,8 +203,12 @@ pub async fn create_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     let mut db = ctx.db()?;
     let mut service = DocumentService::new(&mut db);
 
-    let mut input = CreateDocumentInput::for_module(&campaign_id, module_id, title)
-        .with_type(document_type);
+    let mut input = if let Some(mid) = module_id {
+        CreateDocumentInput::for_module(&campaign_id, mid, title)
+    } else {
+        CreateDocumentInput::for_campaign(&campaign_id, title)
+    }
+    .with_type(document_type);
 
     if let Some(c) = content {
         input = input.with_content(c);

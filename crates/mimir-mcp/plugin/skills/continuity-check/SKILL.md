@@ -22,11 +22,14 @@ Load and analyze all campaign content:
 
 ```
 get_campaign_details(campaign_id)
+# Campaign-level documents (world lore, session notes, etc.)
+list_documents()  # omit module_id for campaign-level docs
+read_document(document_id)
+# Module-level documents
 list_modules()
 # For each module:
 get_module_details(module_id)
 list_documents(module_id)
-# Read each document
 read_document(document_id)
 ```
 

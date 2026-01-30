@@ -6,9 +6,10 @@ description: >-
   "find D&D items", "list campaigns", "set up a dungeon crawl", "create a mystery adventure",
   "add loot to characters", "search for traps", "manage character inventory",
   "build an adventure", "populate a dungeon", "give items to players", "create a villain",
-  "add treasure", "write session notes", or mentions "Mimir campaign", "D&D 5e authoring",
+  "add treasure", "write session notes", "create campaign document", "add world lore",
+  "campaign-level document", or mentions "Mimir campaign", "D&D 5e authoring",
   or "dungeon master tools". Provides MCP tools for campaign management, module creation,
-  NPC authoring, and catalog searching.
+  NPC authoring, document management, and catalog searching.
 ---
 
 # Mimir DM - D&D 5e Campaign Management
@@ -24,11 +25,19 @@ All subsequent operations require an active campaign.
 
 ## Core Workflows
 
+### Create Campaign-Level Documents
+
+Campaign-level documents are not tied to any module — use them for world lore, session notes, or campaign-wide references.
+
+1. Set the active campaign
+2. Create a document with `create_document` (title, document_type) — **omit `module_id`**
+3. List campaign documents with `list_documents` — **omit `module_id`**
+
 ### Create and Populate a Module
 
 1. Set the active campaign
 2. Create the module with `create_module` (name, type, description)
-3. Add narrative documents with `create_document` (backstory, read_aloud, dm_notes, description, custom)
+3. Add narrative documents with `create_document` (module_id, backstory, read_aloud, dm_notes, description, custom)
 4. Search the catalog with `search_monsters` to find exact names
 5. Add monsters with `add_monster_to_module` (include count and notes)
 6. Search items with `search_items` and add loot with `add_item_to_module`
@@ -52,7 +61,9 @@ Use `get_module_details` to see the full structure before editing — it returns
 
 ## Document Types
 
-Modules support these document types for `create_document`:
+Documents can belong to a **module** (provide `module_id`) or the **campaign** (omit `module_id`).
+
+Supported types for `create_document`:
 
 - `backstory` — Background and history
 - `read_aloud` — Text to read to players

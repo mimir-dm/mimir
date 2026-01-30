@@ -19,7 +19,7 @@ The binary will be at `target/release/mimir-mcp`.
 
 ### Environment Setup
 
-The MCP server **requires** the `MIMIR_DATABASE_PATH` environment variable pointing to your Mimir database file:
+The MCP server automatically detects the default database location. You can optionally override it with the `MIMIR_DATABASE_PATH` environment variable:
 
 ```bash
 # macOS (production)
@@ -75,9 +75,9 @@ claude mcp add mimir \
 - `add_item_to_module` - Add an item from the catalog as module loot
 
 ### Document Management
-- `list_documents` - List all documents in a module
+- `list_documents` - List documents in a module, or campaign-level documents (omit `module_id`)
 - `read_document` - Read the full content of a document
-- `create_document` - Create a new document in a module
+- `create_document` - Create a document in a module or at the campaign level (omit `module_id`)
 - `edit_document` - Edit a document using search and replace
 
 ### Character Management
@@ -131,9 +131,9 @@ When a campaign is active, catalog searches are automatically filtered to only i
 
 ## Document Types
 
-Modules support various document types for organizing content:
-- `module_overview` - Main module description and structure
-- `play_notes` - Session tracking and notes
+Documents can belong to a **module** or directly to the **campaign** (omit `module_id`). Campaign-level documents are useful for world lore, session notes, and campaign-wide references.
+
+Supported document types:
 - `backstory` - Background and history
 - `read_aloud` - Text to read to players
 - `dm_notes` - DM-only information

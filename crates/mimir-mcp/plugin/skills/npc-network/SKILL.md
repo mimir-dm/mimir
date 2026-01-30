@@ -31,6 +31,10 @@ Extract from each NPC: name, role, location, faction affiliation, and module ass
 Read documents to find relationship mentions:
 
 ```
+# Campaign-level documents (world lore, session notes)
+list_documents()  # omit module_id for campaign-level docs
+read_document(document_id)
+# Module-level documents
 # For each module:
 list_documents(module_id)
 read_document(document_id)

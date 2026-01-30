@@ -24,9 +24,12 @@ For deeper analysis of specific areas, see the related skills:
 
 ### 1. Content Readiness
 
-Load the module being run:
+Load the module being run and campaign-level context:
 
 ```
+# Campaign-level documents (world lore, session notes)
+list_documents()  # omit module_id for campaign-level docs
+# Module content
 get_module_details(module_id)
 list_documents(module_id)
 ```
@@ -36,6 +39,7 @@ Verify:
 - [ ] Read-aloud text prepared for key moments
 - [ ] DM notes cover contingencies
 - [ ] Maps/handouts referenced are available
+- [ ] Relevant campaign-level documents reviewed (world lore, prior session notes)
 
 ### 2. NPC Readiness
 
