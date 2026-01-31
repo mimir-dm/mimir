@@ -5,7 +5,9 @@ description: >-
   "show character connections", "analyze NPC network", "who knows who",
   "faction relationships", "visualize NPCs", "NPC web",
   "character relationship map", or mentions "NPC connections",
-  "social network", or "faction dynamics".
+  "social network", or "faction dynamics". Maps relationships between NPCs
+  by faction, location, and document references to identify hub characters,
+  isolated NPCs, and missing connections.
 ---
 
 # NPC Network Analysis
@@ -20,8 +22,11 @@ Analyze and visualize relationships between NPCs, their faction affiliations, kn
 
 ```
 list_characters(character_type: "npc")
+# Filter by location or faction for focused analysis:
+list_characters(character_type: "npc", location: "Waterdeep")
+list_characters(character_type: "npc", faction: "Zhentarim")
 # For each NPC:
-get_character(character_id)
+get_character(character_id: character_id)
 ```
 
 Extract from each NPC: name, role, location, faction affiliation, and module assignment.
@@ -33,11 +38,11 @@ Read documents to find relationship mentions:
 ```
 # Campaign-level documents (world lore, session notes)
 list_documents()  # omit module_id for campaign-level docs
-read_document(document_id)
+read_document(document_id: document_id)
 # Module-level documents
 # For each module:
-list_documents(module_id)
-read_document(document_id)
+list_documents(module_id: module_id)
+read_document(document_id: document_id)
 ```
 
 Look for:

@@ -5,7 +5,9 @@ description: >-
   "verify plot consistency", "find contradictions", "audit my campaign",
   "check for inconsistencies", "verify NPC references", "timeline check",
   "fact check my module", "continuity audit", or mentions "plot holes",
-  "contradictions", or "consistency issues".
+  "contradictions", or "consistency issues". Cross-references all campaign
+  documents, NPCs, locations, and timelines to find contradictions, orphan
+  references, and naming inconsistencies.
 ---
 
 # Plot Continuity Check
@@ -21,16 +23,16 @@ Systematically verify that all references in campaign documents are internally c
 Load and analyze all campaign content:
 
 ```
-get_campaign_details(campaign_id)
+get_campaign_details()
 # Campaign-level documents (world lore, session notes, etc.)
 list_documents()  # omit module_id for campaign-level docs
-read_document(document_id)
+read_document(document_id: document_id)
 # Module-level documents
 list_modules()
 # For each module:
-get_module_details(module_id)
-list_documents(module_id)
-read_document(document_id)
+get_module_details(module_id: module_id)
+list_documents(module_id: module_id)
+read_document(document_id: document_id)
 ```
 
 ### 2. Build Reference Index
@@ -40,7 +42,9 @@ Extract and catalog all named entities:
 #### Characters
 - Extract NPC names mentioned in documents
 - Cross-reference with `list_characters(character_type: "npc")`
+- Use location/faction filters to verify groupings: `list_characters(character_type: "npc", location: "...")`, `list_characters(character_type: "npc", faction: "...")`
 - Note roles, locations, and relationships
+- Verify character inventories match document references: `get_character_inventory(character_id)`
 
 #### Locations
 - Extract places mentioned in read-aloud text, backstory, and NPC locations

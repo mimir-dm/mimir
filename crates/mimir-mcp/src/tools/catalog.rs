@@ -4,7 +4,10 @@
 
 use mimir_core::dal::campaign as campaign_dal;
 use mimir_core::dal::catalog as catalog_dal;
-use mimir_core::models::catalog::{ItemFilter, MonsterFilter, SpellFilter};
+use mimir_core::models::catalog::{
+    BackgroundFilter, ClassFilter, ConditionFilter, FeatFilter, ItemFilter, MonsterFilter,
+    RaceFilter, SpellFilter,
+};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -87,6 +90,111 @@ pub fn search_spells_tool() -> Tool {
                     "Filter by school (e.g., evocation, necromancy)",
                 ),
                 ("class_name", "string", "Filter by class spell list"),
+                ("limit", "integer", "Maximum results to return (default: 20)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn search_races_tool() -> Tool {
+    Tool {
+        name: "search_races".to_string(),
+        description: Some("Search the race catalog".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec![],
+            create_properties(vec![
+                ("name", "string", "Search by name (partial match)"),
+                ("limit", "integer", "Maximum results to return (default: 20)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn search_classes_tool() -> Tool {
+    Tool {
+        name: "search_classes".to_string(),
+        description: Some("Search the class catalog".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec![],
+            create_properties(vec![
+                ("name", "string", "Search by name (partial match)"),
+                ("limit", "integer", "Maximum results to return (default: 20)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn search_backgrounds_tool() -> Tool {
+    Tool {
+        name: "search_backgrounds".to_string(),
+        description: Some("Search the background catalog".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec![],
+            create_properties(vec![
+                ("name", "string", "Search by name (partial match)"),
+                ("limit", "integer", "Maximum results to return (default: 20)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn search_feats_tool() -> Tool {
+    Tool {
+        name: "search_feats".to_string(),
+        description: Some("Search the feat catalog".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec![],
+            create_properties(vec![
+                ("name", "string", "Search by name (partial match)"),
+                ("limit", "integer", "Maximum results to return (default: 20)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn search_conditions_tool() -> Tool {
+    Tool {
+        name: "search_conditions".to_string(),
+        description: Some("Search the condition catalog".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec![],
+            create_properties(vec![
+                ("name", "string", "Search by name (partial match)"),
                 ("limit", "integer", "Maximum results to return (default: 20)"),
             ]),
             None,
@@ -258,4 +366,139 @@ pub async fn search_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         "spells": spell_data,
         "count": spell_data.len()
     }))
+}
+
+pub async fn search_races(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let mut db = ctx.db()?;
+    let mut filter = RaceFilter::new();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        filter = filter.with_name_contains(name);
+    }
+    if let Some(campaign_id) = ctx.get_active_campaign_id() {
+        let sources = campaign_dal::list_campaign_source_codes(&mut db, &campaign_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+        if !sources.is_empty() {
+            filter = filter.with_sources(sources);
+        }
+    }
+
+    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20) as i64;
+    let races = catalog_dal::search_races_paginated(&mut db, &filter, limit, 0)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    let data: Vec<Value> = races
+        .iter()
+        .map(|r| json!({"name": r.name, "source": r.source}))
+        .collect();
+
+    Ok(json!({"races": data, "count": data.len()}))
+}
+
+pub async fn search_classes(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let mut db = ctx.db()?;
+    let mut filter = ClassFilter::new();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        filter = filter.with_name_contains(name);
+    }
+    if let Some(campaign_id) = ctx.get_active_campaign_id() {
+        let sources = campaign_dal::list_campaign_source_codes(&mut db, &campaign_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+        if !sources.is_empty() {
+            filter = filter.with_sources(sources);
+        }
+    }
+
+    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20) as i64;
+    let classes = catalog_dal::search_classes_paginated(&mut db, &filter, limit, 0)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    let data: Vec<Value> = classes
+        .iter()
+        .map(|c| json!({"name": c.name, "source": c.source}))
+        .collect();
+
+    Ok(json!({"classes": data, "count": data.len()}))
+}
+
+pub async fn search_backgrounds(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let mut db = ctx.db()?;
+    let mut filter = BackgroundFilter::new();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        filter = filter.with_name_contains(name);
+    }
+    if let Some(campaign_id) = ctx.get_active_campaign_id() {
+        let sources = campaign_dal::list_campaign_source_codes(&mut db, &campaign_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+        if !sources.is_empty() {
+            filter = filter.with_sources(sources);
+        }
+    }
+
+    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20) as i64;
+    let backgrounds = catalog_dal::search_backgrounds_paginated(&mut db, &filter, limit, 0)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    let data: Vec<Value> = backgrounds
+        .iter()
+        .map(|b| json!({"name": b.name, "source": b.source}))
+        .collect();
+
+    Ok(json!({"backgrounds": data, "count": data.len()}))
+}
+
+pub async fn search_feats(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let mut db = ctx.db()?;
+    let mut filter = FeatFilter::new();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        filter = filter.with_name_contains(name);
+    }
+    if let Some(campaign_id) = ctx.get_active_campaign_id() {
+        let sources = campaign_dal::list_campaign_source_codes(&mut db, &campaign_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+        if !sources.is_empty() {
+            filter = filter.with_sources(sources);
+        }
+    }
+
+    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20) as i64;
+    let feats = catalog_dal::search_feats_paginated(&mut db, &filter, limit, 0)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    let data: Vec<Value> = feats
+        .iter()
+        .map(|f| json!({"name": f.name, "source": f.source}))
+        .collect();
+
+    Ok(json!({"feats": data, "count": data.len()}))
+}
+
+pub async fn search_conditions(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let mut db = ctx.db()?;
+    let mut filter = ConditionFilter::new();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        filter = filter.with_name_contains(name);
+    }
+    if let Some(campaign_id) = ctx.get_active_campaign_id() {
+        let sources = campaign_dal::list_campaign_source_codes(&mut db, &campaign_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+        if !sources.is_empty() {
+            filter = filter.with_sources(sources);
+        }
+    }
+
+    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20) as i64;
+    let conditions = catalog_dal::search_conditions_paginated(&mut db, &filter, limit, 0)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    let data: Vec<Value> = conditions
+        .iter()
+        .map(|c| json!({"name": c.name, "source": c.source}))
+        .collect();
+
+    Ok(json!({"conditions": data, "count": data.len()}))
 }

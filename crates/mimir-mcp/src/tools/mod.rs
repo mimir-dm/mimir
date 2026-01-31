@@ -9,6 +9,7 @@ pub mod campaign;
 pub mod catalog;
 pub mod character;
 pub mod document;
+pub mod map;
 pub mod module;
 
 /// Create a properties map for tool input schema.

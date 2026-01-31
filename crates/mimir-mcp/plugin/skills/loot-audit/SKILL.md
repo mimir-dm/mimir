@@ -5,7 +5,9 @@ description: >-
   "check treasure distribution", "review magic items", "is loot balanced",
   "treasure by level", "too much gold", "not enough magic items",
   "wealth check", or mentions "treasure placement", "loot tables",
-  or "magic item distribution".
+  or "magic item distribution". Audits treasure and magic item placement across
+  modules and character inventories to flag wealth imbalances, rarity mismatches,
+  and loot gaps.
 ---
 
 # Loot & Treasure Audit
@@ -24,10 +26,19 @@ list_modules()
 get_module_details(module_id)
 # Extract: module_items (loot), monsters (for hoard context)
 
+# Check campaign-level documents for treasure references
+list_documents()  # omit module_id for campaign-level docs
+
 list_characters(character_type: "npc")
 # For each NPC:
 get_character(character_id)
+get_character_inventory(character_id)
 # Extract: inventory items that might be loot
+
+list_characters(character_type: "pc")
+# For each PC:
+get_character_inventory(character_id)
+# Extract: items already awarded to players
 ```
 
 ### 2. Catalog Items

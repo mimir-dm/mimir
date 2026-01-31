@@ -49,3 +49,4 @@ uuid = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+diesel_migrations = { workspace = true }

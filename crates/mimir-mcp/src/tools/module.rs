@@ -4,7 +4,7 @@
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::models::campaign::NewModuleMonster;
-use mimir_core::services::{CreateModuleInput, ModuleService, ModuleType};
+use mimir_core::services::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -113,6 +113,48 @@ pub fn add_item_to_module_tool() -> Tool {
                 ("item_name", "string", "Name of the item from the catalog"),
                 ("quantity", "integer", "Quantity of this item (default: 1)"),
                 ("notes", "string", "Optional notes about this item"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn update_module_tool() -> Tool {
+    Tool {
+        name: "update_module".to_string(),
+        description: Some("Update a module's name or description".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["module_id".to_string()],
+            create_properties(vec![
+                ("module_id", "string", "The ID of the module"),
+                ("name", "string", "New module name"),
+                ("description", "string", "New module description"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn delete_module_tool() -> Tool {
+    Tool {
+        name: "delete_module".to_string(),
+        description: Some("Delete a module and all its contents".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["module_id".to_string()],
+            create_properties(vec![
+                ("module_id", "string", "The ID of the module to delete"),
             ]),
             None,
         ),
@@ -337,4 +379,56 @@ pub async fn add_item_to_module(_ctx: &Arc<McpContext>, args: Value) -> Result<V
     Err(McpError::Internal(
         "Module item tracking is not yet implemented. Items can be added to character inventories instead.".to_string()
     ))
+}
+
+pub async fn update_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let module_id = args
+        .get("module_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
+
+    let mut input = UpdateModuleInput::default();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        input.name = Some(name.to_string());
+    }
+    if let Some(desc) = args.get("description").and_then(|v| v.as_str()) {
+        input.description = Some(Some(desc.to_string()));
+    }
+
+    let mut db = ctx.db()?;
+    let mut service = ModuleService::new(&mut db);
+
+    let module = service
+        .update(module_id, input)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    Ok(json!({
+        "status": "updated",
+        "module": {
+            "id": module.id,
+            "name": module.name,
+            "description": module.description,
+            "module_number": module.module_number
+        }
+    }))
+}
+
+pub async fn delete_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let module_id = args
+        .get("module_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
+
+    let mut db = ctx.db()?;
+    let mut service = ModuleService::new(&mut db);
+
+    service
+        .delete(module_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    Ok(json!({
+        "status": "deleted",
+        "module_id": module_id
+    }))
 }

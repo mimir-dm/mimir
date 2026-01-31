@@ -5,7 +5,9 @@ description: >-
   "stress test this module", "find plot holes", "what if players do X",
   "test my adventure", "challenge my scenario", "poke holes in my plot",
   "adversarial review", "player-proof this", or mentions "edge cases",
-  "breaking the campaign", or "unexpected player actions".
+  "breaking the campaign", or "unexpected player actions". Adopts an
+  adversarial player mindset to find plot holes, dead-ends, and exploits
+  before game time.
 ---
 
 # Campaign Pressure Testing
@@ -21,9 +23,20 @@ Systematically challenge campaign content by adopting an adversarial player mind
 Load the campaign and module being tested:
 
 ```
-get_campaign_details(campaign_id)
-get_module_details(module_id)
+get_campaign_details()
+get_module_details(module_id: module_id)
 list_characters(character_type: "npc")
+
+# Check for maps and token placements
+list_maps(module_id: module_id)
+get_map(map_id: map_id)
+
+# Check campaign-level documents for world context
+list_documents()  # omit module_id for campaign-level docs
+
+# Check for orphaned NPCs (not assigned to any module)
+list_characters(character_type: "npc")
+# Flag any NPC without a module assignment or location
 ```
 
 Read all relevant documents to understand the scenario.

@@ -3,7 +3,10 @@
 //! MCP tools for campaign management.
 
 use mimir_core::dal::campaign as dal;
-use mimir_core::services::{ArchiveService, CampaignService, CharacterService, ModuleService};
+use mimir_core::services::{
+    ArchiveService, CampaignService, CharacterService, CreateCampaignInput, ModuleService,
+    UpdateCampaignInput,
+};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::path::Path;
@@ -91,6 +94,69 @@ pub fn get_campaign_sources_tool() -> Tool {
                 "string",
                 "Campaign ID (optional, defaults to active campaign)",
             )]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn create_campaign_tool() -> Tool {
+    Tool {
+        name: "create_campaign".to_string(),
+        description: Some("Create a new campaign".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["name".to_string()],
+            create_properties(vec![
+                ("name", "string", "Name of the campaign"),
+                ("description", "string", "Description of the campaign"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn update_campaign_tool() -> Tool {
+    Tool {
+        name: "update_campaign".to_string(),
+        description: Some("Update campaign name or description".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec![],
+            create_properties(vec![
+                ("campaign_id", "string", "Campaign ID (optional, defaults to active campaign)"),
+                ("name", "string", "New campaign name"),
+                ("description", "string", "New campaign description"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn delete_campaign_tool() -> Tool {
+    Tool {
+        name: "delete_campaign".to_string(),
+        description: Some("Delete a campaign and all its data".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["campaign_id".to_string()],
+            create_properties(vec![
+                ("campaign_id", "string", "The ID of the campaign to delete"),
+            ]),
             None,
         ),
         title: None,
@@ -244,6 +310,97 @@ pub async fn get_campaign_sources(ctx: &Arc<McpContext>, args: Value) -> Result<
     Ok(json!({
         "campaign_id": campaign_id,
         "sources": source_codes
+    }))
+}
+
+pub async fn create_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let name = args
+        .get("name")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
+
+    let description = args.get("description").and_then(|v| v.as_str());
+
+    let mut db = ctx.db()?;
+    let mut service = CampaignService::new(&mut db);
+
+    let mut input = CreateCampaignInput::new(name);
+    if let Some(desc) = description {
+        input = input.with_description(desc);
+    }
+
+    let campaign = service
+        .create(input)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    // Auto-set as active
+    ctx.set_active_campaign_id(Some(campaign.id.clone()));
+
+    Ok(json!({
+        "status": "created",
+        "campaign": {
+            "id": campaign.id,
+            "name": campaign.name,
+            "description": campaign.description
+        }
+    }))
+}
+
+pub async fn update_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let campaign_id = args
+        .get("campaign_id")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .or_else(|| ctx.get_active_campaign_id())
+        .ok_or(McpError::NoActiveCampaign)?;
+
+    let mut input = UpdateCampaignInput::default();
+
+    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+        input.name = Some(name.to_string());
+    }
+    if let Some(desc) = args.get("description").and_then(|v| v.as_str()) {
+        input.description = Some(Some(desc.to_string()));
+    }
+
+    let mut db = ctx.db()?;
+    let mut service = CampaignService::new(&mut db);
+
+    let campaign = service
+        .update(&campaign_id, input)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    Ok(json!({
+        "status": "updated",
+        "campaign": {
+            "id": campaign.id,
+            "name": campaign.name,
+            "description": campaign.description
+        }
+    }))
+}
+
+pub async fn delete_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let campaign_id = args
+        .get("campaign_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("campaign_id is required".to_string()))?;
+
+    let mut db = ctx.db()?;
+    let mut service = CampaignService::new(&mut db);
+
+    service
+        .delete(campaign_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    // Clear active campaign if it was the deleted one
+    if ctx.get_active_campaign_id().as_deref() == Some(campaign_id) {
+        ctx.set_active_campaign_id(None);
+    }
+
+    Ok(json!({
+        "status": "deleted",
+        "campaign_id": campaign_id
     }))
 }
 

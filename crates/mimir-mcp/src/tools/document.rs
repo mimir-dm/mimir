@@ -115,6 +115,26 @@ pub fn edit_document_tool() -> Tool {
     }
 }
 
+pub fn delete_document_tool() -> Tool {
+    Tool {
+        name: "delete_document".to_string(),
+        description: Some("Delete a document".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["document_id".to_string()],
+            create_properties(vec![
+                ("document_id", "string", "The ID of the document to delete"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
 // =============================================================================
 // Tool Implementations
 // =============================================================================
@@ -279,5 +299,24 @@ pub async fn edit_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
             "doc_type": updated.doc_type,
             "content": updated.content
         }
+    }))
+}
+
+pub async fn delete_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let document_id = args
+        .get("document_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("document_id is required".to_string()))?;
+
+    let mut db = ctx.db()?;
+    let mut service = DocumentService::new(&mut db);
+
+    service
+        .delete(document_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    Ok(json!({
+        "status": "deleted",
+        "document_id": document_id
     }))
 }

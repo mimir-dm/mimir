@@ -4,7 +4,9 @@ description: >-
   This skill should be used when the user asks to "check encounter balance",
   "review CR", "is this too hard", "is this too easy", "balance my encounters",
   "encounter difficulty", "TPK check", "deadly encounter", "party level check",
-  or mentions "challenge rating", "encounter math", or "XP budget".
+  or mentions "challenge rating", "encounter math", or "XP budget". Analyzes
+  module encounters against party composition using D&D 5e math to identify
+  deadly, trivial, or unbalanced fights.
 ---
 
 # Encounter Balance Review
@@ -25,12 +27,18 @@ Ask for or assume:
 ### 2. Gather Encounter Data
 
 ```
-get_campaign_details(campaign_id)
+get_campaign_details()
 list_modules()
 # For each module:
-get_module_details(module_id)
+get_module_details(module_id: module_id)
 # Extract monster list with counts
+
+# Also check maps for token placements
+list_maps(module_id: module_id)
+get_map(map_id: map_id)  # includes token positions
 ```
+
+**Important**: Verify the module exists and has monsters before analysis. If a monster is not found in the catalog via `search_monsters`, note it as homebrew.
 
 ### 3. Calculate Per Encounter
 

@@ -4,7 +4,9 @@ description: >-
   This skill should be used when the user asks to "prep for session",
   "review before game night", "session checklist", "am I ready to run this",
   "pre-session review", "game prep", "DM prep check", or mentions
-  "running tonight", "session tomorrow", or "game day prep".
+  "running tonight", "session tomorrow", or "game day prep". Runs a
+  comprehensive pre-session checklist covering content, NPC readiness,
+  encounter balance, and contingency planning.
 ---
 
 # Session Prep Review
@@ -45,21 +47,26 @@ Verify:
 
 ```
 list_characters(character_type: "npc", module_id: module_id)
+# Also check by location if the session spans areas:
+list_characters(character_type: "npc", location: "Tavern District")
 ```
 
 For each NPC players will likely encounter:
 - [ ] Name, role, location defined
 - [ ] Motivation and goals clear
 - [ ] Key information they know documented
+- [ ] Ability scores set (for skill checks during play)
+- [ ] Inventory populated (`get_character_inventory`)
 - [ ] Voice/mannerism notes (optional)
 
 ### 3. Encounter Readiness
 
-Review module monsters:
-- [ ] Monster stat blocks accessible
+Review module monsters and maps:
+- [ ] Monster stat blocks accessible (verify via `search_monsters`)
 - [ ] Tactics noted in DM notes
 - [ ] Terrain/environmental factors documented
 - [ ] Treasure/loot defined
+- [ ] Maps uploaded and tokens placed (`list_maps`, `get_map`)
 
 ### 4. Plot Thread Check
 
