@@ -29,3 +29,4 @@ After showing results, offer to:
 1. Add a monster to a module
 2. Search with different criteria
 3. Get detailed stats for a specific monster
+4. Clone a monster as homebrew for customization

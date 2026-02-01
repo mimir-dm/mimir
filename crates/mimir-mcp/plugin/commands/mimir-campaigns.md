@@ -13,6 +13,6 @@ For each campaign, display:
 - Creation date
 - Whether it's the active campaign
 
-If no campaigns exist, inform the user they can create one in the Mimir desktop app.
+If no campaigns exist, offer to create one using `create_campaign`.
 
 After listing, ask the user if they want to set one as active using `set_active_campaign`.

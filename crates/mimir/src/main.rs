@@ -8,7 +8,7 @@
 )]
 
 use mimir_core::db::init_database;
-use mimir_lib::commands::{archive, asset, campaign, catalog, character, dev, dm_map, document, homebrew, map, module, player_display, print, source};
+use mimir_lib::commands::{archive, asset, campaign, catalog, character, dev, dm_map, document, homebrew, homebrew_monster, homebrew_spell, map, module, player_display, print, source};
 use mimir_lib::{AppPaths, AppState};
 use mimir_print::PrintState;
 use tauri::Manager;
@@ -79,6 +79,18 @@ fn main() {
             homebrew::create_homebrew_item,
             homebrew::update_homebrew_item,
             homebrew::delete_homebrew_item,
+            // Homebrew monster commands
+            homebrew_monster::list_homebrew_monsters,
+            homebrew_monster::get_homebrew_monster,
+            homebrew_monster::create_homebrew_monster,
+            homebrew_monster::update_homebrew_monster,
+            homebrew_monster::delete_homebrew_monster,
+            // Homebrew spell commands
+            homebrew_spell::list_homebrew_spells,
+            homebrew_spell::get_homebrew_spell,
+            homebrew_spell::create_homebrew_spell,
+            homebrew_spell::update_homebrew_spell,
+            homebrew_spell::delete_homebrew_spell,
             // Module commands
             module::list_modules,
             module::get_module,

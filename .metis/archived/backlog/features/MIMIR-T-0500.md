@@ -7,7 +7,7 @@ created_at: 2026-01-30T19:51:18.507266+00:00
 updated_at: 2026-01-31T13:43:48.916478+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -125,6 +125,8 @@ Search tools return partial matches. Skills must instruct agents to:
 
 ### New workflow: `level-up-workflow.md`
 - Level up flow: get_character → choose class → level_up_character → verify result
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

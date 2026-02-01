@@ -7,7 +7,7 @@ created_at: 2026-01-30T19:51:18.335114+00:00
 updated_at: 2026-01-31T03:04:53.574097+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -172,6 +172,8 @@ Note: `create_map` requires uploading a UVTT file — may need special handling 
 ## Deferred — Assets
 
 Asset management (blob storage for UVTT files, token images) requires file upload handling that may not fit the MCP stdio model cleanly. Track separately.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

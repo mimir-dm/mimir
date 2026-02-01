@@ -7,7 +7,7 @@ created_at: 2026-01-31T03:35:08.997172+00:00
 updated_at: 2026-01-31T13:43:48.096175+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -31,6 +31,8 @@ Allow modules within a campaign to be reordered by swapping `module_number` valu
 - **Type**: Feature
 - **Priority**: P2 - Medium
 - **Effort**: S
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

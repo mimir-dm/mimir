@@ -7,7 +7,7 @@ created_at: 2026-01-30T04:20:36.362186+00:00
 updated_at: 2026-01-30T04:45:47.673905+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -27,6 +27,8 @@ initiative_id: NULL
 Expose campaign-level document operations through the MCP tools so users can create and manage documents that belong to the campaign rather than a specific module (e.g. world lore, session notes, campaign-wide references).
 
 The database, models, DAL, and service layer already fully support this (`module_id` is nullable). Only the MCP tool layer and plugin documentation need updating.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

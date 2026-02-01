@@ -92,6 +92,18 @@ impl MimirHandler {
             tools::homebrew::create_homebrew_item_tool(),
             tools::homebrew::update_homebrew_item_tool(),
             tools::homebrew::delete_homebrew_item_tool(),
+            // Homebrew monster tools
+            tools::homebrew_monster::list_homebrew_monsters_tool(),
+            tools::homebrew_monster::get_homebrew_monster_tool(),
+            tools::homebrew_monster::create_homebrew_monster_tool(),
+            tools::homebrew_monster::update_homebrew_monster_tool(),
+            tools::homebrew_monster::delete_homebrew_monster_tool(),
+            // Homebrew spell tools
+            tools::homebrew_spell::list_homebrew_spells_tool(),
+            tools::homebrew_spell::get_homebrew_spell_tool(),
+            tools::homebrew_spell::create_homebrew_spell_tool(),
+            tools::homebrew_spell::update_homebrew_spell_tool(),
+            tools::homebrew_spell::delete_homebrew_spell_tool(),
             // Catalog tools
             tools::catalog::search_monsters_tool(),
             tools::catalog::search_items_tool(),
@@ -186,6 +198,32 @@ impl MimirHandler {
             }
             "delete_homebrew_item" => {
                 tools::homebrew::delete_homebrew_item(&self.context, args).await
+            }
+
+            // Homebrew monster tools
+            "list_homebrew_monsters" => tools::homebrew_monster::list_homebrew_monsters(&self.context, args).await,
+            "get_homebrew_monster" => tools::homebrew_monster::get_homebrew_monster(&self.context, args).await,
+            "create_homebrew_monster" => {
+                tools::homebrew_monster::create_homebrew_monster(&self.context, args).await
+            }
+            "update_homebrew_monster" => {
+                tools::homebrew_monster::update_homebrew_monster(&self.context, args).await
+            }
+            "delete_homebrew_monster" => {
+                tools::homebrew_monster::delete_homebrew_monster(&self.context, args).await
+            }
+
+            // Homebrew spell tools
+            "list_homebrew_spells" => tools::homebrew_spell::list_homebrew_spells(&self.context, args).await,
+            "get_homebrew_spell" => tools::homebrew_spell::get_homebrew_spell(&self.context, args).await,
+            "create_homebrew_spell" => {
+                tools::homebrew_spell::create_homebrew_spell(&self.context, args).await
+            }
+            "update_homebrew_spell" => {
+                tools::homebrew_spell::update_homebrew_spell(&self.context, args).await
+            }
+            "delete_homebrew_spell" => {
+                tools::homebrew_spell::delete_homebrew_spell(&self.context, args).await
             }
 
             // Catalog tools
@@ -321,6 +359,18 @@ mod tests {
         "create_homebrew_item",
         "update_homebrew_item",
         "delete_homebrew_item",
+        // Homebrew Monster
+        "list_homebrew_monsters",
+        "get_homebrew_monster",
+        "create_homebrew_monster",
+        "update_homebrew_monster",
+        "delete_homebrew_monster",
+        // Homebrew Spell
+        "list_homebrew_spells",
+        "get_homebrew_spell",
+        "create_homebrew_spell",
+        "update_homebrew_spell",
+        "delete_homebrew_spell",
         // Catalog
         "search_monsters",
         "search_items",

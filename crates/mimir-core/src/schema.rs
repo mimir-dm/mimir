@@ -49,6 +49,37 @@ diesel::table! {
 }
 
 diesel::table! {
+    campaign_homebrew_monsters (id) {
+        id -> Text,
+        campaign_id -> Text,
+        name -> Text,
+        cr -> Nullable<Text>,
+        creature_type -> Nullable<Text>,
+        size -> Nullable<Text>,
+        data -> Text,
+        cloned_from_name -> Nullable<Text>,
+        cloned_from_source -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    campaign_homebrew_spells (id) {
+        id -> Text,
+        campaign_id -> Text,
+        name -> Text,
+        level -> Nullable<Integer>,
+        school -> Nullable<Text>,
+        data -> Text,
+        cloned_from_name -> Nullable<Text>,
+        cloned_from_source -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
     campaign_sources (id) {
         id -> Text,
         campaign_id -> Text,
@@ -651,6 +682,8 @@ diesel::joinable!(actions -> catalog_sources (source));
 diesel::joinable!(backgrounds -> catalog_sources (source));
 diesel::joinable!(campaign_assets -> campaigns (campaign_id));
 diesel::joinable!(campaign_homebrew_items -> campaigns (campaign_id));
+diesel::joinable!(campaign_homebrew_monsters -> campaigns (campaign_id));
+diesel::joinable!(campaign_homebrew_spells -> campaigns (campaign_id));
 diesel::joinable!(campaign_assets -> modules (module_id));
 diesel::joinable!(campaign_sources -> campaigns (campaign_id));
 diesel::joinable!(campaign_sources -> catalog_sources (source_code));
@@ -715,6 +748,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     books,
     campaign_assets,
     campaign_homebrew_items,
+    campaign_homebrew_monsters,
+    campaign_homebrew_spells,
     campaign_sources,
     campaigns,
     catalog_sources,

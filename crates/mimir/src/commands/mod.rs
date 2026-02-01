@@ -11,6 +11,8 @@ pub mod character;
 pub mod dev;
 pub mod dm_map;
 pub mod homebrew;
+pub mod homebrew_monster;
+pub mod homebrew_spell;
 pub mod document;
 pub mod map;
 pub mod module;

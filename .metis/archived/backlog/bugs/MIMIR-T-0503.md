@@ -7,7 +7,7 @@ created_at: 2026-01-31T04:26:18.529624+00:00
 updated_at: 2026-01-31T13:43:41.992387+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -31,6 +31,8 @@ The `item_type` column in the items table stores the raw 5etools `type` field wh
 - **Type**: Bug
 - **Priority**: P2 - Medium
 - **Effort**: S
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

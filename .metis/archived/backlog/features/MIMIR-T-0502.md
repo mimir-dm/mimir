@@ -7,7 +7,7 @@ created_at: 2026-01-31T04:25:02.897950+00:00
 updated_at: 2026-01-31T14:34:47.733635+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -33,6 +33,8 @@ Currently searching for "+1 Shortsword" returns nothing because 5etools stores t
 - **Type**: Feature
 - **Priority**: P1 - High (users can't find/add magic weapons, armor, or ammo to character inventories)
 - **Effort**: M
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

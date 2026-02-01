@@ -1,5 +1,38 @@
 <template>
   <div class="homebrew-tab">
+    <!-- Sub-tab bar -->
+    <div class="sub-tabs">
+      <button
+        class="sub-tab"
+        :class="{ active: activeSubTab === 'items' }"
+        @click="activeSubTab = 'items'"
+      >Items</button>
+      <button
+        class="sub-tab"
+        :class="{ active: activeSubTab === 'monsters' }"
+        @click="activeSubTab = 'monsters'"
+      >Monsters</button>
+      <button
+        class="sub-tab"
+        :class="{ active: activeSubTab === 'spells' }"
+        @click="activeSubTab = 'spells'"
+      >Spells</button>
+    </div>
+
+    <!-- Monsters sub-tab -->
+    <HomebrewMonstersSubTab
+      v-if="activeSubTab === 'monsters'"
+      :campaign="campaign"
+    />
+
+    <!-- Spells sub-tab -->
+    <HomebrewSpellsSubTab
+      v-if="activeSubTab === 'spells'"
+      :campaign="campaign"
+    />
+
+    <!-- Items sub-tab (original content) -->
+    <template v-if="activeSubTab === 'items'">
     <!-- Header -->
     <div class="tab-header">
       <h2>Homebrew Items</h2>
@@ -316,6 +349,7 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -324,6 +358,8 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { HomebrewService, type HomebrewItem } from '@/services/HomebrewService'
 import ItemDetailBlock from '@/features/characters/components/sheet/ItemDetailBlock.vue'
+import HomebrewMonstersSubTab from './HomebrewMonstersSubTab.vue'
+import HomebrewSpellsSubTab from './HomebrewSpellsSubTab.vue'
 import { dataEvents } from '@/utils/dataEvents'
 import type { Campaign } from '@/types'
 import type { ApiResponse } from '@/types/api'
@@ -333,6 +369,8 @@ const props = defineProps<{
   campaign?: Campaign
   documents?: any[]
 }>()
+
+const activeSubTab = ref<'items' | 'monsters' | 'spells'>('items')
 
 const loading = ref(false)
 const saving = ref(false)
@@ -719,6 +757,35 @@ watch(() => props.campaign?.id, () => {
   padding: var(--spacing-lg);
 }
 
+.sub-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-xs);
+}
+
+.sub-tab {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.sub-tab:hover {
+  color: var(--color-text-primary);
+}
+
+.sub-tab.active {
+  color: var(--color-primary-600);
+  border-bottom-color: var(--color-primary-600);
+}
+
 .tab-header {
   display: flex;
   justify-content: space-between;
@@ -778,7 +845,7 @@ watch(() => props.campaign?.id, () => {
 
 .homebrew-card.selected {
   border-color: var(--color-primary-400);
-  background: var(--color-primary-50, #eff6ff);
+  background: color-mix(in srgb, var(--color-primary-400) 12%, var(--color-surface));
 }
 
 .card-header {

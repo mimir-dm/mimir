@@ -5,13 +5,16 @@
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Campaign, CampaignAsset, CampaignHomebrewItem, Character, CharacterClass, CharacterFeat,
-    CharacterFeature, CharacterInventory, CharacterProficiency, CharacterSpell, Document,
-    FogRevealedArea, LightSource, Map, MapPoi, MapTrap, Module, ModuleMonster, ModuleNpc,
-    NewCampaign, NewCampaignAsset, NewCampaignHomebrewItem, NewCharacter, NewCharacterClass,
-    NewCharacterFeat, NewCharacterFeature, NewCharacterInventory, NewCharacterProficiency,
-    NewCharacterSpell, NewDocument, NewFogRevealedArea, NewLightSource, NewMap, NewMapPoi,
-    NewMapTrap, NewModule, NewModuleMonster, NewModuleNpc, NewTokenPlacement, TokenPlacement,
+    Campaign, CampaignAsset, CampaignHomebrewItem, CampaignHomebrewMonster,
+    CampaignHomebrewSpell, Character,
+    CharacterClass, CharacterFeat, CharacterFeature, CharacterInventory, CharacterProficiency,
+    CharacterSpell, Document, FogRevealedArea, LightSource, Map, MapPoi, MapTrap, Module,
+    ModuleMonster, ModuleNpc, NewCampaign, NewCampaignAsset, NewCampaignHomebrewItem,
+    NewCampaignHomebrewMonster, NewCampaignHomebrewSpell, NewCharacter, NewCharacterClass,
+    NewCharacterFeat,
+    NewCharacterFeature, NewCharacterInventory, NewCharacterProficiency, NewCharacterSpell,
+    NewDocument, NewFogRevealedArea, NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModule,
+    NewModuleMonster, NewModuleNpc, NewTokenPlacement, TokenPlacement,
 };
 use crate::services::{ServiceError, ServiceResult};
 use chrono::{DateTime, Utc};
@@ -62,6 +65,10 @@ pub struct ArchiveCounts {
     pub assets: usize,
     #[serde(default)]
     pub homebrew_items: usize,
+    #[serde(default)]
+    pub homebrew_monsters: usize,
+    #[serde(default)]
+    pub homebrew_spells: usize,
 }
 
 /// A reference to a catalog item found in campaign content
@@ -120,6 +127,10 @@ pub struct ArchiveData {
     pub assets: Vec<CampaignAsset>,
     #[serde(default)]
     pub homebrew_items: Vec<CampaignHomebrewItem>,
+    #[serde(default)]
+    pub homebrew_monsters: Vec<CampaignHomebrewMonster>,
+    #[serde(default)]
+    pub homebrew_spells: Vec<CampaignHomebrewSpell>,
 }
 
 /// Character with all related data aggregated
@@ -194,6 +205,8 @@ impl<'a> ArchiveService<'a> {
                 module_npcs: archive_data.module_npcs.len(),
                 assets: asset_files.len(),
                 homebrew_items: archive_data.homebrew_items.len(),
+                homebrew_monsters: archive_data.homebrew_monsters.len(),
+                homebrew_spells: archive_data.homebrew_spells.len(),
             },
             catalog_references: catalog_refs,
         };
@@ -280,6 +293,12 @@ impl<'a> ArchiveService<'a> {
         // 9. Import homebrew items
         self.import_homebrew_items(&data, &new_campaign_id)?;
 
+        // 10. Import homebrew monsters
+        self.import_homebrew_monsters(&data, &new_campaign_id)?;
+
+        // 11. Import homebrew spells
+        self.import_homebrew_spells(&data, &new_campaign_id)?;
+
         let counts = ArchiveCounts {
             modules: data.modules.len(),
             documents: data.documents.len(),
@@ -290,6 +309,8 @@ impl<'a> ArchiveService<'a> {
             module_npcs: data.module_npcs.len(),
             assets: data.assets.len(),
             homebrew_items: data.homebrew_items.len(),
+            homebrew_monsters: data.homebrew_monsters.len(),
+            homebrew_spells: data.homebrew_spells.len(),
         };
 
         info!(
@@ -397,6 +418,12 @@ impl<'a> ArchiveService<'a> {
         // Homebrew items
         let homebrew_items = dal::list_campaign_homebrew_items(self.conn, campaign_id)?;
 
+        // Homebrew monsters
+        let homebrew_monsters = dal::list_campaign_homebrew_monsters(self.conn, campaign_id)?;
+
+        // Homebrew spells
+        let homebrew_spells = dal::list_campaign_homebrew_spells(self.conn, campaign_id)?;
+
         Ok(ArchiveData {
             campaign,
             sources,
@@ -409,6 +436,8 @@ impl<'a> ArchiveService<'a> {
             module_npcs,
             assets,
             homebrew_items,
+            homebrew_monsters,
+            homebrew_spells,
         })
     }
 
@@ -996,6 +1025,43 @@ impl<'a> ArchiveService<'a> {
             new_item.cloned_from_name = item.cloned_from_name.as_deref();
             new_item.cloned_from_source = item.cloned_from_source.as_deref();
             dal::insert_campaign_homebrew_item(self.conn, &new_item)?;
+        }
+        Ok(())
+    }
+
+    fn import_homebrew_spells(
+        &mut self,
+        data: &ArchiveData,
+        campaign_id: &str,
+    ) -> ServiceResult<()> {
+        for spell in &data.homebrew_spells {
+            let new_id = uuid::Uuid::new_v4().to_string();
+            let mut new_spell =
+                NewCampaignHomebrewSpell::new(&new_id, campaign_id, &spell.name, &spell.data);
+            new_spell.level = spell.level;
+            new_spell.school = spell.school.as_deref();
+            new_spell.cloned_from_name = spell.cloned_from_name.as_deref();
+            new_spell.cloned_from_source = spell.cloned_from_source.as_deref();
+            dal::insert_campaign_homebrew_spell(self.conn, &new_spell)?;
+        }
+        Ok(())
+    }
+
+    fn import_homebrew_monsters(
+        &mut self,
+        data: &ArchiveData,
+        campaign_id: &str,
+    ) -> ServiceResult<()> {
+        for monster in &data.homebrew_monsters {
+            let new_id = uuid::Uuid::new_v4().to_string();
+            let mut new_monster =
+                NewCampaignHomebrewMonster::new(&new_id, campaign_id, &monster.name, &monster.data);
+            new_monster.cr = monster.cr.as_deref();
+            new_monster.creature_type = monster.creature_type.as_deref();
+            new_monster.size = monster.size.as_deref();
+            new_monster.cloned_from_name = monster.cloned_from_name.as_deref();
+            new_monster.cloned_from_source = monster.cloned_from_source.as_deref();
+            dal::insert_campaign_homebrew_monster(self.conn, &new_monster)?;
         }
         Ok(())
     }

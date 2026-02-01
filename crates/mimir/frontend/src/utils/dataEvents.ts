@@ -68,6 +68,16 @@ export interface DataEventPayloads {
   'homebrew:updated': unknown
   'homebrew:deleted': { id: string }
 
+  // Homebrew monster events
+  'homebrew-monster:created': unknown
+  'homebrew-monster:updated': unknown
+  'homebrew-monster:deleted': { id: string }
+
+  // Homebrew spell events
+  'homebrew-spell:created': unknown
+  'homebrew-spell:updated': unknown
+  'homebrew-spell:deleted': { id: string }
+
   // Generic refresh trigger (use sparingly)
   'data:refresh-all': { scope?: string }
 }

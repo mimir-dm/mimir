@@ -4,15 +4,15 @@ level: task
 title: "Homebrew weapon creation with catalog cloning"
 short_code: "MIMIR-T-0505"
 created_at: 2026-01-31T13:48:49.869748+00:00
-updated_at: 2026-01-31T21:16:46.135741+00:00
+updated_at: 2026-02-01T03:47:40.464417+00:00
 parent: 
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
   - "#feature"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -35,6 +35,10 @@ Allow DMs to create custom homebrew items (weapons, armor, potions, wondrous ite
 ### Business Justification
 - **User Value**: DMs frequently need custom or reskinned items — a "Moonblade" that's mechanically a +1 Longsword, a custom potion, or a completely novel wondrous item. Currently there's no way to add items that aren't in the 5etools catalog.
 - **Effort Estimate**: L — requires new DB table + migration, DAL, service, Tauri commands, export/import changes, and frontend UI.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
