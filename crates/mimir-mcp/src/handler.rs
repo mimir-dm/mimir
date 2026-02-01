@@ -86,6 +86,12 @@ impl MimirHandler {
             tools::map::add_token_to_map_tool(),
             tools::map::list_tokens_on_map_tool(),
             tools::map::remove_token_tool(),
+            // Homebrew tools
+            tools::homebrew::list_homebrew_items_tool(),
+            tools::homebrew::get_homebrew_item_tool(),
+            tools::homebrew::create_homebrew_item_tool(),
+            tools::homebrew::update_homebrew_item_tool(),
+            tools::homebrew::delete_homebrew_item_tool(),
             // Catalog tools
             tools::catalog::search_monsters_tool(),
             tools::catalog::search_items_tool(),
@@ -168,6 +174,19 @@ impl MimirHandler {
             "add_token_to_map" => tools::map::add_token_to_map(&self.context, args).await,
             "list_tokens_on_map" => tools::map::list_tokens_on_map(&self.context, args).await,
             "remove_token" => tools::map::remove_token(&self.context, args).await,
+
+            // Homebrew tools
+            "list_homebrew_items" => tools::homebrew::list_homebrew_items(&self.context, args).await,
+            "get_homebrew_item" => tools::homebrew::get_homebrew_item(&self.context, args).await,
+            "create_homebrew_item" => {
+                tools::homebrew::create_homebrew_item(&self.context, args).await
+            }
+            "update_homebrew_item" => {
+                tools::homebrew::update_homebrew_item(&self.context, args).await
+            }
+            "delete_homebrew_item" => {
+                tools::homebrew::delete_homebrew_item(&self.context, args).await
+            }
 
             // Catalog tools
             "search_monsters" => tools::catalog::search_monsters(&self.context, args).await,
@@ -296,6 +315,12 @@ mod tests {
         "add_token_to_map",
         "list_tokens_on_map",
         "remove_token",
+        // Homebrew
+        "list_homebrew_items",
+        "get_homebrew_item",
+        "create_homebrew_item",
+        "update_homebrew_item",
+        "delete_homebrew_item",
         // Catalog
         "search_monsters",
         "search_items",
