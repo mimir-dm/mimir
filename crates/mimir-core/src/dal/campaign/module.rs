@@ -81,6 +81,86 @@ pub fn count_modules(conn: &mut SqliteConnection, campaign_id: &str) -> QueryRes
         .get_result(conn)
 }
 
+/// Reorder a module by moving it to a new position (1-indexed).
+///
+/// Uses a sentinel value (-1) to work around the UNIQUE(campaign_id, module_number) constraint,
+/// then shifts affected modules and places the target module at the new position.
+pub fn reorder_module(
+    conn: &mut SqliteConnection,
+    campaign_id: &str,
+    module_id: &str,
+    new_position: i32,
+) -> QueryResult<()> {
+    use diesel::Connection;
+
+    conn.transaction(|conn| {
+        // Get the module's current position
+        let module = get_module(conn, module_id)?;
+        let current = module.module_number;
+
+        if current == new_position {
+            return Ok(());
+        }
+
+        // Validate new_position is in range
+        let total = count_modules(conn, campaign_id)? as i32;
+        if new_position < 1 || new_position > total {
+            return Err(diesel::result::Error::RollbackTransaction);
+        }
+
+        let now = chrono::Utc::now().to_rfc3339();
+
+        // Step 1: Move target module to sentinel (-1)
+        diesel::update(modules::table.find(module_id))
+            .set((
+                modules::module_number.eq(-1),
+                modules::updated_at.eq(&now),
+            ))
+            .execute(conn)?;
+
+        // Step 2: Shift affected modules one at a time to avoid UNIQUE conflicts
+        if current < new_position {
+            // Moving down: shift [current+1, new_position] each by -1, in ascending order
+            for pos in (current + 1)..=new_position {
+                diesel::update(
+                    modules::table
+                        .filter(modules::campaign_id.eq(campaign_id))
+                        .filter(modules::module_number.eq(pos)),
+                )
+                .set((
+                    modules::module_number.eq(pos - 1),
+                    modules::updated_at.eq(&now),
+                ))
+                .execute(conn)?;
+            }
+        } else {
+            // Moving up: shift [new_position, current-1] each by +1, in descending order
+            for pos in (new_position..current).rev() {
+                diesel::update(
+                    modules::table
+                        .filter(modules::campaign_id.eq(campaign_id))
+                        .filter(modules::module_number.eq(pos)),
+                )
+                .set((
+                    modules::module_number.eq(pos + 1),
+                    modules::updated_at.eq(&now),
+                ))
+                .execute(conn)?;
+            }
+        }
+
+        // Step 3: Place module at new position
+        diesel::update(modules::table.find(module_id))
+            .set((
+                modules::module_number.eq(new_position),
+                modules::updated_at.eq(&now),
+            ))
+            .execute(conn)?;
+
+        Ok(())
+    })
+}
+
 /// Get the next available module number for a campaign.
 pub fn next_module_number(conn: &mut SqliteConnection, campaign_id: &str) -> QueryResult<i32> {
     let max: Option<i32> = modules::table
@@ -263,6 +343,85 @@ mod tests {
         insert_module(&mut conn, &module2).expect("Failed to insert");
 
         assert_eq!(count_modules(&mut conn, "camp-1").expect("Failed to count"), 2);
+    }
+
+    #[test]
+    fn test_reorder_module_move_down() {
+        let mut conn = setup_test_db();
+
+        let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        let m2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
+        let m3 = NewModule::new("mod-3", "camp-1", "Chapter 3", 3);
+        insert_module(&mut conn, &m1).unwrap();
+        insert_module(&mut conn, &m2).unwrap();
+        insert_module(&mut conn, &m3).unwrap();
+
+        // Move module 1 to position 3
+        reorder_module(&mut conn, "camp-1", "mod-1", 3).unwrap();
+
+        let modules = list_modules(&mut conn, "camp-1").unwrap();
+        assert_eq!(modules[0].id, "mod-2");
+        assert_eq!(modules[0].module_number, 1);
+        assert_eq!(modules[1].id, "mod-3");
+        assert_eq!(modules[1].module_number, 2);
+        assert_eq!(modules[2].id, "mod-1");
+        assert_eq!(modules[2].module_number, 3);
+    }
+
+    #[test]
+    fn test_reorder_module_move_up() {
+        let mut conn = setup_test_db();
+
+        let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        let m2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
+        let m3 = NewModule::new("mod-3", "camp-1", "Chapter 3", 3);
+        insert_module(&mut conn, &m1).unwrap();
+        insert_module(&mut conn, &m2).unwrap();
+        insert_module(&mut conn, &m3).unwrap();
+
+        // Move module 3 to position 1
+        reorder_module(&mut conn, "camp-1", "mod-3", 1).unwrap();
+
+        let modules = list_modules(&mut conn, "camp-1").unwrap();
+        assert_eq!(modules[0].id, "mod-3");
+        assert_eq!(modules[0].module_number, 1);
+        assert_eq!(modules[1].id, "mod-1");
+        assert_eq!(modules[1].module_number, 2);
+        assert_eq!(modules[2].id, "mod-2");
+        assert_eq!(modules[2].module_number, 3);
+    }
+
+    #[test]
+    fn test_reorder_module_no_op() {
+        let mut conn = setup_test_db();
+
+        let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        let m2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
+        insert_module(&mut conn, &m1).unwrap();
+        insert_module(&mut conn, &m2).unwrap();
+
+        // Move module 1 to position 1 (no-op)
+        reorder_module(&mut conn, "camp-1", "mod-1", 1).unwrap();
+
+        let modules = list_modules(&mut conn, "camp-1").unwrap();
+        assert_eq!(modules[0].id, "mod-1");
+        assert_eq!(modules[1].id, "mod-2");
+    }
+
+    #[test]
+    fn test_reorder_module_invalid_position() {
+        let mut conn = setup_test_db();
+
+        let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        insert_module(&mut conn, &m1).unwrap();
+
+        // Position 0 is invalid
+        let result = reorder_module(&mut conn, "camp-1", "mod-1", 0);
+        assert!(result.is_err());
+
+        // Position 2 is invalid (only 1 module)
+        let result = reorder_module(&mut conn, "camp-1", "mod-1", 2);
+        assert!(result.is_err());
     }
 
     #[test]

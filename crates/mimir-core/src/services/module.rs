@@ -260,6 +260,32 @@ impl<'a> ModuleService<'a> {
         dal::count_modules(self.conn, campaign_id).map_err(ServiceError::from)
     }
 
+    /// Reorder a module by moving it to a new position (1-indexed).
+    ///
+    /// Returns the updated list of modules in their new order.
+    pub fn reorder(
+        &mut self,
+        module_id: &str,
+        new_position: i32,
+    ) -> ServiceResult<Vec<Module>> {
+        // Look up the module to get campaign_id
+        let module = dal::get_module_optional(self.conn, module_id)?
+            .ok_or_else(|| ServiceError::not_found("Module", module_id))?;
+
+        dal::reorder_module(self.conn, &module.campaign_id, module_id, new_position)
+            .map_err(|e| match e {
+                diesel::result::Error::RollbackTransaction => {
+                    ServiceError::Validation(format!(
+                        "Invalid position {}. Must be between 1 and the number of modules.",
+                        new_position
+                    ))
+                }
+                other => ServiceError::from(other),
+            })?;
+
+        dal::list_modules(self.conn, &module.campaign_id).map_err(ServiceError::from)
+    }
+
     /// Check if a module exists.
     pub fn exists(&mut self, id: &str) -> ServiceResult<bool> {
         dal::module_exists(self.conn, id).map_err(ServiceError::from)
@@ -530,6 +556,37 @@ mod tests {
                 .expect("Failed to count"),
             2
         );
+    }
+
+    #[test]
+    fn test_reorder_module() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+
+        let mut service = ModuleService::new(&mut conn);
+
+        let input1 = CreateModuleInput::new(&campaign_id, "Chapter 1");
+        let input2 = CreateModuleInput::new(&campaign_id, "Chapter 2");
+        let input3 = CreateModuleInput::new(&campaign_id, "Chapter 3");
+        let m1 = service.create(input1).expect("Failed to create");
+        service.create(input2).expect("Failed to create");
+        service.create(input3).expect("Failed to create");
+
+        // Move chapter 1 to position 3
+        let modules = service.reorder(&m1.id, 3).expect("Failed to reorder");
+        assert_eq!(modules.len(), 3);
+        assert_eq!(modules[0].name, "Chapter 2");
+        assert_eq!(modules[1].name, "Chapter 3");
+        assert_eq!(modules[2].name, "Chapter 1");
+    }
+
+    #[test]
+    fn test_reorder_module_not_found() {
+        let mut conn = setup_test_db();
+
+        let mut service = ModuleService::new(&mut conn);
+        let result = service.reorder("nonexistent", 1);
+        assert!(matches!(result, Err(ServiceError::NotFound { .. })));
     }
 
     #[test]

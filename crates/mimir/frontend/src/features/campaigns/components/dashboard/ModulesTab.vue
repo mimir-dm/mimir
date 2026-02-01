@@ -11,7 +11,7 @@
       <div v-else-if="modules.length === 0" class="modules-empty">No modules yet</div>
       <div v-else class="modules-list">
         <div
-          v-for="mod in modules"
+          v-for="(mod, index) in modules"
           :key="mod.id"
           class="module-item"
           :class="{ selected: selectedModule?.id === mod.id }"
@@ -19,6 +19,20 @@
         >
           <span class="module-number">#{{ mod.module_number }}</span>
           <span class="module-name">{{ mod.name }}</span>
+          <span class="module-reorder-buttons">
+            <button
+              class="btn-reorder"
+              :disabled="index === 0"
+              title="Move up"
+              @click.stop="moveModule(mod.id, mod.module_number - 1)"
+            >&#9650;</button>
+            <button
+              class="btn-reorder"
+              :disabled="index === modules.length - 1"
+              title="Move down"
+              @click.stop="moveModule(mod.id, mod.module_number + 1)"
+            >&#9660;</button>
+          </span>
         </div>
       </div>
     </div>
@@ -571,6 +585,20 @@ async function loadModules() {
     console.error('Failed to load modules:', e)
   } finally {
     loading.value = false
+  }
+}
+
+// Move a module to a new position
+async function moveModule(moduleId: string, newPosition: number) {
+  try {
+    const updatedModules = await ModuleService.reorder(moduleId, newPosition)
+    modules.value = updatedModules
+    // Update selectedModule ref if it was the moved module
+    if (selectedModule.value?.id === moduleId) {
+      selectedModule.value = updatedModules.find(m => m.id === moduleId) || null
+    }
+  } catch (e) {
+    console.error('Failed to reorder module:', e)
   }
 }
 
@@ -1197,6 +1225,40 @@ onMounted(async () => {
   font-weight: 600;
   color: var(--color-text-secondary);
   font-size: 0.75rem;
+}
+
+.module-reorder-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.module-item:hover .module-reorder-buttons {
+  opacity: 1;
+}
+
+.btn-reorder {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  font-size: 0.5rem;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.btn-reorder:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: var(--color-surface-variant);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.2;
+  cursor: default;
 }
 
 .module-name {

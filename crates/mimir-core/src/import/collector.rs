@@ -253,6 +253,7 @@ fn collect_root_level_entities(
         // Items are in root-level files, not a subdirectory
         ("items.json", &["item"][..]),
         ("items-base.json", &["item", "baseitem"][..]),
+        ("magicvariants.json", &["magicvariant"][..]),
     ];
 
     for (filename, entity_types) in root_files {

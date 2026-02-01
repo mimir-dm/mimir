@@ -125,6 +125,24 @@ class ModuleServiceClass {
   }
 
   /**
+   * Reorder a module by moving it to a new position (1-indexed).
+   * Returns the updated list of modules in their new order.
+   */
+  async reorder(moduleId: string, newPosition: number): Promise<Module[]> {
+    const response = await invoke<ApiResponse<Module[]>>('reorder_module', {
+      moduleId,
+      newPosition
+    })
+
+    if (response.success && response.data) {
+      dataEvents.emit('module:reordered', { moduleId })
+      return response.data
+    }
+
+    throw new Error(response.error || `Failed to reorder module ${moduleId}`)
+  }
+
+  /**
    * Update module status/stage (stub - backend doesn't have stages)
    * @deprecated The new backend doesn't support module stages
    */

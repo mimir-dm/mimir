@@ -153,6 +153,22 @@ pub fn get_module_by_number(
     }
 }
 
+/// Reorder a module by moving it to a new position (1-indexed).
+#[tauri::command]
+pub fn reorder_module(
+    state: State<'_, AppState>,
+    module_id: String,
+    new_position: i32,
+) -> ApiResponse<Vec<Module>> {
+    let mut db = match state.db.lock() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+    };
+
+    let result = ModuleService::new(&mut db).reorder(&module_id, new_position);
+    to_api_response(result)
+}
+
 // =============================================================================
 // Module Monster Commands
 // =============================================================================

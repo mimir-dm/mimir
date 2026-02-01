@@ -229,10 +229,69 @@ impl<'a> CatalogImportService<'a> {
             }
         }
 
+        // Global magic variant expansion for disk-based import
+        match self.expand_magic_variants_from_disk(repo_path) {
+            Ok(count) => {
+                if count > 0 {
+                    *result.entity_counts.entry("item (expanded variant)".to_string()).or_insert(0) += count;
+                    result.total_entities += count;
+                }
+            }
+            Err(e) => {
+                warn!("Failed to expand magic variants: {}", e);
+            }
+        }
+
         // Add image count to result
         result.images_copied = self.images_copied;
 
         Ok(result)
+    }
+
+    /// Expand magic variant templates from disk-based 5etools data.
+    fn expand_magic_variants_from_disk(&mut self, repo_path: &Path) -> Result<usize> {
+        let data_dir = repo_path.join("data");
+
+        let variants_file = data_dir.join("magicvariants.json");
+        let base_items_file = data_dir.join("items-base.json");
+
+        if !variants_file.exists() || !base_items_file.exists() {
+            return Ok(0);
+        }
+
+        let variants_data: Value = serde_json::from_str(
+            &std::fs::read_to_string(&variants_file)?
+        )?;
+        let base_items_data: Value = serde_json::from_str(
+            &std::fs::read_to_string(&base_items_file)?
+        )?;
+
+        let all_variants = variants_data
+            .get("magicvariant")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let all_base_items = base_items_data
+            .get("baseitem")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+
+        if all_variants.is_empty() || all_base_items.is_empty() {
+            return Ok(0);
+        }
+
+        info!(
+            "Expanding {} magic variant templates against {} base items",
+            all_variants.len(),
+            all_base_items.len()
+        );
+
+        let mut collected = CollectedEntities::default();
+        collected.add("magicvariant", all_variants);
+        collected.add("baseitem", all_base_items);
+
+        self.expand_and_import_magic_variants(&collected, "")
     }
 
     /// Import all sources from a tar.gz archive, streaming directly without extraction.
@@ -312,7 +371,73 @@ impl<'a> CatalogImportService<'a> {
             }
         }
 
+        // Global magic variant expansion: expand all variants against all base items
+        // regardless of source (e.g., DMG variants + PHB base items)
+        match self.expand_magic_variants_from_memory(&json_files) {
+            Ok(count) => {
+                if count > 0 {
+                    *result.entity_counts.entry("item (expanded variant)".to_string()).or_insert(0) += count;
+                    result.total_entities += count;
+                }
+            }
+            Err(e) => {
+                warn!("Failed to expand magic variants: {}", e);
+            }
+        }
+
         Ok(result)
+    }
+
+    /// Expand magic variant templates from in-memory JSON files.
+    /// Reads magicvariants.json and items-base.json directly (unfiltered by source),
+    /// then expands each variant against matching base items.
+    fn expand_magic_variants_from_memory(
+        &mut self,
+        json_files: &HashMap<String, String>,
+    ) -> Result<usize> {
+        // Collect ALL magicvariants (not filtered by source)
+        let mut all_variants: Vec<Value> = Vec::new();
+        let mut all_base_items: Vec<Value> = Vec::new();
+
+        for (path, content) in json_files {
+            if path.contains("fluff") {
+                continue;
+            }
+
+            if path.ends_with("magicvariants.json") || path.contains("magicvariants") {
+                if let Ok(data) = serde_json::from_str::<Value>(content) {
+                    if let Some(variants) = data.get("magicvariant").and_then(|v| v.as_array()) {
+                        all_variants.extend(variants.clone());
+                    }
+                }
+            }
+
+            // Collect base items from items-base.json
+            if path.ends_with("items-base.json") {
+                if let Ok(data) = serde_json::from_str::<Value>(content) {
+                    if let Some(items) = data.get("baseitem").and_then(|v| v.as_array()) {
+                        all_base_items.extend(items.clone());
+                    }
+                }
+            }
+        }
+
+        if all_variants.is_empty() || all_base_items.is_empty() {
+            return Ok(0);
+        }
+
+        info!(
+            "Expanding {} magic variant templates against {} base items",
+            all_variants.len(),
+            all_base_items.len()
+        );
+
+        // Build a CollectedEntities with variants and base items for the expansion method
+        let mut collected = CollectedEntities::default();
+        collected.add("magicvariant", all_variants);
+        collected.add("baseitem", all_base_items);
+
+        self.expand_and_import_magic_variants(&collected, "")
     }
 
     /// Import a single source from in-memory JSON files.
@@ -531,7 +656,8 @@ impl<'a> CatalogImportService<'a> {
         match entity_type {
             "monster" => self.import_monster(entity, name, source, &data, fluff_ref),
             "spell" => self.import_spell(entity, name, source, &data, fluff_ref),
-            "item" => self.import_item(entity, name, source, &data, fluff_ref),
+            "item" | "baseitem" => self.import_item(entity, name, source, &data, fluff_ref),
+            "magicvariant" => Ok(0), // Expanded separately after base items are imported
             "class" => self.import_class(name, source, &data, fluff_ref),
             "classFeature" => self.import_class_feature(entity, name, source, &data),
             "subclass" => self.import_subclass(entity, name, source, &data, fluff_ref),
@@ -879,7 +1005,7 @@ impl<'a> CatalogImportService<'a> {
         let item_type = entity
             .get("type")
             .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+            .map(|s| s.split('|').next().unwrap_or(s).to_string());
         let rarity = entity
             .get("rarity")
             .and_then(|v| v.as_str())
@@ -921,6 +1047,144 @@ impl<'a> CatalogImportService<'a> {
             }
         }
         Ok(())
+    }
+
+    /// Expand magic variant templates against base items and import the resulting concrete items.
+    ///
+    /// For each Generic Variant (e.g., "+1 Weapon"), matches it against base items using
+    /// `requires`/`excludes` rules, then creates concrete items (e.g., "+1 Shortsword")
+    /// by merging the base item data with the variant's `inherits` block.
+    fn expand_and_import_magic_variants(
+        &mut self,
+        collected: &CollectedEntities,
+        source_code: &str,
+    ) -> Result<usize> {
+        let variants = match collected.get("magicvariant") {
+            Some(v) => v,
+            None => return Ok(0),
+        };
+
+        // Collect base items for matching — use "baseitem" entities if available,
+        // fall back to checking "item" entities that have base item characteristics
+        let base_items: Vec<&Value> = collected
+            .get("baseitem")
+            .map(|v| v.iter().collect())
+            .unwrap_or_default();
+
+        if base_items.is_empty() {
+            info!("No base items available for magic variant expansion");
+            return Ok(0);
+        }
+
+        let mut count = 0;
+
+        for variant in variants {
+            let variant_name = match variant.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => continue,
+            };
+
+            let requires = match variant.get("requires").and_then(|v| v.as_array()) {
+                Some(r) => r,
+                None => continue,
+            };
+
+            let excludes = variant.get("excludes");
+            let inherits = match variant.get("inherits") {
+                Some(i) => i,
+                None => continue,
+            };
+
+            // Extract naming rules from inherits
+            let name_prefix = inherits.get("namePrefix").and_then(|v| v.as_str()).unwrap_or("");
+            let name_suffix = inherits.get("nameSuffix").and_then(|v| v.as_str()).unwrap_or("");
+            let name_remove = inherits.get("nameRemove").and_then(|v| v.as_str()).unwrap_or("");
+
+            // Determine the source for expanded items
+            let variant_source = inherits
+                .get("source")
+                .and_then(|v| v.as_str())
+                .unwrap_or(source_code);
+
+            for base_item in &base_items {
+                // Check requires (ANY requirement object must match)
+                let matches_any_req = requires.iter().any(|req| {
+                    if let Some(req_obj) = req.as_object() {
+                        req_obj.iter().all(|(key, val)| base_item_matches_field(base_item, key, val))
+                    } else {
+                        false
+                    }
+                });
+
+                if !matches_any_req {
+                    continue;
+                }
+
+                // Check excludes
+                if let Some(exc) = excludes {
+                    if base_item_excluded(base_item, exc) {
+                        continue;
+                    }
+                }
+
+                // Build expanded item name
+                let base_name = base_item.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                let cleaned_name = if !name_remove.is_empty() {
+                    base_name.replace(name_remove, "")
+                } else {
+                    base_name.to_string()
+                };
+                let expanded_name = format!("{}{}{}", name_prefix, cleaned_name, name_suffix);
+
+                // Build expanded item JSON: start with base, overlay inherits
+                let expanded = build_expanded_item(base_item, inherits, &expanded_name, variant_name);
+                let data = serde_json::to_string(&expanded)?;
+
+                let item_type = expanded
+                    .get("type")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.split('|').next().unwrap_or(s).to_string());
+                let rarity = expanded
+                    .get("rarity")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+
+                let mut new_item = NewItem::new(&expanded_name, variant_source, &data);
+                if let Some(ref t) = item_type {
+                    new_item = new_item.with_type(t);
+                }
+                if let Some(ref r) = rarity {
+                    new_item = new_item.with_rarity(r);
+                }
+
+                match catalog::insert_item(self.conn, &new_item) {
+                    Ok(item_id) => {
+                        count += 1;
+                        // Index in FTS
+                        if let Err(e) = self.index_entity_fts("item", item_id, &expanded) {
+                            warn!("Failed to FTS index expanded item '{}': {}", expanded_name, e);
+                        }
+                        // Import attunement from expanded data
+                        if let Err(e) = self.import_item_attunement(item_id, &expanded) {
+                            warn!("Failed to import attunement for '{}': {}", expanded_name, e);
+                        }
+                    }
+                    Err(e) => {
+                        warn!("Failed to insert expanded item '{}': {}", expanded_name, e);
+                    }
+                }
+            }
+        }
+
+        if count > 0 {
+            info!(
+                "Expanded {} concrete items from {} magic variant templates",
+                count,
+                variants.len()
+            );
+        }
+
+        Ok(count)
     }
 
     fn import_class(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
@@ -1507,8 +1771,8 @@ fn collect_entities_from_memory(
         ("data/bestiary/bestiary-", "monster", "monster"),
         ("data/spells/spells-", "spell", "spell"),
         ("data/items", "item", "item"),
-        ("data/items", "baseitem", "item"),
-        ("data/items", "magicvariant", "item"),
+        ("data/items", "baseitem", "baseitem"),
+        ("data/magicvariants.json", "magicvariant", "magicvariant"),
         ("data/class/class-", "class", "class"),
         ("data/class/class-", "subclass", "subclass"),
         ("data/class/class-", "classFeature", "classFeature"),
@@ -1749,6 +2013,209 @@ fn extract_attunement_classes(attune_str: &str) -> Vec<String> {
         .collect()
 }
 
+// === Magic Variant Expansion Helpers ===
+
+/// Check if a base item field matches a requirement key-value pair.
+fn base_item_matches_field(base_item: &Value, key: &str, expected: &Value) -> bool {
+    let actual = base_item.get(key);
+
+    match expected {
+        // Boolean requirement: check if the base item has a truthy value for this key
+        Value::Bool(true) => {
+            actual.map_or(false, |v| v.as_bool().unwrap_or(false) || v == &Value::Bool(true))
+        }
+        Value::Bool(false) => {
+            actual.map_or(true, |v| v.as_bool() == Some(false))
+        }
+        // String requirement: exact match against base item field
+        Value::String(s) => {
+            actual.map_or(false, |v| {
+                if let Some(actual_str) = v.as_str() {
+                    actual_str == s.as_str()
+                } else if let Some(arr) = v.as_array() {
+                    // Field might be an array (e.g., "property": ["F", "L"])
+                    arr.iter().any(|item| item.as_str() == Some(s.as_str()))
+                } else {
+                    false
+                }
+            })
+        }
+        // Number: exact match
+        Value::Number(_) => {
+            actual.map_or(false, |v| v == expected)
+        }
+        _ => false,
+    }
+}
+
+/// Check if a base item should be excluded based on the variant's excludes block.
+fn base_item_excluded(base_item: &Value, excludes: &Value) -> bool {
+    let exc_obj = match excludes.as_object() {
+        Some(o) => o,
+        None => return false,
+    };
+
+    for (key, val) in exc_obj {
+        match val {
+            // { "net": true } — exclude if base item has this boolean flag
+            Value::Bool(true) => {
+                if base_item.get(key).and_then(|v| v.as_bool()).unwrap_or(false) {
+                    return true;
+                }
+                // Also check name match for string-like excludes
+                if key == "name" || key.chars().next().map_or(false, |c| c.is_uppercase()) {
+                    // Skip — this is a boolean flag check, not a name check
+                }
+            }
+            // { "name": "Hide Armor" } — exclude by exact name
+            Value::String(s) => {
+                if let Some(actual) = base_item.get(key).and_then(|v| v.as_str()) {
+                    if actual == s.as_str() {
+                        return true;
+                    }
+                }
+            }
+            // { "property": ["2H", "2H|XPHB"] } — exclude if any value matches
+            Value::Array(arr) => {
+                if let Some(actual) = base_item.get(key) {
+                    for exclude_val in arr {
+                        if let Some(exc_str) = exclude_val.as_str() {
+                            if let Some(actual_str) = actual.as_str() {
+                                if actual_str == exc_str {
+                                    return true;
+                                }
+                            }
+                            if let Some(actual_arr) = actual.as_array() {
+                                if actual_arr.iter().any(|v| v.as_str() == Some(exc_str)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    false
+}
+
+/// Build an expanded item JSON by merging base item data with variant inherits.
+fn build_expanded_item(
+    base_item: &Value,
+    inherits: &Value,
+    expanded_name: &str,
+    variant_name: &str,
+) -> Value {
+    let mut expanded = base_item.clone();
+
+    // Overlay inherits fields onto the base item
+    if let (Some(base_obj), Some(inherits_obj)) = (expanded.as_object_mut(), inherits.as_object()) {
+        // Metadata fields from inherits that we skip (naming handled separately)
+        let skip_keys = ["namePrefix", "nameSuffix", "nameRemove", "reprintedAs", "lootTables"];
+
+        for (key, val) in inherits_obj {
+            if skip_keys.contains(&key.as_str()) {
+                continue;
+            }
+            base_obj.insert(key.clone(), val.clone());
+        }
+
+        // Set the expanded name
+        base_obj.insert("name".to_string(), Value::String(expanded_name.to_string()));
+
+        // Add provenance
+        base_obj.insert(
+            "_variantName".to_string(),
+            Value::String(variant_name.to_string()),
+        );
+
+        // Remove baseitem marker if present
+        base_obj.remove("_isBaseItem");
+
+        // Resolve template variables like {=bonusWeapon}, {=dmgType} in entries
+        resolve_template_variables(base_obj);
+    }
+
+    expanded
+}
+
+/// Map 5etools damage type codes to human-readable names for use in prose text.
+fn expand_damage_type(code: &str) -> &str {
+    match code {
+        "A" => "Acid",
+        "B" => "Bludgeoning",
+        "C" => "Cold",
+        "F" => "Fire",
+        "O" => "Force",
+        "L" => "Lightning",
+        "N" => "Necrotic",
+        "P" => "Piercing",
+        "I" => "Poison",
+        "Y" => "Psychic",
+        "R" => "Radiant",
+        "S" => "Slashing",
+        "T" => "Thunder",
+        other => other,
+    }
+}
+
+/// Resolve 5etools template variables ({=fieldName}) throughout a JSON object.
+/// Replaces {=key} with the string value of that key in the same object.
+/// Damage type codes are expanded to full names in prose context.
+fn resolve_template_variables(obj: &mut serde_json::Map<String, Value>) {
+    // Build lookup of string values for substitution,
+    // expanding damage types to readable names for prose
+    let lookup: HashMap<String, String> = obj
+        .iter()
+        .filter_map(|(k, v)| {
+            v.as_str().map(|s| {
+                let display = if k == "dmgType" {
+                    expand_damage_type(s).to_string()
+                } else {
+                    s.to_string()
+                };
+                (k.clone(), display)
+            })
+        })
+        .collect();
+
+    // Resolve in all string values recursively
+    let keys: Vec<String> = obj.keys().cloned().collect();
+    for key in keys {
+        if let Some(val) = obj.get(&key).cloned() {
+            let resolved = resolve_value_templates(&val, &lookup);
+            obj.insert(key, resolved);
+        }
+    }
+}
+
+/// Recursively resolve {=key} templates in a JSON value.
+fn resolve_value_templates(val: &Value, lookup: &HashMap<String, String>) -> Value {
+    match val {
+        Value::String(s) => {
+            let mut result = s.clone();
+            for (key, replacement) in lookup {
+                let pattern = format!("{{={}}}", key);
+                result = result.replace(&pattern, replacement);
+            }
+            Value::String(result)
+        }
+        Value::Array(arr) => {
+            Value::Array(arr.iter().map(|v| resolve_value_templates(v, lookup)).collect())
+        }
+        Value::Object(obj) => {
+            let mut new_obj = obj.clone();
+            for (k, v) in obj {
+                new_obj.insert(k.clone(), resolve_value_templates(v, lookup));
+            }
+            Value::Object(new_obj)
+        }
+        other => other.clone(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1820,6 +2287,124 @@ mod tests {
         assert_eq!(classes.len(), 2);
         assert!(classes.contains(&"cleric".to_string()));
         assert!(classes.contains(&"paladin".to_string()));
+    }
+
+    // === Magic Variant Expansion Tests ===
+
+    #[test]
+    fn test_base_item_matches_boolean_field() {
+        let base = json!({"name": "Shortsword", "weapon": true, "sword": true});
+        assert!(base_item_matches_field(&base, "weapon", &json!(true)));
+        assert!(base_item_matches_field(&base, "sword", &json!(true)));
+        assert!(!base_item_matches_field(&base, "armor", &json!(true)));
+    }
+
+    #[test]
+    fn test_base_item_matches_string_field() {
+        let base = json!({"name": "Shortsword", "type": "M", "weaponCategory": "martial"});
+        assert!(base_item_matches_field(&base, "type", &json!("M")));
+        assert!(base_item_matches_field(&base, "weaponCategory", &json!("martial")));
+        assert!(!base_item_matches_field(&base, "type", &json!("R")));
+    }
+
+    #[test]
+    fn test_base_item_matches_array_field() {
+        // Base item with property as array
+        let base = json!({"name": "Greatsword", "property": ["2H", "H"], "weapon": true});
+        assert!(base_item_matches_field(&base, "property", &json!("2H")));
+        assert!(!base_item_matches_field(&base, "property", &json!("F")));
+    }
+
+    #[test]
+    fn test_base_item_excluded_boolean() {
+        let base = json!({"name": "Net", "net": true, "weapon": true});
+        assert!(base_item_excluded(&base, &json!({"net": true})));
+
+        let base2 = json!({"name": "Shortsword", "sword": true, "weapon": true});
+        assert!(!base_item_excluded(&base2, &json!({"net": true})));
+    }
+
+    #[test]
+    fn test_base_item_excluded_string() {
+        let base = json!({"name": "Hide Armor", "armor": true});
+        assert!(base_item_excluded(&base, &json!({"name": "Hide Armor"})));
+        assert!(!base_item_excluded(&base, &json!({"name": "Chain Mail"})));
+    }
+
+    #[test]
+    fn test_base_item_excluded_array() {
+        let base = json!({"name": "Greatsword", "property": ["2H", "H"]});
+        assert!(base_item_excluded(&base, &json!({"property": ["2H", "2H|XPHB"]})));
+        assert!(!base_item_excluded(&base, &json!({"property": ["F", "L"]})));
+    }
+
+    #[test]
+    fn test_build_expanded_item() {
+        let base = json!({
+            "name": "Shortsword",
+            "type": "M",
+            "dmg1": "1d6",
+            "dmgType": "P",
+            "weight": 2,
+            "weapon": true,
+            "sword": true,
+            "source": "PHB"
+        });
+        let inherits = json!({
+            "namePrefix": "+1 ",
+            "source": "DMG",
+            "rarity": "uncommon",
+            "bonusWeapon": "+1",
+            "entries": ["You have a +1 bonus to attack and damage rolls."]
+        });
+
+        let expanded = build_expanded_item(&base, &inherits, "+1 Shortsword", "+1 Weapon");
+        assert_eq!(expanded["name"], "+1 Shortsword");
+        assert_eq!(expanded["source"], "DMG");
+        assert_eq!(expanded["rarity"], "uncommon");
+        assert_eq!(expanded["bonusWeapon"], "+1");
+        // Base properties preserved
+        assert_eq!(expanded["dmg1"], "1d6");
+        assert_eq!(expanded["dmgType"], "P");
+        assert_eq!(expanded["weight"], 2);
+        assert_eq!(expanded["weapon"], true);
+        // Provenance
+        assert_eq!(expanded["_variantName"], "+1 Weapon");
+        // namePrefix should NOT be in the output
+        assert!(expanded.get("namePrefix").is_none());
+    }
+
+    #[test]
+    fn test_template_variable_resolution() {
+        let base = json!({"name": "Longbow", "dmgType": "P", "weapon": true, "source": "PHB"});
+        let inherits = json!({
+            "namePrefix": "+1 ",
+            "source": "DMG",
+            "bonusWeapon": "+1",
+            "entries": [
+                "You have a {=bonusWeapon} bonus to attack and damage rolls.",
+                "Extra {=dmgType} damage on a crit."
+            ]
+        });
+
+        let expanded = build_expanded_item(&base, &inherits, "+1 Longbow", "+1 Weapon");
+        let entries = expanded["entries"].as_array().unwrap();
+        assert_eq!(entries[0], "You have a +1 bonus to attack and damage rolls.");
+        assert_eq!(entries[1], "Extra Piercing damage on a crit.");
+    }
+
+    #[test]
+    fn test_build_expanded_item_suffix() {
+        let base = json!({"name": "Arrow", "type": "A", "source": "PHB"});
+        let inherits = json!({
+            "nameSuffix": " of Slaying",
+            "source": "DMG",
+            "rarity": "very rare"
+        });
+
+        let expanded = build_expanded_item(&base, &inherits, "Arrow of Slaying", "Arrow of Slaying");
+        assert_eq!(expanded["name"], "Arrow of Slaying");
+        assert_eq!(expanded["rarity"], "very rare");
     }
 
     #[test]
