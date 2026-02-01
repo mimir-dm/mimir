@@ -1,7 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-export type DashboardTab = 'campaign' | 'modules' | 'npcs' | 'pcs'
+export type DashboardTab = 'campaign' | 'modules' | 'npcs' | 'pcs' | 'homebrew'
 
 export interface DashboardTabConfig {
   id: DashboardTab
@@ -14,7 +14,8 @@ export const dashboardTabs: DashboardTabConfig[] = [
   { id: 'campaign', label: 'Campaign', icon: 'globe', route: 'campaign' },
   { id: 'modules', label: 'Modules', icon: 'folder', route: 'modules' },
   { id: 'npcs', label: 'NPCs', icon: 'users', route: 'npcs' },
-  { id: 'pcs', label: 'PCs', icon: 'user', route: 'pcs' }
+  { id: 'pcs', label: 'PCs', icon: 'user', route: 'pcs' },
+  { id: 'homebrew', label: 'Homebrew', icon: 'flask', route: 'homebrew' }
 ]
 
 const STORAGE_KEY_PREFIX = 'mimir-dashboard-tab-'

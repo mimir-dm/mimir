@@ -63,6 +63,11 @@ export interface DataEventPayloads {
   'campaign:updated': { campaignId: string }
   'campaign:deleted': { campaignId: string }
 
+  // Homebrew item events
+  'homebrew:created': unknown
+  'homebrew:updated': unknown
+  'homebrew:deleted': { id: string }
+
   // Generic refresh trigger (use sparingly)
   'data:refresh-all': { scope?: string }
 }

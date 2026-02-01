@@ -54,6 +54,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../../features/campaigns/components/dashboard/PCsTab.vue')
       },
       {
+        path: 'homebrew',
+        name: 'dashboard-homebrew',
+        component: () => import('../../features/campaigns/components/dashboard/HomebrewTab.vue')
+      },
+      {
         path: 'modules/:moduleId/play',
         name: 'dashboard-play',
         component: () => import('../../features/modules/views/ModulePlayView.vue'),

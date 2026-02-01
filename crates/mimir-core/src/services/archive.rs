@@ -5,13 +5,13 @@
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Campaign, CampaignAsset, Character, CharacterClass, CharacterFeat, CharacterFeature,
-    CharacterInventory, CharacterProficiency, CharacterSpell, Document, FogRevealedArea,
-    LightSource, Map, MapPoi, MapTrap, Module, ModuleMonster, ModuleNpc, NewCampaign,
-    NewCampaignAsset, NewCharacter, NewCharacterClass, NewCharacterFeat, NewCharacterFeature,
-    NewCharacterInventory, NewCharacterProficiency, NewCharacterSpell, NewDocument,
-    NewFogRevealedArea, NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModule,
-    NewModuleMonster, NewModuleNpc, NewTokenPlacement, TokenPlacement,
+    Campaign, CampaignAsset, CampaignHomebrewItem, Character, CharacterClass, CharacterFeat,
+    CharacterFeature, CharacterInventory, CharacterProficiency, CharacterSpell, Document,
+    FogRevealedArea, LightSource, Map, MapPoi, MapTrap, Module, ModuleMonster, ModuleNpc,
+    NewCampaign, NewCampaignAsset, NewCampaignHomebrewItem, NewCharacter, NewCharacterClass,
+    NewCharacterFeat, NewCharacterFeature, NewCharacterInventory, NewCharacterProficiency,
+    NewCharacterSpell, NewDocument, NewFogRevealedArea, NewLightSource, NewMap, NewMapPoi,
+    NewMapTrap, NewModule, NewModuleMonster, NewModuleNpc, NewTokenPlacement, TokenPlacement,
 };
 use crate::services::{ServiceError, ServiceResult};
 use chrono::{DateTime, Utc};
@@ -60,6 +60,8 @@ pub struct ArchiveCounts {
     pub module_monsters: usize,
     pub module_npcs: usize,
     pub assets: usize,
+    #[serde(default)]
+    pub homebrew_items: usize,
 }
 
 /// A reference to a catalog item found in campaign content
@@ -116,6 +118,8 @@ pub struct ArchiveData {
     pub module_monsters: Vec<ModuleMonster>,
     pub module_npcs: Vec<ModuleNpc>,
     pub assets: Vec<CampaignAsset>,
+    #[serde(default)]
+    pub homebrew_items: Vec<CampaignHomebrewItem>,
 }
 
 /// Character with all related data aggregated
@@ -189,6 +193,7 @@ impl<'a> ArchiveService<'a> {
                 module_monsters: archive_data.module_monsters.len(),
                 module_npcs: archive_data.module_npcs.len(),
                 assets: asset_files.len(),
+                homebrew_items: archive_data.homebrew_items.len(),
             },
             catalog_references: catalog_refs,
         };
@@ -272,6 +277,9 @@ impl<'a> ArchiveService<'a> {
         // 8. Import tokens (need map and module_monster/module_npc IDs)
         self.import_tokens(&data, &id_maps)?;
 
+        // 9. Import homebrew items
+        self.import_homebrew_items(&data, &new_campaign_id)?;
+
         let counts = ArchiveCounts {
             modules: data.modules.len(),
             documents: data.documents.len(),
@@ -281,6 +289,7 @@ impl<'a> ArchiveService<'a> {
             module_monsters: data.module_monsters.len(),
             module_npcs: data.module_npcs.len(),
             assets: data.assets.len(),
+            homebrew_items: data.homebrew_items.len(),
         };
 
         info!(
@@ -385,6 +394,9 @@ impl<'a> ArchiveService<'a> {
         // All campaign assets (maps, tokens, images, etc.)
         let assets = dal::list_campaign_assets(self.conn, campaign_id)?;
 
+        // Homebrew items
+        let homebrew_items = dal::list_campaign_homebrew_items(self.conn, campaign_id)?;
+
         Ok(ArchiveData {
             campaign,
             sources,
@@ -396,6 +408,7 @@ impl<'a> ArchiveService<'a> {
             module_monsters,
             module_npcs,
             assets,
+            homebrew_items,
         })
     }
 
@@ -965,6 +978,24 @@ impl<'a> ArchiveService<'a> {
             };
 
             dal::insert_token_placement(self.conn, &new_token)?;
+        }
+        Ok(())
+    }
+
+    fn import_homebrew_items(
+        &mut self,
+        data: &ArchiveData,
+        campaign_id: &str,
+    ) -> ServiceResult<()> {
+        for item in &data.homebrew_items {
+            let new_id = uuid::Uuid::new_v4().to_string();
+            let mut new_item =
+                NewCampaignHomebrewItem::new(&new_id, campaign_id, &item.name, &item.data);
+            new_item.item_type = item.item_type.as_deref();
+            new_item.rarity = item.rarity.as_deref();
+            new_item.cloned_from_name = item.cloned_from_name.as_deref();
+            new_item.cloned_from_source = item.cloned_from_source.as_deref();
+            dal::insert_campaign_homebrew_item(self.conn, &new_item)?;
         }
         Ok(())
     }

@@ -4,6 +4,7 @@
 
 mod campaign;
 mod campaign_asset;
+mod campaign_homebrew_item;
 mod campaign_source;
 mod character;
 mod character_class;
@@ -25,6 +26,9 @@ mod module_npc;
 mod token_placement;
 
 pub use campaign::{Campaign, NewCampaign, UpdateCampaign};
+pub use campaign_homebrew_item::{
+    CampaignHomebrewItem, NewCampaignHomebrewItem, UpdateCampaignHomebrewItem,
+};
 pub use campaign_asset::{
     extension_for_mime_type, is_allowed_mime_type, CampaignAsset, NewCampaignAsset,
     ALLOWED_MIME_TYPES,

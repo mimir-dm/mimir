@@ -53,6 +53,7 @@
             >
               <div class="item-info">
                 <span class="item-name">{{ item.item_name }}</span>
+                <span v-if="item.item_source === 'HB'" class="result-badge homebrew-badge">HB</span>
                 <span class="item-quantity">x{{ item.quantity }}</span>
               </div>
               <div class="item-details">
@@ -199,6 +200,7 @@
               @click="selectItem(item)"
             >
               <span class="result-name">{{ item.name }}</span>
+              <span v-if="item.homebrew" class="result-badge homebrew-badge">HB</span>
               <span class="result-source">{{ item.source }}</span>
             </div>
             <div v-if="itemSearch && searchResults.length === 0" class="no-results">
@@ -238,7 +240,9 @@ import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '@/stores/characters'
+import { HomebrewService, type HomebrewItem } from '@/services/HomebrewService'
 import type { Character, CharacterInventory } from '@/types/character'
+import type { ApiResponse } from '@/types/api'
 
 interface CatalogItem {
   id: string
@@ -246,6 +250,7 @@ interface CatalogItem {
   source: string
   item_type: string
   rarity: string | null
+  homebrew?: boolean
 }
 
 const props = defineProps<{
@@ -364,11 +369,35 @@ const searchItems = async () => {
   }
 
   try {
-    const results = await invoke<CatalogItem[]>('search_items', {
-      name: itemSearch.value
+    const response = await invoke<ApiResponse<CatalogItem[]>>('search_items', {
+      filter: { name_contains: itemSearch.value }
     })
 
-    // Sort results to prioritize basic items and better matches
+    const catalogResults: CatalogItem[] = (response.success && response.data) ? response.data : []
+
+    // Also search homebrew items for the campaign
+    let homebrewResults: CatalogItem[] = []
+    if (props.characterData.campaign_id) {
+      try {
+        const homebrewItems = await HomebrewService.list(props.characterData.campaign_id)
+        const searchLower = itemSearch.value.toLowerCase()
+        homebrewResults = homebrewItems
+          .filter(hi => hi.name.toLowerCase().includes(searchLower))
+          .map(hi => ({
+            id: hi.id,
+            name: hi.name,
+            source: 'HB',
+            item_type: hi.item_type || '',
+            rarity: hi.rarity,
+            homebrew: true
+          }))
+      } catch {
+        // Homebrew search failure is non-fatal
+      }
+    }
+
+    // Merge homebrew results first, then catalog
+    const results = [...homebrewResults, ...catalogResults]
     const searchLower = itemSearch.value.toLowerCase()
     searchResults.value = results.sort((a, b) => {
       const aName = a.name.toLowerCase()
@@ -768,6 +797,19 @@ watch(() => props.visible, async (visible) => {
 .result-source {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
+}
+
+.result-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.homebrew-badge {
+  background: var(--color-warning, #f59e0b);
+  color: #fff;
 }
 
 .no-results {

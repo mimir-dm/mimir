@@ -10,6 +10,7 @@ pub mod catalog;
 pub mod character;
 pub mod dev;
 pub mod dm_map;
+pub mod homebrew;
 pub mod document;
 pub mod map;
 pub mod module;

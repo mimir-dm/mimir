@@ -47,7 +47,8 @@
             <span class="item-name">{{ item.item_name }}</span>
             <span class="item-meta">
               <span v-if="item.attuned" class="item-attuned">Attuned</span>
-              <span class="item-source">{{ item.item_source }}</span>
+              <span v-if="item.item_source === 'HB'" class="homebrew-badge">HB</span>
+              <span v-else class="item-source">{{ item.item_source }}</span>
               <span class="expand-icon">{{ isItemExpanded(item.item_name, item.item_source) ? '−' : '+' }}</span>
             </span>
           </div>
@@ -56,19 +57,7 @@
             class="item-card-details"
           >
             <template v-if="getItemDetail(item.item_name, item.item_source)">
-              <div class="item-detail-row" v-if="getItemDetail(item.item_name, item.item_source)?.rarity">
-                <span class="detail-label">Rarity:</span>
-                <span class="detail-value rarity" :class="getItemDetail(item.item_name, item.item_source)?.rarity?.toLowerCase()">
-                  {{ getItemDetail(item.item_name, item.item_source)?.rarity }}
-                </span>
-              </div>
-              <div class="item-detail-row" v-if="getItemProperties(getItemDetail(item.item_name, item.item_source)!).length > 0">
-                <span class="detail-label">Properties:</span>
-                <span class="detail-value">{{ getItemProperties(getItemDetail(item.item_name, item.item_source)!).join(', ') }}</span>
-              </div>
-              <div class="item-description" v-if="getItemDescription(getItemDetail(item.item_name, item.item_source)!)">
-                {{ getItemDescription(getItemDetail(item.item_name, item.item_source)!) }}
-              </div>
+              <ItemDetailBlock :detail="getItemDetail(item.item_name, item.item_source)!" />
             </template>
             <div v-else class="loading-details">Loading details...</div>
           </div>
@@ -112,19 +101,7 @@
             class="item-card-details"
           >
             <template v-if="getItemDetail(item.item_name, item.item_source)">
-              <div class="item-detail-row" v-if="getItemDetail(item.item_name, item.item_source)?.rarity">
-                <span class="detail-label">Rarity:</span>
-                <span class="detail-value rarity" :class="getItemDetail(item.item_name, item.item_source)?.rarity?.toLowerCase()">
-                  {{ getItemDetail(item.item_name, item.item_source)?.rarity }}
-                </span>
-              </div>
-              <div class="item-detail-row" v-if="getItemProperties(getItemDetail(item.item_name, item.item_source)!).length > 0">
-                <span class="detail-label">Properties:</span>
-                <span class="detail-value">{{ getItemProperties(getItemDetail(item.item_name, item.item_source)!).join(', ') }}</span>
-              </div>
-              <div class="item-description" v-if="getItemDescription(getItemDetail(item.item_name, item.item_source)!)">
-                {{ getItemDescription(getItemDetail(item.item_name, item.item_source)!) }}
-              </div>
+              <ItemDetailBlock :detail="getItemDetail(item.item_name, item.item_source)!" />
               <div v-if="item.notes" class="item-notes">
                 <span class="detail-label">Notes:</span> {{ item.notes }}
               </div>
@@ -141,6 +118,7 @@
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { Character, CharacterInventory } from '@/types/character'
+import ItemDetailBlock from './ItemDetailBlock.vue'
 
 // Item detail from catalog
 interface ItemDetail {
@@ -190,24 +168,19 @@ const toggleItemDetails = async (name: string, source: string) => {
     try {
       const result = await invoke<{ success: boolean; data?: Record<string, unknown> }>(
         'get_item_by_name',
-        { name, source }
+        { name, source, campaignId: props.character.campaign_id || undefined }
       )
       if (result.success && result.data) {
-        const rawItem = result.data as unknown as {
-          name: string
-          source: string
-          item_type: string | null
-          rarity: string | null
-          data: string | Record<string, unknown>
-          fluff: string | null
-        }
+        // entity_to_json returns the parsed data blob as the top-level object
+        // with name, source, rarity, etc. merged in — there's no nested "data" field
+        const blob = result.data as Record<string, unknown>
         const item: ItemDetail = {
-          name: rawItem.name,
-          source: rawItem.source,
-          item_type: rawItem.item_type,
-          rarity: rawItem.rarity,
-          data: typeof rawItem.data === 'string' ? JSON.parse(rawItem.data) : rawItem.data,
-          fluff: rawItem.fluff,
+          name: (blob.name as string) || name,
+          source: (blob.source as string) || source,
+          item_type: (blob.type as string) || null,
+          rarity: (blob.rarity as string) || null,
+          data: blob,
+          fluff: null,
         }
         itemDetails.value[key] = item
       }
@@ -225,71 +198,6 @@ const getItemDetail = (name: string, source: string): ItemDetail | null => {
   return itemDetails.value[getItemKey(name, source)] || null
 }
 
-const getItemDescription = (item: ItemDetail): string => {
-  if (!item.data) return ''
-
-  const entries = item.data.entries as unknown[]
-  if (!entries || !Array.isArray(entries)) return ''
-
-  return entries
-    .map((entry) => {
-      if (typeof entry === 'string') return entry
-      if (typeof entry === 'object' && entry !== null) {
-        const e = entry as Record<string, unknown>
-        if (e.type === 'entries' && Array.isArray(e.entries)) {
-          return (e.entries as unknown[])
-            .filter((sub) => typeof sub === 'string')
-            .join(' ')
-        }
-        if (e.type === 'list' && Array.isArray(e.items)) {
-          return (e.items as unknown[])
-            .filter((sub) => typeof sub === 'string')
-            .join(', ')
-        }
-      }
-      return ''
-    })
-    .filter(Boolean)
-    .join(' ')
-}
-
-const getItemProperties = (item: ItemDetail): string[] => {
-  if (!item.data) return []
-
-  const props: string[] = []
-  const data = item.data
-
-  // Weapon properties
-  if (data.property && Array.isArray(data.property)) {
-    const propMap: Record<string, string> = {
-      'F': 'Finesse',
-      'H': 'Heavy',
-      'L': 'Light',
-      'R': 'Reach',
-      'T': 'Thrown',
-      '2H': 'Two-Handed',
-      'V': 'Versatile',
-      'A': 'Ammunition',
-      'LD': 'Loading',
-      'S': 'Special',
-    }
-    for (const p of data.property as string[]) {
-      if (propMap[p]) props.push(propMap[p])
-    }
-  }
-
-  // Armor properties
-  if (data.stealth) props.push('Stealth Disadvantage')
-  if (data.strength) props.push(`Str ${data.strength}+ required`)
-
-  // Magic item properties
-  if (data.reqAttune) {
-    if (data.reqAttune === true) props.push('Requires Attunement')
-    else if (typeof data.reqAttune === 'string') props.push(`Attunement: ${data.reqAttune}`)
-  }
-
-  return props
-}
 </script>
 
 <style scoped>
@@ -469,6 +377,16 @@ const getItemProperties = (item: ItemDetail): string[] => {
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+.homebrew-badge {
+  background: var(--color-warning, #f59e0b);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .expand-icon {

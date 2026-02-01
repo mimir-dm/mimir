@@ -4,6 +4,7 @@
 
 mod campaign;
 mod campaign_asset;
+mod campaign_homebrew_item;
 mod campaign_source;
 mod character;
 mod character_class;
@@ -26,6 +27,7 @@ mod token_placement;
 
 pub use campaign::*;
 pub use campaign_asset::*;
+pub use campaign_homebrew_item::*;
 pub use campaign_source::*;
 pub use character::*;
 pub use character_class::*;

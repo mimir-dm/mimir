@@ -9,9 +9,9 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Character, Module, NewCampaignAsset, NewCharacter, NewCharacterClass, NewCharacterInventory,
-    NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModuleMonster, NewModuleNpc,
-    NewTokenPlacement,
+    Character, Module, NewCampaignAsset, NewCampaignHomebrewItem, NewCharacter, NewCharacterClass,
+    NewCharacterInventory, NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModuleMonster,
+    NewModuleNpc, NewTokenPlacement,
 };
 use crate::services::{
     CampaignService, CreateCampaignInput, CreateModuleInput, ModuleService, ModuleType,
@@ -68,19 +68,23 @@ pub fn seed_dev_data(conn: &mut SqliteConnection, app_data_dir: &Path) -> Servic
     let characters = seed_characters(conn, &campaign.id)?;
     info!("Created {} characters", characters.len());
 
-    // 3. Create module
+    // 3. Seed homebrew items for the campaign
+    let homebrew_count = seed_homebrew_items(conn, &campaign.id)?;
+    info!("Created {} homebrew items", homebrew_count);
+
+    // 4. Create module
     let module = seed_module(conn, &campaign.id)?;
     info!("Created module: {}", module.name);
 
-    // 4. Add monsters to module
+    // 5. Add monsters to module
     let monsters = seed_monsters(conn, &module.id)?;
     info!("Added 7 monster groups to module");
 
-    // 5. Add NPCs to module
+    // 6. Add NPCs to module
     let npcs = seed_npcs(conn, &module.id)?;
     info!("Added 2 NPCs to module");
 
-    // 6. Seed maps if assets available
+    // 7. Seed maps if assets available
     let map_id = if let Some(assets_dir) = get_seed_assets_dir() {
         let id = seed_maps(conn, &campaign.id, &module.id, &assets_dir, app_data_dir)?;
         info!("Created maps from seed assets");
@@ -90,7 +94,7 @@ pub fn seed_dev_data(conn: &mut SqliteConnection, app_data_dir: &Path) -> Servic
         None
     };
 
-    // 7. Seed tokens, lights, traps, and POIs on the map
+    // 8. Seed tokens, lights, traps, and POIs on the map
     if let Some(ref map_id) = map_id {
         let token_count = seed_tokens(conn, map_id, &monsters, &npcs)?;
         info!("Placed {} tokens on map", token_count);
@@ -167,17 +171,18 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     dal::insert_character_class(conn, &thorin_class)?;
 
     // Add inventory
-    for (name, qty, is_equipped) in [
-        ("Plate Armor", 1, true),
-        ("Shield", 1, true),
-        ("Longsword", 1, true),
-        ("Handaxe", 2, false),
-        ("Potion of Healing", 2, false),
-        ("Backpack", 1, false),
-        ("Bedroll", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Plate Armor", "PHB", 1, true),
+        ("Shield", "PHB", 1, true),
+        ("Longsword", "PHB", 1, true),
+        ("Handaxe", "PHB", 2, false),
+        ("Potion of Healing", "DMG", 2, false),
+        ("Backpack", "PHB", 1, false),
+        ("Bedroll", "PHB", 1, false),
+        ("Oathkeeper", "HB", 1, true),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &thorin_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &thorin_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -207,16 +212,16 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_subclass("School of Evocation", "PHB");
     dal::insert_character_class(conn, &elara_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Quarterstaff", 1, true),
-        ("Spellbook", 1, false),
-        ("Component Pouch", 1, false),
-        ("Dagger", 2, false),
-        ("Scroll of Identify", 1, false),
-        ("Potion of Healing", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Quarterstaff", "PHB", 1, true),
+        ("Spellbook", "PHB", 1, false),
+        ("Component Pouch", "PHB", 1, false),
+        ("Dagger", "PHB", 2, false),
+        ("Spell Scroll (1st Level)", "DMG", 1, false),
+        ("Potion of Healing", "DMG", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &elara_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &elara_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -246,16 +251,17 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_subclass("Thief", "PHB");
     dal::insert_character_class(conn, &finn_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Leather Armor", 1, true),
-        ("Shortsword", 1, true),
-        ("Dagger", 3, false),
-        ("Shortbow", 1, false),
-        ("Arrows", 20, false),
-        ("Thieves' Tools", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Leather Armor", "PHB", 1, true),
+        ("Shortsword", "PHB", 1, true),
+        ("Dagger", "PHB", 3, false),
+        ("Shortbow", "PHB", 1, false),
+        ("Arrow", "PHB", 20, false),
+        ("Thieves' Tools", "PHB", 1, false),
+        ("Whisper", "HB", 1, true),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &finn_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &finn_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -285,17 +291,17 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_subclass("Life Domain", "PHB");
     dal::insert_character_class(conn, &helena_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Chain Mail", 1, true),
-        ("Shield", 1, true),
-        ("Mace", 1, true),
-        ("Holy Symbol", 1, false),
-        ("Healer's Kit", 1, false),
-        ("Potion of Healing", 4, false),
-        ("Holy Water", 2, false),
+    for (name, source, qty, is_equipped) in [
+        ("Chain Mail", "PHB", 1, true),
+        ("Shield", "PHB", 1, true),
+        ("Mace", "PHB", 1, true),
+        ("Healer's Kit", "PHB", 1, false),
+        ("Potion of Healing", "DMG", 4, false),
+        ("Holy Water (flask)", "PHB", 2, false),
+        ("Blessed Talisman of Tyr", "HB", 1, true),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &helena_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &helena_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -329,15 +335,15 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_level(5);
     dal::insert_character_class(conn, &sildar_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Chain Mail", 1, true),
-        ("Longsword", 1, true),
-        ("Shield", 1, true),
-        ("Dagger", 1, false),
-        ("Potion of Healing", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Chain Mail", "PHB", 1, true),
+        ("Longsword", "PHB", 1, true),
+        ("Shield", "PHB", 1, true),
+        ("Dagger", "PHB", 1, false),
+        ("Potion of Healing", "DMG", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &sildar_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &sildar_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -367,14 +373,14 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_level(3);
     dal::insert_character_class(conn, &gundren_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Traveler's Clothes", 1, true),
-        ("Miner's Pick", 1, false),
-        ("Map Case", 1, false),
-        ("Pouch", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Traveler's Clothes", "PHB", 1, true),
+        ("Miner's Pick", "PHB", 1, false),
+        ("Map or Scroll Case", "PHB", 1, false),
+        ("Pouch", "PHB", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &gundren_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &gundren_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -404,14 +410,14 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_level(1);
     dal::insert_character_class(conn, &toblen_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Common Clothes", 1, true),
-        ("Apron", 1, true),
-        ("Dagger", 1, false),
-        ("Key Ring", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Common Clothes", "PHB", 1, true),
+        ("Apron", "PHB", 1, true),
+        ("Dagger", "PHB", 1, false),
+        ("Key Ring", "PHB", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &toblen_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &toblen_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -441,17 +447,17 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_level(4);
     dal::insert_character_class(conn, &iarno_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Robes", 1, true),
-        ("Staff of Defense", 1, true),
-        ("Spellbook", 1, false),
-        ("Component Pouch", 1, false),
-        ("Dagger", 1, false),
-        ("Potion of Invisibility", 1, false),
-        ("Scroll of Fireball", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Robes", "PHB", 1, true),
+        ("Staff of Defense", "DMG", 1, true),
+        ("Spellbook", "PHB", 1, false),
+        ("Component Pouch", "PHB", 1, false),
+        ("Dagger", "PHB", 1, false),
+        ("Potion of Invisibility", "DMG", 1, false),
+        ("Spell Scroll (3rd Level)", "DMG", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &iarno_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &iarno_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -481,14 +487,14 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_level(3);
     dal::insert_character_class(conn, &klarg_class)?;
 
-    for (name, qty, is_equipped) in [
-        ("Hide Armor", 1, true),
-        ("Morningstar", 1, true),
-        ("Javelin", 3, false),
-        ("Belt Pouch", 1, false),
+    for (name, source, qty, is_equipped) in [
+        ("Hide Armor", "PHB", 1, true),
+        ("Morningstar", "PHB", 1, true),
+        ("Javelin", "PHB", 3, false),
+        ("Pouch", "PHB", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &klarg_id, name, "PHB")
+        let mut item = NewCharacterInventory::new(&item_id, &klarg_id, name, source)
             .with_quantity(qty);
         if is_equipped {
             item = item.equipped();
@@ -498,6 +504,136 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     characters.push(dal::get_character(conn, &klarg_id)?);
 
     Ok(characters)
+}
+
+// =============================================================================
+// Homebrew Item Seeding
+// =============================================================================
+
+fn seed_homebrew_items(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<usize> {
+    let mut count = 0;
+
+    // Oathkeeper — a +1 longsword cloned from the catalog longsword, given to Thorin
+    let oathkeeper_id = Uuid::new_v4().to_string();
+    let oathkeeper_data = serde_json::json!({
+        "name": "Oathkeeper",
+        "source": "HB",
+        "type": "M",
+        "weaponCategory": "martial",
+        "weight": 3,
+        "dmg1": "1d8+1",
+        "dmgType": "S",
+        "property": ["V"],
+        "dmg2": "1d10+1",
+        "bonusWeapon": "+1",
+        "reqAttune": true,
+        "entries": [
+            "This ancient dwarven longsword was forged in the fires of Gauntlgrym. Its blade is etched with dwarven runes that glow faintly blue when undead are within 120 feet.",
+            "You gain a +1 bonus to attack and damage rolls made with this magic weapon.",
+            "While attuned, you have advantage on saving throws against being frightened."
+        ]
+    });
+    let oathkeeper_json = oathkeeper_data.to_string();
+    let oathkeeper = NewCampaignHomebrewItem::new(
+        &oathkeeper_id,
+        campaign_id,
+        "Oathkeeper",
+        &oathkeeper_json,
+    )
+    .with_item_type("M")
+    .with_rarity("rare")
+    .cloned_from("Longsword", "PHB");
+    dal::insert_campaign_homebrew_item(conn, &oathkeeper)?;
+    count += 1;
+
+    // Blessed Talisman of Tyr — a wondrous item for Helena
+    let talisman_id = Uuid::new_v4().to_string();
+    let talisman_data = serde_json::json!({
+        "name": "Blessed Talisman of Tyr",
+        "source": "HB",
+        "type": "W",
+        "weight": 0.5,
+        "rarity": "uncommon",
+        "reqAttune": "by a cleric or paladin",
+        "entries": [
+            "A silver medallion bearing the scales of Tyr, god of justice. It was blessed by the high priest of the Temple of Tyr in Neverwinter.",
+            "While wearing this talisman, you can use an action to cast {@spell lesser restoration} once per long rest without expending a spell slot.",
+            "Additionally, when you cast a healing spell, you can roll one of the dice twice and take the higher result. You can use this property a number of times equal to your Wisdom modifier (minimum once), regaining all uses after a long rest."
+        ]
+    });
+    let talisman_json = talisman_data.to_string();
+    let talisman = NewCampaignHomebrewItem::new(
+        &talisman_id,
+        campaign_id,
+        "Blessed Talisman of Tyr",
+        &talisman_json,
+    )
+    .with_item_type("W")
+    .with_rarity("uncommon");
+    dal::insert_campaign_homebrew_item(conn, &talisman)?;
+    count += 1;
+
+    // Whisper — a magical dagger for Finn, cloned from Dagger
+    let whisper_id = Uuid::new_v4().to_string();
+    let whisper_data = serde_json::json!({
+        "name": "Whisper",
+        "source": "HB",
+        "type": "M",
+        "weaponCategory": "simple",
+        "weight": 1,
+        "dmg1": "1d4+1",
+        "dmgType": "P",
+        "property": ["F", "L", "T"],
+        "range": "20/60",
+        "bonusWeapon": "+1",
+        "reqAttune": "by a rogue",
+        "entries": [
+            "This slender black dagger seems to absorb light. Its blade is unnaturally silent when drawn.",
+            "You gain a +1 bonus to attack and damage rolls made with this magic weapon.",
+            "When you hit a creature that hasn't taken a turn yet in combat, the attack deals an extra 1d6 psychic damage.",
+            "While holding Whisper, your footsteps make no sound, granting you advantage on Dexterity (Stealth) checks that rely on moving silently."
+        ]
+    });
+    let whisper_json = whisper_data.to_string();
+    let whisper = NewCampaignHomebrewItem::new(
+        &whisper_id,
+        campaign_id,
+        "Whisper",
+        &whisper_json,
+    )
+    .with_item_type("M")
+    .with_rarity("rare")
+    .cloned_from("Dagger", "PHB");
+    dal::insert_campaign_homebrew_item(conn, &whisper)?;
+    count += 1;
+
+    // Cragmaw Brew — a custom potion (not cloned from anything)
+    let brew_id = Uuid::new_v4().to_string();
+    let brew_data = serde_json::json!({
+        "name": "Cragmaw Brew",
+        "source": "HB",
+        "type": "P",
+        "weight": 0.5,
+        "rarity": "common",
+        "entries": [
+            "A foul-smelling greenish liquid brewed by the goblins of Cragmaw Hideout from cave mushrooms and wolf saliva.",
+            "When you drink this potion, you regain 1d4 hit points. However, you must succeed on a DC 10 Constitution saving throw or be poisoned for 1 hour.",
+            "Goblins are immune to the poisoned effect of this brew."
+        ]
+    });
+    let brew_json = brew_data.to_string();
+    let brew = NewCampaignHomebrewItem::new(
+        &brew_id,
+        campaign_id,
+        "Cragmaw Brew",
+        &brew_json,
+    )
+    .with_item_type("P")
+    .with_rarity("common");
+    dal::insert_campaign_homebrew_item(conn, &brew)?;
+    count += 1;
+
+    Ok(count)
 }
 
 // =============================================================================
