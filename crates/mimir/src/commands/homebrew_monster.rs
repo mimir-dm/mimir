@@ -2,17 +2,17 @@
 //!
 //! Tauri commands for managing campaign homebrew monsters.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{CampaignHomebrewMonster, NewCampaignHomebrewMonster, UpdateCampaignHomebrewMonster};
+use mimir_core::models::campaign::CampaignHomebrewMonster;
+use mimir_core::services::{CreateHomebrewMonsterInput, HomebrewService, UpdateHomebrewMonsterInput};
 use serde::Deserialize;
 use tauri::State;
 
 use super::{to_api_response, ApiResponse};
 use crate::state::AppState;
 
-/// Input for creating a homebrew monster.
+/// Input for creating a homebrew monster (Tauri-facing, Deserialize).
 #[derive(Debug, Deserialize)]
-pub struct CreateHomebrewMonsterInput {
+pub struct TauriCreateHomebrewMonsterInput {
     pub campaign_id: String,
     pub name: String,
     pub cr: Option<String>,
@@ -23,9 +23,9 @@ pub struct CreateHomebrewMonsterInput {
     pub cloned_from_source: Option<String>,
 }
 
-/// Input for updating a homebrew monster.
+/// Input for updating a homebrew monster (Tauri-facing, Deserialize).
 #[derive(Debug, Deserialize)]
-pub struct UpdateHomebrewMonsterInput {
+pub struct TauriUpdateHomebrewMonsterInput {
     pub name: Option<String>,
     pub cr: Option<Option<String>>,
     pub creature_type: Option<Option<String>>,
@@ -44,7 +44,7 @@ pub fn list_homebrew_monsters(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::list_campaign_homebrew_monsters(&mut db, &campaign_id))
+    to_api_response(HomebrewService::new(&mut db).list_monsters(&campaign_id))
 }
 
 /// Get a homebrew monster by ID.
@@ -58,35 +58,32 @@ pub fn get_homebrew_monster(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::get_campaign_homebrew_monster(&mut db, &id))
+    to_api_response(HomebrewService::new(&mut db).get_monster(&id))
 }
 
 /// Create a new homebrew monster.
 #[tauri::command]
 pub fn create_homebrew_monster(
     state: State<'_, AppState>,
-    input: CreateHomebrewMonsterInput,
+    input: TauriCreateHomebrewMonsterInput,
 ) -> ApiResponse<CampaignHomebrewMonster> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let id = uuid::Uuid::new_v4().to_string();
-    let mut new_monster = NewCampaignHomebrewMonster::new(&id, &input.campaign_id, &input.name, &input.data);
-    new_monster.cr = input.cr.as_deref();
-    new_monster.creature_type = input.creature_type.as_deref();
-    new_monster.size = input.size.as_deref();
-    new_monster.cloned_from_name = input.cloned_from_name.as_deref();
-    new_monster.cloned_from_source = input.cloned_from_source.as_deref();
+    let svc_input = CreateHomebrewMonsterInput {
+        campaign_id: input.campaign_id,
+        name: input.name,
+        data: input.data,
+        cr: input.cr,
+        creature_type: input.creature_type,
+        size: input.size,
+        cloned_from_name: input.cloned_from_name,
+        cloned_from_source: input.cloned_from_source,
+    };
 
-    match dal::insert_campaign_homebrew_monster(&mut db, &new_monster) {
-        Ok(_) => match dal::get_campaign_homebrew_monster(&mut db, &id) {
-            Ok(monster) => ApiResponse::ok(monster),
-            Err(e) => ApiResponse::err(e.to_string()),
-        },
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(HomebrewService::new(&mut db).create_monster(svc_input))
 }
 
 /// Update a homebrew monster.
@@ -94,33 +91,22 @@ pub fn create_homebrew_monster(
 pub fn update_homebrew_monster(
     state: State<'_, AppState>,
     id: String,
-    input: UpdateHomebrewMonsterInput,
+    input: TauriUpdateHomebrewMonsterInput,
 ) -> ApiResponse<CampaignHomebrewMonster> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let name_ref = input.name.as_deref();
-    let data_ref = input.data.as_deref();
-    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
-
-    let update = UpdateCampaignHomebrewMonster {
-        name: name_ref,
-        cr: input.cr.as_ref().map(|o| o.as_deref()),
-        creature_type: input.creature_type.as_ref().map(|o| o.as_deref()),
-        size: input.size.as_ref().map(|o| o.as_deref()),
-        data: data_ref,
-        updated_at: Some(&now),
+    let svc_input = UpdateHomebrewMonsterInput {
+        name: input.name,
+        data: input.data,
+        cr: input.cr,
+        creature_type: input.creature_type,
+        size: input.size,
     };
 
-    match dal::update_campaign_homebrew_monster(&mut db, &id, &update) {
-        Ok(_) => match dal::get_campaign_homebrew_monster(&mut db, &id) {
-            Ok(monster) => ApiResponse::ok(monster),
-            Err(e) => ApiResponse::err(e.to_string()),
-        },
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(HomebrewService::new(&mut db).update_monster(&id, svc_input))
 }
 
 /// Delete a homebrew monster.
@@ -134,5 +120,5 @@ pub fn delete_homebrew_monster(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::delete_campaign_homebrew_monster(&mut db, &id).map(|n| n > 0))
+    to_api_response(HomebrewService::new(&mut db).delete_monster(&id).map(|_| true))
 }

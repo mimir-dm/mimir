@@ -2,17 +2,17 @@
 //!
 //! Tauri commands for managing campaign homebrew items.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{CampaignHomebrewItem, NewCampaignHomebrewItem, UpdateCampaignHomebrewItem};
+use mimir_core::models::campaign::CampaignHomebrewItem;
+use mimir_core::services::{CreateHomebrewItemInput, HomebrewService, UpdateHomebrewItemInput};
 use serde::Deserialize;
 use tauri::State;
 
 use super::{to_api_response, ApiResponse};
 use crate::state::AppState;
 
-/// Input for creating a homebrew item.
+/// Input for creating a homebrew item (Tauri-facing, Deserialize).
 #[derive(Debug, Deserialize)]
-pub struct CreateHomebrewItemInput {
+pub struct TauriCreateHomebrewItemInput {
     pub campaign_id: String,
     pub name: String,
     pub item_type: Option<String>,
@@ -22,9 +22,9 @@ pub struct CreateHomebrewItemInput {
     pub cloned_from_source: Option<String>,
 }
 
-/// Input for updating a homebrew item.
+/// Input for updating a homebrew item (Tauri-facing, Deserialize).
 #[derive(Debug, Deserialize)]
-pub struct UpdateHomebrewItemInput {
+pub struct TauriUpdateHomebrewItemInput {
     pub name: Option<String>,
     pub item_type: Option<Option<String>>,
     pub rarity: Option<Option<String>>,
@@ -42,7 +42,7 @@ pub fn list_homebrew_items(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::list_campaign_homebrew_items(&mut db, &campaign_id))
+    to_api_response(HomebrewService::new(&mut db).list_items(&campaign_id))
 }
 
 /// Get a homebrew item by ID.
@@ -56,7 +56,7 @@ pub fn get_homebrew_item(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::get_campaign_homebrew_item(&mut db, &id))
+    to_api_response(HomebrewService::new(&mut db).get_item(&id))
 }
 
 /// Get a homebrew item by campaign_id and name.
@@ -71,34 +71,31 @@ pub fn get_homebrew_item_by_name(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::get_campaign_homebrew_item_by_name(&mut db, &campaign_id, &name))
+    to_api_response(HomebrewService::new(&mut db).get_item_by_name(&campaign_id, &name))
 }
 
 /// Create a new homebrew item.
 #[tauri::command]
 pub fn create_homebrew_item(
     state: State<'_, AppState>,
-    input: CreateHomebrewItemInput,
+    input: TauriCreateHomebrewItemInput,
 ) -> ApiResponse<CampaignHomebrewItem> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let id = uuid::Uuid::new_v4().to_string();
-    let mut new_item = NewCampaignHomebrewItem::new(&id, &input.campaign_id, &input.name, &input.data);
-    new_item.item_type = input.item_type.as_deref();
-    new_item.rarity = input.rarity.as_deref();
-    new_item.cloned_from_name = input.cloned_from_name.as_deref();
-    new_item.cloned_from_source = input.cloned_from_source.as_deref();
+    let svc_input = CreateHomebrewItemInput {
+        campaign_id: input.campaign_id,
+        name: input.name,
+        data: input.data,
+        item_type: input.item_type,
+        rarity: input.rarity,
+        cloned_from_name: input.cloned_from_name,
+        cloned_from_source: input.cloned_from_source,
+    };
 
-    match dal::insert_campaign_homebrew_item(&mut db, &new_item) {
-        Ok(_) => match dal::get_campaign_homebrew_item(&mut db, &id) {
-            Ok(item) => ApiResponse::ok(item),
-            Err(e) => ApiResponse::err(e.to_string()),
-        },
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(HomebrewService::new(&mut db).create_item(svc_input))
 }
 
 /// Update a homebrew item.
@@ -106,32 +103,21 @@ pub fn create_homebrew_item(
 pub fn update_homebrew_item(
     state: State<'_, AppState>,
     id: String,
-    input: UpdateHomebrewItemInput,
+    input: TauriUpdateHomebrewItemInput,
 ) -> ApiResponse<CampaignHomebrewItem> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let name_ref = input.name.as_deref();
-    let data_ref = input.data.as_deref();
-    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
-
-    let update = UpdateCampaignHomebrewItem {
-        name: name_ref,
-        item_type: input.item_type.as_ref().map(|o| o.as_deref()),
-        rarity: input.rarity.as_ref().map(|o| o.as_deref()),
-        data: data_ref,
-        updated_at: Some(&now),
+    let svc_input = UpdateHomebrewItemInput {
+        name: input.name,
+        data: input.data,
+        item_type: input.item_type,
+        rarity: input.rarity,
     };
 
-    match dal::update_campaign_homebrew_item(&mut db, &id, &update) {
-        Ok(_) => match dal::get_campaign_homebrew_item(&mut db, &id) {
-            Ok(item) => ApiResponse::ok(item),
-            Err(e) => ApiResponse::err(e.to_string()),
-        },
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(HomebrewService::new(&mut db).update_item(&id, svc_input))
 }
 
 /// Delete a homebrew item.
@@ -145,5 +131,5 @@ pub fn delete_homebrew_item(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::delete_campaign_homebrew_item(&mut db, &id).map(|n| n > 0))
+    to_api_response(HomebrewService::new(&mut db).delete_item(&id).map(|_| true))
 }

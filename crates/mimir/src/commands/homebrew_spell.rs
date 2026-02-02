@@ -2,17 +2,17 @@
 //!
 //! Tauri commands for managing campaign homebrew spells.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{CampaignHomebrewSpell, NewCampaignHomebrewSpell, UpdateCampaignHomebrewSpell};
+use mimir_core::models::campaign::CampaignHomebrewSpell;
+use mimir_core::services::{CreateHomebrewSpellInput, HomebrewService, UpdateHomebrewSpellInput};
 use serde::Deserialize;
 use tauri::State;
 
 use super::{to_api_response, ApiResponse};
 use crate::state::AppState;
 
-/// Input for creating a homebrew spell.
+/// Input for creating a homebrew spell (Tauri-facing, Deserialize).
 #[derive(Debug, Deserialize)]
-pub struct CreateHomebrewSpellInput {
+pub struct TauriCreateHomebrewSpellInput {
     pub campaign_id: String,
     pub name: String,
     pub level: Option<i32>,
@@ -22,9 +22,9 @@ pub struct CreateHomebrewSpellInput {
     pub cloned_from_source: Option<String>,
 }
 
-/// Input for updating a homebrew spell.
+/// Input for updating a homebrew spell (Tauri-facing, Deserialize).
 #[derive(Debug, Deserialize)]
-pub struct UpdateHomebrewSpellInput {
+pub struct TauriUpdateHomebrewSpellInput {
     pub name: Option<String>,
     pub level: Option<Option<i32>>,
     pub school: Option<Option<String>>,
@@ -42,7 +42,7 @@ pub fn list_homebrew_spells(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::list_campaign_homebrew_spells(&mut db, &campaign_id))
+    to_api_response(HomebrewService::new(&mut db).list_spells(&campaign_id))
 }
 
 /// Get a homebrew spell by ID.
@@ -56,36 +56,31 @@ pub fn get_homebrew_spell(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::get_campaign_homebrew_spell(&mut db, &id))
+    to_api_response(HomebrewService::new(&mut db).get_spell(&id))
 }
 
 /// Create a new homebrew spell.
 #[tauri::command]
 pub fn create_homebrew_spell(
     state: State<'_, AppState>,
-    input: CreateHomebrewSpellInput,
+    input: TauriCreateHomebrewSpellInput,
 ) -> ApiResponse<CampaignHomebrewSpell> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let id = uuid::Uuid::new_v4().to_string();
-    let mut new_spell = NewCampaignHomebrewSpell::new(&id, &input.campaign_id, &input.name, &input.data);
-    if let Some(level) = input.level {
-        new_spell = new_spell.with_level(level);
-    }
-    new_spell.school = input.school.as_deref();
-    new_spell.cloned_from_name = input.cloned_from_name.as_deref();
-    new_spell.cloned_from_source = input.cloned_from_source.as_deref();
+    let svc_input = CreateHomebrewSpellInput {
+        campaign_id: input.campaign_id,
+        name: input.name,
+        data: input.data,
+        level: input.level,
+        school: input.school,
+        cloned_from_name: input.cloned_from_name,
+        cloned_from_source: input.cloned_from_source,
+    };
 
-    match dal::insert_campaign_homebrew_spell(&mut db, &new_spell) {
-        Ok(_) => match dal::get_campaign_homebrew_spell(&mut db, &id) {
-            Ok(spell) => ApiResponse::ok(spell),
-            Err(e) => ApiResponse::err(e.to_string()),
-        },
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(HomebrewService::new(&mut db).create_spell(svc_input))
 }
 
 /// Update a homebrew spell.
@@ -93,32 +88,21 @@ pub fn create_homebrew_spell(
 pub fn update_homebrew_spell(
     state: State<'_, AppState>,
     id: String,
-    input: UpdateHomebrewSpellInput,
+    input: TauriUpdateHomebrewSpellInput,
 ) -> ApiResponse<CampaignHomebrewSpell> {
     let mut db = match state.db.lock() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    let name_ref = input.name.as_deref();
-    let data_ref = input.data.as_deref();
-    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
-
-    let update = UpdateCampaignHomebrewSpell {
-        name: name_ref,
+    let svc_input = UpdateHomebrewSpellInput {
+        name: input.name,
+        data: input.data,
         level: input.level,
-        school: input.school.as_ref().map(|o| o.as_deref()),
-        data: data_ref,
-        updated_at: Some(&now),
+        school: input.school,
     };
 
-    match dal::update_campaign_homebrew_spell(&mut db, &id, &update) {
-        Ok(_) => match dal::get_campaign_homebrew_spell(&mut db, &id) {
-            Ok(spell) => ApiResponse::ok(spell),
-            Err(e) => ApiResponse::err(e.to_string()),
-        },
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(HomebrewService::new(&mut db).update_spell(&id, svc_input))
 }
 
 /// Delete a homebrew spell.
@@ -132,5 +116,5 @@ pub fn delete_homebrew_spell(
         Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
     };
 
-    to_api_response(dal::delete_campaign_homebrew_spell(&mut db, &id).map(|n| n > 0))
+    to_api_response(HomebrewService::new(&mut db).delete_spell(&id).map(|_| true))
 }

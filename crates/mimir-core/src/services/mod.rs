@@ -9,6 +9,7 @@ mod campaign;
 pub mod catalog;
 mod character;
 mod document;
+mod homebrew;
 mod map;
 mod module;
 
@@ -26,6 +27,10 @@ pub use character::{
     ManeuverChoices, SpellChanges, SpellReference, SubclassChoice, UpdateCharacterInput,
 };
 pub use document::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
+pub use homebrew::{
+    CreateHomebrewItemInput, CreateHomebrewMonsterInput, CreateHomebrewSpellInput,
+    HomebrewService, UpdateHomebrewItemInput, UpdateHomebrewMonsterInput, UpdateHomebrewSpellInput,
+};
 pub use map::{CreateMapInput, MapService, UpdateMapInput};
 pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
 pub use catalog::{

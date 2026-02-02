@@ -2,12 +2,10 @@
 //!
 //! MCP tools for campaign homebrew spell CRUD operations.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{NewCampaignHomebrewSpell, UpdateCampaignHomebrewSpell};
+use mimir_core::services::{CreateHomebrewSpellInput, HomebrewService, UpdateHomebrewSpellInput};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
-use uuid::Uuid;
 
 use super::create_properties;
 use crate::context::McpContext;
@@ -144,8 +142,7 @@ pub async fn list_homebrew_spells(ctx: &Arc<McpContext>, _args: Value) -> Result
         .ok_or(McpError::NoActiveCampaign)?;
 
     let mut db = ctx.db()?;
-    let spells = dal::list_campaign_homebrew_spells(&mut db, &campaign_id)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let spells = HomebrewService::new(&mut db).list_spells(&campaign_id)?;
 
     let spell_data: Vec<Value> = spells.iter().map(homebrew_spell_to_json).collect();
 
@@ -162,8 +159,7 @@ pub async fn get_homebrew_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .ok_or_else(|| McpError::InvalidArguments("id is required".to_string()))?;
 
     let mut db = ctx.db()?;
-    let spell = dal::get_campaign_homebrew_spell(&mut db, id)
-        .map_err(|e| McpError::Internal(format!("Homebrew spell '{}' not found: {}", id, e)))?;
+    let spell = HomebrewService::new(&mut db).get_spell(id)?;
 
     Ok(json!({ "spell": homebrew_spell_to_json(&spell) }))
 }
@@ -186,32 +182,18 @@ pub async fn create_homebrew_spell(
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("data is required".to_string()))?;
 
-    // Validate JSON
-    serde_json::from_str::<Value>(data)
-        .map_err(|e| McpError::InvalidArguments(format!("data must be valid JSON: {}", e)))?;
-
-    let id = Uuid::new_v4().to_string();
-    let mut new_spell = NewCampaignHomebrewSpell::new(&id, &campaign_id, name, data);
-
-    if let Some(level) = args.get("level").and_then(|v| v.as_i64()) {
-        new_spell = new_spell.with_level(level as i32);
-    }
-    if let Some(school) = args.get("school").and_then(|v| v.as_str()) {
-        new_spell = new_spell.with_school(school);
-    }
-
-    let cloned_from_name = args.get("cloned_from_name").and_then(|v| v.as_str());
-    let cloned_from_source = args.get("cloned_from_source").and_then(|v| v.as_str());
-    if let (Some(cfn), Some(cfs)) = (cloned_from_name, cloned_from_source) {
-        new_spell = new_spell.cloned_from(cfn, cfs);
-    }
+    let input = CreateHomebrewSpellInput {
+        campaign_id,
+        name: name.to_string(),
+        data: data.to_string(),
+        level: args.get("level").and_then(|v| v.as_i64()).map(|l| l as i32),
+        school: args.get("school").and_then(|v| v.as_str()).map(String::from),
+        cloned_from_name: args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from),
+        cloned_from_source: args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from),
+    };
 
     let mut db = ctx.db()?;
-    dal::insert_campaign_homebrew_spell(&mut db, &new_spell)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
-
-    let spell = dal::get_campaign_homebrew_spell(&mut db, &id)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let spell = HomebrewService::new(&mut db).create_spell(input)?;
 
     Ok(json!({
         "status": "created",
@@ -228,32 +210,23 @@ pub async fn update_homebrew_spell(
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("id is required".to_string()))?;
 
-    // Validate data JSON if provided
-    if let Some(data) = args.get("data").and_then(|v| v.as_str()) {
-        serde_json::from_str::<Value>(data)
-            .map_err(|e| McpError::InvalidArguments(format!("data must be valid JSON: {}", e)))?;
-    }
-
-    let name = args.get("name").and_then(|v| v.as_str());
-    let level = args.get("level").and_then(|v| v.as_i64()).map(|l| l as i32);
-    let school = args.get("school").and_then(|v| v.as_str());
-    let data = args.get("data").and_then(|v| v.as_str());
-
-    let now = chrono::Utc::now().to_rfc3339();
-    let update = UpdateCampaignHomebrewSpell {
-        name,
-        level: if args.get("level").is_some() { Some(level) } else { None },
-        school: if args.get("school").is_some() { Some(school) } else { None },
-        data,
-        updated_at: Some(&now),
+    let input = UpdateHomebrewSpellInput {
+        name: args.get("name").and_then(|v| v.as_str()).map(String::from),
+        data: args.get("data").and_then(|v| v.as_str()).map(String::from),
+        level: if args.get("level").is_some() {
+            Some(args.get("level").and_then(|v| v.as_i64()).map(|l| l as i32))
+        } else {
+            None
+        },
+        school: if args.get("school").is_some() {
+            Some(args.get("school").and_then(|v| v.as_str()).map(String::from))
+        } else {
+            None
+        },
     };
 
     let mut db = ctx.db()?;
-    dal::update_campaign_homebrew_spell(&mut db, id, &update)
-        .map_err(|e| McpError::Internal(format!("Failed to update homebrew spell: {}", e)))?;
-
-    let spell = dal::get_campaign_homebrew_spell(&mut db, id)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let spell = HomebrewService::new(&mut db).update_spell(id, input)?;
 
     Ok(json!({
         "status": "updated",
@@ -268,8 +241,7 @@ pub async fn delete_homebrew_spell(ctx: &Arc<McpContext>, args: Value) -> Result
         .ok_or_else(|| McpError::InvalidArguments("id is required".to_string()))?;
 
     let mut db = ctx.db()?;
-    dal::delete_campaign_homebrew_spell(&mut db, id)
-        .map_err(|e| McpError::Internal(format!("Failed to delete homebrew spell: {}", e)))?;
+    HomebrewService::new(&mut db).delete_spell(id)?;
 
     Ok(json!({
         "status": "deleted",

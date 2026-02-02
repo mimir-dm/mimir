@@ -45,3 +45,22 @@ impl From<serde_json::Error> for McpError {
         McpError::InvalidArguments(e.to_string())
     }
 }
+
+impl From<mimir_core::services::ServiceError> for McpError {
+    fn from(e: mimir_core::services::ServiceError) -> Self {
+        match e {
+            mimir_core::services::ServiceError::NotFound { entity_type, id } => {
+                McpError::NotFound(entity_type, id)
+            }
+            mimir_core::services::ServiceError::Validation(msg) => {
+                McpError::InvalidArguments(msg)
+            }
+            mimir_core::services::ServiceError::Database(e) => {
+                McpError::Database(e.to_string())
+            }
+            mimir_core::services::ServiceError::Io(e) => {
+                McpError::Internal(e.to_string())
+            }
+        }
+    }
+}
