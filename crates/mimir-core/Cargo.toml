@@ -35,6 +35,9 @@ tracing = { workspace = true }
 once_cell = "1.19"
 regex = "1.10"
 
+# Macros
+paste = "1.0"
+
 # File system
 walkdir = { workspace = true }
 

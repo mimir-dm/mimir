@@ -4,6 +4,7 @@
 
 mod campaign;
 mod campaign_asset;
+mod homebrew_crud;
 mod campaign_homebrew_item;
 mod campaign_homebrew_monster;
 mod campaign_homebrew_spell;
