@@ -18,6 +18,7 @@ use mimir_core::services::{
     HazardService, ItemService, LanguageService, MonsterService, ObjectService,
     OptionalFeatureService, PsionicService, RaceService, RewardService, SpellService,
     SubclassFeatureService, SubclassService, TrapService, VariantRuleService, VehicleService,
+    DEFAULT_QUERY_LIMIT,
 };
 use serde_json::Value;
 use tauri::State;
@@ -242,7 +243,7 @@ pub fn search_monsters(
 
     let result = MonsterService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -334,7 +335,7 @@ pub fn search_spells(
     let filter = filter.unwrap_or_default();
     let result = SpellService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -449,7 +450,7 @@ pub fn search_items(
     let filter = filter.unwrap_or_default();
     let result = ItemService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -568,7 +569,7 @@ pub fn search_races(
     let filter = filter.unwrap_or_default();
     let result = RaceService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -657,7 +658,7 @@ pub fn search_backgrounds(
     let filter = filter.unwrap_or_default();
     let result = BackgroundService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -746,7 +747,7 @@ pub fn search_classes(
     let filter = filter.unwrap_or_default();
     let result = ClassService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -999,7 +1000,7 @@ pub fn search_feats(
     let filter = filter.unwrap_or_default();
     let result = FeatService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1086,7 +1087,7 @@ pub fn search_conditions(
     };
 
     let filter = filter.unwrap_or_default();
-    let limit = limit.unwrap_or(100);
+    let limit = limit.unwrap_or(DEFAULT_QUERY_LIMIT);
     let offset = offset.unwrap_or(0);
 
     // Fetch conditions
@@ -1225,7 +1226,7 @@ pub fn search_languages(
     let filter = filter.unwrap_or_default();
     let result = LanguageService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1312,7 +1313,7 @@ pub fn search_traps(
     };
 
     let filter = filter.unwrap_or_default();
-    let limit = limit.unwrap_or(100);
+    let limit = limit.unwrap_or(DEFAULT_QUERY_LIMIT);
     let offset = offset.unwrap_or(0);
 
     // Helper to format trap/hazard type codes
@@ -1466,7 +1467,7 @@ pub fn search_hazards(
     let filter = filter.unwrap_or_default();
     let result = HazardService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1555,7 +1556,7 @@ pub fn search_actions(
     let filter = filter.unwrap_or_default();
     let result = ActionService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1644,7 +1645,7 @@ pub fn search_deities(
     let filter = filter.unwrap_or_default();
     let result = DeityService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1733,7 +1734,7 @@ pub fn search_optional_features(
     let filter = filter.unwrap_or_default();
     let result = OptionalFeatureService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1822,7 +1823,7 @@ pub fn search_tables(
     let filter = filter.unwrap_or_default();
     let result = CatalogTableService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -1911,7 +1912,7 @@ pub fn search_variant_rules(
     let filter = filter.unwrap_or_default();
     let result = VariantRuleService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -2000,7 +2001,7 @@ pub fn search_vehicles(
     let filter = filter.unwrap_or_default();
     let result = VehicleService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -2089,7 +2090,7 @@ pub fn search_cults(
     let filter = filter.unwrap_or_default();
     let result = CultService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -2241,7 +2242,7 @@ pub fn search_psionics(
     let filter = filter.unwrap_or_default();
     let result = PsionicService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -2330,7 +2331,7 @@ pub fn search_rewards(
     let filter = filter.unwrap_or_default();
     let result = RewardService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {
@@ -2419,7 +2420,7 @@ pub fn search_objects(
     let filter = filter.unwrap_or_default();
     let result = ObjectService::new(&mut db).search_paginated(
         &filter,
-        limit.unwrap_or(100),
+        limit.unwrap_or(DEFAULT_QUERY_LIMIT),
         offset.unwrap_or(0),
     );
     match result {

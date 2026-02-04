@@ -2,20 +2,20 @@
 //!
 //! Business logic for character management (PCs and NPCs).
 
-use chrono::Utc;
 use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Character, CharacterClass, CharacterInventory, FeatSourceType, NewCharacter,
-    NewCharacterClass, NewCharacterFeat, NewCharacterFeature, NewCharacterInventory,
+    Character, CharacterClass, CharacterInventory, CharacterResponse, FeatSourceType,
+    NewCharacter, NewCharacterClass, NewCharacterFeat, NewCharacterFeature, NewCharacterInventory,
     NewCharacterProficiency, NewCharacterSpell, ProficiencyType, UpdateCharacter,
     UpdateCharacterClass, UpdateCharacterInventory, UpdateCharacterProficiency,
 };
 use crate::services::catalog::CatalogEntityService;
 use crate::services::{ClassService, ServiceError, ServiceResult};
+use crate::utils::now_rfc3339;
 
 /// Input for creating a new character.
 #[derive(Debug, Clone)]
@@ -636,9 +636,50 @@ impl<'a> CharacterService<'a> {
         dal::get_character_optional(self.conn, id).map_err(ServiceError::from)
     }
 
+    /// Get an enriched character by ID (includes classes and proficiencies).
+    ///
+    /// Returns a `CharacterResponse` with classes and proficiencies populated.
+    pub fn get_enriched(&mut self, id: &str) -> ServiceResult<Option<CharacterResponse>> {
+        let character = match dal::get_character_optional(self.conn, id)? {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+        Ok(Some(self.enrich(character)?))
+    }
+
+    /// Enrich a character with classes and proficiencies.
+    ///
+    /// Takes a `Character` and loads its related classes and proficiencies,
+    /// returning a `CharacterResponse`.
+    pub fn enrich(&mut self, character: Character) -> ServiceResult<CharacterResponse> {
+        let classes = dal::list_character_classes(self.conn, &character.id).unwrap_or_default();
+        let proficiencies =
+            dal::list_character_proficiencies(self.conn, &character.id).unwrap_or_default();
+        Ok(CharacterResponse::from_character(
+            character,
+            classes,
+            proficiencies,
+        ))
+    }
+
+    /// Enrich multiple characters with classes and proficiencies.
+    ///
+    /// Takes a list of `Character` and loads related classes and proficiencies for each,
+    /// returning a list of `CharacterResponse`.
+    pub fn enrich_many(
+        &mut self,
+        characters: Vec<Character>,
+    ) -> ServiceResult<Vec<CharacterResponse>> {
+        let mut result = Vec::with_capacity(characters.len());
+        for character in characters {
+            result.push(self.enrich(character)?);
+        }
+        Ok(result)
+    }
+
     /// Update a character.
     pub fn update(&mut self, id: &str, input: UpdateCharacterInput) -> ServiceResult<Character> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
 
         // Build the update changeset
         let name_ref = input.name.as_deref();
@@ -820,7 +861,7 @@ impl<'a> CharacterService<'a> {
                     }
 
                     // Update character ability scores in database
-                    let now = Utc::now().to_rfc3339();
+                    let now = now_rfc3339();
                     let update = UpdateCharacter {
                         strength: Some(updated_character.strength),
                         dexterity: Some(updated_character.dexterity),

@@ -12,6 +12,7 @@ mod document;
 mod homebrew;
 mod map;
 mod module;
+mod token;
 
 use thiserror::Error;
 
@@ -33,6 +34,7 @@ pub use homebrew::{
 };
 pub use map::{CreateMapInput, MapService, UpdateMapInput};
 pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
+pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
 pub use catalog::{
     ActionService, BackgroundService, CatalogEntityService, CatalogTableService,
     ClassFeatureService, ClassService, ConditionService, CultService, DeityService, FeatService,

@@ -17,7 +17,7 @@ use crate::state::AppState;
 // List Commands
 // =============================================================================
 
-/// List all characters for a campaign (with classes).
+/// List all characters for a campaign (with classes and proficiencies).
 #[tauri::command]
 pub fn list_characters(
     state: State<'_, AppState>,
@@ -28,24 +28,19 @@ pub fn list_characters(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let characters = match CharacterService::new(&mut db).list_for_campaign(&campaign_id) {
+    let mut service = CharacterService::new(&mut db);
+    let characters = match service.list_for_campaign(&campaign_id) {
         Ok(chars) => chars,
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    // Fetch classes and proficiencies for each character
-    let mut result = Vec::with_capacity(characters.len());
-    for character in characters {
-        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
-        let proficiencies =
-            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
-        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    match service.enrich_many(characters) {
+        Ok(result) => ApiResponse::ok(result),
+        Err(e) => ApiResponse::err(e.to_string()),
     }
-
-    ApiResponse::ok(result)
 }
 
-/// List only player characters for a campaign (with classes).
+/// List only player characters for a campaign (with classes and proficiencies).
 #[tauri::command]
 pub fn list_pcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.connect() {
@@ -53,23 +48,19 @@ pub fn list_pcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<
         Err(e) => return ApiResponse::err(e),
     };
 
-    let characters = match CharacterService::new(&mut db).list_pcs(&campaign_id) {
+    let mut service = CharacterService::new(&mut db);
+    let characters = match service.list_pcs(&campaign_id) {
         Ok(chars) => chars,
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    let mut result = Vec::with_capacity(characters.len());
-    for character in characters {
-        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
-        let proficiencies =
-            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
-        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    match service.enrich_many(characters) {
+        Ok(result) => ApiResponse::ok(result),
+        Err(e) => ApiResponse::err(e.to_string()),
     }
-
-    ApiResponse::ok(result)
 }
 
-/// List only NPCs for a campaign (with classes).
+/// List only NPCs for a campaign (with classes and proficiencies).
 #[tauri::command]
 pub fn list_npcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.connect() {
@@ -77,20 +68,16 @@ pub fn list_npcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse
         Err(e) => return ApiResponse::err(e),
     };
 
-    let characters = match CharacterService::new(&mut db).list_npcs(&campaign_id) {
+    let mut service = CharacterService::new(&mut db);
+    let characters = match service.list_npcs(&campaign_id) {
         Ok(chars) => chars,
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    let mut result = Vec::with_capacity(characters.len());
-    for character in characters {
-        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
-        let proficiencies =
-            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
-        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    match service.enrich_many(characters) {
+        Ok(result) => ApiResponse::ok(result),
+        Err(e) => ApiResponse::err(e.to_string()),
     }
-
-    ApiResponse::ok(result)
 }
 
 /// List unassigned player characters (no campaign).
@@ -106,22 +93,17 @@ pub fn list_unassigned_pcs(state: State<'_, AppState>) -> ApiResponse<Vec<Charac
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    let mut result = Vec::with_capacity(characters.len());
-    for character in characters {
-        let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
-        let proficiencies =
-            dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
-        result.push(CharacterResponse::from_character(character, classes, proficiencies));
+    match CharacterService::new(&mut db).enrich_many(characters) {
+        Ok(result) => ApiResponse::ok(result),
+        Err(e) => ApiResponse::err(e.to_string()),
     }
-
-    ApiResponse::ok(result)
 }
 
 // =============================================================================
 // CRUD Commands
 // =============================================================================
 
-/// Get a character by ID (with classes).
+/// Get a character by ID (with classes and proficiencies).
 #[tauri::command]
 pub fn get_character(state: State<'_, AppState>, id: String) -> ApiResponse<CharacterResponse> {
     let mut db = match state.connect() {
@@ -129,14 +111,8 @@ pub fn get_character(state: State<'_, AppState>, id: String) -> ApiResponse<Char
         Err(e) => return ApiResponse::err(e),
     };
 
-    let result = CharacterService::new(&mut db).get(&id);
-    match result {
-        Ok(Some(character)) => {
-            let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
-            let proficiencies =
-                dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
-            ApiResponse::ok(CharacterResponse::from_character(character, classes, proficiencies))
-        }
+    match CharacterService::new(&mut db).get_enriched(&id) {
+        Ok(Some(response)) => ApiResponse::ok(response),
         Ok(None) => ApiResponse::err(format!("Character not found: {}", id)),
         Err(e) => ApiResponse::err(e.to_string()),
     }
@@ -290,13 +266,12 @@ pub fn update_character(
         faction: request.faction,
     };
 
-    match CharacterService::new(&mut db).update(&id, input) {
-        Ok(character) => {
-            let classes = dal::list_character_classes(&mut db, &character.id).unwrap_or_default();
-            let proficiencies =
-                dal::list_character_proficiencies(&mut db, &character.id).unwrap_or_default();
-            ApiResponse::ok(CharacterResponse::from_character(character, classes, proficiencies))
-        }
+    let mut service = CharacterService::new(&mut db);
+    match service.update(&id, input) {
+        Ok(character) => match service.enrich(character) {
+            Ok(response) => ApiResponse::ok(response),
+            Err(e) => ApiResponse::err(e.to_string()),
+        },
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }

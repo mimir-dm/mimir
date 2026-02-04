@@ -2,7 +2,6 @@
 //!
 //! Business logic for module management including type-based document creation.
 
-use chrono::Utc;
 use diesel::SqliteConnection;
 use uuid::Uuid;
 
@@ -10,6 +9,7 @@ use crate::dal::campaign as dal;
 use crate::models::campaign::{Module, NewDocument, NewModule, UpdateModule as DalUpdateModule};
 use crate::services::{ServiceError, ServiceResult};
 use crate::templates;
+use crate::utils::now_rfc3339;
 
 /// Module types that determine which template is used for the overview document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -58,6 +58,19 @@ impl ModuleType {
 impl std::fmt::Display for ModuleType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.display_name())
+    }
+}
+
+impl From<Option<&str>> for ModuleType {
+    fn from(s: Option<&str>) -> Self {
+        match s {
+            Some("mystery") => ModuleType::Mystery,
+            Some("dungeon") => ModuleType::Dungeon,
+            Some("heist") => ModuleType::Heist,
+            Some("horror") => ModuleType::Horror,
+            Some("political") => ModuleType::Political,
+            _ => ModuleType::General,
+        }
     }
 }
 
@@ -222,7 +235,7 @@ impl<'a> ModuleService<'a> {
     ///
     /// Returns the updated module, or an error if not found.
     pub fn update(&mut self, id: &str, input: UpdateModuleInput) -> ServiceResult<Module> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
 
         // Build the update changeset
         let name_ref = input.name.as_deref();
@@ -597,6 +610,18 @@ mod tests {
         assert_eq!(ModuleType::Heist.display_name(), "Heist");
         assert_eq!(ModuleType::Horror.display_name(), "Horror");
         assert_eq!(ModuleType::Political.display_name(), "Political Intrigue");
+    }
+
+    #[test]
+    fn test_module_type_from_str() {
+        assert_eq!(ModuleType::from(Some("mystery")), ModuleType::Mystery);
+        assert_eq!(ModuleType::from(Some("dungeon")), ModuleType::Dungeon);
+        assert_eq!(ModuleType::from(Some("heist")), ModuleType::Heist);
+        assert_eq!(ModuleType::from(Some("horror")), ModuleType::Horror);
+        assert_eq!(ModuleType::from(Some("political")), ModuleType::Political);
+        assert_eq!(ModuleType::from(Some("general")), ModuleType::General);
+        assert_eq!(ModuleType::from(Some("unknown")), ModuleType::General);
+        assert_eq!(ModuleType::from(None), ModuleType::General);
     }
 
     #[test]

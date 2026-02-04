@@ -182,16 +182,7 @@ pub async fn create_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
 
     let description = args.get("description").and_then(|v| v.as_str());
-
-    // Parse module type
-    let module_type = match args.get("module_type").and_then(|v| v.as_str()) {
-        Some("mystery") => ModuleType::Mystery,
-        Some("dungeon") => ModuleType::Dungeon,
-        Some("heist") => ModuleType::Heist,
-        Some("horror") => ModuleType::Horror,
-        Some("political") => ModuleType::Political,
-        _ => ModuleType::General,
-    };
+    let module_type = ModuleType::from(args.get("module_type").and_then(|v| v.as_str()));
 
     let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);

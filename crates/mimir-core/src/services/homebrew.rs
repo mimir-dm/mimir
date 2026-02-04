@@ -4,7 +4,6 @@
 //! Centralizes UUID generation, timestamp management, and JSON validation
 //! that was previously duplicated across Tauri commands and MCP tools.
 
-use chrono::Utc;
 use diesel::SqliteConnection;
 use serde_json::Value;
 use uuid::Uuid;
@@ -16,6 +15,7 @@ use crate::models::campaign::{
     UpdateCampaignHomebrewItem, UpdateCampaignHomebrewMonster, UpdateCampaignHomebrewSpell,
 };
 use crate::services::{ServiceError, ServiceResult};
+use crate::utils::now_rfc3339;
 
 // ── Input structs ──────────────────────────────────────────────────────
 
@@ -153,7 +153,7 @@ impl<'a> HomebrewService<'a> {
             validate_json(data)?;
         }
 
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let name_ref = input.name.as_deref();
         let data_ref = input.data.as_deref();
         let item_type_ref = input.item_type.as_ref().map(|v| v.as_deref());
@@ -247,7 +247,7 @@ impl<'a> HomebrewService<'a> {
             validate_json(data)?;
         }
 
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let name_ref = input.name.as_deref();
         let data_ref = input.data.as_deref();
         let cr_ref = input.cr.as_ref().map(|v| v.as_deref());
@@ -340,7 +340,7 @@ impl<'a> HomebrewService<'a> {
             validate_json(data)?;
         }
 
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let name_ref = input.name.as_deref();
         let data_ref = input.data.as_deref();
         let level_ref = input.level.as_ref().copied();

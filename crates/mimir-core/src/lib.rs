@@ -13,6 +13,7 @@ pub mod seed;
 pub mod services;
 pub mod templates;
 pub mod tokens;
+pub mod utils;
 
 #[cfg(test)]
 pub mod test_utils;

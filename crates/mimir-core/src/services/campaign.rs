@@ -2,7 +2,6 @@
 //!
 //! Business logic for campaign management including automatic document creation.
 
-use chrono::Utc;
 use diesel::SqliteConnection;
 use uuid::Uuid;
 
@@ -10,6 +9,7 @@ use crate::dal::campaign as dal;
 use crate::models::campaign::{Campaign, NewCampaign, NewDocument, UpdateCampaign};
 use crate::services::{ServiceError, ServiceResult};
 use crate::templates;
+use crate::utils::now_rfc3339;
 
 /// Input for creating a new campaign.
 #[derive(Debug, Clone)]
@@ -130,7 +130,7 @@ impl<'a> CampaignService<'a> {
     ///
     /// Returns the updated campaign, or an error if not found.
     pub fn update(&mut self, id: &str, input: UpdateCampaignInput) -> ServiceResult<Campaign> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
 
         // Build the update changeset
         let name_ref = input.name.as_deref();
@@ -155,7 +155,7 @@ impl<'a> CampaignService<'a> {
     ///
     /// Archived campaigns are hidden from default lists but can be restored.
     pub fn archive(&mut self, id: &str) -> ServiceResult<()> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let update = UpdateCampaign::archive(&now);
 
         let rows = dal::update_campaign(self.conn, id, &update)?;
@@ -168,7 +168,7 @@ impl<'a> CampaignService<'a> {
 
     /// Unarchive a campaign.
     pub fn unarchive(&mut self, id: &str) -> ServiceResult<()> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let update = UpdateCampaign::unarchive(&now);
 
         let rows = dal::update_campaign(self.conn, id, &update)?;

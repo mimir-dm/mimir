@@ -7,6 +7,7 @@ use crate::dal::catalog::{self, insert_source};
 use crate::fts::{flatten_entries, index_entity, ContentType};
 use crate::import::{collect_source_entities, copy_images, discover_available_sources, get_token_path, CollectedEntities};
 use crate::models::catalog::*;
+use crate::utils::now_rfc3339;
 use anyhow::{Context, Result};
 use diesel::connection::SimpleConnection;
 use diesel::SqliteConnection;
@@ -479,7 +480,7 @@ impl<'a> CatalogImportService<'a> {
         let mut counts = HashMap::new();
 
         // Insert source record
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let source = NewCatalogSource::new(source_code, source_name, true, &now);
         insert_source(self.conn, &source).context("Failed to insert source record")?;
 
@@ -559,7 +560,7 @@ impl<'a> CatalogImportService<'a> {
         let mut counts = HashMap::new();
 
         // Insert source record
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let source = NewCatalogSource::new(source_code, source_name, true, &now);
         insert_source(self.conn, &source).context("Failed to insert source record")?;
 

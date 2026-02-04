@@ -2,13 +2,13 @@
 //!
 //! Business logic for document management (campaign and module markdown content).
 
-use chrono::Utc;
 use diesel::SqliteConnection;
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{Document, NewDocument, UpdateDocument as DalUpdateDocument};
 use crate::services::{ServiceError, ServiceResult};
+use crate::utils::now_rfc3339;
 
 /// Input for creating a blank document.
 #[derive(Debug, Clone)]
@@ -169,7 +169,7 @@ impl<'a> DocumentService<'a> {
     ///
     /// Returns the updated document, or an error if not found.
     pub fn update(&mut self, id: &str, input: UpdateDocumentInput) -> ServiceResult<Document> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
 
         // Build the update changeset
         let title_ref = input.title.as_deref();
@@ -204,7 +204,7 @@ impl<'a> DocumentService<'a> {
 
     /// Move a document to a different module.
     pub fn move_to_module(&mut self, id: &str, module_id: &str) -> ServiceResult<Document> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let update = DalUpdateDocument::move_to_module(module_id, &now);
 
         let rows = dal::update_document(self.conn, id, &update)?;
@@ -217,7 +217,7 @@ impl<'a> DocumentService<'a> {
 
     /// Move a document out of a module to campaign level.
     pub fn move_to_campaign(&mut self, id: &str) -> ServiceResult<Document> {
-        let now = Utc::now().to_rfc3339();
+        let now = now_rfc3339();
         let update = DalUpdateDocument::move_to_campaign(&now);
 
         let rows = dal::update_document(self.conn, id, &update)?;

@@ -12,6 +12,7 @@ use crate::models::campaign::{
     is_allowed_mime_type, CampaignAsset, LightingMode, Map, NewCampaignAsset, NewMap, UpdateMap,
 };
 use crate::services::{ServiceError, ServiceResult};
+use crate::utils::now_rfc3339;
 
 /// Input for creating a map from a UVTT file.
 #[derive(Debug, Clone)]
@@ -309,7 +310,7 @@ impl<'a> MapService<'a> {
             }
         }
 
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = now_rfc3339();
 
         // Build update struct
         let name_ref = input.name.as_deref();

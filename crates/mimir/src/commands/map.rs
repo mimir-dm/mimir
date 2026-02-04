@@ -5,6 +5,7 @@
 use mimir_core::dal::campaign as dal;
 use mimir_core::models::campaign::{LightingMode, LightSource, Map, NewLightSource, UpdateLightSource};
 use mimir_core::services::{CreateMapInput, MapService, UpdateMapInput};
+use mimir_core::utils::now_rfc3339;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::State;
@@ -748,7 +749,7 @@ pub fn toggle_light_source(state: State<'_, AppState>, id: String) -> ApiRespons
         Err(e) => return ApiResponse::err(format!("Light source not found: {}", e)),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = if light.is_active() {
         UpdateLightSource::turn_off(&now)
     } else {
@@ -867,7 +868,7 @@ pub fn update_light_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
 
     // Build update struct based on what fields are provided
     let name: Option<Option<&str>> = match &request.name {
@@ -913,7 +914,7 @@ pub fn move_light_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateLightSource::set_position(x, y, &now);
 
     if let Err(e) = dal::update_light_source(&mut db, &id, &update) {
@@ -973,7 +974,7 @@ pub fn toggle_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<boo
         Err(e) => return ApiResponse::err(format!("Map not found: {}", e)),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let new_enabled = !map.is_fog_enabled();
     let update = UpdateMap::set_fog_enabled(new_enabled, &now);
 
@@ -992,7 +993,7 @@ pub fn enable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMap::enable_fog(&now);
 
     match dal::update_map(&mut db, &map_id, &update) {
@@ -1009,7 +1010,7 @@ pub fn disable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMap::disable_fog(&now);
 
     match dal::update_map(&mut db, &map_id, &update) {
@@ -1277,7 +1278,7 @@ pub fn update_map_trap(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let name_str = request.name;
     let desc_str = request.description;
     let trigger_str = request.trigger_description;
@@ -1316,7 +1317,7 @@ pub fn move_map_trap(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMapTrap::set_position(grid_x, grid_y, &now);
 
     if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
@@ -1343,7 +1344,7 @@ pub fn toggle_map_trap_visibility(state: State<'_, AppState>, id: String) -> Api
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMapTrap::set_visible(!trap.is_visible(), &now);
 
     if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
@@ -1364,7 +1365,7 @@ pub fn trigger_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<M
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMapTrap::trigger(&now);
 
     if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
@@ -1385,7 +1386,7 @@ pub fn reset_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<Map
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMapTrap::reset(&now);
 
     if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
@@ -1519,7 +1520,7 @@ pub fn update_map_poi(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let name_str = request.name;
     let desc_str = request.description;
     let icon_str = request.icon;
@@ -1557,7 +1558,7 @@ pub fn move_map_poi(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMapPoi::set_position(grid_x, grid_y, &now);
 
     if let Err(e) = dal::update_map_poi(&mut db, &id, &update) {
@@ -1584,7 +1585,7 @@ pub fn toggle_map_poi_visibility(state: State<'_, AppState>, id: String) -> ApiR
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = now_rfc3339();
     let update = UpdateMapPoi::set_visible(!poi.is_visible(), &now);
 
     if let Err(e) = dal::update_map_poi(&mut db, &id, &update) {

@@ -5,6 +5,7 @@
 use mimir_core::dal::catalog::{self as catalog_dal};
 use mimir_core::import::CatalogImportService;
 use mimir_core::models::catalog::{BookContent, CatalogSource};
+use mimir_core::utils::now_rfc3339;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use flate2::read::GzDecoder;
 use serde::Serialize;
@@ -363,7 +364,7 @@ pub fn list_library_books(state: State<'_, AppState>) -> ApiResponse<Vec<Library
         // Get the source info for the imported_at timestamp
         let imported_at = match catalog_dal::get_source(&mut db, &book.source) {
             Ok(source) => source.imported_at,
-            Err(_) => chrono::Utc::now().to_rfc3339(),
+            Err(_) => now_rfc3339(),
         };
 
         book_infos.push(LibraryBookInfo {

@@ -4,6 +4,7 @@
 
 use crate::models::campaign::{Module, NewModule, UpdateModule};
 use crate::schema::modules;
+use crate::utils::now_rfc3339;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
@@ -108,7 +109,7 @@ pub fn reorder_module(
             return Err(diesel::result::Error::RollbackTransaction);
         }
 
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = now_rfc3339();
 
         // Step 1: Move target module to sentinel (-1)
         diesel::update(modules::table.find(module_id))

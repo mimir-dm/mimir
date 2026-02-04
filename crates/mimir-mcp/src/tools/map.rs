@@ -2,9 +2,8 @@
 //!
 //! MCP tools for map and token placement management.
 
-use mimir_core::dal::campaign as dal;
 use mimir_core::models::campaign::LightingMode;
-use mimir_core::services::{CreateMapInput, MapService, UpdateMapInput};
+use mimir_core::services::{CreateMapInput, CreateTokenInput, MapService, TokenService, UpdateMapInput};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -345,8 +344,9 @@ pub async fn get_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpErr
             .ok_or_else(|| McpError::InvalidArguments(format!("Map '{}' not found", map_id)))?
     };
 
-    // Get token placements
-    let tokens = dal::list_token_placements(&mut db, map_id)
+    // Get enriched token placements
+    let tokens = TokenService::new(&mut db, &data_dir)
+        .list(map_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     let token_data: Vec<Value> = tokens
@@ -354,13 +354,15 @@ pub async fn get_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpErr
         .map(|t| {
             json!({
                 "id": t.id,
-                "module_monster_id": t.module_monster_id,
-                "module_npc_id": t.module_npc_id,
+                "name": t.name,
+                "token_type": t.token_type,
+                "size": t.size,
                 "grid_x": t.grid_x,
                 "grid_y": t.grid_y,
-                "label": t.label,
-                "faction_color": t.faction_color,
-                "hidden": t.hidden != 0
+                "visible_to_players": t.visible_to_players,
+                "color": t.color,
+                "monster_id": t.monster_id,
+                "character_id": t.character_id
             })
         })
         .collect();
@@ -451,10 +453,12 @@ pub async fn add_token_to_map(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
 
     let module_monster_id = args.get("module_monster_id").and_then(|v| v.as_str());
     let module_npc_id = args.get("module_npc_id").and_then(|v| v.as_str());
+    let label = args.get("label").and_then(|v| v.as_str());
 
-    if module_monster_id.is_none() && module_npc_id.is_none() {
+    // Validation: need either monster, npc, or label (for PC tokens)
+    if module_monster_id.is_none() && module_npc_id.is_none() && label.is_none() {
         return Err(McpError::InvalidArguments(
-            "Either module_monster_id or module_npc_id is required".to_string(),
+            "Either module_monster_id, module_npc_id, or label is required".to_string(),
         ));
     }
     if module_monster_id.is_some() && module_npc_id.is_some() {
@@ -465,45 +469,39 @@ pub async fn add_token_to_map(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
 
     let grid_x = args.get("grid_x").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
     let grid_y = args.get("grid_y").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
-    let label = args.get("label").and_then(|v| v.as_str());
     let faction_color = args.get("faction_color").and_then(|v| v.as_str());
     let hidden = args.get("hidden").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    let id = uuid::Uuid::new_v4().to_string();
-
-    use mimir_core::models::campaign::NewTokenPlacement;
-    let mut placement = if let Some(mid) = module_monster_id {
-        NewTokenPlacement::for_monster(&id, map_id, mid, grid_x, grid_y)
-    } else {
-        NewTokenPlacement::for_npc(&id, map_id, module_npc_id.unwrap(), grid_x, grid_y)
+    let input = CreateTokenInput {
+        map_id: map_id.to_string(),
+        module_monster_id: module_monster_id.map(|s| s.to_string()),
+        module_npc_id: module_npc_id.map(|s| s.to_string()),
+        grid_x,
+        grid_y,
+        label: label.map(|s| s.to_string()),
+        faction_color: faction_color.map(|s| s.to_string()),
+        hidden,
     };
 
-    if let Some(l) = label {
-        placement = placement.with_label(l);
-    }
-    if let Some(fc) = faction_color {
-        placement = placement.with_faction_color(fc);
-    }
-    if hidden {
-        placement = placement.hidden();
-    }
-
     let mut db = ctx.connect()?;
+    let data_dir = app_data_dir(ctx);
 
-    dal::insert_token_placement(&mut db, &placement)
+    let token = TokenService::new(&mut db, &data_dir)
+        .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     Ok(json!({
         "status": "added",
         "token": {
-            "id": id,
-            "map_id": map_id,
-            "module_monster_id": module_monster_id,
-            "module_npc_id": module_npc_id,
-            "grid_x": grid_x,
-            "grid_y": grid_y,
-            "label": label,
-            "hidden": hidden
+            "id": token.id,
+            "map_id": token.map_id,
+            "name": token.name,
+            "token_type": token.token_type,
+            "size": token.size,
+            "grid_x": token.grid_x,
+            "grid_y": token.grid_y,
+            "visible_to_players": token.visible_to_players,
+            "color": token.color
         }
     }))
 }
@@ -520,11 +518,13 @@ pub async fn list_tokens_on_map(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .unwrap_or(false);
 
     let mut db = ctx.connect()?;
+    let data_dir = app_data_dir(ctx);
+    let mut service = TokenService::new(&mut db, &data_dir);
 
     let tokens = if visible_only {
-        dal::list_visible_token_placements(&mut db, map_id)
+        service.list_visible(map_id)
     } else {
-        dal::list_token_placements(&mut db, map_id)
+        service.list(map_id)
     }
     .map_err(|e| McpError::Internal(e.to_string()))?;
 
@@ -533,13 +533,15 @@ pub async fn list_tokens_on_map(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .map(|t| {
             json!({
                 "id": t.id,
-                "module_monster_id": t.module_monster_id,
-                "module_npc_id": t.module_npc_id,
+                "name": t.name,
+                "token_type": t.token_type,
+                "size": t.size,
                 "grid_x": t.grid_x,
                 "grid_y": t.grid_y,
-                "label": t.label,
-                "faction_color": t.faction_color,
-                "hidden": t.hidden != 0
+                "visible_to_players": t.visible_to_players,
+                "color": t.color,
+                "monster_id": t.monster_id,
+                "character_id": t.character_id
             })
         })
         .collect();
@@ -554,8 +556,10 @@ pub async fn remove_token(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
         .ok_or_else(|| McpError::InvalidArguments("token_id is required".to_string()))?;
 
     let mut db = ctx.connect()?;
+    let data_dir = app_data_dir(ctx);
 
-    dal::delete_token_placement(&mut db, token_id)
+    TokenService::new(&mut db, &data_dir)
+        .delete(token_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     Ok(json!({ "status": "removed", "token_id": token_id }))
