@@ -173,7 +173,7 @@ pub fn delete_campaign_tool() -> Tool {
 // =============================================================================
 
 pub async fn list_campaigns(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
     let campaigns = service.list(false).map_err(|e| McpError::Internal(e.to_string()))?;
@@ -202,7 +202,7 @@ pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<V
         .ok_or_else(|| McpError::InvalidArguments("campaign_id is required".to_string()))?;
 
     // Verify campaign exists
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
     let campaign = service
@@ -231,7 +231,7 @@ pub async fn get_campaign_details(ctx: &Arc<McpContext>, args: Value) -> Result<
         .or_else(|| ctx.get_active_campaign_id())
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Get campaign
     let mut campaign_service = CampaignService::new(&mut db);
@@ -302,7 +302,7 @@ pub async fn get_campaign_sources(ctx: &Arc<McpContext>, args: Value) -> Result<
         .or_else(|| ctx.get_active_campaign_id())
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     let source_codes = dal::list_campaign_source_codes(&mut db, &campaign_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
@@ -321,7 +321,7 @@ pub async fn create_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
 
     let description = args.get("description").and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
     let mut input = CreateCampaignInput::new(name);
@@ -363,7 +363,7 @@ pub async fn update_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         input.description = Some(Some(desc.to_string()));
     }
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
     let campaign = service
@@ -386,7 +386,7 @@ pub async fn delete_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("campaign_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
     service
@@ -488,7 +488,7 @@ pub async fn export_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("output_path is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let output_dir = Path::new(output_path);
     let assets_dir = &ctx.assets_dir;
 
@@ -518,7 +518,7 @@ pub async fn import_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .get("new_name")
         .and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let archive = Path::new(archive_path);
     let assets_dir = &ctx.assets_dir;
 

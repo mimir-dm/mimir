@@ -141,7 +141,7 @@ pub async fn list_homebrew_items(ctx: &Arc<McpContext>, _args: Value) -> Result<
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let items = HomebrewService::new(&mut db).list_items(&campaign_id)?;
 
     let item_data: Vec<Value> = items.iter().map(homebrew_to_json).collect();
@@ -158,7 +158,7 @@ pub async fn get_homebrew_item(ctx: &Arc<McpContext>, args: Value) -> Result<Val
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let item = HomebrewService::new(&mut db).get_item(id)?;
 
     Ok(json!({ "item": homebrew_to_json(&item) }))
@@ -192,7 +192,7 @@ pub async fn create_homebrew_item(
         cloned_from_source: args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from),
     };
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let item = HomebrewService::new(&mut db).create_item(input)?;
 
     Ok(json!({
@@ -225,7 +225,7 @@ pub async fn update_homebrew_item(
         },
     };
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let item = HomebrewService::new(&mut db).update_item(id, input)?;
 
     Ok(json!({
@@ -240,7 +240,7 @@ pub async fn delete_homebrew_item(ctx: &Arc<McpContext>, args: Value) -> Result<
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     HomebrewService::new(&mut db).delete_item(id)?;
 
     Ok(json!({

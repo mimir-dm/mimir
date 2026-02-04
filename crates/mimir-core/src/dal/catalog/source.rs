@@ -181,29 +181,11 @@ pub fn count_enabled_sources(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
-
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn = SqliteConnection::establish(":memory:")
-            .expect("Failed to create in-memory database");
-
-        // Create the table
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE INDEX idx_catalog_sources_enabled ON catalog_sources(enabled);"
-        ).expect("Failed to create table");
-
-        conn
-    }
+    use crate::db::test_connection;
 
     #[test]
     fn test_insert_and_get_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let source = NewCatalogSource::new(
             "PHB",
@@ -223,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_insert_multiple_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let sources = vec![
             NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z"),
@@ -240,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_list_enabled_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let sources = vec![
             NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z"),
@@ -256,7 +238,7 @@ mod tests {
 
     #[test]
     fn test_set_enabled() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(&mut conn, &source).expect("Failed to insert");
@@ -274,7 +256,7 @@ mod tests {
 
     #[test]
     fn test_get_source_optional() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let result = get_source_optional(&mut conn, "NONEXISTENT").expect("Failed to query");
         assert!(result.is_none());
@@ -288,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_source_exists() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         assert!(!source_exists(&mut conn, "PHB").expect("Failed to check"));
 
@@ -300,7 +282,7 @@ mod tests {
 
     #[test]
     fn test_delete_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(&mut conn, &source).expect("Failed to insert");
@@ -314,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_count_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         assert_eq!(count_sources(&mut conn).expect("Failed to count"), 0);
 

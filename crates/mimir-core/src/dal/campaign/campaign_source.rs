@@ -113,51 +113,28 @@ pub fn count_campaign_sources(conn: &mut SqliteConnection, campaign_id: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::insert_campaign;
+    use crate::dal::catalog::insert_source;
+    use crate::models::campaign::NewCampaign;
+    use crate::models::catalog::NewCatalogSource;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            "CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT,
-                archived_at TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE campaign_sources (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                source_code TEXT NOT NULL REFERENCES catalog_sources(code),
-                UNIQUE(campaign_id, source_code)
-            );
-            CREATE INDEX idx_campaign_sources_campaign ON campaign_sources(campaign_id);
-
-            -- Insert test data
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO catalog_sources (code, name, enabled, imported_at) VALUES
-                ('PHB', 'Players Handbook', 1, '2024-01-01'),
-                ('MM', 'Monster Manual', 1, '2024-01-01'),
-                ('DMG', 'Dungeon Masters Guide', 1, '2024-01-01');
-            PRAGMA foreign_keys = ON;",
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let phb = NewCatalogSource::new("PHB", "Players Handbook", true, "2024-01-01");
+        let mm = NewCatalogSource::new("MM", "Monster Manual", true, "2024-01-01");
+        let dmg = NewCatalogSource::new("DMG", "Dungeon Masters Guide", true, "2024-01-01");
+        insert_source(conn, &phb).expect("Failed to create PHB");
+        insert_source(conn, &mm).expect("Failed to create MM");
+        insert_source(conn, &dmg).expect("Failed to create DMG");
     }
 
     #[test]
     fn test_insert_and_get_campaign_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let source = NewCampaignSource::new("src-1", "camp-1", "PHB");
         let id = insert_campaign_source(&mut conn, &source).expect("Failed to insert");
@@ -171,7 +148,8 @@ mod tests {
 
     #[test]
     fn test_insert_multiple_campaign_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let sources = vec![
             NewCampaignSource::new("src-1", "camp-1", "PHB"),
@@ -188,7 +166,8 @@ mod tests {
 
     #[test]
     fn test_list_campaign_source_codes() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let sources = vec![
             NewCampaignSource::new("src-1", "camp-1", "PHB"),
@@ -202,7 +181,8 @@ mod tests {
 
     #[test]
     fn test_campaign_has_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert!(!campaign_has_source(&mut conn, "camp-1", "PHB").expect("Failed to check"));
 
@@ -215,7 +195,8 @@ mod tests {
 
     #[test]
     fn test_delete_campaign_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let source = NewCampaignSource::new("src-1", "camp-1", "PHB");
         insert_campaign_source(&mut conn, &source).expect("Failed to insert");
@@ -229,7 +210,8 @@ mod tests {
 
     #[test]
     fn test_delete_campaign_source_by_code() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let sources = vec![
             NewCampaignSource::new("src-1", "camp-1", "PHB"),
@@ -245,7 +227,8 @@ mod tests {
 
     #[test]
     fn test_delete_all_campaign_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let sources = vec![
             NewCampaignSource::new("src-1", "camp-1", "PHB"),
@@ -268,7 +251,8 @@ mod tests {
 
     #[test]
     fn test_count_campaign_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_campaign_sources(&mut conn, "camp-1").expect("Failed to count"),

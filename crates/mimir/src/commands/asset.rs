@@ -19,9 +19,9 @@ pub fn list_campaign_assets(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<CampaignAsset>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = AssetService::new(&mut db, &state.paths.app_dir).list_for_campaign(&campaign_id);
@@ -34,9 +34,9 @@ pub fn list_module_assets(
     state: State<'_, AppState>,
     module_id: String,
 ) -> ApiResponse<Vec<CampaignAsset>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = AssetService::new(&mut db, &state.paths.app_dir).list_for_module(&module_id);
@@ -50,9 +50,9 @@ pub fn list_module_assets(
 /// Get an asset by ID.
 #[tauri::command]
 pub fn get_asset(state: State<'_, AppState>, id: String) -> ApiResponse<CampaignAsset> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = AssetService::new(&mut db, &state.paths.app_dir).get(&id);
@@ -92,9 +92,9 @@ pub fn upload_asset(
         Err(e) => return ApiResponse::err(format!("Invalid base64 data: {}", e)),
     };
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut input = if let Some(campaign_id) = request.campaign_id {
@@ -117,9 +117,9 @@ pub fn upload_asset(
 /// Delete an asset.
 #[tauri::command]
 pub fn delete_asset(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = AssetService::new(&mut db, &state.paths.app_dir).delete(&id);
@@ -133,9 +133,9 @@ pub fn delete_asset(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
 /// Read the file data for an asset (returned as base64).
 #[tauri::command]
 pub fn read_asset_file(state: State<'_, AppState>, id: String) -> ApiResponse<String> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = AssetService::new(&mut db, &state.paths.app_dir);

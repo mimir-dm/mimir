@@ -20,9 +20,9 @@ pub fn list_campaign_documents(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<Document>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DocumentService::new(&mut db).list_for_campaign(&campaign_id);
@@ -35,9 +35,9 @@ pub fn list_module_documents(
     state: State<'_, AppState>,
     module_id: String,
 ) -> ApiResponse<Vec<Document>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DocumentService::new(&mut db).list_for_module(&module_id);
@@ -51,9 +51,9 @@ pub fn list_module_documents(
 /// Get a document by ID.
 #[tauri::command]
 pub fn get_document(state: State<'_, AppState>, id: String) -> ApiResponse<Document> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DocumentService::new(&mut db).get(&id);
@@ -80,9 +80,9 @@ pub fn create_document(
     state: State<'_, AppState>,
     request: CreateDocumentRequest,
 ) -> ApiResponse<Document> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut input = if let Some(module_id) = request.module_id {
@@ -118,9 +118,9 @@ pub fn update_document(
     id: String,
     request: UpdateDocumentRequest,
 ) -> ApiResponse<Document> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let input = UpdateDocumentInput {
@@ -136,9 +136,9 @@ pub fn update_document(
 /// Delete a document permanently.
 #[tauri::command]
 pub fn delete_document(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DocumentService::new(&mut db).delete(&id);
@@ -156,9 +156,9 @@ pub fn search_documents(
     campaign_id: String,
     query: String,
 ) -> ApiResponse<Vec<DocumentSearchResult>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DocumentService::new(&mut db).search(&campaign_id, &query);
@@ -172,9 +172,9 @@ pub fn search_module_documents(
     module_id: String,
     query: String,
 ) -> ApiResponse<Vec<DocumentSearchResult>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DocumentService::new(&mut db).search_in_module(&module_id, &query);

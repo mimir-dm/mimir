@@ -87,46 +87,25 @@ pub fn count_map_pois(conn: &mut SqliteConnection, map_id: &str) -> QueryResult<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_campaign_asset, insert_map};
+    use crate::models::campaign::{NewCampaign, NewCampaignAsset, NewMap};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE maps (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE map_pois (
-                id TEXT PRIMARY KEY NOT NULL,
-                map_id TEXT NOT NULL REFERENCES maps(id) ON DELETE CASCADE,
-                grid_x INTEGER NOT NULL,
-                grid_y INTEGER NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT,
-                icon TEXT NOT NULL DEFAULT 'pin',
-                color TEXT,
-                visible INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO maps (id, campaign_id, name) VALUES ('map-1', 'camp-1', 'Dungeon');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
+        let asset = NewCampaignAsset::for_campaign("asset-1", "camp-1", "dungeon.uvtt", "application/octet-stream", "/blobs/dungeon.uvtt");
+        insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
-        conn
+        let map = NewMap::for_campaign("map-1", "camp-1", "Dungeon", "asset-1");
+        insert_map(conn, &map).expect("Failed to create map");
     }
 
     #[test]
     fn test_insert_and_get_map_poi() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let poi = NewMapPoi::new("poi-1", "map-1", "Secret Door", 5, 10);
         let id = insert_map_poi(&mut conn, &poi).expect("Failed to insert");
@@ -141,7 +120,8 @@ mod tests {
 
     #[test]
     fn test_insert_with_options() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let poi = NewMapPoi::new("poi-1", "map-1", "Treasure", 0, 0)
             .with_description("Hidden chest full of gold")
@@ -159,7 +139,8 @@ mod tests {
 
     #[test]
     fn test_list_map_pois() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let poi1 = NewMapPoi::new("poi-1", "map-1", "Door", 1, 1);
         let poi2 = NewMapPoi::new("poi-2", "map-1", "Chest", 2, 2);
@@ -172,7 +153,8 @@ mod tests {
 
     #[test]
     fn test_list_visible_pois() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let hidden = NewMapPoi::new("poi-1", "map-1", "Hidden", 1, 1);
         let visible = NewMapPoi::new("poi-2", "map-1", "Obvious", 2, 2).visible();
@@ -186,7 +168,8 @@ mod tests {
 
     #[test]
     fn test_update_position() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let poi = NewMapPoi::new("poi-1", "map-1", "Marker", 0, 0);
         insert_map_poi(&mut conn, &poi).expect("Failed to insert");
@@ -201,7 +184,8 @@ mod tests {
 
     #[test]
     fn test_update_visible() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let poi = NewMapPoi::new("poi-1", "map-1", "Marker", 0, 0);
         insert_map_poi(&mut conn, &poi).expect("Failed to insert");
@@ -215,7 +199,8 @@ mod tests {
 
     #[test]
     fn test_delete_map_poi() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let poi = NewMapPoi::new("poi-1", "map-1", "Doomed", 0, 0);
         insert_map_poi(&mut conn, &poi).expect("Failed to insert");
@@ -229,7 +214,8 @@ mod tests {
 
     #[test]
     fn test_count_map_pois() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_map_pois(&mut conn, "map-1").expect("Failed to count"),

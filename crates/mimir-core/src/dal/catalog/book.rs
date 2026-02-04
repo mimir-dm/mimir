@@ -93,41 +93,19 @@ pub fn count_books(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::catalog::insert_source;
+    use crate::models::catalog::NewCatalogSource;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE books (
-                id INTEGER PRIMARY KEY,
-                source TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                data TEXT NOT NULL,
-                contents TEXT,
-                cover_path TEXT,
-                FOREIGN KEY (source) REFERENCES catalog_sources(code)
-            );
-            CREATE INDEX idx_books_source ON books(source);
-
-            INSERT INTO catalog_sources (code, name, enabled, imported_at)
-            VALUES ('PHB', 'Player''s Handbook', 1, '2024-01-20T12:00:00Z');",
-        )
-        .expect("Failed to create tables");
-
-        conn
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        insert_source(conn, &source).expect("Failed to insert source");
     }
 
     #[test]
     fn test_insert_and_get_book() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let book = NewBook::new("PHB", "Player's Handbook", "[{\"type\":\"section\"}]");
         let id = insert_book(&mut conn, &book).expect("Failed to insert");
@@ -143,7 +121,8 @@ mod tests {
 
     #[test]
     fn test_insert_book_with_contents() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let book = NewBook::new("PHB", "Player's Handbook", "[]")
             .with_contents("[{\"name\":\"Chapter 1\"}]")
@@ -160,14 +139,12 @@ mod tests {
 
     #[test]
     fn test_list_books() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         // Add another source
-        conn.batch_execute(
-            "INSERT INTO catalog_sources (code, name, enabled, imported_at)
-             VALUES ('DMG', 'Dungeon Master''s Guide', 1, '2024-01-20T12:00:00Z');",
-        )
-        .expect("Failed to add source");
+        let dmg_source = NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z");
+        insert_source(&mut conn, &dmg_source).expect("Failed to add DMG source");
 
         let book1 = NewBook::new("PHB", "Player's Handbook", "[]");
         let book2 = NewBook::new("DMG", "Dungeon Master's Guide", "[]");
@@ -181,7 +158,8 @@ mod tests {
 
     #[test]
     fn test_delete_book() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let book = NewBook::new("PHB", "Player's Handbook", "[]");
         insert_book(&mut conn, &book).expect("Failed to insert");
@@ -195,7 +173,8 @@ mod tests {
 
     #[test]
     fn test_count_books() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(count_books(&mut conn).expect("Failed to count"), 0);
 

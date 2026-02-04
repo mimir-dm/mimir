@@ -335,17 +335,19 @@ impl<'a> MapService<'a> {
     pub fn delete(&mut self, id: &str) -> ServiceResult<()> {
         // Get the map to find the asset
         let map = self.get_required(id)?;
+        let asset_id = map.uvtt_asset_id.clone();
 
-        // Delete the UVTT asset file from disk
-        if let Ok(Some(asset)) = dal::get_campaign_asset_optional(self.conn, &map.uvtt_asset_id) {
+        // Delete the map record first (removes FK constraint to asset)
+        dal::delete_map(self.conn, id)?;
+
+        // Now delete the UVTT asset file from disk and database
+        if let Ok(Some(asset)) = dal::get_campaign_asset_optional(self.conn, &asset_id) {
             let file_path = self.app_data_dir.join(&asset.blob_path);
             let _ = std::fs::remove_file(&file_path);
             // Delete asset from database
             let _ = dal::delete_campaign_asset(self.conn, &asset.id);
         }
 
-        // Delete the map record
-        dal::delete_map(self.conn, id)?;
         Ok(())
     }
 

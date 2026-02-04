@@ -153,59 +153,13 @@ pub fn count_spell_subclasses(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::test_connection;
     use crate::dal::catalog::{insert_source, insert_spell};
     use crate::models::catalog::{NewCatalogSource, NewSpell};
-    use diesel::connection::SimpleConnection;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE spells (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                level INTEGER NOT NULL,
-                school TEXT,
-                ritual INTEGER NOT NULL DEFAULT 0,
-                concentration INTEGER NOT NULL DEFAULT 0,
-                data TEXT NOT NULL,
-                UNIQUE(name, source)
-            );
-            CREATE TABLE spell_classes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                spell_id INTEGER NOT NULL REFERENCES spells(id) ON DELETE CASCADE,
-                class_name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                UNIQUE(spell_id, class_name, source)
-            );
-            CREATE INDEX idx_spell_classes_spell ON spell_classes(spell_id);
-            CREATE INDEX idx_spell_classes_class ON spell_classes(class_name);
-            CREATE TABLE spell_subclasses (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                spell_id INTEGER NOT NULL REFERENCES spells(id) ON DELETE CASCADE,
-                subclass_name TEXT NOT NULL,
-                class_name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                UNIQUE(spell_id, subclass_name, class_name, source)
-            );
-            CREATE INDEX idx_spell_subclasses_spell ON spell_subclasses(spell_id);
-            CREATE INDEX idx_spell_subclasses_subclass ON spell_subclasses(subclass_name, class_name);",
-        )
-        .expect("Failed to create tables");
-
-        // Insert a test source
+    fn setup_test_data(conn: &mut SqliteConnection) {
         let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
-        insert_source(&mut conn, &source).expect("Failed to insert source");
-
-        conn
+        insert_source(conn, &source).expect("Failed to insert source");
     }
 
     fn insert_test_spell(conn: &mut SqliteConnection, name: &str, level: i32) -> i32 {
@@ -216,7 +170,8 @@ mod tests {
 
     #[test]
     fn test_spell_class_crud() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let spell_id = insert_test_spell(&mut conn, "Fireball", 3);
 
         // Insert class associations
@@ -243,7 +198,8 @@ mod tests {
 
     #[test]
     fn test_get_class_spells() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let fireball_id = insert_test_spell(&mut conn, "Fireball", 3);
         let shield_id = insert_test_spell(&mut conn, "Shield", 1);
 
@@ -266,7 +222,8 @@ mod tests {
 
     #[test]
     fn test_spell_subclass_crud() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let spell_id = insert_test_spell(&mut conn, "Find Familiar", 1);
 
         // Insert subclass associations
@@ -296,7 +253,8 @@ mod tests {
 
     #[test]
     fn test_delete_by_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let spell_id = insert_test_spell(&mut conn, "Fireball", 3);
 
         // Insert associations

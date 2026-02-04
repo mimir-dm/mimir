@@ -165,45 +165,22 @@ pub fn count_features_by_type(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::models::campaign::{NewCampaign, NewCharacter};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE characters (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                is_npc INTEGER NOT NULL DEFAULT 0
-            );
-            CREATE TABLE character_features (
-                id TEXT PRIMARY KEY NOT NULL,
-                character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                feature_type TEXT NOT NULL,
-                feature_name TEXT NOT NULL,
-                feature_source TEXT NOT NULL,
-                source_class TEXT NOT NULL
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO characters (id, campaign_id, name) VALUES ('char-1', 'camp-1', 'Test Fighter');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let character = NewCharacter::new_pc("char-1", Some("camp-1"), "Test Fighter", "Player");
+        insert_character(conn, &character).expect("Failed to create character");
     }
 
     #[test]
     fn test_insert_and_get_feature() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feature = NewCharacterFeature::fighting_style(
             "feat-1", "char-1", "Defense", "PHB", "Fighter"
@@ -219,7 +196,8 @@ mod tests {
 
     #[test]
     fn test_list_features_by_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let fs = NewCharacterFeature::fighting_style("f1", "char-1", "Defense", "PHB", "Fighter");
         let mm1 = NewCharacterFeature::metamagic("f2", "char-1", "Quickened Spell", "PHB");
@@ -239,7 +217,8 @@ mod tests {
 
     #[test]
     fn test_character_has_feature() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert!(!character_has_feature(&mut conn, "char-1", "fighting_style", "Defense")
             .expect("Failed to check"));
@@ -255,7 +234,8 @@ mod tests {
 
     #[test]
     fn test_find_feature_by_name() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feature = NewCharacterFeature::invocation(
             "feat-1", "char-1", "Agonizing Blast", "PHB"
@@ -274,7 +254,8 @@ mod tests {
 
     #[test]
     fn test_delete_feature() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feature = NewCharacterFeature::maneuver("feat-1", "char-1", "Riposte", "PHB");
         insert_character_feature(&mut conn, &feature).expect("Failed to insert");
@@ -288,7 +269,8 @@ mod tests {
 
     #[test]
     fn test_count_features_by_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let m1 = NewCharacterFeature::maneuver("f1", "char-1", "Riposte", "PHB");
         let m2 = NewCharacterFeature::maneuver("f2", "char-1", "Precision Attack", "PHB");
@@ -304,7 +286,8 @@ mod tests {
 
     #[test]
     fn test_pact_boon() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let boon = NewCharacterFeature::pact_boon("feat-1", "char-1", "Pact of the Blade", "PHB");
         insert_character_feature(&mut conn, &boon).expect("Failed to insert");

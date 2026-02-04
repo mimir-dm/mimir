@@ -193,7 +193,7 @@ pub async fn create_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         _ => ModuleType::General,
     };
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);
 
     let mut input = CreateModuleInput::new(&campaign_id, name).with_type(module_type);
@@ -221,7 +221,7 @@ pub async fn list_modules(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, 
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);
 
     let modules = service
@@ -251,7 +251,7 @@ pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Get module
     let mut service = ModuleService::new(&mut db);
@@ -329,7 +329,7 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
         .and_then(|v| v.as_str())
         .unwrap_or("MM");
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Verify module exists
     let mut service = ModuleService::new(&mut db);
@@ -396,7 +396,7 @@ pub async fn update_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         input.description = Some(Some(desc.to_string()));
     }
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);
 
     let module = service
@@ -420,7 +420,7 @@ pub async fn delete_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);
 
     service

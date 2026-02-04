@@ -167,40 +167,22 @@ pub fn count_character_proficiencies(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::models::campaign::{NewCampaign, NewCharacter};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE characters (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE character_proficiencies (
-                id TEXT PRIMARY KEY NOT NULL,
-                character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                proficiency_type TEXT NOT NULL,
-                name TEXT NOT NULL,
-                expertise INTEGER NOT NULL DEFAULT 0
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO characters (id, campaign_id, name) VALUES ('char-1', 'camp-1', 'Rogue');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let character = NewCharacter::new_pc("char-1", Some("camp-1"), "Rogue", "Player");
+        insert_character(conn, &character).expect("Failed to create character");
     }
 
     #[test]
     fn test_insert_and_get_proficiency() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let prof = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth");
         let id = insert_character_proficiency(&mut conn, &prof).expect("Failed to insert");
@@ -213,7 +195,8 @@ mod tests {
 
     #[test]
     fn test_list_character_proficiencies() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let stealth = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth");
         let perception = NewCharacterProficiency::skill("prof-2", "char-1", "Perception");
@@ -228,7 +211,8 @@ mod tests {
 
     #[test]
     fn test_list_by_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let stealth = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth");
         let perception = NewCharacterProficiency::skill("prof-2", "char-1", "Perception");
@@ -246,7 +230,8 @@ mod tests {
 
     #[test]
     fn test_expertise() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let stealth = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth")
             .with_expertise();
@@ -261,7 +246,8 @@ mod tests {
 
     #[test]
     fn test_character_has_proficiency() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert!(!character_has_proficiency(&mut conn, "char-1", "skill", "Stealth")
             .expect("Failed to check"));
@@ -275,7 +261,8 @@ mod tests {
 
     #[test]
     fn test_update_expertise() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let prof = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth");
         insert_character_proficiency(&mut conn, &prof).expect("Failed to insert");
@@ -289,7 +276,8 @@ mod tests {
 
     #[test]
     fn test_languages() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let common = NewCharacterProficiency::language("prof-1", "char-1", "Common");
         let elvish = NewCharacterProficiency::language("prof-2", "char-1", "Elvish");
@@ -304,7 +292,8 @@ mod tests {
 
     #[test]
     fn test_delete_proficiency() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let prof = NewCharacterProficiency::skill("prof-1", "char-1", "Acrobatics");
         insert_character_proficiency(&mut conn, &prof).expect("Failed to insert");

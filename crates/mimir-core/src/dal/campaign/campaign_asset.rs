@@ -115,61 +115,22 @@ pub fn count_module_assets(conn: &mut SqliteConnection, module_id: &str) -> Quer
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::models::campaign::{NewCampaign, NewModule};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            "CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT,
-                archived_at TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                description TEXT,
-                module_number INTEGER NOT NULL,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-                UNIQUE(campaign_id, module_number)
-            );
-            CREATE TABLE campaign_assets (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT REFERENCES campaigns(id) ON DELETE CASCADE,
-                module_id TEXT REFERENCES modules(id) ON DELETE CASCADE,
-                filename TEXT NOT NULL,
-                mime_type TEXT NOT NULL,
-                blob_path TEXT NOT NULL,
-                file_size INTEGER,
-                uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
-                CHECK (
-                    (campaign_id IS NOT NULL AND module_id IS NULL) OR
-                    (campaign_id IS NULL AND module_id IS NOT NULL)
-                )
-            );
-            CREATE INDEX idx_campaign_assets_campaign ON campaign_assets(campaign_id);
-            CREATE INDEX idx_campaign_assets_module ON campaign_assets(module_id);
-
-            -- Insert test data
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO modules (id, campaign_id, name, module_number) VALUES ('mod-1', 'camp-1', 'Chapter 1', 1);
-            PRAGMA foreign_keys = ON;",
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        insert_module(conn, &module).expect("Failed to create module");
     }
 
     #[test]
     fn test_insert_and_get_campaign_asset() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asset = NewCampaignAsset::for_campaign(
             "asset-1",
@@ -191,7 +152,8 @@ mod tests {
 
     #[test]
     fn test_insert_module_asset() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asset = NewCampaignAsset::for_module(
             "asset-1",
@@ -209,7 +171,8 @@ mod tests {
 
     #[test]
     fn test_list_campaign_assets() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asset1 = NewCampaignAsset::for_campaign(
             "asset-1",
@@ -237,7 +200,8 @@ mod tests {
 
     #[test]
     fn test_list_module_assets() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asset1 = NewCampaignAsset::for_module(
             "asset-1",
@@ -262,7 +226,8 @@ mod tests {
 
     #[test]
     fn test_list_assets_by_mime_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asset1 = NewCampaignAsset::for_campaign(
             "asset-1",
@@ -289,7 +254,8 @@ mod tests {
 
     #[test]
     fn test_delete_campaign_asset() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asset = NewCampaignAsset::for_campaign(
             "asset-1",
@@ -309,7 +275,8 @@ mod tests {
 
     #[test]
     fn test_get_campaign_asset_optional() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let result = get_campaign_asset_optional(&mut conn, "nonexistent").expect("Failed to query");
         assert!(result.is_none());
@@ -329,7 +296,8 @@ mod tests {
 
     #[test]
     fn test_count_campaign_assets() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_campaign_assets(&mut conn, "camp-1").expect("Failed to count"),
@@ -361,7 +329,8 @@ mod tests {
 
     #[test]
     fn test_count_module_assets() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_module_assets(&mut conn, "mod-1").expect("Failed to count"),

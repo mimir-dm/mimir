@@ -255,7 +255,7 @@ pub async fn create_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, Mcp
         .unwrap_or("map.uvtt")
         .to_string();
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let data_dir = app_data_dir(ctx);
     let mut service = MapService::new(&mut db, &data_dir);
 
@@ -297,7 +297,7 @@ pub async fn list_maps(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpE
 
     let module_id = args.get("module_id").and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let data_dir = app_data_dir(ctx);
     let mut service = MapService::new(&mut db, &data_dir);
 
@@ -334,7 +334,7 @@ pub async fn get_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpErr
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("map_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let data_dir = app_data_dir(ctx);
 
     let map = {
@@ -404,7 +404,7 @@ pub async fn update_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, Mcp
         }
     }
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let data_dir = app_data_dir(ctx);
     let mut service = MapService::new(&mut db, &data_dir);
 
@@ -432,7 +432,7 @@ pub async fn delete_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, Mcp
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("map_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let data_dir = app_data_dir(ctx);
     let mut service = MapService::new(&mut db, &data_dir);
 
@@ -488,7 +488,7 @@ pub async fn add_token_to_map(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
         placement = placement.hidden();
     }
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     dal::insert_token_placement(&mut db, &placement)
         .map_err(|e| McpError::Internal(e.to_string()))?;
@@ -519,7 +519,7 @@ pub async fn list_tokens_on_map(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     let tokens = if visible_only {
         dal::list_visible_token_placements(&mut db, map_id)
@@ -553,7 +553,7 @@ pub async fn remove_token(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("token_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     dal::delete_token_placement(&mut db, token_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;

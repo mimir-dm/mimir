@@ -90,56 +90,22 @@ pub fn count_module_npcs(conn: &mut SqliteConnection, module_id: &str) -> QueryR
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::models::campaign::{NewCampaign, NewModule};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                module_number INTEGER NOT NULL
-            );
-            CREATE TABLE campaign_assets (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT REFERENCES campaigns(id),
-                filename TEXT NOT NULL,
-                mime_type TEXT NOT NULL,
-                blob_path TEXT NOT NULL
-            );
-            CREATE TABLE module_npcs (
-                id TEXT PRIMARY KEY NOT NULL,
-                module_id TEXT NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                role TEXT,
-                description TEXT,
-                appearance TEXT,
-                personality TEXT,
-                motivation TEXT,
-                secrets TEXT,
-                stat_block TEXT,
-                token_asset_id TEXT REFERENCES campaign_assets(id),
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO modules (id, campaign_id, name, module_number) VALUES ('mod-1', 'camp-1', 'Dungeon', 1);
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let module = NewModule::new("mod-1", "camp-1", "Dungeon", 1);
+        insert_module(conn, &module).expect("Failed to create module");
     }
 
     #[test]
     fn test_insert_and_get_module_npc() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let npc = NewModuleNpc::new("npc-1", "mod-1", "Sildar Hallwinter");
         let id = insert_module_npc(&mut conn, &npc).expect("Failed to insert");
@@ -151,7 +117,8 @@ mod tests {
 
     #[test]
     fn test_insert_with_details() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let npc = NewModuleNpc::new("npc-1", "mod-1", "Gundren Rockseeker")
             .with_role("Quest Giver")
@@ -168,7 +135,8 @@ mod tests {
 
     #[test]
     fn test_list_module_npcs() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let npc1 = NewModuleNpc::new("npc-1", "mod-1", "Gundren");
         let npc2 = NewModuleNpc::new("npc-2", "mod-1", "Sildar");
@@ -187,7 +155,8 @@ mod tests {
 
     #[test]
     fn test_list_by_role() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let merchant = NewModuleNpc::new("npc-1", "mod-1", "Barthen")
             .with_role("Merchant");
@@ -210,7 +179,8 @@ mod tests {
 
     #[test]
     fn test_update_module_npc() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let npc = NewModuleNpc::new("npc-1", "mod-1", "Unknown");
         insert_module_npc(&mut conn, &npc).expect("Failed to insert");
@@ -224,7 +194,8 @@ mod tests {
 
     #[test]
     fn test_delete_module_npc() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let npc = NewModuleNpc::new("npc-1", "mod-1", "Doomed NPC");
         insert_module_npc(&mut conn, &npc).expect("Failed to insert");
@@ -238,7 +209,8 @@ mod tests {
 
     #[test]
     fn test_count_module_npcs() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_module_npcs(&mut conn, "mod-1").expect("Failed to count"),

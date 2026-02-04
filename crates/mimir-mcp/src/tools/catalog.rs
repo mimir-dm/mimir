@@ -213,7 +213,7 @@ pub fn search_conditions_tool() -> Tool {
 // =============================================================================
 
 pub async fn search_monsters(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Build filter from args
     let mut filter = MonsterFilter::new();
@@ -263,7 +263,7 @@ pub async fn search_monsters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
 }
 
 pub async fn search_items(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Build filter from args
     let mut filter = ItemFilter::new();
@@ -316,7 +316,7 @@ pub async fn search_items(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
 }
 
 pub async fn search_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Build filter from args
     let mut filter = SpellFilter::new();
@@ -369,7 +369,7 @@ pub async fn search_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
 }
 
 pub async fn search_races(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut filter = RaceFilter::new();
 
     if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
@@ -396,7 +396,7 @@ pub async fn search_races(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
 }
 
 pub async fn search_classes(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut filter = ClassFilter::new();
 
     if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
@@ -423,7 +423,7 @@ pub async fn search_classes(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
 }
 
 pub async fn search_backgrounds(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut filter = BackgroundFilter::new();
 
     if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
@@ -450,7 +450,7 @@ pub async fn search_backgrounds(ctx: &Arc<McpContext>, args: Value) -> Result<Va
 }
 
 pub async fn search_feats(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut filter = FeatFilter::new();
 
     if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
@@ -477,7 +477,7 @@ pub async fn search_feats(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
 }
 
 pub async fn search_conditions(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut filter = ConditionFilter::new();
 
     if let Some(name) = args.get("name").and_then(|v| v.as_str()) {

@@ -169,41 +169,22 @@ pub fn count_spells_by_class(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::models::campaign::{NewCampaign, NewCharacter};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE characters (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE character_spells (
-                id TEXT PRIMARY KEY NOT NULL,
-                character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                spell_name TEXT NOT NULL,
-                spell_source TEXT NOT NULL,
-                source_class TEXT NOT NULL,
-                prepared INTEGER NOT NULL DEFAULT 0
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO characters (id, campaign_id, name) VALUES ('char-1', 'camp-1', 'Wizard');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let character = NewCharacter::new_pc("char-1", Some("camp-1"), "Wizard", "Player");
+        insert_character(conn, &character).expect("Failed to create character");
     }
 
     #[test]
     fn test_insert_and_get_spell() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let spell = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard");
         let id = insert_character_spell(&mut conn, &spell).expect("Failed to insert");
@@ -216,7 +197,8 @@ mod tests {
 
     #[test]
     fn test_list_character_spells() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let fireball = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard");
         let shield = NewCharacterSpell::new("spell-2", "char-1", "Shield", "PHB", "Wizard");
@@ -231,7 +213,8 @@ mod tests {
 
     #[test]
     fn test_prepared_spells() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let fireball = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard")
             .prepared();
@@ -251,7 +234,8 @@ mod tests {
 
     #[test]
     fn test_spells_by_class() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         // Multiclass wizard/cleric
         let fireball = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard");
@@ -272,7 +256,8 @@ mod tests {
 
     #[test]
     fn test_character_knows_spell() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert!(!character_knows_spell(&mut conn, "char-1", "Fireball").expect("Failed to check"));
 
@@ -284,7 +269,8 @@ mod tests {
 
     #[test]
     fn test_update_prepared_status() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let spell = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard");
         insert_character_spell(&mut conn, &spell).expect("Failed to insert");
@@ -298,7 +284,8 @@ mod tests {
 
     #[test]
     fn test_delete_spell() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let spell = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard");
         insert_character_spell(&mut conn, &spell).expect("Failed to insert");

@@ -142,7 +142,7 @@ pub fn delete_document_tool() -> Tool {
 pub async fn list_documents(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
     let module_id = args.get("module_id").and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = DocumentService::new(&mut db);
 
     let documents = if let Some(mid) = module_id {
@@ -182,7 +182,7 @@ pub async fn read_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("document_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = DocumentService::new(&mut db);
 
     let document = service
@@ -220,7 +220,7 @@ pub async fn create_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value
 
     let content = args.get("content").and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = DocumentService::new(&mut db);
 
     let mut input = if let Some(mid) = module_id {
@@ -265,7 +265,7 @@ pub async fn edit_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("replace is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = DocumentService::new(&mut db);
 
     // Get the current document
@@ -308,7 +308,7 @@ pub async fn delete_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("document_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = DocumentService::new(&mut db);
 
     service

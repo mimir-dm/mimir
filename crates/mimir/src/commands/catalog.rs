@@ -232,9 +232,9 @@ pub fn search_monsters(
 ) -> ApiResponse<Vec<Value>> {
     println!("[search_monsters] filter: {:?}, limit: {:?}, offset: {:?}", filter, limit, offset);
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -257,9 +257,9 @@ pub fn search_monsters(
 /// Get a monster by database ID.
 #[tauri::command]
 pub fn get_monster(state: State<'_, AppState>, id: i32) -> ApiResponse<Monster> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = MonsterService::new(&mut db).get(id);
@@ -277,9 +277,9 @@ pub fn get_monster_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = MonsterService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -293,9 +293,9 @@ pub fn get_monster_by_name(
 /// List all monster sources.
 #[tauri::command]
 pub fn list_monster_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = MonsterService::new(&mut db).list_sources();
@@ -305,9 +305,9 @@ pub fn list_monster_sources(state: State<'_, AppState>) -> ApiResponse<Vec<Strin
 /// Count total monsters.
 #[tauri::command]
 pub fn count_monsters(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = MonsterService::new(&mut db).count();
@@ -326,9 +326,9 @@ pub fn search_spells(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -346,9 +346,9 @@ pub fn search_spells(
 /// Get a spell by database ID.
 #[tauri::command]
 pub fn get_spell(state: State<'_, AppState>, id: i32) -> ApiResponse<Spell> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SpellService::new(&mut db).get(id);
@@ -366,9 +366,9 @@ pub fn get_spell_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SpellService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -382,9 +382,9 @@ pub fn get_spell_by_name(
 /// List all spell sources.
 #[tauri::command]
 pub fn list_spell_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SpellService::new(&mut db).list_sources();
@@ -394,9 +394,9 @@ pub fn list_spell_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>
 /// Count total spells.
 #[tauri::command]
 pub fn count_spells(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SpellService::new(&mut db).count();
@@ -412,9 +412,9 @@ pub fn get_spells_by_class(
     class_name: String,
     level: Option<i32>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = if let Some(lvl) = level {
@@ -441,9 +441,9 @@ pub fn search_items(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -461,9 +461,9 @@ pub fn search_items(
 /// Get an item by database ID.
 #[tauri::command]
 pub fn get_item(state: State<'_, AppState>, id: i32) -> ApiResponse<Item> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ItemService::new(&mut db).get(id);
@@ -482,9 +482,9 @@ pub fn get_item_by_name(
     source: String,
     campaign_id: Option<String>,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Check homebrew items first when source is "HB" and campaign_id is provided
@@ -527,9 +527,9 @@ pub fn get_item_by_name(
 /// List all item sources.
 #[tauri::command]
 pub fn list_item_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ItemService::new(&mut db).list_sources();
@@ -539,9 +539,9 @@ pub fn list_item_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>>
 /// Count total items.
 #[tauri::command]
 pub fn count_items(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ItemService::new(&mut db).count();
@@ -560,9 +560,9 @@ pub fn search_races(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -580,9 +580,9 @@ pub fn search_races(
 /// Get a race by database ID.
 #[tauri::command]
 pub fn get_race(state: State<'_, AppState>, id: i32) -> ApiResponse<Race> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RaceService::new(&mut db).get(id);
@@ -600,9 +600,9 @@ pub fn get_race_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RaceService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -616,9 +616,9 @@ pub fn get_race_by_name(
 /// List all race sources.
 #[tauri::command]
 pub fn list_race_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RaceService::new(&mut db).list_sources();
@@ -628,9 +628,9 @@ pub fn list_race_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>>
 /// Count total races.
 #[tauri::command]
 pub fn count_races(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RaceService::new(&mut db).count();
@@ -649,9 +649,9 @@ pub fn search_backgrounds(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -669,9 +669,9 @@ pub fn search_backgrounds(
 /// Get a background by database ID.
 #[tauri::command]
 pub fn get_background(state: State<'_, AppState>, id: i32) -> ApiResponse<Background> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = BackgroundService::new(&mut db).get(id);
@@ -689,9 +689,9 @@ pub fn get_background_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = BackgroundService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -705,9 +705,9 @@ pub fn get_background_by_name(
 /// List all background sources.
 #[tauri::command]
 pub fn list_background_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = BackgroundService::new(&mut db).list_sources();
@@ -717,9 +717,9 @@ pub fn list_background_sources(state: State<'_, AppState>) -> ApiResponse<Vec<St
 /// Count total backgrounds.
 #[tauri::command]
 pub fn count_backgrounds(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = BackgroundService::new(&mut db).count();
@@ -738,9 +738,9 @@ pub fn search_classes(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -758,9 +758,9 @@ pub fn search_classes(
 /// Get a class by database ID.
 #[tauri::command]
 pub fn get_class(state: State<'_, AppState>, id: i32) -> ApiResponse<Class> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ClassService::new(&mut db).get(id);
@@ -778,9 +778,9 @@ pub fn get_class_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ClassService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -794,9 +794,9 @@ pub fn get_class_by_name(
 /// List all class sources.
 #[tauri::command]
 pub fn list_class_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ClassService::new(&mut db).list_sources();
@@ -806,9 +806,9 @@ pub fn list_class_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>
 /// Count total classes.
 #[tauri::command]
 pub fn count_classes(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ClassService::new(&mut db).count();
@@ -826,9 +826,9 @@ pub fn get_class_feature(
     name: String,
     class_name: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::<Value>::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::<Value>::err(e),
     };
 
     let result = ClassFeatureService::new(&mut db).get_by_name_and_class(&name, &class_name);
@@ -846,9 +846,9 @@ pub fn list_class_features(
     class_name: String,
     class_source: String,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::<Vec<Value>>::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::<Vec<Value>>::err(e),
     };
 
     let result = ClassFeatureService::new(&mut db).list_by_class(&class_name, &class_source);
@@ -865,9 +865,9 @@ pub fn list_class_features(
 /// Get a subclass by database ID.
 #[tauri::command]
 pub fn get_subclass(state: State<'_, AppState>, id: i32) -> ApiResponse<Subclass> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SubclassService::new(&mut db).get(id);
@@ -885,9 +885,9 @@ pub fn get_subclass_by_name(
     class_name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SubclassService::new(&mut db).get_by_name_and_class(&name, &class_name, &source);
@@ -907,9 +907,9 @@ pub fn list_subclasses_by_class(
     state: State<'_, AppState>,
     class_name: String,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::<Vec<Value>>::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::<Vec<Value>>::err(e),
     };
 
     let result = SubclassService::new(&mut db).list_by_class(&class_name);
@@ -922,9 +922,9 @@ pub fn list_subclasses_by_class(
 /// Count total subclasses.
 #[tauri::command]
 pub fn count_subclasses(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = SubclassService::new(&mut db).count();
@@ -943,9 +943,9 @@ pub fn get_subclass_feature(
     subclass_name: String,
     subclass_source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::<Value>::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::<Value>::err(e),
     };
 
     let result =
@@ -967,9 +967,9 @@ pub fn list_subclass_features(
     subclass_name: String,
     subclass_source: String,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::<Vec<Value>>::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::<Vec<Value>>::err(e),
     };
 
     let result = SubclassFeatureService::new(&mut db).list_by_subclass(&subclass_name, &subclass_source);
@@ -991,9 +991,9 @@ pub fn search_feats(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1011,9 +1011,9 @@ pub fn search_feats(
 /// Get a feat by database ID.
 #[tauri::command]
 pub fn get_feat(state: State<'_, AppState>, id: i32) -> ApiResponse<Feat> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = FeatService::new(&mut db).get(id);
@@ -1031,9 +1031,9 @@ pub fn get_feat_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = FeatService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1047,9 +1047,9 @@ pub fn get_feat_by_name(
 /// List all feat sources.
 #[tauri::command]
 pub fn list_feat_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = FeatService::new(&mut db).list_sources();
@@ -1059,9 +1059,9 @@ pub fn list_feat_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>>
 /// Count total feats.
 #[tauri::command]
 pub fn count_feats(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = FeatService::new(&mut db).count();
@@ -1080,9 +1080,9 @@ pub fn search_conditions(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1148,9 +1148,9 @@ pub fn search_conditions(
 /// Get a condition by database ID.
 #[tauri::command]
 pub fn get_condition(state: State<'_, AppState>, id: i32) -> ApiResponse<Condition> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ConditionService::new(&mut db).get(id);
@@ -1168,9 +1168,9 @@ pub fn get_condition_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ConditionService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1184,9 +1184,9 @@ pub fn get_condition_by_name(
 /// List all condition sources.
 #[tauri::command]
 pub fn list_condition_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ConditionService::new(&mut db).list_sources();
@@ -1196,9 +1196,9 @@ pub fn list_condition_sources(state: State<'_, AppState>) -> ApiResponse<Vec<Str
 /// Count total conditions.
 #[tauri::command]
 pub fn count_conditions(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ConditionService::new(&mut db).count();
@@ -1217,9 +1217,9 @@ pub fn search_languages(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1237,9 +1237,9 @@ pub fn search_languages(
 /// Get a language by database ID.
 #[tauri::command]
 pub fn get_language(state: State<'_, AppState>, id: i32) -> ApiResponse<Language> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = LanguageService::new(&mut db).get(id);
@@ -1257,9 +1257,9 @@ pub fn get_language_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = LanguageService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1273,9 +1273,9 @@ pub fn get_language_by_name(
 /// List all language sources.
 #[tauri::command]
 pub fn list_language_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = LanguageService::new(&mut db).list_sources();
@@ -1285,9 +1285,9 @@ pub fn list_language_sources(state: State<'_, AppState>) -> ApiResponse<Vec<Stri
 /// Count total languages.
 #[tauri::command]
 pub fn count_languages(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = LanguageService::new(&mut db).count();
@@ -1306,9 +1306,9 @@ pub fn search_traps(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1389,9 +1389,9 @@ pub fn search_traps(
 /// Get a trap by database ID.
 #[tauri::command]
 pub fn get_trap(state: State<'_, AppState>, id: i32) -> ApiResponse<Trap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = TrapService::new(&mut db).get(id);
@@ -1409,9 +1409,9 @@ pub fn get_trap_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = TrapService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1425,9 +1425,9 @@ pub fn get_trap_by_name(
 /// List all trap sources.
 #[tauri::command]
 pub fn list_trap_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = TrapService::new(&mut db).list_sources();
@@ -1437,9 +1437,9 @@ pub fn list_trap_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>>
 /// Count total traps.
 #[tauri::command]
 pub fn count_traps(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = TrapService::new(&mut db).count();
@@ -1458,9 +1458,9 @@ pub fn search_hazards(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1478,9 +1478,9 @@ pub fn search_hazards(
 /// Get a hazard by database ID.
 #[tauri::command]
 pub fn get_hazard(state: State<'_, AppState>, id: i32) -> ApiResponse<Hazard> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = HazardService::new(&mut db).get(id);
@@ -1498,9 +1498,9 @@ pub fn get_hazard_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = HazardService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1514,9 +1514,9 @@ pub fn get_hazard_by_name(
 /// List all hazard sources.
 #[tauri::command]
 pub fn list_hazard_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = HazardService::new(&mut db).list_sources();
@@ -1526,9 +1526,9 @@ pub fn list_hazard_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String
 /// Count total hazards.
 #[tauri::command]
 pub fn count_hazards(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = HazardService::new(&mut db).count();
@@ -1547,9 +1547,9 @@ pub fn search_actions(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1567,9 +1567,9 @@ pub fn search_actions(
 /// Get an action by database ID.
 #[tauri::command]
 pub fn get_action(state: State<'_, AppState>, id: i32) -> ApiResponse<Action> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ActionService::new(&mut db).get(id);
@@ -1587,9 +1587,9 @@ pub fn get_action_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ActionService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1603,9 +1603,9 @@ pub fn get_action_by_name(
 /// List all action sources.
 #[tauri::command]
 pub fn list_action_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ActionService::new(&mut db).list_sources();
@@ -1615,9 +1615,9 @@ pub fn list_action_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String
 /// Count total actions.
 #[tauri::command]
 pub fn count_actions(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ActionService::new(&mut db).count();
@@ -1636,9 +1636,9 @@ pub fn search_deities(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1656,9 +1656,9 @@ pub fn search_deities(
 /// Get a deity by database ID.
 #[tauri::command]
 pub fn get_deity(state: State<'_, AppState>, id: i32) -> ApiResponse<Deity> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DeityService::new(&mut db).get(id);
@@ -1676,9 +1676,9 @@ pub fn get_deity_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DeityService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1692,9 +1692,9 @@ pub fn get_deity_by_name(
 /// List all deity sources.
 #[tauri::command]
 pub fn list_deity_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DeityService::new(&mut db).list_sources();
@@ -1704,9 +1704,9 @@ pub fn list_deity_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>
 /// Count total deities.
 #[tauri::command]
 pub fn count_deities(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = DeityService::new(&mut db).count();
@@ -1725,9 +1725,9 @@ pub fn search_optional_features(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1745,9 +1745,9 @@ pub fn search_optional_features(
 /// Get an optional feature by database ID.
 #[tauri::command]
 pub fn get_optional_feature(state: State<'_, AppState>, id: i32) -> ApiResponse<OptionalFeature> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = OptionalFeatureService::new(&mut db).get(id);
@@ -1765,9 +1765,9 @@ pub fn get_optional_feature_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = OptionalFeatureService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1781,9 +1781,9 @@ pub fn get_optional_feature_by_name(
 /// List all optional feature sources.
 #[tauri::command]
 pub fn list_optional_feature_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = OptionalFeatureService::new(&mut db).list_sources();
@@ -1793,9 +1793,9 @@ pub fn list_optional_feature_sources(state: State<'_, AppState>) -> ApiResponse<
 /// Count total optional features.
 #[tauri::command]
 pub fn count_optional_features(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = OptionalFeatureService::new(&mut db).count();
@@ -1814,9 +1814,9 @@ pub fn search_tables(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1834,9 +1834,9 @@ pub fn search_tables(
 /// Get a catalog table by database ID.
 #[tauri::command]
 pub fn get_table(state: State<'_, AppState>, id: i32) -> ApiResponse<CatalogTable> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CatalogTableService::new(&mut db).get(id);
@@ -1854,9 +1854,9 @@ pub fn get_table_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CatalogTableService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1870,9 +1870,9 @@ pub fn get_table_by_name(
 /// List all table sources.
 #[tauri::command]
 pub fn list_table_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CatalogTableService::new(&mut db).list_sources();
@@ -1882,9 +1882,9 @@ pub fn list_table_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>
 /// Count total tables.
 #[tauri::command]
 pub fn count_tables(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CatalogTableService::new(&mut db).count();
@@ -1903,9 +1903,9 @@ pub fn search_variant_rules(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -1923,9 +1923,9 @@ pub fn search_variant_rules(
 /// Get a variant rule by database ID.
 #[tauri::command]
 pub fn get_variant_rule(state: State<'_, AppState>, id: i32) -> ApiResponse<VariantRule> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VariantRuleService::new(&mut db).get(id);
@@ -1943,9 +1943,9 @@ pub fn get_variant_rule_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VariantRuleService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -1959,9 +1959,9 @@ pub fn get_variant_rule_by_name(
 /// List all variant rule sources.
 #[tauri::command]
 pub fn list_variant_rule_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VariantRuleService::new(&mut db).list_sources();
@@ -1971,9 +1971,9 @@ pub fn list_variant_rule_sources(state: State<'_, AppState>) -> ApiResponse<Vec<
 /// Count total variant rules.
 #[tauri::command]
 pub fn count_variant_rules(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VariantRuleService::new(&mut db).count();
@@ -1992,9 +1992,9 @@ pub fn search_vehicles(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -2012,9 +2012,9 @@ pub fn search_vehicles(
 /// Get a vehicle by database ID.
 #[tauri::command]
 pub fn get_vehicle(state: State<'_, AppState>, id: i32) -> ApiResponse<Vehicle> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VehicleService::new(&mut db).get(id);
@@ -2032,9 +2032,9 @@ pub fn get_vehicle_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VehicleService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2048,9 +2048,9 @@ pub fn get_vehicle_by_name(
 /// List all vehicle sources.
 #[tauri::command]
 pub fn list_vehicle_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VehicleService::new(&mut db).list_sources();
@@ -2060,9 +2060,9 @@ pub fn list_vehicle_sources(state: State<'_, AppState>) -> ApiResponse<Vec<Strin
 /// Count total vehicles.
 #[tauri::command]
 pub fn count_vehicles(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = VehicleService::new(&mut db).count();
@@ -2081,9 +2081,9 @@ pub fn search_cults(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -2136,9 +2136,9 @@ pub fn search_cults(
 /// Get a cult by database ID.
 #[tauri::command]
 pub fn get_cult(state: State<'_, AppState>, id: i32) -> ApiResponse<Cult> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CultService::new(&mut db).get(id);
@@ -2156,9 +2156,9 @@ pub fn get_cult_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CultService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2200,9 +2200,9 @@ pub fn get_cult_by_name(
 /// List all cult sources.
 #[tauri::command]
 pub fn list_cult_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CultService::new(&mut db).list_sources();
@@ -2212,9 +2212,9 @@ pub fn list_cult_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>>
 /// Count total cults.
 #[tauri::command]
 pub fn count_cults(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CultService::new(&mut db).count();
@@ -2233,9 +2233,9 @@ pub fn search_psionics(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -2253,9 +2253,9 @@ pub fn search_psionics(
 /// Get a psionic by database ID.
 #[tauri::command]
 pub fn get_psionic(state: State<'_, AppState>, id: i32) -> ApiResponse<Psionic> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = PsionicService::new(&mut db).get(id);
@@ -2273,9 +2273,9 @@ pub fn get_psionic_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = PsionicService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2289,9 +2289,9 @@ pub fn get_psionic_by_name(
 /// List all psionic sources.
 #[tauri::command]
 pub fn list_psionic_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = PsionicService::new(&mut db).list_sources();
@@ -2301,9 +2301,9 @@ pub fn list_psionic_sources(state: State<'_, AppState>) -> ApiResponse<Vec<Strin
 /// Count total psionics.
 #[tauri::command]
 pub fn count_psionics(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = PsionicService::new(&mut db).count();
@@ -2322,9 +2322,9 @@ pub fn search_rewards(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -2342,9 +2342,9 @@ pub fn search_rewards(
 /// Get a reward by database ID.
 #[tauri::command]
 pub fn get_reward(state: State<'_, AppState>, id: i32) -> ApiResponse<Reward> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RewardService::new(&mut db).get(id);
@@ -2362,9 +2362,9 @@ pub fn get_reward_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RewardService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2378,9 +2378,9 @@ pub fn get_reward_by_name(
 /// List all reward sources.
 #[tauri::command]
 pub fn list_reward_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RewardService::new(&mut db).list_sources();
@@ -2390,9 +2390,9 @@ pub fn list_reward_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String
 /// Count total rewards.
 #[tauri::command]
 pub fn count_rewards(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = RewardService::new(&mut db).count();
@@ -2411,9 +2411,9 @@ pub fn search_objects(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();
@@ -2431,9 +2431,9 @@ pub fn search_objects(
 /// Get an object by database ID.
 #[tauri::command]
 pub fn get_object(state: State<'_, AppState>, id: i32) -> ApiResponse<Object> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ObjectService::new(&mut db).get(id);
@@ -2451,9 +2451,9 @@ pub fn get_object_by_name(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ObjectService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2467,9 +2467,9 @@ pub fn get_object_by_name(
 /// List all object sources.
 #[tauri::command]
 pub fn list_object_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ObjectService::new(&mut db).list_sources();
@@ -2479,9 +2479,9 @@ pub fn list_object_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String
 /// Count total objects.
 #[tauri::command]
 pub fn count_objects(state: State<'_, AppState>) -> ApiResponse<i64> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ObjectService::new(&mut db).count();
@@ -2502,9 +2502,9 @@ pub fn get_class_info(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ClassService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2592,9 +2592,9 @@ pub fn get_class_spellcasting(
     name: String,
     source: String,
 ) -> ApiResponse<Value> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ClassService::new(&mut db).get_by_name_and_source(&name, &source);
@@ -2670,9 +2670,9 @@ pub fn get_class_spellcasting(
 /// List all fighting styles.
 #[tauri::command]
 pub fn list_fighting_styles(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get all optional features and filter for fighting styles
@@ -2705,9 +2705,9 @@ pub fn list_fighting_styles(state: State<'_, AppState>) -> ApiResponse<Vec<Value
 /// List all metamagic options.
 #[tauri::command]
 pub fn list_metamagic(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = OptionalFeatureService::new(&mut db).list_by_type("MM");
@@ -2720,9 +2720,9 @@ pub fn list_metamagic(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
 /// List all Battle Master maneuvers.
 #[tauri::command]
 pub fn list_maneuvers(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Maneuvers can be MV or MV:B
@@ -2747,9 +2747,9 @@ pub fn list_maneuvers(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
 /// List all Eldritch Invocations with their prerequisites.
 #[tauri::command]
 pub fn list_invocations(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = OptionalFeatureService::new(&mut db).list_by_type("EI");
@@ -2790,9 +2790,9 @@ pub fn list_feats_with_prereqs(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let filter = filter.unwrap_or_default();

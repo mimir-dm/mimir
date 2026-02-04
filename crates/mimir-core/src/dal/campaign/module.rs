@@ -174,45 +174,19 @@ pub fn next_module_number(conn: &mut SqliteConnection, campaign_id: &str) -> Que
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::insert_campaign;
+    use crate::models::campaign::NewCampaign;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT,
-                archived_at TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                description TEXT,
-                module_number INTEGER NOT NULL,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-                UNIQUE(campaign_id, module_number)
-            );
-            CREATE INDEX idx_modules_campaign ON modules(campaign_id);
-
-            -- Insert test campaign
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            PRAGMA foreign_keys = ON;",
-        )
-        .expect("Failed to create tables");
-
-        conn
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
     }
 
     #[test]
     fn test_insert_and_get_module() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         let id = insert_module(&mut conn, &module).expect("Failed to insert");
@@ -228,7 +202,8 @@ mod tests {
 
     #[test]
     fn test_insert_module_with_description() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1)
             .with_description("The beginning of our story");
@@ -243,7 +218,8 @@ mod tests {
 
     #[test]
     fn test_list_modules_ordered_by_number() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         // Insert out of order
         let module3 = NewModule::new("mod-3", "camp-1", "Chapter 3", 3);
@@ -262,7 +238,8 @@ mod tests {
 
     #[test]
     fn test_get_module_by_number() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         insert_module(&mut conn, &module).expect("Failed to insert");
@@ -277,7 +254,8 @@ mod tests {
 
     #[test]
     fn test_update_module_name() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         insert_module(&mut conn, &module).expect("Failed to insert");
@@ -291,7 +269,8 @@ mod tests {
 
     #[test]
     fn test_update_module_number() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         insert_module(&mut conn, &module).expect("Failed to insert");
@@ -305,7 +284,8 @@ mod tests {
 
     #[test]
     fn test_delete_module() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         insert_module(&mut conn, &module).expect("Failed to insert");
@@ -319,7 +299,8 @@ mod tests {
 
     #[test]
     fn test_get_module_optional() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let result = get_module_optional(&mut conn, "nonexistent").expect("Failed to query");
         assert!(result.is_none());
@@ -333,7 +314,8 @@ mod tests {
 
     #[test]
     fn test_count_modules() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(count_modules(&mut conn, "camp-1").expect("Failed to count"), 0);
 
@@ -347,7 +329,8 @@ mod tests {
 
     #[test]
     fn test_reorder_module_move_down() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         let m2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
@@ -370,7 +353,8 @@ mod tests {
 
     #[test]
     fn test_reorder_module_move_up() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         let m2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
@@ -393,7 +377,8 @@ mod tests {
 
     #[test]
     fn test_reorder_module_no_op() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         let m2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
@@ -410,7 +395,8 @@ mod tests {
 
     #[test]
     fn test_reorder_module_invalid_position() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let m1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         insert_module(&mut conn, &m1).unwrap();
@@ -426,7 +412,8 @@ mod tests {
 
     #[test]
     fn test_next_module_number() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         // Empty campaign should return 1
         assert_eq!(

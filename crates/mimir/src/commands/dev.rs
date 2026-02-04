@@ -37,9 +37,9 @@ pub fn is_dev_seeded(state: State<'_, AppState>) -> ApiResponse<bool> {
         return ApiResponse::err("Not in development mode");
     }
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match seed::is_already_seeded(&mut db) {
@@ -58,9 +58,9 @@ pub fn seed_dev_data(state: State<'_, AppState>) -> ApiResponse<bool> {
         return ApiResponse::err("Not in development mode");
     }
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = seed::seed_dev_data(&mut db, &state.paths.app_dir);
@@ -77,9 +77,9 @@ pub fn reseed_dev_data(state: State<'_, AppState>) -> ApiResponse<bool> {
         return ApiResponse::err("Not in development mode");
     }
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Clear existing data
@@ -99,9 +99,9 @@ pub fn clear_dev_data(state: State<'_, AppState>) -> ApiResponse<()> {
         return ApiResponse::err("Not in development mode");
     }
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = seed::clear_dev_seed_data(&mut db);

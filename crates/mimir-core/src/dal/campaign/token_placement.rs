@@ -117,76 +117,34 @@ pub fn count_token_placements(conn: &mut SqliteConnection, map_id: &str) -> Quer
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_module, insert_campaign_asset, insert_map, insert_module_monster, insert_module_npc};
+    use crate::models::campaign::{NewCampaign, NewModule, NewCampaignAsset, NewMap, NewModuleMonster, NewModuleNpc};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                module_number INTEGER NOT NULL
-            );
-            CREATE TABLE campaign_assets (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT REFERENCES campaigns(id),
-                filename TEXT NOT NULL,
-                mime_type TEXT NOT NULL,
-                blob_path TEXT NOT NULL
-            );
-            CREATE TABLE maps (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE module_monsters (
-                id TEXT PRIMARY KEY NOT NULL,
-                module_id TEXT NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
-                monster_name TEXT NOT NULL,
-                monster_source TEXT NOT NULL
-            );
-            CREATE TABLE module_npcs (
-                id TEXT PRIMARY KEY NOT NULL,
-                module_id TEXT NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE token_placements (
-                id TEXT PRIMARY KEY NOT NULL,
-                map_id TEXT NOT NULL REFERENCES maps(id) ON DELETE CASCADE,
-                module_monster_id TEXT REFERENCES module_monsters(id) ON DELETE CASCADE,
-                module_npc_id TEXT REFERENCES module_npcs(id) ON DELETE CASCADE,
-                grid_x INTEGER NOT NULL,
-                grid_y INTEGER NOT NULL,
-                label TEXT,
-                faction_color TEXT,
-                hidden INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                CHECK (
-                    (module_monster_id IS NOT NULL AND module_npc_id IS NULL) OR
-                    (module_monster_id IS NULL AND module_npc_id IS NOT NULL)
-                )
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO modules (id, campaign_id, name, module_number) VALUES ('mod-1', 'camp-1', 'Dungeon', 1);
-            INSERT INTO maps (id, campaign_id, name) VALUES ('map-1', 'camp-1', 'Goblin Cave');
-            INSERT INTO module_monsters (id, module_id, monster_name, monster_source) VALUES ('mm-1', 'mod-1', 'Goblin', 'MM');
-            INSERT INTO module_npcs (id, module_id, name) VALUES ('npc-1', 'mod-1', 'Sildar');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
+        let module = NewModule::new("mod-1", "camp-1", "Dungeon", 1);
+        insert_module(conn, &module).expect("Failed to create module");
 
-        conn
+        let asset = NewCampaignAsset::for_campaign("asset-1", "camp-1", "goblin-cave.uvtt", "application/octet-stream", "/blobs/goblin-cave.uvtt");
+        insert_campaign_asset(conn, &asset).expect("Failed to create asset");
+
+        let map = NewMap::for_campaign("map-1", "camp-1", "Goblin Cave", "asset-1");
+        insert_map(conn, &map).expect("Failed to create map");
+
+        let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM");
+        insert_module_monster(conn, &monster).expect("Failed to create monster");
+
+        let npc = NewModuleNpc::new("npc-1", "mod-1", "Sildar");
+        insert_module_npc(conn, &npc).expect("Failed to create npc");
     }
 
     #[test]
     fn test_insert_and_get_monster_placement() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let placement = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 5, 10);
         let id = insert_token_placement(&mut conn, &placement).expect("Failed to insert");
@@ -201,7 +159,8 @@ mod tests {
 
     #[test]
     fn test_insert_and_get_npc_placement() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let placement = NewTokenPlacement::for_npc("tp-1", "map-1", "npc-1", 3, 7);
         insert_token_placement(&mut conn, &placement).expect("Failed to insert");
@@ -213,7 +172,8 @@ mod tests {
 
     #[test]
     fn test_insert_with_options() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let placement = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 0, 0)
             .with_label("Goblin Boss")
@@ -229,7 +189,8 @@ mod tests {
 
     #[test]
     fn test_list_token_placements() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let p1 = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 1, 1);
         let p2 = NewTokenPlacement::for_npc("tp-2", "map-1", "npc-1", 2, 2);
@@ -242,7 +203,8 @@ mod tests {
 
     #[test]
     fn test_list_visible_placements() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let visible = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 1, 1);
         let hidden = NewTokenPlacement::for_npc("tp-2", "map-1", "npc-1", 2, 2).hidden();
@@ -256,7 +218,8 @@ mod tests {
 
     #[test]
     fn test_update_position() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let placement = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 0, 0);
         insert_token_placement(&mut conn, &placement).expect("Failed to insert");
@@ -271,7 +234,8 @@ mod tests {
 
     #[test]
     fn test_update_hidden() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let placement = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 0, 0);
         insert_token_placement(&mut conn, &placement).expect("Failed to insert");
@@ -285,7 +249,8 @@ mod tests {
 
     #[test]
     fn test_delete_token_placement() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let placement = NewTokenPlacement::for_monster("tp-1", "map-1", "mm-1", 0, 0);
         insert_token_placement(&mut conn, &placement).expect("Failed to insert");
@@ -299,7 +264,8 @@ mod tests {
 
     #[test]
     fn test_count_token_placements() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_token_placements(&mut conn, "map-1").expect("Failed to count"),

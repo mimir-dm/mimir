@@ -286,7 +286,7 @@ pub async fn list_characters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     let location = args.get("location").and_then(|v| v.as_str());
     let faction = args.get("faction").and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     let characters = if let Some(loc) = location {
@@ -337,7 +337,7 @@ pub async fn get_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
 
     // Get character and inventory using service
     let (character, inventory) = {
@@ -438,7 +438,7 @@ pub async fn create_character(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
 
     let race_name = args.get("race_name").and_then(|v| v.as_str());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     // Create character based on type
@@ -482,7 +482,7 @@ pub async fn edit_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     // Build update from provided fields
@@ -632,7 +632,7 @@ pub async fn delete_character(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     service
@@ -662,7 +662,7 @@ pub async fn add_item_to_character(ctx: &Arc<McpContext>, args: Value) -> Result
     let equipped = args.get("equipped").and_then(|v| v.as_bool()).unwrap_or(false);
     let attuned = args.get("attuned").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     let mut input = AddInventoryInput::new(item_name, item_source);
@@ -700,7 +700,7 @@ pub async fn remove_item_from_character(ctx: &Arc<McpContext>, args: Value) -> R
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("inventory_id is required".to_string()))?;
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     service
@@ -720,7 +720,7 @@ pub async fn update_character_inventory(ctx: &Arc<McpContext>, args: Value) -> R
     let equipped = args.get("equipped").and_then(|v| v.as_bool());
     let attuned = args.get("attuned").and_then(|v| v.as_bool());
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     let item = service
@@ -748,7 +748,7 @@ pub async fn get_character_inventory(ctx: &Arc<McpContext>, args: Value) -> Resu
 
     let filter = args.get("filter").and_then(|v| v.as_str()).unwrap_or("all");
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     let items = match filter {
@@ -866,7 +866,7 @@ pub async fn level_up_character(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         feature_choices: None,
     };
 
-    let mut db = ctx.db()?;
+    let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     let result = service

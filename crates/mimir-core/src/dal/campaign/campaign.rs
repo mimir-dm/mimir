@@ -93,30 +93,11 @@ pub fn count_all_campaigns(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
-
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT,
-                archived_at TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );",
-        )
-        .expect("Failed to create table");
-
-        conn
-    }
+    use crate::db::test_connection;
 
     #[test]
     fn test_insert_and_get_campaign() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
         let id = insert_campaign(&mut conn, &campaign).expect("Failed to insert");
@@ -131,7 +112,7 @@ mod tests {
 
     #[test]
     fn test_insert_campaign_with_description() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign =
             NewCampaign::new("camp-1", "Test Campaign").with_description("A great adventure");
@@ -143,7 +124,7 @@ mod tests {
 
     #[test]
     fn test_list_campaigns_excludes_archived() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign1 = NewCampaign::new("camp-1", "Active Campaign");
         let campaign2 = NewCampaign::new("camp-2", "Archived Campaign");
@@ -166,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_list_archived_campaigns() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign1 = NewCampaign::new("camp-1", "Active Campaign");
         let campaign2 = NewCampaign::new("camp-2", "Archived Campaign");
@@ -184,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_update_campaign_name() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign = NewCampaign::new("camp-1", "Original Name");
         insert_campaign(&mut conn, &campaign).expect("Failed to insert");
@@ -198,7 +179,7 @@ mod tests {
 
     #[test]
     fn test_archive_and_unarchive_campaign() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
         insert_campaign(&mut conn, &campaign).expect("Failed to insert");
@@ -220,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_delete_campaign() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
         insert_campaign(&mut conn, &campaign).expect("Failed to insert");
@@ -234,7 +215,7 @@ mod tests {
 
     #[test]
     fn test_get_campaign_optional() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         let result = get_campaign_optional(&mut conn, "nonexistent").expect("Failed to query");
         assert!(result.is_none());
@@ -248,7 +229,7 @@ mod tests {
 
     #[test]
     fn test_count_campaigns() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
 
         assert_eq!(count_campaigns(&mut conn).expect("Failed to count"), 0);
 

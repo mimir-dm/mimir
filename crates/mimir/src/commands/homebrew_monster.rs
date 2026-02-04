@@ -39,9 +39,9 @@ pub fn list_homebrew_monsters(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<CampaignHomebrewMonster>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).list_monsters(&campaign_id))
@@ -53,9 +53,9 @@ pub fn get_homebrew_monster(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<CampaignHomebrewMonster> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).get_monster(&id))
@@ -67,9 +67,9 @@ pub fn create_homebrew_monster(
     state: State<'_, AppState>,
     input: TauriCreateHomebrewMonsterInput,
 ) -> ApiResponse<CampaignHomebrewMonster> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let svc_input = CreateHomebrewMonsterInput {
@@ -93,9 +93,9 @@ pub fn update_homebrew_monster(
     id: String,
     input: TauriUpdateHomebrewMonsterInput,
 ) -> ApiResponse<CampaignHomebrewMonster> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let svc_input = UpdateHomebrewMonsterInput {
@@ -115,9 +115,9 @@ pub fn delete_homebrew_monster(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<bool> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).delete_monster(&id).map(|_| true))

@@ -29,9 +29,9 @@ pub fn export_campaign(
     campaign_id: String,
     output_dir: String,
 ) -> ApiResponse<ExportResult> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let output_path = Path::new(&output_dir);
@@ -74,9 +74,9 @@ pub fn import_campaign(
     archive_path: String,
     new_name: Option<String>,
 ) -> ApiResponse<ImportResult> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let archive = Path::new(&archive_path);

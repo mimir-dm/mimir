@@ -189,86 +189,22 @@ pub fn search_module_documents(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::models::campaign::{NewCampaign, NewModule};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT,
-                archived_at TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                description TEXT,
-                module_number INTEGER NOT NULL,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-                UNIQUE(campaign_id, module_number)
-            );
-            CREATE TABLE documents (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                module_id TEXT REFERENCES modules(id) ON DELETE CASCADE,
-                title TEXT NOT NULL,
-                content TEXT NOT NULL DEFAULT '',
-                doc_type TEXT NOT NULL DEFAULT 'note',
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            CREATE INDEX idx_documents_campaign ON documents(campaign_id);
-            CREATE INDEX idx_documents_module ON documents(module_id);
-            CREATE INDEX idx_documents_type ON documents(doc_type);
-
-            -- FTS5 for search
-            CREATE VIRTUAL TABLE documents_fts USING fts5(
-                title,
-                content,
-                content='documents',
-                content_rowid='rowid',
-                tokenize='porter unicode61'
-            );
-
-            CREATE TRIGGER documents_fts_insert AFTER INSERT ON documents BEGIN
-                INSERT INTO documents_fts(rowid, title, content)
-                VALUES (new.rowid, new.title, new.content);
-            END;
-
-            CREATE TRIGGER documents_fts_delete AFTER DELETE ON documents BEGIN
-                INSERT INTO documents_fts(documents_fts, rowid, title, content)
-                VALUES ('delete', old.rowid, old.title, old.content);
-            END;
-
-            CREATE TRIGGER documents_fts_update AFTER UPDATE ON documents BEGIN
-                INSERT INTO documents_fts(documents_fts, rowid, title, content)
-                VALUES ('delete', old.rowid, old.title, old.content);
-                INSERT INTO documents_fts(rowid, title, content)
-                VALUES (new.rowid, new.title, new.content);
-            END;
-
-            -- Insert test data
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO modules (id, campaign_id, name, module_number) VALUES ('mod-1', 'camp-1', 'Chapter 1', 1);
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        insert_module(conn, &module).expect("Failed to create module");
     }
 
     #[test]
     fn test_insert_and_get_document() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc = NewDocument::for_campaign("doc-1", "camp-1", "Session Notes", "session")
             .with_content("The party met in a tavern...");
@@ -286,7 +222,8 @@ mod tests {
 
     #[test]
     fn test_insert_module_document() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc =
             NewDocument::for_module("doc-1", "camp-1", "mod-1", "Dungeon Description", "location");
@@ -298,7 +235,8 @@ mod tests {
 
     #[test]
     fn test_list_campaign_documents() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "A Note", "note");
         let doc2 = NewDocument::for_campaign("doc-2", "camp-1", "B Note", "note");
@@ -319,7 +257,8 @@ mod tests {
 
     #[test]
     fn test_list_module_documents() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc1 = NewDocument::for_module("doc-1", "camp-1", "mod-1", "Room 1", "location");
         let doc2 = NewDocument::for_module("doc-2", "camp-1", "mod-1", "Room 2", "location");
@@ -334,7 +273,8 @@ mod tests {
 
     #[test]
     fn test_list_documents_by_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "Session 1", "session");
         let doc2 = NewDocument::for_campaign("doc-2", "camp-1", "Session 2", "session");
@@ -350,7 +290,8 @@ mod tests {
 
     #[test]
     fn test_update_document_content() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc = NewDocument::for_campaign("doc-1", "camp-1", "Notes", "note")
             .with_content("Original content");
@@ -365,7 +306,8 @@ mod tests {
 
     #[test]
     fn test_update_document_move_to_module() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc = NewDocument::for_campaign("doc-1", "camp-1", "Notes", "note");
         insert_document(&mut conn, &doc).expect("Failed to insert");
@@ -379,7 +321,8 @@ mod tests {
 
     #[test]
     fn test_delete_document() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc = NewDocument::for_campaign("doc-1", "camp-1", "Notes", "note");
         insert_document(&mut conn, &doc).expect("Failed to insert");
@@ -393,7 +336,8 @@ mod tests {
 
     #[test]
     fn test_count_documents() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_campaign_documents(&mut conn, "camp-1").expect("Failed to count"),
@@ -417,7 +361,8 @@ mod tests {
 
     #[test]
     fn test_fts_search() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "Dragon Encounter", "session")
             .with_content("The party fought a fearsome red dragon in the mountain cave.");
@@ -441,7 +386,8 @@ mod tests {
 
     #[test]
     fn test_fts_search_module() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let doc1 = NewDocument::for_module("doc-1", "camp-1", "mod-1", "Goblin Cave", "location")
             .with_content("A dark cave inhabited by goblins.");

@@ -161,40 +161,19 @@ pub fn search_cults_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
     use crate::models::catalog::NewCatalogSource;
-    use diesel::connection::SimpleConnection;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE cults (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                data TEXT NOT NULL,
-                UNIQUE(name, source)
-            );",
-        )
-        .expect("Failed to create tables");
-
+    fn setup_test_data(conn: &mut SqliteConnection) {
         let source = NewCatalogSource::new("MM", "Monster Manual", true, "2024-01-20T12:00:00Z");
-        insert_source(&mut conn, &source).expect("Failed to insert source");
-
-        conn
+        insert_source(conn, &source).expect("Failed to insert source");
     }
 
     #[test]
     fn test_cult_crud() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let cult = NewCult::new("Cult of the Dragon", "MM", r#"{"name":"Cult of the Dragon"}"#);
         let id = insert_cult(&mut conn, &cult).expect("Failed to insert");
@@ -213,7 +192,8 @@ mod tests {
 
     #[test]
     fn test_list_cults() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let cults = vec![
             NewCult::new("Cult of the Dragon", "MM", r#"{}"#),

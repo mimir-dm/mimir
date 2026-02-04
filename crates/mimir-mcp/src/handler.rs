@@ -298,13 +298,6 @@ impl ServerHandler for MimirHandler {
 mod tests {
     use super::*;
     use crate::context::McpContext;
-    use diesel::prelude::*;
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-    use std::path::PathBuf;
-    use std::sync::Mutex;
-
-    const MIGRATIONS: EmbeddedMigrations =
-        embed_migrations!("../mimir-core/migrations");
 
     /// Expected tool names — every MCP tool the server should publish.
     const EXPECTED_TOOLS: &[&str] = &[
@@ -383,15 +376,7 @@ mod tests {
     ];
 
     fn test_ctx() -> Arc<McpContext> {
-        let mut db = SqliteConnection::establish(":memory:")
-            .expect("Failed to create in-memory database");
-        db.run_pending_migrations(MIGRATIONS)
-            .expect("Failed to run migrations");
-        Arc::new(McpContext {
-            db: Mutex::new(db),
-            assets_dir: PathBuf::from("/tmp/mimir-test-assets"),
-            active_campaign_id: Mutex::new(None),
-        })
+        Arc::new(McpContext::for_testing())
     }
 
     #[test]

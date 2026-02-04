@@ -128,43 +128,22 @@ pub fn count_character_inventory(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::models::campaign::{NewCampaign, NewCharacter};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE characters (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE character_inventory (
-                id TEXT PRIMARY KEY NOT NULL,
-                character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                item_name TEXT NOT NULL,
-                item_source TEXT NOT NULL,
-                quantity INTEGER NOT NULL DEFAULT 1,
-                equipped INTEGER NOT NULL DEFAULT 0,
-                attuned INTEGER NOT NULL DEFAULT 0,
-                notes TEXT
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO characters (id, campaign_id, name) VALUES ('char-1', 'camp-1', 'Hero');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let character = NewCharacter::new_pc("char-1", Some("camp-1"), "Hero", "Player");
+        insert_character(conn, &character).expect("Failed to create character");
     }
 
     #[test]
     fn test_insert_and_get_inventory() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let item = NewCharacterInventory::new("inv-1", "char-1", "Longsword", "PHB");
         let id = insert_character_inventory(&mut conn, &item).expect("Failed to insert");
@@ -177,7 +156,8 @@ mod tests {
 
     #[test]
     fn test_list_character_inventory() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let sword = NewCharacterInventory::new("inv-1", "char-1", "Longsword", "PHB");
         let arrows = NewCharacterInventory::new("inv-2", "char-1", "Arrow", "PHB")
@@ -191,7 +171,8 @@ mod tests {
 
     #[test]
     fn test_equipped_items() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let sword = NewCharacterInventory::new("inv-1", "char-1", "Longsword", "PHB")
             .equipped();
@@ -208,7 +189,8 @@ mod tests {
 
     #[test]
     fn test_attuned_items() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let cloak = NewCharacterInventory::new("inv-1", "char-1", "Cloak of Protection", "DMG")
             .equipped()
@@ -231,7 +213,8 @@ mod tests {
 
     #[test]
     fn test_update_inventory() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let item = NewCharacterInventory::new("inv-1", "char-1", "Arrow", "PHB")
             .with_quantity(20);
@@ -246,7 +229,8 @@ mod tests {
 
     #[test]
     fn test_delete_inventory() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let item = NewCharacterInventory::new("inv-1", "char-1", "Sword", "PHB");
         insert_character_inventory(&mut conn, &item).expect("Failed to insert");

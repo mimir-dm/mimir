@@ -37,12 +37,13 @@ fn main() {
             let paths = AppPaths::from_tauri_path(tauri_app_data_dir)
                 .expect("Failed to initialize application paths");
 
-            // Initialize database with migrations
-            let conn = init_database(&paths.database_url())
+            // Initialize database with migrations (this creates the DB and runs migrations)
+            let _conn = init_database(&paths.database_url())
                 .expect("Failed to initialize database");
+            // Connection is dropped here - we'll create on-demand connections
 
-            // Create and manage app state
-            let state = AppState::new(conn, paths.clone());
+            // Create and manage app state (stores DB path for on-demand connections)
+            let state = AppState::new(paths.clone());
             app.manage(state);
 
             // Create and manage print state

@@ -132,47 +132,22 @@ pub fn find_character_class_by_name(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::models::campaign::{NewCampaign, NewCharacter};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE characters (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                is_npc INTEGER NOT NULL DEFAULT 0
-            );
-            CREATE TABLE character_classes (
-                id TEXT PRIMARY KEY NOT NULL,
-                character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                class_name TEXT NOT NULL,
-                class_source TEXT NOT NULL,
-                level INTEGER NOT NULL DEFAULT 1,
-                subclass_name TEXT,
-                subclass_source TEXT,
-                starting_class INTEGER NOT NULL DEFAULT 0
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO characters (id, campaign_id, name) VALUES ('char-1', 'camp-1', 'Test Hero');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let character = NewCharacter::new_pc("char-1", Some("camp-1"), "Test Hero", "Player");
+        insert_character(conn, &character).expect("Failed to create character");
     }
 
     #[test]
     fn test_insert_and_get_character_class() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let class = NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB");
         let id = insert_character_class(&mut conn, &class).expect("Failed to insert");
@@ -186,7 +161,8 @@ mod tests {
 
     #[test]
     fn test_multiclass_character() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let fighter = NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB")
             .with_level(5);
@@ -207,7 +183,8 @@ mod tests {
 
     #[test]
     fn test_get_starting_class() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let fighter = NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB");
         let rogue = NewCharacterClass::multiclass("class-2", "char-1", "Rogue", "PHB");
@@ -222,7 +199,8 @@ mod tests {
 
     #[test]
     fn test_update_class_level() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let class = NewCharacterClass::starting("class-1", "char-1", "Wizard", "PHB");
         insert_character_class(&mut conn, &class).expect("Failed to insert");
@@ -236,7 +214,8 @@ mod tests {
 
     #[test]
     fn test_update_subclass() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let class = NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB")
             .with_level(3);
@@ -252,7 +231,8 @@ mod tests {
 
     #[test]
     fn test_delete_character_class() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let class = NewCharacterClass::starting("class-1", "char-1", "Cleric", "PHB");
         insert_character_class(&mut conn, &class).expect("Failed to insert");
@@ -266,7 +246,8 @@ mod tests {
 
     #[test]
     fn test_count_character_classes() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_character_classes(&mut conn, "char-1").expect("Failed to count"),

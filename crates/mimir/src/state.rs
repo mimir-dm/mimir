@@ -2,8 +2,12 @@
 //!
 //! Manages shared state for the Tauri application including database connections,
 //! application paths, and dev/production mode detection.
+//!
+//! Database connections are created on-demand rather than held in a mutex.
+//! This allows concurrent read operations with SQLite WAL mode.
 
 use diesel::SqliteConnection;
+use mimir_core::db::create_connection;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -109,24 +113,55 @@ impl AppPaths {
 ///
 /// This struct is managed by Tauri and can be accessed in command handlers
 /// via the `State` extractor.
+///
+/// Database connections are created on-demand via `connect()` rather than
+/// held in a mutex. This allows concurrent read operations with SQLite WAL mode.
 pub struct AppState {
-    /// Database connection wrapped in a Mutex for thread-safe access.
-    pub db: Mutex<SqliteConnection>,
+    /// Database URL for creating connections.
+    db_url: String,
     /// Application paths configuration.
     pub paths: AppPaths,
+    /// Active campaign ID (for commands that need it).
+    pub active_campaign_id: Mutex<Option<String>>,
 }
 
 impl AppState {
-    /// Create a new AppState with the given database connection and paths.
-    pub fn new(conn: SqliteConnection, paths: AppPaths) -> Self {
+    /// Create a new AppState with the given paths.
+    ///
+    /// The database should already be initialized (migrations run) before creating AppState.
+    pub fn new(paths: AppPaths) -> Self {
         Self {
-            db: Mutex::new(conn),
+            db_url: paths.database_url(),
             paths,
+            active_campaign_id: Mutex::new(None),
         }
+    }
+
+    /// Create a new database connection.
+    ///
+    /// Each connection is configured with WAL mode and foreign keys enabled.
+    /// Returns an error if the connection cannot be established.
+    pub fn connect(&self) -> Result<SqliteConnection, String> {
+        create_connection(&self.db_url).map_err(|e| format!("Database connection error: {}", e))
     }
 
     /// Check if running in development mode.
     pub fn is_dev(&self) -> bool {
         self.paths.is_dev
+    }
+
+    /// Get the active campaign ID, if set.
+    pub fn get_active_campaign_id(&self) -> Option<String> {
+        self.active_campaign_id
+            .lock()
+            .ok()
+            .and_then(|guard| guard.clone())
+    }
+
+    /// Set the active campaign ID.
+    pub fn set_active_campaign_id(&self, campaign_id: Option<String>) {
+        if let Ok(mut guard) = self.active_campaign_id.lock() {
+            *guard = campaign_id;
+        }
     }
 }

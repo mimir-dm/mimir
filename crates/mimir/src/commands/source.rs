@@ -60,9 +60,9 @@ pub struct ImportResponse {
 /// This is the command the frontend calls to populate the book list.
 #[tauri::command]
 pub fn list_catalog_sources(state: State<'_, AppState>) -> ApiResponse<Vec<SourceInfo>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = catalog_dal::list_sources(&mut db);
@@ -88,9 +88,9 @@ pub fn import_catalog_from_zip(
     }
 
     // Get database connection
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Stream import directly from tarball - no extraction needed
@@ -136,9 +136,9 @@ pub fn set_source_enabled(
     source_code: String,
     enabled: bool,
 ) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match catalog_dal::set_enabled(&mut db, &source_code, enabled) {
@@ -156,9 +156,9 @@ pub fn delete_catalog_source(
     state: State<'_, AppState>,
     source_code: String,
 ) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match catalog_dal::delete_source_cascade(&mut db, &source_code) {
@@ -345,9 +345,9 @@ pub struct LibraryBookInfo {
 /// This is used by the "Reading" mode in the Library.
 #[tauri::command]
 pub fn list_library_books(state: State<'_, AppState>) -> ApiResponse<Vec<LibraryBookInfo>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get all books
@@ -387,9 +387,9 @@ pub fn get_book_content(
     state: State<'_, AppState>,
     book_id: String,
 ) -> ApiResponse<BookContent> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = catalog_dal::get_book_by_source(&mut db, &book_id);

@@ -37,9 +37,9 @@ pub fn list_homebrew_items(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<CampaignHomebrewItem>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).list_items(&campaign_id))
@@ -51,9 +51,9 @@ pub fn get_homebrew_item(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<CampaignHomebrewItem> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).get_item(&id))
@@ -66,9 +66,9 @@ pub fn get_homebrew_item_by_name(
     campaign_id: String,
     name: String,
 ) -> ApiResponse<Option<CampaignHomebrewItem>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).get_item_by_name(&campaign_id, &name))
@@ -80,9 +80,9 @@ pub fn create_homebrew_item(
     state: State<'_, AppState>,
     input: TauriCreateHomebrewItemInput,
 ) -> ApiResponse<CampaignHomebrewItem> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let svc_input = CreateHomebrewItemInput {
@@ -105,9 +105,9 @@ pub fn update_homebrew_item(
     id: String,
     input: TauriUpdateHomebrewItemInput,
 ) -> ApiResponse<CampaignHomebrewItem> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let svc_input = UpdateHomebrewItemInput {
@@ -126,9 +126,9 @@ pub fn delete_homebrew_item(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<bool> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).delete_item(&id).map(|_| true))

@@ -91,46 +91,13 @@ pub fn count_item_attunement_classes(conn: &mut SqliteConnection) -> QueryResult
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::test_connection;
     use crate::dal::catalog::{insert_item, insert_source};
     use crate::models::catalog::{NewCatalogSource, NewItem};
-    use diesel::connection::SimpleConnection;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                item_type TEXT,
-                rarity TEXT,
-                data TEXT NOT NULL,
-                UNIQUE(name, source)
-            );
-            CREATE TABLE item_attunement_classes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-                class_name TEXT NOT NULL,
-                UNIQUE(item_id, class_name)
-            );
-            CREATE INDEX idx_item_attunement_item ON item_attunement_classes(item_id);
-            CREATE INDEX idx_item_attunement_class ON item_attunement_classes(class_name);",
-        )
-        .expect("Failed to create tables");
-
-        // Insert a test source
+    fn setup_test_data(conn: &mut SqliteConnection) {
         let source = NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z");
-        insert_source(&mut conn, &source).expect("Failed to insert source");
-
-        conn
+        insert_source(conn, &source).expect("Failed to insert source");
     }
 
     fn insert_test_item(conn: &mut SqliteConnection, name: &str) -> i32 {
@@ -141,7 +108,8 @@ mod tests {
 
     #[test]
     fn test_item_attunement_crud() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let item_id = insert_test_item(&mut conn, "Holy Avenger");
 
         // Insert class requirements (Paladin only)
@@ -173,7 +141,8 @@ mod tests {
 
     #[test]
     fn test_multiple_class_attunement() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let item_id = insert_test_item(&mut conn, "Staff of Healing");
 
         // This item requires attunement by Cleric, Druid, or Bard
@@ -190,7 +159,8 @@ mod tests {
 
     #[test]
     fn test_get_items_by_class() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
         let holy_avenger_id = insert_test_item(&mut conn, "Holy Avenger");
         let staff_healing_id = insert_test_item(&mut conn, "Staff of Healing");
 

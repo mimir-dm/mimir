@@ -98,45 +98,22 @@ pub fn get_total_monster_count(conn: &mut SqliteConnection, module_id: &str) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::models::campaign::{NewCampaign, NewModule};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                module_number INTEGER NOT NULL
-            );
-            CREATE TABLE module_monsters (
-                id TEXT PRIMARY KEY NOT NULL,
-                module_id TEXT NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
-                monster_name TEXT NOT NULL,
-                monster_source TEXT NOT NULL,
-                display_name TEXT,
-                notes TEXT,
-                quantity INTEGER NOT NULL DEFAULT 1,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO modules (id, campaign_id, name, module_number) VALUES ('mod-1', 'camp-1', 'Dungeon', 1);
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let module = NewModule::new("mod-1", "camp-1", "Dungeon", 1);
+        insert_module(conn, &module).expect("Failed to create module");
     }
 
     #[test]
     fn test_insert_and_get_module_monster() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM");
         let id = insert_module_monster(&mut conn, &monster).expect("Failed to insert");
@@ -150,7 +127,8 @@ mod tests {
 
     #[test]
     fn test_insert_with_customizations() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM")
             .with_display_name("Goblin Chief")
@@ -165,7 +143,8 @@ mod tests {
 
     #[test]
     fn test_list_module_monsters() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let goblin = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM");
         let wolf = NewModuleMonster::new("mm-2", "mod-1", "Wolf", "MM");
@@ -184,7 +163,8 @@ mod tests {
 
     #[test]
     fn test_update_module_monster() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM");
         insert_module_monster(&mut conn, &monster).expect("Failed to insert");
@@ -198,7 +178,8 @@ mod tests {
 
     #[test]
     fn test_delete_module_monster() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM");
         insert_module_monster(&mut conn, &monster).expect("Failed to insert");
@@ -212,7 +193,8 @@ mod tests {
 
     #[test]
     fn test_count_and_total() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let goblin = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM")
             .with_quantity(6);

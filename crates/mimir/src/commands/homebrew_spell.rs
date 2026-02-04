@@ -37,9 +37,9 @@ pub fn list_homebrew_spells(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<CampaignHomebrewSpell>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).list_spells(&campaign_id))
@@ -51,9 +51,9 @@ pub fn get_homebrew_spell(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<CampaignHomebrewSpell> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).get_spell(&id))
@@ -65,9 +65,9 @@ pub fn create_homebrew_spell(
     state: State<'_, AppState>,
     input: TauriCreateHomebrewSpellInput,
 ) -> ApiResponse<CampaignHomebrewSpell> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let svc_input = CreateHomebrewSpellInput {
@@ -90,9 +90,9 @@ pub fn update_homebrew_spell(
     id: String,
     input: TauriUpdateHomebrewSpellInput,
 ) -> ApiResponse<CampaignHomebrewSpell> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let svc_input = UpdateHomebrewSpellInput {
@@ -111,9 +111,9 @@ pub fn delete_homebrew_spell(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<bool> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     to_api_response(HomebrewService::new(&mut db).delete_spell(&id).map(|_| true))

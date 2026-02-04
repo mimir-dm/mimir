@@ -20,9 +20,9 @@ use super::{to_api_response, ApiResponse};
 /// List all modules for a campaign.
 #[tauri::command]
 pub fn list_modules(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<Module>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ModuleService::new(&mut db).list_for_campaign(&campaign_id);
@@ -32,9 +32,9 @@ pub fn list_modules(state: State<'_, AppState>, campaign_id: String) -> ApiRespo
 /// Get a module by ID.
 #[tauri::command]
 pub fn get_module(state: State<'_, AppState>, id: String) -> ApiResponse<Module> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ModuleService::new(&mut db).get(&id);
@@ -72,9 +72,9 @@ pub fn create_module(
     state: State<'_, AppState>,
     request: CreateModuleRequest,
 ) -> ApiResponse<Module> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let module_type = parse_module_type(request.module_type.as_deref());
@@ -104,9 +104,9 @@ pub fn update_module(
     id: String,
     request: UpdateModuleRequest,
 ) -> ApiResponse<Module> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let input = UpdateModuleInput {
@@ -121,9 +121,9 @@ pub fn update_module(
 /// Delete a module permanently.
 #[tauri::command]
 pub fn delete_module(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ModuleService::new(&mut db).delete(&id);
@@ -137,9 +137,9 @@ pub fn get_module_by_number(
     campaign_id: String,
     module_number: i32,
 ) -> ApiResponse<Module> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ModuleService::new(&mut db).get_by_number(&campaign_id, module_number);
@@ -160,9 +160,9 @@ pub fn reorder_module(
     module_id: String,
     new_position: i32,
 ) -> ApiResponse<Vec<Module>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = ModuleService::new(&mut db).reorder(&module_id, new_position);
@@ -187,9 +187,9 @@ pub fn list_module_monsters_with_data(
     state: State<'_, AppState>,
     module_id: String,
 ) -> ApiResponse<Vec<MonsterWithData>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get module monsters
@@ -236,9 +236,9 @@ pub fn add_module_monster(
     state: State<'_, AppState>,
     request: AddModuleMonsterRequest,
 ) -> ApiResponse<ModuleMonster> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Check if this monster already exists in the module
@@ -309,9 +309,9 @@ pub fn update_module_monster(
     monster_id: String,
     request: UpdateModuleMonsterRequest,
 ) -> ApiResponse<ModuleMonster> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -344,9 +344,9 @@ pub fn update_module_monster(
 /// List all NPCs for a module.
 #[tauri::command]
 pub fn list_module_npcs(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<ModuleNpc>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::list_module_npcs(&mut db, &module_id) {
@@ -448,9 +448,9 @@ fn transform_token(
 /// List all tokens for a map with resolved names.
 #[tauri::command]
 pub fn list_tokens(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the map's grid size from UVTT
@@ -507,9 +507,9 @@ pub fn create_token(
         return ApiResponse::err("A label is required for PC tokens (when no monster_id or npc_id is provided)".to_string());
     }
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the map's grid size from UVTT
@@ -570,9 +570,9 @@ pub fn update_token(
     id: String,
     request: UpdateTokenRequest,
 ) -> ApiResponse<TokenResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Build update struct - handle Option<Option<String>> properly
@@ -621,9 +621,9 @@ pub fn update_token_position(
     grid_x: i32,
     grid_y: i32,
 ) -> ApiResponse<TokenResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let update = UpdateTokenPlacement::set_position(grid_x, grid_y);
@@ -653,9 +653,9 @@ pub fn update_token_vision(
     vision_dark_ft: i32,
     light_radius_ft: i32,
 ) -> ApiResponse<TokenResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let update = UpdateTokenPlacement::set_vision(
@@ -686,9 +686,9 @@ pub fn toggle_token_visibility(
     state: State<'_, AppState>,
     id: String,
 ) -> ApiResponse<TokenResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get current state
@@ -719,9 +719,9 @@ pub fn toggle_token_visibility(
 /// Delete a token placement.
 #[tauri::command]
 pub fn delete_token(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_token_placement(&mut db, &id) {
@@ -803,9 +803,9 @@ pub fn serve_token_image(
 ) -> ApiResponse<Option<String>> {
     tracing::debug!("serve_token_image called for token_id: {}", token_id);
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the token placement

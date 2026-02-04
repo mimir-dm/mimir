@@ -1,9 +1,12 @@
 //! MCP Context
 //!
 //! Manages database connections and shared state for the MCP server.
+//!
+//! Database connections are created on-demand rather than held in a mutex.
+//! This allows concurrent read operations with SQLite WAL mode.
 
 use diesel::SqliteConnection;
-use mimir_core::db::init_database;
+use mimir_core::db::{create_connection, init_database};
 use std::path::PathBuf;
 use std::sync::Mutex;
 
@@ -11,10 +14,11 @@ use crate::McpError;
 
 /// Shared context for the MCP server.
 ///
-/// Contains database connection and state that persists across tool calls.
+/// Contains database path and state that persists across tool calls.
+/// Connections are created on-demand via `connect()`.
 pub struct McpContext {
-    /// Database connection (wrapped in Mutex for thread safety)
-    pub db: Mutex<SqliteConnection>,
+    /// Database URL for creating connections.
+    db_url: String,
     /// Directory for asset files (images, etc.)
     pub assets_dir: PathBuf,
     /// Currently active campaign ID
@@ -46,16 +50,19 @@ impl McpContext {
             .map(|p| p.join("assets"))
             .unwrap_or_else(|| PathBuf::from("assets"));
 
-        let db = init_database(db_path.to_str().unwrap_or("mimir.db")).map_err(|e| {
+        let db_url = db_path.to_string_lossy().to_string();
+
+        // Initialize database (runs migrations) - connection is dropped after
+        let _db = init_database(&db_url).map_err(|e| {
             McpError::Initialization(format!(
-                "Failed to connect to database at {}: {}",
+                "Failed to initialize database at {}: {}",
                 db_path.display(),
                 e
             ))
         })?;
 
         Ok(Self {
-            db: Mutex::new(db),
+            db_url,
             assets_dir,
             active_campaign_id: Mutex::new(None),
         })
@@ -110,12 +117,35 @@ impl McpContext {
         }
     }
 
-    /// Get a mutable reference to the database connection.
+    /// Create a new database connection.
     ///
-    /// Returns an error if the mutex is poisoned.
-    pub fn db(&self) -> Result<std::sync::MutexGuard<'_, SqliteConnection>, McpError> {
-        self.db
-            .lock()
-            .map_err(|_| McpError::Internal("Database mutex poisoned".to_string()))
+    /// Each connection is configured with WAL mode and foreign keys enabled.
+    /// Returns an error if the connection cannot be established.
+    pub fn connect(&self) -> Result<SqliteConnection, McpError> {
+        create_connection(&self.db_url).map_err(|e| {
+            McpError::Internal(format!("Database connection error: {}", e))
+        })
+    }
+
+    /// Create a context for testing with a temporary file-based database.
+    ///
+    /// Uses a unique temp file so multiple connections share the same DB.
+    /// The database is initialized with migrations run.
+    #[cfg(test)]
+    pub fn for_testing() -> Self {
+        use std::sync::atomic::{AtomicU32, Ordering};
+        static COUNTER: AtomicU32 = AtomicU32::new(0);
+
+        let id = COUNTER.fetch_add(1, Ordering::Relaxed);
+        let db_url = format!("/tmp/mimir-test-{}-{}.db", std::process::id(), id);
+
+        // Initialize with migrations
+        init_database(&db_url).expect("Failed to initialize test database");
+
+        Self {
+            db_url,
+            assets_dir: PathBuf::from("/tmp/mimir-test-assets"),
+            active_campaign_id: Mutex::new(None),
+        }
     }
 }

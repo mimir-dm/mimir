@@ -419,9 +419,9 @@ pub fn export_campaign_document(
     info!("Exporting campaign document {} to PDF", document_id);
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the document
@@ -502,9 +502,9 @@ pub fn export_campaign_documents(
     info!("================================");
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the campaign
@@ -1222,9 +1222,9 @@ pub fn export_module_documents(
     info!("==============================");
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the module
@@ -1664,9 +1664,9 @@ pub fn export_character(
     info!("Exporting character {} to PDF", character_id);
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the character
@@ -2085,9 +2085,9 @@ pub fn print_map(
     info!("  play_los_walls: {:?}", opts.play_los_walls);
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the map
@@ -2326,9 +2326,9 @@ pub fn export_module_monsters(
     info!("  show_cut_lines: {:?}", opts.show_cut_lines);
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get the module
@@ -2463,9 +2463,9 @@ pub fn export_monster_card(
     info!("  show_cut_lines: {:?}", opts.show_cut_lines);
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Look up the monster from catalog
@@ -2563,9 +2563,9 @@ pub fn export_trap_card(
     info!("  show_cut_lines: {:?}", opts.show_cut_lines);
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Look up the trap from catalog
@@ -2661,9 +2661,9 @@ pub fn export_trap_cards(
     }
 
     // Get database connection
-    let mut db = match app_state.db.lock() {
+    let mut db = match app_state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Look up each trap from catalog

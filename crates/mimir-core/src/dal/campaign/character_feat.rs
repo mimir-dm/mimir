@@ -108,45 +108,22 @@ pub fn count_character_feats(conn: &mut SqliteConnection, character_id: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::campaign::FeatSourceType;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::models::campaign::{FeatSourceType, NewCampaign, NewCharacter};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE characters (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                is_npc INTEGER NOT NULL DEFAULT 0
-            );
-            CREATE TABLE character_feats (
-                id TEXT PRIMARY KEY NOT NULL,
-                character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                feat_name TEXT NOT NULL,
-                feat_source TEXT NOT NULL,
-                source_type TEXT NOT NULL DEFAULT 'asi'
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO characters (id, campaign_id, name) VALUES ('char-1', 'camp-1', 'Test Hero');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
-
-        conn
+        let character = NewCharacter::new_pc("char-1", Some("camp-1"), "Test Hero", "Player");
+        insert_character(conn, &character).expect("Failed to create character");
     }
 
     #[test]
     fn test_insert_and_get_feat() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feat = NewCharacterFeat::from_asi("feat-1", "char-1", "Great Weapon Master", "PHB");
         let id = insert_character_feat(&mut conn, &feat).expect("Failed to insert");
@@ -160,7 +137,8 @@ mod tests {
 
     #[test]
     fn test_list_character_feats() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feat1 = NewCharacterFeat::from_asi("feat-1", "char-1", "Alert", "PHB");
         let feat2 = NewCharacterFeat::from_asi("feat-2", "char-1", "Sentinel", "PHB");
@@ -179,7 +157,8 @@ mod tests {
 
     #[test]
     fn test_list_feats_by_source_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feat1 = NewCharacterFeat::from_asi("feat-1", "char-1", "GWM", "PHB");
         let feat2 = NewCharacterFeat::from_asi("feat-2", "char-1", "PAM", "PHB");
@@ -199,7 +178,8 @@ mod tests {
 
     #[test]
     fn test_character_has_feat() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert!(!character_has_feat(&mut conn, "char-1", "Lucky").expect("Failed to check"));
 
@@ -211,7 +191,8 @@ mod tests {
 
     #[test]
     fn test_different_source_types() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let asi = NewCharacterFeat::new(
             "feat-1",
@@ -253,7 +234,8 @@ mod tests {
 
     #[test]
     fn test_delete_character_feat() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feat = NewCharacterFeat::from_asi("feat-1", "char-1", "Tough", "PHB");
         insert_character_feat(&mut conn, &feat).expect("Failed to insert");
@@ -267,7 +249,8 @@ mod tests {
 
     #[test]
     fn test_count_character_feats() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_character_feats(&mut conn, "char-1").expect("Failed to count"),

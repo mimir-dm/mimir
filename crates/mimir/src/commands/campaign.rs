@@ -25,9 +25,9 @@ pub fn list_campaigns(
 ) -> ApiResponse<Vec<Campaign>> {
     let include_archived = include_archived.unwrap_or(false);
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CampaignService::new(&mut db).list(include_archived);
@@ -37,9 +37,9 @@ pub fn list_campaigns(
 /// List only archived campaigns.
 #[tauri::command]
 pub fn list_archived_campaigns(state: State<'_, AppState>) -> ApiResponse<Vec<Campaign>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get all campaigns including archived, then filter to only archived
@@ -53,9 +53,9 @@ pub fn list_archived_campaigns(state: State<'_, AppState>) -> ApiResponse<Vec<Ca
 /// Get a campaign by ID.
 #[tauri::command]
 pub fn get_campaign(state: State<'_, AppState>, id: String) -> ApiResponse<Campaign> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = CampaignService::new(&mut db).get(&id);
@@ -79,9 +79,9 @@ pub fn create_campaign(
     state: State<'_, AppState>,
     request: CreateCampaignRequest,
 ) -> ApiResponse<Campaign> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut input = CreateCampaignInput::new(&request.name);
@@ -107,9 +107,9 @@ pub fn update_campaign(
     id: String,
     request: UpdateCampaignRequest,
 ) -> ApiResponse<Campaign> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let input = UpdateCampaignInput {
@@ -124,9 +124,9 @@ pub fn update_campaign(
 /// Archive a campaign (soft delete).
 #[tauri::command]
 pub fn archive_campaign(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = CampaignService::new(&mut db);
@@ -147,9 +147,9 @@ pub fn archive_campaign(state: State<'_, AppState>, campaign_id: String) -> ApiR
 /// Unarchive a campaign.
 #[tauri::command]
 pub fn unarchive_campaign(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = CampaignService::new(&mut db);
@@ -181,9 +181,9 @@ pub fn delete_campaign(
     state: State<'_, AppState>,
     request: DeleteCampaignRequest,
 ) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Note: delete_files is not implemented yet - campaigns don't have external files in v0.5
@@ -201,9 +201,9 @@ pub fn list_campaign_sources(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = list_campaign_source_codes(&mut db, &campaign_id);
@@ -217,9 +217,9 @@ pub fn add_campaign_source(
     campaign_id: String,
     source_code: String,
 ) -> ApiResponse<CampaignSource> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -241,9 +241,9 @@ pub fn remove_campaign_source(
     campaign_id: String,
     source_code: String,
 ) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = delete_campaign_source_by_code(&mut db, &campaign_id, &source_code);
@@ -260,9 +260,9 @@ pub fn set_campaign_sources(
     campaign_id: String,
     source_codes: Vec<String>,
 ) -> ApiResponse<Vec<String>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Delete all existing sources

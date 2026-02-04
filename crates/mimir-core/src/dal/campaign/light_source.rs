@@ -93,47 +93,25 @@ pub fn count_light_sources(conn: &mut SqliteConnection, map_id: &str) -> QueryRe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::campaign::light_presets as presets;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_campaign_asset, insert_map};
+    use crate::models::campaign::{light_presets as presets, NewCampaign, NewCampaignAsset, NewMap};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL);
-            CREATE TABLE maps (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE light_sources (
-                id TEXT PRIMARY KEY NOT NULL,
-                map_id TEXT NOT NULL REFERENCES maps(id) ON DELETE CASCADE,
-                grid_x INTEGER NOT NULL,
-                grid_y INTEGER NOT NULL,
-                name TEXT,
-                bright_radius INTEGER NOT NULL,
-                dim_radius INTEGER NOT NULL,
-                color TEXT,
-                active INTEGER NOT NULL DEFAULT 1,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO maps (id, campaign_id, name) VALUES ('map-1', 'camp-1', 'Dungeon');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
+        let asset = NewCampaignAsset::for_campaign("asset-1", "camp-1", "dungeon.uvtt", "application/octet-stream", "/blobs/dungeon.uvtt");
+        insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
-        conn
+        let map = NewMap::for_campaign("map-1", "camp-1", "Dungeon", "asset-1");
+        insert_map(conn, &map).expect("Failed to create map");
     }
 
     #[test]
     fn test_insert_and_get_light_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light = NewLightSource::new("ls-1", "map-1", 5, 10, 20, 40);
         let id = insert_light_source(&mut conn, &light).expect("Failed to insert");
@@ -147,7 +125,8 @@ mod tests {
 
     #[test]
     fn test_insert_torch() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let torch = NewLightSource::torch("ls-1", "map-1", 5, 10);
         insert_light_source(&mut conn, &torch).expect("Failed to insert");
@@ -161,7 +140,8 @@ mod tests {
 
     #[test]
     fn test_insert_lantern() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let lantern = NewLightSource::lantern("ls-1", "map-1", 0, 0);
         insert_light_source(&mut conn, &lantern).expect("Failed to insert");
@@ -173,7 +153,8 @@ mod tests {
 
     #[test]
     fn test_insert_inactive() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light = NewLightSource::new("ls-1", "map-1", 0, 0, 20, 40).inactive();
         insert_light_source(&mut conn, &light).expect("Failed to insert");
@@ -184,7 +165,8 @@ mod tests {
 
     #[test]
     fn test_list_light_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light1 = NewLightSource::torch("ls-1", "map-1", 1, 1);
         let light2 = NewLightSource::lantern("ls-2", "map-1", 2, 2);
@@ -197,7 +179,8 @@ mod tests {
 
     #[test]
     fn test_list_active_light_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let active = NewLightSource::torch("ls-1", "map-1", 1, 1);
         let inactive = NewLightSource::torch("ls-2", "map-1", 2, 2).inactive();
@@ -211,7 +194,8 @@ mod tests {
 
     #[test]
     fn test_turn_on_off() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light = NewLightSource::torch("ls-1", "map-1", 0, 0);
         insert_light_source(&mut conn, &light).expect("Failed to insert");
@@ -233,7 +217,8 @@ mod tests {
 
     #[test]
     fn test_update_position() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light = NewLightSource::torch("ls-1", "map-1", 0, 0);
         insert_light_source(&mut conn, &light).expect("Failed to insert");
@@ -248,7 +233,8 @@ mod tests {
 
     #[test]
     fn test_update_radii() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light = NewLightSource::new("ls-1", "map-1", 0, 0, 10, 20);
         insert_light_source(&mut conn, &light).expect("Failed to insert");
@@ -263,7 +249,8 @@ mod tests {
 
     #[test]
     fn test_delete_light_source() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let light = NewLightSource::torch("ls-1", "map-1", 0, 0);
         insert_light_source(&mut conn, &light).expect("Failed to insert");
@@ -277,7 +264,8 @@ mod tests {
 
     #[test]
     fn test_count_light_sources() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_light_sources(&mut conn, "map-1").expect("Failed to count"),

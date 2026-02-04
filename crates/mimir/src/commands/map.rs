@@ -115,9 +115,9 @@ fn enrich_maps_with_uvtt(maps: Vec<Map>, service: &mut MapService, app_dir: &Pat
 /// List all maps for a campaign (including module maps).
 #[tauri::command]
 pub fn list_campaign_maps(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<MapResponse>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -133,9 +133,9 @@ pub fn list_campaign_level_maps(
     state: State<'_, AppState>,
     campaign_id: String,
 ) -> ApiResponse<Vec<MapResponse>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -148,9 +148,9 @@ pub fn list_campaign_level_maps(
 /// List all maps for a module.
 #[tauri::command]
 pub fn list_module_maps(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<MapResponse>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -167,9 +167,9 @@ pub fn list_module_maps(state: State<'_, AppState>, module_id: String) -> ApiRes
 /// Get a map by ID.
 #[tauri::command]
 pub fn get_map(state: State<'_, AppState>, id: String) -> ApiResponse<MapResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -211,9 +211,9 @@ pub fn create_map(state: State<'_, AppState>, request: CreateMapRequest) -> ApiR
         Err(e) => return ApiResponse::err(format!("Invalid base64 data: {}", e)),
     };
 
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut input = if let Some(module_id) = request.module_id {
@@ -255,9 +255,9 @@ pub fn update_map(
     id: String,
     request: UpdateMapRequest,
 ) -> ApiResponse<Map> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let input = UpdateMapInput {
@@ -275,9 +275,9 @@ pub fn update_map(
 /// Delete a map and its associated UVTT asset.
 #[tauri::command]
 pub fn delete_map(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let result = MapService::new(&mut db, &state.paths.app_dir).delete(&id);
@@ -291,9 +291,9 @@ pub fn delete_map(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
 /// Read the UVTT file data for a map (returned as base64).
 #[tauri::command]
 pub fn read_map_uvtt(state: State<'_, AppState>, map_id: String) -> ApiResponse<String> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -377,9 +377,9 @@ pub struct UvttData {
 /// Get parsed UVTT data for a map (resolution, grid size, etc).
 #[tauri::command]
 pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttData> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -536,9 +536,9 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
 /// Serve the map image as a data URL.
 #[tauri::command]
 pub fn serve_map_image(state: State<'_, AppState>, id: String) -> ApiResponse<String> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
@@ -636,9 +636,9 @@ fn get_map_grid_size_for_lights(service: &mut MapService, map_id: &str) -> i32 {
 /// List all light sources for a map.
 #[tauri::command]
 pub fn list_light_sources(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<LightSourceResponse>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get grid size for coordinate conversion
@@ -689,9 +689,9 @@ pub fn create_light_source(
     state: State<'_, AppState>,
     request: CreateLightSourceRequest,
 ) -> ApiResponse<LightSourceResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get grid size to convert pixel coordinates to grid coordinates
@@ -737,9 +737,9 @@ pub fn create_light_source(
 /// Toggle a light source on/off.
 #[tauri::command]
 pub fn toggle_light_source(state: State<'_, AppState>, id: String) -> ApiResponse<LightSourceResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get current state
@@ -768,9 +768,9 @@ pub fn toggle_light_source(state: State<'_, AppState>, id: String) -> ApiRespons
 /// Delete a light source.
 #[tauri::command]
 pub fn delete_light_source(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_light_source(&mut db, &id) {
@@ -782,9 +782,9 @@ pub fn delete_light_source(state: State<'_, AppState>, id: String) -> ApiRespons
 /// Delete all light sources on a map.
 #[tauri::command]
 pub fn delete_all_light_sources(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_all_light_sources(&mut db, &map_id) {
@@ -801,9 +801,9 @@ pub fn create_torch(
     x: i32,
     y: i32,
 ) -> ApiResponse<LightSourceResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -827,9 +827,9 @@ pub fn create_lantern(
     x: i32,
     y: i32,
 ) -> ApiResponse<LightSourceResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -862,9 +862,9 @@ pub fn update_light_source(
     id: String,
     request: UpdateLightSourceRequest,
 ) -> ApiResponse<LightSourceResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -908,9 +908,9 @@ pub fn move_light_source(
     x: i32,
     y: i32,
 ) -> ApiResponse<LightSourceResponse> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -935,9 +935,9 @@ use mimir_core::models::campaign::{FogRevealedArea, FogState, NewFogRevealedArea
 /// Get the fog state for a map (enabled + revealed areas).
 #[tauri::command]
 pub fn get_fog_state(state: State<'_, AppState>, map_id: String) -> ApiResponse<FogState> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get map to check fog_enabled
@@ -962,9 +962,9 @@ pub fn get_fog_state(state: State<'_, AppState>, map_id: String) -> ApiResponse<
 /// Toggle fog of war on/off for a map.
 #[tauri::command]
 pub fn toggle_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<bool> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get current fog state
@@ -987,9 +987,9 @@ pub fn toggle_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<boo
 /// Enable fog of war for a map.
 #[tauri::command]
 pub fn enable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1004,9 +1004,9 @@ pub fn enable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>
 /// Disable fog of war for a map.
 #[tauri::command]
 pub fn disable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1034,9 +1034,9 @@ pub fn reveal_rect(
     state: State<'_, AppState>,
     request: RevealRectRequest,
 ) -> ApiResponse<FogRevealedArea> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -1074,9 +1074,9 @@ pub fn reveal_circle(
     state: State<'_, AppState>,
     request: RevealCircleRequest,
 ) -> ApiResponse<FogRevealedArea> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -1112,9 +1112,9 @@ pub fn reveal_all(
     state: State<'_, AppState>,
     request: RevealAllRequest,
 ) -> ApiResponse<FogRevealedArea> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -1140,9 +1140,9 @@ pub fn reveal_all(
 /// Delete a revealed area.
 #[tauri::command]
 pub fn delete_revealed_area(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_fog_revealed_area(&mut db, &id) {
@@ -1154,9 +1154,9 @@ pub fn delete_revealed_area(state: State<'_, AppState>, id: String) -> ApiRespon
 /// Reset fog by clearing all revealed areas for a map.
 #[tauri::command]
 pub fn reset_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_all_fog_revealed_areas(&mut db, &map_id) {
@@ -1174,9 +1174,9 @@ use mimir_core::models::campaign::{MapTrap, NewMapTrap, UpdateMapTrap};
 /// List all traps for a map.
 #[tauri::command]
 pub fn list_map_traps(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<MapTrap>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::list_map_traps(&mut db, &map_id) {
@@ -1188,9 +1188,9 @@ pub fn list_map_traps(state: State<'_, AppState>, map_id: String) -> ApiResponse
 /// Get a map trap by ID.
 #[tauri::command]
 pub fn get_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::get_map_trap(&mut db, &id) {
@@ -1220,9 +1220,9 @@ pub fn create_map_trap(
     state: State<'_, AppState>,
     request: CreateMapTrapRequest,
 ) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -1272,9 +1272,9 @@ pub fn update_map_trap(
     id: String,
     request: UpdateMapTrapRequest,
 ) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1311,9 +1311,9 @@ pub fn move_map_trap(
     grid_x: i32,
     grid_y: i32,
 ) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1332,9 +1332,9 @@ pub fn move_map_trap(
 /// Toggle trap visibility for players.
 #[tauri::command]
 pub fn toggle_map_trap_visibility(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get current state
@@ -1359,9 +1359,9 @@ pub fn toggle_map_trap_visibility(state: State<'_, AppState>, id: String) -> Api
 /// Trigger a trap.
 #[tauri::command]
 pub fn trigger_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1380,9 +1380,9 @@ pub fn trigger_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<M
 /// Reset (re-arm) a triggered trap.
 #[tauri::command]
 pub fn reset_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1401,9 +1401,9 @@ pub fn reset_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<Map
 /// Delete a map trap.
 #[tauri::command]
 pub fn delete_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_map_trap(&mut db, &id) {
@@ -1421,9 +1421,9 @@ use mimir_core::models::campaign::{MapPoi, NewMapPoi, UpdateMapPoi};
 /// List all POIs for a map.
 #[tauri::command]
 pub fn list_map_pois(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<MapPoi>> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::list_map_pois(&mut db, &map_id) {
@@ -1435,9 +1435,9 @@ pub fn list_map_pois(state: State<'_, AppState>, map_id: String) -> ApiResponse<
 /// Get a map POI by ID.
 #[tauri::command]
 pub fn get_map_poi(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::get_map_poi(&mut db, &id) {
@@ -1466,9 +1466,9 @@ pub fn create_map_poi(
     state: State<'_, AppState>,
     request: CreateMapPoiRequest,
 ) -> ApiResponse<MapPoi> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -1514,9 +1514,9 @@ pub fn update_map_poi(
     id: String,
     request: UpdateMapPoiRequest,
 ) -> ApiResponse<MapPoi> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1552,9 +1552,9 @@ pub fn move_map_poi(
     grid_x: i32,
     grid_y: i32,
 ) -> ApiResponse<MapPoi> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -1573,9 +1573,9 @@ pub fn move_map_poi(
 /// Toggle POI visibility for players.
 #[tauri::command]
 pub fn toggle_map_poi_visibility(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     // Get current state
@@ -1600,9 +1600,9 @@ pub fn toggle_map_poi_visibility(state: State<'_, AppState>, id: String) -> ApiR
 /// Delete a map POI.
 #[tauri::command]
 pub fn delete_map_poi(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
-    let mut db = match state.db.lock() {
+    let mut db = match state.connect() {
         Ok(db) => db,
-        Err(e) => return ApiResponse::err(format!("Database lock error: {}", e)),
+        Err(e) => return ApiResponse::err(e),
     };
 
     match dal::delete_map_poi(&mut db, &id) {

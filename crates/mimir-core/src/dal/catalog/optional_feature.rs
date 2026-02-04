@@ -186,41 +186,19 @@ pub fn search_optional_features_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
     use crate::models::catalog::NewCatalogSource;
-    use diesel::connection::SimpleConnection;
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
-
-        conn.batch_execute(
-            "CREATE TABLE catalog_sources (
-                code TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                imported_at TEXT NOT NULL
-            );
-            CREATE TABLE optional_features (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                source TEXT NOT NULL REFERENCES catalog_sources(code),
-                feature_type TEXT,
-                data TEXT NOT NULL,
-                UNIQUE(name, source)
-            );",
-        )
-        .expect("Failed to create tables");
-
+    fn setup_test_data(conn: &mut SqliteConnection) {
         let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
-        insert_source(&mut conn, &source).expect("Failed to insert source");
-
-        conn
+        insert_source(conn, &source).expect("Failed to insert source");
     }
 
     #[test]
     fn test_optional_feature_crud() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let feature = NewOptionalFeature::new("Agonizing Blast", "PHB", r#"{"name":"Agonizing Blast"}"#)
             .with_feature_type("EI");
@@ -236,7 +214,8 @@ mod tests {
 
     #[test]
     fn test_list_by_type() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let features = vec![
             NewOptionalFeature::new("Agonizing Blast", "PHB", r#"{}"#).with_feature_type("EI"),

@@ -125,61 +125,28 @@ pub fn get_next_module_sort_order(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
+    use crate::db::test_connection;
+    use crate::dal::campaign::{insert_campaign, insert_module, insert_campaign_asset};
+    use crate::models::campaign::{NewCampaign, NewModule, NewCampaignAsset};
 
-    fn setup_test_db() -> SqliteConnection {
-        let mut conn =
-            SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
+    fn setup_test_data(conn: &mut SqliteConnection) {
+        let campaign = NewCampaign::new("camp-1", "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        conn.batch_execute(
-            r#"
-            CREATE TABLE campaigns (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL
-            );
-            CREATE TABLE modules (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                module_number INTEGER NOT NULL
-            );
-            CREATE TABLE campaign_assets (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT REFERENCES campaigns(id) ON DELETE CASCADE,
-                module_id TEXT REFERENCES modules(id) ON DELETE CASCADE,
-                filename TEXT NOT NULL,
-                mime_type TEXT NOT NULL,
-                blob_path TEXT NOT NULL
-            );
-            CREATE TABLE maps (
-                id TEXT PRIMARY KEY NOT NULL,
-                campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-                module_id TEXT REFERENCES modules(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                description TEXT,
-                sort_order INTEGER NOT NULL DEFAULT 0,
-                uvtt_asset_id TEXT NOT NULL REFERENCES campaign_assets(id),
-                lighting_mode TEXT NOT NULL DEFAULT 'bright' CHECK (lighting_mode IN ('bright', 'dim', 'dark')),
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-            );
-            INSERT INTO campaigns (id, name) VALUES ('camp-1', 'Test Campaign');
-            INSERT INTO modules (id, campaign_id, name, module_number) VALUES ('mod-1', 'camp-1', 'Chapter 1', 1);
-            INSERT INTO campaign_assets (id, campaign_id, filename, mime_type, blob_path)
-                VALUES ('asset-1', 'camp-1', 'map1.uvtt', 'application/octet-stream', '/blobs/map1.uvtt');
-            INSERT INTO campaign_assets (id, campaign_id, filename, mime_type, blob_path)
-                VALUES ('asset-2', 'camp-1', 'map2.uvtt', 'application/octet-stream', '/blobs/map2.uvtt');
-            PRAGMA foreign_keys = ON;
-            "#,
-        )
-        .expect("Failed to create tables");
+        let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
+        insert_module(conn, &module).expect("Failed to create module");
 
-        conn
+        let asset1 = NewCampaignAsset::for_campaign("asset-1", "camp-1", "map1.uvtt", "application/octet-stream", "/blobs/map1.uvtt");
+        insert_campaign_asset(conn, &asset1).expect("Failed to create asset 1");
+
+        let asset2 = NewCampaignAsset::for_campaign("asset-2", "camp-1", "map2.uvtt", "application/octet-stream", "/blobs/map2.uvtt");
+        insert_campaign_asset(conn, &asset2).expect("Failed to create asset 2");
     }
 
     #[test]
     fn test_insert_and_get_map() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let map = NewMap::for_campaign("map-1", "camp-1", "World Map", "asset-1");
         let id = insert_map(&mut conn, &map).expect("Failed to insert");
@@ -193,7 +160,8 @@ mod tests {
 
     #[test]
     fn test_insert_module_map() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let map = NewMap::for_module("map-1", "camp-1", "mod-1", "Goblin Cave", "asset-1")
             .with_lighting_mode(crate::models::campaign::LightingMode::Dark);
@@ -206,7 +174,8 @@ mod tests {
 
     #[test]
     fn test_list_campaign_maps() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let world_map = NewMap::for_campaign("map-1", "camp-1", "World Map", "asset-1");
         let dungeon = NewMap::for_module("map-2", "camp-1", "mod-1", "Dungeon", "asset-2");
@@ -225,7 +194,8 @@ mod tests {
 
     #[test]
     fn test_list_module_maps() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let map1 = NewMap::for_module("map-1", "camp-1", "mod-1", "Floor 1", "asset-1")
             .with_sort_order(1);
@@ -245,7 +215,8 @@ mod tests {
 
     #[test]
     fn test_update_map_lighting() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let map = NewMap::for_module("map-1", "camp-1", "mod-1", "Dungeon", "asset-1");
         insert_map(&mut conn, &map).expect("Failed to insert");
@@ -262,7 +233,8 @@ mod tests {
 
     #[test]
     fn test_update_map_move_to_module() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let map = NewMap::for_campaign("map-1", "camp-1", "Regional Map", "asset-1");
         insert_map(&mut conn, &map).expect("Failed to insert");
@@ -276,7 +248,8 @@ mod tests {
 
     #[test]
     fn test_delete_map() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         let map = NewMap::for_campaign("map-1", "camp-1", "Map", "asset-1");
         insert_map(&mut conn, &map).expect("Failed to insert");
@@ -290,7 +263,8 @@ mod tests {
 
     #[test]
     fn test_count_maps() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         assert_eq!(
             count_campaign_maps(&mut conn, "camp-1").expect("Failed to count"),
@@ -314,7 +288,8 @@ mod tests {
 
     #[test]
     fn test_get_next_sort_order() {
-        let mut conn = setup_test_db();
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
 
         // First map should get sort order 1
         let next = get_next_campaign_sort_order(&mut conn, "camp-1").expect("Failed to get");
