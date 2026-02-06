@@ -4,15 +4,15 @@ level: task
 title: "Standardize MCP tool response format"
 short_code: "MIMIR-T-0514"
 created_at: 2026-02-02T01:25:07.072005+00:00
-updated_at: 2026-02-02T01:25:07.072005+00:00
+updated_at: 2026-02-05T04:26:49.089619+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -41,10 +41,16 @@ Create a standardized response wrapper for MCP tools, analogous to Tauri's `ApiR
 
 ## Acceptance Criteria
 
-- [ ] `McpResponse` helper in mimir-mcp with methods like `created(entity_type, data)`, `ok(data)`, `list(entity_type, items, count)`
-- [ ] All MCP tools use `McpResponse` instead of ad-hoc `json!()` construction
-- [ ] Response format is documented in plugin tool-parameter-reference.md
-- [ ] All 16 MCP tests pass
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+- [x] `McpResponse` helper in mimir-mcp with methods like `created(entity_type, data)`, `ok(data)`, `list(entity_type, items, count)`
+- [x] All MCP tools use `McpResponse` instead of ad-hoc `json!()` construction
+- [x] Response format is documented in plugin tool-parameter-reference.md
+- [x] All 24 MCP tests pass (test count increased from 16)
 
 ## Implementation Notes
 
@@ -70,4 +76,30 @@ impl McpResponse {
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-02-05: Implementation Complete
+
+**Created `McpResponse` helper** (`crates/mimir-mcp/src/response.rs`):
+- `list(key, items)` - List responses with count
+- `get(key, data)` - Single entity retrieval
+- `created(key, data)` - Create operation
+- `updated(key, data)` - Update operation
+- `deleted(id)` - Delete operation
+- `added(key, data)` - Add to collection
+- `removed(id)` - Remove from collection
+- `success(data)` - Special operations (level_up)
+- `ok(data)` - Pass-through for complex responses
+
+**Files Updated**:
+- `campaign.rs` - 11 tool implementations
+- `module.rs` - 6 tool implementations
+- `homebrew.rs` - 5 tool implementations
+- `homebrew_monster.rs` - 5 tool implementations
+- `homebrew_spell.rs` - 5 tool implementations
+- `document.rs` - 5 tool implementations
+- `character.rs` - 11 tool implementations
+- `catalog.rs` - 8 tool implementations
+- `map.rs` - 8 tool implementations
+
+**Documentation**: Response format documented in `tool-parameter-reference.md`
+
+**Tests**: All 24 MCP tests pass (updated 2 tests for new response format)

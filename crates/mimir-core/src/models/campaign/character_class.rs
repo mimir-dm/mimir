@@ -6,9 +6,14 @@ use crate::schema::character_classes;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// A character's class level entry.
 /// Characters can have multiple class entries for multiclassing.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = character_classes)]
 pub struct CharacterClass {
     /// Unique ID (UUID)

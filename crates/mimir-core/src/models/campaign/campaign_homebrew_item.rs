@@ -6,8 +6,13 @@ use crate::schema::campaign_homebrew_items;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// A homebrew item belonging to a campaign.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = campaign_homebrew_items)]
 pub struct CampaignHomebrewItem {
     pub id: String,

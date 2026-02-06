@@ -30,6 +30,7 @@
 @import './components/catalog-tables.css';
 @import './components/form-inputs.css';
 @import './components/chat.css';
+@import './components/homebrew.css';
 
 /* Import layout styles */
 @import './layouts/reader-layout.css';

@@ -1,140 +1,26 @@
 /**
  * TypeScript type definitions for character management
  *
- * These types match the Rust structs used in mimir-core and Tauri commands.
+ * Core types are auto-generated from Rust via ts-rs.
+ * This file re-exports them and provides frontend-only request types and helpers.
  */
 
 // =============================================================================
-// Character Core Types - matches mimir-core CharacterResponse model
+// Auto-generated types from Rust (via ts-rs)
 // =============================================================================
 
-/**
- * A character proficiency entry.
- * Matches the mimir-core CharacterProficiency struct.
- */
-export interface CharacterProficiency {
-  /** Unique ID (UUID) */
-  id: string
-  /** Character who has this proficiency */
-  character_id: string
-  /** Type of proficiency: skill, save, tool, weapon, armor, language */
-  proficiency_type: 'skill' | 'save' | 'tool' | 'weapon' | 'armor' | 'language'
-  /** Name of the proficiency */
-  name: string
-  /** Whether character has expertise (double proficiency) - 0 or 1 */
-  expertise: number
-}
+// Import for use in helper functions
+import type { CharacterProficiency } from './generated/CharacterProficiency'
+import type { CharacterClass } from './generated/CharacterClass'
+import type { CharacterInventory } from './generated/CharacterInventory'
+import type { CharacterResponse } from './generated/CharacterResponse'
 
-/**
- * A character class entry (multiclassing support).
- * Matches the mimir-core CharacterClass struct.
- */
-export interface CharacterClass {
-  /** Unique ID (UUID) */
-  id: string
-  /** Character this class belongs to */
-  character_id: string
-  /** Class name (e.g., "Fighter", "Wizard") */
-  class_name: string
-  /** Class source (e.g., "PHB") */
-  class_source: string
-  /** Level in this class */
-  level: number
-  /** Subclass name if chosen (e.g., "Champion", "Evocation") */
-  subclass_name: string | null
-  /** Subclass source (e.g., "PHB") */
-  subclass_source: string | null
-}
+// Re-export generated types
+export type { CharacterProficiency, CharacterClass, CharacterInventory, CharacterResponse }
 
-/**
- * A character - either a player character or NPC in a campaign.
- * Matches the mimir-core CharacterResponse struct.
- */
-export interface Character {
-  /** Unique character ID (UUID) */
-  id: string
-  /** Campaign this character belongs to */
-  campaign_id: string
-  /** Character name */
-  name: string
-  /** Whether this is an NPC (1) or PC (0) */
-  is_npc: number
-  /** Player name (for PCs) */
-  player_name: string | null
-
-  // Race and background (catalog references)
-  /** Race name (e.g., "Elf", "Human") */
-  race_name: string | null
-  /** Race source (e.g., "PHB", "VGtM") */
-  race_source: string | null
-  /** Background name (e.g., "Acolyte", "Criminal") */
-  background_name: string | null
-  /** Background source (e.g., "PHB") */
-  background_source: string | null
-
-  // Ability scores
-  strength: number
-  dexterity: number
-  constitution: number
-  intelligence: number
-  wisdom: number
-  charisma: number
-
-  // Currency
-  cp: number
-  sp: number
-  ep: number
-  gp: number
-  pp: number
-
-  // Roleplay elements
-  traits: string | null
-  ideals: string | null
-  bonds: string | null
-  flaws: string | null
-
-  // NPC-specific fields
-  role: string | null
-  location: string | null
-  faction: string | null
-
-  /** ISO8601 timestamp of creation */
-  created_at: string
-  /** ISO8601 timestamp of last update */
-  updated_at: string
-
-  /** Character classes (from character_classes table) */
-  classes: CharacterClass[]
-
-  /** Character proficiencies (from character_proficiencies table) */
-  proficiencies: CharacterProficiency[]
-}
-
-// =============================================================================
-// Character Inventory - matches mimir-core CharacterInventory model
-// =============================================================================
-
-/**
- * An item in a character's inventory.
- */
-export interface CharacterInventory {
-  /** Unique ID (UUID) */
-  id: string
-  /** Character who has this item */
-  character_id: string
-  /** Item name */
-  item_name: string
-  /** Item source (e.g., "PHB", "DMG") */
-  item_source: string
-  /** Quantity of this item */
-  quantity: number
-  /** Whether the item is equipped (0 or 1) */
-  equipped: number
-  /** Whether the item is attuned (0 or 1) */
-  attuned: number
-  /** Additional notes about the item */
-  notes: string | null
-}
+// CharacterResponse from Rust is what the frontend uses as "Character"
+// (includes classes and proficiencies arrays)
+export type Character = CharacterResponse
 
 // =============================================================================
 // Character Request Types

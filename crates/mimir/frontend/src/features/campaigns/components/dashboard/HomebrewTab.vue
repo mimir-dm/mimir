@@ -34,9 +34,9 @@
     <!-- Items sub-tab (original content) -->
     <template v-if="activeSubTab === 'items'">
     <!-- Header -->
-    <div class="tab-header">
+    <div class="homebrew-tab-header">
       <h2>Homebrew Items</h2>
-      <div class="header-actions">
+      <div class="homebrew-header-actions">
         <button @click="openCloneFromCatalog" class="btn btn-secondary btn-sm">
           Clone from Catalog
         </button>
@@ -47,11 +47,11 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading-state">Loading homebrew items...</div>
+    <div v-if="loading" class="homebrew-loading-state">Loading homebrew items...</div>
 
     <!-- Empty state -->
-    <div v-else-if="items.length === 0" class="empty-state">
-      <div class="empty-icon">&#9881;</div>
+    <div v-else-if="items.length === 0" class="homebrew-empty-state">
+      <div class="homebrew-empty-icon">&#9881;</div>
       <h3>No homebrew items yet</h3>
       <p>Create custom items for your campaign.</p>
       <button @click="showCreateForm = true" class="btn btn-primary">Create Item</button>
@@ -67,13 +67,13 @@
           :class="{ selected: selectedItem?.id === item.id }"
           @click="selectItem(item)"
         >
-          <div class="card-header">
-            <span class="card-name">{{ item.name }}</span>
-            <span v-if="item.rarity" class="card-rarity" :class="rarityClass(item.rarity)">{{ item.rarity }}</span>
+          <div class="homebrew-card-header">
+            <span class="homebrew-card-name">{{ item.name }}</span>
+            <span v-if="item.rarity" class="homebrew-card-badge" :class="rarityClass(item.rarity)">{{ item.rarity }}</span>
           </div>
-          <div class="card-meta">
-            <span v-if="item.item_type" class="card-type">{{ item.item_type }}</span>
-            <span v-if="item.cloned_from_name" class="card-cloned">
+          <div class="homebrew-card-meta">
+            <span v-if="item.item_type" class="homebrew-card-type">{{ item.item_type }}</span>
+            <span v-if="item.cloned_from_name" class="homebrew-card-cloned">
               Based on {{ item.cloned_from_name }}
             </span>
           </div>
@@ -82,20 +82,20 @@
 
       <!-- Detail pane -->
       <div v-if="selectedItem" class="homebrew-detail">
-        <div class="detail-header">
+        <div class="homebrew-detail-header">
           <h3>{{ selectedItem.name }}</h3>
-          <div class="detail-actions">
+          <div class="homebrew-detail-actions">
             <button @click="startEditing" class="btn btn-secondary btn-sm">Edit</button>
             <button @click="confirmDelete" class="btn btn-danger btn-sm">Delete</button>
           </div>
         </div>
-        <div v-if="selectedItem.cloned_from_name" class="detail-cloned">
+        <div v-if="selectedItem.cloned_from_name" class="homebrew-detail-cloned">
           Based on {{ selectedItem.cloned_from_name }} ({{ selectedItem.cloned_from_source }})
         </div>
         <ItemDetailBlock :detail="toItemDetail(selectedItem)" />
-        <details class="raw-json-toggle">
+        <details class="homebrew-raw-json-toggle">
           <summary>Raw JSON</summary>
-          <pre class="data-json">{{ formatData(selectedItem.data) }}</pre>
+          <pre class="homebrew-data-json">{{ formatData(selectedItem.data) }}</pre>
         </details>
       </div>
       <div v-else class="homebrew-detail empty-detail">
@@ -105,7 +105,7 @@
 
     <!-- Create/Edit Modal -->
     <div v-if="showCreateForm || editingItem" class="modal-overlay" @click.self="closeForm">
-      <div class="modal-content modal-lg">
+      <div class="modal-content homebrew-modal-lg">
         <h3>{{ editingItem ? 'Edit Item' : 'Create Homebrew Item' }}</h3>
         <form @submit.prevent="saveItem">
           <div class="form-group">
@@ -294,7 +294,7 @@
     <div v-if="showCloneModal" class="modal-overlay" @click.self="showCloneModal = false">
       <div class="modal-content">
         <h3>Clone from Catalog</h3>
-        <p class="clone-hint">Search the item catalog, then edit the cloned item before saving.</p>
+        <p class="homebrew-clone-hint">Search the item catalog, then edit the cloned item before saving.</p>
         <div class="form-group">
           <input
             v-model="cloneSearch"
@@ -304,25 +304,25 @@
             @input="debouncedCatalogSearch"
           />
         </div>
-        <div v-if="cloneSearching" class="clone-status">Searching...</div>
-        <div v-else-if="cloneResults.length > 0" class="clone-results">
+        <div v-if="cloneSearching" class="homebrew-clone-status">Searching...</div>
+        <div v-else-if="cloneResults.length > 0" class="homebrew-clone-results">
           <div
             v-for="result in cloneResults"
             :key="`${result.name}-${result.source}`"
-            class="clone-result-card"
+            class="homebrew-clone-result-card"
             @click="selectCloneResult(result)"
           >
-            <div class="card-header">
-              <span class="card-name">{{ result.name }}</span>
-              <span v-if="result.rarity" class="card-rarity" :class="rarityClass(result.rarity)">{{ result.rarity }}</span>
+            <div class="homebrew-card-header">
+              <span class="homebrew-card-name">{{ result.name }}</span>
+              <span v-if="result.rarity" class="homebrew-card-badge" :class="rarityClass(result.rarity)">{{ result.rarity }}</span>
             </div>
-            <div class="card-meta">
-              <span v-if="result.type" class="card-type">{{ result.type }}</span>
-              <span class="card-source">{{ result.source }}</span>
+            <div class="homebrew-card-meta">
+              <span v-if="result.type" class="homebrew-card-type">{{ result.type }}</span>
+              <span class="homebrew-card-source">{{ result.source }}</span>
             </div>
           </div>
         </div>
-        <div v-else-if="cloneSearch.length >= 2" class="clone-status">No results found</div>
+        <div v-else-if="cloneSearch.length >= 2" class="homebrew-clone-status">No results found</div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" @click="showCloneModal = false">Cancel</button>
         </div>
@@ -333,7 +333,7 @@
     <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="cancelDelete">
       <div class="modal-content modal-sm">
         <h3>Delete Item</h3>
-        <div v-if="deleteWarningCharacters.length > 0" class="delete-warning">
+        <div v-if="deleteWarningCharacters.length > 0" class="homebrew-delete-warning">
           <p>This item is currently in the inventory of:</p>
           <ul>
             <li v-for="name in deleteWarningCharacters" :key="name"><strong>{{ name }}</strong></li>
@@ -544,7 +544,7 @@ function selectItem(item: HomebrewItem) {
 }
 
 function rarityClass(rarity: string): string {
-  return 'rarity-' + rarity.replace(/\s+/g, '-').toLowerCase()
+  return 'homebrew-rarity-' + rarity.replace(/\s+/g, '-').toLowerCase()
 }
 
 function formatData(data: string): string {
@@ -732,9 +732,9 @@ async function deleteItem() {
 onMounted(() => {
   loadItems()
 
-  const unsub1 = dataEvents.on('homebrew:created', () => loadItems())
-  const unsub2 = dataEvents.on('homebrew:updated', () => loadItems())
-  const unsub3 = dataEvents.on('homebrew:deleted', () => loadItems())
+  const unsub1 = dataEvents.on('homebrew-item:created', () => loadItems())
+  const unsub2 = dataEvents.on('homebrew-item:updated', () => loadItems())
+  const unsub3 = dataEvents.on('homebrew-item:deleted', () => loadItems())
 
   onUnmounted(() => {
     unsub1()
@@ -750,6 +750,7 @@ watch(() => props.campaign?.id, () => {
 </script>
 
 <style scoped>
+/* Container */
 .homebrew-tab {
   display: flex;
   flex-direction: column;
@@ -757,6 +758,7 @@ watch(() => props.campaign?.id, () => {
   padding: var(--spacing-lg);
 }
 
+/* Sub-tab navigation */
 .sub-tabs {
   display: flex;
   gap: var(--spacing-xs);
@@ -786,173 +788,7 @@ watch(() => props.campaign?.id, () => {
   border-bottom-color: var(--color-primary-600);
 }
 
-.tab-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.tab-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-secondary);
-}
-
-.empty-state h3 {
-  margin: var(--spacing-sm) 0;
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  opacity: 0.5;
-}
-
-/* Layout */
-.homebrew-layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: var(--spacing-md);
-  flex: 1;
-  min-height: 0;
-}
-
-.homebrew-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  overflow-y: auto;
-}
-
-.homebrew-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.homebrew-card:hover {
-  background: var(--color-surface-hover);
-}
-
-.homebrew-card.selected {
-  border-color: var(--color-primary-400);
-  background: color-mix(in srgb, var(--color-primary-400) 12%, var(--color-surface));
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.card-rarity {
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  text-transform: capitalize;
-}
-
-.card-meta {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: 2px;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
-.card-type {
-  text-transform: capitalize;
-}
-
-/* Detail pane */
-.homebrew-detail {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  overflow-y: auto;
-  text-align: left;
-}
-
-.homebrew-detail.empty-detail {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.detail-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.detail-actions {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.detail-cloned {
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-  font-style: italic;
-  margin-bottom: var(--spacing-md);
-}
-
-.raw-json-toggle {
-  margin-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--spacing-sm);
-}
-
-.raw-json-toggle summary {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  user-select: none;
-}
-
-.data-json {
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  font-size: 0.8rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  margin: var(--spacing-sm) 0 0;
-}
-
-/* Rarity colors */
-.rarity-common { background: #f3f4f6; color: #6b7280; }
-.rarity-uncommon { background: #dcfce7; color: #16a34a; }
-.rarity-rare { background: #dbeafe; color: #2563eb; }
-.rarity-very-rare { background: #ede9fe; color: #7c3aed; }
-.rarity-legendary { background: #ffedd5; color: #ea580c; }
-.rarity-artifact { background: #fee2e2; color: #dc2626; }
-
-/* Form sections */
+/* Item-specific: Form sections for weapon/armor fields */
 .form-section {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -991,69 +827,6 @@ watch(() => props.campaign?.id, () => {
   margin-top: var(--spacing-xs);
 }
 
-.modal-lg {
-  max-width: 640px;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-/* Clone modal */
-.clone-hint {
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.clone-results {
-  max-height: 300px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-}
-
-.clone-result-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.clone-result-card:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary-400);
-}
-
-.clone-status {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: var(--spacing-md);
-  font-size: 0.85rem;
-}
-
-.card-source {
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-
-/* Delete warning */
-.delete-warning {
-  background: var(--color-warning-50, #fffbeb);
-  border: 1px solid var(--color-warning-200, #fde68a);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 0.9rem;
-}
-
-.delete-warning ul {
-  margin: var(--spacing-xs) 0;
-  padding-left: var(--spacing-lg);
-}
-
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1066,5 +839,4 @@ watch(() => props.campaign?.id, () => {
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
 }
-
 </style>

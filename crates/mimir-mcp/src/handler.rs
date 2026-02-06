@@ -657,8 +657,8 @@ mod tests {
             serde_json::json!({"document_id": doc_id}),
         )
         .await;
-        assert_eq!(res["title"], "Room 1");
-        assert_eq!(res["content"], "A dark room.");
+        assert_eq!(res["document"]["title"], "Room 1");
+        assert_eq!(res["document"]["content"], "A dark room.");
 
         // Edit
         let res = call_ok(
@@ -727,7 +727,7 @@ mod tests {
             serde_json::json!({"document_id": doc_id}),
         )
         .await;
-        assert_eq!(res["title"], "Session Notes");
+        assert_eq!(res["document"]["title"], "Session Notes");
     }
 
     // -- Character CRUD -------------------------------------------------------

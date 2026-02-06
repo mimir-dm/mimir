@@ -4,12 +4,11 @@
  * CRUD operations for campaign homebrew items via Tauri commands.
  */
 
-import { createHomebrewService, type HomebrewBase } from './createHomebrewService'
+import { createHomebrewService } from './createHomebrewService'
+import type { CampaignHomebrewItem } from '@/types/generated/CampaignHomebrewItem'
 
-export interface HomebrewItem extends HomebrewBase {
-  item_type: string | null
-  rarity: string | null
-}
+// Re-export the generated type as HomebrewItem for backwards compatibility
+export type HomebrewItem = CampaignHomebrewItem
 
 export interface CreateHomebrewItemRequest {
   campaign_id: string
@@ -34,7 +33,7 @@ export const HomebrewService = createHomebrewService<
   UpdateHomebrewItemRequest
 >({
   commandSuffix: 'item',
-  eventPrefix: 'homebrew',
+  eventPrefix: 'homebrew-item',
   label: 'item',
   hasGetByName: true,
 })

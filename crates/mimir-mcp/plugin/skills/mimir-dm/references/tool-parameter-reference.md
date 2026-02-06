@@ -1,5 +1,57 @@
 # Tool Parameter Quick Reference
 
+## Response Formats
+
+All MCP tools return standardized JSON responses. The format depends on the operation type:
+
+### List Responses
+```json
+{ "<collection>": [...], "count": <n> }
+```
+Examples: `{ "characters": [...], "count": 5 }`, `{ "monsters": [...], "count": 20 }`
+
+### Get/Read Responses
+```json
+{ "<entity>": { ... } }
+```
+Examples: `{ "character": { "id": "...", "name": "..." } }`, `{ "document": { ... } }`
+
+### Create Responses
+```json
+{ "status": "created", "<entity>": { ... } }
+```
+
+### Update Responses
+```json
+{ "status": "updated", "<entity>": { ... } }
+```
+
+### Delete Responses
+```json
+{ "status": "deleted", "id": "<id>" }
+```
+
+### Add Responses (adding items to collections)
+```json
+{ "status": "added", "<entity>": { ... } }
+```
+
+### Remove Responses (removing items from collections)
+```json
+{ "status": "removed", "id": "<id>" }
+```
+
+### Success Responses (special operations like level_up)
+```json
+{ "status": "success", "data": { ... } }
+```
+
+### Complex Read Responses
+Some tools return composite data and use `ok()` which passes through the JSON directly:
+```json
+{ "map": { ... }, "tokens": [...] }
+```
+
 ## Array Formats
 
 ### Ability Scores

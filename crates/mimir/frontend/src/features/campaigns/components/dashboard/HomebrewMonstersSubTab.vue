@@ -1,9 +1,9 @@
 <template>
   <div class="homebrew-monsters">
     <!-- Header -->
-    <div class="tab-header">
+    <div class="homebrew-tab-header">
       <h2>Homebrew Monsters</h2>
-      <div class="header-actions">
+      <div class="homebrew-header-actions">
         <button @click="openCloneFromCatalog" class="btn btn-secondary btn-sm">
           Clone from Catalog
         </button>
@@ -11,11 +11,11 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading-state">Loading homebrew monsters...</div>
+    <div v-if="loading" class="homebrew-loading-state">Loading homebrew monsters...</div>
 
     <!-- Empty state -->
-    <div v-else-if="monsters.length === 0" class="empty-state">
-      <div class="empty-icon">&#128009;</div>
+    <div v-else-if="monsters.length === 0" class="homebrew-empty-state">
+      <div class="homebrew-empty-icon">&#128009;</div>
       <h3>No homebrew monsters yet</h3>
       <p>Clone a monster from the catalog and customize it.</p>
       <button @click="openCloneFromCatalog" class="btn btn-primary">Clone from Catalog</button>
@@ -31,14 +31,14 @@
           :class="{ selected: selectedMonster?.id === monster.id }"
           @click="selectMonster(monster)"
         >
-          <div class="card-header">
-            <span class="card-name">{{ monster.name }}</span>
-            <span v-if="monster.cr" class="card-cr">CR {{ monster.cr }}</span>
+          <div class="homebrew-card-header">
+            <span class="homebrew-card-name">{{ monster.name }}</span>
+            <span v-if="monster.cr" class="homebrew-card-badge">CR {{ monster.cr }}</span>
           </div>
-          <div class="card-meta">
-            <span v-if="monster.size" class="card-size">{{ sizeLabel(monster.size) }}</span>
-            <span v-if="monster.creature_type" class="card-type">{{ monster.creature_type }}</span>
-            <span v-if="monster.cloned_from_name" class="card-cloned">
+          <div class="homebrew-card-meta">
+            <span v-if="monster.size" class="homebrew-card-size">{{ sizeLabel(monster.size) }}</span>
+            <span v-if="monster.creature_type" class="homebrew-card-type">{{ monster.creature_type }}</span>
+            <span v-if="monster.cloned_from_name" class="homebrew-card-cloned">
               Based on {{ monster.cloned_from_name }}
             </span>
           </div>
@@ -47,21 +47,21 @@
 
       <!-- Detail pane -->
       <div v-if="selectedMonster" class="homebrew-detail">
-        <div class="detail-header">
+        <div class="homebrew-detail-header">
           <h3>{{ selectedMonster.name }}</h3>
-          <div class="detail-actions">
+          <div class="homebrew-detail-actions">
             <button @click="startEditing" class="btn btn-secondary btn-sm">Edit</button>
             <button @click="confirmDelete" class="btn btn-danger btn-sm">Delete</button>
           </div>
         </div>
-        <div v-if="selectedMonster.cloned_from_name" class="detail-cloned">
+        <div v-if="selectedMonster.cloned_from_name" class="homebrew-detail-cloned">
           Based on {{ selectedMonster.cloned_from_name }} ({{ selectedMonster.cloned_from_source }})
         </div>
         <!-- Stat block preview -->
         <MonsterStatBlock v-if="parsedMonsterData" :data="parsedMonsterData" :name="selectedMonster.name" />
-        <details class="raw-json-toggle">
+        <details class="homebrew-raw-json-toggle">
           <summary>Raw JSON</summary>
-          <pre class="data-json">{{ formatData(selectedMonster.data) }}</pre>
+          <pre class="homebrew-data-json">{{ formatData(selectedMonster.data) }}</pre>
         </details>
       </div>
       <div v-else class="homebrew-detail empty-detail">
@@ -71,7 +71,7 @@
 
     <!-- Edit Modal -->
     <div v-if="editingMonster" class="modal-overlay" @click.self="closeForm">
-      <div class="modal-content modal-lg">
+      <div class="modal-content homebrew-modal-lg">
         <h3>Edit Monster</h3>
         <form @submit.prevent="saveMonster">
           <div class="form-group">
@@ -82,7 +82,7 @@
             <label class="form-label">Monster Data (JSON)</label>
             <textarea
               v-model="form.data"
-              class="form-textarea json-editor"
+              class="form-textarea homebrew-json-editor"
               rows="20"
               placeholder='{"str": 16, "dex": 12, ...}'
             ></textarea>
@@ -103,7 +103,7 @@
     <div v-if="showCloneModal" class="modal-overlay" @click.self="showCloneModal = false">
       <div class="modal-content">
         <h3>Clone Monster from Catalog</h3>
-        <p class="clone-hint">Search the monster catalog, then edit the cloned monster's JSON.</p>
+        <p class="homebrew-clone-hint">Search the monster catalog, then edit the cloned monster's JSON.</p>
         <div class="form-group">
           <input
             v-model="cloneSearch"
@@ -113,26 +113,26 @@
             @input="debouncedCatalogSearch"
           />
         </div>
-        <div v-if="cloneSearching" class="clone-status">Searching...</div>
-        <div v-else-if="cloneResults.length > 0" class="clone-results">
+        <div v-if="cloneSearching" class="homebrew-clone-status">Searching...</div>
+        <div v-else-if="cloneResults.length > 0" class="homebrew-clone-results">
           <div
             v-for="result in cloneResults"
             :key="`${result.name}-${result.source}`"
-            class="clone-result-card"
+            class="homebrew-clone-result-card"
             @click="selectCloneResult(result)"
           >
-            <div class="card-header">
-              <span class="card-name">{{ result.name }}</span>
-              <span v-if="result.cr" class="card-cr">CR {{ result.cr }}</span>
+            <div class="homebrew-card-header">
+              <span class="homebrew-card-name">{{ result.name }}</span>
+              <span v-if="result.cr" class="homebrew-card-badge">CR {{ result.cr }}</span>
             </div>
-            <div class="card-meta">
-              <span v-if="result.size" class="card-size">{{ sizeLabel(result.size) }}</span>
-              <span v-if="result.type" class="card-type">{{ result.type }}</span>
-              <span class="card-source">{{ result.source }}</span>
+            <div class="homebrew-card-meta">
+              <span v-if="result.size" class="homebrew-card-size">{{ sizeLabel(result.size) }}</span>
+              <span v-if="result.type" class="homebrew-card-type">{{ result.type }}</span>
+              <span class="homebrew-card-source">{{ result.source }}</span>
             </div>
           </div>
         </div>
-        <div v-else-if="cloneSearch.length >= 2" class="clone-status">No results found</div>
+        <div v-else-if="cloneSearch.length >= 2" class="homebrew-clone-status">No results found</div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" @click="showCloneModal = false">Cancel</button>
         </div>
@@ -143,7 +143,7 @@
     <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="cancelDelete">
       <div class="modal-content modal-sm">
         <h3>Delete Monster</h3>
-        <div v-if="deleteWarningModules.length > 0" class="delete-warning">
+        <div v-if="deleteWarningModules.length > 0" class="homebrew-delete-warning">
           <p>This monster is referenced in the following modules:</p>
           <ul>
             <li v-for="name in deleteWarningModules" :key="name"><strong>{{ name }}</strong></li>
@@ -490,247 +490,18 @@ watch(() => props.campaign?.id, () => {
 </script>
 
 <style scoped>
+/* Container */
 .homebrew-monsters {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.tab-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.tab-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-secondary);
-}
-
-.empty-state h3 {
-  margin: var(--spacing-sm) 0;
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  opacity: 0.5;
-}
-
-/* Layout */
-.homebrew-layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: var(--spacing-md);
-  flex: 1;
-  min-height: 0;
-}
-
-.homebrew-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  overflow-y: auto;
-}
-
-.homebrew-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.homebrew-card:hover {
-  background: var(--color-surface-hover);
-}
-
-.homebrew-card.selected {
-  border-color: var(--color-primary-400);
-  background: color-mix(in srgb, var(--color-primary-400) 12%, var(--color-surface));
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.card-cr {
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-variant);
-  font-weight: 600;
-}
-
-.card-meta {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: 2px;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
-.card-type {
-  text-transform: capitalize;
-}
-
-.card-source {
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-
-/* Detail pane */
-.homebrew-detail {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  overflow-y: auto;
-  text-align: left;
-}
-
-.homebrew-detail.empty-detail {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.detail-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.detail-actions {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.detail-cloned {
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-  font-style: italic;
-  margin-bottom: var(--spacing-md);
-}
-
-.raw-json-toggle {
-  margin-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--spacing-sm);
-}
-
-.raw-json-toggle summary {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  user-select: none;
-}
-
-.data-json {
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  font-size: 0.8rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  margin: var(--spacing-sm) 0 0;
-}
-
-/* JSON editor */
-.json-editor {
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  resize: vertical;
-  min-height: 300px;
-}
-
-/* Clone modal */
-.clone-hint {
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.clone-results {
-  max-height: 300px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-}
-
-.clone-result-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.clone-result-card:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary-400);
-}
-
-.clone-status {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: var(--spacing-md);
-  font-size: 0.85rem;
-}
-
-/* Delete warning */
-.delete-warning {
-  background: var(--color-warning-50, #fffbeb);
-  border: 1px solid var(--color-warning-200, #fde68a);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 0.9rem;
-}
-
-.delete-warning ul {
-  margin: var(--spacing-xs) 0;
-  padding-left: var(--spacing-lg);
-}
-
+/* Monster-specific: form actions */
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
-}
-
-.modal-lg {
-  max-width: 700px;
-  max-height: 85vh;
-  overflow-y: auto;
 }
 </style>

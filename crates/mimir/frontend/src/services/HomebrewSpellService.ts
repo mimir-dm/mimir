@@ -4,12 +4,11 @@
  * CRUD operations for campaign homebrew spells via Tauri commands.
  */
 
-import { createHomebrewService, type HomebrewBase } from './createHomebrewService'
+import { createHomebrewService } from './createHomebrewService'
+import type { CampaignHomebrewSpell } from '@/types/generated/CampaignHomebrewSpell'
 
-export interface HomebrewSpell extends HomebrewBase {
-  level: number | null
-  school: string | null
-}
+// Re-export the generated type as HomebrewSpell for backwards compatibility
+export type HomebrewSpell = CampaignHomebrewSpell
 
 export interface CreateHomebrewSpellRequest {
   campaign_id: string

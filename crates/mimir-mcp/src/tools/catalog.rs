@@ -14,6 +14,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -256,10 +257,7 @@ pub async fn search_monsters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         })
         .collect();
 
-    Ok(json!({
-        "monsters": monster_data,
-        "count": monster_data.len()
-    }))
+    McpResponse::list("monsters", monster_data)
 }
 
 pub async fn search_items(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -309,10 +307,7 @@ pub async fn search_items(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
         })
         .collect();
 
-    Ok(json!({
-        "items": item_data,
-        "count": item_data.len()
-    }))
+    McpResponse::list("items", item_data)
 }
 
 pub async fn search_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -362,10 +357,7 @@ pub async fn search_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         })
         .collect();
 
-    Ok(json!({
-        "spells": spell_data,
-        "count": spell_data.len()
-    }))
+    McpResponse::list("spells", spell_data)
 }
 
 pub async fn search_races(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -392,7 +384,7 @@ pub async fn search_races(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
         .map(|r| json!({"name": r.name, "source": r.source}))
         .collect();
 
-    Ok(json!({"races": data, "count": data.len()}))
+    McpResponse::list("races", data)
 }
 
 pub async fn search_classes(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -419,7 +411,7 @@ pub async fn search_classes(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
         .map(|c| json!({"name": c.name, "source": c.source}))
         .collect();
 
-    Ok(json!({"classes": data, "count": data.len()}))
+    McpResponse::list("classes", data)
 }
 
 pub async fn search_backgrounds(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -446,7 +438,7 @@ pub async fn search_backgrounds(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .map(|b| json!({"name": b.name, "source": b.source}))
         .collect();
 
-    Ok(json!({"backgrounds": data, "count": data.len()}))
+    McpResponse::list("backgrounds", data)
 }
 
 pub async fn search_feats(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -473,7 +465,7 @@ pub async fn search_feats(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
         .map(|f| json!({"name": f.name, "source": f.source}))
         .collect();
 
-    Ok(json!({"feats": data, "count": data.len()}))
+    McpResponse::list("feats", data)
 }
 
 pub async fn search_conditions(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -500,5 +492,5 @@ pub async fn search_conditions(ctx: &Arc<McpContext>, args: Value) -> Result<Val
         .map(|c| json!({"name": c.name, "source": c.source}))
         .collect();
 
-    Ok(json!({"conditions": data, "count": data.len()}))
+    McpResponse::list("conditions", data)
 }

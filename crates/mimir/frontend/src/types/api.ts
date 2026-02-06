@@ -13,22 +13,9 @@ export interface Theme {
 }
 
 // =============================================================================
-// Campaign types - matches mimir-core Campaign model
+// Campaign types - auto-generated from Rust via ts-rs
 // =============================================================================
-export interface Campaign {
-  /** Unique campaign ID (UUID) */
-  id: string
-  /** Campaign name */
-  name: string
-  /** Optional description */
-  description: string | null
-  /** ISO8601 timestamp when archived, null means active */
-  archived_at: string | null
-  /** ISO8601 timestamp of creation */
-  created_at: string
-  /** ISO8601 timestamp of last update */
-  updated_at: string
-}
+export type { Campaign } from './generated/Campaign'
 
 /** Request for creating a new campaign */
 export interface CreateCampaignRequest {
@@ -76,24 +63,9 @@ export interface ArchivePreview {
 }
 
 // =============================================================================
-// Module types - matches mimir-core Module model
+// Module types - auto-generated from Rust via ts-rs
 // =============================================================================
-export interface Module {
-  /** Unique module ID (UUID) */
-  id: string
-  /** Campaign this module belongs to */
-  campaign_id: string
-  /** Module name */
-  name: string
-  /** Optional description */
-  description: string | null
-  /** Module ordering number within the campaign */
-  module_number: number
-  /** ISO8601 timestamp of creation */
-  created_at: string
-  /** ISO8601 timestamp of last update */
-  updated_at: string
-}
+export type { Module } from './generated/Module'
 
 /** Request for creating a new module */
 export interface CreateModuleRequest {
@@ -111,26 +83,9 @@ export interface UpdateModuleRequest {
 }
 
 // =============================================================================
-// Document types - matches mimir-core Document model
+// Document types - auto-generated from Rust via ts-rs
 // =============================================================================
-export interface Document {
-  /** Unique document ID (UUID) */
-  id: string
-  /** Campaign this document belongs to */
-  campaign_id: string
-  /** Module this document belongs to (optional) */
-  module_id: string | null
-  /** Document title */
-  title: string
-  /** Markdown content */
-  content: string
-  /** Document type (note, session, npc, location, etc.) */
-  doc_type: string
-  /** ISO8601 timestamp of creation */
-  created_at: string
-  /** ISO8601 timestamp of last update */
-  updated_at: string
-}
+export type { Document } from './generated/Document'
 
 /** Request for creating a new document */
 export interface CreateDocumentRequest {

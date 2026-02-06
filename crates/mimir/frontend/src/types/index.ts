@@ -7,6 +7,13 @@ export * from './domain'
 // Character types (full character management system)
 export * from './character'
 
+// Auto-generated types from Rust (via ts-rs)
+// These are also exported from api.ts and character.ts for backwards compatibility
+export type { Map } from './generated/Map'
+export type { CampaignHomebrewItem } from './generated/CampaignHomebrewItem'
+export type { CampaignHomebrewMonster } from './generated/CampaignHomebrewMonster'
+export type { CampaignHomebrewSpell } from './generated/CampaignHomebrewSpell'
+
 // Theme constants
 export const THEMES = {
   LIGHT: 'light',

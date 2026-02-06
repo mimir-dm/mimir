@@ -6,8 +6,13 @@ use crate::schema::modules;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// A module - an adventure chapter container within a campaign.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = modules)]
 pub struct Module {
     /// Unique module ID (UUID)

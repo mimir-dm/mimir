@@ -6,8 +6,13 @@ use crate::schema::campaigns;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// A campaign - the top-level container for D&D campaign data.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = campaigns)]
 pub struct Campaign {
     /// Unique campaign ID (UUID)

@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -146,10 +147,7 @@ pub async fn list_homebrew_spells(ctx: &Arc<McpContext>, _args: Value) -> Result
 
     let spell_data: Vec<Value> = spells.iter().map(homebrew_spell_to_json).collect();
 
-    Ok(json!({
-        "spells": spell_data,
-        "count": spells.len()
-    }))
+    McpResponse::list("spells", spell_data)
 }
 
 pub async fn get_homebrew_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -161,7 +159,7 @@ pub async fn get_homebrew_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Va
     let mut db = ctx.connect()?;
     let spell = HomebrewService::new(&mut db).get_spell(id)?;
 
-    Ok(json!({ "spell": homebrew_spell_to_json(&spell) }))
+    McpResponse::get("spell", homebrew_spell_to_json(&spell))
 }
 
 pub async fn create_homebrew_spell(
@@ -195,10 +193,7 @@ pub async fn create_homebrew_spell(
     let mut db = ctx.connect()?;
     let spell = HomebrewService::new(&mut db).create_spell(input)?;
 
-    Ok(json!({
-        "status": "created",
-        "spell": homebrew_spell_to_json(&spell)
-    }))
+    McpResponse::created("spell", homebrew_spell_to_json(&spell))
 }
 
 pub async fn update_homebrew_spell(
@@ -228,10 +223,7 @@ pub async fn update_homebrew_spell(
     let mut db = ctx.connect()?;
     let spell = HomebrewService::new(&mut db).update_spell(id, input)?;
 
-    Ok(json!({
-        "status": "updated",
-        "spell": homebrew_spell_to_json(&spell)
-    }))
+    McpResponse::updated("spell", homebrew_spell_to_json(&spell))
 }
 
 pub async fn delete_homebrew_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -243,8 +235,5 @@ pub async fn delete_homebrew_spell(ctx: &Arc<McpContext>, args: Value) -> Result
     let mut db = ctx.connect()?;
     HomebrewService::new(&mut db).delete_spell(id)?;
 
-    Ok(json!({
-        "status": "deleted",
-        "id": id
-    }))
+    McpResponse::deleted(id)
 }

@@ -7,8 +7,13 @@ use crate::schema::maps;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// A map in a campaign or module.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = maps)]
 pub struct Map {
     /// Unique ID (UUID)

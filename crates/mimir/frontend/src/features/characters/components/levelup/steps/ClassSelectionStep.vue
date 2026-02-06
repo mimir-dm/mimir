@@ -325,7 +325,8 @@ function selectMulticlass(cls: ClassOption) {
     class_source: cls.source,
     level: 0,
     subclass_name: null,
-    subclass_source: null
+    subclass_source: null,
+    starting_class: 0 // Not the starting class when multiclassing
   }
 
   props.levelUp.selectClass(newClass, true)
@@ -341,7 +342,8 @@ function selectManualClass() {
     class_source: newClassSource.value,
     level: 0,
     subclass_name: null,
-    subclass_source: null
+    subclass_source: null,
+    starting_class: props.character.classes.length === 0 ? 1 : 0 // Starting class if first class
   }
 
   props.levelUp.selectClass(newClass, true)

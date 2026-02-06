@@ -28,6 +28,7 @@ export interface DataEventPayloads {
   'module:created': { campaignId: string; moduleId: string }
   'module:updated': { moduleId: string }
   'module:deleted': { campaignId: string; moduleId: string }
+  'module:reordered': { moduleId: string }
 
   // Module monster events
   'module:monsters:changed': { moduleId: string }
@@ -54,9 +55,10 @@ export interface DataEventPayloads {
   'document:deleted': { documentId: string; moduleId?: string }
 
   // Character events
-  'character:created': { campaignId: string; characterId: string }
+  // Note: campaignId can be null for characters not attached to a campaign
+  'character:created': { campaignId: string | null; characterId: string }
   'character:updated': { characterId: string }
-  'character:deleted': { campaignId: string; characterId: string }
+  'character:deleted': { campaignId: string | null; characterId: string }
 
   // Campaign events
   'campaign:created': { campaignId: string }
@@ -64,9 +66,9 @@ export interface DataEventPayloads {
   'campaign:deleted': { campaignId: string }
 
   // Homebrew item events
-  'homebrew:created': unknown
-  'homebrew:updated': unknown
-  'homebrew:deleted': { id: string }
+  'homebrew-item:created': unknown
+  'homebrew-item:updated': unknown
+  'homebrew-item:deleted': { id: string }
 
   // Homebrew monster events
   'homebrew-monster:created': unknown

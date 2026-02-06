@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -275,17 +276,14 @@ pub async fn create_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, Mcp
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "created",
-        "map": {
-            "id": map.id,
-            "name": map.name,
-            "description": map.description,
-            "module_id": map.module_id,
-            "lighting_mode": map.lighting_mode,
-            "fog_enabled": map.fog_enabled != 0,
-            "sort_order": map.sort_order
-        }
+    McpResponse::created("map", json!({
+        "id": map.id,
+        "name": map.name,
+        "description": map.description,
+        "module_id": map.module_id,
+        "lighting_mode": map.lighting_mode,
+        "fog_enabled": map.fog_enabled != 0,
+        "sort_order": map.sort_order
     }))
 }
 
@@ -324,7 +322,7 @@ pub async fn list_maps(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpE
         })
         .collect();
 
-    Ok(json!({ "maps": map_data }))
+    McpResponse::list("maps", map_data)
 }
 
 pub async fn get_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -367,7 +365,7 @@ pub async fn get_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpErr
         })
         .collect();
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "map": {
             "id": map.id,
             "name": map.name,
@@ -414,17 +412,14 @@ pub async fn update_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, Mcp
         .update(map_id, update)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "updated",
-        "map": {
-            "id": map.id,
-            "name": map.name,
-            "description": map.description,
-            "module_id": map.module_id,
-            "lighting_mode": map.lighting_mode,
-            "fog_enabled": map.fog_enabled != 0,
-            "sort_order": map.sort_order
-        }
+    McpResponse::updated("map", json!({
+        "id": map.id,
+        "name": map.name,
+        "description": map.description,
+        "module_id": map.module_id,
+        "lighting_mode": map.lighting_mode,
+        "fog_enabled": map.fog_enabled != 0,
+        "sort_order": map.sort_order
     }))
 }
 
@@ -442,7 +437,7 @@ pub async fn delete_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, Mcp
         .delete(map_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({ "status": "deleted", "map_id": map_id }))
+    McpResponse::deleted(map_id)
 }
 
 pub async fn add_token_to_map(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -490,19 +485,16 @@ pub async fn add_token_to_map(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "added",
-        "token": {
-            "id": token.id,
-            "map_id": token.map_id,
-            "name": token.name,
-            "token_type": token.token_type,
-            "size": token.size,
-            "grid_x": token.grid_x,
-            "grid_y": token.grid_y,
-            "visible_to_players": token.visible_to_players,
-            "color": token.color
-        }
+    McpResponse::added("token", json!({
+        "id": token.id,
+        "map_id": token.map_id,
+        "name": token.name,
+        "token_type": token.token_type,
+        "size": token.size,
+        "grid_x": token.grid_x,
+        "grid_y": token.grid_y,
+        "visible_to_players": token.visible_to_players,
+        "color": token.color
     }))
 }
 
@@ -546,7 +538,7 @@ pub async fn list_tokens_on_map(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         })
         .collect();
 
-    Ok(json!({ "tokens": token_data }))
+    McpResponse::list("tokens", token_data)
 }
 
 pub async fn remove_token(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -562,5 +554,5 @@ pub async fn remove_token(ctx: &Arc<McpContext>, args: Value) -> Result<Value, M
         .delete(token_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({ "status": "removed", "token_id": token_id }))
+    McpResponse::removed(token_id)
 }

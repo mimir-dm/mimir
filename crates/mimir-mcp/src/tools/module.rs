@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -196,14 +197,11 @@ pub async fn create_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "created",
-        "module": {
-            "id": module.id,
-            "name": module.name,
-            "description": module.description,
-            "module_number": module.module_number
-        }
+    McpResponse::created("module", json!({
+        "id": module.id,
+        "name": module.name,
+        "description": module.description,
+        "module_number": module.module_number
     }))
 }
 
@@ -231,9 +229,7 @@ pub async fn list_modules(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, 
         })
         .collect();
 
-    Ok(json!({
-        "modules": module_data
-    }))
+    McpResponse::list("modules", module_data)
 }
 
 pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -284,7 +280,7 @@ pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         })
         .collect();
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "module": {
             "id": module.id,
             "name": module.name,
@@ -343,15 +339,12 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
     dal::insert_module_monster(&mut db, &new_monster)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "added",
-        "module_monster": {
-            "id": id,
-            "monster_name": monster_name,
-            "monster_source": monster_source,
-            "quantity": count,
-            "notes": notes
-        }
+    McpResponse::added("module_monster", json!({
+        "id": id,
+        "monster_name": monster_name,
+        "monster_source": monster_source,
+        "quantity": count,
+        "notes": notes
     }))
 }
 
@@ -394,14 +387,11 @@ pub async fn update_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .update(module_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "updated",
-        "module": {
-            "id": module.id,
-            "name": module.name,
-            "description": module.description,
-            "module_number": module.module_number
-        }
+    McpResponse::updated("module", json!({
+        "id": module.id,
+        "name": module.name,
+        "description": module.description,
+        "module_number": module.module_number
     }))
 }
 
@@ -418,8 +408,5 @@ pub async fn delete_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .delete(module_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "deleted",
-        "module_id": module_id
-    }))
+    McpResponse::deleted(module_id)
 }

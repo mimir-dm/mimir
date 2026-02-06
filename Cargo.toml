@@ -79,6 +79,9 @@ rusttype = "0.9"
 # Testing
 tempfile = "3.10"
 
+# TypeScript type generation
+ts-rs = "10"
+
 # Binary lookup
 which = "6.0"
 

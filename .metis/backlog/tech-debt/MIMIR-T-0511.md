@@ -4,15 +4,15 @@ level: task
 title: "Extract shared use-case layer to eliminate Tauri/MCP logic duplication"
 short_code: "MIMIR-T-0511"
 created_at: 2026-02-02T01:25:04.104041+00:00
-updated_at: 2026-02-02T01:25:04.104041+00:00
+updated_at: 2026-02-04T14:07:47.301780+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -41,6 +41,12 @@ Extract shared "use-case" functions in mimir-core that both Tauri commands and M
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
 - [ ] Shared use-case functions in mimir-core accept typed input structs and return `ServiceResult<T>`
 - [ ] Tauri commands are thin wrappers: parse request → call use-case → wrap in `ApiResponse`
 - [ ] MCP tools are thin wrappers: parse JSON args → call use-case → wrap in JSON response
@@ -57,4 +63,16 @@ Extend the existing service layer pattern. For entities that already have servic
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-02-04: Decomposed into subtasks
+
+Analysis complete. Task decomposed into 5 focused subtasks:
+
+| Code | Task | Size |
+|------|------|------|
+| MIMIR-T-0517 | Extract ModuleType parsing to enum impl | Small |
+| MIMIR-T-0518 | Create centralized timestamp utility | Small |
+| MIMIR-T-0519 | Unify catalog query limit constants | Small |
+| MIMIR-T-0520 | Extract character enrichment to CharacterService | Medium |
+| MIMIR-T-0521 | Create TokenService and MCP token tools | Large |
+
+This parent task marked complete - work continues in subtasks.

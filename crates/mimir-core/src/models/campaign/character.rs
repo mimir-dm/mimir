@@ -6,11 +6,16 @@ use crate::schema::characters;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 use super::{CharacterClass, CharacterProficiency};
 
 /// A character - either a player character or NPC in a campaign.
 /// This is the database model - use `CharacterResponse` for API responses with classes.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = characters)]
 pub struct Character {
     /// Unique character ID (UUID)
@@ -525,6 +530,8 @@ mod tests {
 
 /// Character with classes included - used for API responses.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 pub struct CharacterResponse {
     pub id: String,
     pub campaign_id: Option<String>,

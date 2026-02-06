@@ -1,0 +1,251 @@
+/**
+ * Shared Homebrew Component Styles
+ *
+ * Used by: HomebrewTab.vue, HomebrewMonstersSubTab.vue, HomebrewSpellsSubTab.vue
+ */
+
+/* Tab header */
+.homebrew-tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.homebrew-tab-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Loading and empty states */
+.homebrew-loading-state,
+.homebrew-empty-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+}
+
+.homebrew-empty-state h3 {
+  margin: var(--spacing-sm) 0;
+}
+
+.homebrew-empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+/* Main layout: list + detail split */
+.homebrew-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-height: 0;
+}
+
+/* List panel */
+.homebrew-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  overflow-y: auto;
+}
+
+/* Cards in list */
+.homebrew-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.homebrew-card:hover {
+  background: var(--color-surface-hover);
+}
+
+.homebrew-card.selected {
+  border-color: var(--color-primary-400);
+  background: color-mix(in srgb, var(--color-primary-400) 12%, var(--color-surface));
+}
+
+.homebrew-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.homebrew-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.homebrew-card-meta {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.homebrew-card-type {
+  text-transform: capitalize;
+}
+
+.homebrew-card-source {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Badge styles for CR, level, rarity */
+.homebrew-card-badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-variant);
+  font-weight: 600;
+}
+
+/* Rarity colors (items) */
+.homebrew-rarity-common { background: #f3f4f6; color: #6b7280; }
+.homebrew-rarity-uncommon { background: #dcfce7; color: #16a34a; }
+.homebrew-rarity-rare { background: #dbeafe; color: #2563eb; }
+.homebrew-rarity-very-rare { background: #ede9fe; color: #7c3aed; }
+.homebrew-rarity-legendary { background: #ffedd5; color: #ea580c; }
+.homebrew-rarity-artifact { background: #fee2e2; color: #dc2626; }
+
+/* Detail panel */
+.homebrew-detail {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  text-align: left;
+}
+
+.homebrew-detail.empty-detail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}
+
+.homebrew-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.homebrew-detail-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.homebrew-detail-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.homebrew-detail-cloned {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Raw JSON toggle */
+.homebrew-raw-json-toggle {
+  margin-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-sm);
+}
+
+.homebrew-raw-json-toggle summary {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.homebrew-data-json {
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: var(--spacing-sm) 0 0;
+}
+
+/* JSON editor (edit modal) */
+.homebrew-json-editor {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 300px;
+}
+
+/* Clone modal */
+.homebrew-clone-hint {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.homebrew-clone-results {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.homebrew-clone-result-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.homebrew-clone-result-card:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary-400);
+}
+
+.homebrew-clone-status {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-md);
+  font-size: 0.85rem;
+}
+
+/* Delete warning */
+.homebrew-delete-warning {
+  background: var(--color-warning-50, #fffbeb);
+  border: 1px solid var(--color-warning-200, #fde68a);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.9rem;
+}
+
+.homebrew-delete-warning ul {
+  margin: var(--spacing-xs) 0;
+  padding-left: var(--spacing-lg);
+}
+
+/* Large modal override */
+.homebrew-modal-lg {
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+}

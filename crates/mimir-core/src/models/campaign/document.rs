@@ -6,9 +6,14 @@ use crate::schema::documents;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// A document - markdown content within a campaign.
 /// Documents always belong to a campaign, optionally to a specific module.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = documents)]
 pub struct Document {
     /// Unique document ID (UUID)

@@ -4,13 +4,11 @@
  * CRUD operations for campaign homebrew monsters via Tauri commands.
  */
 
-import { createHomebrewService, type HomebrewBase } from './createHomebrewService'
+import { createHomebrewService } from './createHomebrewService'
+import type { CampaignHomebrewMonster } from '@/types/generated/CampaignHomebrewMonster'
 
-export interface HomebrewMonster extends HomebrewBase {
-  cr: string | null
-  creature_type: string | null
-  size: string | null
-}
+// Re-export the generated type as HomebrewMonster for backwards compatibility
+export type HomebrewMonster = CampaignHomebrewMonster
 
 export interface CreateHomebrewMonsterRequest {
   campaign_id: string

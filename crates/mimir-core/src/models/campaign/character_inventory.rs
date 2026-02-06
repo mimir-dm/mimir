@@ -6,8 +6,13 @@ use crate::schema::character_inventory;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use ts_rs::TS;
+
 /// An item in a character's inventory.
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export, export_to = "bindings/"))]
 #[diesel(table_name = character_inventory)]
 pub struct CharacterInventory {
     /// Unique ID (UUID)

@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -326,9 +327,7 @@ pub async fn list_characters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         })
         .collect();
 
-    Ok(json!({
-        "characters": char_data
-    }))
+    McpResponse::list("characters", char_data)
 }
 
 pub async fn get_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -387,7 +386,7 @@ pub async fn get_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         })
         .collect();
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "character": {
             "id": character.id,
             "name": character.name,
@@ -465,14 +464,11 @@ pub async fn create_character(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "created",
-        "character": {
-            "id": character.id,
-            "name": character.name,
-            "is_npc": character.is_npc(),
-            "race_name": character.race_name
-        }
+    McpResponse::created("character", json!({
+        "id": character.id,
+        "name": character.name,
+        "is_npc": character.is_npc(),
+        "race_name": character.race_name
     }))
 }
 
@@ -600,29 +596,26 @@ pub async fn edit_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
         .update(character_id, update)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "updated",
-        "character": {
-            "id": character.id,
-            "name": character.name,
-            "is_npc": character.is_npc(),
-            "race_name": character.race_name,
-            "background_name": character.background_name,
-            "strength": character.strength,
-            "dexterity": character.dexterity,
-            "constitution": character.constitution,
-            "intelligence": character.intelligence,
-            "wisdom": character.wisdom,
-            "charisma": character.charisma,
-            "cp": character.cp,
-            "sp": character.sp,
-            "ep": character.ep,
-            "gp": character.gp,
-            "pp": character.pp,
-            "role": character.role,
-            "location": character.location,
-            "faction": character.faction
-        }
+    McpResponse::updated("character", json!({
+        "id": character.id,
+        "name": character.name,
+        "is_npc": character.is_npc(),
+        "race_name": character.race_name,
+        "background_name": character.background_name,
+        "strength": character.strength,
+        "dexterity": character.dexterity,
+        "constitution": character.constitution,
+        "intelligence": character.intelligence,
+        "wisdom": character.wisdom,
+        "charisma": character.charisma,
+        "cp": character.cp,
+        "sp": character.sp,
+        "ep": character.ep,
+        "gp": character.gp,
+        "pp": character.pp,
+        "role": character.role,
+        "location": character.location,
+        "faction": character.faction
     }))
 }
 
@@ -639,7 +632,7 @@ pub async fn delete_character(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
         .delete(character_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({ "status": "deleted", "character_id": character_id }))
+    McpResponse::deleted(character_id)
 }
 
 pub async fn add_item_to_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -681,16 +674,13 @@ pub async fn add_item_to_character(ctx: &Arc<McpContext>, args: Value) -> Result
         .add_to_inventory(character_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "added",
-        "inventory_item": {
-            "id": inventory_item.id,
-            "item_name": inventory_item.item_name,
-            "item_source": inventory_item.item_source,
-            "quantity": inventory_item.quantity,
-            "equipped": inventory_item.equipped != 0,
-            "attuned": inventory_item.attuned != 0
-        }
+    McpResponse::added("inventory_item", json!({
+        "id": inventory_item.id,
+        "item_name": inventory_item.item_name,
+        "item_source": inventory_item.item_source,
+        "quantity": inventory_item.quantity,
+        "equipped": inventory_item.equipped != 0,
+        "attuned": inventory_item.attuned != 0
     }))
 }
 
@@ -707,7 +697,7 @@ pub async fn remove_item_from_character(ctx: &Arc<McpContext>, args: Value) -> R
         .remove_from_inventory(inventory_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({ "status": "removed", "inventory_id": inventory_id }))
+    McpResponse::removed(inventory_id)
 }
 
 pub async fn update_character_inventory(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -727,16 +717,13 @@ pub async fn update_character_inventory(ctx: &Arc<McpContext>, args: Value) -> R
         .update_inventory_item(inventory_id, quantity, equipped, attuned)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "updated",
-        "inventory_item": {
-            "id": item.id,
-            "item_name": item.item_name,
-            "item_source": item.item_source,
-            "quantity": item.quantity,
-            "equipped": item.equipped != 0,
-            "attuned": item.attuned != 0
-        }
+    McpResponse::updated("inventory_item", json!({
+        "id": item.id,
+        "item_name": item.item_name,
+        "item_source": item.item_source,
+        "quantity": item.quantity,
+        "equipped": item.equipped != 0,
+        "attuned": item.attuned != 0
     }))
 }
 
@@ -777,7 +764,7 @@ pub async fn get_character_inventory(ctx: &Arc<McpContext>, args: Value) -> Resu
         })
         .collect();
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "filter": filter,
         "inventory": inv_data,
         "count": inv_data.len()
@@ -873,8 +860,8 @@ pub async fn level_up_character(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .level_up(character_id, request)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "leveled_up",
+    McpResponse::success(json!({
+        "action": "leveled_up",
         "character_id": character_id,
         "class": {
             "class_name": result.class.class_name,

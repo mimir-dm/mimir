@@ -14,6 +14,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -190,9 +191,7 @@ pub async fn list_campaigns(ctx: &Arc<McpContext>, _args: Value) -> Result<Value
         })
         .collect();
 
-    Ok(json!({
-        "campaigns": campaign_data
-    }))
+    McpResponse::list("campaigns", campaign_data)
 }
 
 pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -212,8 +211,7 @@ pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<V
 
     ctx.set_active_campaign_id(Some(campaign_id.to_string()));
 
-    Ok(json!({
-        "status": "success",
+    McpResponse::success(json!({
         "active_campaign_id": campaign_id,
         "campaign": {
             "id": campaign.id,
@@ -279,7 +277,7 @@ pub async fn get_campaign_details(ctx: &Arc<McpContext>, args: Value) -> Result<
         })
         .collect();
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "campaign": {
             "id": campaign.id,
             "name": campaign.name,
@@ -307,7 +305,7 @@ pub async fn get_campaign_sources(ctx: &Arc<McpContext>, args: Value) -> Result<
     let source_codes = dal::list_campaign_source_codes(&mut db, &campaign_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "campaign_id": campaign_id,
         "sources": source_codes
     }))
@@ -336,13 +334,10 @@ pub async fn create_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     // Auto-set as active
     ctx.set_active_campaign_id(Some(campaign.id.clone()));
 
-    Ok(json!({
-        "status": "created",
-        "campaign": {
-            "id": campaign.id,
-            "name": campaign.name,
-            "description": campaign.description
-        }
+    McpResponse::created("campaign", json!({
+        "id": campaign.id,
+        "name": campaign.name,
+        "description": campaign.description
     }))
 }
 
@@ -370,13 +365,10 @@ pub async fn update_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .update(&campaign_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "updated",
-        "campaign": {
-            "id": campaign.id,
-            "name": campaign.name,
-            "description": campaign.description
-        }
+    McpResponse::updated("campaign", json!({
+        "id": campaign.id,
+        "name": campaign.name,
+        "description": campaign.description
     }))
 }
 
@@ -398,10 +390,7 @@ pub async fn delete_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         ctx.set_active_campaign_id(None);
     }
 
-    Ok(json!({
-        "status": "deleted",
-        "campaign_id": campaign_id
-    }))
+    McpResponse::deleted(campaign_id)
 }
 
 // =============================================================================
@@ -501,8 +490,7 @@ pub async fn export_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .map(|m| m.len())
         .unwrap_or(0);
 
-    Ok(json!({
-        "status": "success",
+    McpResponse::success(json!({
         "archive_path": archive_path.display().to_string(),
         "size_bytes": size_bytes
     }))
@@ -529,8 +517,7 @@ pub async fn import_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     // Set the imported campaign as active
     ctx.set_active_campaign_id(Some(result.campaign_id.clone()));
 
-    Ok(json!({
-        "status": "success",
+    McpResponse::success(json!({
         "campaign_id": result.campaign_id,
         "campaign_name": result.campaign_name,
         "counts": {
@@ -555,7 +542,7 @@ pub async fn preview_archive(_ctx: &Arc<McpContext>, args: Value) -> Result<Valu
     let preview = ArchiveService::preview_archive(archive)
         .map_err(|e| McpError::Internal(format!("Preview failed: {}", e)))?;
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "campaign_name": preview.campaign_name,
         "archive_version": preview.archive_version,
         "mimir_version": preview.mimir_version,

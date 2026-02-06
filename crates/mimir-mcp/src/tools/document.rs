@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -170,7 +171,7 @@ pub async fn list_documents(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
         })
         .collect();
 
-    Ok(json!({
+    McpResponse::ok(json!({
         "module_id": module_id,
         "documents": doc_data
     }))
@@ -192,8 +193,8 @@ pub async fn read_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
             McpError::InvalidArguments(format!("Document '{}' not found", document_id))
         })?;
 
-    Ok(json!({
-        "document_id": document.id,
+    McpResponse::get("document", json!({
+        "id": document.id,
         "title": document.title,
         "doc_type": document.doc_type,
         "content": document.content,
@@ -238,14 +239,11 @@ pub async fn create_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "created",
-        "document": {
-            "id": document.id,
-            "title": document.title,
-            "doc_type": document.doc_type,
-            "content": document.content
-        }
+    McpResponse::created("document", json!({
+        "id": document.id,
+        "title": document.title,
+        "doc_type": document.doc_type,
+        "content": document.content
     }))
 }
 
@@ -291,14 +289,11 @@ pub async fn edit_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         .update(document_id, update)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "updated",
-        "document": {
-            "id": updated.id,
-            "title": updated.title,
-            "doc_type": updated.doc_type,
-            "content": updated.content
-        }
+    McpResponse::updated("document", json!({
+        "id": updated.id,
+        "title": updated.title,
+        "doc_type": updated.doc_type,
+        "content": updated.content
     }))
 }
 
@@ -315,8 +310,5 @@ pub async fn delete_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .delete(document_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    Ok(json!({
-        "status": "deleted",
-        "document_id": document_id
-    }))
+    McpResponse::deleted(document_id)
 }

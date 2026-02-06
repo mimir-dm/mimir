@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use super::create_properties;
 use crate::context::McpContext;
+use crate::response::McpResponse;
 use crate::McpError;
 
 // =============================================================================
@@ -146,10 +147,7 @@ pub async fn list_homebrew_items(ctx: &Arc<McpContext>, _args: Value) -> Result<
 
     let item_data: Vec<Value> = items.iter().map(homebrew_to_json).collect();
 
-    Ok(json!({
-        "items": item_data,
-        "count": items.len()
-    }))
+    McpResponse::list("items", item_data)
 }
 
 pub async fn get_homebrew_item(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -161,7 +159,7 @@ pub async fn get_homebrew_item(ctx: &Arc<McpContext>, args: Value) -> Result<Val
     let mut db = ctx.connect()?;
     let item = HomebrewService::new(&mut db).get_item(id)?;
 
-    Ok(json!({ "item": homebrew_to_json(&item) }))
+    McpResponse::get("item", homebrew_to_json(&item))
 }
 
 pub async fn create_homebrew_item(
@@ -195,10 +193,7 @@ pub async fn create_homebrew_item(
     let mut db = ctx.connect()?;
     let item = HomebrewService::new(&mut db).create_item(input)?;
 
-    Ok(json!({
-        "status": "created",
-        "item": homebrew_to_json(&item)
-    }))
+    McpResponse::created("item", homebrew_to_json(&item))
 }
 
 pub async fn update_homebrew_item(
@@ -228,10 +223,7 @@ pub async fn update_homebrew_item(
     let mut db = ctx.connect()?;
     let item = HomebrewService::new(&mut db).update_item(id, input)?;
 
-    Ok(json!({
-        "status": "updated",
-        "item": homebrew_to_json(&item)
-    }))
+    McpResponse::updated("item", homebrew_to_json(&item))
 }
 
 pub async fn delete_homebrew_item(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -243,8 +235,5 @@ pub async fn delete_homebrew_item(ctx: &Arc<McpContext>, args: Value) -> Result<
     let mut db = ctx.connect()?;
     HomebrewService::new(&mut db).delete_item(id)?;
 
-    Ok(json!({
-        "status": "deleted",
-        "id": id
-    }))
+    McpResponse::deleted(id)
 }

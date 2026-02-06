@@ -1,0 +1,166 @@
+---
+id: create-centralized-timestamp
+level: task
+title: "Create centralized timestamp utility"
+short_code: "MIMIR-T-0518"
+created_at: 2026-02-04T14:06:28.136797+00:00
+updated_at: 2026-02-04T14:20:09.480462+00:00
+parent: 
+blocked_by: []
+archived: false
+
+tags:
+  - "#task"
+  - "#tech-debt"
+  - "#phase/completed"
+
+
+exit_criteria_met: false
+strategy_id: NULL
+initiative_id: NULL
+---
+
+# Create centralized timestamp utility
+
+*This template includes sections for various types of tasks. Delete sections that don't apply to your specific use case.*
+
+## Parent Initiative **[CONDITIONAL: Assigned Task]**
+
+[[Parent Initiative]]
+
+## Objective
+
+Create a single `now_rfc3339()` utility function in mimir-core, replacing scattered `chrono::Utc::now().to_rfc3339()` calls across 10+ files.
+
+## Backlog Item Details **[CONDITIONAL: Backlog Item]**
+
+{Delete this section when task is assigned to an initiative}
+
+### Type
+- [ ] Bug - Production issue that needs fixing
+- [ ] Feature - New functionality or enhancement  
+- [ ] Tech Debt - Code improvement or refactoring
+- [ ] Chore - Maintenance or setup work
+
+### Priority
+- [ ] P0 - Critical (blocks users/revenue)
+- [ ] P1 - High (important for user experience)
+- [ ] P2 - Medium (nice to have)
+- [ ] P3 - Low (when time permits)
+
+### Impact Assessment **[CONDITIONAL: Bug]**
+- **Affected Users**: {Number/percentage of users affected}
+- **Reproduction Steps**: 
+  1. {Step 1}
+  2. {Step 2}
+  3. {Step 3}
+- **Expected vs Actual**: {What should happen vs what happens}
+
+### Business Justification **[CONDITIONAL: Feature]**
+- **User Value**: {Why users need this}
+- **Business Value**: {Impact on metrics/revenue}
+- **Effort Estimate**: {Rough size - S/M/L/XL}
+
+### Technical Debt Impact **[CONDITIONAL: Tech Debt]**
+- **Current Problems**: {What's difficult/slow/buggy now}
+- **Benefits of Fixing**: {What improves after refactoring}
+- **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria **[REQUIRED]**
+
+- [ ] {Specific, testable requirement 1}
+- [ ] {Specific, testable requirement 2}
+- [ ] {Specific, testable requirement 3}
+
+## Test Cases **[CONDITIONAL: Testing Task]**
+
+{Delete unless this is a testing task}
+
+### Test Case 1: {Test Case Name}
+- **Test ID**: TC-001
+- **Preconditions**: {What must be true before testing}
+- **Steps**: 
+  1. {Step 1}
+  2. {Step 2}
+  3. {Step 3}
+- **Expected Results**: {What should happen}
+- **Actual Results**: {To be filled during execution}
+- **Status**: {Pass/Fail/Blocked}
+
+### Test Case 2: {Test Case Name}
+- **Test ID**: TC-002
+- **Preconditions**: {What must be true before testing}
+- **Steps**: 
+  1. {Step 1}
+  2. {Step 2}
+- **Expected Results**: {What should happen}
+- **Actual Results**: {To be filled during execution}
+- **Status**: {Pass/Fail/Blocked}
+
+## Documentation Sections **[CONDITIONAL: Documentation Task]**
+
+{Delete unless this is a documentation task}
+
+### User Guide Content
+- **Feature Description**: {What this feature does and why it's useful}
+- **Prerequisites**: {What users need before using this feature}
+- **Step-by-Step Instructions**:
+  1. {Step 1 with screenshots/examples}
+  2. {Step 2 with screenshots/examples}
+  3. {Step 3 with screenshots/examples}
+
+### Troubleshooting Guide
+- **Common Issue 1**: {Problem description and solution}
+- **Common Issue 2**: {Problem description and solution}
+- **Error Messages**: {List of error messages and what they mean}
+
+### API Documentation **[CONDITIONAL: API Documentation]**
+- **Endpoint**: {API endpoint description}
+- **Parameters**: {Required and optional parameters}
+- **Example Request**: {Code example}
+- **Example Response**: {Expected response format}
+
+## Implementation Notes **[CONDITIONAL: Technical Task]**
+
+{Keep for technical tasks, delete for non-technical. Technical details, approach, or important considerations}
+
+### Technical Approach
+{How this will be implemented}
+
+### Dependencies
+{Other tasks or systems this depends on}
+
+### Risk Considerations
+{Technical risks and mitigation strategies}
+
+## Status Updates **[REQUIRED]**
+
+### 2026-02-04: Completed
+
+**Implementation:**
+- Created `mimir-core/src/utils.rs` with `now_rfc3339()` function
+- Added `pub mod utils;` to `mimir-core/src/lib.rs`
+- Added unit tests for RFC 3339 format validation and UTC timezone
+
+**Files Updated (replaced `Utc::now().to_rfc3339()` with `now_rfc3339()`):**
+- `mimir-core/src/services/campaign.rs` (3 occurrences)
+- `mimir-core/src/services/character.rs` (2 occurrences)
+- `mimir-core/src/services/document.rs` (3 occurrences)
+- `mimir-core/src/services/module.rs` (2 occurrences)
+- `mimir-core/src/services/map.rs` (1 occurrence)
+- `mimir-core/src/services/homebrew.rs` (3 occurrences)
+- `mimir-core/src/dal/campaign/module.rs` (1 occurrence)
+- `mimir-core/src/import/service.rs` (2 occurrences)
+- `mimir/src/commands/module.rs` (2 occurrences)
+- `mimir/src/commands/map.rs` (14 occurrences)
+- `mimir/src/commands/source.rs` (1 occurrence)
+
+**Verification:**
+- All crates compile: `cargo check -p mimir-core -p mimir -p mimir-mcp`
+- All 797 mimir-core tests pass
