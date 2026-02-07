@@ -4,15 +4,15 @@ level: task
 title: "Split print.rs into sub-domain modules"
 short_code: "MIMIR-T-0522"
 created_at: 2026-02-06T13:33:36.510206+00:00
-updated_at: 2026-02-06T13:33:36.510206+00:00
+updated_at: 2026-02-06T13:48:55.748659+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -41,16 +41,18 @@ Split `commands/print.rs` (2734 lines) into focused sub-modules by print domain,
 
 ## Acceptance Criteria
 
-- [ ] Create `commands/print/` folder with submodules
-- [ ] Extract `mod.rs` - Re-exports, shared types (ApiResponse, PrintResult), helper functions
-- [ ] Extract `document.rs` - Campaign/module document export commands
-- [ ] Extract `character.rs` - Character sheet export, D&D computation helpers
-- [ ] Extract `map.rs` - Map printing commands
-- [ ] Extract `monster.rs` - Monster card export commands
-- [ ] Extract `trap.rs` - Trap card export commands
-- [ ] Delete old `print.rs` 
-- [ ] `main.rs` invoke_handler unchanged (re-exports maintain backwards compatibility)
-- [ ] `cargo check -p mimir` passes
+## Acceptance Criteria
+
+- [x] Create `commands/print/` folder with submodules
+- [x] Extract `mod.rs` - Re-exports, shared types (ApiResponse, PrintResult), helper functions
+- [x] Extract `document.rs` - Campaign/module document export commands
+- [x] Extract `character.rs` - Character sheet export, D&D computation helpers
+- [x] Extract `map.rs` - Map printing commands
+- [x] Extract `monster.rs` - Monster card export commands
+- [x] Extract `trap.rs` - Trap card export commands
+- [x] Delete old `print.rs` 
+- [x] `main.rs` invoke_handler unchanged (re-exports maintain backwards compatibility)
+- [x] `cargo check -p mimir` passes
 
 ## Implementation Notes
 
@@ -75,4 +77,20 @@ commands/print/
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-02-06 - Completed
+
+Split `commands/print.rs` (2734 lines) into focused sub-modules:
+
+**Files created:**
+- `commands/print/mod.rs` - Re-exports and shared types (ApiResponse, PrintResult, export options structs)
+- `commands/print/helpers.rs` - D&D 5e computation helpers (hit_die_for_class, spell_slots_for_caster_level, compute_hp_max, compute_ac, etc.)
+- `commands/print/document.rs` - Campaign/module document export (list_print_templates, export_campaign_document, export_campaign_documents, export_module_documents)
+- `commands/print/character.rs` - Character sheet export (export_character, generate_character_sheet)
+- `commands/print/map.rs` - Map printing (print_map, save_pdf)
+- `commands/print/monster.rs` - Monster card export (export_module_monsters, export_monster_card)
+- `commands/print/trap.rs` - Trap card export (export_trap_card, export_trap_cards)
+
+**Result:**
+- Original 2734-line file split into 7 focused files
+- `cargo check -p mimir` passes with no warnings
+- main.rs invoke_handler unchanged due to re-exports
