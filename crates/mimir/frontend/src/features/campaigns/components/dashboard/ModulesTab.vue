@@ -1,41 +1,14 @@
 <template>
   <div class="modules-tab">
-    <!-- Sidebar - Just module list -->
-    <div class="sidebar-panel">
-      <div class="sidebar-header">
-        <h3>Modules</h3>
-        <button class="btn-add" @click="showCreateModal = true" title="Create Module">+</button>
-      </div>
-
-      <div v-if="loading" class="modules-loading">Loading...</div>
-      <div v-else-if="modules.length === 0" class="modules-empty">No modules yet</div>
-      <div v-else class="modules-list">
-        <div
-          v-for="(mod, index) in modules"
-          :key="mod.id"
-          class="module-item"
-          :class="{ selected: selectedModule?.id === mod.id }"
-          @click="selectModule(mod)"
-        >
-          <span class="module-number">#{{ mod.module_number }}</span>
-          <span class="module-name">{{ mod.name }}</span>
-          <span class="module-reorder-buttons">
-            <button
-              class="btn-reorder"
-              :disabled="index === 0"
-              title="Move up"
-              @click.stop="moveModule(mod.id, mod.module_number - 1)"
-            >&#9650;</button>
-            <button
-              class="btn-reorder"
-              :disabled="index === modules.length - 1"
-              title="Move down"
-              @click.stop="moveModule(mod.id, mod.module_number + 1)"
-            >&#9660;</button>
-          </span>
-        </div>
-      </div>
-    </div>
+    <!-- Sidebar - Module list -->
+    <ModuleList
+      :modules="modules"
+      :selected-module-id="selectedModule?.id"
+      :loading="loading"
+      @select="selectModule"
+      @create="showCreateModal = true"
+      @reorder="moveModule"
+    />
 
     <!-- Main Panel -->
     <div class="main-panel">
@@ -92,80 +65,25 @@
           <div class="dashboard-grid">
             <!-- Left Column: Documents, NPCs, Maps -->
             <div class="dashboard-left">
-              <!-- Documents Section -->
-              <section class="dashboard-section documents-section">
-                <div class="section-header">
-                  <h3>Documents</h3>
-                  <button class="btn-add" @click="showCreateDocModal = true" title="Create Document">+</button>
-                </div>
-                <div v-if="moduleDocuments.length === 0" class="section-empty">
-                  No documents yet
-                </div>
-                <div v-else class="document-cards">
-                  <div
-                    v-for="doc in moduleDocuments"
-                    :key="doc.id"
-                    class="document-card"
-                    @click="selectedDocument = doc"
-                  >
-                    <span class="doc-title">{{ formatDocumentTitle(doc.title || 'Untitled') }}</span>
-                    <button
-                      class="doc-delete-btn"
-                      @click="confirmDeleteDocument(doc, $event)"
-                      title="Delete document"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </section>
+              <ModuleDocumentsPanel
+                :documents="moduleDocuments"
+                @select="selectedDocument = $event"
+                @create="showCreateDocModal = true"
+                @delete="confirmDeleteDocument"
+              />
 
-              <!-- NPCs Section -->
-              <section class="dashboard-section npcs-section">
-                <div class="section-header">
-                  <h3>NPCs</h3>
-                  <button class="btn-add" @click="showNpcSelector = true" title="Add NPC">+</button>
-                </div>
-                <div v-if="moduleNpcs.length === 0" class="section-empty">
-                  No NPCs assigned
-                </div>
-                <div v-else class="npc-cards">
-                  <div
-                    v-for="npc in moduleNpcs"
-                    :key="npc.id"
-                    class="npc-card"
-                    @click="viewModuleNpc(npc)"
-                  >
-                    <span class="npc-name">{{ npc.name }}</span>
-                    <span class="npc-role">{{ npc.role || 'NPC' }}</span>
-                  </div>
-                </div>
-              </section>
+              <ModuleNpcsPanel
+                :npcs="moduleNpcs"
+                @add="showNpcSelector = true"
+                @view="viewModuleNpc"
+              />
 
-              <!-- Maps Section -->
-              <section class="dashboard-section maps-section">
-                <div class="section-header">
-                  <h3>Maps</h3>
-                  <button class="btn-add" @click="showMapUploadModal = true" title="Upload Map">+</button>
-                </div>
-                <div v-if="loadingMaps" class="section-loading">Loading...</div>
-                <div v-else-if="moduleMaps.length === 0" class="section-empty">
-                  No maps uploaded
-                </div>
-                <div v-else class="map-cards">
-                  <div
-                    v-for="map in moduleMaps"
-                    :key="map.id"
-                    class="map-card"
-                    @click="selectMap(map)"
-                  >
-                    <span class="map-name">{{ map.name }}</span>
-                    <span class="map-size">{{ map.width_px }}x{{ map.height_px }}</span>
-                  </div>
-                </div>
-              </section>
+              <ModuleMapsPanel
+                :maps="moduleMaps"
+                :loading="loadingMaps"
+                @upload="showMapUploadModal = true"
+                @select="selectMap"
+              />
             </div>
 
             <!-- Right Column: Dangers (monsters + traps/hazards) -->
@@ -435,23 +353,15 @@ import DangersList from './DangersList.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import CreateDocumentModal from '@/components/dialogs/CreateDocumentModal.vue'
 import AppModal from '@/components/shared/AppModal.vue'
+import {
+  ModuleList,
+  ModuleDocumentsPanel,
+  ModuleMapsPanel,
+  ModuleNpcsPanel,
+  type MapData,
+  type ModuleNpc
+} from './modules'
 import type { Campaign, Module, Document } from '@/types'
-
-interface MapData {
-  id: string
-  campaign_id: string
-  module_id: string | null
-  name: string
-  image_path: string
-  width_px: number
-  height_px: number
-  grid_type: string
-  grid_size_px: number | null
-  grid_offset_x: number
-  grid_offset_y: number
-  original_width_px: number | null
-  original_height_px: number | null
-}
 
 const props = defineProps<{
   campaign?: Campaign
@@ -544,17 +454,6 @@ const selectedMapForTokens = ref<MapData | null>(null)
 const documentToDelete = ref<Document | null>(null)
 
 // NPC state - Module NPCs are custom DM-created characters
-interface ModuleNpc {
-  id: string
-  module_id: string
-  name: string
-  role: string | null
-  description: string | null
-  appearance: string | null
-  personality: string | null
-  motivation: string | null
-  secrets: string | null
-}
 const moduleNpcs = ref<ModuleNpc[]>([])
 const loadingNpcs = ref(false)
 
@@ -905,8 +804,7 @@ async function handleDocumentCreated() {
 }
 
 // Confirm delete document
-function confirmDeleteDocument(doc: Document, event: Event) {
-  event.stopPropagation()
+function confirmDeleteDocument(doc: Document) {
   documentToDelete.value = doc
   showDeleteDocModal.value = true
 }
@@ -933,15 +831,6 @@ async function handleDeleteDocument() {
   } catch (e) {
     console.error('Failed to delete document:', e)
   }
-}
-
-// Format document title
-function formatDocumentTitle(templateId: string): string {
-  return templateId
-    .replace(/[-_]/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
 }
 
 // DM Map window
@@ -1139,177 +1028,6 @@ onMounted(async () => {
   display: flex;
   height: 100%;
   overflow: hidden;
-}
-
-.sidebar-panel {
-  width: 280px;
-  min-width: 240px;
-  max-width: 320px;
-  border-right: 1px solid var(--color-border);
-  overflow-y: auto;
-  background: var(--color-surface);
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.sidebar-header h3 {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.btn-add {
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.btn-add:hover {
-  background: var(--color-primary-500);
-  color: var(--color-background);
-  border-color: var(--color-primary-500);
-}
-
-.modules-loading,
-.modules-empty,
-.maps-loading,
-.maps-empty {
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
-.modules-list {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--spacing-xs);
-}
-
-.module-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
-  color: var(--color-text);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.module-item:hover {
-  background: var(--color-surface-variant);
-}
-
-.module-item.selected {
-  background: var(--color-primary-100);
-}
-
-.module-number {
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  font-size: 0.75rem;
-}
-
-.module-reorder-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.module-item:hover .module-reorder-buttons {
-  opacity: 1;
-}
-
-.btn-reorder {
-  background: none;
-  border: none;
-  padding: 0 2px;
-  font-size: 0.5rem;
-  line-height: 1;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  border-radius: 2px;
-}
-
-.btn-reorder:hover:not(:disabled) {
-  color: var(--color-primary);
-  background: var(--color-surface-variant);
-}
-
-.btn-reorder:disabled {
-  opacity: 0.2;
-  cursor: default;
-}
-
-.module-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Maps section */
-.maps-section {
-  border-top: 1px solid var(--color-border);
-  padding: var(--spacing-xs) var(--spacing-sm);
-}
-
-.maps-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm) 0;
-}
-
-.maps-header h4 {
-  margin: 0;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.maps-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.map-item {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.875rem;
-  color: var(--color-text);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.map-item:hover {
-  background: var(--color-surface-variant);
-}
-
-.map-item.selected {
-  background: var(--color-primary-100);
 }
 
 /* Main panel */
@@ -1515,72 +1233,6 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.dashboard-section {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-sm);
-  padding-bottom: var(--spacing-xs);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.section-header h3 {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.section-empty,
-.section-loading {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  text-align: center;
-  padding: var(--spacing-md);
-}
-
-/* NPC Cards */
-.npc-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-}
-
-.npc-card {
-  display: flex;
-  flex-direction: column;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-warning);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.npc-card:hover {
-  border-color: var(--color-primary-500);
-  border-left-color: var(--color-warning);
-}
-
-.npc-name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.npc-role {
-  font-size: 0.65rem;
-  color: var(--color-text-secondary);
-}
-
 /* Monster Stats Panel in Module Dashboard */
 .module-monster-panel {
   position: absolute;
@@ -1599,121 +1251,6 @@ onMounted(async () => {
   bottom: 0;
   z-index: 10;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Map Cards */
-.map-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-}
-
-.map-card {
-  display: flex;
-  flex-direction: column;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.map-card:hover {
-  border-color: var(--color-primary-500);
-}
-
-.map-name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.map-size {
-  font-size: 0.65rem;
-  color: var(--color-text-secondary);
-}
-
-/* Document Cards */
-.document-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.document-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.document-card:hover {
-  border-color: var(--color-primary-500);
-}
-
-.doc-title {
-  font-size: 0.8rem;
-  color: var(--color-text);
-}
-
-.doc-status {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  padding: 2px 4px;
-  border-radius: 2px;
-}
-
-.doc-status.complete {
-  background: var(--color-success-bg);
-  color: var(--color-success);
-}
-
-.doc-status.user {
-  background: var(--color-primary-100);
-  color: var(--color-primary-600);
-}
-
-.document-card.user-created {
-  border-left: 3px solid var(--color-primary-500);
-}
-
-/* Document delete button */
-.doc-delete-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  background: transparent;
-  color: var(--color-text-muted);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  opacity: 0;
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
-  margin-left: var(--spacing-xs);
-}
-
-.document-card:hover .doc-delete-btn {
-  opacity: 1;
-}
-
-.doc-delete-btn:hover {
-  background: var(--color-error-100, rgba(239, 68, 68, 0.1));
-  color: var(--color-error);
-}
-
-.doc-delete-btn svg {
-  width: 14px;
-  height: 14px;
 }
 
 /* Delete modal styles */
