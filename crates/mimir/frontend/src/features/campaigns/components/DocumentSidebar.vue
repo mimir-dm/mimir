@@ -56,7 +56,7 @@
 
         <!-- User Documents -->
         <div
-          v-for="doc in userDocuments"
+          v-for="(doc, index) in userDocuments"
           :key="doc.id"
           class="document-item"
           :class="{ selected: selectedDocument?.id === doc.id }"
@@ -66,6 +66,20 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
           </svg>
           <span class="document-title">{{ doc.title }}</span>
+          <span class="document-reorder-buttons">
+            <button
+              class="btn-reorder"
+              :disabled="index === 0"
+              title="Move up"
+              @click.stop="moveDocument(doc.id, userDocuments[index - 1].id)"
+            >&#9650;</button>
+            <button
+              class="btn-reorder"
+              :disabled="index === userDocuments.length - 1"
+              title="Move down"
+              @click.stop="moveDocument(doc.id, userDocuments[index + 1].id)"
+            >&#9660;</button>
+          </span>
           <button
             class="delete-btn"
             @click.stop="confirmDeleteDocument(doc)"
@@ -216,11 +230,11 @@ const templateDocuments = computed(() => {
     })
 })
 
-// User-created documents (no defined sort order)
+// User-created documents (ordered by sort_order)
 const userDocuments = computed(() => {
   return [...documents.value]
     .filter(d => !(d.doc_type in DOCUMENT_SORT_ORDER))
-    .sort((a, b) => a.title.localeCompare(b.title))
+    .sort((a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title))
 })
 
 // Filter assets to only show images (exclude map UVTT files which are application/octet-stream)
@@ -272,6 +286,16 @@ const handleDocumentCreated = async () => {
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )[0]
     selectDocument(newestDoc)
+  }
+}
+
+// Reorder a user document by swapping with neighbor
+const moveDocument = async (documentId: string, swapWithId: string) => {
+  try {
+    const updatedDocs = await DocumentService.reorder(documentId, swapWithId)
+    documents.value = updatedDocs
+  } catch (e) {
+    console.error('Failed to reorder document:', e)
   }
 }
 
@@ -478,6 +502,45 @@ onMounted(() => {
   text-align: center;
   color: var(--color-text-muted, #888);
   font-size: 0.875rem;
+}
+
+/* Reorder buttons */
+.document-reorder-buttons {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.document-item:hover .document-reorder-buttons {
+  display: flex;
+}
+
+.btn-reorder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.5rem;
+  line-height: 1;
+  transition: all 0.15s;
+}
+
+.btn-reorder:hover:not(:disabled) {
+  background: var(--color-surface-variant);
+  color: var(--color-text);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* Delete button */

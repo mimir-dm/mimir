@@ -28,6 +28,9 @@ pub struct Document {
     pub content: String,
     /// Document type (freeform: note, session, npc, location, etc.)
     pub doc_type: String,
+    /// Sort order for manual reordering (1-indexed within scope)
+    #[serde(default)]
+    pub sort_order: i32,
     /// ISO8601 timestamp of creation
     pub created_at: String,
     /// ISO8601 timestamp of last update
@@ -56,6 +59,7 @@ pub struct NewDocument<'a> {
     pub title: &'a str,
     pub content: &'a str,
     pub doc_type: &'a str,
+    pub sort_order: i32,
 }
 
 impl<'a> NewDocument<'a> {
@@ -73,6 +77,7 @@ impl<'a> NewDocument<'a> {
             title,
             content: "",
             doc_type,
+            sort_order: 0,
         }
     }
 
@@ -91,7 +96,14 @@ impl<'a> NewDocument<'a> {
             title,
             content: "",
             doc_type,
+            sort_order: 0,
         }
+    }
+
+    /// Set the sort order.
+    pub fn with_sort_order(mut self, sort_order: i32) -> Self {
+        self.sort_order = sort_order;
+        self
     }
 
     /// Set the content.

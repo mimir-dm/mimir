@@ -180,6 +180,23 @@ class DocumentServiceClass {
   }
 
   /**
+   * Swap sort order between two documents
+   */
+  async reorder(documentId: string, swapWithId: string): Promise<Document[]> {
+    const response = await invoke<ApiResponse<Document[]>>('reorder_document', {
+      documentId,
+      swapWithId
+    })
+
+    if (response.success && response.data) {
+      dataEvents.emit('document:reordered', { documentId })
+      return response.data
+    }
+
+    throw new Error(response.error || `Failed to reorder document ${documentId}`)
+  }
+
+  /**
    * Update only the content of a document
    */
   async updateContent(id: string, content: string): Promise<Document> {

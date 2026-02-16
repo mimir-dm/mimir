@@ -4,6 +4,7 @@
 
 use crate::models::campaign::{Document, NewDocument, UpdateDocument};
 use crate::schema::documents;
+use crate::utils::now_rfc3339;
 use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::Text;
@@ -38,7 +39,7 @@ pub fn list_campaign_documents(
 ) -> QueryResult<Vec<Document>> {
     documents::table
         .filter(documents::campaign_id.eq(campaign_id))
-        .order(documents::title.asc())
+        .order((documents::sort_order.asc(), documents::title.asc()))
         .load(conn)
 }
 
@@ -50,7 +51,7 @@ pub fn list_campaign_level_documents(
     documents::table
         .filter(documents::campaign_id.eq(campaign_id))
         .filter(documents::module_id.is_null())
-        .order(documents::title.asc())
+        .order((documents::sort_order.asc(), documents::title.asc()))
         .load(conn)
 }
 
@@ -61,7 +62,7 @@ pub fn list_module_documents(
 ) -> QueryResult<Vec<Document>> {
     documents::table
         .filter(documents::module_id.eq(module_id))
-        .order(documents::title.asc())
+        .order((documents::sort_order.asc(), documents::title.asc()))
         .load(conn)
 }
 
@@ -74,7 +75,7 @@ pub fn list_documents_by_type(
     documents::table
         .filter(documents::campaign_id.eq(campaign_id))
         .filter(documents::doc_type.eq(doc_type))
-        .order(documents::title.asc())
+        .order((documents::sort_order.asc(), documents::title.asc()))
         .load(conn)
 }
 
@@ -116,6 +117,64 @@ pub fn count_module_documents(conn: &mut SqliteConnection, module_id: &str) -> Q
         .filter(documents::module_id.eq(module_id))
         .count()
         .get_result(conn)
+}
+
+/// Get the next available sort_order for campaign-level documents.
+pub fn next_campaign_document_sort_order(
+    conn: &mut SqliteConnection,
+    campaign_id: &str,
+) -> QueryResult<i32> {
+    let max: Option<i32> = documents::table
+        .filter(documents::campaign_id.eq(campaign_id))
+        .filter(documents::module_id.is_null())
+        .select(diesel::dsl::max(documents::sort_order))
+        .first(conn)?;
+
+    Ok(max.unwrap_or(0) + 1)
+}
+
+/// Get the next available sort_order for module documents.
+pub fn next_module_document_sort_order(
+    conn: &mut SqliteConnection,
+    module_id: &str,
+) -> QueryResult<i32> {
+    let max: Option<i32> = documents::table
+        .filter(documents::module_id.eq(module_id))
+        .select(diesel::dsl::max(documents::sort_order))
+        .first(conn)?;
+
+    Ok(max.unwrap_or(0) + 1)
+}
+
+/// Swap sort_order between two documents.
+pub fn swap_document_order(
+    conn: &mut SqliteConnection,
+    doc_id_a: &str,
+    doc_id_b: &str,
+) -> QueryResult<()> {
+    use diesel::Connection;
+
+    conn.transaction(|conn| {
+        let doc_a = get_document(conn, doc_id_a)?;
+        let doc_b = get_document(conn, doc_id_b)?;
+        let now = now_rfc3339();
+
+        diesel::update(documents::table.find(doc_id_a))
+            .set((
+                documents::sort_order.eq(doc_b.sort_order),
+                documents::updated_at.eq(&now),
+            ))
+            .execute(conn)?;
+
+        diesel::update(documents::table.find(doc_id_b))
+            .set((
+                documents::sort_order.eq(doc_a.sort_order),
+                documents::updated_at.eq(&now),
+            ))
+            .execute(conn)?;
+
+        Ok(())
+    })
 }
 
 /// FTS search result with relevance ranking.
@@ -401,5 +460,75 @@ mod tests {
             search_module_documents(&mut conn, "mod-1", "goblin").expect("Failed to search");
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Goblin Cave");
+    }
+
+    #[test]
+    fn test_next_sort_order() {
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
+
+        let next = next_campaign_document_sort_order(&mut conn, "camp-1").expect("Failed");
+        assert_eq!(next, 1);
+
+        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "Doc A", "note")
+            .with_sort_order(1);
+        insert_document(&mut conn, &doc1).expect("Failed to insert");
+
+        let next = next_campaign_document_sort_order(&mut conn, "camp-1").expect("Failed");
+        assert_eq!(next, 2);
+    }
+
+    #[test]
+    fn test_swap_document_order() {
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
+
+        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "First", "note")
+            .with_sort_order(1);
+        let doc2 = NewDocument::for_campaign("doc-2", "camp-1", "Second", "note")
+            .with_sort_order(2);
+        let doc3 = NewDocument::for_campaign("doc-3", "camp-1", "Third", "note")
+            .with_sort_order(3);
+        insert_document(&mut conn, &doc1).expect("Failed");
+        insert_document(&mut conn, &doc2).expect("Failed");
+        insert_document(&mut conn, &doc3).expect("Failed");
+
+        // Swap doc-1 and doc-2
+        swap_document_order(&mut conn, "doc-1", "doc-2").expect("Failed to swap");
+
+        let d1 = get_document(&mut conn, "doc-1").expect("Failed");
+        let d2 = get_document(&mut conn, "doc-2").expect("Failed");
+        let d3 = get_document(&mut conn, "doc-3").expect("Failed");
+
+        assert_eq!(d1.sort_order, 2);
+        assert_eq!(d2.sort_order, 1);
+        assert_eq!(d3.sort_order, 3); // unchanged
+    }
+
+    #[test]
+    fn test_swap_document_order_non_adjacent() {
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
+
+        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "First", "note")
+            .with_sort_order(1);
+        let doc2 = NewDocument::for_campaign("doc-2", "camp-1", "Second", "note")
+            .with_sort_order(2);
+        let doc3 = NewDocument::for_campaign("doc-3", "camp-1", "Third", "note")
+            .with_sort_order(3);
+        insert_document(&mut conn, &doc1).expect("Failed");
+        insert_document(&mut conn, &doc2).expect("Failed");
+        insert_document(&mut conn, &doc3).expect("Failed");
+
+        // Swap doc-1 and doc-3
+        swap_document_order(&mut conn, "doc-1", "doc-3").expect("Failed to swap");
+
+        let d1 = get_document(&mut conn, "doc-1").expect("Failed");
+        let d2 = get_document(&mut conn, "doc-2").expect("Failed");
+        let d3 = get_document(&mut conn, "doc-3").expect("Failed");
+
+        assert_eq!(d1.sort_order, 3);
+        assert_eq!(d2.sort_order, 2); // unchanged
+        assert_eq!(d3.sort_order, 1);
     }
 }

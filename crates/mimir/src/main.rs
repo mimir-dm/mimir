@@ -150,6 +150,7 @@ fn main() {
             document::create_document,
             document::update_document,
             document::delete_document,
+            document::reorder_document,
             // Document commands - search
             document::search_documents,
             document::search_module_documents,

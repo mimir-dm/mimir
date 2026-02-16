@@ -53,6 +53,7 @@ export interface DataEventPayloads {
   'document:created': { documentId: string; moduleId?: string; campaignId?: string }
   'document:updated': { documentId: string }
   'document:deleted': { documentId: string; moduleId?: string }
+  'document:reordered': { documentId: string }
 
   // Character events
   // Note: campaignId can be null for characters not attached to a campaign

@@ -122,17 +122,26 @@ impl<'a> DocumentService<'a> {
     ///
     /// Use this for creating ad-hoc user documents. Template-based documents
     /// are created automatically by CampaignService and ModuleService.
+    /// Automatically assigns the next available sort_order.
     pub fn create(&mut self, input: CreateDocumentInput) -> ServiceResult<Document> {
         let doc_id = Uuid::new_v4().to_string();
         let doc_type = input.doc_type.as_deref().unwrap_or("user_document");
         let content = input.content.as_deref().unwrap_or("");
 
+        let sort_order = if let Some(ref module_id) = input.module_id {
+            dal::next_module_document_sort_order(self.conn, module_id)?
+        } else {
+            dal::next_campaign_document_sort_order(self.conn, &input.campaign_id)?
+        };
+
         let new_doc = if let Some(ref module_id) = input.module_id {
             NewDocument::for_module(&doc_id, &input.campaign_id, module_id, &input.title, doc_type)
                 .with_content(content)
+                .with_sort_order(sort_order)
         } else {
             NewDocument::for_campaign(&doc_id, &input.campaign_id, &input.title, doc_type)
                 .with_content(content)
+                .with_sort_order(sort_order)
         };
 
         dal::insert_document(self.conn, &new_doc)?;
@@ -250,6 +259,30 @@ impl<'a> DocumentService<'a> {
         query: &str,
     ) -> ServiceResult<Vec<dal::DocumentSearchResult>> {
         dal::search_documents(self.conn, campaign_id, query).map_err(ServiceError::from)
+    }
+
+    /// Swap sort_order between two documents.
+    ///
+    /// Used to move a document up or down by swapping with its neighbor.
+    pub fn swap_order(
+        &mut self,
+        doc_id_a: &str,
+        doc_id_b: &str,
+    ) -> ServiceResult<Vec<Document>> {
+        let doc_a = dal::get_document_optional(self.conn, doc_id_a)?
+            .ok_or_else(|| ServiceError::not_found("Document", doc_id_a))?;
+        let doc_b = dal::get_document_optional(self.conn, doc_id_b)?
+            .ok_or_else(|| ServiceError::not_found("Document", doc_id_b))?;
+
+        dal::swap_document_order(self.conn, doc_id_a, doc_id_b)?;
+
+        // Return the updated list scoped to doc_a's context
+        if let Some(module_id) = doc_a.module_id {
+            dal::list_module_documents(self.conn, &module_id).map_err(ServiceError::from)
+        } else {
+            dal::list_campaign_level_documents(self.conn, &doc_b.campaign_id)
+                .map_err(ServiceError::from)
+        }
     }
 
     /// Search documents within a specific module.

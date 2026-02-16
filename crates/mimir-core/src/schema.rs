@@ -320,6 +320,7 @@ diesel::table! {
         title -> Text,
         content -> Text,
         doc_type -> Text,
+        sort_order -> Integer,
         created_at -> Text,
         updated_at -> Text,
     }

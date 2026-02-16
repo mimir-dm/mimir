@@ -30,6 +30,10 @@ content: string,
  */
 doc_type: string, 
 /**
+ * Sort order for manual reordering (1-indexed within scope)
+ */
+sort_order: number, 
+/**
  * ISO8601 timestamp of creation
  */
 created_at: string, 

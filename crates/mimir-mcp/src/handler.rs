@@ -66,6 +66,7 @@ impl MimirHandler {
             tools::document::create_document_tool(),
             tools::document::edit_document_tool(),
             tools::document::delete_document_tool(),
+            tools::document::reorder_document_tool(),
             // Character tools
             tools::character::list_characters_tool(),
             tools::character::get_character_tool(),
@@ -154,6 +155,7 @@ impl MimirHandler {
             "create_document" => tools::document::create_document(&self.context, args).await,
             "edit_document" => tools::document::edit_document(&self.context, args).await,
             "delete_document" => tools::document::delete_document(&self.context, args).await,
+            "reorder_document" => tools::document::reorder_document(&self.context, args).await,
 
             // Character tools
             "list_characters" => tools::character::list_characters(&self.context, args).await,
@@ -326,6 +328,7 @@ mod tests {
         "create_document",
         "edit_document",
         "delete_document",
+        "reorder_document",
         // Character
         "list_characters",
         "get_character",

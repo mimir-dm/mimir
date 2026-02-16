@@ -116,6 +116,33 @@ pub fn edit_document_tool() -> Tool {
     }
 }
 
+pub fn reorder_document_tool() -> Tool {
+    Tool {
+        name: "reorder_document".to_string(),
+        description: Some(
+            "Swap sort order between two documents to reorder them."
+                .to_string(),
+        ),
+        input_schema: ToolInputSchema::new(
+            vec![
+                "document_id".to_string(),
+                "swap_with_id".to_string(),
+            ],
+            create_properties(vec![
+                ("document_id", "string", "The ID of the document to move"),
+                ("swap_with_id", "string", "The ID of the document to swap with"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
 pub fn delete_document_tool() -> Tool {
     Tool {
         name: "delete_document".to_string(),
@@ -294,6 +321,41 @@ pub async fn edit_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
         "title": updated.title,
         "doc_type": updated.doc_type,
         "content": updated.content
+    }))
+}
+
+pub async fn reorder_document(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let document_id = args
+        .get("document_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("document_id is required".to_string()))?;
+
+    let swap_with_id = args
+        .get("swap_with_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("swap_with_id is required".to_string()))?;
+
+    let mut db = ctx.connect()?;
+    let mut service = DocumentService::new(&mut db);
+
+    let documents = service
+        .swap_order(document_id, swap_with_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    let doc_data: Vec<Value> = documents
+        .iter()
+        .map(|d| {
+            json!({
+                "id": d.id,
+                "title": d.title,
+                "doc_type": d.doc_type,
+                "sort_order": d.sort_order
+            })
+        })
+        .collect();
+
+    McpResponse::ok(json!({
+        "documents": doc_data
     }))
 }
 

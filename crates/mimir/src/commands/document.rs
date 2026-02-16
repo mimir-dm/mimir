@@ -146,6 +146,26 @@ pub fn delete_document(state: State<'_, AppState>, id: String) -> ApiResponse<()
 }
 
 // =============================================================================
+// Reorder Commands
+// =============================================================================
+
+/// Swap sort_order between two documents.
+#[tauri::command]
+pub fn reorder_document(
+    state: State<'_, AppState>,
+    document_id: String,
+    swap_with_id: String,
+) -> ApiResponse<Vec<Document>> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    let result = DocumentService::new(&mut db).swap_order(&document_id, &swap_with_id);
+    to_api_response(result)
+}
+
+// =============================================================================
 // Search Commands
 // =============================================================================
 
