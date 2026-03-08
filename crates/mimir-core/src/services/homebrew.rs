@@ -216,9 +216,10 @@ impl<'a> HomebrewService<'a> {
     ) -> ServiceResult<CampaignHomebrewMonster> {
         validate_json(&input.data)?;
 
+        let data = enrich_monster_data(&input.data, input.cr.as_deref(), input.creature_type.as_deref(), input.size.as_deref())?;
         let id = Uuid::new_v4().to_string();
         let mut new_monster =
-            NewCampaignHomebrewMonster::new(&id, &input.campaign_id, &input.name, &input.data);
+            NewCampaignHomebrewMonster::new(&id, &input.campaign_id, &input.name, &data);
 
         if let Some(ref cr) = input.cr {
             new_monster = new_monster.with_cr(cr);
@@ -247,9 +248,19 @@ impl<'a> HomebrewService<'a> {
             validate_json(data)?;
         }
 
+        // Resolve the effective cr/creature_type/size for data enrichment
+        let cr_val = input.cr.as_ref().and_then(|v| v.as_deref());
+        let ct_val = input.creature_type.as_ref().and_then(|v| v.as_deref());
+        let sz_val = input.size.as_ref().and_then(|v| v.as_deref());
+
+        let enriched_data = match &input.data {
+            Some(data) => Some(enrich_monster_data(data, cr_val, ct_val, sz_val)?),
+            None => None,
+        };
+
         let now = now_rfc3339();
         let name_ref = input.name.as_deref();
-        let data_ref = input.data.as_deref();
+        let data_ref = enriched_data.as_deref().or(input.data.as_deref());
         let cr_ref = input.cr.as_ref().map(|v| v.as_deref());
         let creature_type_ref = input.creature_type.as_ref().map(|v| v.as_deref());
         let size_ref = input.size.as_ref().map(|v| v.as_deref());
@@ -379,4 +390,47 @@ fn validate_json(data: &str) -> ServiceResult<()> {
     serde_json::from_str::<Value>(data)
         .map(|_| ())
         .map_err(|e| ServiceError::validation(format!("Invalid JSON data: {e}")))
+}
+
+/// Ensure the monster data JSON blob includes cr, type, and size fields
+/// that match the top-level metadata. The UI stat block renderer reads
+/// these from the data blob, so they must be present for proper display.
+fn enrich_monster_data(
+    data: &str,
+    cr: Option<&str>,
+    creature_type: Option<&str>,
+    size: Option<&str>,
+) -> ServiceResult<String> {
+    let mut obj: serde_json::Map<String, Value> = serde_json::from_str(data)
+        .map_err(|e| ServiceError::validation(format!("Invalid JSON data: {e}")))?;
+
+    // Set cr if missing (5etools format: string like "10" or "1/4")
+    if !obj.contains_key("cr") {
+        if let Some(cr) = cr {
+            obj.insert("cr".to_string(), Value::String(cr.to_string()));
+        }
+    }
+
+    // Set type if missing (5etools format: {"type": "elemental"} or just "elemental")
+    if !obj.contains_key("type") {
+        if let Some(ct) = creature_type {
+            obj.insert(
+                "type".to_string(),
+                serde_json::json!({"type": ct}),
+            );
+        }
+    }
+
+    // Set size if missing (5etools format: array like ["H"])
+    if !obj.contains_key("size") {
+        if let Some(sz) = size {
+            obj.insert(
+                "size".to_string(),
+                Value::Array(vec![Value::String(sz.to_string())]),
+            );
+        }
+    }
+
+    serde_json::to_string(&obj)
+        .map_err(|e| ServiceError::validation(format!("Failed to serialize enriched data: {e}")))
 }

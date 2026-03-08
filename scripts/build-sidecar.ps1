@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Split-Path -Parent $ScriptDir
-$BinariesDir = Join-Path $ProjectRoot "crates\mimir-dm\binaries"
+$BinariesDir = Join-Path $ProjectRoot "crates\mimir\binaries"
 
 # Detect target triple
 if ($env:TAURI_ENV_TARGET_TRIPLE) {
@@ -31,7 +31,7 @@ Write-Host "Building mimir-mcp for target: $Target"
 # Build mimir-mcp in release mode
 Push-Location $ProjectRoot
 try {
-    cargo build --release -p mimir-dm-mcp --target $Target
+    cargo build --release -p mimir-mcp --target $Target
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Cargo build failed"
         exit 1

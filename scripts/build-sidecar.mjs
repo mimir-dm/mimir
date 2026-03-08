@@ -13,7 +13,7 @@ import { platform, arch } from 'os';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
-const binariesDir = join(projectRoot, 'crates', 'mimir-dm', 'binaries');
+const binariesDir = join(projectRoot, 'crates', 'mimir', 'binaries');
 
 /**
  * Detect the target triple for the current platform or from environment.
@@ -73,7 +73,7 @@ function main() {
 
   // Build mimir-mcp in release mode
   try {
-    execSync(`cargo build --release -p mimir-dm-mcp --target ${target}`, {
+    execSync(`cargo build --release -p mimir-mcp --target ${target}`, {
       cwd: projectRoot,
       stdio: 'inherit',
     });

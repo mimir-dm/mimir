@@ -7,7 +7,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-BINARIES_DIR="$PROJECT_ROOT/crates/mimir-dm/binaries"
+BINARIES_DIR="$PROJECT_ROOT/crates/mimir/binaries"
 
 # Detect target triple
 if [ -n "$TAURI_ENV_TARGET_TRIPLE" ]; then
@@ -45,7 +45,7 @@ echo "Building mimir-mcp for target: $TARGET"
 
 # Build mimir-mcp in release mode
 cd "$PROJECT_ROOT"
-cargo build --release -p mimir-dm-mcp --target "$TARGET"
+cargo build --release -p mimir-mcp --target "$TARGET"
 
 # Ensure binaries directory exists
 mkdir -p "$BINARIES_DIR"
