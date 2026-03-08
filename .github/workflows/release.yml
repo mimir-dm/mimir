@@ -103,7 +103,12 @@ jobs:
     name: Attach MCP binaries to release
     needs: build-desktop
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download all mimir-mcp artifacts
         uses: actions/download-artifact@v4
         with:
@@ -117,38 +122,15 @@ jobs:
 
       - name: Upload MCP binaries to release
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          # Wait for draft release to exist (created by tauri-action)
-          for i in $(seq 1 30); do
-            RELEASE_ID=$(curl -sL \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              "https://api.github.com/repos/${{ github.repository }}/releases/tags/app-v${{ steps.version.outputs.version }}" \
-              | jq -r '.id // empty')
-            if [ -n "$RELEASE_ID" ]; then
-              break
-            fi
-            echo "Waiting for release to be created... ($i/30)"
-            sleep 10
-          done
+          TAG="app-v${{ steps.version.outputs.version }}"
+          echo "Uploading MCP binaries to release ${TAG}..."
 
-          if [ -z "$RELEASE_ID" ]; then
-            echo "ERROR: Release not found after waiting"
-            exit 1
-          fi
-
-          echo "Found release ID: $RELEASE_ID"
-
-          # Upload each binary
           for dir in mcp-binaries/mimir-mcp-*/; do
             for file in "$dir"*; do
               filename=$(basename "$file")
               echo "Uploading $filename..."
-              curl -sL \
-                -X POST \
-                -H "Authorization: token ${GITHUB_TOKEN}" \
-                -H "Content-Type: application/octet-stream" \
-                "https://uploads.github.com/repos/${{ github.repository }}/releases/${RELEASE_ID}/assets?name=${filename}" \
-                --data-binary "@${file}"
+              gh release upload "$TAG" "$file" --clobber
             done
           done
