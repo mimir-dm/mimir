@@ -120,7 +120,7 @@ describe('CatalogTable', () => {
         }
       })
 
-      expect(wrapper.find('.catalog-table__result-count').text()).toBe('4 items')
+      expect(wrapper.find('.catalog-table__result-count').text()).toBe('Showing 1-4 of 4 items')
     })
   })
 
@@ -354,8 +354,8 @@ describe('CatalogTable', () => {
       })
 
       const cells = wrapper.findAll('tbody td')
-      expect(cells[1].text()).toBe('—')
-      expect(cells[2].text()).toBe('—')
+      expect(cells[1].text()).toBe('')
+      expect(cells[2].text()).toBe('')
     })
 
     it('uses formatter when provided', () => {

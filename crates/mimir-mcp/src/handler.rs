@@ -300,6 +300,7 @@ impl ServerHandler for MimirHandler {
 mod tests {
     use super::*;
     use crate::context::McpContext;
+    use serde_json::json;
 
     /// Expected tool names — every MCP tool the server should publish.
     const EXPECTED_TOOLS: &[&str] = &[
@@ -923,5 +924,349 @@ mod tests {
 
         let err = call_err(&handler, "delete_campaign", serde_json::json!({})).await;
         assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    // -- Homebrew Monster CRUD ------------------------------------------------
+
+    #[tokio::test]
+    async fn homebrew_monster_crud_lifecycle() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        // List — empty
+        let res = call_ok(&handler, "list_homebrew_monsters", json!({})).await;
+        assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
+
+        // Create
+        let res = call_ok(
+            &handler,
+            "create_homebrew_monster",
+            json!({
+                "name": "Frost Colossus",
+                "data": r#"{"name":"Frost Colossus","hp":{"average":200}}"#,
+                "cr": "20",
+                "creature_type": "elemental",
+                "size": "G"
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "created");
+        let monster_id = res["monster"]["id"].as_str().unwrap().to_string();
+        assert_eq!(res["monster"]["name"], "Frost Colossus");
+        assert_eq!(res["monster"]["cr"], "20");
+
+        // List — has one
+        let res = call_ok(&handler, "list_homebrew_monsters", json!({})).await;
+        assert_eq!(res["monsters"].as_array().unwrap().len(), 1);
+
+        // Get
+        let res = call_ok(
+            &handler,
+            "get_homebrew_monster",
+            json!({"id": monster_id}),
+        )
+        .await;
+        assert_eq!(res["monster"]["name"], "Frost Colossus");
+        assert_eq!(res["monster"]["creature_type"], "elemental");
+
+        // Update
+        let res = call_ok(
+            &handler,
+            "update_homebrew_monster",
+            json!({"id": monster_id, "name": "Ice Titan", "cr": "25"}),
+        )
+        .await;
+        assert_eq!(res["status"], "updated");
+        assert_eq!(res["monster"]["name"], "Ice Titan");
+        assert_eq!(res["monster"]["cr"], "25");
+
+        // Delete
+        let res = call_ok(
+            &handler,
+            "delete_homebrew_monster",
+            json!({"id": monster_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "deleted");
+
+        // List — empty again
+        let res = call_ok(&handler, "list_homebrew_monsters", json!({})).await;
+        assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
+    }
+
+    // -- Homebrew Spell CRUD --------------------------------------------------
+
+    #[tokio::test]
+    async fn homebrew_spell_crud_lifecycle() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        // Create
+        let res = call_ok(
+            &handler,
+            "create_homebrew_spell",
+            json!({
+                "name": "Arcane Blast",
+                "data": r#"{"name":"Arcane Blast","level":3}"#,
+                "level": 3,
+                "school": "evocation"
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "created");
+        let spell_id = res["spell"]["id"].as_str().unwrap().to_string();
+
+        // List
+        let res = call_ok(&handler, "list_homebrew_spells", json!({})).await;
+        assert_eq!(res["spells"].as_array().unwrap().len(), 1);
+
+        // Get
+        let res = call_ok(
+            &handler,
+            "get_homebrew_spell",
+            json!({"id": spell_id}),
+        )
+        .await;
+        assert_eq!(res["spell"]["name"], "Arcane Blast");
+        assert_eq!(res["spell"]["school"], "evocation");
+
+        // Update
+        let res = call_ok(
+            &handler,
+            "update_homebrew_spell",
+            json!({"id": spell_id, "name": "Eldritch Blast", "level": 0}),
+        )
+        .await;
+        assert_eq!(res["status"], "updated");
+        assert_eq!(res["spell"]["name"], "Eldritch Blast");
+
+        // Delete
+        let res = call_ok(
+            &handler,
+            "delete_homebrew_spell",
+            json!({"id": spell_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "deleted");
+
+        // List — empty
+        let res = call_ok(&handler, "list_homebrew_spells", json!({})).await;
+        assert_eq!(res["spells"].as_array().unwrap().len(), 0);
+    }
+
+    // -- Homebrew Item CRUD ---------------------------------------------------
+
+    #[tokio::test]
+    async fn homebrew_item_crud_lifecycle() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        // Create
+        let res = call_ok(
+            &handler,
+            "create_homebrew_item",
+            json!({
+                "name": "Flame Blade",
+                "data": r#"{"name":"Flame Blade"}"#,
+                "item_type": "weapon",
+                "rarity": "rare"
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "created");
+        let item_id = res["item"]["id"].as_str().unwrap().to_string();
+
+        // List
+        let res = call_ok(&handler, "list_homebrew_items", json!({})).await;
+        assert_eq!(res["items"].as_array().unwrap().len(), 1);
+
+        // Get
+        let res = call_ok(
+            &handler,
+            "get_homebrew_item",
+            json!({"id": item_id}),
+        )
+        .await;
+        assert_eq!(res["item"]["name"], "Flame Blade");
+        assert_eq!(res["item"]["rarity"], "rare");
+
+        // Update
+        let res = call_ok(
+            &handler,
+            "update_homebrew_item",
+            json!({"id": item_id, "name": "Frost Blade", "rarity": "legendary"}),
+        )
+        .await;
+        assert_eq!(res["status"], "updated");
+        assert_eq!(res["item"]["name"], "Frost Blade");
+
+        // Delete
+        let res = call_ok(
+            &handler,
+            "delete_homebrew_item",
+            json!({"id": item_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "deleted");
+
+        // List — empty
+        let res = call_ok(&handler, "list_homebrew_items", json!({})).await;
+        assert_eq!(res["items"].as_array().unwrap().len(), 0);
+    }
+
+    // -- Homebrew Error Cases -------------------------------------------------
+
+    #[tokio::test]
+    async fn homebrew_not_found_errors() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        let fake_id = "00000000-0000-0000-0000-000000000000";
+
+        // Monster
+        let err = call_err(&handler, "get_homebrew_monster", json!({"id": fake_id})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)), "Should be a not-found error, not InvalidArguments");
+
+        let err = call_err(&handler, "update_homebrew_monster", json!({"id": fake_id, "name": "x"})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)));
+
+        let err = call_err(&handler, "delete_homebrew_monster", json!({"id": fake_id})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)));
+
+        // Spell
+        let err = call_err(&handler, "get_homebrew_spell", json!({"id": fake_id})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)));
+
+        let err = call_err(&handler, "delete_homebrew_spell", json!({"id": fake_id})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)));
+
+        // Item
+        let err = call_err(&handler, "get_homebrew_item", json!({"id": fake_id})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)));
+
+        let err = call_err(&handler, "delete_homebrew_item", json!({"id": fake_id})).await;
+        assert!(!matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    #[tokio::test]
+    async fn homebrew_create_requires_name_and_data() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        // Monster — missing name
+        let err = call_err(
+            &handler,
+            "create_homebrew_monster",
+            json!({"data": "{}"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Monster — missing data
+        let err = call_err(
+            &handler,
+            "create_homebrew_monster",
+            json!({"name": "Test"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Spell — missing name
+        let err = call_err(
+            &handler,
+            "create_homebrew_spell",
+            json!({"data": "{}"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Item — missing name
+        let err = call_err(
+            &handler,
+            "create_homebrew_item",
+            json!({"data": "{}"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    #[tokio::test]
+    async fn homebrew_get_update_delete_require_id() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        let tools = [
+            "get_homebrew_monster",
+            "update_homebrew_monster",
+            "delete_homebrew_monster",
+            "get_homebrew_spell",
+            "update_homebrew_spell",
+            "delete_homebrew_spell",
+            "get_homebrew_item",
+            "update_homebrew_item",
+            "delete_homebrew_item",
+        ];
+
+        for tool in tools {
+            let err = call_err(&handler, tool, json!({})).await;
+            assert!(
+                matches!(err, McpError::InvalidArguments(_)),
+                "Tool '{}' should fail with InvalidArguments when id is missing, got: {:?}",
+                tool,
+                err
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn homebrew_list_requires_active_campaign() {
+        let handler = MimirHandler::with_context(test_ctx());
+        // No campaign set
+
+        let list_tools = [
+            "list_homebrew_monsters",
+            "list_homebrew_spells",
+            "list_homebrew_items",
+        ];
+
+        for tool in list_tools {
+            let err = call_err(&handler, tool, json!({})).await;
+            assert!(
+                matches!(err, McpError::NoActiveCampaign),
+                "Tool '{}' should fail with NoActiveCampaign, got: {:?}",
+                tool,
+                err
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn homebrew_create_requires_active_campaign() {
+        let handler = MimirHandler::with_context(test_ctx());
+        // No campaign set
+
+        let err = call_err(
+            &handler,
+            "create_homebrew_monster",
+            json!({"name": "Test", "data": "{}"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::NoActiveCampaign));
+
+        let err = call_err(
+            &handler,
+            "create_homebrew_spell",
+            json!({"name": "Test", "data": "{}"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::NoActiveCampaign));
+
+        let err = call_err(
+            &handler,
+            "create_homebrew_item",
+            json!({"name": "Test", "data": "{}"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::NoActiveCampaign));
     }
 }

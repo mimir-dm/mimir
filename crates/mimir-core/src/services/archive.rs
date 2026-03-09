@@ -1081,6 +1081,60 @@ impl<'a> ArchiveService<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::models::campaign::{NewCampaign, NewModule};
+    use crate::services::document::{CreateDocumentInput, DocumentService};
+    use crate::services::character::CharacterService;
+    use crate::test_utils::setup_test_db;
+    use tempfile::TempDir;
+
+    fn create_test_campaign(conn: &mut SqliteConnection) -> String {
+        let id = uuid::Uuid::new_v4().to_string();
+        let campaign = NewCampaign::new(&id, "Test Campaign");
+        insert_campaign(conn, &campaign).expect("Failed to create campaign");
+        id
+    }
+
+    fn create_test_module(conn: &mut SqliteConnection, campaign_id: &str) -> String {
+        let id = uuid::Uuid::new_v4().to_string();
+        let module = NewModule::new(&id, campaign_id, "Test Module", 1)
+            .with_description("A test module for archiving");
+        insert_module(conn, &module).expect("Failed to create module");
+        id
+    }
+
+    /// Seed a campaign with a module, document, and character for testing.
+    fn seed_campaign(conn: &mut SqliteConnection) -> (String, String) {
+        let campaign_id = create_test_campaign(conn);
+        let module_id = create_test_module(conn, &campaign_id);
+
+        // Create a document with a catalog reference
+        {
+            let mut doc_svc = DocumentService::new(conn);
+            let input = CreateDocumentInput::for_module(&campaign_id, &module_id, "Room 1")
+                .with_content("A {@monster Goblin|MM} guards the door.");
+            doc_svc.create(input).expect("Failed to create document");
+        }
+
+        // Create a character
+        {
+            let mut char_svc = CharacterService::new(conn);
+            let input = crate::services::character::CreateCharacterInput {
+                campaign_id: Some(campaign_id.clone()),
+                name: "Test Hero".to_string(),
+                is_npc: false,
+                player_name: None,
+                race_name: Some("Human".to_string()),
+                race_source: None,
+                background_name: None,
+                background_source: None,
+                ability_scores: None,
+            };
+            char_svc.create(input).expect("Failed to create character");
+        }
+
+        (campaign_id, module_id)
+    }
 
     #[test]
     fn test_slugify() {
@@ -1107,5 +1161,329 @@ mod tests {
         set.insert(ref1);
         set.insert(ref2);
         assert_eq!(set.len(), 1);
+    }
+
+    #[test]
+    fn test_export_creates_file() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let mut svc = ArchiveService::new(&mut conn);
+        let path = svc
+            .export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+            .expect("Failed to export");
+
+        assert!(path.exists());
+        assert!(path.to_string_lossy().ends_with(ARCHIVE_EXTENSION));
+    }
+
+    #[test]
+    fn test_export_archive_contains_manifest_and_data() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let mut svc = ArchiveService::new(&mut conn);
+        let path = svc
+            .export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+            .unwrap();
+
+        // Open the tar.gz and verify entries
+        let file = File::open(&path).unwrap();
+        let gz = GzDecoder::new(file);
+        let mut archive = Archive::new(gz);
+
+        let mut found_manifest = false;
+        let mut found_data = false;
+        for entry in archive.entries().unwrap() {
+            let entry = entry.unwrap();
+            let path = entry.path().unwrap();
+            let filename = path.file_name().unwrap().to_string_lossy().to_string();
+            if filename == "manifest.json" {
+                found_manifest = true;
+            }
+            if filename == "data.json" {
+                found_data = true;
+            }
+        }
+        assert!(found_manifest, "Archive should contain manifest.json");
+        assert!(found_data, "Archive should contain data.json");
+    }
+
+    #[test]
+    fn test_preview_archive() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let mut svc = ArchiveService::new(&mut conn);
+        let path = svc
+            .export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+            .unwrap();
+
+        let preview = ArchiveService::preview_archive(&path).expect("Failed to preview");
+
+        assert_eq!(preview.campaign_name, "Test Campaign");
+        assert_eq!(preview.archive_version, ARCHIVE_VERSION);
+        assert_eq!(preview.counts.modules, 1);
+        assert_eq!(preview.counts.documents, 1);
+        assert_eq!(preview.counts.characters, 1);
+    }
+
+    #[test]
+    fn test_preview_extracts_catalog_references() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let mut svc = ArchiveService::new(&mut conn);
+        let path = svc
+            .export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+            .unwrap();
+
+        let preview = ArchiveService::preview_archive(&path).unwrap();
+
+        assert!(!preview.catalog_references.is_empty());
+        let goblin_ref = preview
+            .catalog_references
+            .iter()
+            .find(|r| r.name == "Goblin" && r.source == "MM");
+        assert!(goblin_ref.is_some(), "Should find Goblin|MM catalog reference");
+    }
+
+    #[test]
+    fn test_export_nonexistent_campaign() {
+        let mut conn = setup_test_db();
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let mut svc = ArchiveService::new(&mut conn);
+        let result = svc.export_campaign("nonexistent", output_dir.path(), assets_dir.path());
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_preview_nonexistent_file() {
+        let result = ArchiveService::preview_archive(Path::new("/nonexistent/file.tar.gz"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_import_round_trip() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        // Export
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .expect("Failed to export")
+        };
+
+        // Import with name override
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Imported Campaign"))
+                .expect("Failed to import")
+        };
+
+        assert_eq!(import_result.campaign_name, "Imported Campaign");
+        assert_eq!(import_result.counts.modules, 1);
+        assert_eq!(import_result.counts.documents, 1);
+        assert_eq!(import_result.counts.characters, 1);
+
+        // Verify imported campaign exists and has data
+        let imported_campaign =
+            dal::get_campaign(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(imported_campaign.name, "Imported Campaign");
+
+        // Verify module imported
+        let modules = dal::list_modules(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(modules.len(), 1);
+        assert_eq!(modules[0].name, "Test Module");
+
+        // Verify document imported
+        let docs = dal::list_campaign_documents(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(docs.len(), 1);
+        assert!(docs[0].content.contains("Goblin"));
+
+        // Verify character imported
+        let chars = dal::list_campaign_characters(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(chars.len(), 1);
+        assert_eq!(chars[0].name, "Test Hero");
+    }
+
+    #[test]
+    fn test_import_generates_new_uuids() {
+        let mut conn = setup_test_db();
+        let (campaign_id, module_id) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Clone"))
+                .unwrap()
+        };
+
+        // Campaign ID must differ
+        assert_ne!(import_result.campaign_id, campaign_id);
+
+        // Module ID must differ
+        let modules = dal::list_modules(&mut conn, &import_result.campaign_id).unwrap();
+        assert_ne!(modules[0].id, module_id);
+    }
+
+    #[test]
+    fn test_import_name_collision_auto_increments() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        // Import without name override — should auto-generate unique name
+        let result1 = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), None)
+                .unwrap()
+        };
+        // Original is "Test Campaign", so duplicate should be "Test Campaign (2)"
+        assert_eq!(result1.campaign_name, "Test Campaign (2)");
+
+        // Import again — should get (3)
+        let result2 = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), None)
+                .unwrap()
+        };
+        assert_eq!(result2.campaign_name, "Test Campaign (3)");
+    }
+
+    #[test]
+    fn test_import_invalid_archive() {
+        let mut conn = setup_test_db();
+        let temp_dir = TempDir::new().unwrap();
+        let bad_file = temp_dir.path().join("bad.tar.gz");
+        fs::write(&bad_file, b"not a real archive").unwrap();
+
+        let assets_dir = TempDir::new().unwrap();
+        let mut svc = ArchiveService::new(&mut conn);
+        let result = svc.import_campaign(&bad_file, assets_dir.path(), None);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_export_empty_campaign() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let mut svc = ArchiveService::new(&mut conn);
+        let path = svc
+            .export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+            .expect("Failed to export empty campaign");
+
+        let preview = ArchiveService::preview_archive(&path).unwrap();
+        assert_eq!(preview.counts.modules, 0);
+        assert_eq!(preview.counts.documents, 0);
+        assert_eq!(preview.counts.characters, 0);
+        assert_eq!(preview.counts.maps, 0);
+    }
+
+    #[test]
+    fn test_import_preserves_document_content() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Content Check"))
+                .unwrap()
+        };
+
+        let docs = dal::list_campaign_documents(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(docs[0].content, "A {@monster Goblin|MM} guards the door.");
+        assert_eq!(docs[0].title, "Room 1");
+    }
+
+    #[test]
+    fn test_import_preserves_module_document_associations() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Assoc Check"))
+                .unwrap()
+        };
+
+        let modules = dal::list_modules(&mut conn, &import_result.campaign_id).unwrap();
+        let docs = dal::list_campaign_documents(&mut conn, &import_result.campaign_id).unwrap();
+
+        // Document should be associated with the imported module
+        assert_eq!(docs[0].module_id, Some(modules[0].id.clone()));
+    }
+
+    #[test]
+    fn test_export_import_empty_round_trip() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Empty Import"))
+                .unwrap()
+        };
+
+        assert_eq!(import_result.campaign_name, "Empty Import");
+        assert_eq!(import_result.counts.modules, 0);
+        assert_eq!(import_result.counts.documents, 0);
+        assert_eq!(import_result.counts.characters, 0);
     }
 }

@@ -73,6 +73,25 @@ jobs:
           projectPath: ./crates/mimir
           args: ${{ matrix.args }}
 
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install frontend dependencies
+        working-directory: ./crates/mimir/frontend
+        run: npm ci
+
+      - name: run tests
+        working-directory: ./crates/mimir/frontend
+        run: npx vitest run
+
   test-other-crates:
     name: Test Other Crates
     runs-on: ubuntu-latest
