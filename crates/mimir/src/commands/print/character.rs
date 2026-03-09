@@ -141,7 +141,7 @@ pub fn export_character(
 
         inventory: inventory
             .iter()
-            .map(|i| enrich_inventory_item(&mut db, i))
+            .map(|i| enrich_inventory_item(&mut db, i, character.campaign_id.as_deref()))
             .collect(),
 
         proficiencies,
@@ -392,49 +392,96 @@ pub fn export_character(
                     "  Looking up item '{}' from source '{}'",
                     inv_item.item_name, inv_item.item_source
                 );
-                match catalog_dal::get_item_by_name(
-                    &mut db,
-                    &inv_item.item_name,
-                    &inv_item.item_source,
-                ) {
-                    Ok(Some(catalog_item)) => match catalog_item.parse_data() {
-                        Ok(mut data) => {
-                            // Add inventory-specific fields
-                            if let Some(obj) = data.as_object_mut() {
-                                obj.insert(
-                                    "quantity".to_string(),
-                                    Value::Number(inv_item.quantity.into()),
-                                );
-                                obj.insert(
-                                    "equipped".to_string(),
-                                    Value::Bool(inv_item.is_equipped()),
-                                );
-                                obj.insert(
-                                    "attuned".to_string(),
-                                    Value::Bool(inv_item.is_attuned()),
-                                );
-                                if let Some(ref notes) = inv_item.notes {
-                                    obj.insert("notes".to_string(), Value::String(notes.clone()));
+                // Look up item data — check homebrew first if source is "HB"
+                let item_json: Option<Value> = if inv_item.item_source == "HB" {
+                    // Look up from homebrew items using character's campaign
+                    let campaign_id = character.campaign_id.as_deref().unwrap_or("");
+                    match dal::get_campaign_homebrew_item_by_name(
+                        &mut db,
+                        campaign_id,
+                        &inv_item.item_name,
+                    ) {
+                        Ok(Some(hb_item)) => {
+                            match serde_json::from_str::<Value>(&hb_item.data) {
+                                Ok(mut data) => {
+                                    if let Some(obj) = data.as_object_mut() {
+                                        obj.insert("name".to_string(), Value::String(hb_item.name));
+                                        obj.insert("source".to_string(), Value::String("HB".to_string()));
+                                        if let Some(ref r) = hb_item.rarity {
+                                            obj.insert("rarity".to_string(), Value::String(r.clone()));
+                                        }
+                                    }
+                                    Some(data)
+                                }
+                                Err(e) => {
+                                    error!("    -> Failed to parse homebrew item data: {}", e);
+                                    None
                                 }
                             }
-                            // Only include card-worthy items
-                            if is_card_worthy(&data) {
-                                info!("    -> Card-worthy item added");
-                                item_data.push(data);
-                            } else {
-                                info!("    -> Item not card-worthy, skipping");
-                            }
+                        }
+                        Ok(None) => {
+                            info!("    -> Homebrew item not found");
+                            None
                         }
                         Err(e) => {
-                            error!("    -> Failed to parse item data: {}", e);
+                            error!("    -> Error looking up homebrew item: {}", e);
+                            None
                         }
-                    },
-                    Ok(None) => {
-                        info!("    -> Item not found in catalog");
                     }
-                    Err(e) => {
-                        error!("    -> Error looking up item: {}", e);
+                } else {
+                    // Look up from catalog
+                    match catalog_dal::get_item_by_name(
+                        &mut db,
+                        &inv_item.item_name,
+                        &inv_item.item_source,
+                    ) {
+                        Ok(Some(catalog_item)) => match catalog_item.parse_data() {
+                            Ok(data) => Some(data),
+                            Err(e) => {
+                                error!("    -> Failed to parse item data: {}", e);
+                                None
+                            }
+                        },
+                        Ok(None) => {
+                            info!("    -> Item not found in catalog");
+                            None
+                        }
+                        Err(e) => {
+                            error!("    -> Error looking up item: {}", e);
+                            None
+                        }
                     }
+                };
+
+                match item_json {
+                    Some(mut data) => {
+                        // Add inventory-specific fields
+                        if let Some(obj) = data.as_object_mut() {
+                            obj.insert(
+                                "quantity".to_string(),
+                                Value::Number(inv_item.quantity.into()),
+                            );
+                            obj.insert(
+                                "equipped".to_string(),
+                                Value::Bool(inv_item.is_equipped()),
+                            );
+                            obj.insert(
+                                "attuned".to_string(),
+                                Value::Bool(inv_item.is_attuned()),
+                            );
+                            if let Some(ref notes) = inv_item.notes {
+                                obj.insert("notes".to_string(), Value::String(notes.clone()));
+                            }
+                        }
+                        // Only include card-worthy items
+                        if is_card_worthy(&data) {
+                            info!("    -> Card-worthy item added");
+                            item_data.push(data);
+                        } else {
+                            info!("    -> Item not card-worthy, skipping");
+                        }
+                    }
+                    None => {}
                 }
             }
 

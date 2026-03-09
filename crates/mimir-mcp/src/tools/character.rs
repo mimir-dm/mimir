@@ -651,6 +651,26 @@ pub async fn add_item_to_character(ctx: &Arc<McpContext>, args: Value) -> Result
         .and_then(|v| v.as_str())
         .unwrap_or("PHB");
 
+    // If no explicit source was provided, check if this item exists as homebrew
+    // in the active campaign — if so, use "HB" source instead of "PHB"
+    let item_source = if args.get("item_source").is_none() {
+        if let Some(campaign_id) = ctx.get_active_campaign_id() {
+            let mut db = ctx.connect()?;
+            match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(
+                &mut db,
+                &campaign_id,
+                item_name,
+            ) {
+                Ok(Some(_)) => "HB",
+                _ => item_source,
+            }
+        } else {
+            item_source
+        }
+    } else {
+        item_source
+    };
+
     let quantity = args.get("quantity").and_then(|v| v.as_i64()).map(|q| q as i32);
     let equipped = args.get("equipped").and_then(|v| v.as_bool()).unwrap_or(false);
     let attuned = args.get("attuned").and_then(|v| v.as_bool()).unwrap_or(false);

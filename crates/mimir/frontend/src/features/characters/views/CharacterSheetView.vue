@@ -311,7 +311,7 @@ const loadCharacter = async () => {
         loadSubclassDetails(),
       ])
       // Load features after class data is ready (it parses from classData)
-      loadClassFeatures()
+      await loadClassFeatures()
     }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load character'
@@ -364,7 +364,7 @@ const loadClassData = async () => {
   }
 }
 
-const loadClassFeatures = () => {
+const loadClassFeatures = async () => {
   if (!character.value?.classes?.length) return
 
   const allFeatures: ClassFeature[] = []
@@ -408,42 +408,46 @@ const loadClassFeatures = () => {
       }
     }
 
-    // Also load subclass features if character has a subclass
+    // Load subclass features from the backend (includes child features like "Fast Hands", "Improved Critical")
     if (cls.subclass_name) {
-      const subclassKey = `${cls.class_name}|${cls.subclass_name}`
-      const subclass = subclassDetails.value[subclassKey]
-      if (subclass?.data) {
-        // Subclass features format: "FeatureName|ClassName|ClassSource|SubclassShortName|SubclassSource|Level" (6 parts)
-        const rawSubFeatures = (subclass.data as Record<string, unknown>).subclassFeatures as string[] | undefined
-        if (rawSubFeatures) {
-          for (const featureRef of rawSubFeatures) {
-            if (typeof featureRef !== 'string') continue
-            const parts = featureRef.split('|')
-            if (parts.length >= 6) {
-              const featureName = parts[0]
-              const className = parts[1] || cls.class_name
-              const classSource = parts[2] || cls.class_source || 'PHB'
-              const subclassShortName = parts[3]
-              const subclassSource = parts[4]
-              const level = parseInt(parts[5]) || 1
+      const subSource = cls.subclass_source || 'PHB'
+      try {
+        const result = await invoke<{ success: boolean; data?: Array<Record<string, unknown>> }>(
+          'list_subclass_features',
+          { subclassName: cls.subclass_name, subclassSource: subSource }
+        )
+        if (result.success && result.data) {
+          for (const feature of result.data) {
+            const level = (feature.level as number) || 1
+            const featureName = feature.name as string
+            if (!featureName) continue
+            // Only include features up to character's current level
+            if (level > cls.level) continue
+            // Skip the intro feature that shares its name with the subclass (e.g., "Thief", "Champion")
+            // — it's just the subclass description, the actual features are separate entries
+            const header = feature.header as number | undefined
+            if (featureName === cls.subclass_name && header === 1) continue
 
-              // Only include features up to character's current level
-              if (level <= cls.level) {
-                allFeatures.push({
-                  name: featureName,
-                  source: subclassSource || classSource,
-                  class_name: className,
-                  class_source: classSource,
-                  level: level,
-                  data: '',
-                  subclass_name: cls.subclass_name,
-                  subclass_short_name: subclassShortName,
-                  subclass_source: subclassSource,
-                })
-              }
-            }
+            // Determine the subclass short name from the feature data or cls
+            const subclassShortName = (feature.subclassShortName as string)
+              || (feature.shortName as string)
+              || cls.subclass_name
+
+            allFeatures.push({
+              name: featureName,
+              source: subSource,
+              class_name: cls.class_name,
+              class_source: cls.class_source || 'PHB',
+              level: level,
+              data: '',
+              subclass_name: cls.subclass_name,
+              subclass_short_name: subclassShortName,
+              subclass_source: subSource,
+            })
           }
         }
+      } catch (e) {
+        console.error(`Failed to load subclass features for ${cls.subclass_name}:`, e)
       }
     }
   }

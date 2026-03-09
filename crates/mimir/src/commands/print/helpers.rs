@@ -110,34 +110,59 @@ pub fn compute_hit_die_string(classes: &[ClassInfo]) -> String {
 pub fn enrich_inventory_item(
     db: &mut diesel::SqliteConnection,
     inv_item: &mimir_core::models::CharacterInventory,
+    campaign_id: Option<&str>,
 ) -> InventoryItem {
     let equipped = inv_item.is_equipped();
     let attuned = inv_item.is_attuned();
 
-    // Try to look up catalog item for weapon/armor stats
+    // Parse item data from either homebrew or catalog
+    let parse_item_data = |data: &serde_json::Value| {
+        let it = data.get("type")
+            .or_else(|| data.get("item_type"))
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        let dmg = data.get("dmg1").and_then(|v| v.as_str()).map(String::from);
+        let dt = data.get("dmg_type")
+            .or_else(|| data.get("dmgType"))
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        let ac = data.get("ac").and_then(|v| v.as_i64()).map(|v| v as i32);
+        let fin = data.get("property")
+            .and_then(|v| v.as_array())
+            .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("F")));
+        (it, dmg, dt, ac, fin)
+    };
+
+    // Try homebrew first if source is "HB", then fall back to catalog
     let (item_type, damage, damage_type, armor_ac, finesse) =
-        match catalog_dal::get_item_by_name(db, &inv_item.item_name, &inv_item.item_source) {
-            Ok(Some(catalog_item)) => {
-                if let Ok(data) = catalog_item.parse_data() {
-                    let it = data.get("type")
-                        .or_else(|| data.get("item_type"))
-                        .and_then(|v| v.as_str())
-                        .map(String::from);
-                    let dmg = data.get("dmg1").and_then(|v| v.as_str()).map(String::from);
-                    let dt = data.get("dmg_type")
-                        .or_else(|| data.get("dmgType"))
-                        .and_then(|v| v.as_str())
-                        .map(String::from);
-                    let ac = data.get("ac").and_then(|v| v.as_i64()).map(|v| v as i32);
-                    let fin = data.get("property")
-                        .and_then(|v| v.as_array())
-                        .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("F")));
-                    (it, dmg, dt, ac, fin)
-                } else {
-                    (None, None, None, None, false)
+        if inv_item.item_source == "HB" {
+            if let Some(cid) = campaign_id {
+                match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(
+                    db, cid, &inv_item.item_name,
+                ) {
+                    Ok(Some(hb_item)) => {
+                        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&hb_item.data) {
+                            parse_item_data(&data)
+                        } else {
+                            (None, None, None, None, false)
+                        }
+                    }
+                    _ => (None, None, None, None, false),
                 }
+            } else {
+                (None, None, None, None, false)
             }
-            _ => (None, None, None, None, false),
+        } else {
+            match catalog_dal::get_item_by_name(db, &inv_item.item_name, &inv_item.item_source) {
+                Ok(Some(catalog_item)) => {
+                    if let Ok(data) = catalog_item.parse_data() {
+                        parse_item_data(&data)
+                    } else {
+                        (None, None, None, None, false)
+                    }
+                }
+                _ => (None, None, None, None, false),
+            }
         };
 
     InventoryItem {

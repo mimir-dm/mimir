@@ -494,7 +494,7 @@ pub fn export_campaign_documents(
                     .collect(),
                 inventory: inventory
                     .iter()
-                    .map(|i| enrich_inventory_item(&mut db, i))
+                    .map(|i| enrich_inventory_item(&mut db, i, Some(&campaign_id)))
                     .collect(),
                 proficiencies,
                 speed: 30,

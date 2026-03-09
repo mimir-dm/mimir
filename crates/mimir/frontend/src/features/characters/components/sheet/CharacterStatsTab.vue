@@ -365,10 +365,21 @@ const toggleFeatureExpansion = async (feature: ClassFeature) => {
   if (!featureDetails.value[key]) {
     loadingFeature.value = key
     try {
-      const result = await invoke<{ success: boolean; data?: Record<string, unknown>; error?: string }>(
-        'get_class_feature',
-        { name: feature.name, className: feature.class_name }
-      )
+      let result: { success: boolean; data?: Record<string, unknown>; error?: string }
+      if (feature.subclass_name) {
+        // Subclass feature — look up by subclass name and source
+        result = await invoke('get_subclass_feature', {
+          name: feature.name,
+          subclassName: feature.subclass_short_name || feature.subclass_name,
+          subclassSource: feature.subclass_source || 'PHB',
+        })
+      } else {
+        // Class feature
+        result = await invoke('get_class_feature', {
+          name: feature.name,
+          className: feature.class_name,
+        })
+      }
       if (result.success && result.data) {
         featureDetails.value = { ...featureDetails.value, [key]: result.data }
       }

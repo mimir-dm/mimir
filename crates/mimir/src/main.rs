@@ -12,15 +12,37 @@ use mimir_lib::commands::{archive, asset, campaign, catalog, character, dev, dm_
 use mimir_lib::{AppPaths, AppState};
 use mimir_print::PrintState;
 use tauri::Manager;
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::EnvFilter;
 
 fn main() {
-    // Initialize tracing subscriber for logging
+    // Set up file-based logging in the app's logs directory
+    #[cfg(target_os = "macos")]
+    let log_dir = std::env::var("HOME")
+        .map(|h| std::path::PathBuf::from(h).join("Library/Application Support/com.mimir.app/logs"))
+        .unwrap_or_else(|_| std::path::PathBuf::from("logs"));
+    #[cfg(target_os = "windows")]
+    let log_dir = std::env::var("APPDATA")
+        .map(|h| std::path::PathBuf::from(h).join("com.mimir.app/logs"))
+        .unwrap_or_else(|_| std::path::PathBuf::from("logs"));
+    #[cfg(target_os = "linux")]
+    let log_dir = std::env::var("HOME")
+        .map(|h| std::path::PathBuf::from(h).join(".local/share/com.mimir.app/logs"))
+        .unwrap_or_else(|_| std::path::PathBuf::from("logs"));
+    std::fs::create_dir_all(&log_dir).ok();
+
+    let file_appender = tracing_appender::rolling::daily(&log_dir, "mimir.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    // Log to both stderr and file
+    let writer = std::io::stderr.and(non_blocking);
+
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| EnvFilter::new("mimir=info,mimir_core=info"))
         )
+        .with_writer(writer)
         .init();
 
     tauri::Builder::default()
