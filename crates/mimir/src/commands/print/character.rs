@@ -24,6 +24,43 @@ use super::helpers::{
 };
 use super::{ApiResponse, CharacterExportOptions, PrintResult};
 
+/// Map human-readable homebrew item_type (from frontend UI) to 5etools type codes.
+/// For weapons, inspects the JSON data to determine melee (M) vs ranged (R).
+pub(super) fn homebrew_item_type_to_code(item_type: &str, data: &serde_json::Map<String, Value>) -> Option<String> {
+    match item_type.to_lowercase().as_str() {
+        "weapon" => {
+            // Check for ranged indicators in the data
+            let has_range = data.get("range").and_then(|v| v.as_str()).is_some_and(|r| !r.is_empty());
+            let has_ammo_prop = data.get("property")
+                .and_then(|v| v.as_array())
+                .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("A")));
+            if has_range && !has_ammo_prop {
+                // Has range but not just "thrown" (ammunition property = ranged weapon)
+                // Actually: range + no melee damage indicator = ranged
+                Some("R".to_string())
+            } else if has_range && has_ammo_prop {
+                Some("R".to_string())
+            } else {
+                Some("M".to_string())
+            }
+        }
+        "armor" => Some("LA".to_string()), // default to light; AC computation handles specifics
+        "shield" => Some("S".to_string()),
+        "potion" => Some("P".to_string()),
+        "ring" => Some("RG".to_string()),
+        "rod" => Some("RD".to_string()),
+        "wand" => Some("WD".to_string()),
+        "scroll" => Some("SC".to_string()),
+        "staff" | "wondrous item" => Some("W".to_string()),
+        "adventuring gear" => Some("G".to_string()),
+        // Already a 5etools code (e.g., "M", "R", "W")
+        "m" | "r" | "a" | "af" | "s" | "la" | "ma" | "ha" | "rg" | "rd" | "wd" | "w" | "p" | "sc" => {
+            Some(item_type.to_uppercase())
+        }
+        _ => None,
+    }
+}
+
 /// Export a character to PDF
 #[tauri::command]
 pub fn export_character(
@@ -132,6 +169,7 @@ pub fn export_character(
                 let is_starting = c.is_starting_class();
                 ClassInfo {
                     class_name: c.class_name,
+                    class_source: c.class_source,
                     level: c.level,
                     subclass_name: c.subclass_name,
                     is_starting,
@@ -314,14 +352,24 @@ pub fn export_character(
                             continue;
                         }
 
-                        // Filter by character's allowed sources (if configured)
+                        // Filter by character's allowed sources if configured.
                         if let Some(ref sources) = allowed_sources {
                             if !sources.contains(&spell.source) {
                                 continue;
                             }
                         }
 
-                        // Create unique key to avoid duplicates (same spell on multiple class lists)
+                        // PHB and XPHB are revisions of the same book and publish
+                        // duplicate spells. When both exist, only keep the version
+                        // matching the character's class ruleset. Spells from other
+                        // sources (XGE, TCE, etc.) are always included.
+                        if (spell.source == "PHB" && class_info.class_source == "XPHB")
+                            || (spell.source == "XPHB" && class_info.class_source == "PHB")
+                        {
+                            continue;
+                        }
+
+                        // Deduplicate across multiclass (same spell on multiple class lists)
                         let spell_key = format!("{}|{}", spell.name, spell.source);
                         if seen_spells.contains(&spell_key) {
                             continue;
@@ -409,6 +457,14 @@ pub fn export_character(
                                         obj.insert("source".to_string(), Value::String("HB".to_string()));
                                         if let Some(ref r) = hb_item.rarity {
                                             obj.insert("rarity".to_string(), Value::String(r.clone()));
+                                        }
+                                        // Inject 5etools type code from item_type if not already in data
+                                        if !obj.contains_key("type") {
+                                            if let Some(ref it) = hb_item.item_type {
+                                                if let Some(code) = homebrew_item_type_to_code(it, obj) {
+                                                    obj.insert("type".to_string(), Value::String(code));
+                                                }
+                                            }
                                         }
                                     }
                                     Some(data)

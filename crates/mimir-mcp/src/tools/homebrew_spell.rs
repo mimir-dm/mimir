@@ -52,18 +52,18 @@ pub fn create_homebrew_spell_tool() -> Tool {
     Tool {
         name: "create_homebrew_spell".to_string(),
         description: Some(
-            "Create a new homebrew spell in the active campaign. Data should be a JSON string with the spell's details."
+            "Create a new homebrew spell in the active campaign. To clone from a catalog spell, provide cloned_from_name and cloned_from_source — the catalog spell's full data will be used as the base, and any fields in data will override specific properties. When cloning, data is optional. IMPORTANT: Use search_spells first to find the exact name and source of the catalog spell before cloning."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
-            vec!["name".to_string(), "data".to_string()],
+            vec!["name".to_string()],
             create_properties(vec![
                 ("name", "string", "Name of the homebrew spell"),
-                ("data", "string", "JSON string with spell data"),
+                ("data", "string", "JSON string with spell data. Required when not cloning. When cloning, fields here override the catalog data."),
                 ("level", "integer", "Spell level (0 for cantrip, 1-9)"),
                 ("school", "string", "School of magic (e.g. 'evocation', 'necromancy')"),
-                ("cloned_from_name", "string", "Name of the catalog spell this was cloned from"),
-                ("cloned_from_source", "string", "Source book of the catalog spell this was cloned from"),
+                ("cloned_from_name", "string", "Name of the catalog spell to clone from. Must be used with cloned_from_source."),
+                ("cloned_from_source", "string", "Source book of the catalog spell to clone from (e.g. PHB, XGE). Must be used with cloned_from_name."),
             ]),
             None,
         ),
@@ -175,19 +175,25 @@ pub async fn create_homebrew_spell(
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
 
-    let data = args
-        .get("data")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("data is required".to_string()))?;
+    let data = args.get("data").and_then(|v| v.as_str()).map(String::from);
+    let cloned_from_name = args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from);
+    let cloned_from_source = args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from);
+
+    // data is required when not cloning
+    if data.is_none() && (cloned_from_name.is_none() || cloned_from_source.is_none()) {
+        return Err(McpError::InvalidArguments(
+            "data is required when not cloning from catalog (provide cloned_from_name and cloned_from_source to clone)".to_string(),
+        ));
+    }
 
     let input = CreateHomebrewSpellInput {
         campaign_id,
         name: name.to_string(),
-        data: data.to_string(),
+        data,
         level: args.get("level").and_then(|v| v.as_i64()).map(|l| l as i32),
         school: args.get("school").and_then(|v| v.as_str()).map(String::from),
-        cloned_from_name: args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from),
-        cloned_from_source: args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from),
+        cloned_from_name,
+        cloned_from_source,
     };
 
     let mut db = ctx.connect()?;

@@ -66,14 +66,20 @@ pub fn get_character_tool() -> Tool {
 pub fn create_character_tool() -> Tool {
     Tool {
         name: "create_character".to_string(),
-        description: Some("Create a new character (NPC or PC)".to_string()),
+        description: Some("Create a new character (NPC or PC). When race, class, and background are provided, proficiencies are automatically populated from catalog data.".to_string()),
         input_schema: ToolInputSchema::new(
             vec!["name".to_string(), "character_type".to_string()],
             create_properties(vec![
                 ("name", "string", "Name of the character"),
                 ("character_type", "string", "Type: pc or npc"),
-                ("race_name", "string", "Race of the character"),
-                ("class_name", "string", "Starting class"),
+                ("player_name", "string", "Player name (PCs only, defaults to 'Player')"),
+                ("race_name", "string", "Race name (e.g., 'Elf'). Populates race proficiencies."),
+                ("race_source", "string", "Race source book (default: PHB)"),
+                ("class_name", "string", "Starting class (e.g., 'Fighter'). Populates saving throws, armor, weapon, and tool proficiencies."),
+                ("class_source", "string", "Class source book (default: PHB)"),
+                ("background_name", "string", "Background name (e.g., 'Acolyte'). Populates skill, tool, and language proficiencies."),
+                ("background_source", "string", "Background source book (default: PHB)"),
+                ("selected_skills", "array", "Skill proficiencies chosen from the class skill list (e.g., ['Perception', 'Stealth'])"),
                 ("level", "integer", "Starting level (default: 1)"),
             ]),
             None,
@@ -458,6 +464,35 @@ pub async fn create_character(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
             .and_then(|v| v.as_str())
             .unwrap_or("PHB");
         input = input.with_race(race, race_source);
+    }
+
+    // Set class if provided (enables proficiency auto-population)
+    if let Some(class_name) = args.get("class_name").and_then(|v| v.as_str()) {
+        let class_source = args
+            .get("class_source")
+            .and_then(|v| v.as_str())
+            .unwrap_or("PHB");
+        input = input.with_class(class_name, class_source);
+    }
+
+    // Set background if provided (enables proficiency auto-population)
+    if let Some(bg_name) = args.get("background_name").and_then(|v| v.as_str()) {
+        let bg_source = args
+            .get("background_source")
+            .and_then(|v| v.as_str())
+            .unwrap_or("PHB");
+        input = input.with_background(bg_name, bg_source);
+    }
+
+    // Set selected skills if provided
+    if let Some(skills) = args.get("selected_skills").and_then(|v| v.as_array()) {
+        let skill_names: Vec<String> = skills
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
+        if !skill_names.is_empty() {
+            input = input.with_skills(skill_names);
+        }
     }
 
     let character = service

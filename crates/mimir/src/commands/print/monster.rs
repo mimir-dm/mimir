@@ -75,44 +75,73 @@ pub fn export_module_monsters(
         );
     }
 
-    // Look up each monster's full data from the catalog
+    // Look up each monster's full data from catalog or homebrew
     let mut monster_data: Vec<Value> = Vec::new();
     for mm in &module_monsters {
-        match catalog_dal::get_monster_by_name(&mut db, &mm.monster_name, &mm.monster_source) {
-            Ok(Some(catalog_monster)) => {
-                // Parse the monster's data JSON
-                match catalog_monster.parse_data() {
-                    Ok(mut data) => {
-                        // Apply display name override if set
-                        if let Some(ref display_name) = mm.display_name {
+        let parsed: Option<Value> = if mm.monster_source == "HB" {
+            // Look up from homebrew monsters
+            match dal::get_campaign_homebrew_monster_by_name(
+                &mut db,
+                &module.campaign_id,
+                &mm.monster_name,
+            ) {
+                Ok(Some(hb_monster)) => {
+                    match serde_json::from_str::<Value>(&hb_monster.data) {
+                        Ok(mut data) => {
                             if let Some(obj) = data.as_object_mut() {
-                                obj.insert(
-                                    "name".to_string(),
-                                    Value::String(display_name.clone()),
-                                );
+                                obj.insert("name".to_string(), Value::String(hb_monster.name));
+                                obj.insert("source".to_string(), Value::String("HB".to_string()));
                             }
+                            Some(data)
                         }
-                        // Add quantity copies if > 1
-                        for _ in 0..mm.quantity {
-                            monster_data.push(data.clone());
+                        Err(e) => {
+                            error!("Failed to parse homebrew monster data for {}: {}", mm.monster_name, e);
+                            None
                         }
-                    }
-                    Err(e) => {
-                        error!(
-                            "Failed to parse monster data for {}: {}",
-                            mm.monster_name, e
-                        );
                     }
                 }
+                Ok(None) => {
+                    error!("Homebrew monster not found: {}", mm.monster_name);
+                    None
+                }
+                Err(e) => {
+                    error!("Failed to look up homebrew monster {}: {}", mm.monster_name, e);
+                    None
+                }
             }
-            Ok(None) => {
-                error!(
-                    "Catalog monster not found: {} ({})",
-                    mm.monster_name, mm.monster_source
-                );
+        } else {
+            // Look up from catalog
+            match catalog_dal::get_monster_by_name(&mut db, &mm.monster_name, &mm.monster_source) {
+                Ok(Some(catalog_monster)) => {
+                    match catalog_monster.parse_data() {
+                        Ok(data) => Some(data),
+                        Err(e) => {
+                            error!("Failed to parse monster data for {}: {}", mm.monster_name, e);
+                            None
+                        }
+                    }
+                }
+                Ok(None) => {
+                    error!("Catalog monster not found: {} ({})", mm.monster_name, mm.monster_source);
+                    None
+                }
+                Err(e) => {
+                    error!("Failed to look up monster {}: {}", mm.monster_name, e);
+                    None
+                }
             }
-            Err(e) => {
-                error!("Failed to look up monster {}: {}", mm.monster_name, e);
+        };
+
+        if let Some(mut data) = parsed {
+            // Apply display name override if set
+            if let Some(ref display_name) = mm.display_name {
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert("name".to_string(), Value::String(display_name.clone()));
+                }
+            }
+            // Add quantity copies
+            for _ in 0..mm.quantity {
+                monster_data.push(data.clone());
             }
         }
     }

@@ -142,7 +142,17 @@ pub fn enrich_inventory_item(
                 ) {
                     Ok(Some(hb_item)) => {
                         if let Ok(data) = serde_json::from_str::<serde_json::Value>(&hb_item.data) {
-                            parse_item_data(&data)
+                            let (it, dmg, dt, ac, fin) = parse_item_data(&data);
+                            // Fall back to DB item_type if JSON data has no type field
+                            let item_type = it.or_else(|| {
+                                hb_item.item_type.as_deref().and_then(|t| {
+                                    super::character::homebrew_item_type_to_code(
+                                        t,
+                                        data.as_object().unwrap_or(&serde_json::Map::new()),
+                                    )
+                                })
+                            });
+                            (item_type, dmg, dt, ac, fin)
                         } else {
                             (None, None, None, None, false)
                         }

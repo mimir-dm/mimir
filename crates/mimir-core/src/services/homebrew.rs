@@ -9,6 +9,7 @@ use serde_json::Value;
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
+use crate::dal::catalog as catalog_dal;
 use crate::models::campaign::{
     CampaignHomebrewItem, CampaignHomebrewMonster, CampaignHomebrewSpell,
     NewCampaignHomebrewItem, NewCampaignHomebrewMonster, NewCampaignHomebrewSpell,
@@ -20,11 +21,15 @@ use crate::utils::now_rfc3339;
 // ── Input structs ──────────────────────────────────────────────────────
 
 /// Input for creating a homebrew item.
+///
+/// When `cloned_from_name` and `cloned_from_source` are provided, the catalog
+/// item's data blob is used as the base. Any user-provided `data` fields are
+/// deep-merged on top (user overrides win). `data` is optional when cloning.
 #[derive(Debug, Clone)]
 pub struct CreateHomebrewItemInput {
     pub campaign_id: String,
     pub name: String,
-    pub data: String,
+    pub data: Option<String>,
     pub item_type: Option<String>,
     pub rarity: Option<String>,
     pub cloned_from_name: Option<String>,
@@ -41,11 +46,15 @@ pub struct UpdateHomebrewItemInput {
 }
 
 /// Input for creating a homebrew monster.
+///
+/// When `cloned_from_name` and `cloned_from_source` are provided, the catalog
+/// monster's data blob is used as the base. Any user-provided `data` fields are
+/// deep-merged on top. `data` is optional when cloning.
 #[derive(Debug, Clone)]
 pub struct CreateHomebrewMonsterInput {
     pub campaign_id: String,
     pub name: String,
-    pub data: String,
+    pub data: Option<String>,
     pub cr: Option<String>,
     pub creature_type: Option<String>,
     pub size: Option<String>,
@@ -64,11 +73,15 @@ pub struct UpdateHomebrewMonsterInput {
 }
 
 /// Input for creating a homebrew spell.
+///
+/// When `cloned_from_name` and `cloned_from_source` are provided, the catalog
+/// spell's data blob is used as the base. Any user-provided `data` fields are
+/// deep-merged on top. `data` is optional when cloning.
 #[derive(Debug, Clone)]
 pub struct CreateHomebrewSpellInput {
     pub campaign_id: String,
     pub name: String,
-    pub data: String,
+    pub data: Option<String>,
     pub level: Option<i32>,
     pub school: Option<String>,
     pub cloned_from_name: Option<String>,
@@ -120,14 +133,27 @@ impl<'a> HomebrewService<'a> {
     }
 
     /// Create a homebrew item.
+    ///
+    /// When `cloned_from_name` + `cloned_from_source` are provided, looks up the
+    /// catalog item and uses its data as the base, with user overrides merged on top.
     pub fn create_item(
         &mut self,
         input: CreateHomebrewItemInput,
     ) -> ServiceResult<CampaignHomebrewItem> {
-        validate_json(&input.data)?;
+        let data = resolve_clone_data(
+            input.data.as_deref(),
+            input.cloned_from_name.as_deref(),
+            input.cloned_from_source.as_deref(),
+            |name, source| {
+                catalog_dal::get_item_by_name(self.conn, name, source)
+                    .map_err(ServiceError::from)?
+                    .map(|item| item.data)
+                    .ok_or_else(|| ServiceError::not_found("CatalogItem", &format!("{name} ({source})")))
+            },
+        )?;
 
         let id = Uuid::new_v4().to_string();
-        let mut new_item = NewCampaignHomebrewItem::new(&id, &input.campaign_id, &input.name, &input.data);
+        let mut new_item = NewCampaignHomebrewItem::new(&id, &input.campaign_id, &input.name, &data);
 
         if let Some(ref t) = input.item_type {
             new_item = new_item.with_item_type(t);
@@ -210,13 +236,26 @@ impl<'a> HomebrewService<'a> {
     }
 
     /// Create a homebrew monster.
+    ///
+    /// When `cloned_from_name` + `cloned_from_source` are provided, looks up the
+    /// catalog monster and uses its data as the base, with user overrides merged on top.
     pub fn create_monster(
         &mut self,
         input: CreateHomebrewMonsterInput,
     ) -> ServiceResult<CampaignHomebrewMonster> {
-        validate_json(&input.data)?;
+        let base_data = resolve_clone_data(
+            input.data.as_deref(),
+            input.cloned_from_name.as_deref(),
+            input.cloned_from_source.as_deref(),
+            |name, source| {
+                catalog_dal::get_monster_by_name(self.conn, name, source)
+                    .map_err(ServiceError::from)?
+                    .map(|m| m.data)
+                    .ok_or_else(|| ServiceError::not_found("CatalogMonster", &format!("{name} ({source})")))
+            },
+        )?;
 
-        let data = enrich_monster_data(&input.data, input.cr.as_deref(), input.creature_type.as_deref(), input.size.as_deref())?;
+        let data = enrich_monster_data(&base_data, input.cr.as_deref(), input.creature_type.as_deref(), input.size.as_deref())?;
         let id = Uuid::new_v4().to_string();
         let mut new_monster =
             NewCampaignHomebrewMonster::new(&id, &input.campaign_id, &input.name, &data);
@@ -317,15 +356,28 @@ impl<'a> HomebrewService<'a> {
     }
 
     /// Create a homebrew spell.
+    ///
+    /// When `cloned_from_name` + `cloned_from_source` are provided, looks up the
+    /// catalog spell and uses its data as the base, with user overrides merged on top.
     pub fn create_spell(
         &mut self,
         input: CreateHomebrewSpellInput,
     ) -> ServiceResult<CampaignHomebrewSpell> {
-        validate_json(&input.data)?;
+        let data = resolve_clone_data(
+            input.data.as_deref(),
+            input.cloned_from_name.as_deref(),
+            input.cloned_from_source.as_deref(),
+            |name, source| {
+                catalog_dal::get_spell_by_name(self.conn, name, source)
+                    .map_err(ServiceError::from)?
+                    .map(|s| s.data)
+                    .ok_or_else(|| ServiceError::not_found("CatalogSpell", &format!("{name} ({source})")))
+            },
+        )?;
 
         let id = Uuid::new_v4().to_string();
         let mut new_spell =
-            NewCampaignHomebrewSpell::new(&id, &input.campaign_id, &input.name, &input.data);
+            NewCampaignHomebrewSpell::new(&id, &input.campaign_id, &input.name, &data);
 
         if let Some(level) = input.level {
             new_spell = new_spell.with_level(level);
@@ -384,6 +436,73 @@ impl<'a> HomebrewService<'a> {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
+
+/// Resolve the data blob for a homebrew entity, handling clone-from-catalog.
+///
+/// - If cloning (`cloned_from_name` + `cloned_from_source` provided): look up the
+///   catalog entity's data, then deep-merge any user overrides on top.
+/// - If not cloning: `user_data` is required and used as-is.
+///
+/// The `lookup_fn` fetches the catalog entity's data string given (name, source).
+fn resolve_clone_data<F>(
+    user_data: Option<&str>,
+    cloned_from_name: Option<&str>,
+    cloned_from_source: Option<&str>,
+    lookup_fn: F,
+) -> ServiceResult<String>
+where
+    F: FnOnce(&str, &str) -> ServiceResult<String>,
+{
+    match (cloned_from_name, cloned_from_source) {
+        (Some(name), Some(source)) => {
+            let catalog_data = lookup_fn(name, source)?;
+
+            match user_data {
+                Some(overrides) if overrides != "{}" => {
+                    // Deep merge user overrides on top of catalog data
+                    validate_json(&catalog_data)?;
+                    validate_json(overrides)?;
+                    let mut base: Value = serde_json::from_str(&catalog_data)
+                        .map_err(|e| ServiceError::validation(format!("Invalid catalog JSON: {e}")))?;
+                    let user_val: Value = serde_json::from_str(overrides)
+                        .map_err(|e| ServiceError::validation(format!("Invalid override JSON: {e}")))?;
+                    deep_merge(&mut base, &user_val);
+                    serde_json::to_string(&base)
+                        .map_err(|e| ServiceError::validation(format!("Failed to serialize merged data: {e}")))
+                }
+                _ => {
+                    // No user overrides — use catalog data as-is
+                    validate_json(&catalog_data)?;
+                    Ok(catalog_data)
+                }
+            }
+        }
+        _ => {
+            // Not cloning — data is required
+            let data = user_data.ok_or_else(|| {
+                ServiceError::validation("data is required when not cloning from catalog".to_string())
+            })?;
+            validate_json(data)?;
+            Ok(data.to_string())
+        }
+    }
+}
+
+/// Deep merge `source` into `target`. For objects, recursively merge keys.
+/// For all other types (arrays, strings, numbers), source overwrites target.
+fn deep_merge(target: &mut Value, source: &Value) {
+    match (target, source) {
+        (Value::Object(ref mut target_map), Value::Object(source_map)) => {
+            for (key, source_val) in source_map {
+                let target_val = target_map.entry(key.clone()).or_insert(Value::Null);
+                deep_merge(target_val, source_val);
+            }
+        }
+        (target, source) => {
+            *target = source.clone();
+        }
+    }
+}
 
 /// Validate that a string is valid JSON.
 fn validate_json(data: &str) -> ServiceResult<()> {
@@ -549,7 +668,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id: campaign_id.clone(),
                 name: "Flame Sword".to_string(),
-                data: r#"{"name":"Flame Sword","rarity":"rare"}"#.to_string(),
+                data: Some(r#"{"name":"Flame Sword","rarity":"rare"}"#.to_string()),
                 item_type: Some("weapon".to_string()),
                 rarity: Some("rare".to_string()),
                 cloned_from_name: None,
@@ -572,7 +691,7 @@ mod tests {
         let result = service.create_item(CreateHomebrewItemInput {
             campaign_id,
             name: "Bad Item".to_string(),
-            data: "not json".to_string(),
+            data: Some("not json".to_string()),
             item_type: None,
             rarity: None,
             cloned_from_name: None,
@@ -592,7 +711,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id: campaign_id.clone(),
                 name: "Item 1".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 item_type: None,
                 rarity: None,
                 cloned_from_name: None,
@@ -603,7 +722,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id: campaign_id.clone(),
                 name: "Item 2".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 item_type: None,
                 rarity: None,
                 cloned_from_name: None,
@@ -625,7 +744,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id,
                 name: "Test Item".to_string(),
-                data: r#"{"name":"Test Item"}"#.to_string(),
+                data: Some(r#"{"name":"Test Item"}"#.to_string()),
                 item_type: None,
                 rarity: None,
                 cloned_from_name: None,
@@ -647,7 +766,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id,
                 name: "Original".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 item_type: None,
                 rarity: None,
                 cloned_from_name: None,
@@ -697,7 +816,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id: campaign_id.clone(),
                 name: "To Delete".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 item_type: None,
                 rarity: None,
                 cloned_from_name: None,
@@ -730,7 +849,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id: campaign_id.clone(),
                 name: "Frost Colossus".to_string(),
-                data: r#"{"name":"Frost Colossus"}"#.to_string(),
+                data: Some(r#"{"name":"Frost Colossus"}"#.to_string()),
                 cr: Some("20".to_string()),
                 creature_type: Some("elemental".to_string()),
                 size: Some("G".to_string()),
@@ -762,7 +881,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id,
                 name: "Dragon".to_string(),
-                data: r#"{"name":"Dragon","cr":"15","type":"dragon","size":["H"]}"#.to_string(),
+                data: Some(r#"{"name":"Dragon","cr":"15","type":"dragon","size":["H"]}"#.to_string()),
                 cr: Some("20".to_string()),
                 creature_type: Some("elemental".to_string()),
                 size: Some("G".to_string()),
@@ -789,7 +908,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id,
                 name: "Empty Monster".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 cr: Some("1/4".to_string()),
                 creature_type: Some("beast".to_string()),
                 size: Some("S".to_string()),
@@ -815,7 +934,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id: campaign_id.clone(),
                 name: "Monster 1".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 cr: None,
                 creature_type: None,
                 size: None,
@@ -838,7 +957,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id,
                 name: "Original".to_string(),
-                data: r#"{"name":"Original"}"#.to_string(),
+                data: Some(r#"{"name":"Original"}"#.to_string()),
                 cr: Some("5".to_string()),
                 creature_type: None,
                 size: None,
@@ -889,7 +1008,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id,
                 name: "To Delete".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 cr: None,
                 creature_type: None,
                 size: None,
@@ -923,7 +1042,7 @@ mod tests {
             .create_spell(CreateHomebrewSpellInput {
                 campaign_id: campaign_id.clone(),
                 name: "Arcane Blast".to_string(),
-                data: r#"{"name":"Arcane Blast","level":3}"#.to_string(),
+                data: Some(r#"{"name":"Arcane Blast","level":3}"#.to_string()),
                 level: Some(3),
                 school: Some("evocation".to_string()),
                 cloned_from_name: None,
@@ -945,7 +1064,7 @@ mod tests {
         let result = service.create_spell(CreateHomebrewSpellInput {
             campaign_id,
             name: "Bad Spell".to_string(),
-            data: "not json".to_string(),
+            data: Some("not json".to_string()),
             level: None,
             school: None,
             cloned_from_name: None,
@@ -965,7 +1084,7 @@ mod tests {
             .create_spell(CreateHomebrewSpellInput {
                 campaign_id: campaign_id.clone(),
                 name: "Spell 1".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 level: Some(0),
                 school: None,
                 cloned_from_name: None,
@@ -976,7 +1095,7 @@ mod tests {
             .create_spell(CreateHomebrewSpellInput {
                 campaign_id: campaign_id.clone(),
                 name: "Spell 2".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 level: Some(5),
                 school: None,
                 cloned_from_name: None,
@@ -998,7 +1117,7 @@ mod tests {
             .create_spell(CreateHomebrewSpellInput {
                 campaign_id,
                 name: "Original Spell".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 level: Some(1),
                 school: None,
                 cloned_from_name: None,
@@ -1048,7 +1167,7 @@ mod tests {
             .create_spell(CreateHomebrewSpellInput {
                 campaign_id,
                 name: "To Delete".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 level: None,
                 school: None,
                 cloned_from_name: None,
@@ -1081,7 +1200,7 @@ mod tests {
             .create_item(CreateHomebrewItemInput {
                 campaign_id: campaign_id.clone(),
                 name: "Unique Item".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 item_type: None,
                 rarity: None,
                 cloned_from_name: None,
@@ -1107,7 +1226,7 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id: campaign_id.clone(),
                 name: "Custom Dragon".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 cr: None,
                 creature_type: None,
                 size: None,
@@ -1133,7 +1252,7 @@ mod tests {
             .create_spell(CreateHomebrewSpellInput {
                 campaign_id: campaign_id.clone(),
                 name: "Custom Spell".to_string(),
-                data: r#"{}"#.to_string(),
+                data: Some(r#"{}"#.to_string()),
                 level: None,
                 school: None,
                 cloned_from_name: None,
@@ -1148,50 +1267,144 @@ mod tests {
         assert!(not_found.is_none());
     }
 
-    // ── cloned_from tests ─────────────────────────────────────────
+    // ── clone-from-catalog tests ──────────────────────────────────
 
     #[test]
-    fn test_create_item_with_clone_source() {
+    fn test_clone_item_catalog_not_found() {
         let mut conn = setup_test_db();
         let campaign_id = create_test_campaign(&mut conn);
 
         let mut service = HomebrewService::new(&mut conn);
-        let item = service
-            .create_item(CreateHomebrewItemInput {
-                campaign_id,
-                name: "Cloned Sword".to_string(),
-                data: r#"{}"#.to_string(),
-                item_type: None,
-                rarity: None,
-                cloned_from_name: Some("Longsword".to_string()),
-                cloned_from_source: Some("PHB".to_string()),
-            })
-            .unwrap();
+        let result = service.create_item(CreateHomebrewItemInput {
+            campaign_id,
+            name: "Cloned Sword".to_string(),
+            data: None,
+            item_type: None,
+            rarity: None,
+            cloned_from_name: Some("Nonexistent".to_string()),
+            cloned_from_source: Some("PHB".to_string()),
+        });
 
-        assert_eq!(item.cloned_from_name, Some("Longsword".to_string()));
-        assert_eq!(item.cloned_from_source, Some("PHB".to_string()));
+        assert!(matches!(result, Err(ServiceError::NotFound { .. })));
     }
 
     #[test]
-    fn test_create_monster_with_clone_source() {
+    fn test_clone_monster_catalog_not_found() {
         let mut conn = setup_test_db();
         let campaign_id = create_test_campaign(&mut conn);
 
         let mut service = HomebrewService::new(&mut conn);
-        let monster = service
-            .create_monster(CreateHomebrewMonsterInput {
-                campaign_id,
-                name: "Custom Goblin".to_string(),
-                data: r#"{}"#.to_string(),
-                cr: Some("1/4".to_string()),
-                creature_type: None,
-                size: None,
-                cloned_from_name: Some("Goblin".to_string()),
-                cloned_from_source: Some("MM".to_string()),
-            })
-            .unwrap();
+        let result = service.create_monster(CreateHomebrewMonsterInput {
+            campaign_id,
+            name: "Custom Goblin".to_string(),
+            data: None,
+            cr: None,
+            creature_type: None,
+            size: None,
+            cloned_from_name: Some("Nonexistent".to_string()),
+            cloned_from_source: Some("MM".to_string()),
+        });
 
-        assert_eq!(monster.cloned_from_name, Some("Goblin".to_string()));
-        assert_eq!(monster.cloned_from_source, Some("MM".to_string()));
+        assert!(matches!(result, Err(ServiceError::NotFound { .. })));
+    }
+
+    #[test]
+    fn test_clone_spell_catalog_not_found() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+
+        let mut service = HomebrewService::new(&mut conn);
+        let result = service.create_spell(CreateHomebrewSpellInput {
+            campaign_id,
+            name: "Cloned Spell".to_string(),
+            data: None,
+            level: None,
+            school: None,
+            cloned_from_name: Some("Nonexistent".to_string()),
+            cloned_from_source: Some("PHB".to_string()),
+        });
+
+        assert!(matches!(result, Err(ServiceError::NotFound { .. })));
+    }
+
+    #[test]
+    fn test_create_item_requires_data_when_not_cloning() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+
+        let mut service = HomebrewService::new(&mut conn);
+        let result = service.create_item(CreateHomebrewItemInput {
+            campaign_id,
+            name: "No Data Item".to_string(),
+            data: None,
+            item_type: None,
+            rarity: None,
+            cloned_from_name: None,
+            cloned_from_source: None,
+        });
+
+        assert!(matches!(result, Err(ServiceError::Validation { .. })));
+    }
+
+    #[test]
+    fn test_create_monster_requires_data_when_not_cloning() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+
+        let mut service = HomebrewService::new(&mut conn);
+        let result = service.create_monster(CreateHomebrewMonsterInput {
+            campaign_id,
+            name: "No Data Monster".to_string(),
+            data: None,
+            cr: None,
+            creature_type: None,
+            size: None,
+            cloned_from_name: None,
+            cloned_from_source: None,
+        });
+
+        assert!(matches!(result, Err(ServiceError::Validation { .. })));
+    }
+
+    #[test]
+    fn test_create_spell_requires_data_when_not_cloning() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+
+        let mut service = HomebrewService::new(&mut conn);
+        let result = service.create_spell(CreateHomebrewSpellInput {
+            campaign_id,
+            name: "No Data Spell".to_string(),
+            data: None,
+            level: None,
+            school: None,
+            cloned_from_name: None,
+            cloned_from_source: None,
+        });
+
+        assert!(matches!(result, Err(ServiceError::Validation { .. })));
+    }
+
+    #[test]
+    fn test_deep_merge_objects() {
+        let mut base: Value = serde_json::from_str(r#"{"a":1,"b":{"c":2,"d":3}}"#).unwrap();
+        let overrides: Value = serde_json::from_str(r#"{"b":{"c":99,"e":5},"f":6}"#).unwrap();
+        deep_merge(&mut base, &overrides);
+
+        assert_eq!(base["a"], serde_json::json!(1));
+        assert_eq!(base["b"]["c"], serde_json::json!(99));
+        assert_eq!(base["b"]["d"], serde_json::json!(3));
+        assert_eq!(base["b"]["e"], serde_json::json!(5));
+        assert_eq!(base["f"], serde_json::json!(6));
+    }
+
+    #[test]
+    fn test_deep_merge_replaces_non_objects() {
+        let mut base: Value = serde_json::from_str(r#"{"a":"old","b":[1,2]}"#).unwrap();
+        let overrides: Value = serde_json::from_str(r#"{"a":"new","b":[3,4,5]}"#).unwrap();
+        deep_merge(&mut base, &overrides);
+
+        assert_eq!(base["a"], serde_json::json!("new"));
+        assert_eq!(base["b"], serde_json::json!([3, 4, 5]));
     }
 }

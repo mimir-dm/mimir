@@ -17,7 +17,7 @@ pub struct TauriCreateHomebrewSpellInput {
     pub name: String,
     pub level: Option<i32>,
     pub school: Option<String>,
-    pub data: String,
+    pub data: Option<String>,
     pub cloned_from_name: Option<String>,
     pub cloned_from_source: Option<String>,
 }

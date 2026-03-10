@@ -20,6 +20,62 @@ use crate::state::AppState;
 use super::helpers::{compute_ac, compute_hit_die_string, compute_hp_max, enrich_inventory_item};
 use super::{ApiResponse, CampaignExportOptions, ModuleExportOptions, PrintResult, PrintTemplateInfo};
 
+/// Look up monster data from catalog or homebrew, returning parsed JSON.
+fn lookup_monster_data(
+    db: &mut diesel::SqliteConnection,
+    monster_name: &str,
+    monster_source: &str,
+    campaign_id: &str,
+) -> Option<Value> {
+    if monster_source == "HB" {
+        match dal::get_campaign_homebrew_monster_by_name(db, campaign_id, monster_name) {
+            Ok(Some(hb_monster)) => {
+                match serde_json::from_str::<Value>(&hb_monster.data) {
+                    Ok(mut data) => {
+                        if let Some(obj) = data.as_object_mut() {
+                            obj.insert("name".to_string(), Value::String(hb_monster.name));
+                            obj.insert("source".to_string(), Value::String("HB".to_string()));
+                        }
+                        Some(data)
+                    }
+                    Err(e) => {
+                        error!("Failed to parse homebrew monster data for {}: {}", monster_name, e);
+                        None
+                    }
+                }
+            }
+            Ok(None) => {
+                error!("Homebrew monster not found: {}", monster_name);
+                None
+            }
+            Err(e) => {
+                error!("Failed to look up homebrew monster {}: {}", monster_name, e);
+                None
+            }
+        }
+    } else {
+        match catalog_dal::get_monster_by_name(db, monster_name, monster_source) {
+            Ok(Some(catalog_monster)) => {
+                match catalog_monster.parse_data() {
+                    Ok(data) => Some(data),
+                    Err(e) => {
+                        error!("Failed to parse monster data for {}: {}", monster_name, e);
+                        None
+                    }
+                }
+            }
+            Ok(None) => {
+                error!("Catalog monster not found: {} ({})", monster_name, monster_source);
+                None
+            }
+            Err(e) => {
+                error!("Failed to look up monster {}: {}", monster_name, e);
+                None
+            }
+        }
+    }
+}
+
 /// List available print templates
 #[tauri::command]
 pub fn list_print_templates(
@@ -257,21 +313,19 @@ pub fn export_campaign_documents(
             if !module_monsters.is_empty() {
                 let mut monster_data: Vec<Value> = Vec::new();
                 for mm in &module_monsters {
-                    if let Ok(Some(catalog_monster)) =
-                        catalog_dal::get_monster_by_name(&mut db, &mm.monster_name, &mm.monster_source)
-                    {
-                        if let Ok(mut data) = catalog_monster.parse_data() {
-                            if let Some(ref display_name) = mm.display_name {
-                                if let Some(obj) = data.as_object_mut() {
-                                    obj.insert(
-                                        "name".to_string(),
-                                        Value::String(display_name.clone()),
-                                    );
-                                }
+                    if let Some(mut data) = lookup_monster_data(
+                        &mut db, &mm.monster_name, &mm.monster_source, &campaign_id,
+                    ) {
+                        if let Some(ref display_name) = mm.display_name {
+                            if let Some(obj) = data.as_object_mut() {
+                                obj.insert(
+                                    "name".to_string(),
+                                    Value::String(display_name.clone()),
+                                );
                             }
-                            for _ in 0..mm.quantity {
-                                monster_data.push(data.clone());
-                            }
+                        }
+                        for _ in 0..mm.quantity {
+                            monster_data.push(data.clone());
                         }
                     }
                 }
@@ -486,6 +540,7 @@ pub fn export_campaign_documents(
                         let is_starting = c.is_starting_class();
                         ClassInfo {
                             class_name: c.class_name,
+                            class_source: c.class_source,
                             level: c.level,
                             subclass_name: c.subclass_name,
                             is_starting,
@@ -781,40 +836,57 @@ pub fn export_campaign_documents(
             };
 
             for mm in module_monsters {
-                // Look up catalog monster to get size
-                let size = match catalog_dal::get_monster_by_name(
-                    &mut db,
-                    &mm.monster_name,
-                    &mm.monster_source,
-                ) {
-                    Ok(Some(catalog_monster)) => {
-                        catalog_monster.size.unwrap_or_else(|| "Medium".to_string())
+                // Look up monster size from catalog or homebrew
+                let size = if mm.monster_source == "HB" {
+                    // Try to get size from homebrew monster data
+                    match dal::get_campaign_homebrew_monster_by_name(
+                        &mut db, &campaign_id, &mm.monster_name,
+                    ) {
+                        Ok(Some(hb)) => {
+                            serde_json::from_str::<Value>(&hb.data).ok()
+                                .and_then(|d| d.get("size").and_then(|s| s.as_str()).map(|s| match s {
+                                    "T" => "Tiny", "S" => "Small", "M" => "Medium",
+                                    "L" => "Large", "H" => "Huge", "G" => "Gargantuan",
+                                    other => other,
+                                }.to_string()))
+                                .unwrap_or_else(|| "Medium".to_string())
+                        }
+                        _ => "Medium".to_string(),
                     }
-                    _ => "Medium".to_string(),
+                } else {
+                    match catalog_dal::get_monster_by_name(
+                        &mut db, &mm.monster_name, &mm.monster_source,
+                    ) {
+                        Ok(Some(catalog_monster)) => {
+                            catalog_monster.size.unwrap_or_else(|| "Medium".to_string())
+                        }
+                        _ => "Medium".to_string(),
+                    }
                 };
 
-                // Try to load token image from assets
-                let img_base = app_state
-                    .paths
-                    .assets_dir
-                    .join("catalog")
-                    .join("bestiary")
-                    .join("tokens")
-                    .join(&mm.monster_source);
-
-                let extensions = ["webp", "png", "jpg", "jpeg"];
+                // Try to load token image from assets (catalog monsters only)
                 let mut image_bytes: Option<Vec<u8>> = None;
+                if mm.monster_source != "HB" {
+                    let img_base = app_state
+                        .paths
+                        .assets_dir
+                        .join("catalog")
+                        .join("bestiary")
+                        .join("tokens")
+                        .join(&mm.monster_source);
 
-                for ext in &extensions {
-                    let path = img_base.join(format!("{}.{}", &mm.monster_name, ext));
-                    if path.exists() {
-                        match std::fs::read(&path) {
-                            Ok(bytes) => {
-                                image_bytes = Some(bytes);
-                                break;
-                            }
-                            Err(e) => {
-                                error!("Failed to read token image {:?}: {}", path, e);
+                    let extensions = ["webp", "png", "jpg", "jpeg"];
+                    for ext in &extensions {
+                        let path = img_base.join(format!("{}.{}", &mm.monster_name, ext));
+                        if path.exists() {
+                            match std::fs::read(&path) {
+                                Ok(bytes) => {
+                                    image_bytes = Some(bytes);
+                                    break;
+                                }
+                                Err(e) => {
+                                    error!("Failed to read token image {:?}: {}", path, e);
+                                }
                             }
                         }
                     }
@@ -972,20 +1044,18 @@ pub fn export_module_documents(
 
         let mut monster_data: Vec<Value> = Vec::new();
         for mm in &module_monsters {
-            if let Ok(Some(catalog_monster)) =
-                catalog_dal::get_monster_by_name(&mut db, &mm.monster_name, &mm.monster_source)
-            {
-                if let Ok(mut data) = catalog_monster.parse_data() {
-                    // Apply display name override if set
-                    if let Some(ref display_name) = mm.display_name {
-                        if let Some(obj) = data.as_object_mut() {
-                            obj.insert("name".to_string(), Value::String(display_name.clone()));
-                        }
+            if let Some(mut data) = lookup_monster_data(
+                &mut db, &mm.monster_name, &mm.monster_source, &module.campaign_id,
+            ) {
+                // Apply display name override if set
+                if let Some(ref display_name) = mm.display_name {
+                    if let Some(obj) = data.as_object_mut() {
+                        obj.insert("name".to_string(), Value::String(display_name.clone()));
                     }
-                    // Add quantity copies if > 1
-                    for _ in 0..mm.quantity {
-                        monster_data.push(data.clone());
-                    }
+                }
+                // Add quantity copies if > 1
+                for _ in 0..mm.quantity {
+                    monster_data.push(data.clone());
                 }
             }
         }
@@ -1263,35 +1333,52 @@ pub fn export_module_documents(
         let mut cutout_tokens: Vec<CutoutToken> = Vec::new();
 
         for mm in module_monsters {
-            let size = match catalog_dal::get_monster_by_name(
-                &mut db,
-                &mm.monster_name,
-                &mm.monster_source,
-            ) {
-                Ok(Some(catalog_monster)) => {
-                    catalog_monster.size.unwrap_or_else(|| "Medium".to_string())
+            // Look up monster size from catalog or homebrew
+            let size = if mm.monster_source == "HB" {
+                match dal::get_campaign_homebrew_monster_by_name(
+                    &mut db, &module.campaign_id, &mm.monster_name,
+                ) {
+                    Ok(Some(hb)) => {
+                        serde_json::from_str::<Value>(&hb.data).ok()
+                            .and_then(|d| d.get("size").and_then(|s| s.as_str()).map(|s| match s {
+                                "T" => "Tiny", "S" => "Small", "M" => "Medium",
+                                "L" => "Large", "H" => "Huge", "G" => "Gargantuan",
+                                other => other,
+                            }.to_string()))
+                            .unwrap_or_else(|| "Medium".to_string())
+                    }
+                    _ => "Medium".to_string(),
                 }
-                _ => "Medium".to_string(),
+            } else {
+                match catalog_dal::get_monster_by_name(
+                    &mut db, &mm.monster_name, &mm.monster_source,
+                ) {
+                    Ok(Some(catalog_monster)) => {
+                        catalog_monster.size.unwrap_or_else(|| "Medium".to_string())
+                    }
+                    _ => "Medium".to_string(),
+                }
             };
 
-            // Try to load token image
-            let img_base = app_state
-                .paths
-                .assets_dir
-                .join("catalog")
-                .join("bestiary")
-                .join("tokens")
-                .join(&mm.monster_source);
-
-            let extensions = ["webp", "png", "jpg", "jpeg"];
+            // Try to load token image (catalog monsters only)
             let mut image_bytes: Option<Vec<u8>> = None;
+            if mm.monster_source != "HB" {
+                let img_base = app_state
+                    .paths
+                    .assets_dir
+                    .join("catalog")
+                    .join("bestiary")
+                    .join("tokens")
+                    .join(&mm.monster_source);
 
-            for ext in &extensions {
-                let path = img_base.join(format!("{}.{}", &mm.monster_name, ext));
-                if path.exists() {
-                    if let Ok(bytes) = std::fs::read(&path) {
-                        image_bytes = Some(bytes);
-                        break;
+                let extensions = ["webp", "png", "jpg", "jpeg"];
+                for ext in &extensions {
+                    let path = img_base.join(format!("{}.{}", &mm.monster_name, ext));
+                    if path.exists() {
+                        if let Ok(bytes) = std::fs::read(&path) {
+                            image_bytes = Some(bytes);
+                            break;
+                        }
                     }
                 }
             }

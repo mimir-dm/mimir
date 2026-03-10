@@ -1,0 +1,12 @@
+// Auto-generated fixture index — do not edit manually
+export * from './classes'
+export * from './subclasses'
+export * from './classFeatures'
+export * from './subclassFeatures'
+export * from './backgrounds'
+export * from './races'
+export * from './items'
+export * from './spells'
+export * from './monsters'
+export * from './characters'
+export * from './homebrew'

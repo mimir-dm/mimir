@@ -459,6 +459,10 @@ function formToDataJson(): string {
 
   if (form.value.item_type === 'weapon') {
     d.weapon = true
+    // Determine 5etools type code: R for ranged (has range + ammunition), M for melee
+    const hasRange = !!form.value.range
+    const hasAmmoProp = form.value.properties.includes('A')
+    d.type = (hasRange && hasAmmoProp) ? 'R' : 'M'
     if (form.value.weaponCategory) d.weaponCategory = form.value.weaponCategory
     if (form.value.dmg1) d.dmg1 = form.value.dmg1
     if (form.value.dmgType) d.dmgType = form.value.dmgType
@@ -470,10 +474,20 @@ function formToDataJson(): string {
 
   if (form.value.item_type === 'armor') {
     d.armor = true
+    d.type = 'LA' // default; specific armor sub-type not tracked in form
     if (form.value.ac) d.ac = form.value.ac
     if (form.value.bonusAc) d.bonusAc = form.value.bonusAc
     if (form.value.strength) d.strength = form.value.strength
     if (form.value.stealth) d.stealth = true
+  }
+
+  // Map other item types to 5etools codes
+  const typeCodeMap: Record<string, string> = {
+    'potion': 'P', 'ring': 'RG', 'rod': 'RD', 'wand': 'WD',
+    'scroll': 'SC', 'staff': 'W', 'wondrous item': 'W',
+  }
+  if (form.value.item_type && typeCodeMap[form.value.item_type]) {
+    d.type = typeCodeMap[form.value.item_type]
   }
 
   return JSON.stringify(d)

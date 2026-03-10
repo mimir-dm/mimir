@@ -1,0 +1,1784 @@
+[
+  {
+    "_variantName": "+1 Weapon",
+    "basicRules": true,
+    "basicRules2024": true,
+    "bonusWeapon": "+1",
+    "classFeatures": [
+      "replicate magic item|artificer|efa|2|efa"
+    ],
+    "dmg1": "1d8",
+    "dmg2": "1d10",
+    "dmgType": "S",
+    "edition": "classic",
+    "entries": [
+      "You have a +1 bonus to attack and damage rolls made with this magic weapon."
+    ],
+    "name": "+1 Longsword",
+    "page": 324,
+    "property": [
+      "V"
+    ],
+    "rarity": "uncommon",
+    "reprintedAs": [
+      "Longsword|XPHB"
+    ],
+    "source": "XDMG",
+    "srd": true,
+    "srd52": true,
+    "sword": true,
+    "type": "M",
+    "value": 1500,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 3,
+    "id": 2017,
+    "_itemType": "M",
+    "_rarity": "uncommon"
+  },
+  {
+    "basicRules": true,
+    "containerCapacity": {
+      "weight": [
+        30
+      ]
+    },
+    "entries": [
+      "A backpack can hold one cubic foot or 30 pounds of gear. You can also strap items, such as a bedroll or a coil of rope, to the outside of a backpack."
+    ],
+    "name": "Backpack",
+    "page": 153,
+    "rarity": "none",
+    "reprintedAs": [
+      "Backpack|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "G",
+    "value": 200,
+    "weight": 5,
+    "id": 5066,
+    "_itemType": "G",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "containerCapacity": {
+      "weight": [
+        500
+      ],
+      "weightless": true
+    },
+    "entries": [
+      "This bag has an interior space considerably larger than its outside dimensions, roughly 2 feet in diameter at the mouth and 4 feet deep. The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. The bag weighs 15 pounds, regardless of its contents. Retrieving an item from the bag requires an action.",
+      "If the bag is overloaded, pierced, or torn, it ruptures and is destroyed, and its contents are scattered in the Astral Plane. If the bag is turned inside out, its contents spill forth, unharmed, but the bag must be put right before it can be used again. Breathing creatures inside the bag can survive up to a number of minutes equal to 10 divided by the number of creatures (minimum 1 minute), after which time they begin to suffocate.",
+      "Placing a bag of holding inside an extradimensional space created by a {@item Heward's handy haversack}, {@item portable hole}, or similar item instantly destroys both items and opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other. Any creature within 10 feet of the gate is sucked through it to a random location on the Astral Plane. The gate then closes. The gate is one-way only and can't be reopened."
+    ],
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table A",
+      "Magic Item Table B"
+    ],
+    "name": "Bag of Holding",
+    "optionalfeatures": [
+      "replicate magic item|tce"
+    ],
+    "page": 153,
+    "rarity": "uncommon",
+    "reprintedAs": [
+      "Bag of Holding|XDMG"
+    ],
+    "source": "DMG",
+    "srd": true,
+    "tier": "minor",
+    "weight": 15,
+    "wondrous": true,
+    "id": 5363,
+    "fluff": {
+      "images": [
+        {
+          "href": {
+            "path": "items/DMG/Bag of Holding.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Bag of Holding",
+      "source": "DMG"
+    },
+    "_rarity": "uncommon"
+  },
+  {
+    "axe": true,
+    "basicRules": true,
+    "dmg1": "1d8",
+    "dmg2": "1d10",
+    "dmgType": "S",
+    "edition": "classic",
+    "name": "Battleaxe",
+    "page": 149,
+    "property": [
+      "V"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Battleaxe|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 1000,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 4,
+    "id": 5246,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "entries": [
+      "While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have advantage on Dexterity ({@skill Stealth}) checks that rely on moving silently."
+    ],
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table F"
+    ],
+    "name": "Boots of Elvenkind",
+    "optionalfeatures": [
+      "replicate magic item|tce"
+    ],
+    "page": 155,
+    "rarity": "uncommon",
+    "reprintedAs": [
+      "Boots of Elvenkind|XDMG"
+    ],
+    "source": "DMG",
+    "srd": true,
+    "tier": "major",
+    "wondrous": true,
+    "id": 5391,
+    "fluff": {
+      "images": [
+        {
+          "credit": "Conceptopolis",
+          "href": {
+            "path": "items/DMG/Boots of Elvenkind.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Boots of Elvenkind",
+      "source": "DMG"
+    },
+    "_rarity": "uncommon"
+  },
+  {
+    "ac": 14,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "This armor consists of a fitted metal chest piece worn with supple leather. Although it leaves the legs and arms relatively unprotected, this armor provides good protection for the wearer's vital organs while leaving the wearer relatively unencumbered."
+    ],
+    "name": "Breastplate",
+    "page": 145,
+    "rarity": "none",
+    "reprintedAs": [
+      "Breastplate|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "MA",
+    "value": 40000,
+    "weight": 20,
+    "id": 5250,
+    "_itemType": "MA",
+    "_rarity": "none"
+  },
+  {
+    "ac": 16,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "Made of interlocking metal rings, chain mail includes a layer of quilted fabric worn underneath the mail to prevent chafing and to cushion the impact of blows. The suit includes gauntlets."
+    ],
+    "name": "Chain Mail",
+    "page": 145,
+    "rarity": "none",
+    "reprintedAs": [
+      "Chain Mail|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "strength": "13",
+    "type": "HA",
+    "value": 7500,
+    "weight": 55,
+    "id": 5251,
+    "_itemType": "HA",
+    "_rarity": "none"
+  },
+  {
+    "ac": 13,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "Made of interlocking metal rings, a chain shirt is worn between layers of clothing or leather. This armor offers modest protection to the wearer's upper body and allows the sound of the rings rubbing against one another to be muffled by outer layers."
+    ],
+    "name": "Chain Shirt",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Chain Shirt|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "MA",
+    "value": 5000,
+    "weight": 20,
+    "id": 5252,
+    "_itemType": "MA",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "entries": [
+      "While you wear this cloak with its hood up, Wisdom ({@skill Perception}) checks made to see you have disadvantage, and you have advantage on Dexterity ({@skill Stealth}) checks made to hide, as the cloak's color shifts to camouflage you. Pulling the hood up or down requires an action."
+    ],
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table F"
+    ],
+    "name": "Cloak of Elvenkind",
+    "optionalfeatures": [
+      "replicate magic item|tce"
+    ],
+    "page": 158,
+    "rarity": "uncommon",
+    "reprintedAs": [
+      "Cloak of Elvenkind|XDMG"
+    ],
+    "reqAttune": true,
+    "source": "DMG",
+    "srd": true,
+    "tier": "major",
+    "wondrous": true,
+    "id": 5431,
+    "fluff": {
+      "images": [
+        {
+          "href": {
+            "path": "items/DMG/Cloak of Elvenkind.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Cloak of Elvenkind",
+      "source": "DMG"
+    },
+    "_rarity": "uncommon"
+  },
+  {
+    "bonusAc": "+1",
+    "bonusSavingThrow": "+1",
+    "entries": [
+      "You gain a +1 bonus to AC and saving throws while you wear this cloak."
+    ],
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table F"
+    ],
+    "name": "Cloak of Protection",
+    "optionalfeatures": [
+      "replicate magic item|tce"
+    ],
+    "page": 159,
+    "rarity": "uncommon",
+    "reprintedAs": [
+      "Cloak of Protection|XDMG"
+    ],
+    "reqAttune": true,
+    "source": "DMG",
+    "srd": true,
+    "tier": "major",
+    "wondrous": true,
+    "id": 5433,
+    "fluff": {
+      "images": [
+        {
+          "href": {
+            "path": "items/DMG/Cloak of Protection.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Cloak of Protection",
+      "source": "DMG"
+    },
+    "_rarity": "uncommon"
+  },
+  {
+    "basicRules": true,
+    "dagger": true,
+    "dmg1": "1d4",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Dagger",
+    "page": 149,
+    "property": [
+      "F",
+      "L",
+      "T"
+    ],
+    "range": "20/60",
+    "rarity": "none",
+    "reprintedAs": [
+      "Dagger|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 200,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 1,
+    "id": 5257,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ability": {
+      "amount": 2,
+      "count": 1,
+      "from": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ]
+    },
+    "attachedSpells": [
+      "wish"
+    ],
+    "entries": [
+      "Usually found in a box or pouch, this deck contains a number of cards made of ivory or vellum. Most ({@chance 75}) of these decks have only thirteen cards, but the rest have twenty-two.",
+      "Before you draw a card, you must declare how many cards you intend to draw and then draw them randomly (you can use an altered deck of playing cards to simulate the deck). Any cards drawn in excess of this number have no effect. Otherwise, as soon as you draw a card from the deck, its magic takes effect. You must draw each card no more than 1 hour after the previous draw. If you fail to draw the chosen number, the remaining number of cards fly from the deck on their own and take effect all at once.",
+      "Once a card is drawn, it fades from existence. Unless the card is the {@card Fool|Deck of Many Things} or the {@card Jester|Deck of Many Things}, the card reappears in the deck, making it possible to draw the same card twice.",
+      {
+        "entries": [
+          "Two of the cards in a deck of many things can earn a character the enmity of another being. With the Flames card, the enmity is overt. The character should experience the devil's malevolent efforts on multiple occasions. Seeking out the fiend shouldn't be a simple task, and the adventurer should clash with the devil's allies and followers a few times before being able to confront the devil itself.",
+          "In the case of the {@card Rogue|Deck of Many Things} card, the enmity is secret and should come from someone thought to be a friend or an ally. As Dungeon Master, you should wait for a dramatically appropriate moment to reveal this enmity, leaving the adventurer guessing who is likely to become a betrayer."
+        ],
+        "name": "A Question of Enmity",
+        "type": "entries"
+      },
+      {
+        "colLabels": [
+          "{@dice 1d22|Playing Card}",
+          "Card"
+        ],
+        "colStyles": [
+          "col-6 text-center",
+          "col-6 text-center"
+        ],
+        "footnotes": [
+          "* Found only in a deck with twenty-two cards"
+        ],
+        "rows": [
+          [
+            {
+              "entry": "Ace of diamonds",
+              "roll": {
+                "exact": 1
+              },
+              "type": "cell"
+            },
+            "Vizier*"
+          ],
+          [
+            {
+              "entry": "King of diamonds",
+              "roll": {
+                "exact": 2
+              },
+              "type": "cell"
+            },
+            "Sun"
+          ],
+          [
+            {
+              "entry": "Queen of diamonds",
+              "roll": {
+                "exact": 3
+              },
+              "type": "cell"
+            },
+            "Moon"
+          ],
+          [
+            {
+              "entry": "Jack of diamonds",
+              "roll": {
+                "exact": 4
+              },
+              "type": "cell"
+            },
+            "Star"
+          ],
+          [
+            {
+              "entry": "Two of diamonds",
+              "roll": {
+                "exact": 5
+              },
+              "type": "cell"
+            },
+            "Comet*"
+          ],
+          [
+            {
+              "entry": "Ace of hearts",
+              "roll": {
+                "exact": 6
+              },
+              "type": "cell"
+            },
+            "The Fates*"
+          ],
+          [
+            {
+              "entry": "King of hearts",
+              "roll": {
+                "exact": 7
+              },
+              "type": "cell"
+            },
+            "Throne"
+          ],
+          [
+            {
+              "entry": "Queen of hearts",
+              "roll": {
+                "exact": 8
+              },
+              "type": "cell"
+            },
+            "Key"
+          ],
+          [
+            {
+              "entry": "Jack of hearts",
+              "roll": {
+                "exact": 9
+              },
+              "type": "cell"
+            },
+            "Knight"
+          ],
+          [
+            {
+              "entry": "Two of hearts",
+              "roll": {
+                "exact": 10
+              },
+              "type": "cell"
+            },
+            "Gem*"
+          ],
+          [
+            {
+              "entry": "Ace of clubs",
+              "roll": {
+                "exact": 11
+              },
+              "type": "cell"
+            },
+            "Talons*"
+          ],
+          [
+            {
+              "entry": "King of clubs",
+              "roll": {
+                "exact": 12
+              },
+              "type": "cell"
+            },
+            "The Void"
+          ],
+          [
+            {
+              "entry": "Queen of clubs",
+              "roll": {
+                "exact": 13
+              },
+              "type": "cell"
+            },
+            "Flames"
+          ],
+          [
+            {
+              "entry": "Jack of clubs",
+              "roll": {
+                "exact": 14
+              },
+              "type": "cell"
+            },
+            "Skull"
+          ],
+          [
+            {
+              "entry": "Two of clubs",
+              "roll": {
+                "exact": 15
+              },
+              "type": "cell"
+            },
+            "Idiot*"
+          ],
+          [
+            {
+              "entry": "Ace of spades",
+              "roll": {
+                "exact": 16
+              },
+              "type": "cell"
+            },
+            "Donjon*"
+          ],
+          [
+            {
+              "entry": "King of spades",
+              "roll": {
+                "exact": 17
+              },
+              "type": "cell"
+            },
+            "Ruin"
+          ],
+          [
+            {
+              "entry": "Queen of spades",
+              "roll": {
+                "exact": 18
+              },
+              "type": "cell"
+            },
+            "Euryale"
+          ],
+          [
+            {
+              "entry": "Jack of spades",
+              "roll": {
+                "exact": 19
+              },
+              "type": "cell"
+            },
+            "Rogue"
+          ],
+          [
+            {
+              "entry": "Two of spades",
+              "roll": {
+                "exact": 20
+              },
+              "type": "cell"
+            },
+            "Balance*"
+          ],
+          [
+            {
+              "entry": "Joker (with TM)",
+              "roll": {
+                "exact": 21
+              },
+              "type": "cell"
+            },
+            "Fool*"
+          ],
+          [
+            {
+              "entry": "Joker (without TM)",
+              "roll": {
+                "exact": 22
+              },
+              "type": "cell"
+            },
+            "Jester"
+          ]
+        ],
+        "type": "table"
+      },
+      {
+        "entries": [
+          "At any time you choose within one year of drawing this card, you can ask a question in meditation and mentally receive a truthful answer to that question. Besides information, the answer helps you solve a puzzling problem or other dilemma. In other words, the knowledge comes with wisdom on how to apply it."
+        ],
+        "name": "Vizier",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You gain 50,000 XP, and a wondrous item (which the DM determines randomly) appears in your hands."
+        ],
+        "name": "Sun",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You are granted the ability to cast the {@spell wish} spell {@dice 1d3} times."
+        ],
+        "name": "Moon",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "Increase one of your ability scores by 2. The score can exceed 20 but can't exceed 24."
+        ],
+        "name": "Star",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "If you single-handedly defeat the next hostile monster or group of monsters you encounter, you gain experience points enough to gain one level. Otherwise, this card has no effect."
+        ],
+        "name": "Comet",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "Reality's fabric unravels and spins anew, allowing you to avoid or erase one event as if it never happened. You can use the card's magic as soon as you draw the card or at any other time before you die."
+        ],
+        "name": "The Fates",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You gain proficiency in the {@skill Persuasion} skill, and you double your proficiency bonus on checks made with that skill. In addition, you gain rightful ownership of a small keep somewhere in the world. However, the keep is currently in the hands of monsters, which you must clear out before you can claim the keep as yours."
+        ],
+        "name": "Throne",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "A rare or rarer magic weapon with which you are proficient appears in your hands. The DM chooses the weapon."
+        ],
+        "name": "Key",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You gain the service of a 4th-level fighter who appears in a space you choose within 30 feet of you. The fighter is of the same race as you and serves you loyally until death, believing the fates have drawn him or her to you. You control this character."
+        ],
+        "name": "Knight",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "Twenty-five pieces of jewelry worth 2,000 gp each or fifty gems worth 1,000 gp each appear at your feet."
+        ],
+        "name": "Gem",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "Every magic item you wear or carry disintegrates. Artifacts in your possession aren't destroyed but do vanish."
+        ],
+        "name": "Talons",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "This black card spells disaster. Your soul is drawn from your body and contained in an object in a place of the DM's choice. One or more powerful beings guard the place. While your soul is trapped in this way, your body is {@condition incapacitated}. A {@spell wish} spell can't restore your soul, but the spell reveals the location of the object that holds it. You draw no more cards."
+        ],
+        "name": "The Void",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "A powerful devil becomes your enemy. The devil seeks your ruin and plagues your life, savoring your suffering before attempting to slay you. This enmity lasts until either you or the devil dies."
+        ],
+        "name": "Flames",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You summon an {@creature avatar of death|DMG}—a ghostly humanoid skeleton clad in a tattered black robe and carrying a spectral scythe. It appears in a space of the DM's choice within 10 feet of you and attacks you, warning all others that you must win the battle alone. The avatar fights until you die or it drops to 0 hit points, whereupon it disappears. If anyone tries to help you, the helper summons its own {@creature avatar of death|DMG}. A creature slain by an {@creature avatar of death|DMG} can't be restored to life."
+        ],
+        "name": "Skull",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "Permanently reduce your Intelligence by {@dice 1d4 + 1} (to a minimum score of 1). You can draw one additional card beyond your declared draws."
+        ],
+        "name": "Idiot",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You disappear and become entombed in a state of suspended animation in an extradimensional sphere. Everything you were wearing and carrying stays behind in the space you occupied when you disappeared. You remain imprisoned until you are found and removed from the sphere. You can't be located by any divination magic, but a {@spell wish} spell can reveal the location of your prison. You draw no more cards."
+        ],
+        "name": "Donjon",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "All forms of wealth that you carry or own, other than magic items, are lost to you. Portable property vanishes. Businesses, buildings, and land you own are lost in a way that alters reality the least. Any documentation that proves you should own something lost to this card also disappears."
+        ],
+        "name": "Ruin",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "The card's {@creature medusa}-like visage curses you. You take a −2 penalty on saving throws while cursed in this way. Only a god or the magic of {@card The Fates|Deck of Many Things} card can end this curse."
+        ],
+        "name": "Euryale",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "A nonplayer character of the DM's choice becomes hostile toward you. The identity of your new enemy isn't known until the NPC or someone else reveals it. Nothing less than a {@spell wish} spell or divine intervention can end the NPC's hostility toward you."
+        ],
+        "name": "Rogue",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "Your mind suffers a wrenching alteration, causing your alignment to change. Lawful becomes chaotic, good becomes evil, and vice versa. If you are true neutral or unaligned, this card has no effect on you."
+        ],
+        "name": "Balance",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You lose 10,000 XP, discard this card, and draw from the deck again, counting both draws as one of your declared draws. If losing that much XP would cause you to lose a level, you instead lose an amount that leaves you with just enough XP to keep your level."
+        ],
+        "name": "Fool",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You gain 10,000 XP, or you can draw two additional cards beyond your declared draws."
+        ],
+        "name": "Jester",
+        "type": "entries"
+      }
+    ],
+    "grantsProficiency": true,
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table I"
+    ],
+    "name": "Deck of Many Things",
+    "page": 162,
+    "rarity": "legendary",
+    "reprintedAs": [
+      "Deck of Many Things|XDMG"
+    ],
+    "seeAlsoDeck": [
+      "Deck of Many Things",
+      "Deck of Many Things (13 Cards)"
+    ],
+    "source": "DMG",
+    "srd": true,
+    "tier": "major",
+    "wondrous": true,
+    "id": 5450,
+    "fluff": {
+      "images": [
+        {
+          "href": {
+            "path": "items/DMG/Deck of Many Things.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Deck of Many Things",
+      "source": "DMG"
+    },
+    "_rarity": "legendary"
+  },
+  {
+    "axe": true,
+    "basicRules": true,
+    "dmg1": "1d12",
+    "dmgType": "S",
+    "edition": "classic",
+    "name": "Greataxe",
+    "page": 149,
+    "property": [
+      "H",
+      "2H"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Greataxe|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 3000,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 7,
+    "id": 5264,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "2d6",
+    "dmgType": "S",
+    "edition": "classic",
+    "name": "Greatsword",
+    "page": 149,
+    "property": [
+      "H",
+      "2H"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Greatsword|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "sword": true,
+    "type": "M",
+    "value": 5000,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 6,
+    "id": 5266,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ac": 15,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "Half plate consists of shaped metal plates that cover most of the wearer's body. It does not include leg protection beyond simple greaves that are attached with leather straps."
+    ],
+    "name": "Half Plate Armor",
+    "page": 145,
+    "rarity": "none",
+    "reprintedAs": [
+      "Half Plate Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "type": "MA",
+    "value": 75000,
+    "weight": 40,
+    "id": 5268,
+    "_itemType": "MA",
+    "_rarity": "none"
+  },
+  {
+    "axe": true,
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmgType": "S",
+    "edition": "classic",
+    "name": "Handaxe",
+    "page": 149,
+    "property": [
+      "L",
+      "T"
+    ],
+    "range": "20/60",
+    "rarity": "none",
+    "reprintedAs": [
+      "Handaxe|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 500,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 2,
+    "id": 5270,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ammoType": "crossbow bolt|phb",
+    "basicRules": true,
+    "crossbow": true,
+    "dmg1": "1d10",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Heavy Crossbow",
+    "page": 149,
+    "property": [
+      "A",
+      "H",
+      "LD",
+      "2H"
+    ],
+    "range": "100/400",
+    "rarity": "none",
+    "reprintedAs": [
+      "Heavy Crossbow|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "R",
+    "value": 5000,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 18,
+    "id": 5271,
+    "_itemType": "R",
+    "_rarity": "none"
+  },
+  {
+    "ac": 12,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "This crude armor consists of thick furs and pelts. It is commonly worn by barbarian tribes, evil humanoids, and other folk who lack access to the tools and materials needed to create better armor."
+    ],
+    "name": "Hide Armor",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Hide Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "MA",
+    "value": 1000,
+    "weight": 12,
+    "id": 5272,
+    "_itemType": "MA",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Javelin",
+    "page": 149,
+    "property": [
+      "T"
+    ],
+    "range": "30/120",
+    "rarity": "none",
+    "reprintedAs": [
+      "Javelin|XPHB"
+    ],
+    "source": "PHB",
+    "spear": true,
+    "srd": true,
+    "type": "M",
+    "value": 50,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 2,
+    "id": 5274,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ac": 11,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "The breastplate and shoulder protectors of this armor are made of leather that has been stiffened by being boiled in oil. The rest of the armor is made of softer and more flexible materials."
+    ],
+    "name": "Leather Armor",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Leather Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "LA",
+    "value": 1000,
+    "weight": 10,
+    "id": 5276,
+    "_itemType": "LA",
+    "_rarity": "none"
+  },
+  {
+    "ammoType": "crossbow bolt|phb",
+    "basicRules": true,
+    "crossbow": true,
+    "dmg1": "1d8",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Light Crossbow",
+    "page": 149,
+    "property": [
+      "A",
+      "LD",
+      "2H"
+    ],
+    "range": "80/320",
+    "rarity": "none",
+    "reprintedAs": [
+      "Light Crossbow|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "R",
+    "value": 2500,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 5,
+    "id": 5277,
+    "_itemType": "R",
+    "_rarity": "none"
+  },
+  {
+    "ammoType": "arrow|phb",
+    "basicRules": true,
+    "bow": true,
+    "dmg1": "1d8",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Longbow",
+    "page": 149,
+    "property": [
+      "A",
+      "H",
+      "2H"
+    ],
+    "range": "150/600",
+    "rarity": "none",
+    "reprintedAs": [
+      "Longbow|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "R",
+    "value": 5000,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 2,
+    "id": 5279,
+    "_itemType": "R",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d8",
+    "dmg2": "1d10",
+    "dmgType": "S",
+    "edition": "classic",
+    "name": "Longsword",
+    "page": 149,
+    "property": [
+      "V"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Longsword|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "sword": true,
+    "type": "M",
+    "value": 1500,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 3,
+    "id": 5280,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmgType": "B",
+    "edition": "classic",
+    "mace": true,
+    "name": "Mace",
+    "page": 149,
+    "rarity": "none",
+    "reprintedAs": [
+      "Mace|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 500,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 4,
+    "id": 5283,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ac": 11,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "Padded armor consists of quilted layers of cloth and batting."
+    ],
+    "name": "Padded Armor",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Padded Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "type": "LA",
+    "value": 500,
+    "weight": 8,
+    "id": 5288,
+    "_itemType": "LA",
+    "_rarity": "none"
+  },
+  {
+    "ac": 18,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body."
+    ],
+    "name": "Plate Armor",
+    "page": 145,
+    "rarity": "none",
+    "reprintedAs": [
+      "Plate Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "strength": "15",
+    "type": "HA",
+    "value": 150000,
+    "weight": 65,
+    "id": 5291,
+    "_itemType": "HA",
+    "_rarity": "none"
+  },
+  {
+    "entries": [
+      "You regain {@dice 4d4 + 4} hit points when you drink this potion. The potion's red liquid glimmers when agitated."
+    ],
+    "lootTables": [
+      "Magic Item Table A",
+      "Magic Item Table B"
+    ],
+    "miscTags": [
+      "CNS"
+    ],
+    "name": "Potion of Greater Healing",
+    "page": 187,
+    "rarity": "uncommon",
+    "reprintedAs": [
+      "Potion of Greater Healing|XDMG"
+    ],
+    "source": "DMG",
+    "srd": true,
+    "tier": "minor",
+    "type": "P",
+    "id": 5640,
+    "_itemType": "P",
+    "_rarity": "uncommon"
+  },
+  {
+    "entries": [
+      "You regain {@dice 2d4 + 2} hit points when you drink this potion. The potion's red liquid glimmers when agitated."
+    ],
+    "lootTables": [
+      "Magic Item Table A"
+    ],
+    "miscTags": [
+      "CNS"
+    ],
+    "name": "Potion of Healing",
+    "otherSources": [
+      {
+        "page": 153,
+        "source": "PHB"
+      }
+    ],
+    "page": 187,
+    "rarity": "common",
+    "reprintedAs": [
+      "Potion of Healing|XDMG"
+    ],
+    "source": "DMG",
+    "srd": true,
+    "tier": "minor",
+    "type": "P",
+    "value": 5000,
+    "weight": 0.5,
+    "id": 5642,
+    "_itemType": "P",
+    "_rarity": "common"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmg2": "1d8",
+    "dmgType": "B",
+    "edition": "classic",
+    "name": "Quarterstaff",
+    "page": 149,
+    "property": [
+      "V"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Quarterstaff|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 20,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 4,
+    "id": 5292,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d8",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Rapier",
+    "page": 149,
+    "property": [
+      "F"
+    ],
+    "rapier": true,
+    "rarity": "none",
+    "reprintedAs": [
+      "Rapier|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "sword": true,
+    "type": "M",
+    "value": 2500,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 2,
+    "id": 5293,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "entries": [
+      "Rations consist of dry foods suitable for extended travel, including jerky, dried fruit, hardtack, and nuts."
+    ],
+    "miscTags": [
+      "CNS"
+    ],
+    "name": "Rations (1 day)",
+    "page": 153,
+    "rarity": "none",
+    "reprintedAs": [
+      "Rations|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "G",
+    "value": 50,
+    "weight": 2,
+    "id": 5196,
+    "_itemType": "G",
+    "_rarity": "none"
+  },
+  {
+    "ac": 14,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "This armor is leather armor with heavy rings sewn into it. The rings help reinforce the armor against blows from swords and axes. Ring mail is inferior to chain mail, and it's usually worn only by those who can't afford better armor."
+    ],
+    "name": "Ring Mail",
+    "page": 145,
+    "rarity": "none",
+    "reprintedAs": [
+      "Ring Mail|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "type": "HA",
+    "value": 3000,
+    "weight": 40,
+    "id": 5294,
+    "_itemType": "HA",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "bonusAc": "+1",
+    "bonusSavingThrow": "+1",
+    "entries": [
+      "You gain a +1 bonus to AC and saving throws while wearing this ring."
+    ],
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table G"
+    ],
+    "name": "Ring of Protection",
+    "optionalfeatures": [
+      "replicate magic item|tce"
+    ],
+    "page": 191,
+    "rarity": "rare",
+    "reprintedAs": [
+      "Ring of Protection|XDMG"
+    ],
+    "reqAttune": true,
+    "source": "DMG",
+    "srd": true,
+    "tier": "major",
+    "type": "RG|DMG",
+    "id": 5692,
+    "fluff": {
+      "images": [
+        {
+          "credit": "Conceptopolis",
+          "href": {
+            "path": "items/DMG/Ring of Protection.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Ring of Protection",
+      "source": "DMG"
+    },
+    "_itemType": "RG",
+    "_rarity": "rare"
+  },
+  {
+    "ac": 14,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "This armor consists of a coat and leggings (and perhaps a separate skirt) of leather covered with overlapping pieces of metal, much like the scales of a fish. The suit includes gauntlets."
+    ],
+    "name": "Scale Mail",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Scale Mail|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "type": "MA",
+    "value": 5000,
+    "weight": 45,
+    "id": 5296,
+    "_itemType": "MA",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmgType": "S",
+    "edition": "classic",
+    "name": "Scimitar",
+    "page": 149,
+    "property": [
+      "F",
+      "L"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Scimitar|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "sword": true,
+    "type": "M",
+    "value": 2500,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 3,
+    "id": 5297,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ac": 2,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time."
+    ],
+    "name": "Shield",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Shield|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "S",
+    "value": 1000,
+    "weight": 6,
+    "id": 5299,
+    "_itemType": "S",
+    "_rarity": "none"
+  },
+  {
+    "ammoType": "arrow|phb",
+    "basicRules": true,
+    "bow": true,
+    "dmg1": "1d6",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Shortbow",
+    "page": 149,
+    "property": [
+      "A",
+      "2H"
+    ],
+    "range": "80/320",
+    "rarity": "none",
+    "reprintedAs": [
+      "Shortbow|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "R",
+    "value": 2500,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 2,
+    "id": 5300,
+    "_itemType": "R",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Shortsword",
+    "page": 149,
+    "property": [
+      "F",
+      "L"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Shortsword|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "sword": true,
+    "type": "M",
+    "value": 1000,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 2,
+    "id": 5301,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d6",
+    "dmg2": "1d8",
+    "dmgType": "P",
+    "edition": "classic",
+    "name": "Spear",
+    "page": 149,
+    "property": [
+      "T",
+      "V"
+    ],
+    "range": "20/60",
+    "rarity": "none",
+    "reprintedAs": [
+      "Spear|XPHB"
+    ],
+    "source": "PHB",
+    "spear": true,
+    "srd": true,
+    "type": "M",
+    "value": 100,
+    "weapon": true,
+    "weaponCategory": "simple",
+    "weight": 3,
+    "id": 5306,
+    "_itemType": "M",
+    "_rarity": "none"
+  },
+  {
+    "ac": 17,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "This armor is made of narrow vertical strips of metal riveted to a backing of leather that is worn over cloth padding. Flexible chain mail protects the joints."
+    ],
+    "name": "Splint Armor",
+    "page": 145,
+    "rarity": "none",
+    "reprintedAs": [
+      "Splint Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "stealth": true,
+    "strength": "15",
+    "type": "HA",
+    "value": 20000,
+    "weight": 60,
+    "id": 5307,
+    "_itemType": "HA",
+    "_rarity": "none"
+  },
+  {
+    "attachedSpells": {
+      "charges": {
+        "2": [
+          "flaming sphere",
+          "invisibility",
+          "knock",
+          "web"
+        ],
+        "3": [
+          "dispel magic"
+        ],
+        "4": [
+          "ice storm",
+          "wall of fire"
+        ],
+        "5": [
+          "passwall",
+          "telekinesis"
+        ],
+        "7": [
+          "conjure elemental",
+          "fireball#7",
+          "lightning bolt#7",
+          "plane shift"
+        ]
+      },
+      "will": [
+        "arcane lock",
+        "detect magic",
+        "enlarge/reduce",
+        "light",
+        "mage hand",
+        "protection from evil and good"
+      ]
+    },
+    "bonusSpellAttack": "+2",
+    "bonusWeapon": "+2",
+    "charges": 50,
+    "dmg1": "1d6",
+    "dmg2": "1d8",
+    "dmgType": "B",
+    "entries": [
+      "This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. While you hold it, you gain a +2 bonus to spell attack rolls.",
+      "The staff has 50 charges for the following properties. It regains {@dice 4d6 + 2} expended charges daily at dawn. If you expend the last charge, roll a {@dice d20}. On a 20, the staff regains {@dice 1d12 + 1} charges.",
+      {
+        "entries": [
+          "While holding the staff, you have advantage on saving throws against spells. In addition, you can use your reaction when another creature casts a spell that targets only you. If you do, the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell's level. However, if doing so brings the staff's total number of charges above 50, the staff explodes as if you activated its retributive strike (see below)."
+        ],
+        "name": "Spell Absorption",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "While holding the staff, you can use an action to expend some of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability: {@spell conjure elemental} (7 charges), {@spell dispel magic} (3 charges), {@spell fireball} (7th-level version, 7 charges), {@spell flaming sphere} (2 charges), {@spell ice storm} (4 charges), {@spell invisibility} (2 charges), {@spell knock} (2 charges), {@spell lightning bolt} (7th-level version, 7 charges), {@spell passwall} (5 charges), {@spell plane shift} (7 charges), {@spell telekinesis} (5 charges), {@spell wall of fire} (4 charges), or {@spell web} (2 charges).",
+          "You can also use an action to cast one of the following spells from the staff without using any charges: {@spell arcane lock}, {@spell detect magic}, {@spell enlarge/reduce}, {@spell light}, {@spell mage hand}, or {@spell protection from evil and good}."
+        ],
+        "name": "Spells",
+        "type": "entries"
+      },
+      {
+        "entries": [
+          "You can use an action to break the staff over your knee or against a solid surface, performing a retributive strike. The staff is destroyed and releases its remaining magic in an explosion that expands to fill a 30-foot-radius sphere centered on it.",
+          "You have a {@chance 50} chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take force damage equal to 16 × the number of charges in the staff. Every other creature in the area must make a {@dc 17} Dexterity saving throw. On a failed save, a creature takes an amount of damage based on how far away it is from the point of origin, as shown in the following table. On a successful save, a creature takes half as much damage."
+        ],
+        "name": "Retributive Strike",
+        "type": "entries"
+      },
+      {
+        "colLabels": [
+          "Distance from Origin",
+          "Damage"
+        ],
+        "colStyles": [
+          "col-3",
+          "col-9"
+        ],
+        "rows": [
+          [
+            "10 ft. away or closer",
+            "8 × the number of charges in the staff"
+          ],
+          [
+            "11 to 20 ft. away",
+            "6 × the number of charges in the staff"
+          ],
+          [
+            "21 to 30 ft. away",
+            "4 × the number of charges in the staff"
+          ]
+        ],
+        "type": "table"
+      }
+    ],
+    "hasFluffImages": true,
+    "lootTables": [
+      "Magic Item Table I"
+    ],
+    "name": "Staff of the Magi",
+    "page": 203,
+    "property": [
+      "V"
+    ],
+    "rarity": "legendary",
+    "recharge": "dawn",
+    "rechargeAmount": "{@dice 4d6 + 2}",
+    "reprintedAs": [
+      "Staff of the Magi|XDMG"
+    ],
+    "reqAttune": "by a sorcerer, warlock, or wizard",
+    "reqAttuneTags": [
+      {
+        "class": "sorcerer"
+      },
+      {
+        "class": "warlock"
+      },
+      {
+        "class": "wizard"
+      }
+    ],
+    "source": "DMG",
+    "srd": true,
+    "staff": true,
+    "tier": "major",
+    "weaponCategory": "simple",
+    "weight": 4,
+    "id": 5775,
+    "fluff": {
+      "images": [
+        {
+          "href": {
+            "path": "items/DMG/Staff of the Magi.webp",
+            "type": "internal"
+          },
+          "type": "image"
+        }
+      ],
+      "name": "Staff of the Magi",
+      "source": "DMG"
+    },
+    "_rarity": "legendary"
+  },
+  {
+    "ac": 12,
+    "armor": true,
+    "basicRules": true,
+    "edition": "classic",
+    "entries": [
+      "Made from tough but flexible leather, studded leather is reinforced with close-set rivets or spikes."
+    ],
+    "name": "Studded Leather Armor",
+    "page": 144,
+    "rarity": "none",
+    "reprintedAs": [
+      "Studded Leather Armor|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "LA",
+    "value": 4500,
+    "weight": 13,
+    "id": 5309,
+    "_itemType": "LA",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "entries": [
+      "A torch burns for 1 hour, providing bright light in a 20-foot radius and dim light for an additional 20 feet. If you make a melee attack with a burning torch and hit, it deals 1 fire damage."
+    ],
+    "light": [
+      {
+        "bright": 20,
+        "dim": 40
+      }
+    ],
+    "miscTags": [
+      "CNS"
+    ],
+    "name": "Torch",
+    "page": 153,
+    "rarity": "none",
+    "reprintedAs": [
+      "Torch|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "G",
+    "value": 1,
+    "weight": 1,
+    "id": 5229,
+    "_itemType": "G",
+    "_rarity": "none"
+  },
+  {
+    "basicRules": true,
+    "dmg1": "1d8",
+    "dmg2": "1d10",
+    "dmgType": "B",
+    "edition": "classic",
+    "hammer": true,
+    "name": "Warhammer",
+    "page": 149,
+    "property": [
+      "V"
+    ],
+    "rarity": "none",
+    "reprintedAs": [
+      "Warhammer|XPHB"
+    ],
+    "source": "PHB",
+    "srd": true,
+    "type": "M",
+    "value": 1500,
+    "weapon": true,
+    "weaponCategory": "martial",
+    "weight": 2,
+    "id": 5314,
+    "_itemType": "M",
+    "_rarity": "none"
+  }
+]

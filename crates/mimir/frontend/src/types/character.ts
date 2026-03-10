@@ -39,6 +39,12 @@ export interface CreatePcRequest {
   background_source?: string
   /** Ability scores: [str, dex, con, int, wis, cha] */
   ability_scores?: [number, number, number, number, number, number]
+  /** Starting class name (e.g., "Fighter") */
+  class_name?: string
+  /** Starting class source (e.g., "PHB") */
+  class_source?: string
+  /** Selected skill proficiencies from class */
+  selected_skills?: string[]
 }
 
 /**

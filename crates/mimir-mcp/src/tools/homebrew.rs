@@ -52,18 +52,18 @@ pub fn create_homebrew_item_tool() -> Tool {
     Tool {
         name: "create_homebrew_item".to_string(),
         description: Some(
-            "Create a new homebrew item in the active campaign. Data should be a JSON string with the item's properties."
+            "Create a new homebrew item in the active campaign. To clone from a catalog item, provide cloned_from_name and cloned_from_source — the catalog item's full data will be used as the base, and any fields in data will override specific properties. When cloning, data is optional. IMPORTANT: Use search_items first to find the exact name and source of the catalog item before cloning."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
-            vec!["name".to_string(), "data".to_string()],
+            vec!["name".to_string()],
             create_properties(vec![
                 ("name", "string", "Name of the homebrew item"),
-                ("data", "string", "JSON string with item data (description, properties, etc.)"),
+                ("data", "string", "JSON string with item data. Required when not cloning. When cloning, fields here override the catalog data."),
                 ("item_type", "string", "Item type: weapon, armor, potion, ring, rod, scroll, staff, wand, wondrous item, adventuring gear"),
                 ("rarity", "string", "Rarity: common, uncommon, rare, very rare, legendary, artifact"),
-                ("cloned_from_name", "string", "Name of the catalog item this was cloned from"),
-                ("cloned_from_source", "string", "Source book of the catalog item this was cloned from"),
+                ("cloned_from_name", "string", "Name of the catalog item to clone from. Must be used with cloned_from_source."),
+                ("cloned_from_source", "string", "Source book of the catalog item to clone from (e.g. PHB, DMG). Must be used with cloned_from_name."),
             ]),
             None,
         ),
@@ -175,19 +175,25 @@ pub async fn create_homebrew_item(
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
 
-    let data = args
-        .get("data")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("data is required".to_string()))?;
+    let data = args.get("data").and_then(|v| v.as_str()).map(String::from);
+    let cloned_from_name = args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from);
+    let cloned_from_source = args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from);
+
+    // data is required when not cloning
+    if data.is_none() && (cloned_from_name.is_none() || cloned_from_source.is_none()) {
+        return Err(McpError::InvalidArguments(
+            "data is required when not cloning from catalog (provide cloned_from_name and cloned_from_source to clone)".to_string(),
+        ));
+    }
 
     let input = CreateHomebrewItemInput {
         campaign_id,
         name: name.to_string(),
-        data: data.to_string(),
+        data,
         item_type: args.get("item_type").and_then(|v| v.as_str()).map(String::from),
         rarity: args.get("rarity").and_then(|v| v.as_str()).map(String::from),
-        cloned_from_name: args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from),
-        cloned_from_source: args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from),
+        cloned_from_name,
+        cloned_from_source,
     };
 
     let mut db = ctx.connect()?;

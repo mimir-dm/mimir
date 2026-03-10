@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
+use crate::dal::catalog as catalog_dal;
 use crate::models::campaign::{
     Character, CharacterClass, CharacterInventory, CharacterResponse, FeatSourceType,
     NewCharacter, NewCharacterClass, NewCharacterFeat, NewCharacterFeature, NewCharacterInventory,
@@ -38,6 +39,12 @@ pub struct CreateCharacterInput {
     pub background_source: Option<String>,
     /// Ability scores [STR, DEX, CON, INT, WIS, CHA]
     pub ability_scores: Option<[i32; 6]>,
+    /// Starting class name (e.g., "Fighter")
+    pub class_name: Option<String>,
+    /// Starting class source (e.g., "PHB")
+    pub class_source: Option<String>,
+    /// Selected skill proficiencies from class (user choices)
+    pub selected_skills: Option<Vec<String>>,
 }
 
 impl CreateCharacterInput {
@@ -57,6 +64,9 @@ impl CreateCharacterInput {
             background_name: None,
             background_source: None,
             ability_scores: None,
+            class_name: None,
+            class_source: None,
+            selected_skills: None,
         }
     }
 
@@ -72,6 +82,9 @@ impl CreateCharacterInput {
             background_name: None,
             background_source: None,
             ability_scores: None,
+            class_name: None,
+            class_source: None,
+            selected_skills: None,
         }
     }
 
@@ -92,6 +105,19 @@ impl CreateCharacterInput {
     /// Set ability scores [STR, DEX, CON, INT, WIS, CHA].
     pub fn with_ability_scores(mut self, scores: [i32; 6]) -> Self {
         self.ability_scores = Some(scores);
+        self
+    }
+
+    /// Set starting class.
+    pub fn with_class(mut self, name: impl Into<String>, source: impl Into<String>) -> Self {
+        self.class_name = Some(name.into());
+        self.class_source = Some(source.into());
+        self
+    }
+
+    /// Set selected skill proficiencies.
+    pub fn with_skills(mut self, skills: Vec<String>) -> Self {
+        self.selected_skills = Some(skills);
         self
     }
 }
@@ -543,6 +569,225 @@ fn get_class_hit_die(conn: &mut SqliteConnection, class_name: &str, class_source
     }
 }
 
+// =============================================================================
+// Proficiency Extraction Helpers
+// =============================================================================
+
+/// A proficiency to be inserted during character creation.
+struct ProficiencyEntry {
+    prof_type: ProficiencyType,
+    name: String,
+}
+
+/// Extract deterministic (non-choice) proficiencies from a keyed JSON object.
+///
+/// Handles the common 5etools format: `{ "perception": true, "stealth": true }`
+/// Ignores choice keys like "choose", "any", "anyStandard", etc.
+fn extract_keyed_proficiencies(
+    items: &[serde_json::Value],
+    prof_type: ProficiencyType,
+) -> Vec<ProficiencyEntry> {
+    let mut result = Vec::new();
+    for item in items {
+        if let Some(obj) = item.as_object() {
+            for (key, val) in obj {
+                // Skip choice/meta keys
+                if key == "choose" || key == "any" || key.starts_with("any") {
+                    continue;
+                }
+                // Boolean true means granted proficiency
+                if val.as_bool() == Some(true) {
+                    // Clean up key: remove source suffix (e.g., "longsword|phb" -> "longsword")
+                    let name = key.split('|').next().unwrap_or(key);
+                    result.push(ProficiencyEntry {
+                        prof_type: prof_type.clone(),
+                        name: capitalize_proficiency(name),
+                    });
+                }
+            }
+        } else if let Some(s) = item.as_str() {
+            // Simple string proficiency (e.g., armor types: "light", "medium", "heavy")
+            result.push(ProficiencyEntry {
+                prof_type: prof_type.clone(),
+                name: capitalize_proficiency(s),
+            });
+        }
+    }
+    result
+}
+
+/// Capitalize a proficiency name for display.
+fn capitalize_proficiency(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => {
+            let upper: String = first.to_uppercase().collect();
+            upper + chars.as_str()
+        }
+    }
+}
+
+/// Extract proficiencies from class catalog data.
+fn extract_class_proficiencies(
+    class_data: &serde_json::Value,
+    selected_skills: &[String],
+) -> Vec<ProficiencyEntry> {
+    let mut profs = Vec::new();
+
+    // Saving throws from "proficiency" field: ["str", "con"]
+    if let Some(saves) = class_data.get("proficiency").and_then(|v| v.as_array()) {
+        for save in saves {
+            if let Some(s) = save.as_str() {
+                let full_name = match s {
+                    "str" => "Strength",
+                    "dex" => "Dexterity",
+                    "con" => "Constitution",
+                    "int" => "Intelligence",
+                    "wis" => "Wisdom",
+                    "cha" => "Charisma",
+                    other => other,
+                };
+                profs.push(ProficiencyEntry {
+                    prof_type: ProficiencyType::Save,
+                    name: full_name.to_string(),
+                });
+            }
+        }
+    }
+
+    // Starting proficiencies
+    if let Some(sp) = class_data.get("startingProficiencies") {
+        // Armor proficiencies
+        if let Some(armor) = sp.get("armor").and_then(|v| v.as_array()) {
+            profs.extend(extract_keyed_proficiencies(armor, ProficiencyType::Armor));
+        }
+
+        // Weapon proficiencies
+        if let Some(weapons) = sp.get("weapons").and_then(|v| v.as_array()) {
+            profs.extend(extract_keyed_proficiencies(weapons, ProficiencyType::Weapon));
+        }
+
+        // Tool proficiencies
+        if let Some(tools) = sp.get("tools").and_then(|v| v.as_array()) {
+            profs.extend(extract_keyed_proficiencies(tools, ProficiencyType::Tool));
+        }
+    }
+
+    // Skill proficiencies (user-selected)
+    for skill in selected_skills {
+        profs.push(ProficiencyEntry {
+            prof_type: ProficiencyType::Skill,
+            name: skill.clone(),
+        });
+    }
+
+    profs
+}
+
+/// Extract proficiencies from background catalog data.
+fn extract_background_proficiencies(bg_data: &serde_json::Value) -> Vec<ProficiencyEntry> {
+    let mut profs = Vec::new();
+
+    // Skill proficiencies (usually deterministic for backgrounds)
+    if let Some(skills) = bg_data.get("skillProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(skills, ProficiencyType::Skill));
+    }
+
+    // Tool proficiencies
+    if let Some(tools) = bg_data.get("toolProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(tools, ProficiencyType::Tool));
+    }
+
+    // Language proficiencies
+    if let Some(langs) = bg_data.get("languageProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(langs, ProficiencyType::Language));
+    }
+
+    profs
+}
+
+/// Extract proficiencies from race catalog data.
+fn extract_race_proficiencies(race_data: &serde_json::Value) -> Vec<ProficiencyEntry> {
+    let mut profs = Vec::new();
+
+    // Skill proficiencies
+    if let Some(skills) = race_data.get("skillProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(skills, ProficiencyType::Skill));
+    }
+
+    // Weapon proficiencies
+    if let Some(weapons) = race_data.get("weaponProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(weapons, ProficiencyType::Weapon));
+    }
+
+    // Armor proficiencies
+    if let Some(armor) = race_data.get("armorProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(armor, ProficiencyType::Armor));
+    }
+
+    // Tool proficiencies
+    if let Some(tools) = race_data.get("toolProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(tools, ProficiencyType::Tool));
+    }
+
+    // Language proficiencies
+    if let Some(langs) = race_data.get("languageProficiencies").and_then(|v| v.as_array()) {
+        profs.extend(extract_keyed_proficiencies(langs, ProficiencyType::Language));
+    }
+
+    profs
+}
+
+/// Extract multiclass proficiencies from class catalog data.
+fn extract_multiclass_proficiencies(class_data: &serde_json::Value) -> Vec<ProficiencyEntry> {
+    let mut profs = Vec::new();
+
+    if let Some(mc) = class_data.get("multiclassing") {
+        if let Some(gained) = mc.get("proficienciesGained") {
+            if let Some(armor) = gained.get("armor").and_then(|v| v.as_array()) {
+                profs.extend(extract_keyed_proficiencies(armor, ProficiencyType::Armor));
+            }
+            if let Some(weapons) = gained.get("weapons").and_then(|v| v.as_array()) {
+                profs.extend(extract_keyed_proficiencies(weapons, ProficiencyType::Weapon));
+            }
+            if let Some(tools) = gained.get("tools").and_then(|v| v.as_array()) {
+                profs.extend(extract_keyed_proficiencies(tools, ProficiencyType::Tool));
+            }
+        }
+    }
+
+    profs
+}
+
+/// Insert proficiency entries for a character, skipping duplicates.
+fn insert_proficiencies(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    entries: &[ProficiencyEntry],
+) -> ServiceResult<()> {
+    for entry in entries {
+        // Skip if character already has this proficiency
+        if dal::character_has_proficiency(
+            conn,
+            character_id,
+            &entry.prof_type.as_str(),
+            &entry.name,
+        )? {
+            continue;
+        }
+        let prof_id = Uuid::new_v4().to_string();
+        let new_prof = NewCharacterProficiency::new(
+            &prof_id,
+            character_id,
+            entry.prof_type.clone(),
+            &entry.name,
+        );
+        dal::insert_character_proficiency(conn, &new_prof)?;
+    }
+    Ok(())
+}
+
 /// Service for character management.
 ///
 /// Handles character CRUD operations and inventory management.
@@ -594,6 +839,49 @@ impl<'a> CharacterService<'a> {
         }
 
         dal::insert_character(self.conn, &new_char)?;
+
+        // Populate proficiencies from catalog data
+        let selected_skills = input.selected_skills.as_deref().unwrap_or(&[]);
+
+        // Class proficiencies (saving throws, armor, weapons, tools, selected skills)
+        if let (Some(class_name), Some(class_source)) =
+            (input.class_name.as_deref(), input.class_source.as_deref())
+        {
+            if let Ok(Some(class)) =
+                catalog_dal::get_class_by_name(self.conn, class_name, class_source)
+            {
+                if let Ok(class_data) = serde_json::from_str::<serde_json::Value>(&class.data) {
+                    let class_profs =
+                        extract_class_proficiencies(&class_data, selected_skills);
+                    insert_proficiencies(self.conn, &char_id, &class_profs)?;
+                }
+            }
+        }
+
+        // Background proficiencies (skills, tools, languages)
+        if let (Some(bg_name), Some(bg_source)) = (background_name, background_source) {
+            if let Ok(Some(bg)) =
+                catalog_dal::get_background_by_name(self.conn, bg_name, bg_source)
+            {
+                if let Ok(bg_data) = serde_json::from_str::<serde_json::Value>(&bg.data) {
+                    let bg_profs = extract_background_proficiencies(&bg_data);
+                    insert_proficiencies(self.conn, &char_id, &bg_profs)?;
+                }
+            }
+        }
+
+        // Race proficiencies (skills, weapons, armor, tools, languages)
+        if let (Some(r_name), Some(r_source)) = (race_name, race_source) {
+            if let Ok(Some(race)) =
+                catalog_dal::get_race_by_name(self.conn, r_name, r_source)
+            {
+                if let Ok(race_data) = serde_json::from_str::<serde_json::Value>(&race.data) {
+                    let race_profs = extract_race_proficiencies(&race_data);
+                    insert_proficiencies(self.conn, &char_id, &race_profs)?;
+                }
+            }
+        }
+
         dal::get_character(self.conn, &char_id).map_err(ServiceError::from)
     }
 
@@ -1185,6 +1473,23 @@ impl<'a> CharacterService<'a> {
             }
 
             dal::insert_character_class(self.conn, &new_class)?;
+
+            // Add multiclass proficiencies if this is a multiclass level-up
+            if is_multiclass {
+                if let Ok(Some(class_row)) = catalog_dal::get_class_by_name(
+                    self.conn,
+                    &request.class_name,
+                    &request.class_source,
+                ) {
+                    if let Ok(class_data) =
+                        serde_json::from_str::<serde_json::Value>(&class_row.data)
+                    {
+                        let mc_profs = extract_multiclass_proficiencies(&class_data);
+                        let _ = insert_proficiencies(self.conn, character_id, &mc_profs);
+                    }
+                }
+            }
+
             dal::get_character_class(self.conn, &class_id)?
         };
 
@@ -1664,5 +1969,183 @@ mod tests {
         assert_eq!(updated.quantity, 15);
         assert!(updated.is_equipped());
         assert!(!updated.is_attuned());
+    }
+
+    // ── Proficiency Extraction Tests ────────────────────────────────
+
+    #[test]
+    fn test_extract_keyed_proficiencies_boolean_keys() {
+        let items = vec![serde_json::json!({"perception": true, "stealth": true})];
+        let profs = extract_keyed_proficiencies(&items, ProficiencyType::Skill);
+        let names: Vec<&str> = profs.iter().map(|p| p.name.as_str()).collect();
+        assert!(names.contains(&"Perception"));
+        assert!(names.contains(&"Stealth"));
+        assert_eq!(profs.len(), 2);
+    }
+
+    #[test]
+    fn test_extract_keyed_proficiencies_ignores_choice_keys() {
+        let items = vec![serde_json::json!({"choose": {"from": ["a", "b"]}, "any": 2})];
+        let profs = extract_keyed_proficiencies(&items, ProficiencyType::Skill);
+        assert_eq!(profs.len(), 0);
+    }
+
+    #[test]
+    fn test_extract_keyed_proficiencies_ignores_any_prefix_keys() {
+        let items = vec![serde_json::json!({"anyStandard": 2, "anyMusicalInstrument": 1})];
+        let profs = extract_keyed_proficiencies(&items, ProficiencyType::Language);
+        assert_eq!(profs.len(), 0);
+    }
+
+    #[test]
+    fn test_extract_keyed_proficiencies_string_values() {
+        let items = vec![
+            serde_json::Value::String("light".to_string()),
+            serde_json::Value::String("medium".to_string()),
+            serde_json::Value::String("{@item shield|phb}".to_string()),
+        ];
+        let profs = extract_keyed_proficiencies(&items, ProficiencyType::Armor);
+        assert_eq!(profs.len(), 3);
+        assert_eq!(profs[0].name, "Light");
+        assert_eq!(profs[1].name, "Medium");
+    }
+
+    #[test]
+    fn test_extract_keyed_proficiencies_strips_source_suffix() {
+        let items = vec![serde_json::json!({"longsword|phb": true, "shortbow|phb": true})];
+        let profs = extract_keyed_proficiencies(&items, ProficiencyType::Weapon);
+        let names: Vec<&str> = profs.iter().map(|p| p.name.as_str()).collect();
+        assert!(names.contains(&"Longsword"));
+        assert!(names.contains(&"Shortbow"));
+    }
+
+    #[test]
+    fn test_extract_class_proficiencies_saves() {
+        let class_data = serde_json::json!({
+            "proficiency": ["str", "con"],
+            "startingProficiencies": {
+                "armor": ["light", "medium", "heavy", "{@item shield|phb}"],
+                "weapons": [{"simple weapons": true, "martial weapons": true}]
+            }
+        });
+        let profs = extract_class_proficiencies(&class_data, &[]);
+        let saves: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Save))
+            .map(|p| p.name.as_str())
+            .collect();
+        assert!(saves.contains(&"Strength"));
+        assert!(saves.contains(&"Constitution"));
+    }
+
+    #[test]
+    fn test_extract_class_proficiencies_with_skills() {
+        let class_data = serde_json::json!({
+            "proficiency": ["dex", "int"],
+            "startingProficiencies": {}
+        });
+        let selected = vec!["Stealth".to_string(), "Perception".to_string()];
+        let profs = extract_class_proficiencies(&class_data, &selected);
+        let skills: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Skill))
+            .map(|p| p.name.as_str())
+            .collect();
+        assert!(skills.contains(&"Stealth"));
+        assert!(skills.contains(&"Perception"));
+    }
+
+    #[test]
+    fn test_extract_background_proficiencies() {
+        let bg_data = serde_json::json!({
+            "skillProficiencies": [{"insight": true, "religion": true}],
+            "languageProficiencies": [{"common": true, "elvish": true}],
+            "toolProficiencies": [{"disguise kit": true}]
+        });
+        let profs = extract_background_proficiencies(&bg_data);
+        let skills: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Skill))
+            .map(|p| p.name.as_str())
+            .collect();
+        let langs: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Language))
+            .map(|p| p.name.as_str())
+            .collect();
+        let tools: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Tool))
+            .map(|p| p.name.as_str())
+            .collect();
+        assert!(skills.contains(&"Insight"));
+        assert!(skills.contains(&"Religion"));
+        assert!(langs.contains(&"Common"));
+        assert!(langs.contains(&"Elvish"));
+        assert!(tools.contains(&"Disguise kit"));
+    }
+
+    #[test]
+    fn test_extract_race_proficiencies() {
+        let race_data = serde_json::json!({
+            "skillProficiencies": [{"perception": true}],
+            "languageProficiencies": [{"common": true, "elvish": true}],
+            "weaponProficiencies": [{"longsword|phb": true, "shortbow|phb": true}]
+        });
+        let profs = extract_race_proficiencies(&race_data);
+        let skills: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Skill))
+            .map(|p| p.name.as_str())
+            .collect();
+        let weapons: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Weapon))
+            .map(|p| p.name.as_str())
+            .collect();
+        assert!(skills.contains(&"Perception"));
+        assert!(weapons.contains(&"Longsword"));
+        assert!(weapons.contains(&"Shortbow"));
+    }
+
+    #[test]
+    fn test_extract_multiclass_proficiencies() {
+        let class_data = serde_json::json!({
+            "multiclassing": {
+                "proficienciesGained": {
+                    "armor": ["light", "medium"],
+                    "weapons": [{"simple weapons": true}]
+                }
+            }
+        });
+        let profs = extract_multiclass_proficiencies(&class_data);
+        let armor: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Armor))
+            .map(|p| p.name.as_str())
+            .collect();
+        let weapons: Vec<&str> = profs
+            .iter()
+            .filter(|p| matches!(p.prof_type, ProficiencyType::Weapon))
+            .map(|p| p.name.as_str())
+            .collect();
+        assert!(armor.contains(&"Light"));
+        assert!(armor.contains(&"Medium"));
+        assert!(weapons.contains(&"Simple weapons"));
+    }
+
+    #[test]
+    fn test_extract_multiclass_proficiencies_no_multiclass() {
+        let class_data = serde_json::json!({});
+        let profs = extract_multiclass_proficiencies(&class_data);
+        assert_eq!(profs.len(), 0);
+    }
+
+    #[test]
+    fn test_capitalize_proficiency() {
+        assert_eq!(capitalize_proficiency("perception"), "Perception");
+        assert_eq!(capitalize_proficiency("stealth"), "Stealth");
+        assert_eq!(capitalize_proficiency(""), "");
+        assert_eq!(capitalize_proficiency("a"), "A");
     }
 }

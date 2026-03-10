@@ -1129,6 +1129,9 @@ mod tests {
                 background_name: None,
                 background_source: None,
                 ability_scores: None,
+                class_name: None,
+                class_source: None,
+                selected_skills: None,
             };
             char_svc.create(input).expect("Failed to create character");
         }

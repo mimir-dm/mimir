@@ -1132,6 +1132,9 @@ const createCharacter = async () => {
           formData.value.abilities.wisdom,
           formData.value.abilities.charisma,
         ],
+        class_name: formData.value.class_name.trim() || undefined,
+        class_source: formData.value.class_source.trim() || undefined,
+        selected_skills: allSelectedSkills.value.length > 0 ? allSelectedSkills.value : undefined,
       })
     }
 

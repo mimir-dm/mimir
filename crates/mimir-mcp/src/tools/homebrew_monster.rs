@@ -52,19 +52,19 @@ pub fn create_homebrew_monster_tool() -> Tool {
     Tool {
         name: "create_homebrew_monster".to_string(),
         description: Some(
-            "Create a new homebrew monster in the active campaign. Data should be a JSON string with the monster's stat block."
+            "Create a new homebrew monster in the active campaign. To clone from a catalog monster, provide cloned_from_name and cloned_from_source — the catalog monster's full data will be used as the base, and any fields in data will override specific properties. When cloning, data is optional. IMPORTANT: Use search_monsters first to find the exact name and source of the catalog monster before cloning."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
-            vec!["name".to_string(), "data".to_string()],
+            vec!["name".to_string()],
             create_properties(vec![
                 ("name", "string", "Name of the homebrew monster"),
-                ("data", "string", "JSON string with monster stat block data"),
+                ("data", "string", "JSON string with monster stat block data. Required when not cloning. When cloning, fields here override the catalog data."),
                 ("cr", "string", "Challenge rating (e.g. '1/4', '1', '5', '20')"),
                 ("creature_type", "string", "Creature type (e.g. 'humanoid', 'dragon', 'undead')"),
                 ("size", "string", "Size: T, S, M, L, H, G"),
-                ("cloned_from_name", "string", "Name of the catalog monster this was cloned from"),
-                ("cloned_from_source", "string", "Source book of the catalog monster this was cloned from"),
+                ("cloned_from_name", "string", "Name of the catalog monster to clone from. Must be used with cloned_from_source."),
+                ("cloned_from_source", "string", "Source book of the catalog monster to clone from (e.g. MM, VGM). Must be used with cloned_from_name."),
             ]),
             None,
         ),
@@ -178,20 +178,26 @@ pub async fn create_homebrew_monster(
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
 
-    let data = args
-        .get("data")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("data is required".to_string()))?;
+    let data = args.get("data").and_then(|v| v.as_str()).map(String::from);
+    let cloned_from_name = args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from);
+    let cloned_from_source = args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from);
+
+    // data is required when not cloning
+    if data.is_none() && (cloned_from_name.is_none() || cloned_from_source.is_none()) {
+        return Err(McpError::InvalidArguments(
+            "data is required when not cloning from catalog (provide cloned_from_name and cloned_from_source to clone)".to_string(),
+        ));
+    }
 
     let input = CreateHomebrewMonsterInput {
         campaign_id,
         name: name.to_string(),
-        data: data.to_string(),
+        data,
         cr: args.get("cr").and_then(|v| v.as_str()).map(String::from),
         creature_type: args.get("creature_type").and_then(|v| v.as_str()).map(String::from),
         size: args.get("size").and_then(|v| v.as_str()).map(String::from),
-        cloned_from_name: args.get("cloned_from_name").and_then(|v| v.as_str()).map(String::from),
-        cloned_from_source: args.get("cloned_from_source").and_then(|v| v.as_str()).map(String::from),
+        cloned_from_name,
+        cloned_from_source,
     };
 
     let mut db = ctx.connect()?;

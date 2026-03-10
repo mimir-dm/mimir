@@ -545,6 +545,7 @@ mod tests {
             faction: None,
             classes: vec![ClassInfo {
                 class_name: "Fighter".to_string(),
+                class_source: "PHB".to_string(),
                 level: 5,
                 subclass_name: Some("Champion".to_string()),
                 is_starting: true,

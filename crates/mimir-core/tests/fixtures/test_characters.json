@@ -1,0 +1,276 @@
+[
+  {
+    "id": "test-fighter-champion-5",
+    "name": "Test Fighter",
+    "campaign_id": "test-campaign-1",
+    "is_npc": false,
+    "level": 5,
+    "race": "Human",
+    "classes": [
+      {
+        "class_name": "Fighter",
+        "subclass_name": "Champion",
+        "level": 5,
+        "hit_dice_used": 0
+      }
+    ],
+    "ability_scores": {
+      "str": 16,
+      "dex": 14,
+      "con": 14,
+      "int": 10,
+      "wis": 12,
+      "cha": 8
+    },
+    "max_hp": 44,
+    "current_hp": 44,
+    "temp_hp": 0,
+    "armor_class": 18,
+    "speed": 30,
+    "background": "Soldier",
+    "alignment": "Lawful Good",
+    "proficiencies": [
+      {
+        "name": "Athletics",
+        "type": "skill"
+      },
+      {
+        "name": "Intimidation",
+        "type": "skill"
+      },
+      {
+        "name": "All Armor",
+        "type": "armor"
+      },
+      {
+        "name": "Shields",
+        "type": "armor"
+      },
+      {
+        "name": "Simple Weapons",
+        "type": "weapon"
+      },
+      {
+        "name": "Martial Weapons",
+        "type": "weapon"
+      },
+      {
+        "name": "Strength",
+        "type": "saving_throw"
+      },
+      {
+        "name": "Constitution",
+        "type": "saving_throw"
+      }
+    ],
+    "features": [],
+    "spells": [],
+    "notes": "Test fixture: Level 5 Champion Fighter with SRD equipment"
+  },
+  {
+    "id": "test-rogue-thief-3",
+    "name": "Test Rogue",
+    "campaign_id": "test-campaign-1",
+    "is_npc": false,
+    "level": 3,
+    "race": "Halfling",
+    "classes": [
+      {
+        "class_name": "Rogue",
+        "subclass_name": "Thief",
+        "level": 3,
+        "hit_dice_used": 0
+      }
+    ],
+    "ability_scores": {
+      "str": 8,
+      "dex": 16,
+      "con": 12,
+      "int": 14,
+      "wis": 10,
+      "cha": 13
+    },
+    "max_hp": 21,
+    "current_hp": 21,
+    "temp_hp": 0,
+    "armor_class": 14,
+    "speed": 25,
+    "background": "Criminal",
+    "alignment": "Chaotic Neutral",
+    "proficiencies": [
+      {
+        "name": "Stealth",
+        "type": "skill"
+      },
+      {
+        "name": "Thieves' Tools",
+        "type": "tool"
+      },
+      {
+        "name": "Sleight of Hand",
+        "type": "skill"
+      },
+      {
+        "name": "Acrobatics",
+        "type": "skill"
+      },
+      {
+        "name": "Deception",
+        "type": "skill"
+      },
+      {
+        "name": "Light Armor",
+        "type": "armor"
+      },
+      {
+        "name": "Simple Weapons",
+        "type": "weapon"
+      },
+      {
+        "name": "Dexterity",
+        "type": "saving_throw"
+      },
+      {
+        "name": "Intelligence",
+        "type": "saving_throw"
+      }
+    ],
+    "features": [],
+    "spells": [],
+    "notes": "Test fixture: Level 3 Thief Rogue"
+  },
+  {
+    "id": "test-wizard-evocation-5",
+    "name": "Test Wizard",
+    "campaign_id": "test-campaign-1",
+    "is_npc": false,
+    "level": 5,
+    "race": "High Elf",
+    "classes": [
+      {
+        "class_name": "Wizard",
+        "subclass_name": "School of Evocation",
+        "level": 5,
+        "hit_dice_used": 0
+      }
+    ],
+    "ability_scores": {
+      "str": 8,
+      "dex": 14,
+      "con": 12,
+      "int": 17,
+      "wis": 13,
+      "cha": 10
+    },
+    "max_hp": 27,
+    "current_hp": 27,
+    "temp_hp": 0,
+    "armor_class": 12,
+    "speed": 30,
+    "background": "Sage",
+    "alignment": "Neutral Good",
+    "proficiencies": [
+      {
+        "name": "Arcana",
+        "type": "skill"
+      },
+      {
+        "name": "Investigation",
+        "type": "skill"
+      },
+      {
+        "name": "History",
+        "type": "skill"
+      },
+      {
+        "name": "Intelligence",
+        "type": "saving_throw"
+      },
+      {
+        "name": "Wisdom",
+        "type": "saving_throw"
+      }
+    ],
+    "features": [],
+    "spells": [],
+    "notes": "Test fixture: Level 5 Evocation Wizard"
+  },
+  {
+    "id": "test-multiclass-fighter3-rogue2",
+    "name": "Test Multiclass",
+    "campaign_id": "test-campaign-1",
+    "is_npc": false,
+    "level": 5,
+    "race": "Half-Elf",
+    "classes": [
+      {
+        "class_name": "Fighter",
+        "subclass_name": "Champion",
+        "level": 3,
+        "hit_dice_used": 0
+      },
+      {
+        "class_name": "Rogue",
+        "subclass_name": null,
+        "level": 2,
+        "hit_dice_used": 0
+      }
+    ],
+    "ability_scores": {
+      "str": 14,
+      "dex": 16,
+      "con": 12,
+      "int": 10,
+      "wis": 10,
+      "cha": 14
+    },
+    "max_hp": 33,
+    "current_hp": 33,
+    "temp_hp": 0,
+    "armor_class": 16,
+    "speed": 30,
+    "background": "Folk Hero",
+    "alignment": "Neutral Good",
+    "proficiencies": [
+      {
+        "name": "Athletics",
+        "type": "skill"
+      },
+      {
+        "name": "Perception",
+        "type": "skill"
+      },
+      {
+        "name": "Stealth",
+        "type": "skill"
+      },
+      {
+        "name": "All Armor",
+        "type": "armor"
+      },
+      {
+        "name": "Shields",
+        "type": "armor"
+      },
+      {
+        "name": "Simple Weapons",
+        "type": "weapon"
+      },
+      {
+        "name": "Martial Weapons",
+        "type": "weapon"
+      },
+      {
+        "name": "Strength",
+        "type": "saving_throw"
+      },
+      {
+        "name": "Constitution",
+        "type": "saving_throw"
+      }
+    ],
+    "features": [],
+    "spells": [],
+    "notes": "Test fixture: Fighter 3 (Champion) / Rogue 2 multiclass"
+  }
+]

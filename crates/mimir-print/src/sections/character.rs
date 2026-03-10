@@ -75,6 +75,7 @@ pub struct CharacterData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassInfo {
     pub class_name: String,
+    pub class_source: String,
     pub level: i32,
     pub subclass_name: Option<String>,
     pub is_starting: bool,
@@ -820,12 +821,14 @@ mod tests {
             classes: vec![
                 ClassInfo {
                     class_name: "Fighter".to_string(),
+                    class_source: "PHB".to_string(),
                     level: 5,
                     subclass_name: Some("Champion".to_string()),
                     is_starting: true,
                 },
                 ClassInfo {
                     class_name: "Ranger".to_string(),
+                    class_source: "PHB".to_string(),
                     level: 3,
                     subclass_name: None,
                     is_starting: false,
@@ -906,6 +909,7 @@ mod tests {
             classes: vec![
                 ClassInfo {
                     class_name: "Wizard".to_string(),
+                    class_source: "PHB".to_string(),
                     level: 9,
                     subclass_name: Some("Evocation".to_string()),
                     is_starting: true,

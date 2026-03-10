@@ -6,7 +6,8 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tests/*": ["./__tests__/*"]
     },
     "types": ["node"],
     "lib": ["ES2015", "DOM", "DOM.Iterable"],

@@ -129,6 +129,9 @@ pub struct CreatePcRequest {
     pub background_name: Option<String>,
     pub background_source: Option<String>,
     pub ability_scores: Option<[i32; 6]>,
+    pub class_name: Option<String>,
+    pub class_source: Option<String>,
+    pub selected_skills: Option<Vec<String>>,
 }
 
 /// Create a new player character.
@@ -157,9 +160,23 @@ pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiRes
         input = input.with_ability_scores(scores);
     }
 
+    // Set class if both name and source provided
+    if let (Some(name), Some(source)) = (&request.class_name, &request.class_source) {
+        input = input.with_class(name, source);
+    }
+
+    // Set selected skills if provided
+    if let Some(skills) = request.selected_skills {
+        input = input.with_skills(skills);
+    }
+
     match CharacterService::new(&mut db).create(input) {
         Ok(character) => {
-            ApiResponse::ok(CharacterResponse::from_character(character, vec![], vec![]))
+            // Enrich response with proficiencies
+            match CharacterService::new(&mut db).enrich(character) {
+                Ok(response) => ApiResponse::ok(response),
+                Err(e) => ApiResponse::err(e.to_string()),
+            }
         }
         Err(e) => ApiResponse::err(e.to_string()),
     }

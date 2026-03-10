@@ -11,13 +11,16 @@ use super::{to_api_response, ApiResponse};
 use crate::state::AppState;
 
 /// Input for creating a homebrew item (Tauri-facing, Deserialize).
+///
+/// `data` is optional when `cloned_from_name` + `cloned_from_source` are provided —
+/// the catalog item's data will be used as the base.
 #[derive(Debug, Deserialize)]
 pub struct TauriCreateHomebrewItemInput {
     pub campaign_id: String,
     pub name: String,
     pub item_type: Option<String>,
     pub rarity: Option<String>,
-    pub data: String,
+    pub data: Option<String>,
     pub cloned_from_name: Option<String>,
     pub cloned_from_source: Option<String>,
 }

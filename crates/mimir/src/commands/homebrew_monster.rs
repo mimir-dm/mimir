@@ -18,7 +18,7 @@ pub struct TauriCreateHomebrewMonsterInput {
     pub cr: Option<String>,
     pub creature_type: Option<String>,
     pub size: Option<String>,
-    pub data: String,
+    pub data: Option<String>,
     pub cloned_from_name: Option<String>,
     pub cloned_from_source: Option<String>,
 }
