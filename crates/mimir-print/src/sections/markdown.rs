@@ -115,4 +115,68 @@ This is a test.
         let section = MarkdownSection::from_content("Content", Some("Chapter 1"));
         assert_eq!(section.toc_title(), Some("Chapter 1".to_string()));
     }
+
+    #[test]
+    fn test_toc_title_none_without_title() {
+        let section = MarkdownSection::from_content("Content", None);
+        assert_eq!(section.toc_title(), None);
+    }
+
+    #[test]
+    fn test_with_title_overrides_frontmatter() {
+        let md = "---\ntitle: Original\n---\n\n# Content";
+        let section = MarkdownSection::from_markdown(md).unwrap().with_title("Overridden");
+        assert_eq!(section.toc_title(), Some("Overridden".to_string()));
+    }
+
+    #[test]
+    fn test_doc_type_extracted() {
+        let md = "---\ntitle: Doc\ntype: session_outline\n---\n\nContent";
+        let section = MarkdownSection::from_markdown(md).unwrap();
+        assert_eq!(section.doc_type(), Some("session_outline"));
+    }
+
+    #[test]
+    fn test_doc_type_none_when_missing() {
+        let md = "---\ntitle: Doc\n---\n\nContent";
+        let section = MarkdownSection::from_markdown(md).unwrap();
+        assert_eq!(section.doc_type(), None);
+    }
+
+    #[test]
+    fn test_to_typst_returns_content() {
+        let section = MarkdownSection::from_content("# Hello\n\nWorld", Some("Test"));
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("Hello"));
+    }
+
+    #[test]
+    fn test_markdown_with_bold_italic() {
+        let md = "This is **bold** and *italic*.";
+        let section = MarkdownSection::from_content(md, Some("Formatting Test"));
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("*"));
+        assert!(typst.contains("_"));
+    }
+
+    #[test]
+    fn test_markdown_with_list() {
+        let md = "- Item A\n- Item B\n- Item C";
+        let section = MarkdownSection::from_content(md, None);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("- "));
+        assert!(typst.contains("Item A"));
+        assert!(typst.contains("Item B"));
+        assert!(typst.contains("Item C"));
+    }
+
+    #[test]
+    fn test_page_break_before_default() {
+        let section = MarkdownSection::from_content("Content", None);
+        // MarkdownSection uses default (true)
+        assert!(section.page_break_before());
+    }
 }

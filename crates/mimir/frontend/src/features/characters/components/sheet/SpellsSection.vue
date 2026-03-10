@@ -107,6 +107,7 @@
                 >
                   <span class="spell-name">
                     {{ spell.name }}
+                    <span v-if="spell.source === 'HB'" class="spell-tag homebrew">HB</span>
                     <span v-if="spell.ritual" class="spell-tag ritual">R</span>
                     <span v-if="spell.concentration" class="spell-tag conc">C</span>
                   </span>
@@ -442,6 +443,11 @@ loadClassSpells()
 .spell-tag.conc {
   background: var(--color-warning-100);
   color: var(--color-warning-700);
+}
+
+.spell-tag.homebrew {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
 }
 
 .spell-meta {

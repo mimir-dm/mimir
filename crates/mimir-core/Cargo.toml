@@ -1,8 +1,8 @@
 [package]
 name = "mimir-core"
-version = "0.5.3"
+version = "0.6.0"
 edition = "2021"
-description = "Mimir v0.5 core library - models, services, and data access"
+description = "Mimir core library - models, services, and data access"
 
 [dependencies]
 # Database

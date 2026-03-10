@@ -293,3 +293,428 @@ pub fn max_spell_level_for_class(class_name: &str, class_level: i32) -> i32 {
         _ => 0,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── hit_die_for_class ──────────────────────────────────────────────
+
+    #[test]
+    fn hit_die_barbarian_d12() {
+        assert_eq!(hit_die_for_class("Barbarian"), 12);
+    }
+
+    #[test]
+    fn hit_die_fighter_d10() {
+        assert_eq!(hit_die_for_class("Fighter"), 10);
+    }
+
+    #[test]
+    fn hit_die_paladin_d10() {
+        assert_eq!(hit_die_for_class("Paladin"), 10);
+    }
+
+    #[test]
+    fn hit_die_ranger_d10() {
+        assert_eq!(hit_die_for_class("Ranger"), 10);
+    }
+
+    #[test]
+    fn hit_die_d8_classes() {
+        for class in &["Bard", "Cleric", "Druid", "Monk", "Rogue", "Warlock", "Artificer"] {
+            assert_eq!(hit_die_for_class(class), 8, "Expected d8 for {}", class);
+        }
+    }
+
+    #[test]
+    fn hit_die_wizard_d6() {
+        assert_eq!(hit_die_for_class("Wizard"), 6);
+    }
+
+    #[test]
+    fn hit_die_sorcerer_d6() {
+        assert_eq!(hit_die_for_class("Sorcerer"), 6);
+    }
+
+    #[test]
+    fn hit_die_unknown_defaults_d8() {
+        assert_eq!(hit_die_for_class("Blood Hunter"), 8);
+    }
+
+    // ─── spellcasting_ability_for_class ─────────────────────────────────
+
+    #[test]
+    fn spell_ability_int_casters() {
+        assert_eq!(spellcasting_ability_for_class("Wizard"), Some("INT"));
+        assert_eq!(spellcasting_ability_for_class("Artificer"), Some("INT"));
+    }
+
+    #[test]
+    fn spell_ability_wis_casters() {
+        assert_eq!(spellcasting_ability_for_class("Cleric"), Some("WIS"));
+        assert_eq!(spellcasting_ability_for_class("Druid"), Some("WIS"));
+        assert_eq!(spellcasting_ability_for_class("Ranger"), Some("WIS"));
+    }
+
+    #[test]
+    fn spell_ability_cha_casters() {
+        assert_eq!(spellcasting_ability_for_class("Bard"), Some("CHA"));
+        assert_eq!(spellcasting_ability_for_class("Paladin"), Some("CHA"));
+        assert_eq!(spellcasting_ability_for_class("Sorcerer"), Some("CHA"));
+        assert_eq!(spellcasting_ability_for_class("Warlock"), Some("CHA"));
+    }
+
+    #[test]
+    fn spell_ability_non_casters() {
+        assert_eq!(spellcasting_ability_for_class("Fighter"), None);
+        assert_eq!(spellcasting_ability_for_class("Rogue"), None);
+        assert_eq!(spellcasting_ability_for_class("Barbarian"), None);
+        assert_eq!(spellcasting_ability_for_class("Monk"), None);
+    }
+
+    // ─── caster_level_multiplier ────────────────────────────────────────
+
+    #[test]
+    fn caster_multiplier_full_casters() {
+        for class in &["Bard", "Cleric", "Druid", "Sorcerer", "Wizard"] {
+            assert_eq!(caster_level_multiplier(class), 1.0, "Expected 1.0 for {}", class);
+        }
+    }
+
+    #[test]
+    fn caster_multiplier_half_casters() {
+        for class in &["Artificer", "Paladin", "Ranger"] {
+            assert_eq!(caster_level_multiplier(class), 0.5, "Expected 0.5 for {}", class);
+        }
+    }
+
+    #[test]
+    fn caster_multiplier_third_casters() {
+        let third = 1.0 / 3.0;
+        assert!((caster_level_multiplier("Eldritch Knight") - third).abs() < 0.001);
+        assert!((caster_level_multiplier("Arcane Trickster") - third).abs() < 0.001);
+    }
+
+    #[test]
+    fn caster_multiplier_non_casters() {
+        assert_eq!(caster_level_multiplier("Fighter"), 0.0);
+        assert_eq!(caster_level_multiplier("Rogue"), 0.0);
+        assert_eq!(caster_level_multiplier("Barbarian"), 0.0);
+    }
+
+    // ─── spell_slots_for_caster_level ───────────────────────────────────
+
+    #[test]
+    fn spell_slots_level_0() {
+        assert_eq!(spell_slots_for_caster_level(0), vec![0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn spell_slots_level_1() {
+        assert_eq!(spell_slots_for_caster_level(1), vec![2, 0, 0, 0, 0, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn spell_slots_level_5() {
+        assert_eq!(spell_slots_for_caster_level(5), vec![4, 3, 2, 0, 0, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn spell_slots_level_9() {
+        assert_eq!(spell_slots_for_caster_level(9), vec![4, 3, 3, 3, 1, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn spell_slots_level_20() {
+        assert_eq!(spell_slots_for_caster_level(20), vec![4, 3, 3, 3, 3, 2, 2, 1, 1]);
+    }
+
+    #[test]
+    fn spell_slots_above_20_caps() {
+        assert_eq!(spell_slots_for_caster_level(25), vec![4, 3, 3, 3, 3, 2, 2, 1, 1]);
+    }
+
+    #[test]
+    fn spell_slots_negative_level() {
+        assert_eq!(spell_slots_for_caster_level(-1), vec![0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    }
+
+    // ─── compute_hp_max ─────────────────────────────────────────────────
+
+    #[test]
+    fn hp_single_class_level_1() {
+        let classes = vec![ClassInfo {
+            class_name: "Fighter".to_string(),
+            class_source: "PHB".to_string(),
+            level: 1,
+            subclass_name: None,
+            is_starting: true,
+        }];
+        // Level 1: max die (10) + CON mod (2) = 12
+        assert_eq!(compute_hp_max(&classes, 2), 12);
+    }
+
+    #[test]
+    fn hp_single_class_level_5() {
+        let classes = vec![ClassInfo {
+            class_name: "Fighter".to_string(),
+            class_source: "PHB".to_string(),
+            level: 5,
+            subclass_name: None,
+            is_starting: true,
+        }];
+        // Level 1: 10 + 2 = 12
+        // Levels 2-5: 4 × (5 + 1 + 2) = 4 × 8 = 32
+        // Total: 44
+        assert_eq!(compute_hp_max(&classes, 2), 44);
+    }
+
+    #[test]
+    fn hp_multiclass() {
+        let classes = vec![
+            ClassInfo {
+                class_name: "Fighter".to_string(),
+                class_source: "PHB".to_string(),
+                level: 5,
+                subclass_name: None,
+                is_starting: true,
+            },
+            ClassInfo {
+                class_name: "Rogue".to_string(),
+                class_source: "PHB".to_string(),
+                level: 3,
+                subclass_name: None,
+                is_starting: false,
+            },
+        ];
+        // Fighter starting: 10 + 2 = 12 (level 1) + 4 × (5+1+2) = 32 → 44
+        // Rogue: 3 × (4+1+2) = 21
+        // Total: 65
+        assert_eq!(compute_hp_max(&classes, 2), 65);
+    }
+
+    #[test]
+    fn hp_wizard_low_con() {
+        let classes = vec![ClassInfo {
+            class_name: "Wizard".to_string(),
+            class_source: "PHB".to_string(),
+            level: 1,
+            subclass_name: None,
+            is_starting: true,
+        }];
+        // Level 1: 6 + (-1) = 5
+        assert_eq!(compute_hp_max(&classes, -1), 5);
+    }
+
+    #[test]
+    fn hp_empty_classes() {
+        assert_eq!(compute_hp_max(&[], 2), 0);
+    }
+
+    #[test]
+    fn hp_minimum_is_1() {
+        let classes = vec![ClassInfo {
+            class_name: "Wizard".to_string(),
+            class_source: "PHB".to_string(),
+            level: 1,
+            subclass_name: None,
+            is_starting: true,
+        }];
+        // Level 1: 6 + (-10) = -4, clamped to 1
+        assert_eq!(compute_hp_max(&classes, -10), 1);
+    }
+
+    // ─── compute_hit_die_string ─────────────────────────────────────────
+
+    #[test]
+    fn hit_die_string_single_class() {
+        let classes = vec![ClassInfo {
+            class_name: "Fighter".to_string(),
+            class_source: "PHB".to_string(),
+            level: 5,
+            subclass_name: None,
+            is_starting: true,
+        }];
+        assert_eq!(compute_hit_die_string(&classes), "5d10");
+    }
+
+    #[test]
+    fn hit_die_string_multiclass() {
+        let classes = vec![
+            ClassInfo {
+                class_name: "Fighter".to_string(),
+                class_source: "PHB".to_string(),
+                level: 5,
+                subclass_name: None,
+                is_starting: true,
+            },
+            ClassInfo {
+                class_name: "Rogue".to_string(),
+                class_source: "PHB".to_string(),
+                level: 3,
+                subclass_name: None,
+                is_starting: false,
+            },
+        ];
+        assert_eq!(compute_hit_die_string(&classes), "5d10 + 3d8");
+    }
+
+    #[test]
+    fn hit_die_string_empty() {
+        assert_eq!(compute_hit_die_string(&[]), "");
+    }
+
+    // ─── compute_ac ─────────────────────────────────────────────────────
+
+    #[test]
+    fn ac_no_armor() {
+        // No armor: 10 + DEX mod
+        assert_eq!(compute_ac(&[], 3), 13);
+    }
+
+    #[test]
+    fn ac_light_armor() {
+        let inv = vec![InventoryItem {
+            name: "Leather Armor".to_string(),
+            quantity: 1,
+            equipped: true,
+            item_type: Some("LA".to_string()),
+            armor_ac: Some(11),
+            ..Default::default()
+        }];
+        // Light: base + full DEX mod
+        assert_eq!(compute_ac(&inv, 3), 14);
+    }
+
+    #[test]
+    fn ac_medium_armor_dex_capped() {
+        let inv = vec![InventoryItem {
+            name: "Breastplate".to_string(),
+            quantity: 1,
+            equipped: true,
+            item_type: Some("MA".to_string()),
+            armor_ac: Some(14),
+            ..Default::default()
+        }];
+        // Medium: base + min(DEX, 2)
+        assert_eq!(compute_ac(&inv, 4), 16); // DEX 4 capped at 2
+    }
+
+    #[test]
+    fn ac_medium_armor_low_dex() {
+        let inv = vec![InventoryItem {
+            name: "Breastplate".to_string(),
+            quantity: 1,
+            equipped: true,
+            item_type: Some("MA".to_string()),
+            armor_ac: Some(14),
+            ..Default::default()
+        }];
+        // Medium with low DEX: base + DEX (since DEX < 2)
+        assert_eq!(compute_ac(&inv, 1), 15);
+    }
+
+    #[test]
+    fn ac_heavy_armor_ignores_dex() {
+        let inv = vec![InventoryItem {
+            name: "Chain Mail".to_string(),
+            quantity: 1,
+            equipped: true,
+            item_type: Some("HA".to_string()),
+            armor_ac: Some(16),
+            ..Default::default()
+        }];
+        // Heavy: flat AC, no DEX
+        assert_eq!(compute_ac(&inv, 4), 16);
+    }
+
+    #[test]
+    fn ac_shield_adds_bonus() {
+        let inv = vec![
+            InventoryItem {
+                name: "Chain Mail".to_string(),
+                quantity: 1,
+                equipped: true,
+                item_type: Some("HA".to_string()),
+                armor_ac: Some(16),
+                ..Default::default()
+            },
+            InventoryItem {
+                name: "Shield".to_string(),
+                quantity: 1,
+                equipped: true,
+                item_type: Some("S".to_string()),
+                armor_ac: Some(2),
+                ..Default::default()
+            },
+        ];
+        assert_eq!(compute_ac(&inv, 0), 18);
+    }
+
+    #[test]
+    fn ac_unequipped_armor_ignored() {
+        let inv = vec![InventoryItem {
+            name: "Plate Armor".to_string(),
+            quantity: 1,
+            equipped: false,
+            item_type: Some("HA".to_string()),
+            armor_ac: Some(18),
+            ..Default::default()
+        }];
+        // Not equipped → uses default 10 + DEX
+        assert_eq!(compute_ac(&inv, 2), 12);
+    }
+
+    // ─── max_spell_level_for_class ──────────────────────────────────────
+
+    #[test]
+    fn max_spell_level_wizard() {
+        assert_eq!(max_spell_level_for_class("Wizard", 1), 1);
+        assert_eq!(max_spell_level_for_class("Wizard", 3), 2);
+        assert_eq!(max_spell_level_for_class("Wizard", 5), 3);
+        assert_eq!(max_spell_level_for_class("Wizard", 9), 5);
+        assert_eq!(max_spell_level_for_class("Wizard", 17), 9);
+        assert_eq!(max_spell_level_for_class("Wizard", 20), 9); // capped at 9
+    }
+
+    #[test]
+    fn max_spell_level_paladin() {
+        assert_eq!(max_spell_level_for_class("Paladin", 1), 0); // No casting at level 1
+        assert_eq!(max_spell_level_for_class("Paladin", 2), 1);
+        assert_eq!(max_spell_level_for_class("Paladin", 5), 2);
+        assert_eq!(max_spell_level_for_class("Paladin", 9), 3);
+        assert_eq!(max_spell_level_for_class("Paladin", 17), 5);
+    }
+
+    #[test]
+    fn max_spell_level_warlock() {
+        assert_eq!(max_spell_level_for_class("Warlock", 1), 1);
+        assert_eq!(max_spell_level_for_class("Warlock", 3), 2);
+        assert_eq!(max_spell_level_for_class("Warlock", 5), 3);
+        assert_eq!(max_spell_level_for_class("Warlock", 9), 5);
+        assert_eq!(max_spell_level_for_class("Warlock", 20), 5); // Pact slots cap at 5
+    }
+
+    #[test]
+    fn max_spell_level_artificer() {
+        assert_eq!(max_spell_level_for_class("Artificer", 1), 1); // Starts at 1
+        assert_eq!(max_spell_level_for_class("Artificer", 5), 2);
+        assert_eq!(max_spell_level_for_class("Artificer", 17), 5);
+    }
+
+    #[test]
+    fn max_spell_level_third_caster() {
+        assert_eq!(max_spell_level_for_class("Eldritch Knight", 2), 0);
+        assert_eq!(max_spell_level_for_class("Eldritch Knight", 3), 1);
+        assert_eq!(max_spell_level_for_class("Eldritch Knight", 7), 2);
+        assert_eq!(max_spell_level_for_class("Eldritch Knight", 19), 4);
+    }
+
+    #[test]
+    fn max_spell_level_non_caster() {
+        assert_eq!(max_spell_level_for_class("Fighter", 20), 0);
+        assert_eq!(max_spell_level_for_class("Rogue", 20), 0);
+        assert_eq!(max_spell_level_for_class("Barbarian", 20), 0);
+    }
+}

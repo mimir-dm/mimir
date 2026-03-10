@@ -21,6 +21,11 @@ impl<'a> ItemService<'a> {
         Self { conn }
     }
 
+    /// List all weapon names from the catalog (item_type 'M' or 'R').
+    pub fn list_weapon_names(&mut self) -> ServiceResult<Vec<String>> {
+        dal::list_weapon_names(self.conn).map_err(ServiceError::from)
+    }
+
     /// List all items from a specific source.
     pub fn list_by_source(&mut self, source: &str) -> ServiceResult<Vec<Item>> {
         dal::list_items_by_source(self.conn, source).map_err(ServiceError::from)

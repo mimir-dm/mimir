@@ -244,30 +244,77 @@ export function getWeaponDamage(weaponName: string, abilityMod: number): string 
   const w = weaponName.toLowerCase()
   const modStr = abilityMod >= 0 ? `+${abilityMod}` : `${abilityMod}`
 
-  // Heavy two-handed weapons
+  // Heavy two-handed melee
   if (w.includes('greatsword') || w.includes('maul')) return `2d6${modStr}`
   if (w.includes('greataxe')) return `1d12${modStr}`
+  if (w.includes('lance')) return `1d12${modStr}`
 
-  // Versatile / martial weapons
+  // Reach/heavy martial (1d10)
+  if (w.includes('glaive') || w.includes('halberd') || w.includes('pike')) return `1d10${modStr}`
+
+  // Versatile / martial (1d8)
   if (w.includes('longsword') || w.includes('warhammer') || w.includes('battleaxe'))
     return `1d8${modStr}`
   if (w.includes('rapier')) return `1d8${modStr}`
+  if (w.includes('flail') || w.includes('morningstar') || w.includes('war pick'))
+    return `1d8${modStr}`
+  if (w.includes('greatclub')) return `1d8${modStr}`
 
-  // Light weapons
+  // Light/simple melee (1d6)
   if (w.includes('shortsword') || w.includes('scimitar')) return `1d6${modStr}`
-  if (w.includes('dagger')) return `1d4${modStr}`
+  if (w.includes('quarterstaff') || w.includes('spear') || w.includes('trident'))
+    return `1d6${modStr}`
+  if (w.includes('handaxe') || w.includes('javelin') || w.includes('mace')) return `1d6${modStr}`
 
-  // Simple weapons
-  if (w.includes('quarterstaff') || w.includes('spear')) return `1d6${modStr}`
+  // Small weapons (1d4)
+  if (w.includes('dagger')) return `1d4${modStr}`
+  if (w.includes('club') || w.includes('light hammer') || w.includes('sickle'))
+    return `1d4${modStr}`
+  if (w.includes('whip')) return `1d4${modStr}`
 
   // Ranged weapons
   if (w.includes('longbow')) return `1d8${modStr}`
-  if (w.includes('shortbow') || w.includes('light crossbow')) return `1d6${modStr}`
   if (w.includes('heavy crossbow')) return `1d10${modStr}`
+  if (w.includes('shortbow') || w.includes('light crossbow')) return `1d6${modStr}`
   if (w.includes('hand crossbow')) return `1d6${modStr}`
+  if (w.includes('dart') || w.includes('sling')) return `1d4${modStr}`
+  if (w.includes('blowgun')) return `1${modStr}`
+  if (w.includes('net')) return `0`
 
   // Default
   return `1d6${modStr}`
+}
+
+/** All PHB/SRD weapon base names (lowercase) for detection */
+const WEAPON_BASE_NAMES = new Set([
+  // Simple melee
+  'club', 'dagger', 'greatclub', 'handaxe', 'javelin',
+  'light hammer', 'mace', 'quarterstaff', 'sickle', 'spear',
+  // Simple ranged
+  'light crossbow', 'dart', 'shortbow', 'sling',
+  // Martial melee
+  'battleaxe', 'flail', 'glaive', 'greataxe', 'greatsword',
+  'halberd', 'lance', 'longsword', 'maul', 'morningstar',
+  'pike', 'rapier', 'scimitar', 'shortsword', 'trident',
+  'war pick', 'warhammer', 'whip',
+  // Martial ranged
+  'blowgun', 'hand crossbow', 'heavy crossbow', 'longbow', 'net',
+])
+
+/**
+ * Check if an item name refers to a weapon.
+ * Matches all PHB/SRD weapons including magic variants (e.g. "Longsword +2").
+ */
+export function isWeapon(itemName: string): boolean {
+  const name = itemName.toLowerCase()
+  // Exact match first
+  if (WEAPON_BASE_NAMES.has(name)) return true
+  // Check if name starts with a weapon base name (covers "+1 Longsword" style won't match,
+  // but "Longsword +1" will). Also covers any suffix like "of Flame".
+  for (const weapon of WEAPON_BASE_NAMES) {
+    if (name.startsWith(weapon) || name.endsWith(weapon)) return true
+  }
+  return false
 }
 
 /**
@@ -289,7 +336,14 @@ export function isFinesse(weaponName: string): boolean {
  */
 export function isRanged(weaponName: string): boolean {
   const w = weaponName.toLowerCase()
-  return w.includes('bow') || w.includes('crossbow') || w.includes('dart') || w.includes('sling')
+  return (
+    w.includes('bow') ||
+    w.includes('crossbow') ||
+    w.includes('dart') ||
+    w.includes('sling') ||
+    w.includes('blowgun') ||
+    w.includes('net')
+  )
 }
 
 // =============================================================================

@@ -147,6 +147,16 @@ pub fn search_items_paginated(
         .load(conn)
 }
 
+/// List all weapon names (item_type 'M' or 'R'), lowercased and deduplicated.
+pub fn list_weapon_names(conn: &mut SqliteConnection) -> QueryResult<Vec<String>> {
+    items::table
+        .select(lower(items::name))
+        .filter(items::item_type.eq("M").or(items::item_type.eq("R")))
+        .distinct()
+        .order(items::name.asc())
+        .load(conn)
+}
+
 /// Delete an item by its ID.
 pub fn delete_item(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize> {
     diesel::delete(items::table.filter(items::id.eq(id))).execute(conn)

@@ -636,4 +636,363 @@ mod tests {
         assert_eq!(EquipmentCardsSection::get_icon("RG"), "gem-icon");
         assert_eq!(EquipmentCardsSection::get_icon("M|PHB"), "sword-icon");
     }
+
+    #[test]
+    fn test_get_icon_all_types() {
+        assert_eq!(EquipmentCardsSection::get_icon("A"), "bow-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("AF"), "bow-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("LA"), "shield-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("MA"), "shield-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("HA"), "shield-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("RD"), "gem-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("WD"), "gem-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("W"), "gem-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("G"), "gear-icon");
+        assert_eq!(EquipmentCardsSection::get_icon("P"), "gear-icon");
+    }
+
+    #[test]
+    fn test_get_type_name_all() {
+        assert_eq!(EquipmentCardsSection::get_type_name("M"), "Melee Weapon");
+        assert_eq!(EquipmentCardsSection::get_type_name("R"), "Ranged Weapon");
+        assert_eq!(EquipmentCardsSection::get_type_name("A"), "Ammunition");
+        assert_eq!(EquipmentCardsSection::get_type_name("AF"), "Special Ammunition");
+        assert_eq!(EquipmentCardsSection::get_type_name("S"), "Shield");
+        assert_eq!(EquipmentCardsSection::get_type_name("LA"), "Light Armor");
+        assert_eq!(EquipmentCardsSection::get_type_name("MA"), "Medium Armor");
+        assert_eq!(EquipmentCardsSection::get_type_name("HA"), "Heavy Armor");
+        assert_eq!(EquipmentCardsSection::get_type_name("RG"), "Ring");
+        assert_eq!(EquipmentCardsSection::get_type_name("RD"), "Rod");
+        assert_eq!(EquipmentCardsSection::get_type_name("WD"), "Wand");
+        assert_eq!(EquipmentCardsSection::get_type_name("W"), "Wondrous Item");
+        assert_eq!(EquipmentCardsSection::get_type_name("P"), "Potion");
+        assert_eq!(EquipmentCardsSection::get_type_name("SC"), "Scroll");
+        assert_eq!(EquipmentCardsSection::get_type_name("XYZ"), "Equipment");
+    }
+
+    #[test]
+    fn test_format_rarity() {
+        assert_eq!(EquipmentCardsSection::format_rarity("common"), "Common");
+        assert_eq!(EquipmentCardsSection::format_rarity("uncommon"), "Uncommon");
+        assert_eq!(EquipmentCardsSection::format_rarity("rare"), "Rare");
+        assert_eq!(EquipmentCardsSection::format_rarity("very rare"), "Very Rare");
+        assert_eq!(EquipmentCardsSection::format_rarity("veryrare"), "Very Rare");
+        assert_eq!(EquipmentCardsSection::format_rarity("legendary"), "Legendary");
+        assert_eq!(EquipmentCardsSection::format_rarity("artifact"), "Artifact");
+        assert_eq!(EquipmentCardsSection::format_rarity("none"), "");
+        assert_eq!(EquipmentCardsSection::format_rarity(""), "");
+    }
+
+    #[test]
+    fn test_render_card_weapon_with_damage() {
+        let item = json!({
+            "name": "Longsword",
+            "type": "M",
+            "rarity": "none",
+            "dmg1": "1d8",
+            "dmg2": "1d10",
+            "dmg_type": "S",
+            "property": ["V"],
+            "source": "PHB"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("Longsword"));
+        assert!(card.contains("Melee Weapon"));
+        assert!(card.contains("sword-icon"));
+        assert!(card.contains("1d8/1d10 slashing"));
+        assert!(card.contains("Versatile"));
+        assert!(card.contains("PHB"));
+    }
+
+    #[test]
+    fn test_render_card_armor_with_ac() {
+        let item = json!({
+            "name": "Chain Mail",
+            "type": "HA",
+            "rarity": "none",
+            "ac": 16,
+            "source": "PHB"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("Chain Mail"));
+        assert!(card.contains("Heavy Armor"));
+        assert!(card.contains("shield-icon"));
+        assert!(card.contains("*AC:*"));
+        assert!(card.contains("16"));
+    }
+
+    #[test]
+    fn test_render_card_magic_item_with_rarity() {
+        let item = json!({
+            "name": "Ring of Protection",
+            "type": "RG",
+            "rarity": "rare",
+            "reqAttune": true,
+            "entries": ["You gain a +1 bonus to AC and saving throws while wearing this ring."],
+            "source": "DMG"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("Ring of Protection"));
+        assert!(card.contains("Ring"));
+        assert!(card.contains("Rare"));
+        assert!(card.contains("gem-icon"));
+        assert!(card.contains("Requires Attunement"));
+        assert!(card.contains("+1 bonus to AC"));
+    }
+
+    #[test]
+    fn test_render_card_ranged_weapon_with_range() {
+        let item = json!({
+            "name": "Longbow",
+            "type": "R",
+            "rarity": "none",
+            "dmg1": "1d8",
+            "dmg_type": "P",
+            "range": "150/600",
+            "property": ["A", "H", "2H"],
+            "source": "PHB"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("Longbow"));
+        assert!(card.contains("Ranged Weapon"));
+        assert!(card.contains("bow-icon"));
+        assert!(card.contains("1d8 piercing"));
+        assert!(card.contains("150/600"));
+        assert!(card.contains("Ammunition"));
+        assert!(card.contains("Heavy"));
+        assert!(card.contains("Two-Handed"));
+    }
+
+    #[test]
+    fn test_render_card_attunement_with_requirement() {
+        let item = json!({
+            "name": "Staff of Fire",
+            "type": "W",
+            "rarity": "very rare",
+            "reqAttune": "by a druid, sorcerer, warlock, or wizard"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("by a druid"));
+    }
+
+    #[test]
+    fn test_render_card_missing_type_defaults_to_gear() {
+        let item = json!({
+            "name": "Mystery Object"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("Mystery Object"));
+        assert!(card.contains("gear-icon"));
+        assert!(card.contains("Equipment"));
+    }
+
+    #[test]
+    fn test_render_card_description_truncation() {
+        let long_desc = "A".repeat(400);
+        let item = json!({
+            "name": "Verbose Item",
+            "type": "W",
+            "entries": [long_desc]
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        // Should be truncated to 350 chars + "..."
+        assert!(card.contains("..."));
+    }
+
+    #[test]
+    fn test_render_card_notes_as_description() {
+        let item = json!({
+            "name": "Noted Item",
+            "type": "G",
+            "notes": "Found in the dragon's hoard"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+
+        assert!(card.contains("Found in the dragon"));
+    }
+
+    #[test]
+    fn test_to_typst_grid_layout() {
+        let items = vec![json!({"name": "Sword", "type": "M"})];
+        let section = EquipmentCardsSection::new(items);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // 3x3 grid
+        assert!(typst.contains("columns: (2.5in,) * 3"));
+        assert!(typst.contains("rows: (3.25in,) * 3"));
+        // 1 item = 8 empty slots
+        assert_eq!(typst.matches("box(width: 2.5in, height: 3.25in)").count(), 8);
+    }
+
+    #[test]
+    fn test_to_typst_cut_lines() {
+        let items = vec![json!({"name": "Sword", "type": "M"})];
+        let section = EquipmentCardsSection::new(items);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Cut along card borders"));
+    }
+
+    #[test]
+    fn test_to_typst_no_cut_lines() {
+        let items = vec![json!({"name": "Sword", "type": "M"})];
+        let section = EquipmentCardsSection::new(items).with_cut_lines(false);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(!typst.contains("Cut along card borders"));
+    }
+
+    #[test]
+    fn test_to_typst_empty_returns_comment() {
+        let section = EquipmentCardsSection::new(vec![]);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("No equipment to display"));
+    }
+
+    #[test]
+    fn test_to_typst_page_break_after_nine() {
+        let items: Vec<Value> = (0..10)
+            .map(|i| json!({"name": format!("Item {}", i), "type": "M"}))
+            .collect();
+        let section = EquipmentCardsSection::new(items);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("#pagebreak()"));
+    }
+
+    #[test]
+    fn test_to_typst_icon_definitions() {
+        let items = vec![json!({"name": "Sword", "type": "M"})];
+        let section = EquipmentCardsSection::new(items);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("sword-icon"));
+        assert!(typst.contains("bow-icon"));
+        assert!(typst.contains("shield-icon"));
+        assert!(typst.contains("gem-icon"));
+        assert!(typst.contains("gear-icon"));
+    }
+
+    #[test]
+    fn test_format_damage_type_all() {
+        assert_eq!(format_damage_type("C"), "cold");
+        assert_eq!(format_damage_type("L"), "lightning");
+        assert_eq!(format_damage_type("A"), "acid");
+        assert_eq!(format_damage_type("T"), "thunder");
+        assert_eq!(format_damage_type("N"), "necrotic");
+        assert_eq!(format_damage_type("R"), "radiant");
+        assert_eq!(format_damage_type("O"), "force");
+        assert_eq!(format_damage_type("Y"), "psychic");
+        assert_eq!(format_damage_type("I"), "poison");
+        assert_eq!(format_damage_type("Z"), "Z"); // unknown passes through
+    }
+
+    #[test]
+    fn test_format_property_all() {
+        assert_eq!(format_property("A"), "Ammunition");
+        assert_eq!(format_property("H"), "Heavy");
+        assert_eq!(format_property("L"), "Light");
+        assert_eq!(format_property("LD"), "Loading");
+        assert_eq!(format_property("R"), "Reach");
+        assert_eq!(format_property("S"), "Special");
+        assert_eq!(format_property("T"), "Thrown");
+        assert_eq!(format_property("RLD"), "Reload");
+        assert_eq!(format_property("BF"), "Burst Fire");
+        assert_eq!(format_property("??"), "Special"); // unknown
+    }
+
+    #[test]
+    fn test_is_card_worthy_attunement() {
+        let item = json!({
+            "name": "Cloak",
+            "type": "W",
+            "rarity": "none",
+            "reqAttune": true
+        });
+        assert!(is_card_worthy(&item));
+    }
+
+    #[test]
+    fn test_is_card_worthy_entries() {
+        let item = json!({
+            "name": "Magic Gem",
+            "type": "G",
+            "rarity": "none",
+            "entries": ["This gem glows faintly."]
+        });
+        assert!(is_card_worthy(&item));
+    }
+
+    #[test]
+    fn test_is_card_worthy_pipe_type() {
+        // Type with pipe separator (e.g., "M|PHB")
+        let item = json!({
+            "name": "Sword",
+            "type": "M|PHB",
+            "rarity": "none"
+        });
+        assert!(is_card_worthy(&item));
+    }
+
+    #[test]
+    fn test_page_break_before() {
+        let section = EquipmentCardsSection::new(vec![json!({"name": "X"})]);
+        assert!(section.page_break_before());
+    }
+
+    #[test]
+    fn test_from_json() {
+        let data = json!([
+            {"name": "Sword", "type": "M"},
+            {"name": "Shield", "type": "S"}
+        ]);
+        let section = EquipmentCardsSection::from_json(data);
+        assert_eq!(section.items.len(), 2);
+    }
+
+    #[test]
+    fn test_from_json_non_array() {
+        let data = json!({"name": "Not an array"});
+        let section = EquipmentCardsSection::from_json(data);
+        assert_eq!(section.items.len(), 0);
+    }
+
+    #[test]
+    fn test_render_card_damage_single_no_type() {
+        let item = json!({
+            "name": "Club",
+            "type": "M",
+            "dmg1": "1d4"
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+        assert!(card.contains("1d4"));
+        assert!(!card.contains("slashing"));
+    }
+
+    #[test]
+    fn test_render_card_no_damage() {
+        let item = json!({
+            "name": "Shield",
+            "type": "S",
+            "ac": 2
+        });
+        let card = EquipmentCardsSection::render_card(&item);
+        // Should have AC but no damage row
+        assert!(card.contains("*AC:*"));
+        assert!(!card.contains("*Damage:*"));
+    }
 }

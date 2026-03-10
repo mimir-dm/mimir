@@ -586,6 +586,89 @@ mod tests {
     }
 
     #[test]
+    fn test_escape_typst_string() {
+        assert_eq!(escape_typst_string("Hello [World]"), "Hello \\[World\\]");
+        assert_eq!(escape_typst_string("#test"), "\\#test");
+        assert_eq!(escape_typst_string("$var"), "\\$var");
+        assert_eq!(escape_typst_string("a\"b"), "a\\\"b");
+    }
+
+    #[test]
+    fn test_tiled_map_toc_title() {
+        let section = TiledMapSection::from_tiles("Dungeon Level 1".to_string(), vec![], 1, 1);
+        assert_eq!(section.toc_title(), Some("Tiled Map: Dungeon Level 1".to_string()));
+    }
+
+    #[test]
+    fn test_tiled_map_page_break_before() {
+        let section = TiledMapSection::from_tiles("Test".to_string(), vec![], 1, 1);
+        assert!(section.page_break_before());
+    }
+
+    #[test]
+    fn test_tiled_map_page_margin() {
+        let section = TiledMapSection::from_tiles("Test".to_string(), vec![], 1, 1);
+        assert_eq!(section.page_margin(), Some(0.25));
+    }
+
+    #[test]
+    fn test_tiled_map_custom_margin() {
+        let section = TiledMapSection::from_tiles("Test".to_string(), vec![], 1, 1)
+            .with_margin(0.5);
+        assert_eq!(section.page_margin(), Some(0.5));
+    }
+
+    #[test]
+    fn test_assembly_guide_labels() {
+        let section = TiledMapSection::from_tiles("My Map".to_string(), vec![], 3, 2);
+        let guide = section.render_assembly_guide(3, 2);
+
+        assert!(guide.contains("My Map - Assembly Guide"));
+        assert!(guide.contains("6 pages")); // 3x2 = 6
+        assert!(guide.contains("3 columns"));
+        assert!(guide.contains("2 rows"));
+        // Check tile labels
+        assert!(guide.contains("A1"));
+        assert!(guide.contains("A2"));
+        assert!(guide.contains("A3"));
+        assert!(guide.contains("B1"));
+        assert!(guide.contains("B2"));
+        assert!(guide.contains("B3"));
+    }
+
+    #[test]
+    fn test_map_preview_from_rendered() {
+        let preview = MapPreview::from_rendered("Test Map".to_string(), vec![1, 2, 3]);
+        assert_eq!(preview.name, "Test Map");
+        assert_eq!(preview.toc_title(), None); // Renders own heading
+    }
+
+    #[test]
+    fn test_tiled_map_from_rendered() {
+        // Create a valid small PNG image
+        use image::{Rgba, RgbaImage};
+        let mut img = RgbaImage::new(200, 200);
+        for pixel in img.pixels_mut() {
+            *pixel = Rgba([100, 100, 100, 255]);
+        }
+        let mut bytes = Vec::new();
+        img.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
+            .expect("Failed to encode test image");
+
+        let section = TiledMapSection::from_rendered("Small Map".to_string(), bytes, 100);
+        let ctx = RenderContext::new(std::env::temp_dir().join("mimir-test-tiled-rendered"));
+
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // 200x200 px at 100px/grid = 2x2 inches
+        // Page width = 8.5 - 0.5 = 8.0in, page height = 11 - 0.5 - 0.5 = 10.0in
+        // Should fit on a single tile (1 col x 1 row)
+        assert!(typst.contains("Small Map - Assembly Guide"));
+        assert!(typst.contains("1 pages"));
+        assert!(typst.contains("Tile A1"));
+    }
+
+    #[test]
     fn test_tiled_map_one_page_per_tile() {
         // Create a 2x2 grid of tiles (4 tiles total)
         let tiles = vec![

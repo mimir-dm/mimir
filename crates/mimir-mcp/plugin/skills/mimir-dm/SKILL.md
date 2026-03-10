@@ -24,10 +24,10 @@ description: >-
 
 ## Getting Started
 
-Before using any module, character, or document tools:
+**Always do these two steps before using any module, character, or document tools:**
 
-1. List available campaigns with `list_campaigns` (or create one with `create_campaign`)
-2. Set an active campaign with `set_active_campaign`
+1. **List** campaigns with `list_campaigns` (or **create** one with `create_campaign`)
+2. **Set** the active campaign with `set_active_campaign`
 
 All subsequent operations require an active campaign.
 
@@ -118,9 +118,9 @@ Campaign-level documents are not tied to any module — use them for world lore,
 
 ### Level Up a Character
 
-1. `get_character` to check current level and class
-2. `level_up_character` (character_id, class_name, hp_method: "average"|"roll"|"manual")
-3. Optionally include subclass_name, asi_type ("asi"|"feat"), ability_increases, feat_name
+1. **Read** the character with `get_character` to check current level and class
+2. **Level up** with `level_up_character` (character_id, class_name, hp_method: "average"|"roll"|"manual")
+3. Optionally include subclass_name, asi_type ("asi"|"feat"), asi_ability1/asi_increase1, feat_name
 
 ### Populate an Encounter
 
@@ -143,6 +143,15 @@ Campaign-level documents are not tied to any module — use them for world lore,
 - `add_item_to_character` — add items (set equipped, attuned flags)
 - `update_character_inventory` — change quantity, equipped, or attuned status
 - `remove_item_from_character` — remove items by inventory ID
+
+### Manage Character Spells
+
+- `list_character_spells` — list all known spells, optionally filtered by class or prepared status
+- `add_character_spell` — add a catalog or homebrew spell to a character's known spells
+- `remove_character_spell` — remove a spell by name, optionally scoped to a specific class
+- `toggle_spell_prepared` — flip a spell's prepared/unprepared state (via Tauri command)
+
+Use `spell_source: "HB"` when adding homebrew spells. Verify the homebrew spell exists in the campaign with `list_homebrew_spells` before adding it to a character.
 
 ### Review Module Structure
 
@@ -172,6 +181,7 @@ Homebrew content lets the DM create custom items, monsters, and spells that don'
 3. Review with `get_homebrew_spell`
 4. Edit with `update_homebrew_spell` to adjust the spell data JSON
 5. List all with `list_homebrew_spells`
+6. Add to a character with `add_character_spell` (spell_source: "HB", source_class: the granting class)
 
 **Important**: The `data` field is a JSON string following 5etools format. Always clone from catalog to get the correct structure, then make targeted edits. If you must build from scratch, validate the JSON is well-formed before saving.
 
@@ -199,3 +209,4 @@ When a campaign is active, catalog searches are automatically filtered to only i
 - For array format details (ability_scores, currency, etc.), see references/tool-parameter-reference.md
 - When deleting homebrew content, check if any modules or characters reference it first
 - Homebrew monsters appear with source "HB" in module monster lists
+- Homebrew spells added to characters appear with source "HB" on the character sheet and in spell card PDF exports

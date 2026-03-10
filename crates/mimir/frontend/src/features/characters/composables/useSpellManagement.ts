@@ -390,6 +390,53 @@ export function useSpellManagement(
         }
       }
 
+      // Fetch homebrew spells from the campaign and merge them in
+      if (character.value?.campaign_id) {
+        try {
+          const hbResult = await invoke<{
+            success: boolean
+            data?: Array<{
+              id: string
+              name: string
+              level: number | null
+              school: string | null
+              data: string
+            }>
+          }>('list_homebrew_spells', { campaignId: character.value.campaign_id })
+
+          if (hbResult.success && hbResult.data) {
+            for (const hb of hbResult.data) {
+              const spellLevel = hb.level ?? 0
+              if (spellLevel > maxLevel) continue
+
+              const key = `${hb.name}|HB`
+              if (seenSpells.has(key)) continue
+              seenSpells.add(key)
+
+              // Parse the JSON data blob for spell details
+              let parsedData: Record<string, unknown> = {}
+              try {
+                parsedData = JSON.parse(hb.data || '{}')
+              } catch {
+                // ignore parse errors
+              }
+
+              allSpells.push({
+                name: hb.name,
+                source: 'HB',
+                level: spellLevel,
+                school: hb.school,
+                ritual: parsedData.ritual === true || parsedData.ritual === 1,
+                concentration: parsedData.concentration === true || parsedData.concentration === 1,
+                data: { ...parsedData, name: hb.name, source: 'HB', level: spellLevel, school: hb.school, homebrew: true },
+              })
+            }
+          }
+        } catch (e) {
+          console.warn('Could not load homebrew spells:', e)
+        }
+      }
+
       // Sort by level, then name
       allSpells.sort((a, b) => {
         if (a.level !== b.level) return a.level - b.level

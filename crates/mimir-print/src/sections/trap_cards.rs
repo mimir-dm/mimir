@@ -883,4 +883,339 @@ mod tests {
         assert!(typst.contains("columns: (3.875in,) * 2"));
         assert!(typst.contains("#grid("));
     }
+
+    // === Trap type color tests ===
+
+    #[test]
+    fn test_trap_type_mechanical() {
+        let (label, color) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "MECH"}));
+        assert_eq!(label, "Mechanical Trap");
+        assert!(color.contains("#b45309"));
+    }
+
+    #[test]
+    fn test_trap_type_magical() {
+        let (label, color) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "MAG"}));
+        assert_eq!(label, "Magical Trap");
+        assert!(color.contains("#7c3aed"));
+    }
+
+    #[test]
+    fn test_trap_type_wilderness() {
+        let (label, color) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "WLD"}));
+        assert_eq!(label, "Wilderness Hazard");
+        assert!(color.contains("#15803d"));
+    }
+
+    #[test]
+    fn test_trap_type_weather() {
+        let (label, color) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "WTH"}));
+        assert_eq!(label, "Weather Hazard");
+        assert!(color.contains("#0369a1"));
+    }
+
+    #[test]
+    fn test_trap_type_environmental() {
+        let (label, color) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "ENV"}));
+        assert_eq!(label, "Environmental Hazard");
+        assert!(color.contains("#64748b"));
+    }
+
+    #[test]
+    fn test_trap_type_hazard() {
+        let (label, color) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "HAZ"}));
+        assert_eq!(label, "Hazard");
+        assert!(color.contains("#dc2626"));
+    }
+
+    #[test]
+    fn test_trap_type_default() {
+        let (label, _) = TrapCardSection::get_trap_type_info(&json!({"trapHazType": "UNKNOWN"}));
+        assert_eq!(label, "Trap/Hazard");
+    }
+
+    #[test]
+    fn test_trap_type_alternate_key() {
+        let (label, _) = TrapCardSection::get_trap_type_info(&json!({"trap_haz_type": "MAG"}));
+        assert_eq!(label, "Magical Trap");
+    }
+
+    // === Full card rendering tests ===
+
+    fn test_pit_trap() -> Value {
+        json!({
+            "name": "Pit Trap",
+            "source": "DMG",
+            "trapHazType": "MECH",
+            "threat": "moderate",
+            "perception_dc": 15,
+            "disable_dc": 10,
+            "entries": [
+                "A 10-foot-square section of floor is actually a thin cover over a 10-foot-deep pit.",
+                {
+                    "type": "entries",
+                    "name": "Trigger",
+                    "entries": ["A creature that steps on the cover falls through."]
+                },
+                {
+                    "type": "entries",
+                    "name": "Effect",
+                    "entries": ["The creature falls 10 feet and takes {@damage 1d6} bludgeoning damage."]
+                }
+            ]
+        })
+    }
+
+    fn test_fire_glyph() -> Value {
+        json!({
+            "name": "Glyph of Warding",
+            "source": "PHB",
+            "trapHazType": "MAG",
+            "threat": "deadly",
+            "entries": [
+                "An almost invisible glyph is inscribed on a surface.",
+                {
+                    "type": "entries",
+                    "name": "Trigger",
+                    "entries": ["A creature that touches the glyph activates it."]
+                },
+                {
+                    "type": "entries",
+                    "name": "Effect",
+                    "entries": ["Each creature within 20 feet must make a DC 15 Dexterity saving throw, taking {@damage 5d8} fire damage on a failed save."]
+                }
+            ]
+        })
+    }
+
+    #[test]
+    fn test_render_card_trap_name_and_type() {
+        let trap = test_pit_trap();
+        let card = TrapCardSection::render_card(&trap);
+
+        assert!(card.contains("Pit Trap"));
+        assert!(card.contains("Mechanical Trap"));
+    }
+
+    #[test]
+    fn test_render_card_threat_badge_moderate() {
+        let trap = test_pit_trap();
+        let card = TrapCardSection::render_card(&trap);
+
+        // Moderate badge with amber color
+        assert!(card.contains("MODERATE"));
+        assert!(card.contains("#92400e"));
+    }
+
+    #[test]
+    fn test_render_card_threat_badge_deadly() {
+        let trap = test_fire_glyph();
+        let card = TrapCardSection::render_card(&trap);
+
+        assert!(card.contains("DEADLY"));
+        assert!(card.contains("#991b1b"));
+    }
+
+    #[test]
+    fn test_render_card_dc_block() {
+        let trap = test_pit_trap();
+        let card = TrapCardSection::render_card(&trap);
+
+        assert!(card.contains("*Detect* DC 15"));
+        assert!(card.contains("*Disable* DC 10"));
+    }
+
+    #[test]
+    fn test_render_card_entries() {
+        let trap = test_pit_trap();
+        let card = TrapCardSection::render_card(&trap);
+
+        assert!(card.contains("Trigger"));
+        assert!(card.contains("Effect"));
+        assert!(card.contains("1d6")); // stripped 5etools tag
+    }
+
+    #[test]
+    fn test_render_card_source_footer() {
+        let trap = test_pit_trap();
+        let card = TrapCardSection::render_card(&trap);
+
+        assert!(card.contains("DMG"));
+    }
+
+    #[test]
+    fn test_cut_lines_enabled() {
+        let traps = vec![test_pit_trap()];
+        let section = TrapCardSection::new(traps);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Cut along card borders"));
+    }
+
+    #[test]
+    fn test_cut_lines_disabled() {
+        let traps = vec![test_pit_trap()];
+        let section = TrapCardSection::new(traps).with_cut_lines(false);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(!typst.contains("Cut along card borders"));
+    }
+
+    #[test]
+    fn test_multiple_traps_grid() {
+        let traps = vec![test_pit_trap(), test_fire_glyph()];
+        let section = TrapCardSection::new(traps);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Pit Trap"));
+        assert!(typst.contains("Glyph of Warding"));
+        // 2 traps = 2 empty slots
+        assert_eq!(typst.matches("box(width: 3.875in, height: 5.125in)").count(), 2);
+    }
+
+    #[test]
+    fn test_dc_block_empty_when_no_dcs() {
+        let result = render_dc_block(&json!({"name": "No DC Trap"}));
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_dc_extracted_from_entry_text() {
+        let trap = json!({
+            "name": "Test",
+            "entries": ["Each creature must make a DC 15 Dexterity saving throw."]
+        });
+        let result = render_dc_block(&trap);
+        assert!(result.contains("DC 15"));
+        assert!(result.contains("Dex"));
+    }
+
+    #[test]
+    fn test_abbreviate_ability() {
+        assert_eq!(abbreviate_ability("Strength"), "Str");
+        assert_eq!(abbreviate_ability("Dexterity"), "Dex");
+        assert_eq!(abbreviate_ability("Constitution"), "Con");
+        assert_eq!(abbreviate_ability("Intelligence"), "Int");
+        assert_eq!(abbreviate_ability("Wisdom"), "Wis");
+        assert_eq!(abbreviate_ability("Charisma"), "Cha");
+        assert_eq!(abbreviate_ability("Other"), "Other");
+    }
+
+    #[test]
+    fn test_trap_strip_5etools_skill_tag() {
+        assert_eq!(strip_5etools_tags("{@skill Perception}"), "Perception");
+        assert_eq!(strip_5etools_tags("{@item rope|phb}"), "rope");
+        assert_eq!(strip_5etools_tags("{@spell alarm}"), "alarm");
+    }
+
+    #[test]
+    fn test_render_trap_entries_with_list() {
+        let trap = json!({
+            "name": "Test",
+            "entries": [
+                {
+                    "type": "list",
+                    "name": "Countermeasures",
+                    "items": ["Spot the trap with {@skill Perception}", "Disable with {@skill Thieves' Tools}"]
+                }
+            ]
+        });
+        let accent = "rgb(\"#b45309\")";
+        let entries = render_trap_entries(&trap, accent);
+        assert!(!entries.is_empty());
+        assert!(entries[0].typst.contains("Countermeasures"));
+        assert!(entries[0].typst.contains("Perception"));
+    }
+
+    #[test]
+    fn test_render_trap_entries_with_table() {
+        let trap = json!({
+            "name": "Test",
+            "entries": [
+                {
+                    "type": "table",
+                    "caption": "Damage by Level",
+                    "colLabels": ["Level", "Damage"],
+                    "rows": [
+                        ["1-4", "2d6"],
+                        ["5-10", "4d6"]
+                    ]
+                }
+            ]
+        });
+        let accent = "rgb(\"#b45309\")";
+        let entries = render_trap_entries(&trap, accent);
+        assert!(!entries.is_empty());
+        assert!(entries[0].typst.contains("Damage by Level"));
+        assert!(entries[0].typst.contains("Level"));
+        assert!(entries[0].typst.contains("2d6"));
+    }
+
+    #[test]
+    fn test_simple_back_card_none() {
+        let trap = test_pit_trap();
+        let back = TrapCardSection::render_back_card(&trap);
+        // Simple trap should fit on one card
+        assert!(back.is_none());
+    }
+
+    #[test]
+    fn test_threat_badge_simple() {
+        let trap = json!({
+            "name": "Simple Trap",
+            "trapHazType": "MECH",
+            "threat": "simple"
+        });
+        let card = TrapCardSection::render_card(&trap);
+        assert!(card.contains("SIMPLE"));
+        assert!(card.contains("#166534")); // green text
+    }
+
+    #[test]
+    fn test_threat_badge_dangerous() {
+        let trap = json!({
+            "name": "Danger Trap",
+            "trapHazType": "MECH",
+            "threat": "dangerous"
+        });
+        let card = TrapCardSection::render_card(&trap);
+        assert!(card.contains("DANGEROUS"));
+        assert!(card.contains("#c2410c")); // orange text
+    }
+
+    #[test]
+    fn test_no_threat_badge() {
+        let trap = json!({
+            "name": "No Threat",
+            "trapHazType": "MECH"
+        });
+        let card = TrapCardSection::render_card(&trap);
+        // Should not have badge markup
+        assert!(!card.contains("SIMPLE"));
+        assert!(!card.contains("MODERATE"));
+        assert!(!card.contains("DANGEROUS"));
+        assert!(!card.contains("DEADLY"));
+    }
+
+    #[test]
+    fn test_page_break_with_five_traps() {
+        let traps = vec![
+            test_pit_trap(), test_pit_trap(), test_pit_trap(), test_pit_trap(),
+            test_fire_glyph(),
+        ];
+        let section = TrapCardSection::new(traps);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("#pagebreak()"));
+    }
+
+    #[test]
+    fn test_escape_typst_trap() {
+        assert_eq!(escape_typst("10 ft. [area]"), "10 ft. \\[area\\]");
+        assert_eq!(escape_typst("@trap"), "\\@trap");
+    }
 }

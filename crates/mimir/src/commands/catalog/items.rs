@@ -99,6 +99,18 @@ pub fn get_item_by_name(
     }
 }
 
+/// List all weapon names from the catalog (melee + ranged).
+#[tauri::command]
+pub fn list_weapon_names(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    let result = ItemService::new(&mut db).list_weapon_names();
+    to_api_response(result)
+}
+
 /// List all item sources.
 #[tauri::command]
 pub fn list_item_sources(state: State<'_, AppState>) -> ApiResponse<Vec<String>> {

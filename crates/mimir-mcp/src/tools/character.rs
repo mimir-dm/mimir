@@ -3,6 +3,7 @@
 //! MCP tools for character (NPC and PC) management.
 
 use mimir_core::dal::campaign as dal;
+use mimir_core::models::campaign::NewCharacterSpell;
 use mimir_core::services::{
     AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
 };
@@ -268,6 +269,82 @@ pub fn level_up_character_tool() -> Tool {
                 ("asi_increase2", "integer", "Amount for second ability (for ASI)"),
                 ("feat_name", "string", "Feat name (if choosing feat)"),
                 ("feat_source", "string", "Feat source (default: PHB)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn add_character_spell_tool() -> Tool {
+    Tool {
+        name: "add_character_spell".to_string(),
+        description: Some(
+            "Add a spell to a character's known spells. Supports both catalog and homebrew spells."
+                .to_string(),
+        ),
+        input_schema: ToolInputSchema::new(
+            vec![
+                "character_id".to_string(),
+                "spell_name".to_string(),
+                "spell_source".to_string(),
+                "source_class".to_string(),
+            ],
+            create_properties(vec![
+                ("character_id", "string", "The ID of the character"),
+                ("spell_name", "string", "Name of the spell (e.g. Fireball)"),
+                ("spell_source", "string", "Source book abbreviation (e.g. PHB, XGE) or HB for homebrew"),
+                ("source_class", "string", "Class that grants this spell (e.g. Wizard, Cleric)"),
+                ("prepared", "boolean", "Whether the spell starts prepared (default: false)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn remove_character_spell_tool() -> Tool {
+    Tool {
+        name: "remove_character_spell".to_string(),
+        description: Some("Remove a spell from a character's known spells".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["character_id".to_string(), "spell_name".to_string()],
+            create_properties(vec![
+                ("character_id", "string", "The ID of the character"),
+                ("spell_name", "string", "Name of the spell to remove"),
+                ("source_class", "string", "Class that granted the spell (optional — if omitted, removes all instances)"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn list_character_spells_tool() -> Tool {
+    Tool {
+        name: "list_character_spells".to_string(),
+        description: Some("List all spells known by a character, optionally filtered by class".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["character_id".to_string()],
+            create_properties(vec![
+                ("character_id", "string", "The ID of the character"),
+                ("source_class", "string", "Filter by granting class (e.g. Wizard)"),
+                ("prepared_only", "boolean", "Only return prepared spells"),
             ]),
             None,
         ),
@@ -927,5 +1004,151 @@ pub async fn level_up_character(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         "hp_gained": result.hp_gained,
         "new_total_level": result.new_total_level,
         "is_multiclass": result.is_multiclass
+    }))
+}
+
+pub async fn add_character_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let character_id = args
+        .get("character_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("character_id required".to_string()))?;
+    let spell_name = args
+        .get("spell_name")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("spell_name required".to_string()))?;
+    let spell_source = args
+        .get("spell_source")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("spell_source required".to_string()))?;
+    let source_class = args
+        .get("source_class")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("source_class required".to_string()))?;
+    let prepared = args.get("prepared").and_then(|v| v.as_bool()).unwrap_or(false);
+
+    let mut db = ctx.connect()?;
+
+    // Check for duplicate
+    let existing = dal::find_character_spell_by_name(&mut db, character_id, spell_name, source_class)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+    if existing.is_some() {
+        return Err(McpError::InvalidArguments(format!(
+            "Character already knows {} (from {})",
+            spell_name, source_class
+        )));
+    }
+
+    let id = uuid::Uuid::new_v4().to_string();
+    let new_spell = NewCharacterSpell::new(&id, character_id, spell_name, spell_source, source_class);
+    let new_spell = if prepared { new_spell.prepared() } else { new_spell };
+
+    dal::insert_character_spell(&mut db, &new_spell)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    McpResponse::success(json!({
+        "action": "spell_added",
+        "character_id": character_id,
+        "spell": {
+            "id": id,
+            "spell_name": spell_name,
+            "spell_source": spell_source,
+            "source_class": source_class,
+            "prepared": prepared
+        }
+    }))
+}
+
+pub async fn remove_character_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let character_id = args
+        .get("character_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("character_id required".to_string()))?;
+    let spell_name = args
+        .get("spell_name")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("spell_name required".to_string()))?;
+    let source_class = args.get("source_class").and_then(|v| v.as_str());
+
+    let mut db = ctx.connect()?;
+
+    if let Some(class) = source_class {
+        // Remove specific class instance
+        let spell = dal::find_character_spell_by_name(&mut db, character_id, spell_name, class)
+            .map_err(|e| McpError::Internal(e.to_string()))?
+            .ok_or_else(|| {
+                McpError::InvalidArguments(format!(
+                    "Spell {} not found for class {}",
+                    spell_name, class
+                ))
+            })?;
+        dal::delete_character_spell(&mut db, &spell.id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+    } else {
+        // Remove all instances of this spell
+        let spells = dal::list_character_spells(&mut db, character_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?;
+        let matching: Vec<_> = spells.iter().filter(|s| s.spell_name == spell_name).collect();
+        if matching.is_empty() {
+            return Err(McpError::InvalidArguments(format!(
+                "Spell {} not found on character",
+                spell_name
+            )));
+        }
+        for spell in matching {
+            dal::delete_character_spell(&mut db, &spell.id)
+                .map_err(|e| McpError::Internal(e.to_string()))?;
+        }
+    }
+
+    McpResponse::success(json!({
+        "action": "spell_removed",
+        "character_id": character_id,
+        "spell_name": spell_name
+    }))
+}
+
+pub async fn list_character_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let character_id = args
+        .get("character_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("character_id required".to_string()))?;
+    let source_class = args.get("source_class").and_then(|v| v.as_str());
+    let prepared_only = args.get("prepared_only").and_then(|v| v.as_bool()).unwrap_or(false);
+
+    let mut db = ctx.connect()?;
+
+    let spells = if let Some(class) = source_class {
+        dal::list_spells_by_class(&mut db, character_id, class)
+    } else if prepared_only {
+        dal::list_prepared_spells(&mut db, character_id)
+    } else {
+        dal::list_character_spells(&mut db, character_id)
+    }
+    .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    // Apply prepared filter if class filter was used
+    let spells: Vec<_> = if prepared_only && source_class.is_some() {
+        spells.into_iter().filter(|s| s.is_prepared()).collect()
+    } else {
+        spells
+    };
+
+    let spell_data: Vec<Value> = spells
+        .iter()
+        .map(|s| {
+            json!({
+                "id": s.id,
+                "spell_name": s.spell_name,
+                "spell_source": s.spell_source,
+                "source_class": s.source_class,
+                "prepared": s.is_prepared()
+            })
+        })
+        .collect();
+
+    McpResponse::success(json!({
+        "character_id": character_id,
+        "spell_count": spell_data.len(),
+        "spells": spell_data
     }))
 }

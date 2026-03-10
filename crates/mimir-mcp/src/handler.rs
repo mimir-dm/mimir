@@ -78,6 +78,9 @@ impl MimirHandler {
             tools::character::remove_item_from_character_tool(),
             tools::character::update_character_inventory_tool(),
             tools::character::get_character_inventory_tool(),
+            tools::character::add_character_spell_tool(),
+            tools::character::remove_character_spell_tool(),
+            tools::character::list_character_spells_tool(),
             // Map tools
             tools::map::create_map_tool(),
             tools::map::list_maps_tool(),
@@ -177,6 +180,15 @@ impl MimirHandler {
             }
             "get_character_inventory" => {
                 tools::character::get_character_inventory(&self.context, args).await
+            }
+            "add_character_spell" => {
+                tools::character::add_character_spell(&self.context, args).await
+            }
+            "remove_character_spell" => {
+                tools::character::remove_character_spell(&self.context, args).await
+            }
+            "list_character_spells" => {
+                tools::character::list_character_spells(&self.context, args).await
             }
 
             // Map tools
@@ -341,6 +353,9 @@ mod tests {
         "remove_item_from_character",
         "update_character_inventory",
         "get_character_inventory",
+        "add_character_spell",
+        "remove_character_spell",
+        "list_character_spells",
         // Map
         "create_map",
         "list_maps",

@@ -542,4 +542,73 @@ This is a test."#;
         let typst = markdown_to_typst(md);
         assert!(typst.contains("#line(length: 100%)"));
     }
+
+    #[test]
+    fn test_markdown_table() {
+        let md = "| Name | Level |\n| --- | --- |\n| Fighter | 5 |\n| Wizard | 3 |";
+        let typst = markdown_to_typst(md);
+        // Table structure
+        assert!(typst.contains("#table("));
+        assert!(typst.contains("columns:"));
+        // Header cells are bold
+        assert!(typst.contains("table.header("));
+        assert!(typst.contains("[*#\"Name\"*]"));
+        assert!(typst.contains("[*#\"Level\"*]"));
+        // Body cells
+        assert!(typst.contains("[#\"Fighter\"]"));
+        assert!(typst.contains("[#\"5\"]"));
+    }
+
+    #[test]
+    fn test_markdown_table_with_formatting() {
+        let md = "| Name | Note |\n| --- | --- |\n| **Bold** | *Italic* |";
+        let typst = markdown_to_typst(md);
+        assert!(typst.contains("*#\"Bold\"*"));
+        assert!(typst.contains("_#\"Italic\"_"));
+    }
+
+    #[test]
+    fn test_markdown_strikethrough() {
+        let md = "This is ~~deleted~~ text.";
+        let typst = markdown_to_typst(md);
+        assert!(typst.contains("#strike["));
+    }
+
+    #[test]
+    fn test_markdown_nested_list() {
+        let md = "- Item 1\n  - Sub item\n- Item 2";
+        let typst = markdown_to_typst(md);
+        assert!(typst.contains("- #\"Item 1\""));
+        assert!(typst.contains("  - #\"Sub item\""));
+        assert!(typst.contains("- #\"Item 2\""));
+    }
+
+    #[test]
+    fn test_markdown_html_comment() {
+        let md = "<div>Some HTML</div>";
+        let typst = markdown_to_typst(md);
+        // HTML should be wrapped in a comment
+        assert!(typst.contains("/*"));
+    }
+
+    #[test]
+    fn test_markdown_image() {
+        let md = "![alt text](image.png)";
+        let typst = markdown_to_typst(md);
+        assert!(typst.contains("#image(\"image.png\""));
+    }
+
+    #[test]
+    fn test_empty_markdown() {
+        let typst = markdown_to_typst("");
+        assert!(typst.trim().is_empty() || typst == "\n");
+    }
+
+    #[test]
+    fn test_backslash_escaped_in_string_literal() {
+        let md = r"path\to\file";
+        let typst = markdown_to_typst(md);
+        // Backslashes should be escaped inside string literal
+        assert!(typst.contains(r#"\\to\\file"#));
+    }
 }

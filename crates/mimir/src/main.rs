@@ -159,6 +159,11 @@ fn main() {
             character::add_inventory_item,
             character::remove_inventory_item,
             character::update_inventory_item,
+            // Character commands - spells
+            character::list_character_spells,
+            character::add_character_spell,
+            character::remove_character_spell,
+            character::toggle_spell_prepared,
             // Character commands - sources
             character::list_character_sources,
             character::add_character_source,
@@ -253,6 +258,7 @@ fn main() {
             catalog::search_items,
             catalog::get_item,
             catalog::get_item_by_name,
+            catalog::list_weapon_names,
             catalog::list_item_sources,
             catalog::count_items,
             // Catalog commands - races

@@ -595,4 +595,101 @@ mod tests {
         assert_eq!(escape_typst_string("#hashtag"), "\\#hashtag");
         assert_eq!(escape_typst_string("$money$"), "\\$money\\$");
     }
+
+    #[test]
+    fn test_escape_typst_string_backslash_and_quotes() {
+        assert_eq!(escape_typst_string(r#"a\b"c"#), r#"a\\b\"c"#);
+    }
+
+    #[test]
+    fn test_build_typst_multiple_sections_ordered() {
+        let builder = DocumentBuilder::new("Multi Section")
+            .append(TestSection::new("First section content").with_title("Chapter 1"))
+            .append(TestSection::new("Second section content").with_title("Chapter 2"))
+            .append(TestSection::new("Third section content").with_title("Chapter 3"));
+
+        let typst = builder.build_typst().unwrap();
+
+        // All content should be present
+        assert!(typst.contains("First section content"));
+        assert!(typst.contains("Second section content"));
+        assert!(typst.contains("Third section content"));
+
+        // Order should be preserved
+        let pos1 = typst.find("First section content").unwrap();
+        let pos2 = typst.find("Second section content").unwrap();
+        let pos3 = typst.find("Third section content").unwrap();
+        assert!(pos1 < pos2, "Section 1 should come before Section 2");
+        assert!(pos2 < pos3, "Section 2 should come before Section 3");
+    }
+
+    #[test]
+    fn test_build_typst_toc_with_multiple_titles() {
+        let builder = DocumentBuilder::new("TOC Test")
+            .with_toc(true)
+            .append(TestSection::new("Content A").with_title("Alpha"))
+            .append(TestSection::new("Content B").with_title("Beta"))
+            .append(TestSection::new("Content C").with_title("Gamma"));
+
+        let typst = builder.build_typst().unwrap();
+
+        // TOC should be present
+        assert!(typst.contains("#outline"));
+        // Section headings should appear
+        assert!(typst.contains("Alpha"));
+        assert!(typst.contains("Beta"));
+        assert!(typst.contains("Gamma"));
+    }
+
+    #[test]
+    fn test_build_typst_sections_without_titles() {
+        let builder = DocumentBuilder::new("No Title Sections")
+            .append(TestSection::new("Untitled content 1"))
+            .append(TestSection::new("Untitled content 2"));
+
+        let typst = builder.build_typst().unwrap();
+        assert!(typst.contains("Untitled content 1"));
+        assert!(typst.contains("Untitled content 2"));
+    }
+
+    #[test]
+    fn test_build_typst_empty_builder() {
+        let builder = DocumentBuilder::new("Empty Document");
+        let typst = builder.build_typst().unwrap();
+        // Should still produce valid Typst with page setup
+        assert!(typst.contains("#set page"));
+        assert!(typst.contains("Empty Document"));
+    }
+
+    #[test]
+    fn test_document_builder_title_page() {
+        let builder = DocumentBuilder::new("My Campaign")
+            .with_title_page(true);
+
+        assert!(builder.config.include_title_page);
+    }
+
+    #[test]
+    fn test_build_typst_contains_page_setup() {
+        let builder = DocumentBuilder::new("Setup Test")
+            .with_margin(1.5)
+            .append(TestSection::new("Body"));
+
+        let typst = builder.build_typst().unwrap();
+        assert!(typst.contains("#set page"));
+        assert!(typst.contains("1.5in"));
+        // Font size is set via design system tokens (sizes.base), not raw pt
+        assert!(typst.contains("sizes.base"));
+    }
+
+    #[test]
+    fn test_build_typst_page_break_between_sections() {
+        let builder = DocumentBuilder::new("Page Break Test")
+            .append(TestSection::new("Section 1").with_title("Ch 1"))
+            .append(TestSection::new("Section 2").with_title("Ch 2"));
+
+        let typst = builder.build_typst().unwrap();
+        // Sections with page_break_before = true should have page breaks
+        assert!(typst.contains("pagebreak()"));
+    }
 }

@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-10T01:24:59Z | 488 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-10T18:40:17Z | 532 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -11,11 +11,33 @@
 │   │   ├── frontend/
 │   │   │   ├── __tests__/
 │   │   │   │   ├── components/
+│   │   │   │   │   ├── campaigns/
+│   │   │   │   │   │   ├── CampaignSourcesModal.test.ts
+│   │   │   │   │   │   ├── CharacterCard.test.ts
+│   │   │   │   │   │   ├── NPCsTab.test.ts
+│   │   │   │   │   │   └── PCsTab.test.ts
+│   │   │   │   │   ├── modules/
+│   │   │   │   │   │   ├── CreateModuleModal.test.ts
+│   │   │   │   │   │   ├── ModuleDocumentsPanel.test.ts
+│   │   │   │   │   │   ├── ModuleMaps.test.ts
+│   │   │   │   │   │   ├── ModuleMonsters.test.ts
+│   │   │   │   │   │   ├── ModuleNPCs.test.ts
+│   │   │   │   │   │   └── ModuleUserDocuments.test.ts
 │   │   │   │   │   └── sheet/
 │   │   │   │   │       ├── CharacterDetailsTab.test.ts
 │   │   │   │   │       ├── CharacterStatsTab.test.ts
 │   │   │   │   │       ├── EquipmentSection.test.ts
 │   │   │   │   │       └── SpellsSection.test.ts
+│   │   │   │   ├── composables/
+│   │   │   │   │   ├── useCatalogSearch.test.ts
+│   │   │   │   │   ├── useDebouncedSearch.test.ts
+│   │   │   │   │   ├── useLightSources.test.ts
+│   │   │   │   │   ├── usePlayerDisplay.test.ts
+│   │   │   │   │   ├── usePlayerDisplayEvents.test.ts
+│   │   │   │   │   ├── usePlayerViewport.test.ts
+│   │   │   │   │   ├── useSpells.test.ts
+│   │   │   │   │   ├── useTokenVision.test.ts
+│   │   │   │   │   └── useVisionCalculation.test.ts
 │   │   │   │   ├── fixtures/
 │   │   │   │   │   ├── backgrounds.ts
 │   │   │   │   │   ├── characters.ts
@@ -29,6 +51,12 @@
 │   │   │   │   │   ├── spells.ts
 │   │   │   │   │   ├── subclassFeatures.ts
 │   │   │   │   │   └── subclasses.ts
+│   │   │   │   ├── formatters/
+│   │   │   │   │   ├── itemFormatting.test.ts
+│   │   │   │   │   ├── modalFormatters.test.ts
+│   │   │   │   │   ├── monsterFormatterEnhanced.test.ts
+│   │   │   │   │   ├── monsterFormatting.test.ts
+│   │   │   │   │   └── spellFormatting.test.ts
 │   │   │   │   ├── helpers/
 │   │   │   │   │   ├── __tests__/
 │   │   │   │   │   │   ├── fixtures.test.ts
@@ -37,8 +65,18 @@
 │   │   │   │   │   ├── index.ts
 │   │   │   │   │   ├── mockInvoke.ts
 │   │   │   │   │   └── mountHelpers.ts
-│   │   │   │   └── integration/
-│   │   │   │       └── CharacterSheetIntegration.test.ts
+│   │   │   │   ├── homebrew/
+│   │   │   │   │   ├── homebrewCrud.test.ts
+│   │   │   │   │   └── homebrewRendering.test.ts
+│   │   │   │   ├── integration/
+│   │   │   │   │   └── CharacterSheetIntegration.test.ts
+│   │   │   │   ├── services/
+│   │   │   │   │   ├── DocumentService.test.ts
+│   │   │   │   │   └── ModuleService.test.ts
+│   │   │   │   └── utils/
+│   │   │   │       ├── contentRenderer.test.ts
+│   │   │   │       ├── textFormatting.test.ts
+│   │   │   │       └── tokenSizes.test.ts
 │   │   │   ├── env.d.ts
 │   │   │   ├── postcss.config.js
 │   │   │   ├── src/
@@ -56,6 +94,14 @@
 │   │   │   │   │           └── AppModal.test.ts
 │   │   │   │   ├── composables/
 │   │   │   │   │   ├── map/
+│   │   │   │   │   │   ├── __tests__/
+│   │   │   │   │   │   │   ├── useFog.test.ts
+│   │   │   │   │   │   │   ├── useLightSources.test.ts
+│   │   │   │   │   │   │   ├── useMapMarkers.test.ts
+│   │   │   │   │   │   │   ├── usePlayerDisplayEvents.test.ts
+│   │   │   │   │   │   │   ├── usePlayerViewport.test.ts
+│   │   │   │   │   │   │   ├── useVisibilityPolygon.test.ts
+│   │   │   │   │   │   │   └── useVisionCalculation.test.ts
 │   │   │   │   │   │   ├── useEntityDragDrop.ts
 │   │   │   │   │   │   ├── useFog.ts
 │   │   │   │   │   │   ├── useLightSources.ts
@@ -75,7 +121,10 @@
 │   │   │   │   │   ├── useDebouncedSearch.ts
 │   │   │   │   │   ├── useDevTools.ts
 │   │   │   │   │   ├── usePagination.ts
+│   │   │   │   │   ├── useWeaponRegistry.ts
 │   │   │   │   │   └── windows/
+│   │   │   │   │       ├── __tests__/
+│   │   │   │   │       │   └── usePlayerDisplay.test.ts
 │   │   │   │   │       ├── useDmMapWindow.ts
 │   │   │   │   │       └── usePlayerDisplay.ts
 │   │   │   │   ├── constants/
@@ -93,6 +142,10 @@
 │   │   │   │   │   │       └── useModalsState.ts
 │   │   │   │   │   ├── characters/
 │   │   │   │   │   │   └── composables/
+│   │   │   │   │   │       ├── __tests__/
+│   │   │   │   │   │       │   ├── useFeatureSelection.test.ts
+│   │   │   │   │   │       │   ├── useLevelUp.test.ts
+│   │   │   │   │   │       │   └── useSpellManagement.test.ts
 │   │   │   │   │   │       ├── useFeatureSelection.ts
 │   │   │   │   │   │       ├── useLevelUp.ts
 │   │   │   │   │   │       └── useSpellManagement.ts
@@ -240,6 +293,8 @@
 │   │   │   │   │   ├── index.ts
 │   │   │   │   │   └── reference.ts
 │   │   │   │   └── utils/
+│   │   │   │       ├── __tests__/
+│   │   │   │       │   └── characterUtils.test.ts
 │   │   │   │       ├── api.ts
 │   │   │   │       ├── characterUtils.ts
 │   │   │   │       ├── dataEvents.ts
@@ -594,6 +649,64 @@
 
 -  `main` function L1-3 — `()`
 
+### crates/mimir/frontend/__tests__/components/campaigns
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/components/campaigns/CampaignSourcesModal.test.ts
+
+-  `setupSourceMocks` function L35-38 — `function setupSourceMocks(selectedSources: string[] = ['PHB', 'DMG', 'MM'])`
+-  `mountModal` function L56-67 — `function mountModal(selectedSources?: string[])`
+
+#### crates/mimir/frontend/__tests__/components/campaigns/CharacterCard.test.ts
+
+-  `makeCharacter` function L13-27 — `function makeCharacter(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/components/campaigns/NPCsTab.test.ts
+
+-  `makeCampaign` function L19-29 — `function makeCampaign(overrides: Record<string, unknown> = {})`
+-  `makeNPC` function L31-45 — `function makeNPC(overrides: Record<string, unknown> = {})`
+-  `mountTab` function L58-72 — `function mountTab(npcs = [makeNPC()])`
+
+#### crates/mimir/frontend/__tests__/components/campaigns/PCsTab.test.ts
+
+-  `makeCampaign` function L19-29 — `function makeCampaign(overrides: Record<string, unknown> = {})`
+-  `makePC` function L31-45 — `function makePC(overrides: Record<string, unknown> = {})`
+-  `mountTab` function L58-72 — `function mountTab(pcs = [makePC()])`
+
+### crates/mimir/frontend/__tests__/components/modules
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/components/modules/CreateModuleModal.test.ts
+
+-  `mountModal` function L20-25 — `function mountModal(show = true)`
+
+#### crates/mimir/frontend/__tests__/components/modules/ModuleDocumentsPanel.test.ts
+
+-  `makeDocument` function L18-31 — `function makeDocument(overrides: Record<string, unknown> = {})`
+-  `mountPanel` function L36-40 — `function mountPanel(documents = [makeDocument()])`
+
+#### crates/mimir/frontend/__tests__/components/modules/ModuleMaps.test.ts
+
+-  `makeMap` function L24-41 — `function makeMap(overrides: Record<string, unknown> = {})`
+-  `mountComponent` function L54-70 — `function mountComponent(maps = [makeMap()])`
+
+#### crates/mimir/frontend/__tests__/components/modules/ModuleMonsters.test.ts
+
+-  `makeModuleMonster` function L25-40 — `function makeModuleMonster(overrides: Record<string, unknown> = {})`
+-  `mountComponent` function L53-68 — `function mountComponent(monsters = [makeModuleMonster()])`
+
+#### crates/mimir/frontend/__tests__/components/modules/ModuleNPCs.test.ts
+
+-  `makeModuleNpc` function L23-34 — `function makeModuleNpc(overrides: Record<string, unknown> = {})`
+-  `mountComponent` function L47-60 — `function mountComponent(npcs = [makeModuleNpc()])`
+
+#### crates/mimir/frontend/__tests__/components/modules/ModuleUserDocuments.test.ts
+
+-  `makeDocument` function L23-36 — `function makeDocument(overrides: Record<string, unknown> = {})`
+-  `mountComponent` function L49-63 — `function mountComponent(documents = [makeDocument()])`
+
 ### crates/mimir/frontend/__tests__/components/sheet
 
 > *Semantic summary to be generated by AI agent.*
@@ -631,6 +744,65 @@
 -  `formatMod` function L71 — `const formatMod = (mod: number)`
 -  `setupSpellMocks` function L73-82 — `function setupSpellMocks(spells: Record<string, unknown>[] = [])`
 -  `mountWithSpell` function L393-410 — `function mountWithSpell(spellOverrides: Record<string, unknown> = {})`
+
+### crates/mimir/frontend/__tests__/composables
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/composables/useCatalogSearch.test.ts
+
+-  `makeSpellSummary` function L21-31 — `function makeSpellSummary(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/composables/useDebouncedSearch.test.ts
+
+-  `createSearch` function L29-36 — `function createSearch(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/composables/useLightSources.test.ts
+
+-  `makeLightSource` function L20-36 — `function makeLightSource(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/composables/usePlayerDisplay.test.ts
+
+-  `getUsePlayerDisplay` function L20-23 — `function getUsePlayerDisplay()`
+
+#### crates/mimir/frontend/__tests__/composables/usePlayerDisplayEvents.test.ts
+
+-  `createHandlerSpies` function L39-48 — `function createHandlerSpies(): PlayerDisplayEventHandlers`
+-  `mountWithHandlers` function L50-57 — `function mountWithHandlers(handlers: PlayerDisplayEventHandlers)`
+
+#### crates/mimir/frontend/__tests__/composables/useSpells.test.ts
+
+-  `makeSpell` function L19-34 — `function makeSpell(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/composables/useTokenVision.test.ts
+
+-  `makeToken` function L19-36 — `function makeToken(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/composables/useVisionCalculation.test.ts
+
+-  `makeToken` function L18-43 — `function makeToken(overrides: Partial<Token> = {}): Token`
+-  `makeLightSource` function L45-60 — `function makeLightSource(overrides: Partial<LightSourceSummary> = {}): LightSour...`
+-  `createVision` function L62-75 — `function createVision( tokens: Token[] = [], lightSources: LightSourceSummary[] ...`
+
+### crates/mimir/frontend/__tests__/formatters
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/formatters/itemFormatting.test.ts
+
+-  `findItem` function L19-21 — `function findItem(name: string)`
+
+#### crates/mimir/frontend/__tests__/formatters/monsterFormatterEnhanced.test.ts
+
+-  `findMonster` function L19-21 — `function findMonster(name: string)`
+
+#### crates/mimir/frontend/__tests__/formatters/monsterFormatting.test.ts
+
+-  `findMonster` function L33-35 — `function findMonster(name: string)`
+
+#### crates/mimir/frontend/__tests__/formatters/spellFormatting.test.ts
+
+-  `findSpell` function L15-17 — `function findSpell(name: string)`
 
 ### crates/mimir/frontend/__tests__/helpers
 
@@ -695,6 +867,26 @@
 - pub `createTestPinia` function L105-115 — `function createTestPinia(initialState?: Record<string, unknown>): Pinia`
 -  `buildGlobalConfig` function L37-60 — `function buildGlobalConfig(options: MountOptions = {}): MountingOptions<unknown>...`
 
+### crates/mimir/frontend/__tests__/homebrew
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/homebrew/homebrewCrud.test.ts
+
+-  `ItemFormState` interface L18-38 — `{ name: : string, item_type: : string, rarity: : string, description: : string, ...`
+-  `emptyForm` function L40-47 — `function emptyForm(): ItemFormState`
+-  `formToDataJson` function L50-95 — `function formToDataJson(form: ItemFormState): string`
+-  `dataJsonToForm` function L98-142 — `function dataJsonToForm(data: Record<string, unknown>): Partial<ItemFormState>`
+-  `HomebrewItem` interface L418-421 — `{ item_type: : string | null, rarity: : string | null }`
+-  `CreateItem` interface L423-429 — `{ campaign_id: : string, name: : string, item_type: : string, rarity: : string, ...`
+-  `UpdateItem` interface L431-436 — `{ name: : string, item_type: : string | null, rarity: : string | null, data: : s...`
+-  `HomebrewMonster` interface L438-442 — `{ cr: : string | null, creature_type: : string | null, size: : string | null }`
+-  `CreateMonster` interface L444-451 — `{ campaign_id: : string, name: : string, data: : string, cr: : string, creature_...`
+-  `UpdateMonster` interface L453-459 — `{ name: : string, data: : string, cr: : string | null, creature_type: : string |...`
+-  `HomebrewSpell` interface L461-464 — `{ level: : number | null, school: : string | null }`
+-  `CreateSpell` interface L466-472 — `{ campaign_id: : string, name: : string, data: : string, level: : number, school...`
+-  `UpdateSpell` interface L474-479 — `{ name: : string, data: : string, level: : number | null, school: : string | nul...`
+
 ### crates/mimir/frontend/__tests__/integration
 
 > *Semantic summary to be generated by AI agent.*
@@ -709,6 +901,60 @@
 -  `makeSubclassFeatures` function L155-162 — `function makeSubclassFeatures(): Array<Record<string, unknown>>`
 -  `makeInventory` function L164-171 — `function makeInventory(): CharacterInventory[]`
 -  `setupFullCharacterMocks` function L179-210 — `function setupFullCharacterMocks(character: Character = makeCharacter())`
+
+### crates/mimir/frontend/__tests__/services
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/services/DocumentService.test.ts
+
+-  `makeDocument` function L20-33 — `function makeDocument(overrides: Record<string, unknown> = {})`
+
+#### crates/mimir/frontend/__tests__/services/ModuleService.test.ts
+
+-  `makeModule` function L21-33 — `function makeModule(overrides: Record<string, unknown> = {})`
+
+### crates/mimir/frontend/__tests__/utils
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/__tests__/utils/contentRenderer.test.ts
+
+-  `render` function L42-44 — `function render(entries: any[])`
+
+### crates/mimir/frontend/src/composables/map/__tests__
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/src/composables/map/__tests__/useFog.test.ts
+
+-  `makeArea` function L18-28 — `function makeArea(overrides: Partial<FogRevealedArea> = {}): FogRevealedArea`
+
+#### crates/mimir/frontend/src/composables/map/__tests__/useLightSources.test.ts
+
+-  `makeSummary` function L18-34 — `function makeSummary(overrides: Partial<LightSourceSummary> = {}): LightSourceSu...`
+-  `makeLightSource` function L36-53 — `function makeLightSource(overrides: Partial<LightSource> = {}): LightSource`
+
+#### crates/mimir/frontend/src/composables/map/__tests__/useMapMarkers.test.ts
+
+-  `makeTrap` function L24-40 — `function makeTrap(overrides: Partial<MapTrap> = {}): MapTrap`
+-  `makePoi` function L42-57 — `function makePoi(overrides: Partial<MapPoi> = {}): MapPoi`
+-  `createMarkers` function L59-65 — `function createMarkers(mapIdValue = 'map-1')`
+
+#### crates/mimir/frontend/src/composables/map/__tests__/usePlayerDisplayEvents.test.ts
+
+-  `createHandlerSpies` function L39-48 — `function createHandlerSpies(): PlayerDisplayEventHandlers`
+-  `mountWithHandlers` function L50-57 — `function mountWithHandlers(handlers: PlayerDisplayEventHandlers)`
+
+#### crates/mimir/frontend/src/composables/map/__tests__/useVisibilityPolygon.test.ts
+
+-  `makeUvttData` function L17-26 — `function makeUvttData(overrides: Partial<UvttData> = {}): UvttData`
+
+#### crates/mimir/frontend/src/composables/map/__tests__/useVisionCalculation.test.ts
+
+-  `makeToken` function L18-43 — `function makeToken(overrides: Partial<Token> = {}): Token`
+-  `makeLightSource` function L45-61 — `function makeLightSource(overrides: Partial<LightSourceSummary> = {}): LightSour...`
+-  `createVision` function L63-76 — `function createVision( tokens: Token[] = [], lightSources: LightSourceSummary[] ...`
 
 ### crates/mimir/frontend/src/composables/map
 
@@ -973,6 +1219,20 @@
 -  `lastPage` function L108-110 — `function lastPage()`
 -  `reset` function L112-114 — `function reset()`
 
+#### crates/mimir/frontend/src/composables/useWeaponRegistry.ts
+
+- pub `useWeaponRegistry` function L59-65 — `function useWeaponRegistry()`
+-  `loadWeaponNames` function L22-37 — `function loadWeaponNames(): Promise<void>`
+-  `isWeapon` function L43-53 — `function isWeapon(itemName: string): boolean`
+
+### crates/mimir/frontend/src/composables/windows/__tests__
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/src/composables/windows/__tests__/usePlayerDisplay.test.ts
+
+-  `getUsePlayerDisplay` function L18-21 — `function getUsePlayerDisplay()`
+
 ### crates/mimir/frontend/src/composables/windows
 
 > *Semantic summary to be generated by AI agent.*
@@ -1033,6 +1293,29 @@
 -  `closeAllModals` function L74-78 — `function closeAllModals()`
 -  `isAnyModalOpen` function L83-85 — `function isAnyModalOpen(): boolean`
 
+### crates/mimir/frontend/src/features/characters/composables/__tests__
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/src/features/characters/composables/__tests__/useFeatureSelection.test.ts
+
+-  `makeFeature` function L16-18 — `function makeFeature(name: string, source = 'PHB'): FeatureItem`
+
+#### crates/mimir/frontend/src/features/characters/composables/__tests__/useLevelUp.test.ts
+
+-  `makeCharacterClass` function L30-42 — `function makeCharacterClass(overrides: Partial<CharacterClass> = {}): CharacterC...`
+-  `makeCharacter` function L44-70 — `function makeCharacter(overrides: Partial<Character> = {}): Character`
+-  `makeClassInfo` function L72-84 — `function makeClassInfo(overrides: Partial<ClassInfo> = {}): ClassInfo`
+-  `makeContext` function L86-101 — `function makeContext(overrides: Partial<LevelUpContext> = {}): LevelUpContext`
+-  `createLevelUp` function L288-291 — `function createLevelUp(charOverrides: Partial<Character> = {})`
+
+#### crates/mimir/frontend/src/features/characters/composables/__tests__/useSpellManagement.test.ts
+
+-  `makeCharacterClass` function L23-35 — `function makeCharacterClass(overrides: Partial<CharacterClass> = {}): CharacterC...`
+-  `makeCharacter` function L37-63 — `function makeCharacter(overrides: Partial<Character> = {}): Character`
+-  `makeSpell` function L65-76 — `function makeSpell(overrides: Partial<SpellInfo> = {}): SpellInfo`
+-  `createSpellManagement` function L78-82 — `function createSpellManagement(charOverrides: Partial<Character> = {})`
+
 ### crates/mimir/frontend/src/features/characters/composables
 
 > *Semantic summary to be generated by AI agent.*
@@ -1079,7 +1362,7 @@
 
 - pub `SpellInfo` interface L16-24 — `{ name: : string, source: : string, level: : number, school: : string | null, ri...`
 - pub `SpellcastingStats` interface L29-34 — `{ className: : string, ability: : string, saveDC: : number, attackBonus: : numbe...`
-- pub `useSpellManagement` function L39-441 — `function useSpellManagement( character: Ref<Character | null>, characterId: Comp...`
+- pub `useSpellManagement` function L39-488 — `function useSpellManagement( character: Ref<Character | null>, characterId: Comp...`
 -  `getSchoolName` function L167-180 — `const getSchoolName = (code: string | null): string`
 -  `getLevelDisplay` function L182-188 — `const getLevelDisplay = (level: number): string`
 -  `toggleSpellDetails` function L190-198 — `const toggleSpellDetails = (name: string, source: string)`
@@ -1091,7 +1374,7 @@
 -  `getSpellComponents` function L236-244 — `const getSpellComponents = (spell: SpellInfo): string`
 -  `getSpellDuration` function L246-257 — `const getSpellDuration = (spell: SpellInfo): string`
 -  `getSpellDescription` function L259-284 — `const getSpellDescription = (spell: SpellInfo): string`
--  `loadClassSpells` function L287-406 — `const loadClassSpells = ()`
+-  `loadClassSpells` function L287-453 — `const loadClassSpells = ()`
 -  `getMaxSpellLevel` function L316-334 — `const getMaxSpellLevel = (className: string, level: number): number`
 
 ### crates/mimir/frontend/src/features/modules/composables
@@ -2198,6 +2481,16 @@
 
 - pub `Module` type L6-34 — `= { /** * Unique module ID (UUID) */ id: string, /** * Campaign this module belo...`
 
+### crates/mimir/frontend/src/utils/__tests__
+
+> *Semantic summary to be generated by AI agent.*
+
+#### crates/mimir/frontend/src/utils/__tests__/characterUtils.test.ts
+
+-  `makeClass` function L47-59 — `function makeClass(overrides: Partial<CharacterClass> = {}): CharacterClass`
+-  `makeProf` function L61-70 — `function makeProf(overrides: Partial<CharacterProficiency> = {}): CharacterProfi...`
+-  `makeCharacter` function L72-98 — `function makeCharacter(overrides: Partial<Character> = {}): Character`
+
 ### crates/mimir/frontend/src/utils
 
 > *Semantic summary to be generated by AI agent.*
@@ -2226,19 +2519,20 @@
 - pub `getSaveBonus` function L152-160 — `function getSaveBonus(character: Character, ability: string, score: number): num...`
 - pub `getPassivePerception` function L165-179 — `function getPassivePerception(character: Character): number`
 - pub `getArmorAC` function L189-238 — `function getArmorAC(armorName: string, dexMod: number): number`
-- pub `getWeaponDamage` function L243-271 — `function getWeaponDamage(weaponName: string, abilityMod: number): string`
-- pub `isFinesse` function L276-285 — `function isFinesse(weaponName: string): boolean`
-- pub `isRanged` function L290-293 — `function isRanged(weaponName: string): boolean`
-- pub `isSpellcaster` function L318-322 — `function isSpellcaster(character: Character): boolean`
-- pub `getSpellcastingAbility` function L328-334 — `function getSpellcastingAbility(character: Character): AbilityName | null`
-- pub `getSpellSaveDC` function L340-349 — `function getSpellSaveDC(character: Character): number | null`
-- pub `getSpellAttackBonus` function L355-364 — `function getSpellAttackBonus(character: Character): number | null`
-- pub `SpellcastingStats` interface L367-373 — `{ className: : string, ability: : AbilityName, abilityAbbrev: : string, saveDC: ...`
-- pub `getAllSpellcastingStats` function L379-402 — `function getAllSpellcastingStats(character: Character): SpellcastingStats[]`
-- pub `getMulticlassCasterLevel` function L412-437 — `function getMulticlassCasterLevel(character: Character): number`
-- pub `getHitDiceString` function L464-475 — `function getHitDiceString(character: Character): string`
-- pub `formatClassString` function L485-497 — `function formatClassString(character: Character): string`
-- pub `getAbilityScore` function L502-504 — `function getAbilityScore(character: Character, ability: AbilityName): number`
+- pub `getWeaponDamage` function L243-286 — `function getWeaponDamage(weaponName: string, abilityMod: number): string`
+- pub `isWeapon` function L308-318 — `function isWeapon(itemName: string): boolean`
+- pub `isFinesse` function L323-332 — `function isFinesse(weaponName: string): boolean`
+- pub `isRanged` function L337-347 — `function isRanged(weaponName: string): boolean`
+- pub `isSpellcaster` function L372-376 — `function isSpellcaster(character: Character): boolean`
+- pub `getSpellcastingAbility` function L382-388 — `function getSpellcastingAbility(character: Character): AbilityName | null`
+- pub `getSpellSaveDC` function L394-403 — `function getSpellSaveDC(character: Character): number | null`
+- pub `getSpellAttackBonus` function L409-418 — `function getSpellAttackBonus(character: Character): number | null`
+- pub `SpellcastingStats` interface L421-427 — `{ className: : string, ability: : AbilityName, abilityAbbrev: : string, saveDC: ...`
+- pub `getAllSpellcastingStats` function L433-456 — `function getAllSpellcastingStats(character: Character): SpellcastingStats[]`
+- pub `getMulticlassCasterLevel` function L466-491 — `function getMulticlassCasterLevel(character: Character): number`
+- pub `getHitDiceString` function L518-529 — `function getHitDiceString(character: Character): string`
+- pub `formatClassString` function L539-551 — `function formatClassString(character: Character): string`
+- pub `getAbilityScore` function L556-558 — `function getAbilityScore(character: Character, ability: AbilityName): number`
 
 #### crates/mimir/frontend/src/utils/dataEvents.ts
 
@@ -2319,32 +2613,36 @@
 
 #### crates/mimir/src/commands/character.rs
 
-- pub `list_characters` function L22-41 — `( state: State<'_, AppState>, campaign_id: String, ) -> ApiResponse<Vec<Characte...` — List all characters for a campaign (with classes and proficiencies).
-- pub `list_pcs` function L45-61 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only player characters for a campaign (with classes and proficiencies).
-- pub `list_npcs` function L65-81 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only NPCs for a campaign (with classes and proficiencies).
-- pub `list_unassigned_pcs` function L85-100 — `(state: State<'_, AppState>) -> ApiResponse<Vec<CharacterResponse>>` — List unassigned player characters (no campaign).
-- pub `get_character` function L108-119 — `(state: State<'_, AppState>, id: String) -> ApiResponse<CharacterResponse>` — Get a character by ID (with classes and proficiencies).
-- pub `CreatePcRequest` struct L123-135 — `{ campaign_id: Option<String>, name: String, player_name: String, race_name: Opt...` — Request for creating a new PC.
-- pub `create_pc` function L139-183 — `(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<CharacterR...` — Create a new player character.
-- pub `CreateNpcRequest` struct L187-195 — `{ campaign_id: Option<String>, name: String, race_name: Option<String>, race_sou...` — Request for creating a new NPC.
-- pub `create_npc` function L199-234 — `(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<Character...` — Create a new NPC.
-- pub `UpdateCharacterRequest` struct L238-254 — `{ name: Option<String>, player_name: Option<Option<String>>, race_name: Option<O...` — Request for updating a character.
-- pub `update_character` function L258-294 — `( state: State<'_, AppState>, id: String, request: UpdateCharacterRequest, ) -> ...` — Update a character.
-- pub `delete_character` function L298-306 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a character permanently.
-- pub `assign_character_to_campaign` function L310-324 — `( state: State<'_, AppState>, character_id: String, campaign_id: String, ) -> Ap...` — Assign a character to a campaign.
-- pub `level_up_character` function L334-346 — `( state: State<'_, AppState>, character_id: String, request: LevelUpRequest, ) -...` — Level up a character.
-- pub `get_character_inventory` function L354-365 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get a character's inventory.
-- pub `get_equipped_items` function L369-380 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get equipped items for a character.
-- pub `get_attuned_items` function L384-395 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get attuned items for a character.
-- pub `AddInventoryRequest` struct L399-406 — `{ item_name: String, item_source: String, quantity: Option<i32>, equipped: Optio...` — Request for adding an item to inventory.
-- pub `add_inventory_item` function L410-437 — `( state: State<'_, AppState>, character_id: String, request: AddInventoryRequest...` — Add an item to a character's inventory.
-- pub `remove_inventory_item` function L441-449 — `(state: State<'_, AppState>, inventory_id: String) -> ApiResponse<()>` — Remove an item from a character's inventory.
-- pub `UpdateInventoryRequest` struct L453-457 — `{ quantity: Option<i32>, equipped: Option<bool>, attuned: Option<bool> }` — Request for updating an inventory item.
-- pub `update_inventory_item` function L461-478 — `( state: State<'_, AppState>, inventory_id: String, request: UpdateInventoryRequ...` — Update an inventory item (quantity, equipped, attuned).
-- pub `list_character_sources` function L492-505 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<String>...` — List allowed source codes for a character.
-- pub `add_character_source` function L509-530 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Add a source to a character's allowed sources.
-- pub `remove_character_source` function L534-548 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Remove a source from a character's allowed sources.
-- pub `set_character_sources` function L552-577 — `( state: State<'_, AppState>, character_id: String, source_codes: Vec<String>, )...` — Set the complete list of allowed sources for a character (replaces existing).
+- pub `list_characters` function L24-43 — `( state: State<'_, AppState>, campaign_id: String, ) -> ApiResponse<Vec<Characte...` — List all characters for a campaign (with classes and proficiencies).
+- pub `list_pcs` function L47-63 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only player characters for a campaign (with classes and proficiencies).
+- pub `list_npcs` function L67-83 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only NPCs for a campaign (with classes and proficiencies).
+- pub `list_unassigned_pcs` function L87-102 — `(state: State<'_, AppState>) -> ApiResponse<Vec<CharacterResponse>>` — List unassigned player characters (no campaign).
+- pub `get_character` function L110-121 — `(state: State<'_, AppState>, id: String) -> ApiResponse<CharacterResponse>` — Get a character by ID (with classes and proficiencies).
+- pub `CreatePcRequest` struct L125-137 — `{ campaign_id: Option<String>, name: String, player_name: String, race_name: Opt...` — Request for creating a new PC.
+- pub `create_pc` function L141-185 — `(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<CharacterR...` — Create a new player character.
+- pub `CreateNpcRequest` struct L189-197 — `{ campaign_id: Option<String>, name: String, race_name: Option<String>, race_sou...` — Request for creating a new NPC.
+- pub `create_npc` function L201-236 — `(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<Character...` — Create a new NPC.
+- pub `UpdateCharacterRequest` struct L240-256 — `{ name: Option<String>, player_name: Option<Option<String>>, race_name: Option<O...` — Request for updating a character.
+- pub `update_character` function L260-296 — `( state: State<'_, AppState>, id: String, request: UpdateCharacterRequest, ) -> ...` — Update a character.
+- pub `delete_character` function L300-308 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a character permanently.
+- pub `assign_character_to_campaign` function L312-326 — `( state: State<'_, AppState>, character_id: String, campaign_id: String, ) -> Ap...` — Assign a character to a campaign.
+- pub `level_up_character` function L336-348 — `( state: State<'_, AppState>, character_id: String, request: LevelUpRequest, ) -...` — Level up a character.
+- pub `get_character_inventory` function L356-367 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get a character's inventory.
+- pub `get_equipped_items` function L371-382 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get equipped items for a character.
+- pub `get_attuned_items` function L386-397 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get attuned items for a character.
+- pub `AddInventoryRequest` struct L401-408 — `{ item_name: String, item_source: String, quantity: Option<i32>, equipped: Optio...` — Request for adding an item to inventory.
+- pub `add_inventory_item` function L412-439 — `( state: State<'_, AppState>, character_id: String, request: AddInventoryRequest...` — Add an item to a character's inventory.
+- pub `remove_inventory_item` function L443-451 — `(state: State<'_, AppState>, inventory_id: String) -> ApiResponse<()>` — Remove an item from a character's inventory.
+- pub `UpdateInventoryRequest` struct L455-459 — `{ quantity: Option<i32>, equipped: Option<bool>, attuned: Option<bool> }` — Request for updating an inventory item.
+- pub `update_inventory_item` function L463-480 — `( state: State<'_, AppState>, inventory_id: String, request: UpdateInventoryRequ...` — Update an inventory item (quantity, equipped, attuned).
+- pub `list_character_sources` function L494-507 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<String>...` — List allowed source codes for a character.
+- pub `add_character_source` function L511-532 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Add a source to a character's allowed sources.
+- pub `remove_character_source` function L536-550 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Remove a source from a character's allowed sources.
+- pub `set_character_sources` function L554-579 — `( state: State<'_, AppState>, character_id: String, source_codes: Vec<String>, )...` — Set the complete list of allowed sources for a character (replaces existing).
+- pub `list_character_spells` function L587-600 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — List all spells a character knows.
+- pub `add_character_spell` function L604-644 — `( state: State<'_, AppState>, character_id: String, spell_name: String, spell_so...` — Add a spell to a character's known spells.
+- pub `remove_character_spell` function L648-692 — `( state: State<'_, AppState>, character_id: String, spell_name: String, source_c...` — Remove a spell from a character's known spells.
+- pub `toggle_spell_prepared` function L696-722 — `( state: State<'_, AppState>, spell_id: String, ) -> ApiResponse<CharacterSpell>` — Toggle a spell's prepared status.
 
 #### crates/mimir/src/commands/dev.rs
 
@@ -2548,8 +2846,9 @@
 - pub `search_items` function L13-34 — `( state: State<'_, AppState>, filter: Option<ItemFilter>, limit: Option<i64>, of...` — Search items with optional filters.
 - pub `get_item` function L38-50 — `(state: State<'_, AppState>, id: i32) -> ApiResponse<Item>` — Get an item by database ID.
 - pub `get_item_by_name` function L54-100 — `( state: State<'_, AppState>, name: String, source: String, campaign_id: Option<...` — Get an item by name and source.
-- pub `list_item_sources` function L104-112 — `(state: State<'_, AppState>) -> ApiResponse<Vec<String>>` — List all item sources.
-- pub `count_items` function L116-124 — `(state: State<'_, AppState>) -> ApiResponse<i64>` — Count total items.
+- pub `list_weapon_names` function L104-112 — `(state: State<'_, AppState>) -> ApiResponse<Vec<String>>` — List all weapon names from the catalog (melee + ranged).
+- pub `list_item_sources` function L116-124 — `(state: State<'_, AppState>) -> ApiResponse<Vec<String>>` — List all item sources.
+- pub `count_items` function L128-136 — `(state: State<'_, AppState>) -> ApiResponse<i64>` — Count total items.
 
 #### crates/mimir/src/commands/catalog/level_up.rs
 
@@ -2914,9 +3213,28 @@
 
 #### crates/mimir/src/commands/print/character.rs
 
-- pub `export_character` function L66-589 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, character_...` — Export a character to PDF
-- pub `generate_character_sheet` function L593-604 — `( _app_state: State<'_, AppState>, _print_state: State<'_, PrintState>, characte...` — Generate character sheet (legacy API)
+- pub `export_character` function L66-640 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, character_...` — Export a character to PDF
+- pub `generate_character_sheet` function L774-785 — `( _app_state: State<'_, AppState>, _print_state: State<'_, PrintState>, characte...` — Generate character sheet (legacy API)
 -  `homebrew_item_type_to_code` function L29-62 — `(item_type: &str, data: &serde_json::Map<String, Value>) -> Option<String>` — Map human-readable homebrew item_type (from frontend UI) to 5etools type codes.
+-  `tests` module L643-770 — `-` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_weapon_melee_default` function L648-652 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_weapon_ranged_with_range` function L655-660 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_weapon_ranged_with_ammo` function L663-669 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_weapon_case_insensitive` function L672-676 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_armor` function L679-682 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_shield` function L685-688 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_potion` function L691-694 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_ring` function L697-700 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_rod` function L703-706 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_wand` function L709-712 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_scroll` function L715-718 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_staff` function L721-724 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_wondrous_item` function L727-730 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_homebrew_adventuring_gear` function L733-736 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_passthrough_raw_5etools_codes` function L739-746 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_passthrough_lowercase_5etools_codes` function L749-754 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_unknown_type_returns_none` function L757-761 — `()` — Tauri commands for exporting character sheets to PDF.
+-  `test_weapon_with_empty_range_is_melee` function L764-769 — `()` — Tauri commands for exporting character sheets to PDF.
 
 #### crates/mimir/src/commands/print/document.rs
 
@@ -2937,6 +3255,52 @@
 - pub `enrich_inventory_item` function L110-189 — `( db: &mut diesel::SqliteConnection, inv_item: &mimir_core::models::CharacterInv...` — Enrich an inventory item with catalog data (weapon stats, armor AC, etc.)
 - pub `compute_ac` function L192-228 — `(inventory: &[InventoryItem], dex_mod: i32) -> i32` — Compute AC from equipped armor and DEX modifier
 - pub `max_spell_level_for_class` function L232-295 — `(class_name: &str, class_level: i32) -> i32` — Calculate the maximum spell level a class can cast at a given class level.
+-  `tests` module L298-720 — `-` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_barbarian_d12` function L304-306 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_fighter_d10` function L309-311 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_paladin_d10` function L314-316 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_ranger_d10` function L319-321 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_d8_classes` function L324-328 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_wizard_d6` function L331-333 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_sorcerer_d6` function L336-338 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_unknown_defaults_d8` function L341-343 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_ability_int_casters` function L348-351 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_ability_wis_casters` function L354-358 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_ability_cha_casters` function L361-366 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_ability_non_casters` function L369-374 — `()` — spell slots, and armor class for PDF character sheets.
+-  `caster_multiplier_full_casters` function L379-383 — `()` — spell slots, and armor class for PDF character sheets.
+-  `caster_multiplier_half_casters` function L386-390 — `()` — spell slots, and armor class for PDF character sheets.
+-  `caster_multiplier_third_casters` function L393-397 — `()` — spell slots, and armor class for PDF character sheets.
+-  `caster_multiplier_non_casters` function L400-404 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_level_0` function L409-411 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_level_1` function L414-416 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_level_5` function L419-421 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_level_9` function L424-426 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_level_20` function L429-431 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_above_20_caps` function L434-436 — `()` — spell slots, and armor class for PDF character sheets.
+-  `spell_slots_negative_level` function L439-441 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hp_single_class_level_1` function L446-456 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hp_single_class_level_5` function L459-471 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hp_multiclass` function L474-495 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hp_wizard_low_con` function L498-508 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hp_empty_classes` function L511-513 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hp_minimum_is_1` function L516-526 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_string_single_class` function L531-540 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_string_multiclass` function L543-561 — `()` — spell slots, and armor class for PDF character sheets.
+-  `hit_die_string_empty` function L564-566 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_no_armor` function L571-574 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_light_armor` function L577-588 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_medium_armor_dex_capped` function L591-602 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_medium_armor_low_dex` function L605-616 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_heavy_armor_ignores_dex` function L619-630 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_shield_adds_bonus` function L633-653 — `()` — spell slots, and armor class for PDF character sheets.
+-  `ac_unequipped_armor_ignored` function L656-667 — `()` — spell slots, and armor class for PDF character sheets.
+-  `max_spell_level_wizard` function L672-679 — `()` — spell slots, and armor class for PDF character sheets.
+-  `max_spell_level_paladin` function L682-688 — `()` — spell slots, and armor class for PDF character sheets.
+-  `max_spell_level_warlock` function L691-697 — `()` — spell slots, and armor class for PDF character sheets.
+-  `max_spell_level_artificer` function L700-704 — `()` — spell slots, and armor class for PDF character sheets.
+-  `max_spell_level_third_caster` function L707-712 — `()` — spell slots, and armor class for PDF character sheets.
+-  `max_spell_level_non_caster` function L715-719 — `()` — spell slots, and armor class for PDF character sheets.
 
 #### crates/mimir/src/commands/print/map.rs
 
@@ -2996,7 +3360,7 @@
 
 #### crates/mimir/src/main.rs
 
--  `main` function L18-432 — `()` — Initializes the Tauri application with database connection and runs the event loop.
+-  `main` function L18-438 — `()` — Initializes the Tauri application with database connection and runs the event loop.
 
 #### crates/mimir/src/state.rs
 
@@ -4269,20 +4633,21 @@
 - pub `list_items_by_source` function L68-76 — `( conn: &mut SqliteConnection, source: &str, ) -> QueryResult<Vec<Item>>` — List items from a specific source.
 - pub `search_items` function L79-109 — `( conn: &mut SqliteConnection, filter: &ItemFilter, ) -> QueryResult<Vec<Item>>` — Search items with filters.
 - pub `search_items_paginated` function L112-148 — `( conn: &mut SqliteConnection, filter: &ItemFilter, limit: i64, offset: i64, ) -...` — Search items with pagination.
-- pub `delete_item` function L151-153 — `(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize>` — Delete an item by its ID.
-- pub `delete_items_by_source` function L156-158 — `(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize>` — Delete all items from a specific source.
-- pub `count_items` function L161-163 — `(conn: &mut SqliteConnection) -> QueryResult<i64>` — Count all items.
-- pub `count_items_by_source` function L166-171 — `(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64>` — Count items from a specific source.
-- pub `list_item_sources` function L174-180 — `(conn: &mut SqliteConnection) -> QueryResult<Vec<String>>` — List all distinct sources that have items.
--  `tests` module L183-342 — `-` — Database operations for items.
--  `test_insert_and_get_item` function L188-204 — `()` — Database operations for items.
--  `test_get_item_by_name` function L207-221 — `()` — Database operations for items.
--  `test_list_items_by_source` function L224-235 — `()` — Database operations for items.
--  `test_search_items` function L238-271 — `()` — Database operations for items.
--  `test_search_items_paginated` function L274-291 — `()` — Database operations for items.
--  `test_delete_item` function L294-305 — `()` — Database operations for items.
--  `test_delete_items_by_source` function L308-322 — `()` — Database operations for items.
--  `test_count_items` function L325-341 — `()` — Database operations for items.
+- pub `list_weapon_names` function L151-158 — `(conn: &mut SqliteConnection) -> QueryResult<Vec<String>>` — List all weapon names (item_type 'M' or 'R'), lowercased and deduplicated.
+- pub `delete_item` function L161-163 — `(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize>` — Delete an item by its ID.
+- pub `delete_items_by_source` function L166-168 — `(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize>` — Delete all items from a specific source.
+- pub `count_items` function L171-173 — `(conn: &mut SqliteConnection) -> QueryResult<i64>` — Count all items.
+- pub `count_items_by_source` function L176-181 — `(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64>` — Count items from a specific source.
+- pub `list_item_sources` function L184-190 — `(conn: &mut SqliteConnection) -> QueryResult<Vec<String>>` — List all distinct sources that have items.
+-  `tests` module L193-352 — `-` — Database operations for items.
+-  `test_insert_and_get_item` function L198-214 — `()` — Database operations for items.
+-  `test_get_item_by_name` function L217-231 — `()` — Database operations for items.
+-  `test_list_items_by_source` function L234-245 — `()` — Database operations for items.
+-  `test_search_items` function L248-281 — `()` — Database operations for items.
+-  `test_search_items_paginated` function L284-301 — `()` — Database operations for items.
+-  `test_delete_item` function L304-315 — `()` — Database operations for items.
+-  `test_delete_items_by_source` function L318-332 — `()` — Database operations for items.
+-  `test_count_items` function L335-351 — `()` — Database operations for items.
 
 #### crates/mimir-core/src/dal/catalog/item_attunement.rs
 
@@ -6364,26 +6729,31 @@
 -  `import_homebrew_spells` function L1032-1048 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
 -  `import_homebrew_monsters` function L1050-1067 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
 -  `slugify` function L1069-1078 — `(name: &str) -> String` — and importing them back into new campaign instances.
--  `tests` module L1082-1492 — `-` — and importing them back into new campaign instances.
--  `create_test_campaign` function L1091-1096 — `(conn: &mut SqliteConnection) -> String` — and importing them back into new campaign instances.
--  `create_test_module` function L1098-1104 — `(conn: &mut SqliteConnection, campaign_id: &str) -> String` — and importing them back into new campaign instances.
--  `seed_campaign` function L1107-1140 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a module, document, and character for testing.
--  `test_slugify` function L1143-1147 — `()` — and importing them back into new campaign instances.
--  `test_catalog_reference_hash` function L1150-1167 — `()` — and importing them back into new campaign instances.
--  `test_export_creates_file` function L1170-1183 — `()` — and importing them back into new campaign instances.
--  `test_export_archive_contains_manifest_and_data` function L1186-1217 — `()` — and importing them back into new campaign instances.
--  `test_preview_archive` function L1220-1238 — `()` — and importing them back into new campaign instances.
--  `test_preview_extracts_catalog_references` function L1241-1260 — `()` — and importing them back into new campaign instances.
--  `test_export_nonexistent_campaign` function L1263-1272 — `()` — and importing them back into new campaign instances.
--  `test_preview_nonexistent_file` function L1275-1278 — `()` — and importing them back into new campaign instances.
--  `test_import_round_trip` function L1281-1325 — `()` — and importing them back into new campaign instances.
--  `test_import_generates_new_uuids` function L1328-1352 — `()` — and importing them back into new campaign instances.
--  `test_import_name_collision_auto_increments` function L1355-1383 — `()` — and importing them back into new campaign instances.
--  `test_import_invalid_archive` function L1386-1397 — `()` — and importing them back into new campaign instances.
--  `test_export_empty_campaign` function L1400-1416 — `()` — and importing them back into new campaign instances.
--  `test_import_preserves_document_content` function L1419-1440 — `()` — and importing them back into new campaign instances.
--  `test_import_preserves_module_document_associations` function L1443-1466 — `()` — and importing them back into new campaign instances.
--  `test_export_import_empty_round_trip` function L1469-1491 — `()` — and importing them back into new campaign instances.
+-  `tests` module L1082-1769 — `-` — and importing them back into new campaign instances.
+-  `create_test_campaign` function L1095-1100 — `(conn: &mut SqliteConnection) -> String` — and importing them back into new campaign instances.
+-  `create_test_module` function L1102-1108 — `(conn: &mut SqliteConnection, campaign_id: &str) -> String` — and importing them back into new campaign instances.
+-  `seed_campaign` function L1111-1144 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a module, document, and character for testing.
+-  `test_slugify` function L1147-1151 — `()` — and importing them back into new campaign instances.
+-  `test_catalog_reference_hash` function L1154-1171 — `()` — and importing them back into new campaign instances.
+-  `test_export_creates_file` function L1174-1187 — `()` — and importing them back into new campaign instances.
+-  `test_export_archive_contains_manifest_and_data` function L1190-1221 — `()` — and importing them back into new campaign instances.
+-  `test_preview_archive` function L1224-1242 — `()` — and importing them back into new campaign instances.
+-  `test_preview_extracts_catalog_references` function L1245-1264 — `()` — and importing them back into new campaign instances.
+-  `test_export_nonexistent_campaign` function L1267-1276 — `()` — and importing them back into new campaign instances.
+-  `test_preview_nonexistent_file` function L1279-1282 — `()` — and importing them back into new campaign instances.
+-  `test_import_round_trip` function L1285-1329 — `()` — and importing them back into new campaign instances.
+-  `test_import_generates_new_uuids` function L1332-1356 — `()` — and importing them back into new campaign instances.
+-  `test_import_name_collision_auto_increments` function L1359-1387 — `()` — and importing them back into new campaign instances.
+-  `test_import_invalid_archive` function L1390-1401 — `()` — and importing them back into new campaign instances.
+-  `test_export_empty_campaign` function L1404-1420 — `()` — and importing them back into new campaign instances.
+-  `test_import_preserves_document_content` function L1423-1444 — `()` — and importing them back into new campaign instances.
+-  `seed_campaign_with_homebrew` function L1447-1490 — `(conn: &mut SqliteConnection) -> String` — Seed a campaign with homebrew items, monsters, and spells for testing.
+-  `seed_campaign_with_detailed_character` function L1493-1571 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a character that has classes, inventory, and proficiencies.
+-  `test_homebrew_item_round_trip` function L1574-1626 — `()` — and importing them back into new campaign instances.
+-  `test_character_details_round_trip` function L1629-1677 — `()` — and importing them back into new campaign instances.
+-  `test_module_entities_round_trip` function L1680-1717 — `()` — and importing them back into new campaign instances.
+-  `test_import_preserves_module_document_associations` function L1720-1743 — `()` — and importing them back into new campaign instances.
+-  `test_export_import_empty_round_trip` function L1746-1768 — `()` — and importing them back into new campaign instances.
 
 #### crates/mimir-core/src/services/asset.rs
 
@@ -7095,23 +7465,24 @@
 
 - pub `ItemService` struct L14-16 — `{ conn: &'a mut SqliteConnection }` — Service for accessing item catalog data.
 - pub `new` function L20-22 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new item service.
-- pub `list_by_source` function L25-27 — `(&mut self, source: &str) -> ServiceResult<Vec<Item>>` — List all items from a specific source.
-- pub `list_all` function L30-32 — `(&mut self) -> ServiceResult<Vec<Item>>` — List all items (up to DEFAULT_QUERY_LIMIT).
--  `Entity` type L36 — `= Item` — Service layer for accessing item catalog data.
--  `Filter` type L37 — `= ItemFilter` — Service layer for accessing item catalog data.
--  `search` function L39-41 — `(&mut self, filter: &Self::Filter) -> ServiceResult<Vec<Self::Entity>>` — Service layer for accessing item catalog data.
--  `search_paginated` function L43-50 — `( &mut self, filter: &Self::Filter, limit: i64, offset: i64, ) -> ServiceResult<...` — Service layer for accessing item catalog data.
--  `get` function L52-54 — `(&mut self, id: i32) -> ServiceResult<Option<Self::Entity>>` — Service layer for accessing item catalog data.
--  `get_by_name_and_source` function L56-62 — `( &mut self, name: &str, source: &str, ) -> ServiceResult<Option<Self::Entity>>` — Service layer for accessing item catalog data.
--  `list_sources` function L64-66 — `(&mut self) -> ServiceResult<Vec<String>>` — Service layer for accessing item catalog data.
--  `count` function L68-70 — `(&mut self) -> ServiceResult<i64>` — Service layer for accessing item catalog data.
--  `count_by_source` function L72-74 — `(&mut self, source: &str) -> ServiceResult<i64>` — Service layer for accessing item catalog data.
--  `tests` module L78-164 — `-` — Service layer for accessing item catalog data.
--  `insert_test_items` function L84-100 — `(conn: &mut SqliteConnection)` — Service layer for accessing item catalog data.
--  `test_item_service_search` function L103-124 — `()` — Service layer for accessing item catalog data.
--  `test_item_service_get` function L127-138 — `()` — Service layer for accessing item catalog data.
--  `test_item_service_list_sources` function L141-151 — `()` — Service layer for accessing item catalog data.
--  `test_item_service_count` function L154-163 — `()` — Service layer for accessing item catalog data.
+- pub `list_weapon_names` function L25-27 — `(&mut self) -> ServiceResult<Vec<String>>` — List all weapon names from the catalog (item_type 'M' or 'R').
+- pub `list_by_source` function L30-32 — `(&mut self, source: &str) -> ServiceResult<Vec<Item>>` — List all items from a specific source.
+- pub `list_all` function L35-37 — `(&mut self) -> ServiceResult<Vec<Item>>` — List all items (up to DEFAULT_QUERY_LIMIT).
+-  `Entity` type L41 — `= Item` — Service layer for accessing item catalog data.
+-  `Filter` type L42 — `= ItemFilter` — Service layer for accessing item catalog data.
+-  `search` function L44-46 — `(&mut self, filter: &Self::Filter) -> ServiceResult<Vec<Self::Entity>>` — Service layer for accessing item catalog data.
+-  `search_paginated` function L48-55 — `( &mut self, filter: &Self::Filter, limit: i64, offset: i64, ) -> ServiceResult<...` — Service layer for accessing item catalog data.
+-  `get` function L57-59 — `(&mut self, id: i32) -> ServiceResult<Option<Self::Entity>>` — Service layer for accessing item catalog data.
+-  `get_by_name_and_source` function L61-67 — `( &mut self, name: &str, source: &str, ) -> ServiceResult<Option<Self::Entity>>` — Service layer for accessing item catalog data.
+-  `list_sources` function L69-71 — `(&mut self) -> ServiceResult<Vec<String>>` — Service layer for accessing item catalog data.
+-  `count` function L73-75 — `(&mut self) -> ServiceResult<i64>` — Service layer for accessing item catalog data.
+-  `count_by_source` function L77-79 — `(&mut self, source: &str) -> ServiceResult<i64>` — Service layer for accessing item catalog data.
+-  `tests` module L83-169 — `-` — Service layer for accessing item catalog data.
+-  `insert_test_items` function L89-105 — `(conn: &mut SqliteConnection)` — Service layer for accessing item catalog data.
+-  `test_item_service_search` function L108-129 — `()` — Service layer for accessing item catalog data.
+-  `test_item_service_get` function L132-143 — `()` — Service layer for accessing item catalog data.
+-  `test_item_service_list_sources` function L146-156 — `()` — Service layer for accessing item catalog data.
+-  `test_item_service_count` function L159-168 — `()` — Service layer for accessing item catalog data.
 
 #### crates/mimir-core/src/services/catalog/language.rs
 
@@ -7537,42 +7908,42 @@
 - pub `MimirHandler` struct L23-25 — `{ context: Arc<McpContext> }` — Mimir MCP Server Handler.
 - pub `new` function L29-34 — `() -> Result<Self, McpError>` — Create a new handler with initialized context.
 - pub `with_context` function L37-39 — `(context: Arc<McpContext>) -> Self` — Create a handler with an existing context.
--  `MimirHandler` type L27-244 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_tools` function L42-118 — `() -> Vec<Tool>` — Get the list of available tools.
--  `execute_tool` function L121-243 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
--  `MimirHandler` type L247-297 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_list_tools_request` function L248-259 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_call_tool_request` function L261-296 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tests` module L300-1272 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `EXPECTED_TOOLS` variable L306-380 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
--  `test_ctx` function L382-384 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_expected_tools_are_published` function L387-399 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `no_duplicate_tool_names` function L402-413 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `published_tools_match_expected_count` function L416-427 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `every_published_tool_has_a_route` function L430-448 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_tools_have_descriptions` function L451-460 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `call_ok` function L467-472 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
--  `call_err` function L475-480 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
--  `campaign_crud_lifecycle` function L485-537 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_campaign` function L542-557 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
--  `module_crud_lifecycle` function L560-612 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `document_crud_lifecycle` function L617-700 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_level_document` function L705-735 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_crud_lifecycle` function L740-795 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_filter_by_type` function L798-837 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `catalog_searches_return_empty_on_fresh_db` function L842-870 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tool_not_found_for_unknown_name` function L875-879 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_required_tools_fail_without_active_campaign` function L882-901 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `create_character_requires_name` function L904-919 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `delete_campaign_requires_id` function L922-927 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_monster_crud_lifecycle` function L932-995 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_spell_crud_lifecycle` function L1000-1055 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_item_crud_lifecycle` function L1060-1115 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_not_found_errors` function L1120-1149 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_name_and_data` function L1152-1191 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_get_update_delete_require_id` function L1194-1219 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_list_requires_active_campaign` function L1222-1241 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_active_campaign` function L1244-1271 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `MimirHandler` type L27-256 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_tools` function L42-121 — `() -> Vec<Tool>` — Get the list of available tools.
+-  `execute_tool` function L124-255 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
+-  `MimirHandler` type L259-309 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_list_tools_request` function L260-271 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_call_tool_request` function L273-308 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tests` module L312-1287 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `EXPECTED_TOOLS` variable L318-395 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
+-  `test_ctx` function L397-399 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_expected_tools_are_published` function L402-414 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `no_duplicate_tool_names` function L417-428 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `published_tools_match_expected_count` function L431-442 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `every_published_tool_has_a_route` function L445-463 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_tools_have_descriptions` function L466-475 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `call_ok` function L482-487 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
+-  `call_err` function L490-495 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
+-  `campaign_crud_lifecycle` function L500-552 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_campaign` function L557-572 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
+-  `module_crud_lifecycle` function L575-627 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `document_crud_lifecycle` function L632-715 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_level_document` function L720-750 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_crud_lifecycle` function L755-810 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_filter_by_type` function L813-852 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `catalog_searches_return_empty_on_fresh_db` function L857-885 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tool_not_found_for_unknown_name` function L890-894 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_required_tools_fail_without_active_campaign` function L897-916 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `create_character_requires_name` function L919-934 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `delete_campaign_requires_id` function L937-942 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_monster_crud_lifecycle` function L947-1010 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_spell_crud_lifecycle` function L1015-1070 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_item_crud_lifecycle` function L1075-1130 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_not_found_errors` function L1135-1164 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_name_and_data` function L1167-1206 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_get_update_delete_require_id` function L1209-1234 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_list_requires_active_campaign` function L1237-1256 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_active_campaign` function L1259-1286 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 
 #### crates/mimir-mcp/src/lib.rs
 
@@ -7657,26 +8028,32 @@
 
 #### crates/mimir-mcp/src/tools/character.rs
 
-- pub `list_characters_tool` function L22-43 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `get_character_tool` function L45-64 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `create_character_tool` function L66-94 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `edit_character_tool` function L96-139 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `delete_character_tool` function L141-157 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `add_item_to_character_tool` function L159-181 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `remove_item_from_character_tool` function L183-201 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `update_character_inventory_tool` function L203-224 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `get_character_inventory_tool` function L226-245 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `level_up_character_tool` function L247-281 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `list_characters` function L287-337 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `get_character` function L339-427 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `create_character` function L429-508 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `edit_character` function L510-655 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `delete_character` function L657-671 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `add_item_to_character` function L673-740 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `remove_item_from_character` function L742-756 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `update_character_inventory` function L758-783 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `get_character_inventory` function L785-827 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `level_up_character` function L829-931 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `list_characters_tool` function L23-44 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `get_character_tool` function L46-65 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `create_character_tool` function L67-95 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `edit_character_tool` function L97-140 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `delete_character_tool` function L142-158 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `add_item_to_character_tool` function L160-182 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `remove_item_from_character_tool` function L184-202 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `update_character_inventory_tool` function L204-225 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `get_character_inventory_tool` function L227-246 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `level_up_character_tool` function L248-282 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `add_character_spell_tool` function L284-314 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `remove_character_spell_tool` function L316-336 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `list_character_spells_tool` function L338-358 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `list_characters` function L364-414 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `get_character` function L416-504 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `create_character` function L506-585 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `edit_character` function L587-732 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `delete_character` function L734-748 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `add_item_to_character` function L750-817 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `remove_item_from_character` function L819-833 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `update_character_inventory` function L835-860 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `get_character_inventory` function L862-904 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `level_up_character` function L906-1008 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `add_character_spell` function L1010-1059 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `remove_character_spell` function L1061-1108 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `list_character_spells` function L1110-1154 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
 
 #### crates/mimir-mcp/src/tools/document.rs
 
@@ -7832,7 +8209,7 @@
 -  `build_preamble` function L335-381 — `(&self) -> String` — Build the document preamble (page setup, fonts, shared imports)
 -  `build_title_page` function L384-395 — `(&self) -> String` — Build the title page
 -  `build_toc` function L398-407 — `(&self) -> String` — Build the table of contents
--  `tests` module L503-598 — `-` — ```
+-  `tests` module L503-695 — `-` — ```
 -  `TestSection` struct L507-510 — `{ content: String, title: Option<String> }` — Simple test section that renders static content
 -  `TestSection` type L512-524 — `= TestSection` — ```
 -  `new` function L513-518 — `(content: &str) -> Self` — ```
@@ -7846,6 +8223,14 @@
 -  `test_build_typst_simple` function L568-577 — `()` — ```
 -  `test_build_typst_with_toc` function L580-589 — `()` — ```
 -  `test_escape_typst_string` function L592-597 — `()` — ```
+-  `test_escape_typst_string_backslash_and_quotes` function L600-602 — `()` — ```
+-  `test_build_typst_multiple_sections_ordered` function L605-624 — `()` — ```
+-  `test_build_typst_toc_with_multiple_titles` function L627-642 — `()` — ```
+-  `test_build_typst_sections_without_titles` function L645-653 — `()` — ```
+-  `test_build_typst_empty_builder` function L656-662 — `()` — ```
+-  `test_document_builder_title_page` function L665-670 — `()` — ```
+-  `test_build_typst_contains_page_setup` function L673-683 — `()` — ```
+-  `test_build_typst_page_break_between_sections` function L686-694 — `()` — ```
 
 #### crates/mimir-print/src/embedded_templates.rs
 
@@ -7919,7 +8304,7 @@
 - pub `parse_campaign_document` function L29-54 — `(markdown: &str) -> Result<ParsedDocument>` — Parse a campaign document from markdown with YAML frontmatter.
 - pub `markdown_to_typst` function L66-404 — `(markdown: &str) -> String` — Convert markdown text to Typst markup.
 -  `escape_for_typst_string` function L408-410 — `(text: &str) -> String` — Escape text for use inside a Typst string literal.
--  `tests` module L413-545 — `-` — and converting them to Typst markup for PDF rendering.
+-  `tests` module L413-614 — `-` — and converting them to Typst markup for PDF rendering.
 -  `test_parse_document_with_frontmatter` function L417-432 — `()` — and converting them to Typst markup for PDF rendering.
 -  `test_parse_document_without_frontmatter` function L435-440 — `()` — and converting them to Typst markup for PDF rendering.
 -  `test_markdown_headers` function L443-450 — `()` — and converting them to Typst markup for PDF rendering.
@@ -7933,6 +8318,14 @@
 -  `test_quotes_escaped_in_strings` function L521-530 — `()` — and converting them to Typst markup for PDF rendering.
 -  `test_markdown_blockquote` function L533-537 — `()` — and converting them to Typst markup for PDF rendering.
 -  `test_markdown_horizontal_rule` function L540-544 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_markdown_table` function L547-560 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_markdown_table_with_formatting` function L563-568 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_markdown_strikethrough` function L571-575 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_markdown_nested_list` function L578-584 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_markdown_html_comment` function L587-592 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_markdown_image` function L595-599 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_empty_markdown` function L602-605 — `()` — and converting them to Typst markup for PDF rendering.
+-  `test_backslash_escaped_in_string_literal` function L608-613 — `()` — and converting them to Typst markup for PDF rendering.
 
 #### crates/mimir-print/src/service.rs
 
@@ -8010,7 +8403,7 @@
 -  `tertiary_label` function L248-262 — `(title: &str, content: &str, markup: bool) -> String` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `toc_title` function L783-785 — `(&self) -> Option<String>` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `page_break_before` function L787-789 — `(&self) -> bool` — Shows basic info, ability scores, classes, and roleplay elements.
--  `tests` module L793-1056 — `-` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `tests` module L793-1272 — `-` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `test_character` function L796-882 — `() -> CharacterData` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `test_spellcaster` function L884-963 — `() -> CharacterData` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `test_total_level` function L966-970 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
@@ -8023,6 +8416,21 @@
 -  `test_non_caster_no_spell_section` function L1022-1029 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `test_all_18_skills_rendered` function L1032-1043 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
 -  `test_actions_reference` function L1046-1055 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_npc_renders_badge_and_info` function L1058-1076 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_weapon_attack_bonus_str_based` function L1079-1088 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_finesse_weapon_uses_better_mod` function L1091-1110 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_ranged_weapon_uses_dex` function L1113-1132 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_expertise_renders_diamond` function L1135-1146 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_multiclass_class_string_with_subclass` function L1149-1154 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_no_class_string` function L1157-1162 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_currency_renders_all_denominations` function L1165-1176 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_inventory_renders_equipped_and_attuned` function L1179-1188 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_personality_renders_all_four` function L1191-1203 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_proficiency_bonus_by_level` function L1206-1230 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_passive_perception_with_proficiency` function L1233-1242 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_spellcaster_attack_bonus_and_dc` function L1245-1253 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_modifier_edge_cases` function L1256-1264 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
+-  `test_modifier_str_formatting` function L1267-1271 — `()` — Shows basic info, ability scores, classes, and roleplay elements.
 
 #### crates/mimir-print/src/sections/character_battle_card.rs
 
@@ -8048,13 +8456,19 @@
 -  `render_individual_boxes` function L439-454 — `(hp: i32) -> String` — Render individual HP boxes (1-20 HP)
 -  `render_fives_and_ones` function L457-484 — `(hp: i32) -> String` — Render 5-HP boxes plus 1-HP boxes (for 21-100 HP)
 -  `render_tens_and_ones` function L487-514 — `(hp: i32) -> String` — Render 10-HP boxes plus 1-HP boxes (for 101+ HP)
--  `tests` module L517-651 — `-` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `tests` module L517-729 — `-` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 -  `test_character` function L521-598 — `() -> CharacterData` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 -  `test_modifier` function L601-605 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 -  `test_battle_card_empty` function L608-611 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 -  `test_battle_card_single` function L614-621 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 -  `test_battle_card_renders` function L624-636 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 -  `test_npc_card_colors` function L639-650 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `test_battle_card_shows_core_stats` function L653-665 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `test_battle_card_shows_equipped_weapons` function L668-675 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `test_battle_card_class_info` function L678-686 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `test_battle_card_multiple_characters` function L689-699 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `test_battle_card_ability_modifiers` function L702-713 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
+-  `test_battle_card_footer_pc_vs_npc` function L716-728 — `()` — Works for both PCs and NPCs - shows AC, HP, speed, attacks, saves, skills, etc.
 
 #### crates/mimir-print/src/sections/equipment_cards.rs
 
@@ -8075,7 +8489,7 @@
 -  `format_damage_type` function L401-418 — `(dt: &str) -> &str` — Format damage type abbreviation to full name
 -  `format_property` function L421-437 — `(prop: &str) -> &'static str` — Format property abbreviation to full name
 -  `escape_typst` function L440-453 — `(s: &str) -> String` — Escape special Typst characters
--  `tests` module L527-639 — `-` — equipment icons to distinguish from spell cards.
+-  `tests` module L527-998 — `-` — equipment icons to distinguish from spell cards.
 -  `test_equipment_cards_empty` function L532-535 — `()` — equipment icons to distinguish from spell cards.
 -  `test_equipment_cards_with_items` function L538-548 — `()` — equipment icons to distinguish from spell cards.
 -  `test_is_card_worthy_weapon` function L551-565 — `()` — equipment icons to distinguish from spell cards.
@@ -8086,6 +8500,33 @@
 -  `test_format_damage_type` function L617-622 — `()` — equipment icons to distinguish from spell cards.
 -  `test_format_property` function L625-629 — `()` — equipment icons to distinguish from spell cards.
 -  `test_get_icon` function L632-638 — `()` — equipment icons to distinguish from spell cards.
+-  `test_get_icon_all_types` function L641-652 — `()` — equipment icons to distinguish from spell cards.
+-  `test_get_type_name_all` function L655-671 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_rarity` function L674-684 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_weapon_with_damage` function L687-706 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_armor_with_ac` function L709-724 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_magic_item_with_rarity` function L727-744 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_ranged_weapon_with_range` function L747-768 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_attunement_with_requirement` function L771-781 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_missing_type_defaults_to_gear` function L784-793 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_description_truncation` function L796-807 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_notes_as_description` function L810-819 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_grid_layout` function L822-833 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_cut_lines` function L836-843 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_no_cut_lines` function L846-853 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_empty_returns_comment` function L856-862 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_page_break_after_nine` function L865-874 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_icon_definitions` function L877-888 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_damage_type_all` function L891-902 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_property_all` function L905-916 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_attunement` function L919-927 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_entries` function L930-938 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_pipe_type` function L941-949 — `()` — equipment icons to distinguish from spell cards.
+-  `test_page_break_before` function L952-955 — `()` — equipment icons to distinguish from spell cards.
+-  `test_from_json` function L958-965 — `()` — equipment icons to distinguish from spell cards.
+-  `test_from_json_non_array` function L968-972 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_damage_single_no_type` function L975-984 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_no_damage` function L987-997 — `()` — equipment icons to distinguish from spell cards.
 
 #### crates/mimir-print/src/sections/map.rs
 
@@ -8116,12 +8557,20 @@
 -  `page_margin` function L519-521 — `(&self) -> Option<f32>` — 2.
 -  `sanitize_filename` function L525-529 — `(name: &str) -> String` — Sanitize a filename for use in paths
 -  `escape_typst_string` function L532-539 — `(s: &str) -> String` — Escape special characters for Typst strings
--  `tests` module L542-649 — `-` — 2.
+-  `tests` module L542-732 — `-` — 2.
 -  `test_map` function L546-557 — `() -> RenderMap` — 2.
 -  `test_sanitize_filename` function L560-564 — `()` — 2.
 -  `test_map_preview_toc_title` function L567-573 — `()` — 2.
 -  `create_test_tile_image` function L576-586 — `() -> Vec<u8>` — Create a minimal PNG image for testing
--  `test_tiled_map_one_page_per_tile` function L589-648 — `()` — 2.
+-  `test_escape_typst_string` function L589-594 — `()` — 2.
+-  `test_tiled_map_toc_title` function L597-600 — `()` — 2.
+-  `test_tiled_map_page_break_before` function L603-606 — `()` — 2.
+-  `test_tiled_map_page_margin` function L609-612 — `()` — 2.
+-  `test_tiled_map_custom_margin` function L615-619 — `()` — 2.
+-  `test_assembly_guide_labels` function L622-637 — `()` — 2.
+-  `test_map_preview_from_rendered` function L640-644 — `()` — 2.
+-  `test_tiled_map_from_rendered` function L647-669 — `()` — 2.
+-  `test_tiled_map_one_page_per_tile` function L672-731 — `()` — 2.
 
 #### crates/mimir-print/src/sections/markdown.rs
 
@@ -8135,10 +8584,18 @@
 -  `MarkdownSection` type L75-83 — `impl Renderable for MarkdownSection` — Markdown document section
 -  `to_typst` function L76-78 — `(&self, _ctx: &RenderContext) -> Result<String>` — Markdown document section
 -  `toc_title` function L80-82 — `(&self) -> Option<String>` — Markdown document section
--  `tests` module L86-118 — `-` — Markdown document section
+-  `tests` module L86-182 — `-` — Markdown document section
 -  `test_from_markdown_with_frontmatter` function L90-104 — `()` — Markdown document section
 -  `test_from_content` function L107-111 — `()` — Markdown document section
 -  `test_toc_title` function L114-117 — `()` — Markdown document section
+-  `test_toc_title_none_without_title` function L120-123 — `()` — Markdown document section
+-  `test_with_title_overrides_frontmatter` function L126-130 — `()` — Markdown document section
+-  `test_doc_type_extracted` function L133-137 — `()` — Markdown document section
+-  `test_doc_type_none_when_missing` function L140-144 — `()` — Markdown document section
+-  `test_to_typst_returns_content` function L147-152 — `()` — Markdown document section
+-  `test_markdown_with_bold_italic` function L155-162 — `()` — Markdown document section
+-  `test_markdown_with_list` function L165-174 — `()` — Markdown document section
+-  `test_page_break_before_default` function L177-181 — `()` — Markdown document section
 
 #### crates/mimir-print/src/sections/mod.rs
 
@@ -8193,7 +8650,7 @@
 -  `regex_replace` function L1091-1097 — `(text: &str, pattern: &str, replacement: &str) -> String` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `modifier` function L1099-1106 — `(score: i64) -> String` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `escape_typst` function L1108-1121 — `(s: &str) -> String` — Shows full stat blocks including attacks, resistances, and abilities.
--  `tests` module L1124-1252 — `-` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `tests` module L1124-1683 — `-` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `test_monster_cards_empty` function L1129-1132 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `test_monster_cards_with_monsters` function L1135-1144 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `test_from_json` function L1147-1154 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
@@ -8205,6 +8662,41 @@
 -  `test_render_fives_and_ones` function L1210-1220 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `test_render_tens_and_ones` function L1223-1233 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
 -  `test_render_hp_tracker_tier_selection` function L1236-1251 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_goblin` function L1255-1283 — `() -> Value` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_dragon` function L1285-1316 — `() -> Value` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_card_basic_monster` function L1319-1348 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_card_senses_languages` function L1351-1360 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_card_actions_and_traits` function L1363-1376 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_card_damage_immunities` function L1379-1385 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_card_saves` function L1388-1393 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_card_multiple_speeds` function L1396-1403 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_foldable_card_with_lots_of_content` function L1406-1430 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_back_card_exists_for_complex_monster` function L1433-1459 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_render_back_card_none_for_simple_monster` function L1462-1466 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_non_foldable_has_no_fold_indicator` function L1469-1475 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_to_typst_grid_layout` function L1478-1491 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_to_typst_cut_lines` function L1494-1501 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_to_typst_no_cut_lines` function L1504-1511 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_to_typst_multiple_monsters` function L1514-1523 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_to_typst_page_break_after_four` function L1526-1537 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_size_name_mapping` function L1540-1550 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_ac_full_simple` function L1553-1556 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_ac_full_with_source` function L1559-1562 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_hp_full_with_formula` function L1565-1568 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_hp_full_simple` function L1571-1574 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_speed_with_fly_hover` function L1577-1581 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_cr_from_object` function L1584-1587 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_creature_type_object` function L1590-1593 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_creature_type_string` function L1596-1599 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_alignment_unaligned` function L1602-1605 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_alignment_any` function L1608-1611 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_escape_typst` function L1614-1618 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_extract_entries_text_nested` function L1621-1630 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_strip_5etools_tags_comprehensive` function L1633-1641 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_resistances_block_empty` function L1644-1647 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_resistances_block_with_content` function L1650-1660 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_condition_immunities_string` function L1663-1668 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
+-  `test_section_colors` function L1671-1682 — `()` — Shows full stat blocks including attacks, resistances, and abilities.
 
 #### crates/mimir-print/src/sections/spell_cards.rs
 
@@ -8253,11 +8745,31 @@
 -  `sanitize_filename` function L296-306 — `(name: &str) -> String` — Sanitize a string for use as filename
 -  `truncate_name` function L309-315 — `(name: &str, max_len: usize) -> String` — Truncate name to max length
 -  `detect_image_format` function L319-339 — `(bytes: &[u8]) -> &'static str` — Detect image format from magic bytes
--  `tests` module L342-383 — `-` — for use on physical battle maps.
+-  `tests` module L342-586 — `-` — for use on physical battle maps.
 -  `test_size_multiplier` function L346-355 — `()` — for use on physical battle maps.
 -  `test_truncate_name` function L358-361 — `()` — for use on physical battle maps.
 -  `test_sanitize_filename` function L364-367 — `()` — for use on physical battle maps.
 -  `test_detect_image_format` function L370-382 — `()` — for use on physical battle maps.
+-  `test_size_multiplier_all_sizes` function L387-401 — `()` — for use on physical battle maps.
+-  `test_token_type_colors` function L406-412 — `()` — for use on physical battle maps.
+-  `test_cutout_token_with_quantity` function L417-422 — `()` — for use on physical battle maps.
+-  `test_cutout_token_with_image` function L425-430 — `()` — for use on physical battle maps.
+-  `test_cutout_token_default_quantity` function L433-437 — `()` — for use on physical battle maps.
+-  `test_section_with_cell_size` function L440-443 — `()` — for use on physical battle maps.
+-  `test_section_with_cut_lines` function L446-449 — `()` — for use on physical battle maps.
+-  `test_empty_tokens_renders_comment` function L454-459 — `()` — for use on physical battle maps.
+-  `test_toc_title` function L462-465 — `()` — for use on physical battle maps.
+-  `test_render_token_fallback_circle` function L468-479 — `()` — for use on physical battle maps.
+-  `test_render_token_name_truncation` function L482-490 — `()` — for use on physical battle maps.
+-  `test_render_groups_by_size` function L493-511 — `()` — for use on physical battle maps.
+-  `test_render_respects_quantity` function L514-523 — `()` — for use on physical battle maps.
+-  `test_render_cut_lines_dashed` function L526-533 — `()` — for use on physical battle maps.
+-  `test_render_no_cut_lines` function L536-548 — `()` — for use on physical battle maps.
+-  `test_detect_image_format_unknown` function L551-554 — `()` — for use on physical battle maps.
+-  `test_sanitize_filename_special_chars` function L557-561 — `()` — for use on physical battle maps.
+-  `test_truncate_name_exact_length` function L564-567 — `()` — for use on physical battle maps.
+-  `test_render_token_npc_color` function L570-576 — `()` — for use on physical battle maps.
+-  `test_render_token_pc_color` function L579-585 — `()` — for use on physical battle maps.
 
 #### crates/mimir-print/src/sections/trap_cards.rs
 
@@ -8284,12 +8796,43 @@
 -  `strip_5etools_tags` function L780-808 — `(text: &str) -> String` — Strip 5etools formatting tags and convert to plain text
 -  `regex_replace` function L810-816 — `(text: &str, pattern: &str, replacement: &str) -> String` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `escape_typst` function L819-832 — `(s: &str) -> String` — Escape special Typst characters
--  `tests` module L835-886 — `-` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `tests` module L835-1221 — `-` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_trap_cards_empty` function L840-843 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_trap_cards_with_traps` function L846-854 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_from_json` function L857-864 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_strip_5etools_tags` function L867-871 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_half_page_format` function L874-885 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_mechanical` function L890-894 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_magical` function L897-901 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_wilderness` function L904-908 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_weather` function L911-915 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_environmental` function L918-922 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_hazard` function L925-929 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_default` function L932-935 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_type_alternate_key` function L938-941 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_pit_trap` function L945-967 — `() -> Value` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_fire_glyph` function L969-989 — `() -> Value` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_card_trap_name_and_type` function L992-998 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_card_threat_badge_moderate` function L1001-1008 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_card_threat_badge_deadly` function L1011-1017 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_card_dc_block` function L1020-1026 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_card_entries` function L1029-1036 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_card_source_footer` function L1039-1044 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_cut_lines_enabled` function L1047-1054 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_cut_lines_disabled` function L1057-1064 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_multiple_traps_grid` function L1067-1077 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_dc_block_empty_when_no_dcs` function L1080-1083 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_dc_extracted_from_entry_text` function L1086-1094 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_abbreviate_ability` function L1097-1105 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_trap_strip_5etools_skill_tag` function L1108-1112 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_trap_entries_with_list` function L1115-1131 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_render_trap_entries_with_table` function L1134-1155 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_simple_back_card_none` function L1158-1163 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_threat_badge_simple` function L1166-1175 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_threat_badge_dangerous` function L1178-1187 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_no_threat_badge` function L1190-1201 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_page_break_with_five_traps` function L1204-1214 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
+-  `test_escape_typst_trap` function L1217-1220 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 
 ### docs/book
 

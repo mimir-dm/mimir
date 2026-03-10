@@ -34,11 +34,14 @@ level_up_character(
   class_name: "Warlock",
   hp_method: "average",
   asi_type: "asi",
-  ability_increases: [0, 0, 1, 0, 0, 1]
+  asi_ability1: "Constitution",
+  asi_increase1: 1,
+  asi_ability2: "Charisma",
+  asi_increase2: 1
 )
 ```
 
-The array is `[STR, DEX, CON, INT, WIS, CHA]` — each value is how much to increase.
+Use `asi_ability1`/`asi_increase1` for the first increase and optionally `asi_ability2`/`asi_increase2` for a second. Total increases must equal 2.
 
 ## Step 4: Level Up with Feat
 

@@ -648,4 +648,82 @@ mod tests {
         // NPC should have blue header
         assert!(typst.contains("dbeafe"));
     }
+
+    #[test]
+    fn test_battle_card_shows_core_stats() {
+        let char = test_character();
+        let section = CharacterBattleCardSection::from_single(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // Core stats rendered using estimate_ac/estimate_hp
+        assert!(typst.contains("*AC*"));
+        assert!(typst.contains("*HP*"));
+        assert!(typst.contains("Speed"));
+        assert!(typst.contains("Prof"));
+        assert!(typst.contains("Init"));
+    }
+
+    #[test]
+    fn test_battle_card_shows_equipped_weapons() {
+        let char = test_character();
+        let section = CharacterBattleCardSection::from_single(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Longsword"));
+    }
+
+    #[test]
+    fn test_battle_card_class_info() {
+        let char = test_character();
+        let section = CharacterBattleCardSection::from_single(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Fighter"));
+        assert!(typst.contains("Champion"));
+    }
+
+    #[test]
+    fn test_battle_card_multiple_characters() {
+        let mut char2 = test_character();
+        char2.name = "Legolas".to_string();
+
+        let section = CharacterBattleCardSection::new(vec![test_character(), char2]);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Thorin"));
+        assert!(typst.contains("Legolas"));
+    }
+
+    #[test]
+    fn test_battle_card_ability_modifiers() {
+        let char = test_character();
+        let section = CharacterBattleCardSection::from_single(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // STR 16 → +3, DEX 12 → +1, CON 16 → +3, INT 10 → +0, WIS 12 → +1, CHA 8 → -1
+        assert!(typst.contains("+3")); // STR/CON mod
+        assert!(typst.contains("+1")); // DEX/WIS mod
+        assert!(typst.contains("+0")); // INT mod
+        assert!(typst.contains("-1")); // CHA mod
+    }
+
+    #[test]
+    fn test_battle_card_footer_pc_vs_npc() {
+        let pc = test_character();
+        let section = CharacterBattleCardSection::from_single(pc);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("Player Character"));
+
+        let mut npc = test_character();
+        npc.is_npc = true;
+        let section = CharacterBattleCardSection::from_single(npc);
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("NPC"));
+    }
 }

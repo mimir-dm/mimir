@@ -3,7 +3,9 @@
 //! Tauri commands for character management (PCs and NPCs).
 
 use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{CharacterInventory, CharacterResponse};
+use mimir_core::models::campaign::{
+    CharacterInventory, CharacterResponse, CharacterSpell, NewCharacterSpell, UpdateCharacterSpell,
+};
 use mimir_core::services::{
     AddInventoryInput, CharacterService, CreateCharacterInput, LevelUpRequest, LevelUpResult,
     UpdateCharacterInput,
@@ -576,3 +578,145 @@ pub fn set_character_sources(
     ApiResponse::ok(source_codes)
 }
 
+// =============================================================================
+// Spell Commands
+// =============================================================================
+
+/// List all spells a character knows.
+#[tauri::command]
+pub fn list_character_spells(
+    state: State<'_, AppState>,
+    character_id: String,
+) -> ApiResponse<Vec<CharacterSpell>> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    match dal::list_character_spells(&mut db, &character_id) {
+        Ok(spells) => ApiResponse::ok(spells),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Add a spell to a character's known spells.
+#[tauri::command]
+pub fn add_character_spell(
+    state: State<'_, AppState>,
+    character_id: String,
+    spell_name: String,
+    spell_source: String,
+    source_class: String,
+    prepared: Option<bool>,
+) -> ApiResponse<CharacterSpell> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    // Check if character already knows this spell from the same class
+    if let Ok(Some(_)) =
+        dal::find_character_spell_by_name(&mut db, &character_id, &spell_name, &source_class)
+    {
+        return ApiResponse::err(format!(
+            "Character already knows {} from {}",
+            spell_name, source_class
+        ));
+    }
+
+    let id = uuid::Uuid::new_v4().to_string();
+    let mut spell = NewCharacterSpell::new(&id, &character_id, &spell_name, &spell_source, &source_class);
+    if prepared.unwrap_or(false) {
+        spell = spell.prepared();
+    }
+
+    match dal::insert_character_spell(&mut db, &spell) {
+        Ok(_) => ApiResponse::ok(CharacterSpell {
+            id,
+            character_id,
+            spell_name,
+            spell_source,
+            source_class,
+            prepared: if prepared.unwrap_or(false) { 1 } else { 0 },
+        }),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Remove a spell from a character's known spells.
+#[tauri::command]
+pub fn remove_character_spell(
+    state: State<'_, AppState>,
+    character_id: String,
+    spell_name: String,
+    source_class: Option<String>,
+) -> ApiResponse<()> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    if let Some(class) = source_class {
+        // Remove specific class's version
+        match dal::find_character_spell_by_name(&mut db, &character_id, &spell_name, &class) {
+            Ok(Some(spell)) => match dal::delete_character_spell(&mut db, &spell.id) {
+                Ok(_) => ApiResponse::ok(()),
+                Err(e) => ApiResponse::err(e.to_string()),
+            },
+            Ok(None) => ApiResponse::err(format!(
+                "Character doesn't know {} from {}",
+                spell_name, class
+            )),
+            Err(e) => ApiResponse::err(e.to_string()),
+        }
+    } else {
+        // Remove all instances of this spell (any class)
+        let spells = match dal::list_character_spells(&mut db, &character_id) {
+            Ok(s) => s,
+            Err(e) => return ApiResponse::err(e.to_string()),
+        };
+        let matching: Vec<_> = spells
+            .iter()
+            .filter(|s| s.spell_name.to_lowercase() == spell_name.to_lowercase())
+            .collect();
+        if matching.is_empty() {
+            return ApiResponse::err(format!("Character doesn't know {}", spell_name));
+        }
+        for spell in matching {
+            if let Err(e) = dal::delete_character_spell(&mut db, &spell.id) {
+                return ApiResponse::err(e.to_string());
+            }
+        }
+        ApiResponse::ok(())
+    }
+}
+
+/// Toggle a spell's prepared status.
+#[tauri::command]
+pub fn toggle_spell_prepared(
+    state: State<'_, AppState>,
+    spell_id: String,
+) -> ApiResponse<CharacterSpell> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    // Get current state
+    let spell = match dal::get_character_spell_optional(&mut db, &spell_id) {
+        Ok(Some(s)) => s,
+        Ok(None) => return ApiResponse::err(format!("Spell entry not found: {}", spell_id)),
+        Err(e) => return ApiResponse::err(e.to_string()),
+    };
+
+    let new_prepared = !spell.is_prepared();
+    let update = UpdateCharacterSpell::set_prepared(new_prepared);
+
+    match dal::update_character_spell(&mut db, &spell_id, &update) {
+        Ok(_) => ApiResponse::ok(CharacterSpell {
+            prepared: if new_prepared { 1 } else { 0 },
+            ..spell
+        }),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}

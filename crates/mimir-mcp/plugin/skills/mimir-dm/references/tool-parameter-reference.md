@@ -64,10 +64,17 @@ Example: `[16, 12, 14, 10, 13, 11]`
 
 Example: `[0, 0, 0, 50, 0]` (50 gold)
 
-### Ability Increases (Level Up)
-`ability_increases: [STR, DEX, CON, INT, WIS, CHA]`
+### Ability Increases (Level Up — MCP tool)
 
-Each value is the amount to increase. Example: `[0, 0, 1, 0, 0, 1]` (+1 CON, +1 CHA)
+The MCP `level_up_character` tool uses **individual parameters**, not an array:
+- `asi_ability1` — First ability to increase (e.g., "Constitution")
+- `asi_increase1` — Amount for first ability (1 or 2)
+- `asi_ability2` — Second ability to increase (optional)
+- `asi_increase2` — Amount for second ability
+
+Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi_ability2: "Charisma", asi_increase2: 1`
+
+> **Note**: The Tauri frontend command uses a `[STR, DEX, CON, INT, WIS, CHA]` array format instead. The MCP tool uses the named parameters above.
 
 ## Enum Values
 
@@ -152,6 +159,25 @@ Each value is the amount to increase. Example: `[0, 0, 1, 0, 0, 1]` (+1 CON, +1 
 
 ### update_homebrew_* tools
 All update tools accept the same fields as their create counterparts plus `id` (required). Only fields you provide will be updated.
+
+## Character Spell Tools
+
+### add_character_spell
+- `character_id` (required) — The character's ID
+- `spell_name` (required) — Spell name (e.g., "Fireball")
+- `spell_source` (required) — Source book abbreviation (e.g., "PHB", "XGE") or "HB" for homebrew
+- `source_class` (required) — Class that grants this spell (e.g., "Wizard", "Cleric")
+- `prepared` — Whether the spell starts prepared (default: false)
+
+### remove_character_spell
+- `character_id` (required) — The character's ID
+- `spell_name` (required) — Name of the spell to remove
+- `source_class` — Class that granted the spell. If omitted, removes all instances of the spell.
+
+### list_character_spells
+- `character_id` (required) — The character's ID
+- `source_class` — Filter by granting class (e.g., "Wizard")
+- `prepared_only` — Only return prepared spells (default: false)
 
 ## Campaign Management Tools
 

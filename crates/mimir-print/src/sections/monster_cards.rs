@@ -1249,4 +1249,435 @@ mod tests {
         assert!(result.contains("[10]"));
         assert!(!result.contains("[5]"));
     }
+
+    // === Full card rendering tests ===
+
+    fn test_goblin() -> Value {
+        json!({
+            "name": "Goblin",
+            "source": "MM",
+            "size": ["S"],
+            "type": "humanoid",
+            "alignment": ["N", "E"],
+            "ac": [{"ac": 15, "from": ["{@item leather armor|phb}", "{@item shield|phb}"]}],
+            "hp": {"average": 7, "formula": "2d6"},
+            "speed": {"walk": 30},
+            "str": 8, "dex": 14, "con": 10, "int": 10, "wis": 8, "cha": 8,
+            "cr": "1/4",
+            "passive": 9,
+            "senses": ["darkvision 60 ft."],
+            "languages": ["Common", "Goblin"],
+            "action": [
+                {
+                    "name": "Scimitar",
+                    "entries": ["{@atk mw} {@hit 4} to hit, reach 5 ft., one target. {@damage 1d6+2} slashing damage."]
+                }
+            ],
+            "trait": [
+                {
+                    "name": "Nimble Escape",
+                    "entries": ["The goblin can take the Disengage or Hide action as a bonus action on each of its turns."]
+                }
+            ]
+        })
+    }
+
+    fn test_dragon() -> Value {
+        json!({
+            "name": "Adult Red Dragon",
+            "source": "MM",
+            "size": ["H"],
+            "type": "dragon",
+            "alignment": ["C", "E"],
+            "ac": [{"ac": 19, "from": ["natural armor"]}],
+            "hp": {"average": 256, "formula": "19d12+133"},
+            "speed": {"walk": 40, "climb": 40, "fly": 80},
+            "str": 27, "dex": 10, "con": 25, "int": 16, "wis": 13, "cha": 21,
+            "cr": "17",
+            "passive": 23,
+            "save": {"dex": "+6", "con": "+13", "wis": "+7", "cha": "+11"},
+            "senses": ["blindsight 60 ft.", "darkvision 120 ft."],
+            "languages": ["Common", "Draconic"],
+            "damageImmunities": ["fire"],
+            "trait": [
+                {"name": "Legendary Resistance (3/Day)", "entries": ["If the dragon fails a saving throw, it can choose to succeed instead."]}
+            ],
+            "action": [
+                {"name": "Multiattack", "entries": ["The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws."]},
+                {"name": "Bite", "entries": ["{@atk mw} {@hit 14} to hit, reach 10 ft., one target. {@damage 2d10+8} piercing damage plus {@damage 2d6} fire damage."]},
+                {"name": "Fire Breath (Recharge 5-6)", "entries": ["The dragon exhales fire in a 60-foot cone. Each creature in that area must make a {@dc 21} Dexterity saving throw, taking {@damage 18d6} fire damage on a failed save, or half as much on a successful one."]}
+            ],
+            "legendary": [
+                {"name": "Detect", "entries": ["The dragon makes a Wisdom (Perception) check."]},
+                {"name": "Tail Attack", "entries": ["{@atk mw} {@hit 14} to hit, reach 15 ft., one target. {@damage 2d8+8} bludgeoning damage."]},
+                {"name": "Wing Attack (Costs 2 Actions)", "entries": ["The dragon beats its wings. Each creature within 10 feet must succeed on a {@dc 22} Dexterity saving throw or take {@damage 2d6+8} bludgeoning damage and be knocked prone."]}
+            ]
+        })
+    }
+
+    #[test]
+    fn test_render_card_basic_monster() {
+        let goblin = test_goblin();
+        let card = MonsterCardSection::render_card(&goblin);
+
+        // Name and type info
+        assert!(card.contains("Goblin"));
+        assert!(card.contains("Small"));
+        assert!(card.contains("humanoid"));
+        assert!(card.contains("neutral evil"));
+
+        // CR
+        assert!(card.contains("CR 1/4"));
+
+        // Core stats
+        assert!(card.contains("*AC*"));
+        assert!(card.contains("15"));
+        assert!(card.contains("*HP*"));
+        assert!(card.contains("7 (2d6)"));
+        assert!(card.contains("*PP*"));
+        assert!(card.contains("9"));
+
+        // Speed
+        assert!(card.contains("30 ft."));
+
+        // Ability scores
+        assert!(card.contains("*STR*"));
+        assert!(card.contains("8 (-1)"));
+        assert!(card.contains("*DEX*"));
+        assert!(card.contains("14 (+2)"));
+    }
+
+    #[test]
+    fn test_render_card_senses_languages() {
+        let goblin = test_goblin();
+        let card = MonsterCardSection::render_card(&goblin);
+
+        assert!(card.contains("*Senses*"));
+        assert!(card.contains("darkvision 60 ft."));
+        assert!(card.contains("*Languages*"));
+        assert!(card.contains("Common"));
+        assert!(card.contains("Goblin"));
+    }
+
+    #[test]
+    fn test_render_card_actions_and_traits() {
+        let goblin = test_goblin();
+        let card = MonsterCardSection::render_card(&goblin);
+
+        // Trait
+        assert!(card.contains("Nimble Escape"));
+        assert!(card.contains("Disengage or Hide"));
+
+        // Action with 5etools tags stripped
+        assert!(card.contains("Scimitar"));
+        assert!(card.contains("Melee Weapon Attack:"));
+        assert!(card.contains("+4"));
+        assert!(card.contains("1d6+2"));
+    }
+
+    #[test]
+    fn test_render_card_damage_immunities() {
+        let dragon = test_dragon();
+        let card = MonsterCardSection::render_card(&dragon);
+
+        assert!(card.contains("*Immune*"));
+        assert!(card.contains("fire"));
+    }
+
+    #[test]
+    fn test_render_card_saves() {
+        let dragon = test_dragon();
+        let card = MonsterCardSection::render_card(&dragon);
+
+        assert!(card.contains("*Saves*"));
+    }
+
+    #[test]
+    fn test_render_card_multiple_speeds() {
+        let dragon = test_dragon();
+        let card = MonsterCardSection::render_card(&dragon);
+
+        assert!(card.contains("40 ft."));
+        assert!(card.contains("climb 40 ft."));
+        assert!(card.contains("fly 80 ft."));
+    }
+
+    #[test]
+    fn test_foldable_card_with_lots_of_content() {
+        // Create a monster with enough content to exceed SINGLE_CARD_BUDGET (1200 chars)
+        let long_desc = "A".repeat(400);
+        let monster = json!({
+            "name": "Complex Monster",
+            "source": "MM",
+            "size": ["L"],
+            "type": "monstrosity",
+            "trait": [
+                {"name": "Trait 1", "entries": [&long_desc]},
+                {"name": "Trait 2", "entries": [&long_desc]}
+            ],
+            "action": [
+                {"name": "Action 1", "entries": [&long_desc]},
+                {"name": "Action 2", "entries": [&long_desc]}
+            ],
+            "legendary": [
+                {"name": "Legendary 1", "entries": [&long_desc]}
+            ]
+        });
+        let layout = plan_card_layout(&monster);
+
+        assert!(layout.is_foldable);
+        assert!(!layout.back_sections.is_empty());
+    }
+
+    #[test]
+    fn test_render_back_card_exists_for_complex_monster() {
+        let long_desc = "A".repeat(400);
+        let monster = json!({
+            "name": "Complex Monster",
+            "source": "MM",
+            "size": ["L"],
+            "type": "monstrosity",
+            "trait": [
+                {"name": "Trait 1", "entries": [&long_desc]},
+                {"name": "Trait 2", "entries": [&long_desc]}
+            ],
+            "action": [
+                {"name": "Action 1", "entries": [&long_desc]},
+                {"name": "Action 2", "entries": [&long_desc]}
+            ],
+            "legendary": [
+                {"name": "Legendary 1", "entries": [&long_desc]}
+            ]
+        });
+        let back = MonsterCardSection::render_back_card(&monster);
+        assert!(back.is_some());
+
+        let back_content = back.unwrap();
+        assert!(back_content.contains("Complex Monster"));
+        assert!(back_content.contains("(continued)"));
+        assert!(back_content.contains("fold"));
+    }
+
+    #[test]
+    fn test_render_back_card_none_for_simple_monster() {
+        let goblin = test_goblin();
+        let back = MonsterCardSection::render_back_card(&goblin);
+        assert!(back.is_none());
+    }
+
+    #[test]
+    fn test_non_foldable_has_no_fold_indicator() {
+        let goblin = test_goblin();
+        let card = MonsterCardSection::render_card(&goblin);
+
+        // Simple card should NOT have fold indicator
+        assert!(!card.contains("continued"));
+    }
+
+    #[test]
+    fn test_to_typst_grid_layout() {
+        let monsters = vec![test_goblin()];
+        let section = MonsterCardSection::new(monsters);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // 2x2 grid
+        assert!(typst.contains("columns: (3.875in,) * 2"));
+        assert!(typst.contains("rows: (5.125in,) * 2"));
+        assert!(typst.contains("#grid("));
+
+        // One monster = 3 empty slots filled
+        assert_eq!(typst.matches("box(width: 3.875in, height: 5.125in)").count(), 3);
+    }
+
+    #[test]
+    fn test_to_typst_cut_lines() {
+        let monsters = vec![test_goblin()];
+        let section = MonsterCardSection::new(monsters);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("Cut along card borders"));
+    }
+
+    #[test]
+    fn test_to_typst_no_cut_lines() {
+        let monsters = vec![test_goblin()];
+        let section = MonsterCardSection::new(monsters).with_cut_lines(false);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(!typst.contains("Cut along card borders"));
+    }
+
+    #[test]
+    fn test_to_typst_multiple_monsters() {
+        let monsters = vec![test_goblin(), test_goblin(), test_goblin()];
+        let section = MonsterCardSection::new(monsters);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // 3 goblins on one page, 1 empty slot
+        assert_eq!(typst.matches("Goblin").count() >= 3, true);
+        assert_eq!(typst.matches("box(width: 3.875in, height: 5.125in)").count(), 1);
+    }
+
+    #[test]
+    fn test_to_typst_page_break_after_four() {
+        let monsters = vec![
+            test_goblin(), test_goblin(), test_goblin(), test_goblin(),
+            test_goblin(),
+        ];
+        let section = MonsterCardSection::new(monsters);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // 5 monsters = 2 pages
+        assert!(typst.contains("#pagebreak()"));
+    }
+
+    #[test]
+    fn test_size_name_mapping() {
+        let sizes = vec![
+            ("T", "Tiny"), ("S", "Small"), ("M", "Medium"),
+            ("L", "Large"), ("H", "Huge"), ("G", "Gargantuan"),
+        ];
+        for (code, name) in sizes {
+            let monster = json!({"name": "Test", "size": [code]});
+            let card = MonsterCardSection::render_card(&monster);
+            assert!(card.contains(name), "Expected '{}' for size code '{}'", name, code);
+        }
+    }
+
+    #[test]
+    fn test_extract_ac_full_simple() {
+        let monster = json!({"ac": [12]});
+        assert_eq!(extract_ac_full(&monster), "12");
+    }
+
+    #[test]
+    fn test_extract_ac_full_with_source() {
+        let monster = json!({"ac": [{"ac": 18, "from": ["plate armor"]}]});
+        assert_eq!(extract_ac_full(&monster), "18 (plate armor)");
+    }
+
+    #[test]
+    fn test_extract_hp_full_with_formula() {
+        let monster = json!({"hp": {"average": 52, "formula": "8d8+16"}});
+        assert_eq!(extract_hp_full(&monster), "52 (8d8+16)");
+    }
+
+    #[test]
+    fn test_extract_hp_full_simple() {
+        let monster = json!({"hp": 30});
+        assert_eq!(extract_hp_full(&monster), "30");
+    }
+
+    #[test]
+    fn test_extract_speed_with_fly_hover() {
+        let monster = json!({"speed": {"walk": 0, "fly": 60, "hover": true}});
+        let speed = extract_speed_full(&monster);
+        assert!(speed.contains("fly 60 ft. (hover)"));
+    }
+
+    #[test]
+    fn test_extract_cr_from_object() {
+        let monster = json!({"cr": {"cr": "1/2", "lair": "3"}});
+        assert_eq!(extract_cr(&monster), "1/2");
+    }
+
+    #[test]
+    fn test_extract_creature_type_object() {
+        let monster = json!({"type": {"type": "fiend", "tags": ["devil"]}});
+        assert_eq!(extract_creature_type(&monster), "fiend");
+    }
+
+    #[test]
+    fn test_extract_creature_type_string() {
+        let monster = json!({"type": "beast"});
+        assert_eq!(extract_creature_type(&monster), "beast");
+    }
+
+    #[test]
+    fn test_alignment_unaligned() {
+        let monster = json!({"alignment": ["U"]});
+        assert_eq!(extract_alignment(&monster), "unaligned");
+    }
+
+    #[test]
+    fn test_alignment_any() {
+        let monster = json!({"alignment": ["A"]});
+        assert_eq!(extract_alignment(&monster), "any");
+    }
+
+    #[test]
+    fn test_escape_typst() {
+        assert_eq!(escape_typst("Hello [World]"), "Hello \\[World\\]");
+        assert_eq!(escape_typst("#test"), "\\#test");
+        assert_eq!(escape_typst("a_b"), "a\\_b");
+    }
+
+    #[test]
+    fn test_extract_entries_text_nested() {
+        let entries = json!([
+            "First line.",
+            {"entries": ["Nested line 1.", "Nested line 2."]}
+        ]);
+        let result = extract_entries_text(Some(&entries));
+        assert!(result.contains("First line."));
+        assert!(result.contains("Nested line 1."));
+        assert!(result.contains("Nested line 2."));
+    }
+
+    #[test]
+    fn test_strip_5etools_tags_comprehensive() {
+        assert_eq!(strip_5etools_tags("{@atk rw}"), "Ranged Weapon Attack:");
+        assert_eq!(strip_5etools_tags("{@atk ms}"), "Melee Spell Attack:");
+        assert_eq!(strip_5etools_tags("{@atk rs}"), "Ranged Spell Attack:");
+        assert_eq!(strip_5etools_tags("{@atk mw,rw}"), "Melee or Ranged Weapon Attack:");
+        assert_eq!(strip_5etools_tags("{@dice 2d6}"), "2d6");
+        assert_eq!(strip_5etools_tags("{@creature goblin|mm}"), "goblin");
+        assert_eq!(strip_5etools_tags("{@condition frightened|phb}"), "frightened");
+    }
+
+    #[test]
+    fn test_resistances_block_empty() {
+        let result = render_resistances_block("", "", "", "");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_resistances_block_with_content() {
+        let result = render_resistances_block("cold", "fire, lightning", "poison", "charmed");
+        assert!(result.contains("*Vuln*"));
+        assert!(result.contains("cold"));
+        assert!(result.contains("*Resist*"));
+        assert!(result.contains("fire"));
+        assert!(result.contains("*Immune*"));
+        assert!(result.contains("poison"));
+        assert!(result.contains("*Cond Immune*"));
+        assert!(result.contains("charmed"));
+    }
+
+    #[test]
+    fn test_condition_immunities_string() {
+        let monster = json!({"conditionImmune": ["charmed", "frightened"]});
+        let result = extract_condition_immunities(&monster);
+        assert!(result.contains("charmed"));
+        assert!(result.contains("frightened"));
+    }
+
+    #[test]
+    fn test_section_colors() {
+        let dragon = test_dragon();
+        let layout = plan_card_layout(&dragon);
+
+        // Check that section names exist
+        let section_names: Vec<&str> = layout.front_sections.iter()
+            .chain(layout.back_sections.iter())
+            .map(|s| s.name)
+            .collect();
+
+        assert!(section_names.contains(&"Traits") || section_names.contains(&"Actions") || section_names.contains(&"Legendary"));
+    }
 }

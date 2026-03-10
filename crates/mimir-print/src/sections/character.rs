@@ -1053,4 +1053,220 @@ mod tests {
         assert!(typst.contains("Dodge"));
         assert!(typst.contains("YOUR TURN"));
     }
+
+    #[test]
+    fn test_npc_renders_badge_and_info() {
+        let mut char = test_character();
+        char.is_npc = true;
+        char.player_name = None;
+        char.role = Some("Tavern Keeper".to_string());
+        char.location = Some("The Prancing Pony".to_string());
+        char.faction = Some("Bree-folk".to_string());
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("NPC"));
+        assert!(typst.contains("NPC INFORMATION"));
+        assert!(typst.contains("ROLE"));
+        assert!(typst.contains("Tavern Keeper"));
+        assert!(typst.contains("LOCATION"));
+        assert!(typst.contains("The Prancing Pony"));
+        assert!(typst.contains("FACTION"));
+        assert!(typst.contains("Bree-folk"));
+    }
+
+    #[test]
+    fn test_weapon_attack_bonus_str_based() {
+        // STR 16 (+3), level 8 (prof +3) → attack +6
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("WEAPONS"));
+        assert!(typst.contains("Longsword"));
+        assert!(typst.contains("+6")); // STR +3 + prof +3
+    }
+
+    #[test]
+    fn test_finesse_weapon_uses_better_mod() {
+        let mut char = test_character();
+        // DEX 14 (+2), STR 16 (+3), level 8 (prof +3)
+        // Finesse should use STR since it's higher
+        char.inventory.push(InventoryItem {
+            name: "Rapier".to_string(),
+            quantity: 1,
+            equipped: true,
+            attuned: false,
+            item_type: Some("M".to_string()),
+            damage: Some("1d8".to_string()),
+            damage_type: Some("P".to_string()),
+            armor_ac: None,
+            finesse: true,
+        });
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("Rapier"));
+    }
+
+    #[test]
+    fn test_ranged_weapon_uses_dex() {
+        let mut char = test_character();
+        char.inventory.push(InventoryItem {
+            name: "Longbow".to_string(),
+            quantity: 1,
+            equipped: true,
+            attuned: false,
+            item_type: Some("R".to_string()),
+            damage: Some("1d8".to_string()),
+            damage_type: Some("P".to_string()),
+            armor_ac: None,
+            finesse: false,
+        });
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("Longbow"));
+        // DEX +2 + prof +3 = +5
+        assert!(typst.contains("+5"));
+    }
+
+    #[test]
+    fn test_expertise_renders_diamond() {
+        let mut char = test_character();
+        char.proficiencies.skills.push(ProficiencyEntry {
+            name: "Stealth".to_string(),
+            expertise: true,
+        });
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        // Expertise bullet is ◆
+        assert!(typst.contains("◆"));
+    }
+
+    #[test]
+    fn test_multiclass_class_string_with_subclass() {
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        // Fighter (Champion) 5 / Ranger 3
+        assert_eq!(section.class_string(), "Fighter (Champion) 5 / Ranger 3");
+    }
+
+    #[test]
+    fn test_no_class_string() {
+        let mut char = test_character();
+        char.classes.clear();
+        let section = CharacterSection::new(char);
+        assert_eq!(section.class_string(), "No Class");
+    }
+
+    #[test]
+    fn test_currency_renders_all_denominations() {
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("PP"));
+        assert!(typst.contains("GP"));
+        assert!(typst.contains("EP"));
+        assert!(typst.contains("SP"));
+        assert!(typst.contains("CP"));
+        assert!(typst.contains("CURRENCY"));
+    }
+
+    #[test]
+    fn test_inventory_renders_equipped_and_attuned() {
+        let char = test_spellcaster();
+        // Staff of Power is equipped + attuned → "E ★"
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("INVENTORY"));
+        assert!(typst.contains("Staff of Power"));
+        assert!(typst.contains("Spellbook"));
+    }
+
+    #[test]
+    fn test_personality_renders_all_four() {
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("PERSONALITY"));
+        assert!(typst.contains("TRAITS"));
+        assert!(typst.contains("IDEALS"));
+        assert!(typst.contains("BONDS"));
+        assert!(typst.contains("FLAWS"));
+        assert!(typst.contains("I always speak in a serious tone"));
+        assert!(typst.contains("Duty above all"));
+    }
+
+    #[test]
+    fn test_proficiency_bonus_by_level() {
+        // Level 1-4 → +2, 5-8 → +3, 9-12 → +4, 13-16 → +5, 17+ → +6
+        let make_section = |level: i32| {
+            let mut char = test_character();
+            char.classes = vec![ClassInfo {
+                class_name: "Fighter".to_string(),
+                class_source: "PHB".to_string(),
+                level,
+                subclass_name: None,
+                is_starting: true,
+            }];
+            CharacterSection::new(char)
+        };
+
+        assert_eq!(make_section(1).prof_bonus(), 2);
+        assert_eq!(make_section(4).prof_bonus(), 2);
+        assert_eq!(make_section(5).prof_bonus(), 3);
+        assert_eq!(make_section(8).prof_bonus(), 3);
+        assert_eq!(make_section(9).prof_bonus(), 4);
+        assert_eq!(make_section(12).prof_bonus(), 4);
+        assert_eq!(make_section(13).prof_bonus(), 5);
+        assert_eq!(make_section(16).prof_bonus(), 5);
+        assert_eq!(make_section(17).prof_bonus(), 6);
+        assert_eq!(make_section(20).prof_bonus(), 6);
+    }
+
+    #[test]
+    fn test_passive_perception_with_proficiency() {
+        // WIS 14 (+2), Perception proficient, level 8 (prof +3)
+        // Passive = 10 + 2 + 3 = 15
+        let char = test_character();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("15")); // passive perception
+        assert!(typst.contains("PASSIVE"));
+    }
+
+    #[test]
+    fn test_spellcaster_attack_bonus_and_dc() {
+        let char = test_spellcaster();
+        let section = CharacterSection::new(char);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("INT"));
+        assert!(typst.contains("17")); // Save DC
+        assert!(typst.contains("+9")); // Attack bonus
+    }
+
+    #[test]
+    fn test_modifier_edge_cases() {
+        assert_eq!(CharacterSection::modifier(10), 0);
+        assert_eq!(CharacterSection::modifier(11), 0);
+        assert_eq!(CharacterSection::modifier(9), -1);
+        assert_eq!(CharacterSection::modifier(20), 5);
+        assert_eq!(CharacterSection::modifier(30), 10);
+        assert_eq!(CharacterSection::modifier(1), -5);
+        assert_eq!(CharacterSection::modifier(3), -4);
+    }
+
+    #[test]
+    fn test_modifier_str_formatting() {
+        assert_eq!(CharacterSection::modifier_str(14), "+2");
+        assert_eq!(CharacterSection::modifier_str(10), "+0");
+        assert_eq!(CharacterSection::modifier_str(8), "-1");
+    }
 }

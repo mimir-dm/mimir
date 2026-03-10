@@ -1082,7 +1082,11 @@ impl<'a> ArchiveService<'a> {
 mod tests {
     use super::*;
     use crate::dal::campaign::{insert_campaign, insert_module};
-    use crate::models::campaign::{NewCampaign, NewModule};
+    use crate::models::campaign::{
+        NewCampaign, NewCampaignHomebrewItem, NewCampaignHomebrewMonster,
+        NewCampaignHomebrewSpell, NewCharacterClass, NewCharacterInventory,
+        NewCharacterProficiency, NewModule, NewModuleMonster, NewModuleNpc,
+    };
     use crate::services::document::{CreateDocumentInput, DocumentService};
     use crate::services::character::CharacterService;
     use crate::test_utils::setup_test_db;
@@ -1437,6 +1441,279 @@ mod tests {
         let docs = dal::list_campaign_documents(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(docs[0].content, "A {@monster Goblin|MM} guards the door.");
         assert_eq!(docs[0].title, "Room 1");
+    }
+
+    /// Seed a campaign with homebrew items, monsters, and spells for testing.
+    fn seed_campaign_with_homebrew(conn: &mut SqliteConnection) -> String {
+        let campaign_id = create_test_campaign(conn);
+
+        // Homebrew item
+        let item_id = uuid::Uuid::new_v4().to_string();
+        let mut item = NewCampaignHomebrewItem::new(
+            &item_id,
+            &campaign_id,
+            "Flame Tongue Greatsword",
+            r#"{"type":"M","weapon":true,"dmg1":"2d6","dmgType":"S","rarity":"rare"}"#,
+        );
+        item.item_type = Some("weapon");
+        item.rarity = Some("rare");
+        item.cloned_from_name = Some("Flame Tongue");
+        item.cloned_from_source = Some("DMG");
+        dal::insert_campaign_homebrew_item(conn, &item).unwrap();
+
+        // Homebrew monster
+        let mon_id = uuid::Uuid::new_v4().to_string();
+        let mut monster = NewCampaignHomebrewMonster::new(
+            &mon_id,
+            &campaign_id,
+            "Void Stalker",
+            r#"{"name":"Void Stalker","size":["L"],"type":"aberration","cr":"10"}"#,
+        );
+        monster.cr = Some("10");
+        monster.creature_type = Some("aberration");
+        monster.size = Some("L");
+        dal::insert_campaign_homebrew_monster(conn, &monster).unwrap();
+
+        // Homebrew spell
+        let spell_id = uuid::Uuid::new_v4().to_string();
+        let mut spell = NewCampaignHomebrewSpell::new(
+            &spell_id,
+            &campaign_id,
+            "Eldritch Bolt",
+            r#"{"name":"Eldritch Bolt","level":3,"school":"V"}"#,
+        );
+        spell.level = Some(3);
+        spell.school = Some("V");
+        dal::insert_campaign_homebrew_spell(conn, &spell).unwrap();
+
+        campaign_id
+    }
+
+    /// Seed a campaign with a character that has classes, inventory, and proficiencies.
+    fn seed_campaign_with_detailed_character(conn: &mut SqliteConnection) -> (String, String) {
+        let campaign_id = create_test_campaign(conn);
+        let module_id = create_test_module(conn, &campaign_id);
+
+        // Create character with ability scores
+        let char_id = {
+            let mut char_svc = CharacterService::new(conn);
+            let input = crate::services::character::CreateCharacterInput {
+                campaign_id: Some(campaign_id.clone()),
+                name: "Thorin Ironforge".to_string(),
+                is_npc: false,
+                player_name: None,
+                race_name: Some("Dwarf".to_string()),
+                race_source: Some("PHB".to_string()),
+                background_name: Some("Soldier".to_string()),
+                background_source: Some("PHB".to_string()),
+                ability_scores: Some([16, 10, 14, 8, 12, 13]),
+                class_name: Some("Fighter".to_string()),
+                class_source: Some("PHB".to_string()),
+                selected_skills: None,
+            };
+            char_svc.create(input).expect("Failed to create character")
+        };
+        let char_id = char_id.id.clone();
+
+        // Add character class (CharacterService::create doesn't insert a class record)
+        let class_id = uuid::Uuid::new_v4().to_string();
+        let new_class = NewCharacterClass::starting(&class_id, &char_id, "Fighter", "PHB")
+            .with_level(3);
+        dal::insert_character_class(conn, &new_class).unwrap();
+
+        // Add inventory item
+        let inv_id = uuid::Uuid::new_v4().to_string();
+        let mut inv = NewCharacterInventory::new(
+            &inv_id,
+            &char_id,
+            "Longsword",
+            "PHB",
+        );
+        inv.quantity = 1;
+        inv.equipped = 1;
+        inv.attuned = 0;
+        inv.notes = Some("Family heirloom");
+        dal::insert_character_inventory(conn, &inv).unwrap();
+
+        // Add proficiency
+        let prof_id = uuid::Uuid::new_v4().to_string();
+        let prof = NewCharacterProficiency {
+            id: &prof_id,
+            character_id: &char_id,
+            proficiency_type: "armor",
+            name: "Heavy Armor",
+            expertise: 0,
+        };
+        dal::insert_character_proficiency(conn, &prof).unwrap();
+
+        // Add module monster
+        let monster_id = uuid::Uuid::new_v4().to_string();
+        let mut monster = NewModuleMonster::new(
+            &monster_id,
+            &module_id,
+            "Goblin Boss",
+            "MM",
+        );
+        monster.quantity = 1;
+        monster.display_name = Some("Grik the Goblin");
+        monster.notes = Some("Guards the entrance");
+        dal::insert_module_monster(conn, &monster).unwrap();
+
+        // Add module NPC
+        let npc_id = uuid::Uuid::new_v4().to_string();
+        let mut npc = NewModuleNpc::new(&npc_id, &module_id, "Elder Miriam");
+        npc.role = Some("Quest Giver");
+        npc.description = Some("An elderly half-elf sage");
+        npc.personality = Some("Kind but secretive");
+        dal::insert_module_npc(conn, &npc).unwrap();
+
+        (campaign_id, module_id)
+    }
+
+    #[test]
+    fn test_homebrew_item_round_trip() {
+        let mut conn = setup_test_db();
+        let campaign_id = seed_campaign_with_homebrew(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        // Verify preview counts include homebrew
+        let preview = ArchiveService::preview_archive(&archive_path).unwrap();
+        assert_eq!(preview.counts.homebrew_items, 1);
+        assert_eq!(preview.counts.homebrew_monsters, 1);
+        assert_eq!(preview.counts.homebrew_spells, 1);
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Homebrew Import"))
+                .unwrap()
+        };
+
+        assert_eq!(import_result.counts.homebrew_items, 1);
+        assert_eq!(import_result.counts.homebrew_monsters, 1);
+        assert_eq!(import_result.counts.homebrew_spells, 1);
+
+        // Verify homebrew items
+        let items = dal::list_campaign_homebrew_items(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "Flame Tongue Greatsword");
+        assert_eq!(items[0].item_type.as_deref(), Some("weapon"));
+        assert_eq!(items[0].rarity.as_deref(), Some("rare"));
+        assert_eq!(items[0].cloned_from_name.as_deref(), Some("Flame Tongue"));
+        assert_eq!(items[0].cloned_from_source.as_deref(), Some("DMG"));
+        assert!(items[0].data.contains("dmg1"));
+
+        // Verify homebrew monsters
+        let monsters = dal::list_campaign_homebrew_monsters(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(monsters.len(), 1);
+        assert_eq!(monsters[0].name, "Void Stalker");
+        assert_eq!(monsters[0].cr.as_deref(), Some("10"));
+        assert_eq!(monsters[0].creature_type.as_deref(), Some("aberration"));
+        assert_eq!(monsters[0].size.as_deref(), Some("L"));
+
+        // Verify homebrew spells
+        let spells = dal::list_campaign_homebrew_spells(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(spells.len(), 1);
+        assert_eq!(spells[0].name, "Eldritch Bolt");
+        assert_eq!(spells[0].level, Some(3));
+        assert_eq!(spells[0].school.as_deref(), Some("V"));
+    }
+
+    #[test]
+    fn test_character_details_round_trip() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign_with_detailed_character(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Detailed Char"))
+                .unwrap()
+        };
+
+        let chars = dal::list_campaign_characters(&mut conn, &import_result.campaign_id).unwrap();
+        assert_eq!(chars.len(), 1);
+        let c = &chars[0];
+        assert_eq!(c.name, "Thorin Ironforge");
+        assert_eq!(c.race_name.as_deref(), Some("Dwarf"));
+        assert_eq!(c.race_source.as_deref(), Some("PHB"));
+        assert_eq!(c.background_name.as_deref(), Some("Soldier"));
+        assert_eq!(c.strength, 16);
+        assert_eq!(c.dexterity, 10);
+        assert_eq!(c.constitution, 14);
+        assert_eq!(c.intelligence, 8);
+        assert_eq!(c.wisdom, 12);
+        assert_eq!(c.charisma, 13);
+
+        // Verify classes imported
+        let classes = dal::list_character_classes(&mut conn, &c.id).unwrap();
+        assert_eq!(classes.len(), 1);
+        assert_eq!(classes[0].class_name, "Fighter");
+        assert_eq!(classes[0].class_source, "PHB");
+
+        // Verify inventory imported
+        let inventory = dal::list_character_inventory(&mut conn, &c.id).unwrap();
+        assert_eq!(inventory.len(), 1);
+        assert_eq!(inventory[0].item_name, "Longsword");
+        assert_eq!(inventory[0].equipped, 1);
+        assert_eq!(inventory[0].notes.as_deref(), Some("Family heirloom"));
+
+        // Verify proficiencies imported
+        let profs = dal::list_character_proficiencies(&mut conn, &c.id).unwrap();
+        assert!(profs.iter().any(|p| p.name == "Heavy Armor" && p.proficiency_type == "armor"));
+    }
+
+    #[test]
+    fn test_module_entities_round_trip() {
+        let mut conn = setup_test_db();
+        let (campaign_id, _) = seed_campaign_with_detailed_character(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let assets_dir = TempDir::new().unwrap();
+
+        let archive_path = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.export_campaign(&campaign_id, output_dir.path(), assets_dir.path())
+                .unwrap()
+        };
+
+        let import_result = {
+            let mut svc = ArchiveService::new(&mut conn);
+            svc.import_campaign(&archive_path, assets_dir.path(), Some("Module Entities"))
+                .unwrap()
+        };
+
+        assert_eq!(import_result.counts.module_monsters, 1);
+        assert_eq!(import_result.counts.module_npcs, 1);
+
+        // Verify module monsters
+        let modules = dal::list_modules(&mut conn, &import_result.campaign_id).unwrap();
+        let monsters = dal::list_module_monsters(&mut conn, &modules[0].id).unwrap();
+        assert_eq!(monsters.len(), 1);
+        assert_eq!(monsters[0].monster_name, "Goblin Boss");
+        assert_eq!(monsters[0].monster_source, "MM");
+        assert_eq!(monsters[0].display_name.as_deref(), Some("Grik the Goblin"));
+        assert_eq!(monsters[0].notes.as_deref(), Some("Guards the entrance"));
+
+        // Verify module NPCs
+        let npcs = dal::list_module_npcs(&mut conn, &modules[0].id).unwrap();
+        assert_eq!(npcs.len(), 1);
+        assert_eq!(npcs[0].name, "Elder Miriam");
+        assert_eq!(npcs[0].role.as_deref(), Some("Quest Giver"));
+        assert_eq!(npcs[0].description.as_deref(), Some("An elderly half-elf sage"));
+        assert_eq!(npcs[0].personality.as_deref(), Some("Kind but secretive"));
     }
 
     #[test]

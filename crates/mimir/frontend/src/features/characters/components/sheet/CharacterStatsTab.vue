@@ -196,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { Character, CharacterInventory } from '@/types/character'
 import {
@@ -219,6 +219,7 @@ import {
   isRanged,
   getHitDiceString,
 } from '@/utils/characterUtils'
+import { useWeaponRegistry } from '@/composables/useWeaponRegistry'
 import { processFormattingTags } from '../../../sources/utils/textFormatting'
 
 // Class feature from catalog
@@ -244,6 +245,10 @@ const props = defineProps<{
   spellSaveDC: number | null
   spellAttackBonus: number | null
 }>()
+
+// Weapon registry — loads catalog weapon names dynamically
+const { isWeapon, loadWeaponNames } = useWeaponRegistry()
+onMounted(() => loadWeaponNames())
 
 // Local state for feature expansion
 const expandedFeatures = ref<Set<string>>(new Set())
@@ -290,20 +295,7 @@ const equippedArmor = computed(() =>
   })
 )
 const equippedWeapons = computed(() =>
-  equippedItems.value.filter((i) => {
-    const name = i.item_name.toLowerCase()
-    return (
-      name.includes('sword') ||
-      name.includes('axe') ||
-      name.includes('bow') ||
-      name.includes('dagger') ||
-      name.includes('mace') ||
-      name.includes('staff') ||
-      name.includes('crossbow') ||
-      name.includes('spear') ||
-      name.includes('hammer')
-    )
-  })
+  equippedItems.value.filter((i) => isWeapon(i.item_name))
 )
 
 // AC calculation

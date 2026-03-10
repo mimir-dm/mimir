@@ -380,4 +380,207 @@ mod tests {
         let webp = [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50];
         assert_eq!(detect_image_format(&webp), "webp");
     }
+
+    // === Size multiplier tests ===
+
+    #[test]
+    fn test_size_multiplier_all_sizes() {
+        let cases = vec![
+            ("tiny", 0.5), ("t", 0.5),
+            ("small", 1.0), ("s", 1.0),
+            ("medium", 1.0), ("m", 1.0),
+            ("large", 2.0), ("l", 2.0),
+            ("huge", 3.0), ("h", 3.0),
+            ("gargantuan", 4.0), ("g", 4.0),
+            ("unknown", 1.0),
+        ];
+        for (size, expected) in cases {
+            let token = CutoutToken::new("Test".into(), size.into(), "monster".into());
+            assert_eq!(token.size_multiplier(), expected, "Failed for size: {}", size);
+        }
+    }
+
+    // === Token type color tests ===
+
+    #[test]
+    fn test_token_type_colors() {
+        assert_eq!(TokenCutoutSection::token_type_color("monster"), "#dc3545");
+        assert_eq!(TokenCutoutSection::token_type_color("pc"), "#28a745");
+        assert_eq!(TokenCutoutSection::token_type_color("npc"), "#007bff");
+        assert_eq!(TokenCutoutSection::token_type_color("trap"), "#ffc107");
+        assert_eq!(TokenCutoutSection::token_type_color("other"), "#6c757d");
+    }
+
+    // === Builder pattern tests ===
+
+    #[test]
+    fn test_cutout_token_with_quantity() {
+        let token = CutoutToken::new("Goblin".into(), "small".into(), "monster".into())
+            .with_quantity(3);
+        assert_eq!(token.quantity, 3);
+        assert_eq!(token.name, "Goblin");
+    }
+
+    #[test]
+    fn test_cutout_token_with_image() {
+        let bytes = vec![1, 2, 3, 4];
+        let token = CutoutToken::new("Test".into(), "medium".into(), "monster".into())
+            .with_image(bytes.clone());
+        assert_eq!(token.image_bytes, Some(bytes));
+    }
+
+    #[test]
+    fn test_cutout_token_default_quantity() {
+        let token = CutoutToken::new("Test".into(), "medium".into(), "monster".into());
+        assert_eq!(token.quantity, 1);
+        assert!(token.image_bytes.is_none());
+    }
+
+    #[test]
+    fn test_section_with_cell_size() {
+        let section = TokenCutoutSection::new(vec![]).with_cell_size(1.5);
+        assert_eq!(section.cell_size, 1.5);
+    }
+
+    #[test]
+    fn test_section_with_cut_lines() {
+        let section = TokenCutoutSection::new(vec![]).with_cut_lines(false);
+        assert!(!section.show_cut_lines);
+    }
+
+    // === Rendering tests ===
+
+    #[test]
+    fn test_empty_tokens_renders_comment() {
+        let section = TokenCutoutSection::new(vec![]);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+        assert!(typst.contains("No tokens to render"));
+    }
+
+    #[test]
+    fn test_toc_title() {
+        let section = TokenCutoutSection::new(vec![]);
+        assert_eq!(section.toc_title(), Some("Token Cutouts".to_string()));
+    }
+
+    #[test]
+    fn test_render_token_fallback_circle() {
+        let token = CutoutToken::new("Goblin".into(), "medium".into(), "monster".into());
+        let section = TokenCutoutSection::new(vec![]);
+        let ctx = RenderContext::default();
+
+        let result = section.render_token(&token, &ctx, 1.0).unwrap();
+
+        // Should contain fallback circle with initial
+        assert!(result.contains("#circle"));
+        assert!(result.contains("G")); // Initial of "Goblin"
+        assert!(result.contains("#dc3545")); // Monster color
+    }
+
+    #[test]
+    fn test_render_token_name_truncation() {
+        let token = CutoutToken::new("Ancient Red Dragon Wyrm".into(), "huge".into(), "monster".into());
+        let section = TokenCutoutSection::new(vec![]);
+        let ctx = RenderContext::default();
+
+        let result = section.render_token(&token, &ctx, 3.0).unwrap();
+        // Name should be truncated to 14 chars
+        assert!(result.contains("Ancient Red..."));
+    }
+
+    #[test]
+    fn test_render_groups_by_size() {
+        let tokens = vec![
+            CutoutToken::new("Goblin".into(), "small".into(), "monster".into()),
+            CutoutToken::new("Dragon".into(), "huge".into(), "monster".into()),
+            CutoutToken::new("Sprite".into(), "tiny".into(), "monster".into()),
+        ];
+        let section = TokenCutoutSection::new(tokens);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // Should contain header
+        assert!(typst.contains("Token Cutouts"));
+        assert!(typst.contains("Cut along dashed lines"));
+
+        // All tokens should appear
+        assert!(typst.contains("Goblin"));
+        assert!(typst.contains("Dragon"));
+        assert!(typst.contains("Sprite"));
+    }
+
+    #[test]
+    fn test_render_respects_quantity() {
+        let token = CutoutToken::new("Goblin".into(), "small".into(), "monster".into())
+            .with_quantity(3);
+        let section = TokenCutoutSection::new(vec![token]);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // "Goblin" should appear 3 times (once per copy) in the grid
+        assert_eq!(typst.matches("Goblin").count(), 3);
+    }
+
+    #[test]
+    fn test_render_cut_lines_dashed() {
+        let token = CutoutToken::new("Test".into(), "medium".into(), "monster".into());
+        let section = TokenCutoutSection::new(vec![token]);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        assert!(typst.contains("dashed"));
+    }
+
+    #[test]
+    fn test_render_no_cut_lines() {
+        let token = CutoutToken::new("Test".into(), "medium".into(), "monster".into());
+        let section = TokenCutoutSection::new(vec![token]).with_cut_lines(false);
+        let ctx = RenderContext::default();
+
+        // Test at the individual token render level — stroke style changes
+        let result = section.render_token(
+            &CutoutToken::new("Test".into(), "medium".into(), "monster".into()),
+            &ctx, 1.0
+        ).unwrap();
+        assert!(!result.contains("dashed"));
+        assert!(result.contains("luma(220)")); // non-cut-line style
+    }
+
+    #[test]
+    fn test_detect_image_format_unknown() {
+        let unknown = [0x00, 0x01, 0x02];
+        assert_eq!(detect_image_format(&unknown), "png"); // default
+    }
+
+    #[test]
+    fn test_sanitize_filename_special_chars() {
+        assert_eq!(sanitize_filename("a/b\\c:d"), "a_b_c_d");
+        assert_eq!(sanitize_filename("hello world!"), "hello_world_");
+        assert_eq!(sanitize_filename("abc_123"), "abc_123");
+    }
+
+    #[test]
+    fn test_truncate_name_exact_length() {
+        assert_eq!(truncate_name("Exactly14chars", 14), "Exactly14chars");
+        assert_eq!(truncate_name("Short", 14), "Short");
+    }
+
+    #[test]
+    fn test_render_token_npc_color() {
+        let token = CutoutToken::new("Merchant".into(), "medium".into(), "npc".into());
+        let section = TokenCutoutSection::new(vec![]);
+        let ctx = RenderContext::default();
+        let result = section.render_token(&token, &ctx, 1.0).unwrap();
+        assert!(result.contains("#007bff")); // NPC color (blue)
+    }
+
+    #[test]
+    fn test_render_token_pc_color() {
+        let token = CutoutToken::new("Fighter".into(), "medium".into(), "pc".into());
+        let section = TokenCutoutSection::new(vec![]);
+        let ctx = RenderContext::default();
+        let result = section.render_token(&token, &ctx, 1.0).unwrap();
+        assert!(result.contains("#28a745")); // PC color (green)
+    }
 }
