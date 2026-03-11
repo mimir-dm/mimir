@@ -109,6 +109,10 @@ impl MimirHandler {
             tools::homebrew_spell::create_homebrew_spell_tool(),
             tools::homebrew_spell::update_homebrew_spell_tool(),
             tools::homebrew_spell::delete_homebrew_spell_tool(),
+            // Map generation tools
+            tools::mapgen::generate_map_tool(),
+            tools::mapgen::list_map_presets_tool(),
+            tools::mapgen::validate_map_config_tool(),
             // Catalog tools
             tools::catalog::search_monsters_tool(),
             tools::catalog::search_items_tool(),
@@ -243,6 +247,11 @@ impl MimirHandler {
             "delete_homebrew_spell" => {
                 tools::homebrew_spell::delete_homebrew_spell(&self.context, args).await
             }
+
+            // Map generation tools (no campaign context needed)
+            "generate_map" => tools::mapgen::generate_map(args).await,
+            "list_map_presets" => tools::mapgen::list_map_presets(args).await,
+            "validate_map_config" => tools::mapgen::validate_map_config(args).await,
 
             // Catalog tools
             "search_monsters" => tools::catalog::search_monsters(&self.context, args).await,
@@ -388,6 +397,10 @@ mod tests {
         "create_homebrew_spell",
         "update_homebrew_spell",
         "delete_homebrew_spell",
+        // Map generation
+        "generate_map",
+        "list_map_presets",
+        "validate_map_config",
         // Catalog
         "search_monsters",
         "search_items",

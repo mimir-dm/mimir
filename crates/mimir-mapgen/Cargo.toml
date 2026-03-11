@@ -1,0 +1,36 @@
+[package]
+name = "mimir-mapgen"
+version = "0.6.1"
+edition = "2021"
+description = "Declarative Dungeondraft map generation from YAML configs"
+
+[[bin]]
+name = "mimir-mapgen"
+path = "src/main.rs"
+
+[dependencies]
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Noise generation
+noise = { workspace = true }
+rand = { workspace = true }
+rand_chacha = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# CLI
+clap = { workspace = true }
+
+# Utilities
+chrono = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

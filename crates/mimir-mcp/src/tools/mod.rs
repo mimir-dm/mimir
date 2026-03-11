@@ -13,6 +13,7 @@ pub mod homebrew;
 pub mod homebrew_monster;
 pub mod homebrew_spell;
 pub mod map;
+pub mod mapgen;
 pub mod module;
 
 /// Create a properties map for tool input schema.

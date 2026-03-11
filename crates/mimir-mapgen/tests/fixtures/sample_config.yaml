@@ -1,0 +1,51 @@
+name: "Test Forest Map"
+width: 8
+height: 8
+seed: 42
+noise:
+  seed: 0
+  octaves: 4
+  persistence: 0.5
+  lacunarity: 2.0
+  scale: 0.03
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0
+      upper: 0.3
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.25
+      upper: 0.55
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.5
+      upper: 0.8
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.75
+      upper: 1.0
+  blend_width: 0.05
+  smooth_blending: false
+trees:
+  - tree:
+      textures:
+        - "res://textures/objects/trees/tree_01.png"
+      min_distance: 180.0
+      noise_lower: 0.3
+      noise_upper: 0.8
+      probability: 0.8
+      scale_min: 0.8
+      scale_max: 1.4
+      layer: 300
+      random_rotation: true
+      random_mirror: true
+clutter:
+  - textures:
+      - "res://textures/objects/grass/grass_01.png"
+    min_distance: 80.0
+    noise_lower: 0.2
+    noise_upper: 0.7
+    probability: 0.6
+    scale_min: 0.5
+    scale_max: 1.0
+    layer: 100
+    random_rotation: true
+    random_mirror: false

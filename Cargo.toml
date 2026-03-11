@@ -2,6 +2,7 @@
 members = [
     "crates/mimir",
     "crates/mimir-core",
+    "crates/mimir-mapgen",
     "crates/mimir-mcp",
     "crates/mimir-print",
 ]
@@ -75,6 +76,11 @@ ecow = "0.2"
 fontdb = "0.21"
 imageproc = "0.25"
 rusttype = "0.9"
+
+# Noise generation
+noise = "0.9"
+rand = "0.8"
+rand_chacha = "0.3"
 
 # Testing
 tempfile = "3.10"
