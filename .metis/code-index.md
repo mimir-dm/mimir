@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-10T18:40:17Z | 532 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-11T20:45:57Z | 533 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -608,6 +608,7 @@
 │           ├── map_renderer.rs
 │           ├── markdown.rs
 │           ├── sections/
+│           │   ├── card_utils.rs
 │           │   ├── character.rs
 │           │   ├── character_battle_card.rs
 │           │   ├── equipment_cards.rs
@@ -1392,31 +1393,33 @@
 
 #### crates/mimir/frontend/src/features/modules/composables/useModuleMonsters.ts
 
-- pub `MonsterWithData` interface L7-19 — `{ id: : string, module_id: : string, monster_name: : string, monster_source: : s...`
-- pub `EncounterGroup` interface L21-24 — `{ encounter_tag: : string | null, monsters: : MonsterWithData[] }`
-- pub `useModuleMonsters` function L30-195 — `function useModuleMonsters(moduleId: Ref<string>)`
-- pub `formatCreatureType` function L235-266 — `function formatCreatureType(monsterData: any): string`
-- pub `formatSpeed` function L271-292 — `function formatSpeed(monsterData: any): string`
-- pub `formatModifier` function L297-300 — `function formatModifier(score: number): string`
-- pub `formatSaves` function L305-316 — `function formatSaves(monsterData: any): string`
-- pub `formatSkills` function L321-332 — `function formatSkills(monsterData: any): string`
-- pub `formatSenses` function L337-355 — `function formatSenses(monsterData: any): string`
-- pub `formatLanguages` function L360-368 — `function formatLanguages(monsterData: any): string`
-- pub `formatDamageVulnerabilities` function L373-379 — `function formatDamageVulnerabilities(monsterData: any): string`
-- pub `formatDamageResistances` function L384-394 — `function formatDamageResistances(monsterData: any): string`
-- pub `formatDamageImmunities` function L399-409 — `function formatDamageImmunities(monsterData: any): string`
-- pub `formatConditionImmunities` function L414-420 — `function formatConditionImmunities(monsterData: any): string`
-- pub `formatCR` function L425-431 — `function formatCR(monsterData: any): string`
-- pub `formatAC` function L436-456 — `function formatAC(monsterData: any): string`
-- pub `formatHP` function L461-471 — `function formatHP(monsterData: any): string`
-- pub `formatActionEntries` function L476-491 — `function formatActionEntries(entries: any[]): string`
-- pub `getOrdinal` function L496-500 — `function getOrdinal(n: number): string`
-- pub `getSpellcasting` function L505-549 — `function getSpellcasting(monsterData: any): string | null`
--  `loadEncounters` function L39-84 — `function loadEncounters(campaignId?: string)`
--  `loadMapMonsterTokens` function L87-136 — `function loadMapMonsterTokens(campaignId?: string): Promise<MonsterWithData[]>`
--  `selectEncounter` function L139-151 — `function selectEncounter(group: EncounterGroup)`
--  `selectMonster` function L154-156 — `function selectMonster(monster: MonsterWithData)`
--  `clearSelectedMonster` function L159-161 — `function clearSelectedMonster()`
+- pub `MonsterWithData` interface L7-21 — `{ id: : string, module_id: : string, monster_name: : string | null, monster_sour...`
+- pub `getMonsterDisplayName` function L24-30 — `function getMonsterDisplayName(monster: MonsterWithData): string`
+- pub `isHomebrewMonster` function L33-35 — `function isHomebrewMonster(monster: MonsterWithData): boolean`
+- pub `EncounterGroup` interface L37-40 — `{ encounter_tag: : string | null, monsters: : MonsterWithData[] }`
+- pub `useModuleMonsters` function L46-212 — `function useModuleMonsters(moduleId: Ref<string>)`
+- pub `formatCreatureType` function L252-283 — `function formatCreatureType(monsterData: any): string`
+- pub `formatSpeed` function L288-309 — `function formatSpeed(monsterData: any): string`
+- pub `formatModifier` function L314-317 — `function formatModifier(score: number): string`
+- pub `formatSaves` function L322-333 — `function formatSaves(monsterData: any): string`
+- pub `formatSkills` function L338-349 — `function formatSkills(monsterData: any): string`
+- pub `formatSenses` function L354-372 — `function formatSenses(monsterData: any): string`
+- pub `formatLanguages` function L377-385 — `function formatLanguages(monsterData: any): string`
+- pub `formatDamageVulnerabilities` function L390-396 — `function formatDamageVulnerabilities(monsterData: any): string`
+- pub `formatDamageResistances` function L401-411 — `function formatDamageResistances(monsterData: any): string`
+- pub `formatDamageImmunities` function L416-426 — `function formatDamageImmunities(monsterData: any): string`
+- pub `formatConditionImmunities` function L431-437 — `function formatConditionImmunities(monsterData: any): string`
+- pub `formatCR` function L442-448 — `function formatCR(monsterData: any): string`
+- pub `formatAC` function L453-473 — `function formatAC(monsterData: any): string`
+- pub `formatHP` function L478-488 — `function formatHP(monsterData: any): string`
+- pub `formatActionEntries` function L493-508 — `function formatActionEntries(entries: any[]): string`
+- pub `getOrdinal` function L513-517 — `function getOrdinal(n: number): string`
+- pub `getSpellcasting` function L522-566 — `function getSpellcasting(monsterData: any): string | null`
+-  `loadEncounters` function L55-100 — `function loadEncounters(campaignId?: string)`
+-  `loadMapMonsterTokens` function L103-153 — `function loadMapMonsterTokens(campaignId?: string): Promise<MonsterWithData[]>`
+-  `selectEncounter` function L156-168 — `function selectEncounter(group: EncounterGroup)`
+-  `selectMonster` function L171-173 — `function selectMonster(monster: MonsterWithData)`
+-  `clearSelectedMonster` function L176-178 — `function clearSelectedMonster()`
 
 #### crates/mimir/frontend/src/features/modules/composables/usePlayNotes.ts
 
@@ -2746,23 +2749,24 @@
 - pub `get_module_by_number` function L124-143 — `( state: State<'_, AppState>, campaign_id: String, module_number: i32, ) -> ApiR...` — Get a module by campaign ID and module number.
 - pub `reorder_module` function L147-159 — `( state: State<'_, AppState>, module_id: String, new_position: i32, ) -> ApiResp...` — Reorder a module by moving it to a new position (1-indexed).
 - pub `MonsterWithData` struct L167-171 — `{ monster: ModuleMonster, monster_data: Option<serde_json::Value> }` — Monster with optional catalog data for display.
-- pub `list_module_monsters_with_data` function L175-208 — `( state: State<'_, AppState>, module_id: String, ) -> ApiResponse<Vec<MonsterWit...` — List all monsters for a module with catalog data.
-- pub `AddModuleMonsterRequest` struct L213-220 — `{ module_id: String, monster_name: String, monster_source: String, quantity: Opt...` — Request for adding a module monster.
-- pub `add_module_monster` function L224-284 — `( state: State<'_, AppState>, request: AddModuleMonsterRequest, ) -> ApiResponse...` — Add a monster to a module (or increment quantity if it already exists).
-- pub `UpdateModuleMonsterRequest` struct L288-292 — `{ display_name: Option<String>, notes: Option<String>, quantity: Option<i32> }` — Request for updating a module monster.
-- pub `update_module_monster` function L296-327 — `( state: State<'_, AppState>, monster_id: String, request: UpdateModuleMonsterRe...` — Update a module monster.
-- pub `list_module_npcs` function L335-345 — `(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<ModuleNpc>>` — List all NPCs for a module.
-- pub `list_tokens` function L353-363 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List all tokens for a map with resolved names.
-- pub `list_token_summaries` function L367-369 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List token summaries (alias for list_tokens for frontend compatibility).
-- pub `CreateTokenRequest` struct L374-383 — `{ map_id: String, module_monster_id: Option<String>, module_npc_id: Option<Strin...` — Request for creating a token placement.
-- pub `create_token` function L387-411 — `( state: State<'_, AppState>, request: CreateTokenRequest, ) -> ApiResponse<Toke...` — Create a new token placement.
-- pub `UpdateTokenRequest` struct L415-421 — `{ grid_x: Option<i32>, grid_y: Option<i32>, label: Option<Option<String>>, facti...` — Request for updating a token placement.
-- pub `update_token` function L425-448 — `( state: State<'_, AppState>, id: String, request: UpdateTokenRequest, ) -> ApiR...` — Update a token placement.
-- pub `update_token_position` function L452-467 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Update only the position of a token (optimized for drag operations).
-- pub `update_token_vision` function L471-494 — `( state: State<'_, AppState>, id: String, vision_bright_ft: Option<i32>, vision_...` — Update a token's vision settings (D&D 5e vision rules).
-- pub `toggle_token_visibility` function L498-511 — `( state: State<'_, AppState>, id: String, ) -> ApiResponse<TokenResponse>` — Toggle a token's visibility (hidden from players).
-- pub `delete_token` function L515-525 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a token placement.
-- pub `serve_token_image` function L537-642 — `( state: State<'_, AppState>, token_id: String, ) -> ApiResponse<Option<String>>` — Serve a token's image as a base64 data URL.
+- pub `list_module_monsters_with_data` function L175-234 — `( state: State<'_, AppState>, module_id: String, ) -> ApiResponse<Vec<MonsterWit...` — List all monsters for a module with catalog data.
+- pub `AddModuleMonsterRequest` struct L239-250 — `{ module_id: String, monster_name: Option<String>, monster_source: Option<String...` — Request for adding a module monster.
+- pub `add_module_monster` function L258-349 — `( state: State<'_, AppState>, request: AddModuleMonsterRequest, ) -> ApiResponse...` — Add a monster to a module (or increment quantity if it already exists).
+- pub `UpdateModuleMonsterRequest` struct L353-357 — `{ display_name: Option<String>, notes: Option<String>, quantity: Option<i32> }` — Request for updating a module monster.
+- pub `update_module_monster` function L361-392 — `( state: State<'_, AppState>, monster_id: String, request: UpdateModuleMonsterRe...` — Update a module monster.
+- pub `remove_module_monster` function L396-410 — `( state: State<'_, AppState>, monster_id: String, ) -> ApiResponse<()>` — Remove a monster from a module.
+- pub `list_module_npcs` function L418-428 — `(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<ModuleNpc>>` — List all NPCs for a module.
+- pub `list_tokens` function L436-446 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List all tokens for a map with resolved names.
+- pub `list_token_summaries` function L450-452 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List token summaries (alias for list_tokens for frontend compatibility).
+- pub `CreateTokenRequest` struct L457-466 — `{ map_id: String, module_monster_id: Option<String>, module_npc_id: Option<Strin...` — Request for creating a token placement.
+- pub `create_token` function L470-494 — `( state: State<'_, AppState>, request: CreateTokenRequest, ) -> ApiResponse<Toke...` — Create a new token placement.
+- pub `UpdateTokenRequest` struct L498-504 — `{ grid_x: Option<i32>, grid_y: Option<i32>, label: Option<Option<String>>, facti...` — Request for updating a token placement.
+- pub `update_token` function L508-531 — `( state: State<'_, AppState>, id: String, request: UpdateTokenRequest, ) -> ApiR...` — Update a token placement.
+- pub `update_token_position` function L535-550 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Update only the position of a token (optimized for drag operations).
+- pub `update_token_vision` function L554-577 — `( state: State<'_, AppState>, id: String, vision_bright_ft: Option<i32>, vision_...` — Update a token's vision settings (D&D 5e vision rules).
+- pub `toggle_token_visibility` function L581-594 — `( state: State<'_, AppState>, id: String, ) -> ApiResponse<TokenResponse>` — Toggle a token's visibility (hidden from players).
+- pub `delete_token` function L598-608 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a token placement.
+- pub `serve_token_image` function L620-734 — `( state: State<'_, AppState>, token_id: String, ) -> ApiResponse<Option<String>>` — Serve a token's image as a base64 data URL.
 
 #### crates/mimir/src/commands/player_display.rs
 
@@ -3238,11 +3242,18 @@
 
 #### crates/mimir/src/commands/print/document.rs
 
-- pub `list_print_templates` function L81-101 — `( print_state: State<'_, PrintState>, ) -> ApiResponse<Vec<PrintTemplateInfo>>` — List available print templates
-- pub `export_campaign_document` function L105-167 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, document_i...` — Export a single campaign document to PDF
-- pub `export_campaign_documents` function L171-947 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, campaign_i...` — Export all campaign documents to PDF
-- pub `export_module_documents` function L951-1435 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, module_id:...` — Export module documents to PDF
--  `lookup_monster_data` function L24-77 — `( db: &mut diesel::SqliteConnection, monster_name: &str, monster_source: &str, c...` — Look up monster data from catalog or homebrew, returning parsed JSON.
+- pub `list_print_templates` function L207-227 — `( print_state: State<'_, PrintState>, ) -> ApiResponse<Vec<PrintTemplateInfo>>` — List available print templates
+- pub `export_campaign_document` function L231-293 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, document_i...` — Export a single campaign document to PDF
+- pub `export_campaign_documents` function L297-1025 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, campaign_i...` — Export all campaign documents to PDF
+- pub `export_module_documents` function L1029-1471 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, module_id:...` — Export module documents to PDF
+-  `lookup_monster_data` function L24-35 — `( db: &mut diesel::SqliteConnection, monster_name: &str, monster_source: &str, c...` — Look up monster data from catalog or homebrew, returning parsed JSON.
+-  `lookup_homebrew_monster_by_name` function L37-53 — `( db: &mut diesel::SqliteConnection, campaign_id: &str, monster_name: &str, ) ->...` — Tauri commands for exporting campaign and module documents to PDF.
+-  `lookup_homebrew_monster_by_id` function L55-66 — `( db: &mut diesel::SqliteConnection, homebrew_monster_id: &str, ) -> Option<Valu...` — Tauri commands for exporting campaign and module documents to PDF.
+-  `parse_homebrew_monster_data` function L68-82 — `(hb_monster: mimir_core::models::campaign::CampaignHomebrewMonster) -> Option<Va...` — Tauri commands for exporting campaign and module documents to PDF.
+-  `lookup_catalog_monster` function L84-108 — `( db: &mut diesel::SqliteConnection, monster_name: &str, monster_source: &str, )...` — Tauri commands for exporting campaign and module documents to PDF.
+-  `resolve_module_monster_data` function L111-124 — `( db: &mut diesel::SqliteConnection, mm: &mimir_core::models::campaign::ModuleMo...` — Resolve monster data for a module monster, handling both catalog and homebrew paths.
+-  `resolve_monster_size` function L127-172 — `( db: &mut diesel::SqliteConnection, mm: &mimir_core::models::campaign::ModuleMo...` — Resolve monster size from catalog or homebrew.
+-  `load_monster_token_image` function L175-203 — `( mm: &mimir_core::models::campaign::ModuleMonster, assets_dir: &std::path::Path...` — Load token image for a catalog monster (homebrew monsters don't have catalog images).
 
 #### crates/mimir/src/commands/print/helpers.rs
 
@@ -3328,8 +3339,8 @@
 #### crates/mimir/src/commands/print/monster.rs
 
 - pub `MonsterExportOptions` struct L21-23 — `{ show_cut_lines: Option<bool> }` — Export options for monster cards
-- pub `export_module_monsters` function L27-196 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, module_id:...` — Export module monsters as cards to PDF
-- pub `export_monster_card` function L200-284 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, monster_na...` — Export a single monster as a card to PDF
+- pub `export_module_monsters` function L27-222 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, module_id:...` — Export module monsters as cards to PDF
+- pub `export_monster_card` function L226-310 — `( app_state: State<'_, AppState>, print_state: State<'_, PrintState>, monster_na...` — Export a single monster as a card to PDF
 
 #### crates/mimir/src/commands/print/trap.rs
 
@@ -3360,7 +3371,7 @@
 
 #### crates/mimir/src/main.rs
 
--  `main` function L18-438 — `()` — Initializes the Tauri application with database connection and runs the event loop.
+-  `main` function L18-439 — `()` — Initializes the Tauri application with database connection and runs the event loop.
 
 #### crates/mimir/src/state.rs
 
@@ -4349,14 +4360,17 @@
 - pub `module_monster_exists` function L72-77 — `(conn: &mut SqliteConnection, id: &str) -> QueryResult<bool>` — Check if a module monster exists.
 - pub `count_module_monsters` function L80-85 — `(conn: &mut SqliteConnection, module_id: &str) -> QueryResult<i64>` — Count monsters for a module.
 - pub `get_total_monster_count` function L88-96 — `(conn: &mut SqliteConnection, module_id: &str) -> QueryResult<i64>` — Get total monster count for a module (sum of quantities).
--  `tests` module L99-218 — `-` — Database operations for module monsters (catalog monster instances).
+-  `tests` module L99-298 — `-` — Database operations for module monsters (catalog monster instances).
 -  `setup_test_data` function L105-111 — `(conn: &mut SqliteConnection)` — Database operations for module monsters (catalog monster instances).
--  `test_insert_and_get_module_monster` function L114-126 — `()` — Database operations for module monsters (catalog monster instances).
--  `test_insert_with_customizations` function L129-142 — `()` — Database operations for module monsters (catalog monster instances).
--  `test_list_module_monsters` function L145-162 — `()` — Database operations for module monsters (catalog monster instances).
--  `test_update_module_monster` function L165-177 — `()` — Database operations for module monsters (catalog monster instances).
--  `test_delete_module_monster` function L180-192 — `()` — Database operations for module monsters (catalog monster instances).
--  `test_count_and_total` function L195-217 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_insert_and_get_module_monster` function L114-127 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_insert_with_customizations` function L130-143 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_list_module_monsters` function L146-163 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_update_module_monster` function L166-178 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_delete_module_monster` function L181-193 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_count_and_total` function L196-218 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_insert_homebrew_module_monster` function L221-246 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_list_mixed_catalog_and_homebrew` function L249-278 — `()` — Database operations for module monsters (catalog monster instances).
+-  `test_delete_homebrew_module_monster` function L281-297 — `()` — Database operations for module monsters (catalog monster instances).
 
 #### crates/mimir-core/src/dal/campaign/module_npc.rs
 
@@ -5984,25 +5998,30 @@
 
 #### crates/mimir-core/src/models/campaign/module_monster.rs
 
-- pub `ModuleMonster` struct L12-31 — `{ id: String, module_id: String, monster_name: String, monster_source: String, d...` — A monster instance in a module, referencing the catalog with optional customizations.
-- pub `effective_name` function L35-37 — `(&self) -> &str` — Get the effective display name (custom or catalog name).
-- pub `has_custom_name` function L40-42 — `(&self) -> bool` — Check if this monster has a custom display name.
-- pub `NewModuleMonster` struct L48-56 — `{ id: &'a str, module_id: &'a str, monster_name: &'a str, monster_source: &'a st...` — Data for inserting a new module monster.
-- pub `new` function L60-75 — `( id: &'a str, module_id: &'a str, monster_name: &'a str, monster_source: &'a st...` — Create a new module monster from catalog reference.
-- pub `with_display_name` function L78-81 — `(mut self, name: &'a str) -> Self` — Set a custom display name.
-- pub `with_notes` function L84-87 — `(mut self, notes: &'a str) -> Self` — Set DM notes.
-- pub `with_quantity` function L90-93 — `(mut self, quantity: i32) -> Self` — Set quantity for encounters.
-- pub `UpdateModuleMonster` struct L99-104 — `{ display_name: Option<Option<&'a str>>, notes: Option<Option<&'a str>>, quantit...` — Data for updating a module monster.
-- pub `set_display_name` function L108-114 — `(name: Option<&'a str>, updated_at: &'a str) -> Self` — Update the display name.
-- pub `set_notes` function L117-123 — `(notes: Option<&'a str>, updated_at: &'a str) -> Self` — Update the notes.
-- pub `set_quantity` function L126-132 — `(quantity: i32, updated_at: &'a str) -> Self` — Update the quantity.
--  `ModuleMonster` type L33-43 — `= ModuleMonster` — Catalog monster instances with optional customizations for use in modules.
--  `tests` module L136-174 — `-` — Catalog monster instances with optional customizations for use in modules.
--  `test_new_module_monster` function L140-146 — `()` — Catalog monster instances with optional customizations for use in modules.
--  `test_with_display_name` function L149-153 — `()` — Catalog monster instances with optional customizations for use in modules.
--  `test_with_quantity` function L156-160 — `()` — Catalog monster instances with optional customizations for use in modules.
--  `test_with_notes` function L163-167 — `()` — Catalog monster instances with optional customizations for use in modules.
--  `test_update_quantity` function L170-173 — `()` — Catalog monster instances with optional customizations for use in modules.
+- pub `ModuleMonster` struct L12-33 — `{ id: String, module_id: String, monster_name: Option<String>, monster_source: O...` — A monster instance in a module, referencing either the catalog or a homebrew monster.
+- pub `effective_name` function L37-42 — `(&self) -> &str` — Get the effective display name (custom name, or catalog name if available).
+- pub `has_custom_name` function L45-47 — `(&self) -> bool` — Check if this monster has a custom display name.
+- pub `is_homebrew` function L50-52 — `(&self) -> bool` — Check if this is a homebrew monster reference.
+- pub `is_catalog` function L55-57 — `(&self) -> bool` — Check if this is a catalog monster reference.
+- pub `NewModuleMonster` struct L63-72 — `{ id: &'a str, module_id: &'a str, monster_name: Option<&'a str>, monster_source...` — Data for inserting a new module monster.
+- pub `new` function L76-92 — `( id: &'a str, module_id: &'a str, monster_name: &'a str, monster_source: &'a st...` — Create a new module monster from catalog reference.
+- pub `from_homebrew` function L95-110 — `( id: &'a str, module_id: &'a str, homebrew_monster_id: &'a str, ) -> Self` — Create a new module monster from a homebrew monster reference.
+- pub `with_display_name` function L113-116 — `(mut self, name: &'a str) -> Self` — Set a custom display name.
+- pub `with_notes` function L119-122 — `(mut self, notes: &'a str) -> Self` — Set DM notes.
+- pub `with_quantity` function L125-128 — `(mut self, quantity: i32) -> Self` — Set quantity for encounters.
+- pub `UpdateModuleMonster` struct L134-139 — `{ display_name: Option<Option<&'a str>>, notes: Option<Option<&'a str>>, quantit...` — Data for updating a module monster.
+- pub `set_display_name` function L143-149 — `(name: Option<&'a str>, updated_at: &'a str) -> Self` — Update the display name.
+- pub `set_notes` function L152-158 — `(notes: Option<&'a str>, updated_at: &'a str) -> Self` — Update the notes.
+- pub `set_quantity` function L161-167 — `(quantity: i32, updated_at: &'a str) -> Self` — Update the quantity.
+-  `ModuleMonster` type L35-58 — `= ModuleMonster` — Catalog monster instances with optional customizations for use in modules.
+-  `tests` module L171-231 — `-` — Catalog monster instances with optional customizations for use in modules.
+-  `test_new_catalog_module_monster` function L175-182 — `()` — Catalog monster instances with optional customizations for use in modules.
+-  `test_new_homebrew_module_monster` function L185-191 — `()` — Catalog monster instances with optional customizations for use in modules.
+-  `test_with_display_name` function L194-198 — `()` — Catalog monster instances with optional customizations for use in modules.
+-  `test_with_quantity` function L201-205 — `()` — Catalog monster instances with optional customizations for use in modules.
+-  `test_with_notes` function L208-212 — `()` — Catalog monster instances with optional customizations for use in modules.
+-  `test_homebrew_with_builders` function L215-224 — `()` — Catalog monster instances with optional customizations for use in modules.
+-  `test_update_quantity` function L227-230 — `()` — Catalog monster instances with optional customizations for use in modules.
 
 #### crates/mimir-core/src/models/campaign/module_npc.rs
 
@@ -6663,26 +6682,28 @@
 
 #### crates/mimir-core/src/seed/dev.rs
 
-- pub `TEST_CAMPAIGN_NAME` variable L39 — `: &str` — Name of the test campaign for detection.
-- pub `is_already_seeded` function L42-45 — `(conn: &mut SqliteConnection) -> ServiceResult<bool>` — Check if dev seed data already exists.
-- pub `seed_dev_data` function L55-114 — `(conn: &mut SqliteConnection, app_data_dir: &Path) -> ServiceResult<bool>` — Seed development data into the database.
-- pub `clear_dev_seed_data` function L117-131 — `(conn: &mut SqliteConnection) -> ServiceResult<()>` — Clear existing dev seed data.
--  `SeededMonsters` struct L22-30 — `{ entrance_guards: String, bridge_archers: String, main_chamber: String, klarg: ...` — IDs of seeded monsters for token placement.
--  `SeededNpcs` struct L33-36 — `{ sildar: String, yeemik: String }` — IDs of seeded NPCs for token placement.
--  `seed_campaign` function L137-142 — `(conn: &mut SqliteConnection) -> ServiceResult<crate::models::campaign::Campaign...` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_characters` function L148-507 — `(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<Vec<Character>...` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_homebrew_items` function L513-637 — `(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_module` function L643-649 — `(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<Module>` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_monsters` function L655-700 — `(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<SeededMonsters>` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_npcs` function L706-751 — `(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<SeededNpcs>` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `get_seed_assets_dir` function L758-789 — `() -> Option<PathBuf>` — Get the seed assets directory path.
--  `seed_maps` function L791-813 — `( conn: &mut SqliteConnection, campaign_id: &str, module_id: &str, assets_dir: &...` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_uvtt_map` function L815-855 — `( conn: &mut SqliteConnection, campaign_id: &str, module_id: Option<&str>, uvtt_...` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_png_map` function L857-917 — `( conn: &mut SqliteConnection, campaign_id: &str, module_id: Option<&str>, png_p...` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_tokens` function L923-1019 — `( conn: &mut SqliteConnection, map_id: &str, monsters: &SeededMonsters, npcs: &S...` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_lights` function L1025-1052 — `(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_traps` function L1058-1076 — `(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
--  `seed_pois` function L1082-1095 — `(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
+- pub `TEST_CAMPAIGN_NAME` variable L45 — `: &str` — Name of the test campaign for detection.
+- pub `is_already_seeded` function L48-51 — `(conn: &mut SqliteConnection) -> ServiceResult<bool>` — Check if dev seed data already exists.
+- pub `seed_dev_data` function L61-124 — `(conn: &mut SqliteConnection, app_data_dir: &Path) -> ServiceResult<bool>` — Seed development data into the database.
+- pub `clear_dev_seed_data` function L127-141 — `(conn: &mut SqliteConnection) -> ServiceResult<()>` — Clear existing dev seed data.
+-  `SeededMonsters` struct L22-31 — `{ entrance_guards: String, bridge_archers: String, main_chamber: String, klarg: ...` — IDs of seeded monsters for token placement.
+-  `SeededHomebrewMonsters` struct L34-36 — `{ cragmaw_mutant: String }` — IDs of seeded homebrew monsters for module monster creation.
+-  `SeededNpcs` struct L39-42 — `{ sildar: String, yeemik: String }` — IDs of seeded NPCs for token placement.
+-  `seed_campaign` function L147-152 — `(conn: &mut SqliteConnection) -> ServiceResult<crate::models::campaign::Campaign...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_characters` function L158-517 — `(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<Vec<Character>...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_homebrew_items` function L523-647 — `(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_homebrew_monsters` function L653-729 — `( conn: &mut SqliteConnection, campaign_id: &str, ) -> ServiceResult<SeededHomeb...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_module` function L735-741 — `(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<Module>` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_monsters` function L747-809 — `( conn: &mut SqliteConnection, module_id: &str, homebrew_monsters: &SeededHomebr...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_npcs` function L815-860 — `(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<SeededNpcs>` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `get_seed_assets_dir` function L867-898 — `() -> Option<PathBuf>` — Get the seed assets directory path.
+-  `seed_maps` function L900-922 — `( conn: &mut SqliteConnection, campaign_id: &str, module_id: &str, assets_dir: &...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_uvtt_map` function L924-964 — `( conn: &mut SqliteConnection, campaign_id: &str, module_id: Option<&str>, uvtt_...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_png_map` function L966-1026 — `( conn: &mut SqliteConnection, campaign_id: &str, module_id: Option<&str>, png_p...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_tokens` function L1032-1140 — `( conn: &mut SqliteConnection, map_id: &str, monsters: &SeededMonsters, npcs: &S...` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_lights` function L1146-1173 — `(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_traps` function L1179-1197 — `(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
+-  `seed_pois` function L1203-1216 — `(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>` — Seeds the database with "The Lost Mine of Phandelver" test data.
 
 #### crates/mimir-core/src/seed/mod.rs
 
@@ -6700,60 +6721,60 @@
 - pub `CatalogReference` struct L76-81 — `{ ref_type: String, name: String, source: String }` — A reference to a catalog item found in campaign content
 - pub `ArchivePreview` struct L85-92 — `{ campaign_name: String, counts: ArchiveCounts, catalog_references: Vec<CatalogR...` — Preview information about an archive without importing
 - pub `ImportResult` struct L96-100 — `{ campaign_id: String, campaign_name: String, counts: ArchiveCounts }` — Result of importing an archive
-- pub `ArchiveData` struct L117-134 — `{ campaign: Campaign, sources: Vec<String>, modules: Vec<Module>, documents: Vec...` — Complete archive data - uses existing models directly
-- pub `CharacterWithRelated` struct L138-147 — `{ character: Character, classes: Vec<CharacterClass>, inventory: Vec<CharacterIn...` — Character with all related data aggregated
-- pub `MapWithRelated` struct L151-158 — `{ map: Map, pois: Vec<MapPoi>, traps: Vec<MapTrap>, light_sources: Vec<LightSour...` — Map with all related data aggregated
-- pub `ArchiveService` struct L165-167 — `{ conn: &'a mut SqliteConnection }` — Service for campaign archive operations
-- pub `new` function L170-172 — `(conn: &'a mut SqliteConnection) -> Self` — and importing them back into new campaign instances.
-- pub `export_campaign` function L175-222 — `( &mut self, campaign_id: &str, output_dir: &Path, assets_dir: &Path, ) -> Servi...` — Export a campaign to a tar.gz archive.
-- pub `import_campaign` function L228-327 — `( &mut self, archive_path: &Path, assets_dir: &Path, campaign_name_override: Opt...` — Import a campaign from an archive.
-- pub `preview_archive` function L330-365 — `(archive_path: &Path) -> ServiceResult<ArchivePreview>` — Preview an archive without importing.
+- pub `ArchiveData` struct L118-135 — `{ campaign: Campaign, sources: Vec<String>, modules: Vec<Module>, documents: Vec...` — Complete archive data - uses existing models directly
+- pub `CharacterWithRelated` struct L139-148 — `{ character: Character, classes: Vec<CharacterClass>, inventory: Vec<CharacterIn...` — Character with all related data aggregated
+- pub `MapWithRelated` struct L152-159 — `{ map: Map, pois: Vec<MapPoi>, traps: Vec<MapTrap>, light_sources: Vec<LightSour...` — Map with all related data aggregated
+- pub `ArchiveService` struct L166-168 — `{ conn: &'a mut SqliteConnection }` — Service for campaign archive operations
+- pub `new` function L171-173 — `(conn: &'a mut SqliteConnection) -> Self` — and importing them back into new campaign instances.
+- pub `export_campaign` function L176-223 — `( &mut self, campaign_id: &str, output_dir: &Path, assets_dir: &Path, ) -> Servi...` — Export a campaign to a tar.gz archive.
+- pub `import_campaign` function L229-328 — `( &mut self, archive_path: &Path, assets_dir: &Path, campaign_name_override: Opt...` — Import a campaign from an archive.
+- pub `preview_archive` function L331-366 — `(archive_path: &Path) -> ServiceResult<ArchivePreview>` — Preview an archive without importing.
 -  `ARCHIVE_VERSION` variable L33 — `: &str` — Archive format version
 -  `ARCHIVE_FORMAT` variable L35 — `: &str` — Archive format identifier
--  `IdMaps` struct L104-113 — `{ campaign: HashMap<String, String>, modules: HashMap<String, String>, documents...` — ID mapping tables for import (old ID -> new ID)
--  `collect_campaign_data` function L367-442 — `( &mut self, campaign_id: &str, campaign: Campaign, ) -> ServiceResult<ArchiveDa...` — and importing them back into new campaign instances.
--  `collect_asset_files` function L444-480 — `( &self, data: &ArchiveData, assets_dir: &Path, ) -> ServiceResult<HashMap<Strin...` — and importing them back into new campaign instances.
--  `extract_catalog_references` function L482-503 — `(&self, documents: &[Document]) -> Vec<CatalogReference>` — and importing them back into new campaign instances.
--  `create_archive` function L505-535 — `( &self, archive_path: &Path, manifest: &ArchiveManifest, data: &ArchiveData, as...` — and importing them back into new campaign instances.
--  `add_file_to_archive` function L537-559 — `( archive: &mut Builder<W>, path: &str, data: &[u8], ) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `extract_archive` function L565-571 — `(archive_path: &Path, dest: &Path) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `generate_unique_campaign_name` function L573-589 — `(&mut self, base_name: &str) -> String` — and importing them back into new campaign instances.
--  `import_assets` function L591-625 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, assets...` — and importing them back into new campaign instances.
--  `import_modules` function L627-644 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
--  `import_characters` function L646-793 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
--  `import_documents` function L795-816 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
--  `import_maps` function L818-927 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
--  `import_module_entities` function L929-978 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `import_tokens` function L980-1012 — `(&mut self, data: &ArchiveData, id_maps: &IdMaps) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `import_homebrew_items` function L1014-1030 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `import_homebrew_spells` function L1032-1048 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `import_homebrew_monsters` function L1050-1067 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
--  `slugify` function L1069-1078 — `(name: &str) -> String` — and importing them back into new campaign instances.
--  `tests` module L1082-1769 — `-` — and importing them back into new campaign instances.
--  `create_test_campaign` function L1095-1100 — `(conn: &mut SqliteConnection) -> String` — and importing them back into new campaign instances.
--  `create_test_module` function L1102-1108 — `(conn: &mut SqliteConnection, campaign_id: &str) -> String` — and importing them back into new campaign instances.
--  `seed_campaign` function L1111-1144 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a module, document, and character for testing.
--  `test_slugify` function L1147-1151 — `()` — and importing them back into new campaign instances.
--  `test_catalog_reference_hash` function L1154-1171 — `()` — and importing them back into new campaign instances.
--  `test_export_creates_file` function L1174-1187 — `()` — and importing them back into new campaign instances.
--  `test_export_archive_contains_manifest_and_data` function L1190-1221 — `()` — and importing them back into new campaign instances.
--  `test_preview_archive` function L1224-1242 — `()` — and importing them back into new campaign instances.
--  `test_preview_extracts_catalog_references` function L1245-1264 — `()` — and importing them back into new campaign instances.
--  `test_export_nonexistent_campaign` function L1267-1276 — `()` — and importing them back into new campaign instances.
--  `test_preview_nonexistent_file` function L1279-1282 — `()` — and importing them back into new campaign instances.
--  `test_import_round_trip` function L1285-1329 — `()` — and importing them back into new campaign instances.
--  `test_import_generates_new_uuids` function L1332-1356 — `()` — and importing them back into new campaign instances.
--  `test_import_name_collision_auto_increments` function L1359-1387 — `()` — and importing them back into new campaign instances.
--  `test_import_invalid_archive` function L1390-1401 — `()` — and importing them back into new campaign instances.
--  `test_export_empty_campaign` function L1404-1420 — `()` — and importing them back into new campaign instances.
--  `test_import_preserves_document_content` function L1423-1444 — `()` — and importing them back into new campaign instances.
--  `seed_campaign_with_homebrew` function L1447-1490 — `(conn: &mut SqliteConnection) -> String` — Seed a campaign with homebrew items, monsters, and spells for testing.
--  `seed_campaign_with_detailed_character` function L1493-1571 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a character that has classes, inventory, and proficiencies.
--  `test_homebrew_item_round_trip` function L1574-1626 — `()` — and importing them back into new campaign instances.
--  `test_character_details_round_trip` function L1629-1677 — `()` — and importing them back into new campaign instances.
--  `test_module_entities_round_trip` function L1680-1717 — `()` — and importing them back into new campaign instances.
--  `test_import_preserves_module_document_associations` function L1720-1743 — `()` — and importing them back into new campaign instances.
--  `test_export_import_empty_round_trip` function L1746-1768 — `()` — and importing them back into new campaign instances.
+-  `IdMaps` struct L104-114 — `{ campaign: HashMap<String, String>, modules: HashMap<String, String>, documents...` — ID mapping tables for import (old ID -> new ID)
+-  `collect_campaign_data` function L368-443 — `( &mut self, campaign_id: &str, campaign: Campaign, ) -> ServiceResult<ArchiveDa...` — and importing them back into new campaign instances.
+-  `collect_asset_files` function L445-481 — `( &self, data: &ArchiveData, assets_dir: &Path, ) -> ServiceResult<HashMap<Strin...` — and importing them back into new campaign instances.
+-  `extract_catalog_references` function L483-504 — `(&self, documents: &[Document]) -> Vec<CatalogReference>` — and importing them back into new campaign instances.
+-  `create_archive` function L506-536 — `( &self, archive_path: &Path, manifest: &ArchiveManifest, data: &ArchiveData, as...` — and importing them back into new campaign instances.
+-  `add_file_to_archive` function L538-560 — `( archive: &mut Builder<W>, path: &str, data: &[u8], ) -> ServiceResult<()>` — and importing them back into new campaign instances.
+-  `extract_archive` function L566-572 — `(archive_path: &Path, dest: &Path) -> ServiceResult<()>` — and importing them back into new campaign instances.
+-  `generate_unique_campaign_name` function L574-590 — `(&mut self, base_name: &str) -> String` — and importing them back into new campaign instances.
+-  `import_assets` function L592-626 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, assets...` — and importing them back into new campaign instances.
+-  `import_modules` function L628-645 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
+-  `import_characters` function L647-794 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
+-  `import_documents` function L796-817 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
+-  `import_maps` function L819-928 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, campaign_id: &str, ) -> S...` — and importing them back into new campaign instances.
+-  `import_module_entities` function L930-985 — `( &mut self, data: &ArchiveData, id_maps: &mut IdMaps, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
+-  `import_tokens` function L987-1019 — `(&mut self, data: &ArchiveData, id_maps: &IdMaps) -> ServiceResult<()>` — and importing them back into new campaign instances.
+-  `import_homebrew_items` function L1021-1037 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
+-  `import_homebrew_spells` function L1039-1055 — `( &mut self, data: &ArchiveData, campaign_id: &str, ) -> ServiceResult<()>` — and importing them back into new campaign instances.
+-  `import_homebrew_monsters` function L1057-1076 — `( &mut self, data: &ArchiveData, campaign_id: &str, id_maps: &mut IdMaps, ) -> S...` — and importing them back into new campaign instances.
+-  `slugify` function L1078-1087 — `(name: &str) -> String` — and importing them back into new campaign instances.
+-  `tests` module L1091-1778 — `-` — and importing them back into new campaign instances.
+-  `create_test_campaign` function L1104-1109 — `(conn: &mut SqliteConnection) -> String` — and importing them back into new campaign instances.
+-  `create_test_module` function L1111-1117 — `(conn: &mut SqliteConnection, campaign_id: &str) -> String` — and importing them back into new campaign instances.
+-  `seed_campaign` function L1120-1153 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a module, document, and character for testing.
+-  `test_slugify` function L1156-1160 — `()` — and importing them back into new campaign instances.
+-  `test_catalog_reference_hash` function L1163-1180 — `()` — and importing them back into new campaign instances.
+-  `test_export_creates_file` function L1183-1196 — `()` — and importing them back into new campaign instances.
+-  `test_export_archive_contains_manifest_and_data` function L1199-1230 — `()` — and importing them back into new campaign instances.
+-  `test_preview_archive` function L1233-1251 — `()` — and importing them back into new campaign instances.
+-  `test_preview_extracts_catalog_references` function L1254-1273 — `()` — and importing them back into new campaign instances.
+-  `test_export_nonexistent_campaign` function L1276-1285 — `()` — and importing them back into new campaign instances.
+-  `test_preview_nonexistent_file` function L1288-1291 — `()` — and importing them back into new campaign instances.
+-  `test_import_round_trip` function L1294-1338 — `()` — and importing them back into new campaign instances.
+-  `test_import_generates_new_uuids` function L1341-1365 — `()` — and importing them back into new campaign instances.
+-  `test_import_name_collision_auto_increments` function L1368-1396 — `()` — and importing them back into new campaign instances.
+-  `test_import_invalid_archive` function L1399-1410 — `()` — and importing them back into new campaign instances.
+-  `test_export_empty_campaign` function L1413-1429 — `()` — and importing them back into new campaign instances.
+-  `test_import_preserves_document_content` function L1432-1453 — `()` — and importing them back into new campaign instances.
+-  `seed_campaign_with_homebrew` function L1456-1499 — `(conn: &mut SqliteConnection) -> String` — Seed a campaign with homebrew items, monsters, and spells for testing.
+-  `seed_campaign_with_detailed_character` function L1502-1580 — `(conn: &mut SqliteConnection) -> (String, String)` — Seed a campaign with a character that has classes, inventory, and proficiencies.
+-  `test_homebrew_item_round_trip` function L1583-1635 — `()` — and importing them back into new campaign instances.
+-  `test_character_details_round_trip` function L1638-1686 — `()` — and importing them back into new campaign instances.
+-  `test_module_entities_round_trip` function L1689-1726 — `()` — and importing them back into new campaign instances.
+-  `test_import_preserves_module_document_associations` function L1729-1752 — `()` — and importing them back into new campaign instances.
+-  `test_export_import_empty_round_trip` function L1755-1777 — `()` — and importing them back into new campaign instances.
 
 #### crates/mimir-core/src/services/asset.rs
 
@@ -7234,54 +7255,54 @@
 -  `UpdateTokenInput` type L130-163 — `= UpdateTokenInput` — Business logic for token placements on maps.
 -  `get_grid_size` function L381-396 — `(&mut self, map_id: &str) -> i32` — Get the grid size (pixels per grid) from a map's UVTT file.
 -  `enrich` function L399-427 — `(&mut self, placement: TokenPlacement, grid_size_px: i32) -> ServiceResult<Token...` — Enrich a TokenPlacement with resolved names and computed coordinates.
--  `resolve_names` function L430-468 — `(&mut self, token: &TokenPlacement) -> (String, Option<String>, String)` — Resolve token type and name from monster/NPC references.
--  `normalize_size_code` function L472-482 — `(size: &str) -> String` — Normalize size codes (T, S, M, L, H, G) to full names.
--  `tests` module L485-1240 — `-` — Business logic for token placements on maps.
--  `setup_test_env` function L498-502 — `() -> (SqliteConnection, TempDir)` — Set up a test environment with an in-memory DB and temp directory.
--  `create_prerequisites` function L506-535 — `(conn: &mut SqliteConnection) -> (String, String, String)` — Create prerequisite entities: campaign -> module -> asset -> map.
--  `create_module_monster` function L538-543 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module monster in the DB and return its ID.
--  `create_module_npc` function L546-551 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module NPC in the DB and return its ID.
--  `test_create_pc_token` function L556-572 — `()` — Business logic for token placements on maps.
--  `test_create_monster_token` function L575-588 — `()` — Business logic for token placements on maps.
--  `test_create_npc_token` function L591-605 — `()` — Business logic for token placements on maps.
--  `test_create_token_with_label_and_color` function L608-622 — `()` — Business logic for token placements on maps.
--  `test_create_hidden_token` function L625-634 — `()` — Business logic for token placements on maps.
--  `test_get_token` function L639-656 — `()` — Business logic for token placements on maps.
--  `test_get_token_not_found` function L659-665 — `()` — Business logic for token placements on maps.
--  `test_list_tokens` function L670-688 — `()` — Business logic for token placements on maps.
--  `test_list_tokens_different_maps` function L691-721 — `()` — Business logic for token placements on maps.
--  `test_list_visible_filters_hidden` function L726-745 — `()` — Business logic for token placements on maps.
--  `test_list_visible_empty_when_all_hidden` function L748-759 — `()` — Business logic for token placements on maps.
--  `test_update_token_position` function L764-777 — `()` — Business logic for token placements on maps.
--  `test_update_token_hidden` function L780-792 — `()` — Business logic for token placements on maps.
--  `test_update_token_label` function L795-809 — `()` — Business logic for token placements on maps.
--  `test_update_token_faction_color` function L812-826 — `()` — Business logic for token placements on maps.
--  `test_update_not_found` function L829-836 — `()` — Business logic for token placements on maps.
--  `test_update_position` function L841-856 — `()` — Business logic for token placements on maps.
--  `test_update_position_not_found` function L859-865 — `()` — Business logic for token placements on maps.
--  `test_update_vision` function L870-886 — `()` — Business logic for token placements on maps.
--  `test_update_vision_not_found` function L889-895 — `()` — Business logic for token placements on maps.
--  `test_toggle_visibility` function L900-920 — `()` — Business logic for token placements on maps.
--  `test_toggle_visibility_not_found` function L923-929 — `()` — Business logic for token placements on maps.
--  `test_delete_token` function L934-946 — `()` — Business logic for token placements on maps.
--  `test_delete_not_found` function L949-955 — `()` — Business logic for token placements on maps.
--  `test_count_tokens` function L960-974 — `()` — Business logic for token placements on maps.
--  `test_count_after_delete` function L977-989 — `()` — Business logic for token placements on maps.
--  `test_create_pc_without_label_fails` function L994-1012 — `()` — Business logic for token placements on maps.
--  `test_create_both_monster_and_npc_fails` function L1015-1035 — `()` — Business logic for token placements on maps.
--  `test_pixel_coordinates_use_default_grid_size` function L1040-1053 — `()` — Business logic for token placements on maps.
--  `test_pc_token_defaults_to_medium` function L1058-1067 — `()` — Business logic for token placements on maps.
--  `test_npc_token_defaults_to_medium` function L1070-1080 — `()` — Business logic for token placements on maps.
--  `test_monster_token_with_missing_reference_errors` function L1085-1095 — `()` — Business logic for token placements on maps.
--  `test_npc_token_with_missing_reference_errors` function L1098-1108 — `()` — Business logic for token placements on maps.
--  `test_normalize_size_code_values` function L1113-1120 — `()` — Business logic for token placements on maps.
--  `test_normalize_size_code_case_insensitive` function L1123-1127 — `()` — Business logic for token placements on maps.
--  `test_normalize_size_code_unknown` function L1130-1133 — `()` — Business logic for token placements on maps.
--  `test_default_vision_values` function L1138-1150 — `()` — Business logic for token placements on maps.
--  `test_create_update_delete_sequence` function L1155-1187 — `()` — Business logic for token placements on maps.
--  `test_negative_coordinates_allowed` function L1192-1202 — `()` — Business logic for token placements on maps.
--  `test_create_token_input_builders` function L1207-1221 — `()` — Business logic for token placements on maps.
--  `test_update_token_input_builders` function L1224-1239 — `()` — Business logic for token placements on maps.
+-  `resolve_names` function L430-480 — `(&mut self, token: &TokenPlacement) -> (String, Option<String>, String)` — Resolve token type and name from monster/NPC references.
+-  `normalize_size_code` function L484-494 — `(size: &str) -> String` — Normalize size codes (T, S, M, L, H, G) to full names.
+-  `tests` module L497-1252 — `-` — Business logic for token placements on maps.
+-  `setup_test_env` function L510-514 — `() -> (SqliteConnection, TempDir)` — Set up a test environment with an in-memory DB and temp directory.
+-  `create_prerequisites` function L518-547 — `(conn: &mut SqliteConnection) -> (String, String, String)` — Create prerequisite entities: campaign -> module -> asset -> map.
+-  `create_module_monster` function L550-555 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module monster in the DB and return its ID.
+-  `create_module_npc` function L558-563 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module NPC in the DB and return its ID.
+-  `test_create_pc_token` function L568-584 — `()` — Business logic for token placements on maps.
+-  `test_create_monster_token` function L587-600 — `()` — Business logic for token placements on maps.
+-  `test_create_npc_token` function L603-617 — `()` — Business logic for token placements on maps.
+-  `test_create_token_with_label_and_color` function L620-634 — `()` — Business logic for token placements on maps.
+-  `test_create_hidden_token` function L637-646 — `()` — Business logic for token placements on maps.
+-  `test_get_token` function L651-668 — `()` — Business logic for token placements on maps.
+-  `test_get_token_not_found` function L671-677 — `()` — Business logic for token placements on maps.
+-  `test_list_tokens` function L682-700 — `()` — Business logic for token placements on maps.
+-  `test_list_tokens_different_maps` function L703-733 — `()` — Business logic for token placements on maps.
+-  `test_list_visible_filters_hidden` function L738-757 — `()` — Business logic for token placements on maps.
+-  `test_list_visible_empty_when_all_hidden` function L760-771 — `()` — Business logic for token placements on maps.
+-  `test_update_token_position` function L776-789 — `()` — Business logic for token placements on maps.
+-  `test_update_token_hidden` function L792-804 — `()` — Business logic for token placements on maps.
+-  `test_update_token_label` function L807-821 — `()` — Business logic for token placements on maps.
+-  `test_update_token_faction_color` function L824-838 — `()` — Business logic for token placements on maps.
+-  `test_update_not_found` function L841-848 — `()` — Business logic for token placements on maps.
+-  `test_update_position` function L853-868 — `()` — Business logic for token placements on maps.
+-  `test_update_position_not_found` function L871-877 — `()` — Business logic for token placements on maps.
+-  `test_update_vision` function L882-898 — `()` — Business logic for token placements on maps.
+-  `test_update_vision_not_found` function L901-907 — `()` — Business logic for token placements on maps.
+-  `test_toggle_visibility` function L912-932 — `()` — Business logic for token placements on maps.
+-  `test_toggle_visibility_not_found` function L935-941 — `()` — Business logic for token placements on maps.
+-  `test_delete_token` function L946-958 — `()` — Business logic for token placements on maps.
+-  `test_delete_not_found` function L961-967 — `()` — Business logic for token placements on maps.
+-  `test_count_tokens` function L972-986 — `()` — Business logic for token placements on maps.
+-  `test_count_after_delete` function L989-1001 — `()` — Business logic for token placements on maps.
+-  `test_create_pc_without_label_fails` function L1006-1024 — `()` — Business logic for token placements on maps.
+-  `test_create_both_monster_and_npc_fails` function L1027-1047 — `()` — Business logic for token placements on maps.
+-  `test_pixel_coordinates_use_default_grid_size` function L1052-1065 — `()` — Business logic for token placements on maps.
+-  `test_pc_token_defaults_to_medium` function L1070-1079 — `()` — Business logic for token placements on maps.
+-  `test_npc_token_defaults_to_medium` function L1082-1092 — `()` — Business logic for token placements on maps.
+-  `test_monster_token_with_missing_reference_errors` function L1097-1107 — `()` — Business logic for token placements on maps.
+-  `test_npc_token_with_missing_reference_errors` function L1110-1120 — `()` — Business logic for token placements on maps.
+-  `test_normalize_size_code_values` function L1125-1132 — `()` — Business logic for token placements on maps.
+-  `test_normalize_size_code_case_insensitive` function L1135-1139 — `()` — Business logic for token placements on maps.
+-  `test_normalize_size_code_unknown` function L1142-1145 — `()` — Business logic for token placements on maps.
+-  `test_default_vision_values` function L1150-1162 — `()` — Business logic for token placements on maps.
+-  `test_create_update_delete_sequence` function L1167-1199 — `()` — Business logic for token placements on maps.
+-  `test_negative_coordinates_allowed` function L1204-1214 — `()` — Business logic for token placements on maps.
+-  `test_create_token_input_builders` function L1219-1233 — `()` — Business logic for token placements on maps.
+-  `test_update_token_input_builders` function L1236-1251 — `()` — Business logic for token placements on maps.
 
 ### crates/mimir-core/src/services/catalog
 
@@ -7908,42 +7929,42 @@
 - pub `MimirHandler` struct L23-25 — `{ context: Arc<McpContext> }` — Mimir MCP Server Handler.
 - pub `new` function L29-34 — `() -> Result<Self, McpError>` — Create a new handler with initialized context.
 - pub `with_context` function L37-39 — `(context: Arc<McpContext>) -> Self` — Create a handler with an existing context.
--  `MimirHandler` type L27-256 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_tools` function L42-121 — `() -> Vec<Tool>` — Get the list of available tools.
--  `execute_tool` function L124-255 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
--  `MimirHandler` type L259-309 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_list_tools_request` function L260-271 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_call_tool_request` function L273-308 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tests` module L312-1287 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `EXPECTED_TOOLS` variable L318-395 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
--  `test_ctx` function L397-399 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_expected_tools_are_published` function L402-414 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `no_duplicate_tool_names` function L417-428 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `published_tools_match_expected_count` function L431-442 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `every_published_tool_has_a_route` function L445-463 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_tools_have_descriptions` function L466-475 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `call_ok` function L482-487 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
--  `call_err` function L490-495 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
--  `campaign_crud_lifecycle` function L500-552 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_campaign` function L557-572 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
--  `module_crud_lifecycle` function L575-627 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `document_crud_lifecycle` function L632-715 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_level_document` function L720-750 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_crud_lifecycle` function L755-810 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_filter_by_type` function L813-852 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `catalog_searches_return_empty_on_fresh_db` function L857-885 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tool_not_found_for_unknown_name` function L890-894 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_required_tools_fail_without_active_campaign` function L897-916 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `create_character_requires_name` function L919-934 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `delete_campaign_requires_id` function L937-942 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_monster_crud_lifecycle` function L947-1010 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_spell_crud_lifecycle` function L1015-1070 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_item_crud_lifecycle` function L1075-1130 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_not_found_errors` function L1135-1164 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_name_and_data` function L1167-1206 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_get_update_delete_require_id` function L1209-1234 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_list_requires_active_campaign` function L1237-1256 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_active_campaign` function L1259-1286 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `MimirHandler` type L27-260 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_tools` function L42-122 — `() -> Vec<Tool>` — Get the list of available tools.
+-  `execute_tool` function L125-259 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
+-  `MimirHandler` type L263-313 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_list_tools_request` function L264-275 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_call_tool_request` function L277-312 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tests` module L316-1292 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `EXPECTED_TOOLS` variable L322-400 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
+-  `test_ctx` function L402-404 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_expected_tools_are_published` function L407-419 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `no_duplicate_tool_names` function L422-433 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `published_tools_match_expected_count` function L436-447 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `every_published_tool_has_a_route` function L450-468 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_tools_have_descriptions` function L471-480 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `call_ok` function L487-492 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
+-  `call_err` function L495-500 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
+-  `campaign_crud_lifecycle` function L505-557 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_campaign` function L562-577 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
+-  `module_crud_lifecycle` function L580-632 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `document_crud_lifecycle` function L637-720 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_level_document` function L725-755 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_crud_lifecycle` function L760-815 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_filter_by_type` function L818-857 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `catalog_searches_return_empty_on_fresh_db` function L862-890 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tool_not_found_for_unknown_name` function L895-899 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_required_tools_fail_without_active_campaign` function L902-921 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `create_character_requires_name` function L924-939 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `delete_campaign_requires_id` function L942-947 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_monster_crud_lifecycle` function L952-1015 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_spell_crud_lifecycle` function L1020-1075 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_item_crud_lifecycle` function L1080-1135 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_not_found_errors` function L1140-1169 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_name_and_data` function L1172-1211 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_get_update_delete_require_id` function L1214-1239 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_list_requires_active_campaign` function L1242-1261 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_active_campaign` function L1264-1291 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 
 #### crates/mimir-mcp/src/lib.rs
 
@@ -8009,22 +8030,22 @@
 
 #### crates/mimir-mcp/src/tools/catalog.rs
 
-- pub `search_monsters_tool` function L24-46 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_items_tool` function L48-77 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_spells_tool` function L79-105 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_races_tool` function L107-126 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_classes_tool` function L128-147 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_backgrounds_tool` function L149-168 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_feats_tool` function L170-189 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_conditions_tool` function L191-210 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
-- pub `search_monsters` function L216-261 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_items` function L263-311 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_spells` function L313-361 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_races` function L363-388 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_classes` function L390-415 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_backgrounds` function L417-442 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_feats` function L444-469 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
-- pub `search_conditions` function L471-496 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_monsters_tool` function L24-47 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_items_tool` function L49-78 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_spells_tool` function L80-106 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_races_tool` function L108-127 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_classes_tool` function L129-148 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_backgrounds_tool` function L150-169 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_feats_tool` function L171-190 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_conditions_tool` function L192-211 — `() -> Tool` — MCP tools for searching the D&D 5e catalog.
+- pub `search_monsters` function L217-311 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_items` function L313-361 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_spells` function L363-411 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_races` function L413-438 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_classes` function L440-465 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_backgrounds` function L467-492 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_feats` function L494-519 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
+- pub `search_conditions` function L521-546 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for searching the D&D 5e catalog.
 
 #### crates/mimir-mcp/src/tools/character.rs
 
@@ -8151,17 +8172,19 @@
 - pub `create_module_tool` function L22-46 — `() -> Tool` — MCP tools for module management.
 - pub `list_modules_tool` function L48-60 — `() -> Tool` — MCP tools for module management.
 - pub `get_module_details_tool` function L62-81 — `() -> Tool` — MCP tools for module management.
-- pub `add_monster_to_module_tool` function L83-104 — `() -> Tool` — MCP tools for module management.
-- pub `add_item_to_module_tool` function L106-127 — `() -> Tool` — MCP tools for module management.
-- pub `update_module_tool` function L129-149 — `() -> Tool` — MCP tools for module management.
-- pub `delete_module_tool` function L151-169 — `() -> Tool` — MCP tools for module management.
-- pub `create_module` function L175-206 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `list_modules` function L208-233 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `get_module_details` function L235-293 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `add_monster_to_module` function L295-349 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `add_item_to_module` function L351-366 — `(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `update_module` function L368-396 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `delete_module` function L398-412 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `add_monster_to_module_tool` function L83-110 — `() -> Tool` — MCP tools for module management.
+- pub `add_item_to_module_tool` function L112-133 — `() -> Tool` — MCP tools for module management.
+- pub `update_module_tool` function L135-155 — `() -> Tool` — MCP tools for module management.
+- pub `remove_monster_from_module_tool` function L157-175 — `() -> Tool` — MCP tools for module management.
+- pub `delete_module_tool` function L177-195 — `() -> Tool` — MCP tools for module management.
+- pub `create_module` function L201-232 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `list_modules` function L234-259 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `get_module_details` function L261-321 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `add_monster_to_module` function L323-409 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `remove_monster_from_module` function L411-435 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `add_item_to_module` function L437-452 — `(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `update_module` function L454-482 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `delete_module` function L484-498 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
 
 ### crates/mimir-print/src
 
@@ -8380,6 +8403,28 @@
 
 > *Semantic summary to be generated by AI agent.*
 
+#### crates/mimir-print/src/sections/card_utils.rs
+
+- pub `SMALL_CARD_DESC_BUDGET` variable L13 — `: usize` — Character budget for the description area on a 2.5" x 3.25" card.
+- pub `CardTextSplit` struct L17-24 — `{ front: String, back: String, is_foldable: bool }` — Result of splitting card text for foldable layout
+- pub `split_text_natural` function L34-82 — `(text: &str, budget: usize) -> CardTextSplit` — Split text at a natural boundary near `budget` characters.
+- pub `flatten_entries` function L88-124 — `(entries: &[Value]) -> String` — Recursively flatten 5etools entry arrays into plain text.
+- pub `escape_typst` function L127-140 — `(s: &str) -> String` — Escape special Typst characters in content text
+-  `tests` module L143-272 — `-` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_short_text_no_split` function L150-155 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_split_on_paragraph` function L158-164 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_split_on_sentence` function L167-173 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_split_on_comma` function L176-184 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_split_on_word_boundary` function L187-193 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_split_on_list_item` function L196-204 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_flatten_plain_strings` function L209-212 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_flatten_list_items` function L215-221 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_flatten_named_sub_entries` function L224-231 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_flatten_table_caption` function L234-240 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_flatten_nested` function L243-256 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_escape_5etools_tags` function L261-266 — `()` — used by equipment cards, spell cards, and potentially other card types.
+-  `test_escape_angle_brackets` function L269-271 — `()` — used by equipment cards, spell cards, and potentially other card types.
+
 #### crates/mimir-print/src/sections/character.rs
 
 - pub `CharacterData` struct L13-72 — `{ name: String, player_name: Option<String>, is_npc: bool, race_name: Option<Str...` — Character data for PDF rendering
@@ -8472,61 +8517,64 @@
 
 #### crates/mimir-print/src/sections/equipment_cards.rs
 
-- pub `EquipmentCardsSection` struct L13-18 — `{ items: Vec<Value>, show_cut_lines: bool }` — Equipment cards section - generates multi-up equipment cards for printing
-- pub `new` function L22-27 — `(items: Vec<Value>) -> Self` — Create a new equipment cards section
-- pub `from_json` function L30-36 — `(items: Value) -> Self` — Create from a JSON value (expects array)
-- pub `with_cut_lines` function L39-42 — `(mut self, show: bool) -> Self` — Set whether to show cut lines
-- pub `is_card_worthy` function L456-524 — `(item: &Value) -> bool` — Check if an item is "card-worthy" based on type, rarity, and content
--  `EquipmentCardsSection` type L20-319 — `= EquipmentCardsSection` — equipment icons to distinguish from spell cards.
--  `get_icon` function L45-65 — `(item_type: &str) -> &'static str` — Get equipment icon based on item type
--  `get_type_name` function L68-92 — `(item_type: &str) -> &'static str` — Get human-readable type name
--  `format_rarity` function L95-106 — `(rarity: &str) -> &str` — Format rarity for display
--  `render_card` function L109-318 — `(item: &Value) -> String` — Render a single equipment card
--  `EquipmentCardsSection` type L321-398 — `impl Renderable for EquipmentCardsSection` — equipment icons to distinguish from spell cards.
--  `to_typst` function L322-385 — `(&self, _ctx: &RenderContext) -> Result<String>` — equipment icons to distinguish from spell cards.
--  `toc_title` function L387-393 — `(&self) -> Option<String>` — equipment icons to distinguish from spell cards.
--  `page_break_before` function L395-397 — `(&self) -> bool` — equipment icons to distinguish from spell cards.
--  `format_damage_type` function L401-418 — `(dt: &str) -> &str` — Format damage type abbreviation to full name
--  `format_property` function L421-437 — `(prop: &str) -> &'static str` — Format property abbreviation to full name
--  `escape_typst` function L440-453 — `(s: &str) -> String` — Escape special Typst characters
--  `tests` module L527-998 — `-` — equipment icons to distinguish from spell cards.
--  `test_equipment_cards_empty` function L532-535 — `()` — equipment icons to distinguish from spell cards.
--  `test_equipment_cards_with_items` function L538-548 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_weapon` function L551-565 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_magic_item` function L568-575 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_special_ammo` function L578-593 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_with_notes` function L596-604 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_mundane` function L607-614 — `()` — equipment icons to distinguish from spell cards.
--  `test_format_damage_type` function L617-622 — `()` — equipment icons to distinguish from spell cards.
--  `test_format_property` function L625-629 — `()` — equipment icons to distinguish from spell cards.
--  `test_get_icon` function L632-638 — `()` — equipment icons to distinguish from spell cards.
--  `test_get_icon_all_types` function L641-652 — `()` — equipment icons to distinguish from spell cards.
--  `test_get_type_name_all` function L655-671 — `()` — equipment icons to distinguish from spell cards.
--  `test_format_rarity` function L674-684 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_weapon_with_damage` function L687-706 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_armor_with_ac` function L709-724 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_magic_item_with_rarity` function L727-744 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_ranged_weapon_with_range` function L747-768 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_attunement_with_requirement` function L771-781 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_missing_type_defaults_to_gear` function L784-793 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_description_truncation` function L796-807 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_notes_as_description` function L810-819 — `()` — equipment icons to distinguish from spell cards.
--  `test_to_typst_grid_layout` function L822-833 — `()` — equipment icons to distinguish from spell cards.
--  `test_to_typst_cut_lines` function L836-843 — `()` — equipment icons to distinguish from spell cards.
--  `test_to_typst_no_cut_lines` function L846-853 — `()` — equipment icons to distinguish from spell cards.
--  `test_to_typst_empty_returns_comment` function L856-862 — `()` — equipment icons to distinguish from spell cards.
--  `test_to_typst_page_break_after_nine` function L865-874 — `()` — equipment icons to distinguish from spell cards.
--  `test_to_typst_icon_definitions` function L877-888 — `()` — equipment icons to distinguish from spell cards.
--  `test_format_damage_type_all` function L891-902 — `()` — equipment icons to distinguish from spell cards.
--  `test_format_property_all` function L905-916 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_attunement` function L919-927 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_entries` function L930-938 — `()` — equipment icons to distinguish from spell cards.
--  `test_is_card_worthy_pipe_type` function L941-949 — `()` — equipment icons to distinguish from spell cards.
--  `test_page_break_before` function L952-955 — `()` — equipment icons to distinguish from spell cards.
--  `test_from_json` function L958-965 — `()` — equipment icons to distinguish from spell cards.
--  `test_from_json_non_array` function L968-972 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_damage_single_no_type` function L975-984 — `()` — equipment icons to distinguish from spell cards.
--  `test_render_card_no_damage` function L987-997 — `()` — equipment icons to distinguish from spell cards.
+- pub `EquipmentCardsSection` struct L14-19 — `{ items: Vec<Value>, show_cut_lines: bool }` — Equipment cards section - generates multi-up equipment cards for printing
+- pub `new` function L23-28 — `(items: Vec<Value>) -> Self` — Create a new equipment cards section
+- pub `from_json` function L31-37 — `(items: Value) -> Self` — Create from a JSON value (expects array)
+- pub `with_cut_lines` function L40-43 — `(mut self, show: bool) -> Self` — Set whether to show cut lines
+- pub `is_card_worthy` function L545-613 — `(item: &Value) -> bool` — Check if an item is "card-worthy" based on type, rarity, and content
+-  `EquipmentCardsSection` type L21-386 — `= EquipmentCardsSection` — equipment icons to distinguish from spell cards.
+-  `get_icon` function L46-66 — `(item_type: &str) -> &'static str` — Get equipment icon based on item type
+-  `get_type_name` function L69-93 — `(item_type: &str) -> &'static str` — Get human-readable type name
+-  `format_rarity` function L96-107 — `(rarity: &str) -> &str` — Format rarity for display
+-  `extract_fields` function L110-236 — `(item: &Value) -> CardFields` — Extract common fields from an item for card rendering
+-  `render_cards` function L239-379 — `(item: &Value) -> (String, Option<String>)` — Render the front card for an item.
+-  `render_card` function L383-385 — `(item: &Value) -> String` — Render a single equipment card (front only, used by tests)
+-  `EquipmentCardsSection` type L388-488 — `impl Renderable for EquipmentCardsSection` — equipment icons to distinguish from spell cards.
+-  `to_typst` function L389-475 — `(&self, _ctx: &RenderContext) -> Result<String>` — equipment icons to distinguish from spell cards.
+-  `toc_title` function L477-483 — `(&self) -> Option<String>` — equipment icons to distinguish from spell cards.
+-  `page_break_before` function L485-487 — `(&self) -> bool` — equipment icons to distinguish from spell cards.
+-  `CardFields` struct L491-503 — `{ name: String, source: String, icon_type: &'static str, type_name: &'static str...` — Extracted fields for equipment card rendering
+-  `format_damage_type` function L506-523 — `(dt: &str) -> &str` — Format damage type abbreviation to full name
+-  `format_property` function L526-542 — `(prop: &str) -> &'static str` — Format property abbreviation to full name
+-  `tests` module L616-1106 — `-` — equipment icons to distinguish from spell cards.
+-  `test_equipment_cards_empty` function L621-624 — `()` — equipment icons to distinguish from spell cards.
+-  `test_equipment_cards_with_items` function L627-637 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_weapon` function L640-654 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_magic_item` function L657-664 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_special_ammo` function L667-682 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_with_notes` function L685-693 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_mundane` function L696-703 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_damage_type` function L706-711 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_property` function L714-718 — `()` — equipment icons to distinguish from spell cards.
+-  `test_get_icon` function L721-727 — `()` — equipment icons to distinguish from spell cards.
+-  `test_get_icon_all_types` function L730-741 — `()` — equipment icons to distinguish from spell cards.
+-  `test_get_type_name_all` function L744-760 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_rarity` function L763-773 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_weapon_with_damage` function L776-795 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_armor_with_ac` function L798-813 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_magic_item_with_rarity` function L816-833 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_ranged_weapon_with_range` function L836-857 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_attunement_with_requirement` function L860-870 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_missing_type_defaults_to_gear` function L873-882 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_short_description_fits` function L885-895 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_long_description_foldable` function L898-915 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_notes_as_description` function L918-927 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_grid_layout` function L930-941 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_cut_lines` function L944-951 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_no_cut_lines` function L954-961 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_empty_returns_comment` function L964-970 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_page_break_after_nine` function L973-982 — `()` — equipment icons to distinguish from spell cards.
+-  `test_to_typst_icon_definitions` function L985-996 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_damage_type_all` function L999-1010 — `()` — equipment icons to distinguish from spell cards.
+-  `test_format_property_all` function L1013-1024 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_attunement` function L1027-1035 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_entries` function L1038-1046 — `()` — equipment icons to distinguish from spell cards.
+-  `test_is_card_worthy_pipe_type` function L1049-1057 — `()` — equipment icons to distinguish from spell cards.
+-  `test_page_break_before` function L1060-1063 — `()` — equipment icons to distinguish from spell cards.
+-  `test_from_json` function L1066-1073 — `()` — equipment icons to distinguish from spell cards.
+-  `test_from_json_non_array` function L1076-1080 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_damage_single_no_type` function L1083-1092 — `()` — equipment icons to distinguish from spell cards.
+-  `test_render_card_no_damage` function L1095-1105 — `()` — equipment icons to distinguish from spell cards.
 
 #### crates/mimir-print/src/sections/map.rs
 
@@ -8599,15 +8647,16 @@
 
 #### crates/mimir-print/src/sections/mod.rs
 
-- pub `character` module L6 — `-` — Each section type implements `Renderable` to produce Typst markup
-- pub `character_battle_card` module L7 — `-` — that can be assembled into a complete PDF document.
-- pub `equipment_cards` module L8 — `-` — that can be assembled into a complete PDF document.
-- pub `map` module L9 — `-` — that can be assembled into a complete PDF document.
-- pub `markdown` module L10 — `-` — that can be assembled into a complete PDF document.
-- pub `monster_cards` module L11 — `-` — that can be assembled into a complete PDF document.
-- pub `spell_cards` module L12 — `-` — that can be assembled into a complete PDF document.
-- pub `token_cutouts` module L13 — `-` — that can be assembled into a complete PDF document.
-- pub `trap_cards` module L14 — `-` — that can be assembled into a complete PDF document.
+- pub `card_utils` module L6 — `-` — Each section type implements `Renderable` to produce Typst markup
+- pub `character` module L7 — `-` — that can be assembled into a complete PDF document.
+- pub `character_battle_card` module L8 — `-` — that can be assembled into a complete PDF document.
+- pub `equipment_cards` module L9 — `-` — that can be assembled into a complete PDF document.
+- pub `map` module L10 — `-` — that can be assembled into a complete PDF document.
+- pub `markdown` module L11 — `-` — that can be assembled into a complete PDF document.
+- pub `monster_cards` module L12 — `-` — that can be assembled into a complete PDF document.
+- pub `spell_cards` module L13 — `-` — that can be assembled into a complete PDF document.
+- pub `token_cutouts` module L14 — `-` — that can be assembled into a complete PDF document.
+- pub `trap_cards` module L15 — `-` — that can be assembled into a complete PDF document.
 
 #### crates/mimir-print/src/sections/monster_cards.rs
 
@@ -8700,27 +8749,31 @@
 
 #### crates/mimir-print/src/sections/spell_cards.rs
 
-- pub `SpellCardsSection` struct L11-16 — `{ spells: Vec<Value>, show_cut_lines: bool }` — Spell cards section - generates multi-up spell cards for printing
-- pub `new` function L20-25 — `(spells: Vec<Value>) -> Self` — Create a new spell cards section
-- pub `from_json` function L28-34 — `(spells: Value) -> Self` — Create from a JSON value (expects array)
-- pub `with_cut_lines` function L37-40 — `(mut self, show: bool) -> Self` — Set whether to show cut lines
--  `SpellCardsSection` type L18-314 — `= SpellCardsSection` — Generates printable spell cards using shared Typst components.
--  `level_str` function L43-51 — `(level: i64) -> String` — Get level string
--  `school_icon` function L54-66 — `(school: &str) -> &'static str` — Get school icon function name
--  `school_name` function L69-81 — `(school: &str) -> &'static str` — Get school full name
--  `render_card` function L84-313 — `(spell: &Value) -> String` — Render a single spell card
--  `SpellCardsSection` type L316-397 — `impl Renderable for SpellCardsSection` — Generates printable spell cards using shared Typst components.
--  `to_typst` function L317-384 — `(&self, _ctx: &RenderContext) -> Result<String>` — Generates printable spell cards using shared Typst components.
--  `toc_title` function L386-392 — `(&self) -> Option<String>` — Generates printable spell cards using shared Typst components.
--  `page_break_before` function L394-396 — `(&self) -> bool` — Generates printable spell cards using shared Typst components.
--  `escape_typst` function L400-413 — `(s: &str) -> String` — Escape special Typst characters
--  `tests` module L416-485 — `-` — Generates printable spell cards using shared Typst components.
--  `test_spell_cards_empty` function L421-424 — `()` — Generates printable spell cards using shared Typst components.
--  `test_spell_cards_with_spells` function L427-435 — `()` — Generates printable spell cards using shared Typst components.
--  `test_level_str` function L438-444 — `()` — Generates printable spell cards using shared Typst components.
--  `test_escape_typst_special_chars` function L447-470 — `()` — Generates printable spell cards using shared Typst components.
--  `test_school_icon` function L473-477 — `()` — Generates printable spell cards using shared Typst components.
--  `test_school_name` function L480-484 — `()` — Generates printable spell cards using shared Typst components.
+- pub `SpellCardsSection` struct L14-19 — `{ spells: Vec<Value>, show_cut_lines: bool }` — Spell cards section - generates multi-up spell cards for printing
+- pub `new` function L23-28 — `(spells: Vec<Value>) -> Self` — Create a new spell cards section
+- pub `from_json` function L31-37 — `(spells: Value) -> Self` — Create from a JSON value (expects array)
+- pub `with_cut_lines` function L40-43 — `(mut self, show: bool) -> Self` — Set whether to show cut lines
+-  `SpellCardsSection` type L21-431 — `= SpellCardsSection` — comma, word) and produce foldable continuation cards.
+-  `level_str` function L46-54 — `(level: i64) -> String` — Get level string
+-  `school_icon` function L57-69 — `(school: &str) -> &'static str` — Get school icon function name
+-  `school_name` function L72-84 — `(school: &str) -> &'static str` — Get school full name
+-  `extract_fields` function L87-263 — `(spell: &Value) -> SpellFields` — Extract common spell fields for card rendering
+-  `render_cards` function L266-429 — `(spell: &Value) -> (String, Option<String>)` — Render a spell as front card + optional continuation card
+-  `SpellCardsSection` type L433-538 — `impl Renderable for SpellCardsSection` — comma, word) and produce foldable continuation cards.
+-  `to_typst` function L434-525 — `(&self, _ctx: &RenderContext) -> Result<String>` — comma, word) and produce foldable continuation cards.
+-  `toc_title` function L527-533 — `(&self) -> Option<String>` — comma, word) and produce foldable continuation cards.
+-  `page_break_before` function L535-537 — `(&self) -> bool` — comma, word) and produce foldable continuation cards.
+-  `SpellFields` struct L541-555 — `{ name: String, source: String, icon: &'static str, school_full: &'static str, l...` — Extracted spell fields for card rendering
+-  `tests` module L558-663 — `-` — comma, word) and produce foldable continuation cards.
+-  `test_spell_cards_empty` function L563-566 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_spell_cards_with_spells` function L569-577 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_level_str` function L580-586 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_escape_typst_special_chars` function L589-595 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_school_icon` function L598-605 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_school_name` function L608-612 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_short_spell_no_fold` function L615-626 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_long_spell_foldable` function L629-644 — `()` — comma, word) and produce foldable continuation cards.
+-  `test_foldable_cards_in_grid` function L647-662 — `()` — comma, word) and produce foldable continuation cards.
 
 #### crates/mimir-print/src/sections/token_cutouts.rs
 
