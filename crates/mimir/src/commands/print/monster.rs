@@ -71,65 +71,91 @@ pub fn export_module_monsters(
     for mm in &module_monsters {
         info!(
             "  - {} ({}) x{}",
-            mm.monster_name, mm.monster_source, mm.quantity
+            mm.effective_name(),
+            mm.monster_source.as_deref().unwrap_or("Homebrew"),
+            mm.quantity
         );
     }
 
     // Look up each monster's full data from catalog or homebrew
     let mut monster_data: Vec<Value> = Vec::new();
     for mm in &module_monsters {
-        let parsed: Option<Value> = if mm.monster_source == "HB" {
-            // Look up from homebrew monsters
-            match dal::get_campaign_homebrew_monster_by_name(
-                &mut db,
-                &module.campaign_id,
-                &mm.monster_name,
-            ) {
-                Ok(Some(hb_monster)) => {
+        let parsed: Option<Value> = if let Some(ref hb_id) = mm.homebrew_monster_id {
+            // Look up from homebrew monsters by ID
+            match dal::get_campaign_homebrew_monster(&mut db, hb_id) {
+                Ok(hb_monster) => {
                     match serde_json::from_str::<Value>(&hb_monster.data) {
                         Ok(mut data) => {
                             if let Some(obj) = data.as_object_mut() {
                                 obj.insert("name".to_string(), Value::String(hb_monster.name));
-                                obj.insert("source".to_string(), Value::String("HB".to_string()));
+                                obj.insert("source".to_string(), Value::String("Homebrew".to_string()));
                             }
                             Some(data)
                         }
                         Err(e) => {
-                            error!("Failed to parse homebrew monster data for {}: {}", mm.monster_name, e);
+                            error!("Failed to parse homebrew monster data for {}: {}", mm.effective_name(), e);
                             None
                         }
                     }
                 }
-                Ok(None) => {
-                    error!("Homebrew monster not found: {}", mm.monster_name);
+                Err(e) => {
+                    error!("Failed to look up homebrew monster {}: {}", mm.effective_name(), e);
                     None
                 }
-                Err(e) => {
-                    error!("Failed to look up homebrew monster {}: {}", mm.monster_name, e);
-                    None
+            }
+        } else if let (Some(ref name), Some(ref source)) = (&mm.monster_name, &mm.monster_source) {
+            if source == "HB" {
+                // Legacy: homebrew monsters referenced by name+source="HB"
+                match dal::get_campaign_homebrew_monster_by_name(&mut db, &module.campaign_id, name) {
+                    Ok(Some(hb_monster)) => {
+                        match serde_json::from_str::<Value>(&hb_monster.data) {
+                            Ok(mut data) => {
+                                if let Some(obj) = data.as_object_mut() {
+                                    obj.insert("name".to_string(), Value::String(hb_monster.name));
+                                    obj.insert("source".to_string(), Value::String("Homebrew".to_string()));
+                                }
+                                Some(data)
+                            }
+                            Err(e) => {
+                                error!("Failed to parse homebrew monster data for {}: {}", name, e);
+                                None
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        error!("Homebrew monster not found: {}", name);
+                        None
+                    }
+                    Err(e) => {
+                        error!("Failed to look up homebrew monster {}: {}", name, e);
+                        None
+                    }
+                }
+            } else {
+                // Look up from catalog
+                match catalog_dal::get_monster_by_name(&mut db, name, source) {
+                    Ok(Some(catalog_monster)) => {
+                        match catalog_monster.parse_data() {
+                            Ok(data) => Some(data),
+                            Err(e) => {
+                                error!("Failed to parse monster data for {}: {}", name, e);
+                                None
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        error!("Catalog monster not found: {} ({})", name, source);
+                        None
+                    }
+                    Err(e) => {
+                        error!("Failed to look up monster {}: {}", name, e);
+                        None
+                    }
                 }
             }
         } else {
-            // Look up from catalog
-            match catalog_dal::get_monster_by_name(&mut db, &mm.monster_name, &mm.monster_source) {
-                Ok(Some(catalog_monster)) => {
-                    match catalog_monster.parse_data() {
-                        Ok(data) => Some(data),
-                        Err(e) => {
-                            error!("Failed to parse monster data for {}: {}", mm.monster_name, e);
-                            None
-                        }
-                    }
-                }
-                Ok(None) => {
-                    error!("Catalog monster not found: {} ({})", mm.monster_name, mm.monster_source);
-                    None
-                }
-                Err(e) => {
-                    error!("Failed to look up monster {}: {}", mm.monster_name, e);
-                    None
-                }
-            }
+            error!("Module monster has no catalog or homebrew reference: {}", mm.id);
+            None
         };
 
         if let Some(mut data) = parsed {

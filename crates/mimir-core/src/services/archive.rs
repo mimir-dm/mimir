@@ -110,6 +110,7 @@ struct IdMaps {
     assets: HashMap<String, String>,
     module_monsters: HashMap<String, String>,
     module_npcs: HashMap<String, String>,
+    homebrew_monsters: HashMap<String, String>,
 }
 
 /// Complete archive data - uses existing models directly
@@ -284,20 +285,20 @@ impl<'a> ArchiveService<'a> {
         // 6. Import maps
         self.import_maps(&data, &mut id_maps, &new_campaign_id)?;
 
-        // 7. Import module monsters and NPCs
-        self.import_module_entities(&data, &mut id_maps)?;
-
-        // 8. Import tokens (need map and module_monster/module_npc IDs)
-        self.import_tokens(&data, &id_maps)?;
-
-        // 9. Import homebrew items
+        // 7. Import homebrew items
         self.import_homebrew_items(&data, &new_campaign_id)?;
 
-        // 10. Import homebrew monsters
-        self.import_homebrew_monsters(&data, &new_campaign_id)?;
+        // 8. Import homebrew monsters (before module entities, since module monsters may reference them)
+        self.import_homebrew_monsters(&data, &new_campaign_id, &mut id_maps)?;
 
-        // 11. Import homebrew spells
+        // 9. Import homebrew spells
         self.import_homebrew_spells(&data, &new_campaign_id)?;
+
+        // 10. Import module monsters and NPCs
+        self.import_module_entities(&data, &mut id_maps)?;
+
+        // 11. Import tokens (need map and module_monster/module_npc IDs)
+        self.import_tokens(&data, &id_maps)?;
 
         let counts = ArchiveCounts {
             modules: data.modules.len(),
@@ -939,12 +940,18 @@ impl<'a> ArchiveService<'a> {
             let module_id = id_maps.modules.get(&monster.module_id)
                 .ok_or_else(|| ServiceError::validation("Module not found for monster"))?;
 
-            let mut new_monster = NewModuleMonster::new(
-                &new_id,
-                module_id,
-                &monster.monster_name,
-                &monster.monster_source,
-            );
+            let mut new_monster = if let Some(ref hb_id) = monster.homebrew_monster_id {
+                // Map old homebrew monster ID to new one
+                let new_hb_id = id_maps.homebrew_monsters.get(hb_id)
+                    .ok_or_else(|| ServiceError::validation("Homebrew monster not found for module monster"))?;
+                NewModuleMonster::from_homebrew(&new_id, module_id, new_hb_id)
+            } else {
+                let name = monster.monster_name.as_deref()
+                    .ok_or_else(|| ServiceError::validation("Module monster has no catalog name or homebrew reference"))?;
+                let source = monster.monster_source.as_deref()
+                    .ok_or_else(|| ServiceError::validation("Module monster has no catalog source"))?;
+                NewModuleMonster::new(&new_id, module_id, name, source)
+            };
             new_monster.quantity = monster.quantity;
             new_monster.display_name = monster.display_name.as_deref();
             new_monster.notes = monster.notes.as_deref();
@@ -1051,9 +1058,11 @@ impl<'a> ArchiveService<'a> {
         &mut self,
         data: &ArchiveData,
         campaign_id: &str,
+        id_maps: &mut IdMaps,
     ) -> ServiceResult<()> {
         for monster in &data.homebrew_monsters {
             let new_id = uuid::Uuid::new_v4().to_string();
+            id_maps.homebrew_monsters.insert(monster.id.clone(), new_id.clone());
             let mut new_monster =
                 NewCampaignHomebrewMonster::new(&new_id, campaign_id, &monster.name, &monster.data);
             new_monster.cr = monster.cr.as_deref();
@@ -1702,8 +1711,8 @@ mod tests {
         let modules = dal::list_modules(&mut conn, &import_result.campaign_id).unwrap();
         let monsters = dal::list_module_monsters(&mut conn, &modules[0].id).unwrap();
         assert_eq!(monsters.len(), 1);
-        assert_eq!(monsters[0].monster_name, "Goblin Boss");
-        assert_eq!(monsters[0].monster_source, "MM");
+        assert_eq!(monsters[0].monster_name.as_deref(), Some("Goblin Boss"));
+        assert_eq!(monsters[0].monster_source.as_deref(), Some("MM"));
         assert_eq!(monsters[0].display_name.as_deref(), Some("Grik the Goblin"));
         assert_eq!(monsters[0].notes.as_deref(), Some("Guards the entrance"));
 

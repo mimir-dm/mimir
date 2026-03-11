@@ -83,13 +83,19 @@ pub fn get_module_details_tool() -> Tool {
 pub fn add_monster_to_module_tool() -> Tool {
     Tool {
         name: "add_monster_to_module".to_string(),
-        description: Some("Add a monster from the catalog to a module".to_string()),
+        description: Some(
+            "Add a monster to a module. Use monster_name for catalog monsters or homebrew_monster_id for homebrew monsters. Exactly one path must be provided."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string(), "monster_name".to_string()],
+            vec!["module_id".to_string()],
             create_properties(vec![
                 ("module_id", "string", "The ID of the module"),
-                ("monster_name", "string", "Name of the monster from the catalog"),
+                ("monster_name", "string", "Name of the monster from the catalog (use with monster_source)"),
+                ("monster_source", "string", "Source book code for catalog monster (e.g. MM, VGM). Defaults to MM if monster_name is provided."),
+                ("homebrew_monster_id", "string", "ID of a homebrew monster from the active campaign (alternative to monster_name)"),
                 ("count", "integer", "Number of this monster (default: 1)"),
+                ("display_name", "string", "Optional display name override"),
                 ("notes", "string", "Optional notes about this monster"),
             ]),
             None,
@@ -136,6 +142,26 @@ pub fn update_module_tool() -> Tool {
                 ("module_id", "string", "The ID of the module"),
                 ("name", "string", "New module name"),
                 ("description", "string", "New module description"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn remove_monster_from_module_tool() -> Tool {
+    Tool {
+        name: "remove_monster_from_module".to_string(),
+        description: Some("Remove a monster from a module".to_string()),
+        input_schema: ToolInputSchema::new(
+            vec!["module_monster_id".to_string()],
+            create_properties(vec![
+                ("module_monster_id", "string", "The ID of the module monster entry to remove"),
             ]),
             None,
         ),
@@ -273,9 +299,11 @@ pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Va
                 "id": m.id,
                 "monster_name": m.monster_name,
                 "monster_source": m.monster_source,
+                "homebrew_monster_id": m.homebrew_monster_id,
                 "display_name": m.display_name,
                 "quantity": m.quantity,
-                "notes": m.notes
+                "notes": m.notes,
+                "is_homebrew": m.is_homebrew()
             })
         })
         .collect();
@@ -298,10 +326,8 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
         .and_then(|v| v.as_str())
         .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
 
-    let monster_name = args
-        .get("monster_name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("monster_name is required".to_string()))?;
+    let monster_name = args.get("monster_name").and_then(|v| v.as_str());
+    let homebrew_monster_id = args.get("homebrew_monster_id").and_then(|v| v.as_str());
 
     let count = args
         .get("count")
@@ -309,12 +335,19 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
         .unwrap_or(1) as i32;
 
     let notes = args.get("notes").and_then(|v| v.as_str());
+    let display_name = args.get("display_name").and_then(|v| v.as_str());
 
-    // Default to MM (Monster Manual) as source if not specified
-    let monster_source = args
-        .get("monster_source")
-        .and_then(|v| v.as_str())
-        .unwrap_or("MM");
+    // Validate mutual exclusivity
+    if monster_name.is_some() && homebrew_monster_id.is_some() {
+        return Err(McpError::InvalidArguments(
+            "Cannot specify both monster_name and homebrew_monster_id".to_string(),
+        ));
+    }
+    if monster_name.is_none() && homebrew_monster_id.is_none() {
+        return Err(McpError::InvalidArguments(
+            "Must specify either monster_name (catalog) or homebrew_monster_id (homebrew)".to_string(),
+        ));
+    }
 
     let mut db = ctx.connect()?;
 
@@ -327,25 +360,78 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
         )));
     }
 
-    // Create module monster
     let id = Uuid::new_v4().to_string();
-    let mut new_monster = NewModuleMonster::new(&id, module_id, monster_name, monster_source)
-        .with_quantity(count);
 
-    if let Some(n) = notes {
-        new_monster = new_monster.with_notes(n);
-    }
+    let new_monster = if let Some(hb_id) = homebrew_monster_id {
+        // Validate homebrew monster exists
+        dal::get_campaign_homebrew_monster(&mut db, hb_id)
+            .map_err(|_| McpError::InvalidArguments(format!("Homebrew monster '{}' not found", hb_id)))?;
+
+        let mut m = NewModuleMonster::from_homebrew(&id, module_id, hb_id)
+            .with_quantity(count);
+        if let Some(n) = notes {
+            m = m.with_notes(n);
+        }
+        if let Some(dn) = display_name {
+            m = m.with_display_name(dn);
+        }
+        m
+    } else {
+        let name = monster_name.unwrap();
+        let monster_source = args
+            .get("monster_source")
+            .and_then(|v| v.as_str())
+            .unwrap_or("MM");
+
+        let mut m = NewModuleMonster::new(&id, module_id, name, monster_source)
+            .with_quantity(count);
+        if let Some(n) = notes {
+            m = m.with_notes(n);
+        }
+        if let Some(dn) = display_name {
+            m = m.with_display_name(dn);
+        }
+        m
+    };
 
     dal::insert_module_monster(&mut db, &new_monster)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     McpResponse::added("module_monster", json!({
         "id": id,
-        "monster_name": monster_name,
-        "monster_source": monster_source,
+        "monster_name": new_monster.monster_name,
+        "monster_source": new_monster.monster_source,
+        "homebrew_monster_id": new_monster.homebrew_monster_id,
         "quantity": count,
+        "display_name": display_name,
         "notes": notes
     }))
+}
+
+pub async fn remove_monster_from_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let module_monster_id = args
+        .get("module_monster_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("module_monster_id is required".to_string()))?;
+
+    let mut db = ctx.connect()?;
+
+    // Verify it exists before deleting
+    let monster = dal::get_module_monster_optional(&mut db, module_monster_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    match monster {
+        Some(_) => {
+            dal::delete_module_monster(&mut db, module_monster_id)
+                .map_err(|e| McpError::Internal(e.to_string()))?;
+
+            McpResponse::removed(module_monster_id)
+        }
+        None => Err(McpError::InvalidArguments(format!(
+            "Module monster '{}' not found",
+            module_monster_id
+        ))),
+    }
 }
 
 pub async fn add_item_to_module(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {

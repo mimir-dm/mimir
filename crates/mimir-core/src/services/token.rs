@@ -433,22 +433,34 @@ impl<'a> TokenService<'a> {
                 .ok()
                 .flatten();
             if let Some(m) = monster {
-                // Look up the monster in the catalog to get its size
-                let size = crate::dal::catalog::get_monster_by_name(
-                    self.conn,
-                    &m.monster_name,
-                    &m.monster_source,
-                )
-                .ok()
-                .flatten()
-                .and_then(|catalog_monster| {
-                    catalog_monster.size.as_ref().map(|s| normalize_size_code(s))
-                })
-                .unwrap_or_else(|| "medium".to_string());
+                // Look up the monster in the catalog (or homebrew) to get its size
+                let size = if let (Some(ref name), Some(ref source)) = (&m.monster_name, &m.monster_source) {
+                    crate::dal::catalog::get_monster_by_name(self.conn, name, source)
+                        .ok()
+                        .flatten()
+                        .and_then(|catalog_monster| {
+                            catalog_monster.size.as_ref().map(|s| normalize_size_code(s))
+                        })
+                        .unwrap_or_else(|| "medium".to_string())
+                } else if let Some(ref hb_id) = m.homebrew_monster_id {
+                    // Look up homebrew monster for size
+                    crate::dal::campaign::get_campaign_homebrew_monster(self.conn, hb_id)
+                        .ok()
+                        .and_then(|hb| {
+                            hb.size.as_ref().map(|s| normalize_size_code(s))
+                        })
+                        .unwrap_or_else(|| "medium".to_string())
+                } else {
+                    "medium".to_string()
+                };
+
+                let display = m.display_name
+                    .or(m.monster_name)
+                    .unwrap_or_else(|| "Unknown Monster".to_string());
 
                 (
                     "monster".to_string(),
-                    Some(m.display_name.unwrap_or(m.monster_name)),
+                    Some(display),
                     size,
                 )
             } else {

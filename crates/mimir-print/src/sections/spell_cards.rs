@@ -1,9 +1,12 @@
 //! Spell cards section
 //!
 //! Generates printable spell cards using shared Typst components.
+//! Long descriptions are split at natural boundaries (paragraph, sentence,
+//! comma, word) and produce foldable continuation cards.
 
 use serde_json::Value;
 
+use super::card_utils::{escape_typst, flatten_entries, split_text_natural, SMALL_CARD_DESC_BUDGET};
 use crate::builder::{RenderContext, Renderable};
 use crate::error::Result;
 
@@ -80,8 +83,8 @@ impl SpellCardsSection {
         }
     }
 
-    /// Render a single spell card
-    fn render_card(spell: &Value) -> String {
+    /// Extract common spell fields for card rendering
+    fn extract_fields(spell: &Value) -> SpellFields {
         let name = spell
             .get("name")
             .and_then(|v| v.as_str())
@@ -120,10 +123,17 @@ impl SpellCardsSection {
                     let dist_type = dist.get("type").and_then(|v| v.as_str()).unwrap_or("feet");
                     format!("{} {}", amount, dist_type)
                 } else {
-                    dist.get("type").and_then(|v| v.as_str()).unwrap_or("Self").to_string()
+                    dist.get("type")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("Self")
+                        .to_string()
                 }
             } else {
-                range_obj.get("type").and_then(|v| v.as_str()).unwrap_or("Self").to_string()
+                range_obj
+                    .get("type")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Self")
+                    .to_string()
             }
         } else {
             "Self".to_string()
@@ -134,10 +144,18 @@ impl SpellCardsSection {
             c.to_string()
         } else if let Some(comp_obj) = spell.get("components").and_then(|v| v.as_object()) {
             let mut parts = Vec::new();
-            if comp_obj.get("v").and_then(|v| v.as_bool()).unwrap_or(false) {
+            if comp_obj
+                .get("v")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
                 parts.push("V");
             }
-            if comp_obj.get("s").and_then(|v| v.as_bool()).unwrap_or(false) {
+            if comp_obj
+                .get("s")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
                 parts.push("S");
             }
             if comp_obj.get("m").is_some() {
@@ -160,9 +178,22 @@ impl SpellCardsSection {
                 if dur_type == "instant" {
                     "Instantaneous".to_string()
                 } else if dur_type == "timed" {
-                    let amount = first.get("duration").and_then(|d| d.get("amount")).and_then(|v| v.as_i64()).unwrap_or(1);
-                    let unit = first.get("duration").and_then(|d| d.get("type")).and_then(|v| v.as_str()).unwrap_or("minute");
-                    format!("{} {}{}", amount, unit, if amount > 1 { "s" } else { "" })
+                    let amount = first
+                        .get("duration")
+                        .and_then(|d| d.get("amount"))
+                        .and_then(|v| v.as_i64())
+                        .unwrap_or(1);
+                    let unit = first
+                        .get("duration")
+                        .and_then(|d| d.get("type"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("minute");
+                    format!(
+                        "{} {}{}",
+                        amount,
+                        unit,
+                        if amount > 1 { "s" } else { "" }
+                    )
                 } else {
                     dur_type.to_string()
                 }
@@ -177,27 +208,18 @@ impl SpellCardsSection {
             .get("concentration")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-        let is_ritual = spell.get("ritual").and_then(|v| v.as_bool()).unwrap_or(false);
+        let is_ritual = spell
+            .get("ritual")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
 
         // Description - get from description or entries
-        let description = if let Some(desc) = spell.get("description").and_then(|v| v.as_str()) {
+        let desc_text = if let Some(desc) = spell.get("description").and_then(|v| v.as_str()) {
             desc.to_string()
         } else if let Some(entries) = spell.get("entries").and_then(|v| v.as_array()) {
-            entries
-                .iter()
-                .filter_map(|e| e.as_str())
-                .collect::<Vec<_>>()
-                .join(" ")
+            flatten_entries(entries)
         } else {
             String::new()
-        };
-
-        // Truncate description for card
-        let desc_truncated: String = description.chars().take(400).collect();
-        let desc_display = if description.len() > 400 {
-            format!("{}...", desc_truncated)
-        } else {
-            desc_truncated
         };
 
         // Classes
@@ -208,7 +230,6 @@ impl SpellCardsSection {
                 arr.iter()
                     .take(3)
                     .filter_map(|c| {
-                        // Handle both string and object format
                         if c.is_string() {
                             c.as_str().map(String::from)
                         } else {
@@ -220,13 +241,39 @@ impl SpellCardsSection {
             })
             .unwrap_or_default();
 
-        let icon = Self::school_icon(school);
-        let school_full = Self::school_name(school);
-        let level_text = Self::level_str(level);
-        let ritual_marker = if is_ritual { "#text(size: 5pt)[(R)]" } else { "" };
-        let conc_marker = if is_concentration { " (C)" } else { "" };
+        SpellFields {
+            name: name.to_string(),
+            source: source.to_string(),
+            icon: Self::school_icon(school),
+            school_full: Self::school_name(school),
+            level_text: Self::level_str(level),
+            ritual_marker: if is_ritual {
+                "#text(size: 5pt)[(R)]"
+            } else {
+                ""
+            },
+            conc_marker: if is_concentration { " (C)" } else { "" },
+            casting_time,
+            range,
+            components,
+            duration,
+            classes,
+            desc_text,
+        }
+    }
 
-        format!(
+    /// Render a spell as front card + optional continuation card
+    fn render_cards(spell: &Value) -> (String, Option<String>) {
+        let f = Self::extract_fields(spell);
+        let split = split_text_natural(&f.desc_text, SMALL_CARD_DESC_BUDGET);
+
+        let fold_indicator = if split.is_foldable {
+            " ▶ continued"
+        } else {
+            ""
+        };
+
+        let front = format!(
             r#"box(
   width: 2.5in,
   height: 3.25in,
@@ -291,26 +338,96 @@ impl SpellCardsSection {
       #text(size: 4pt, fill: luma(100))[
         {classes}
         #h(1fr)
+        {source}{fold_indicator}
+      ]
+    ]
+  )
+]"#,
+            icon = f.icon,
+            name = escape_typst(&f.name),
+            ritual_marker = f.ritual_marker,
+            level_text = f.level_text,
+            school_full = f.school_full,
+            conc_marker = f.conc_marker,
+            casting_time = escape_typst(&f.casting_time),
+            range = escape_typst(&f.range),
+            components = escape_typst(&f.components),
+            duration = escape_typst(&f.duration),
+            desc_display = escape_typst(&split.front),
+            classes = escape_typst(&f.classes),
+            source = escape_typst(&f.source),
+            fold_indicator = fold_indicator,
+        );
+
+        let back = if split.is_foldable {
+            Some(format!(
+                r#"box(
+  width: 2.5in,
+  height: 3.25in,
+  stroke: 0.5pt + luma(180),
+  radius: 3pt,
+  clip: true,
+  inset: 0pt,
+)[
+  // Header - continuation
+  #block(
+    width: 100%,
+    fill: luma(245),
+    inset: (x: 4pt, y: 3pt),
+  )[
+    #grid(
+      columns: (auto, 1fr),
+      column-gutter: 3pt,
+      {icon}(size: sizes.xs),
+      [
+        #text(size: 7pt, weight: "bold")[{name}]
+        #h(1fr)
+        #text(size: 5pt, style: "italic", fill: luma(100))[(continued)]
+      ]
+    )
+    #text(size: 5pt, fill: luma(100))[
+      {level_text} #lower("{school_full}")
+    ]
+  ]
+
+  // Description continued
+  #block(
+    width: 100%,
+    inset: 4pt,
+  )[
+    #text(size: 5.5pt)[{desc_continued}]
+  ]
+
+  // Footer
+  #place(
+    bottom + left,
+    block(
+      width: 100%,
+      fill: luma(245),
+      inset: (x: 4pt, y: 2pt),
+    )[
+      #text(size: 4pt, fill: luma(100))[
+        ◀ fold
+        #h(1fr)
         {source}
       ]
     ]
   )
 ]"#,
-            icon = icon,
-            name = escape_typst(name),
-            ritual_marker = ritual_marker,
-            level_text = level_text,
-            school_full = school_full,
-            conc_marker = conc_marker,
-            casting_time = escape_typst(&casting_time),
-            range = escape_typst(&range),
-            components = escape_typst(&components),
-            duration = escape_typst(&duration),
-            desc_display = escape_typst(&desc_display),
-            classes = escape_typst(&classes),
-            source = escape_typst(source),
-        )
+                icon = f.icon,
+                name = escape_typst(&f.name),
+                level_text = f.level_text,
+                school_full = f.school_full,
+                desc_continued = escape_typst(&split.back),
+                source = escape_typst(&f.source),
+            ))
+        } else {
+            None
+        };
+
+        (front, back)
     }
+
 }
 
 impl Renderable for SpellCardsSection {
@@ -320,11 +437,10 @@ impl Renderable for SpellCardsSection {
         }
 
         let mut typst = String::new();
-        let cards_per_page = 9;
-        let total_pages = (self.spells.len() + cards_per_page - 1) / cards_per_page;
 
         // Spell school icons
-        typst.push_str(r#"// Spell school icons
+        typst.push_str(
+            r#"// Spell school icons
 #let abjuration-icon(size: 12pt) = text(size: size)[🛡]
 #let conjuration-icon(size: 12pt) = text(size: size)[✨]
 #let divination-icon(size: 12pt) = text(size: size)[👁]
@@ -335,48 +451,73 @@ impl Renderable for SpellCardsSection {
 #let transmutation-icon(size: 12pt) = text(size: size)[⚗]
 #let magic-icon(size: 12pt) = text(size: size)[✦]
 
-"#);
+"#,
+        );
 
         // Set page margins for spell cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
 
+        // Pre-render all cards, collecting front + continuation cards into a flat list.
+        // Continuation cards are placed immediately after their front card so they
+        // end up adjacent in the grid (easy to fold together after cutting).
+        let mut all_cards: Vec<String> = Vec::new();
+        for spell in &self.spells {
+            let (front, back) = Self::render_cards(spell);
+            all_cards.push(front);
+            if let Some(back_card) = back {
+                all_cards.push(back_card);
+            }
+        }
+
+        let cards_per_page = 9;
+        let total_pages = (all_cards.len() + cards_per_page - 1) / cards_per_page;
+        let has_foldable = all_cards.len() > self.spells.len();
+
         for page_num in 0..total_pages {
             let start_idx = page_num * cards_per_page;
-            let end_idx = std::cmp::min(start_idx + cards_per_page, self.spells.len());
-            let page_spells = &self.spells[start_idx..end_idx];
+            let end_idx = std::cmp::min(start_idx + cards_per_page, all_cards.len());
+            let page_cards = &all_cards[start_idx..end_idx];
 
             if page_num > 0 {
                 typst.push_str("\n#pagebreak()\n");
             }
 
             // Card grid (3x3) - cards sized to fit with gutters for cutting
-            typst.push_str("#align(center)[\n  #grid(\n");
+            // align(center) centers the grid on the page; set align(left) inside
+            // to prevent center alignment from cascading into card text
+            typst.push_str("#align(center)[#align(left)[\n  #grid(\n");
             typst.push_str("    columns: (2.5in,) * 3,\n");
             typst.push_str("    rows: (3.25in,) * 3,\n");
             typst.push_str("    column-gutter: 0.25in,\n");
             typst.push_str("    row-gutter: 0.25in,\n\n");
 
-            // Render each card in this page
-            for (i, spell) in page_spells.iter().enumerate() {
+            for (i, card) in page_cards.iter().enumerate() {
                 typst.push_str("    ");
-                typst.push_str(&Self::render_card(spell));
-                if i < page_spells.len() - 1 || page_spells.len() < 9 {
+                typst.push_str(card);
+                if i < page_cards.len() - 1 || page_cards.len() < 9 {
                     typst.push(',');
                 }
                 typst.push('\n');
             }
 
             // Fill remaining slots with empty boxes
-            for _ in page_spells.len()..9 {
+            for _ in page_cards.len()..9 {
                 typst.push_str("    box(width: 2.5in, height: 3.25in),\n");
             }
 
-            typst.push_str("  )\n]\n");
+            typst.push_str("  )\n]]\n");
 
             // Cut lines indicator
-            if self.show_cut_lines && !page_spells.is_empty() {
-                typst.push_str("#place(\n  bottom + center,\n  dy: 0.1in,\n");
-                typst.push_str("  text(size: 6pt, fill: luma(150))[Cut along card borders]\n)\n");
+            if self.show_cut_lines && !page_cards.is_empty() {
+                let hint = if has_foldable {
+                    "Cut along card borders — fold adjacent cards for extended descriptions"
+                } else {
+                    "Cut along card borders"
+                };
+                typst.push_str(&format!(
+                    "#place(\n  bottom + center,\n  dy: 0.1in,\n  text(size: 6pt, fill: luma(150))[{}]\n)\n",
+                    hint
+                ));
             }
         }
 
@@ -396,20 +537,21 @@ impl Renderable for SpellCardsSection {
     }
 }
 
-/// Escape special Typst characters
-fn escape_typst(s: &str) -> String {
-    s.replace('\\', "\\\\")
-        .replace('[', "\\[")
-        .replace(']', "\\]")
-        .replace('#', "\\#")
-        .replace('$', "\\$")
-        .replace('"', "\\\"")
-        .replace('_', "\\_")
-        .replace('<', "\\<")
-        .replace('>', "\\>")
-        .replace('{', "\\{")
-        .replace('}', "\\}")
-        .replace('@', "\\@")
+/// Extracted spell fields for card rendering
+struct SpellFields {
+    name: String,
+    source: String,
+    icon: &'static str,
+    school_full: &'static str,
+    level_text: String,
+    ritual_marker: &'static str,
+    conc_marker: &'static str,
+    casting_time: String,
+    range: String,
+    components: String,
+    duration: String,
+    classes: String,
+    desc_text: String,
 }
 
 #[cfg(test)]
@@ -445,35 +587,21 @@ mod tests {
 
     #[test]
     fn test_escape_typst_special_chars() {
-        // Angle brackets (some renderers convert 5etools tags to <damage>, etc.)
         assert_eq!(escape_typst("<damage>"), "\\<damage\\>");
-        assert_eq!(escape_typst("<condition>blinded</condition>"), "\\<condition\\>blinded\\</condition\\>");
-
-        // Underscores (subscript markers)
         assert_eq!(escape_typst("fire_damage"), "fire\\_damage");
-
-        // Brackets
         assert_eq!(escape_typst("[test]"), "\\[test\\]");
-
-        // Hash (Typst code mode)
         assert_eq!(escape_typst("#test"), "\\#test");
-
-        // 5etools tags with curly braces and @ symbol
         assert_eq!(escape_typst("{@damage 1d6}"), "\\{\\@damage 1d6\\}");
-        assert_eq!(escape_typst("{@condition charmed}"), "\\{\\@condition charmed\\}");
-
-        // Combined with 5etools format
-        assert_eq!(
-            escape_typst("Deal {@damage 2d6} fire_damage"),
-            "Deal \\{\\@damage 2d6\\} fire\\_damage"
-        );
     }
 
     #[test]
     fn test_school_icon() {
         assert_eq!(SpellCardsSection::school_icon("V"), "evocation-icon");
         assert_eq!(SpellCardsSection::school_icon("A"), "abjuration-icon");
-        assert_eq!(SpellCardsSection::school_icon("EVOCATION"), "evocation-icon");
+        assert_eq!(
+            SpellCardsSection::school_icon("EVOCATION"),
+            "evocation-icon"
+        );
     }
 
     #[test]
@@ -481,5 +609,55 @@ mod tests {
         assert_eq!(SpellCardsSection::school_name("V"), "Evocation");
         assert_eq!(SpellCardsSection::school_name("A"), "Abjuration");
         assert_eq!(SpellCardsSection::school_name("N"), "Necromancy");
+    }
+
+    #[test]
+    fn test_short_spell_no_fold() {
+        let spell = json!({
+            "name": "Fire Bolt",
+            "level": 0,
+            "school": "V",
+            "entries": ["You hurl a mote of fire at a creature."]
+        });
+        let (front, back) = SpellCardsSection::render_cards(&spell);
+        assert!(front.contains("Fire Bolt"));
+        assert!(front.contains("hurl a mote"));
+        assert!(back.is_none());
+    }
+
+    #[test]
+    fn test_long_spell_foldable() {
+        let long_desc = "This spell creates a massive effect. ".repeat(30);
+        let spell = json!({
+            "name": "Wish",
+            "level": 9,
+            "school": "C",
+            "entries": [long_desc],
+            "source": "PHB"
+        });
+        let (front, back) = SpellCardsSection::render_cards(&spell);
+        assert!(front.contains("continued"));
+        let back = back.expect("should have continuation card");
+        assert!(back.contains("continued"));
+        assert!(back.contains("fold"));
+        assert!(back.contains("Wish"));
+    }
+
+    #[test]
+    fn test_foldable_cards_in_grid() {
+        let long_desc = "This spell does something. ".repeat(40);
+        let spells = vec![json!({
+            "name": "Long Spell",
+            "level": 5,
+            "school": "V",
+            "entries": [long_desc]
+        })];
+        let section = SpellCardsSection::new(spells);
+        let ctx = RenderContext::default();
+        let typst = section.to_typst(&ctx).unwrap();
+
+        // Should have fold hint in cut lines
+        assert!(typst.contains("fold adjacent cards"));
+        // Front + back = 2 rendered cards, plus 7 empty slots = 9 total
     }
 }

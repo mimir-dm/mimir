@@ -459,8 +459,9 @@ diesel::table! {
     module_monsters (id) {
         id -> Text,
         module_id -> Text,
-        monster_name -> Text,
-        monster_source -> Text,
+        monster_name -> Nullable<Text>,
+        monster_source -> Nullable<Text>,
+        homebrew_monster_id -> Nullable<Text>,
         display_name -> Nullable<Text>,
         notes -> Nullable<Text>,
         quantity -> Integer,
@@ -718,6 +719,7 @@ diesel::joinable!(map_pois -> maps (map_id));
 diesel::joinable!(maps -> campaign_assets (uvtt_asset_id));
 diesel::joinable!(maps -> campaigns (campaign_id));
 diesel::joinable!(maps -> modules (module_id));
+diesel::joinable!(module_monsters -> campaign_homebrew_monsters (homebrew_monster_id));
 diesel::joinable!(module_monsters -> modules (module_id));
 diesel::joinable!(module_npcs -> campaign_assets (token_asset_id));
 diesel::joinable!(module_npcs -> modules (module_id));

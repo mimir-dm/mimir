@@ -126,6 +126,7 @@ fn main() {
             module::list_module_monsters_with_data,
             module::add_module_monster,
             module::update_module_monster,
+            module::remove_module_monster,
             // Module NPC commands
             module::list_module_npcs,
             // Token commands

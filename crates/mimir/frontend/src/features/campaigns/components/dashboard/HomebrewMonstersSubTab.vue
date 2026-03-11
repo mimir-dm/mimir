@@ -408,12 +408,13 @@ async function confirmDelete() {
     if (modResponse.success && modResponse.data) {
       const affected: string[] = []
       for (const mod of modResponse.data) {
-        const monstersResponse = await invoke<ApiResponse<Array<{ monster_name: string; monster_source: string }>>>('list_module_monsters_with_data', {
+        const monstersResponse = await invoke<ApiResponse<Array<{ monster_name: string | null; monster_source: string | null; homebrew_monster_id: string | null }>>>('list_module_monsters_with_data', {
           moduleId: mod.id,
         })
         if (monstersResponse.success && monstersResponse.data) {
           const hasMonster = monstersResponse.data.some(
-            (mm) => mm.monster_name === selectedMonster.value!.name && mm.monster_source === 'HB'
+            (mm) => mm.homebrew_monster_id === selectedMonster.value!.id
+              || (mm.monster_name === selectedMonster.value!.name && mm.monster_source === 'HB')
           )
           if (hasMonster) affected.push(mod.name)
         }

@@ -6,6 +6,7 @@
 
 use serde_json::Value;
 
+use super::card_utils::{escape_typst, flatten_entries, split_text_natural, SMALL_CARD_DESC_BUDGET};
 use crate::builder::{RenderContext, Renderable};
 use crate::error::Result;
 
@@ -105,8 +106,8 @@ impl EquipmentCardsSection {
         }
     }
 
-    /// Render a single equipment card
-    fn render_card(item: &Value) -> String {
+    /// Extract common fields from an item for card rendering
+    fn extract_fields(item: &Value) -> CardFields {
         let name = item
             .get("name")
             .and_then(|v| v.as_str())
@@ -151,13 +152,9 @@ impl EquipmentCardsSection {
             })
             .unwrap_or_default();
 
-        // Range
         let range = item.get("range").and_then(|v| v.as_str()).unwrap_or("");
-
-        // AC
         let ac = item.get("ac").and_then(|v| v.as_i64());
 
-        // Attunement
         let attunement = item
             .get("requires_attunement")
             .or_else(|| item.get("reqAttune"))
@@ -173,36 +170,22 @@ impl EquipmentCardsSection {
 
         // Description from entries
         let description = if let Some(entries) = item.get("entries").and_then(|v| v.as_array()) {
-            entries
-                .iter()
-                .filter_map(|e| e.as_str())
-                .collect::<Vec<_>>()
-                .join(" ")
+            flatten_entries(entries)
         } else {
             String::new()
         };
 
-        // User notes (if present)
         let notes = item.get("notes").and_then(|v| v.as_str()).unwrap_or("");
-
-        // Truncate description for card
         let desc_text = if !notes.is_empty() && description.is_empty() {
             notes.to_string()
         } else {
             description
-        };
-        let desc_truncated: String = desc_text.chars().take(350).collect();
-        let desc_display = if desc_text.len() > 350 {
-            format!("{}...", desc_truncated)
-        } else {
-            desc_truncated
         };
 
         let icon_type = Self::get_icon(item_type);
         let type_name = Self::get_type_name(item_type);
         let rarity_display = Self::format_rarity(rarity);
 
-        // Build attunement footer text
         let attune_text = match attunement {
             Some("true") => "Requires Attunement",
             Some(req) if !req.is_empty() => req,
@@ -237,7 +220,29 @@ impl EquipmentCardsSection {
             format!("— {}", rarity_display)
         };
 
-        format!(
+        CardFields {
+            name: name.to_string(),
+            source: source.to_string(),
+            icon_type,
+            type_name,
+            rarity_str,
+            damage_row,
+            ac_row,
+            properties_row,
+            range_row,
+            attune_text: attune_text.to_string(),
+            desc_text,
+        }
+    }
+
+    /// Render the front card for an item. Returns (front_card, Option<back_card>).
+    fn render_cards(item: &Value) -> (String, Option<String>) {
+        let f = Self::extract_fields(item);
+        let split = split_text_natural(&f.desc_text, SMALL_CARD_DESC_BUDGET);
+
+        let fold_indicator = if split.is_foldable { " ▶ continued" } else { "" };
+
+        let front = format!(
             r#"box(
   width: 2.5in,
   height: 3.25in,
@@ -298,23 +303,85 @@ impl EquipmentCardsSection {
       #text(size: 4pt, fill: luma(80))[
         {attune_text}
         #h(1fr)
+        {source}{fold_indicator}
+      ]
+    ]
+  )
+]"#,
+            icon = f.icon_type,
+            name = escape_typst(&f.name),
+            type_name = f.type_name,
+            rarity_str = f.rarity_str,
+            damage_row = f.damage_row,
+            ac_row = f.ac_row,
+            properties_row = f.properties_row,
+            range_row = f.range_row,
+            desc_display = escape_typst(&split.front),
+            attune_text = escape_typst(&f.attune_text),
+            source = escape_typst(&f.source),
+            fold_indicator = fold_indicator,
+        );
+
+        let back = if split.is_foldable {
+            Some(format!(
+                r#"box(
+  width: 2.5in,
+  height: 3.25in,
+  stroke: 0.5pt + black,
+  radius: 3pt,
+  clip: true,
+  inset: 0pt,
+)[
+  // Header - continuation
+  #block(
+    width: 100%,
+    fill: luma(240),
+    inset: (x: 4pt, y: 3pt),
+  )[
+    #text(size: 7pt, weight: "bold")[{name}]
+    #h(1fr)
+    #text(size: 5pt, style: "italic", fill: luma(100))[(continued)]
+  ]
+
+  // Description continued
+  #block(
+    width: 100%,
+    inset: 4pt,
+  )[
+    #text(size: 5.5pt)[{desc_continued}]
+  ]
+
+  // Footer
+  #place(
+    bottom + left,
+    block(
+      width: 100%,
+      fill: luma(240),
+      inset: (x: 4pt, y: 2pt),
+    )[
+      #text(size: 4pt, fill: luma(80))[
+        ◀ fold
+        #h(1fr)
         {source}
       ]
     ]
   )
 ]"#,
-            icon = icon_type,
-            name = escape_typst(name),
-            type_name = type_name,
-            rarity_str = rarity_str,
-            damage_row = damage_row,
-            ac_row = ac_row,
-            properties_row = properties_row,
-            range_row = range_row,
-            desc_display = escape_typst(&desc_display),
-            attune_text = escape_typst(attune_text),
-            source = escape_typst(source),
-        )
+                name = escape_typst(&f.name),
+                desc_continued = escape_typst(&split.back),
+                source = escape_typst(&f.source),
+            ))
+        } else {
+            None
+        };
+
+        (front, back)
+    }
+
+    /// Render a single equipment card (front only, used by tests)
+    #[cfg(test)]
+    fn render_card(item: &Value) -> String {
+        Self::render_cards(item).0
     }
 }
 
@@ -325,8 +392,6 @@ impl Renderable for EquipmentCardsSection {
         }
 
         let mut typst = String::new();
-        let cards_per_page = 9;
-        let total_pages = (self.items.len() + cards_per_page - 1) / cards_per_page;
 
         // Equipment icons defined as simple Typst functions
         typst.push_str(r#"// Equipment icons (black/white)
@@ -341,43 +406,68 @@ impl Renderable for EquipmentCardsSection {
         // Set page margins for equipment cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
 
+        // Pre-render all cards, collecting front + continuation cards into a flat list.
+        // Continuation cards are placed immediately after their front card so they
+        // end up adjacent in the grid (easy to fold together after cutting).
+        let mut all_cards: Vec<String> = Vec::new();
+        for item in &self.items {
+            let (front, back) = Self::render_cards(item);
+            all_cards.push(front);
+            if let Some(back_card) = back {
+                all_cards.push(back_card);
+            }
+        }
+
+        let cards_per_page = 9;
+        let total_pages = (all_cards.len() + cards_per_page - 1) / cards_per_page;
+        let has_foldable = all_cards.len() > self.items.len();
+
         for page_num in 0..total_pages {
             let start_idx = page_num * cards_per_page;
-            let end_idx = std::cmp::min(start_idx + cards_per_page, self.items.len());
-            let page_items = &self.items[start_idx..end_idx];
+            let end_idx = std::cmp::min(start_idx + cards_per_page, all_cards.len());
+            let page_cards = &all_cards[start_idx..end_idx];
 
             if page_num > 0 {
                 typst.push_str("\n#pagebreak()\n");
             }
 
             // Card grid (3x3) - cards sized to fit with gutters for cutting
-            typst.push_str("#align(center)[\n  #grid(\n");
+            // align(center) centers the grid on the page; set align(left) inside
+            // to prevent center alignment from cascading into card text
+            typst.push_str("#align(center)[#align(left)[\n  #grid(\n");
             typst.push_str("    columns: (2.5in,) * 3,\n");
             typst.push_str("    rows: (3.25in,) * 3,\n");
             typst.push_str("    column-gutter: 0.25in,\n");
             typst.push_str("    row-gutter: 0.25in,\n\n");
 
             // Render each card in this page
-            for (i, item) in page_items.iter().enumerate() {
+            for (i, card) in page_cards.iter().enumerate() {
                 typst.push_str("    ");
-                typst.push_str(&Self::render_card(item));
-                if i < page_items.len() - 1 || page_items.len() < 9 {
+                typst.push_str(card);
+                if i < page_cards.len() - 1 || page_cards.len() < 9 {
                     typst.push(',');
                 }
                 typst.push('\n');
             }
 
             // Fill remaining slots with empty boxes
-            for _ in page_items.len()..9 {
+            for _ in page_cards.len()..9 {
                 typst.push_str("    box(width: 2.5in, height: 3.25in),\n");
             }
 
-            typst.push_str("  )\n]\n");
+            typst.push_str("  )\n]]\n");
 
             // Cut lines indicator
-            if self.show_cut_lines && !page_items.is_empty() {
-                typst.push_str("#place(\n  bottom + center,\n  dy: 0.1in,\n");
-                typst.push_str("  text(size: 6pt, fill: luma(150))[Cut along card borders]\n)\n");
+            if self.show_cut_lines && !page_cards.is_empty() {
+                let hint = if has_foldable {
+                    "Cut along card borders — fold adjacent cards for extended descriptions"
+                } else {
+                    "Cut along card borders"
+                };
+                typst.push_str(&format!(
+                    "#place(\n  bottom + center,\n  dy: 0.1in,\n  text(size: 6pt, fill: luma(150))[{}]\n)\n",
+                    hint
+                ));
             }
         }
 
@@ -395,6 +485,21 @@ impl Renderable for EquipmentCardsSection {
     fn page_break_before(&self) -> bool {
         true
     }
+}
+
+/// Extracted fields for equipment card rendering
+struct CardFields {
+    name: String,
+    source: String,
+    icon_type: &'static str,
+    type_name: &'static str,
+    rarity_str: String,
+    damage_row: String,
+    ac_row: String,
+    properties_row: String,
+    range_row: String,
+    attune_text: String,
+    desc_text: String,
 }
 
 /// Format damage type abbreviation to full name
@@ -434,22 +539,6 @@ fn format_property(prop: &str) -> &'static str {
         "BF" => "Burst Fire",
         _ => "Special",
     }
-}
-
-/// Escape special Typst characters
-fn escape_typst(s: &str) -> String {
-    s.replace('\\', "\\\\")
-        .replace('[', "\\[")
-        .replace(']', "\\]")
-        .replace('#', "\\#")
-        .replace('$', "\\$")
-        .replace('"', "\\\"")
-        .replace('_', "\\_")
-        .replace('<', "\\<")
-        .replace('>', "\\>")
-        .replace('{', "\\{")
-        .replace('}', "\\}")
-        .replace('@', "\\@")
 }
 
 /// Check if an item is "card-worthy" based on type, rarity, and content
@@ -793,17 +882,36 @@ mod tests {
     }
 
     #[test]
-    fn test_render_card_description_truncation() {
-        let long_desc = "A".repeat(400);
+    fn test_render_card_short_description_fits() {
+        let item = json!({
+            "name": "Simple Item",
+            "type": "W",
+            "entries": ["A short description."]
+        });
+        let (front, back) = EquipmentCardsSection::render_cards(&item);
+
+        assert!(front.contains("A short description."));
+        assert!(back.is_none());
+    }
+
+    #[test]
+    fn test_render_card_long_description_foldable() {
+        // Create text well over the budget
+        let long_desc = "This item does amazing things. ".repeat(40);
         let item = json!({
             "name": "Verbose Item",
             "type": "W",
+            "rarity": "rare",
             "entries": [long_desc]
         });
-        let card = EquipmentCardsSection::render_card(&item);
+        let (front, back) = EquipmentCardsSection::render_cards(&item);
 
-        // Should be truncated to 350 chars + "..."
-        assert!(card.contains("..."));
+        // Front should have fold indicator
+        assert!(front.contains("continued"));
+        // Back card should exist with continuation header
+        let back = back.expect("should have continuation card");
+        assert!(back.contains("continued"));
+        assert!(back.contains("fold"));
     }
 
     #[test]

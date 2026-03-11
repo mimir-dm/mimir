@@ -24,7 +24,7 @@ use crate::McpError;
 pub fn search_monsters_tool() -> Tool {
     Tool {
         name: "search_monsters".to_string(),
-        description: Some("Search the monster catalog".to_string()),
+        description: Some("Search the monster catalog. Also includes homebrew monsters from the active campaign by default.".to_string()),
         input_schema: ToolInputSchema::new(
             vec![],
             create_properties(vec![
@@ -32,6 +32,7 @@ pub fn search_monsters_tool() -> Tool {
                 ("cr_min", "number", "Minimum challenge rating"),
                 ("cr_max", "number", "Maximum challenge rating"),
                 ("monster_type", "string", "Filter by type (e.g., undead, dragon)"),
+                ("include_homebrew", "boolean", "Include homebrew monsters from active campaign (default: true)"),
                 ("limit", "integer", "Maximum results to return (default: 20)"),
             ]),
             None,
@@ -219,17 +220,25 @@ pub async fn search_monsters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     // Build filter from args
     let mut filter = MonsterFilter::new();
 
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    let name_query = args.get("name").and_then(|v| v.as_str());
+    if let Some(name) = name_query {
         filter = filter.with_name_contains(name);
     }
 
-    if let Some(monster_type) = args.get("monster_type").and_then(|v| v.as_str()) {
+    let type_query = args.get("monster_type").and_then(|v| v.as_str());
+    if let Some(monster_type) = type_query {
         filter = filter.with_creature_type(monster_type);
     }
 
+    let include_homebrew = args
+        .get("include_homebrew")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+
     // Apply campaign source filtering if active campaign exists
-    if let Some(campaign_id) = ctx.get_active_campaign_id() {
-        let sources = campaign_dal::list_campaign_source_codes(&mut db, &campaign_id)
+    let active_campaign_id = ctx.get_active_campaign_id();
+    if let Some(ref campaign_id) = active_campaign_id {
+        let sources = campaign_dal::list_campaign_source_codes(&mut db, campaign_id)
             .map_err(|e| McpError::Internal(e.to_string()))?;
         if !sources.is_empty() {
             filter = filter.with_sources(sources);
@@ -244,7 +253,7 @@ pub async fn search_monsters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     let monsters = catalog_dal::search_monsters_paginated(&mut db, &filter, limit, 0)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    let monster_data: Vec<Value> = monsters
+    let mut monster_data: Vec<Value> = monsters
         .iter()
         .map(|m| {
             json!({
@@ -252,10 +261,51 @@ pub async fn search_monsters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
                 "source": m.source,
                 "cr": m.cr,
                 "creature_type": m.creature_type,
-                "size": m.size_name()
+                "size": m.size_name(),
+                "is_homebrew": false
             })
         })
         .collect();
+
+    // Include homebrew monsters from active campaign
+    if include_homebrew {
+        if let Some(ref campaign_id) = active_campaign_id {
+            use mimir_core::services::HomebrewService;
+            if let Ok(hb_monsters) = HomebrewService::new(&mut db).list_monsters(campaign_id) {
+                let name_lower = name_query.map(|n| n.to_lowercase());
+                let type_lower = type_query.map(|t| t.to_lowercase());
+
+                for hb in &hb_monsters {
+                    // Apply name filter
+                    if let Some(ref query) = name_lower {
+                        if !hb.name.to_lowercase().contains(query) {
+                            continue;
+                        }
+                    }
+                    // Apply type filter
+                    if let Some(ref query) = type_lower {
+                        if let Some(ref ct) = hb.creature_type {
+                            if !ct.to_lowercase().contains(query) {
+                                continue;
+                            }
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    monster_data.push(json!({
+                        "name": hb.name,
+                        "source": "Homebrew",
+                        "homebrew_id": hb.id,
+                        "cr": hb.cr,
+                        "creature_type": hb.creature_type,
+                        "size": hb.size,
+                        "is_homebrew": true
+                    }));
+                }
+            }
+        }
+    }
 
     McpResponse::list("monsters", monster_data)
 }

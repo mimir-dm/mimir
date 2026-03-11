@@ -241,8 +241,8 @@
       <div v-if="monsterToEdit" class="monster-edit-form">
         <div class="form-header">
           <span class="base-monster-label">Base Monster:</span>
-          <span class="base-monster-name">{{ monsterToEdit.monster_name }}</span>
-          <span class="base-monster-source">({{ monsterToEdit.monster_source }})</span>
+          <span class="base-monster-name">{{ monsterToEdit.monster_name || monsterToEdit.monster_data?.name || 'Homebrew Monster' }}</span>
+          <span class="base-monster-source">({{ monsterToEdit.monster_source || 'Homebrew' }})</span>
         </div>
 
         <div class="form-group">
@@ -252,7 +252,7 @@
             v-model="monsterEditForm.display_name"
             type="text"
             class="form-input"
-            :placeholder="monsterToEdit.monster_name"
+            :placeholder="monsterToEdit.monster_name || monsterToEdit.monster_data?.name || 'Monster name'"
           />
           <p class="form-help">Custom name to display instead of the base monster name (e.g., "Frost Wight" for a reskinned Goblin)</p>
         </div>

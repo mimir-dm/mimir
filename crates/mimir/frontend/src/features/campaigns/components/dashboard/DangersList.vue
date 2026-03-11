@@ -33,8 +33,9 @@
             >
               <span class="monster-qty">{{ monster.quantity }}×</span>
               <div class="monster-info">
-                <span class="monster-name">{{ monster.display_name || monster.monster_name }}</span>
-                <span v-if="monster.display_name" class="monster-original">({{ monster.monster_name }})</span>
+                <span class="monster-name">{{ monster.display_name || monster.monster_name || monster.monster_data?.name || 'Homebrew Monster' }}</span>
+                <span v-if="monster.display_name && monster.monster_name" class="monster-original">({{ monster.monster_name }})</span>
+                <span v-if="monster.homebrew_monster_id" class="homebrew-badge">HB</span>
                 <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">*</span>
               </div>
               <button
@@ -129,8 +130,10 @@ export interface EncounterGroup {
     id: string
     quantity: number
     display_name: string | null
-    monster_name: string
+    monster_name: string | null
+    homebrew_monster_id?: string | null
     notes: string | null
+    monster_data?: any
   }>
 }
 
@@ -303,6 +306,18 @@ function getPoiIcon(iconName: string): string {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--color-text);
+}
+
+.homebrew-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.2rem;
+  background: var(--color-warning, #f59e0b);
+  color: #000;
+  vertical-align: middle;
+  margin-left: 0.25rem;
 }
 
 .monster-original {

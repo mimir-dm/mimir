@@ -18,7 +18,7 @@
           :class="{ active: selectedModuleMonster?.id === mm.id }"
           @click="selectModuleMonster(mm)"
         >
-          <span class="mm-name">{{ mm.monster_name }}</span>
+          <span class="mm-name">{{ mm.display_name || mm.monster_name || mm.monster_data?.name || 'Monster' }}</span>
           <span class="mm-meta">
             <span v-if="mm.encounter_tag" class="mm-tag">{{ mm.encounter_tag }}</span>
             <span class="mm-qty">×{{ mm.quantity }}</span>
@@ -199,8 +199,9 @@ interface Trap {
 interface ModuleMonsterWithData {
   id: number
   module_id: number
-  monster_name: string
-  monster_source: string
+  monster_name: string | null
+  monster_source: string | null
+  homebrew_monster_id: string | null
   quantity: number
   encounter_tag: string | null
   /** Custom display name (e.g., "Frost Wight" when using goblin stats) */
@@ -209,6 +210,7 @@ interface ModuleMonsterWithData {
   notes: string | null
   monster_data: {
     id?: number
+    name?: string
     size?: string
     cr?: string
     type?: string
@@ -395,7 +397,9 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
 
   selectedModuleMonster.value = mm
   selectedType.value = 'monster'
-  tokenName.value = mm.monster_name
+
+  const displayName = mm.display_name || mm.monster_name || mm.monster_data?.name || 'Monster'
+  tokenName.value = displayName
 
   // Get monster size from data (handles various formats: string, array, etc.)
   if (mm.monster_data?.size) {
@@ -403,14 +407,15 @@ function selectModuleMonster(mm: ModuleMonsterWithData) {
   }
 
   // Set linked monster info (for display, not for DB linking)
+  const monsterSource = mm.monster_source || 'HB'
   selectedMonster.value = {
     id: 0,  // Not used - monster_id is not stable
-    name: mm.monster_name,
-    source: mm.monster_source,
+    name: displayName,
+    source: monsterSource,
     size: mm.monster_data?.size || 'Medium',
     cr: mm.monster_data?.cr || 'N/A'
   }
-  selectedMonsterSource.value = mm.monster_source
+  selectedMonsterSource.value = monsterSource
 
   selectedColor.value = TOKEN_TYPE_COLORS.monster
   emitConfig()

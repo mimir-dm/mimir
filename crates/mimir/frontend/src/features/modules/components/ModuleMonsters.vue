@@ -30,13 +30,18 @@
       <div v-if="searchResults.length > 0" class="search-results">
         <div
           v-for="monster in searchResults"
-          :key="`${monster.name}-${monster.source}`"
+          :key="`${monster.name}-${monster.source}-${monster.homebrew_id || ''}`"
           class="search-result-item"
         >
           <div class="monster-info">
-            <span class="monster-name">{{ monster.name }}</span>
+            <span class="monster-name">
+              {{ monster.name }}
+              <span v-if="monster.is_homebrew" class="homebrew-badge">HB</span>
+            </span>
             <span class="monster-meta">
-              CR {{ monster.cr }} | {{ monster.creature_type }} | {{ monster.source }}
+              <template v-if="monster.cr">CR {{ monster.cr }} | </template>
+              <template v-if="monster.creature_type">{{ monster.creature_type }} | </template>
+              {{ monster.source }}
             </span>
           </div>
           <button
@@ -66,8 +71,11 @@
         @click="viewMonster(monster)"
       >
         <div class="monster-details">
-          <span class="monster-name clickable">{{ monster.display_name || monster.monster_name }}</span>
-          <span class="monster-source">{{ monster.monster_source }}</span>
+          <span class="monster-name clickable">
+            {{ monster.display_name || monster.monster_name || monster.monster_data?.name || 'Unknown Monster' }}
+            <span v-if="monster.homebrew_monster_id" class="homebrew-badge">HB</span>
+          </span>
+          <span class="monster-source">{{ monster.monster_source || 'Homebrew' }}</span>
         </div>
 
         <div class="monster-controls" @click.stop>
@@ -114,7 +122,7 @@
     <!-- Monster Detail Modal -->
     <AppModal
       :visible="showMonsterModal"
-      :title="selectedMonster?.display_name || selectedMonster?.monster_name || 'Monster'"
+      :title="selectedMonster?.display_name || selectedMonster?.monster_name || selectedMonster?.monster_data?.name || 'Monster'"
       size="md"
       @close="closeMonsterModal"
     >
@@ -135,21 +143,34 @@ import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMonsters, type MonsterSummary } from '@/features/sources/composables/catalog/useMonsters'
 import { formatMonsterDetails } from '@/features/sources/formatters/monsterFormatterEnhanced'
+import { HomebrewMonsterService, type HomebrewMonster } from '@/services/HomebrewMonsterService'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import AppModal from '@/components/shared/AppModal.vue'
+
+/** A search result that can be either catalog or homebrew */
+interface SearchResult {
+  name: string
+  cr: string | null
+  creature_type: string | null
+  source: string
+  is_homebrew: boolean
+  /** Only set for homebrew results */
+  homebrew_id?: string
+}
 
 interface ModuleMonster {
   id: number
   module_id: number
-  monster_name: string
-  monster_source: string
+  monster_name: string | null
+  monster_source: string | null
+  homebrew_monster_id: string | null
   quantity: number
   encounter_tag: string | null
   /** Custom display name (e.g., "Frost Wight" when using goblin stats) */
   display_name: string | null
   /** DM notes about customizations or thematic changes */
   notes: string | null
-  /** Full monster data from the catalog (when loaded with _with_data) */
+  /** Full monster data from the catalog or homebrew (when loaded with _with_data) */
   monster_data?: any
   created_at: string
   updated_at: string
@@ -167,9 +188,10 @@ const props = defineProps<Props>()
 const { searchMonsters } = useMonsters()
 
 const searchQuery = ref('')
-const searchResults = ref<MonsterSummary[]>([])
+const searchResults = ref<SearchResult[]>([])
 const isSearching = ref(false)
 const moduleMonsters = ref<ModuleMonster[]>([])
+const homebrewMonsters = ref<HomebrewMonster[]>([])
 
 // Monster detail modal state
 const showMonsterModal = ref(false)
@@ -190,6 +212,15 @@ async function loadModuleMonsters() {
   }
 }
 
+// Load homebrew monsters for the campaign (for search)
+async function loadHomebrewMonsters() {
+  try {
+    homebrewMonsters.value = await HomebrewMonsterService.list(props.campaignId)
+  } catch (error) {
+    console.error('Failed to load homebrew monsters:', error)
+  }
+}
+
 // View monster details in modal
 async function viewMonster(monster: ModuleMonster) {
   selectedMonster.value = monster
@@ -200,7 +231,7 @@ async function viewMonster(monster: ModuleMonster) {
     // If we have monster_data, format it directly
     if (monster.monster_data) {
       monsterDetailContent.value = await formatMonsterDetails(monster.monster_data)
-    } else {
+    } else if (monster.monster_name && monster.monster_source) {
       // Fetch the full monster data from catalog
       const response = await invoke<{ success: boolean; data?: any }>('get_monster_by_name', {
         name: monster.monster_name,
@@ -211,6 +242,9 @@ async function viewMonster(monster: ModuleMonster) {
       } else {
         monsterDetailContent.value = `<p>Monster data not found for ${monster.monster_name} (${monster.monster_source})</p>`
       }
+    } else {
+      const name = monster.display_name || 'Unknown Monster'
+      monsterDetailContent.value = `<p>No detailed data available for ${name}</p>`
     }
   } catch (error) {
     console.error('Failed to load monster details:', error)
@@ -225,7 +259,7 @@ function closeMonsterModal() {
   monsterDetailContent.value = ''
 }
 
-// Debounced search
+// Debounced search (combines catalog and homebrew results)
 function debouncedSearch() {
   if (searchTimeout) {
     clearTimeout(searchTimeout)
@@ -239,10 +273,31 @@ function debouncedSearch() {
 
     isSearching.value = true
     try {
-      console.log('Searching for:', searchQuery.value)
-      const results = await searchMonsters({ query: searchQuery.value })
-      console.log('Search results:', results)
-      searchResults.value = results.slice(0, 10) // Limit results
+      // Search catalog
+      const catalogResults = await searchMonsters({ query: searchQuery.value })
+      const results: SearchResult[] = catalogResults.slice(0, 8).map(m => ({
+        name: m.name,
+        cr: m.cr,
+        creature_type: m.creature_type || null,
+        source: m.source,
+        is_homebrew: false
+      }))
+
+      // Search homebrew monsters locally
+      const query = searchQuery.value.toLowerCase()
+      const hbMatches = homebrewMonsters.value
+        .filter(hb => hb.name.toLowerCase().includes(query))
+        .slice(0, 5)
+        .map(hb => ({
+          name: hb.name,
+          cr: hb.cr,
+          creature_type: hb.creature_type,
+          source: 'Homebrew',
+          is_homebrew: true,
+          homebrew_id: hb.id
+        }))
+
+      searchResults.value = [...hbMatches, ...results].slice(0, 10)
     } catch (error) {
       console.error('Search failed:', error)
     } finally {
@@ -258,7 +313,10 @@ function clearSearch() {
 }
 
 // Check if monster is already added
-function isMonsterAdded(monster: MonsterSummary): boolean {
+function isMonsterAdded(monster: SearchResult): boolean {
+  if (monster.is_homebrew && monster.homebrew_id) {
+    return moduleMonsters.value.some(m => m.homebrew_monster_id === monster.homebrew_id)
+  }
   return moduleMonsters.value.some(
     m => m.monster_name === monster.name && m.monster_source === monster.source
   )
@@ -290,21 +348,26 @@ async function syncMonstersToFile() {
   }
 }
 
-// Add monster to module
-async function addMonster(monster: MonsterSummary) {
+// Add monster to module (catalog or homebrew)
+async function addMonster(monster: SearchResult) {
   try {
-    const response = await invoke<{ data: ModuleMonster }>('add_module_monster', {
-      request: {
-        module_id: props.moduleId,
-        monster_name: monster.name,
-        monster_source: monster.source,
-        quantity: 1,
-        encounter_tag: null
-      }
-    })
+    const request: Record<string, any> = {
+      module_id: props.moduleId,
+      quantity: 1,
+    }
+
+    if (monster.is_homebrew && monster.homebrew_id) {
+      request.homebrew_monster_id = monster.homebrew_id
+    } else {
+      request.monster_name = monster.name
+      request.monster_source = monster.source
+    }
+
+    const response = await invoke<{ data: ModuleMonster }>('add_module_monster', { request })
 
     if (response.data) {
-      moduleMonsters.value.push(response.data)
+      // Reload to get full data including monster_data
+      await loadModuleMonsters()
       await syncMonstersToFile()
     }
   } catch (error) {
@@ -361,6 +424,7 @@ async function removeMonster(monster: ModuleMonster) {
 
 onMounted(() => {
   loadModuleMonsters()
+  loadHomebrewMonsters()
 })
 </script>
 
@@ -623,6 +687,20 @@ onMounted(() => {
 
 .monster-name.clickable:hover {
   text-decoration-style: solid;
+}
+
+.homebrew-badge {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.2rem;
+  background: var(--color-warning, #f59e0b);
+  color: #000;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+  letter-spacing: 0.03em;
 }
 
 /* Modal content */

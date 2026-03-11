@@ -7,8 +7,10 @@ import { dataEvents } from '@/utils/dataEvents'
 export interface MonsterWithData {
   id: string
   module_id: string
-  monster_name: string
-  monster_source: string
+  monster_name: string | null
+  monster_source: string | null
+  /** Homebrew monster ID (set when monster is from homebrew, null for catalog) */
+  homebrew_monster_id: string | null
   quantity: number
   encounter_tag: string | null
   /** Custom display name (e.g., "Frost Wight" when using goblin stats) */
@@ -16,6 +18,20 @@ export interface MonsterWithData {
   /** DM notes about customizations or thematic changes */
   notes: string | null
   monster_data: any | null
+}
+
+/** Helper to get display name for a module monster */
+export function getMonsterDisplayName(monster: MonsterWithData): string {
+  if (monster.display_name) return monster.display_name
+  if (monster.monster_name) return monster.monster_name
+  // For homebrew monsters without display_name, use name from monster_data
+  if (monster.monster_data?.name) return monster.monster_data.name
+  return 'Unknown Monster'
+}
+
+/** Check if a module monster is homebrew */
+export function isHomebrewMonster(monster: MonsterWithData): boolean {
+  return monster.homebrew_monster_id != null
 }
 
 export interface EncounterGroup {
@@ -117,6 +133,7 @@ export function useModuleMonsters(moduleId: Ref<string>) {
                 module_id: moduleId.value,
                 monster_name: token.name,
                 monster_source: token.monster_source || 'MM',
+                homebrew_monster_id: null,
                 quantity: 1,
                 encounter_tag: 'On Map',
                 display_name: null,

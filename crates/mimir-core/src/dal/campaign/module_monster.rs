@@ -39,7 +39,7 @@ pub fn list_module_monsters(
 ) -> QueryResult<Vec<ModuleMonster>> {
     module_monsters::table
         .filter(module_monsters::module_id.eq(module_id))
-        .order(module_monsters::monster_name.asc())
+        .order((module_monsters::monster_name.asc(), module_monsters::created_at.asc()))
         .load(conn)
 }
 
@@ -120,8 +120,9 @@ mod tests {
         assert_eq!(id, "mm-1");
 
         let retrieved = get_module_monster(&mut conn, "mm-1").expect("Failed to get");
-        assert_eq!(retrieved.monster_name, "Goblin");
-        assert_eq!(retrieved.monster_source, "MM");
+        assert_eq!(retrieved.monster_name, Some("Goblin".to_string()));
+        assert_eq!(retrieved.monster_source, Some("MM".to_string()));
+        assert!(retrieved.homebrew_monster_id.is_none());
         assert!(retrieved.display_name.is_none());
     }
 
@@ -155,10 +156,10 @@ mod tests {
 
         let monsters = list_module_monsters(&mut conn, "mod-1").expect("Failed to list");
         assert_eq!(monsters.len(), 3);
-        // Sorted alphabetically
-        assert_eq!(monsters[0].monster_name, "Bugbear");
-        assert_eq!(monsters[1].monster_name, "Goblin");
-        assert_eq!(monsters[2].monster_name, "Wolf");
+        // Sorted alphabetically by monster_name
+        assert_eq!(monsters[0].monster_name, Some("Bugbear".to_string()));
+        assert_eq!(monsters[1].monster_name, Some("Goblin".to_string()));
+        assert_eq!(monsters[2].monster_name, Some("Wolf".to_string()));
     }
 
     #[test]
@@ -214,5 +215,84 @@ mod tests {
             get_total_monster_count(&mut conn, "mod-1").expect("Failed to count"),
             8
         );
+    }
+
+    #[test]
+    fn test_insert_homebrew_module_monster() {
+        use crate::dal::campaign::insert_campaign_homebrew_monster;
+        use crate::models::campaign::NewCampaignHomebrewMonster;
+
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
+
+        // Create a homebrew monster in the campaign first (FK target)
+        let hb = NewCampaignHomebrewMonster::new("hb-1", "camp-1", "Flame Skulker", "{}");
+        insert_campaign_homebrew_monster(&mut conn, &hb).expect("Failed to create homebrew monster");
+
+        // Add it to the module via homebrew reference
+        let monster = NewModuleMonster::from_homebrew("mm-hb-1", "mod-1", "hb-1")
+            .with_display_name("Flame Skulker Alpha")
+            .with_quantity(2);
+        insert_module_monster(&mut conn, &monster).expect("Failed to insert homebrew module monster");
+
+        let retrieved = get_module_monster(&mut conn, "mm-hb-1").expect("Failed to get");
+        assert!(retrieved.monster_name.is_none());
+        assert!(retrieved.monster_source.is_none());
+        assert_eq!(retrieved.homebrew_monster_id, Some("hb-1".to_string()));
+        assert_eq!(retrieved.display_name, Some("Flame Skulker Alpha".to_string()));
+        assert_eq!(retrieved.quantity, 2);
+        assert!(retrieved.is_homebrew());
+        assert!(!retrieved.is_catalog());
+    }
+
+    #[test]
+    fn test_list_mixed_catalog_and_homebrew() {
+        use crate::dal::campaign::insert_campaign_homebrew_monster;
+        use crate::models::campaign::NewCampaignHomebrewMonster;
+
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
+
+        // Create homebrew monster
+        let hb = NewCampaignHomebrewMonster::new("hb-1", "camp-1", "Void Wyrm", "{}");
+        insert_campaign_homebrew_monster(&mut conn, &hb).expect("Failed to create homebrew");
+
+        // Add catalog monster
+        let catalog = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM");
+        insert_module_monster(&mut conn, &catalog).expect("Failed to insert catalog");
+
+        // Add homebrew monster
+        let homebrew = NewModuleMonster::from_homebrew("mm-2", "mod-1", "hb-1");
+        insert_module_monster(&mut conn, &homebrew).expect("Failed to insert homebrew");
+
+        let monsters = list_module_monsters(&mut conn, "mod-1").expect("Failed to list");
+        assert_eq!(monsters.len(), 2);
+
+        // Catalog monster has name, homebrew doesn't — sorted by name then created_at
+        // NULL names sort before non-NULL in SQLite ASC order
+        let catalog_m = monsters.iter().find(|m| m.is_catalog()).unwrap();
+        let homebrew_m = monsters.iter().find(|m| m.is_homebrew()).unwrap();
+
+        assert_eq!(catalog_m.monster_name, Some("Goblin".to_string()));
+        assert_eq!(homebrew_m.homebrew_monster_id, Some("hb-1".to_string()));
+    }
+
+    #[test]
+    fn test_delete_homebrew_module_monster() {
+        use crate::dal::campaign::insert_campaign_homebrew_monster;
+        use crate::models::campaign::NewCampaignHomebrewMonster;
+
+        let mut conn = test_connection();
+        setup_test_data(&mut conn);
+
+        let hb = NewCampaignHomebrewMonster::new("hb-1", "camp-1", "Shadow Beast", "{}");
+        insert_campaign_homebrew_monster(&mut conn, &hb).expect("Failed to create homebrew");
+
+        let monster = NewModuleMonster::from_homebrew("mm-hb-1", "mod-1", "hb-1");
+        insert_module_monster(&mut conn, &monster).expect("Failed to insert");
+
+        assert!(module_monster_exists(&mut conn, "mm-hb-1").expect("Failed to check"));
+        delete_module_monster(&mut conn, "mm-hb-1").expect("Failed to delete");
+        assert!(!module_monster_exists(&mut conn, "mm-hb-1").expect("Failed to check"));
     }
 }

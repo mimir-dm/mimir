@@ -3,6 +3,7 @@
 //! Each section type implements `Renderable` to produce Typst markup
 //! that can be assembled into a complete PDF document.
 
+pub mod card_utils;
 pub mod character;
 pub mod character_battle_card;
 pub mod equipment_cards;

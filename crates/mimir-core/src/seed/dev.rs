@@ -9,9 +9,9 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Character, Module, NewCampaignAsset, NewCampaignHomebrewItem, NewCharacter, NewCharacterClass,
-    NewCharacterInventory, NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModuleMonster,
-    NewModuleNpc, NewTokenPlacement,
+    Character, Module, NewCampaignAsset, NewCampaignHomebrewItem, NewCampaignHomebrewMonster,
+    NewCharacter, NewCharacterClass, NewCharacterInventory, NewLightSource, NewMap, NewMapPoi,
+    NewMapTrap, NewModuleMonster, NewModuleNpc, NewTokenPlacement,
 };
 use crate::services::{
     CampaignService, CreateCampaignInput, CreateModuleInput, ModuleService, ModuleType,
@@ -27,6 +27,12 @@ struct SeededMonsters {
     wolves: String,
     yeemik_guards: String,
     amethyst_dragon: String,
+    cragmaw_mutant: String,
+}
+
+/// IDs of seeded homebrew monsters for module monster creation.
+struct SeededHomebrewMonsters {
+    cragmaw_mutant: String,
 }
 
 /// IDs of seeded NPCs for token placement.
@@ -72,13 +78,17 @@ pub fn seed_dev_data(conn: &mut SqliteConnection, app_data_dir: &Path) -> Servic
     let homebrew_count = seed_homebrew_items(conn, &campaign.id)?;
     info!("Created {} homebrew items", homebrew_count);
 
+    // 3b. Seed homebrew monsters for the campaign
+    let homebrew_monsters = seed_homebrew_monsters(conn, &campaign.id)?;
+    info!("Created homebrew monsters");
+
     // 4. Create module
     let module = seed_module(conn, &campaign.id)?;
     info!("Created module: {}", module.name);
 
-    // 5. Add monsters to module
-    let monsters = seed_monsters(conn, &module.id)?;
-    info!("Added 7 monster groups to module");
+    // 5. Add monsters to module (includes homebrew)
+    let monsters = seed_monsters(conn, &module.id, &homebrew_monsters)?;
+    info!("Added 8 monster groups to module");
 
     // 6. Add NPCs to module
     let npcs = seed_npcs(conn, &module.id)?;
@@ -637,6 +647,88 @@ fn seed_homebrew_items(conn: &mut SqliteConnection, campaign_id: &str) -> Servic
 }
 
 // =============================================================================
+// Homebrew Monster Seeding
+// =============================================================================
+
+fn seed_homebrew_monsters(
+    conn: &mut SqliteConnection,
+    campaign_id: &str,
+) -> ServiceResult<SeededHomebrewMonsters> {
+    // Cragmaw Mutant — a homebrew goblinoid unique to this campaign
+    let mutant_id = Uuid::new_v4().to_string();
+    let mutant_data = serde_json::json!({
+        "name": "Cragmaw Mutant",
+        "source": "HB",
+        "size": ["M"],
+        "type": "humanoid",
+        "alignment": ["C", "E"],
+        "ac": [{"ac": 15, "from": ["natural armor"]}],
+        "hp": {"average": 45, "formula": "6d8 + 18"},
+        "speed": {"walk": 30},
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 8,
+        "wis": 10,
+        "cha": 6,
+        "skill": {"athletics": "+5", "intimidation": "+2"},
+        "senses": ["darkvision 60 ft."],
+        "passive": 10,
+        "cr": "2",
+        "languages": ["Common", "Goblin"],
+        "trait": [
+            {
+                "name": "Aggressive",
+                "entries": [
+                    "As a bonus action, the mutant can move up to its speed toward a hostile creature that it can see."
+                ]
+            },
+            {
+                "name": "Brute",
+                "entries": [
+                    "A melee weapon deals one extra die of its damage when the mutant hits with it (included in the attack)."
+                ]
+            }
+        ],
+        "action": [
+            {
+                "name": "Multiattack",
+                "entries": [
+                    "The mutant makes two attacks: one with its morningstar and one with its claw."
+                ]
+            },
+            {
+                "name": "Morningstar",
+                "entries": [
+                    "{@atk mw} {@hit 5} to hit, reach 5 ft., one target. {@h}12 ({@damage 2d8 + 3}) piercing damage."
+                ]
+            },
+            {
+                "name": "Claw",
+                "entries": [
+                    "{@atk mw} {@hit 5} to hit, reach 5 ft., one target. {@h}8 ({@damage 2d4 + 3}) slashing damage."
+                ]
+            }
+        ]
+    });
+    let mutant_json = mutant_data.to_string();
+    let mutant = NewCampaignHomebrewMonster::new(
+        &mutant_id,
+        campaign_id,
+        "Cragmaw Mutant",
+        &mutant_json,
+    )
+    .with_cr("2")
+    .with_creature_type("humanoid")
+    .with_size("M");
+    dal::insert_campaign_homebrew_monster(conn, &mutant)?;
+
+    Ok(SeededHomebrewMonsters {
+        cragmaw_mutant: mutant_id,
+    })
+}
+
+// =============================================================================
 // Module Seeding
 // =============================================================================
 
@@ -652,7 +744,11 @@ fn seed_module(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<
 // Monster Seeding
 // =============================================================================
 
-fn seed_monsters(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<SeededMonsters> {
+fn seed_monsters(
+    conn: &mut SqliteConnection,
+    module_id: &str,
+    homebrew_monsters: &SeededHomebrewMonsters,
+) -> ServiceResult<SeededMonsters> {
     // Generate IDs upfront so we can return them for token placement
     let entrance_guards_id = Uuid::new_v4().to_string();
     let bridge_archers_id = Uuid::new_v4().to_string();
@@ -661,6 +757,7 @@ fn seed_monsters(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<
     let wolves_id = Uuid::new_v4().to_string();
     let yeemik_guards_id = Uuid::new_v4().to_string();
     let amethyst_dragon_id = Uuid::new_v4().to_string();
+    let cragmaw_mutant_id = Uuid::new_v4().to_string();
 
     // Monsters from Monster Manual (MM) and Fizban's Treasury of Dragons (FTD)
     // (id, name, source, quantity, display_name, notes)
@@ -688,6 +785,17 @@ fn seed_monsters(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<
         dal::insert_module_monster(conn, &monster)?;
     }
 
+    // Homebrew monster: Cragmaw Mutant
+    let mutant = NewModuleMonster::from_homebrew(
+        &cragmaw_mutant_id,
+        module_id,
+        &homebrew_monsters.cragmaw_mutant,
+    )
+    .with_quantity(2)
+    .with_display_name("Cragmaw Mutants")
+    .with_notes("Mutated goblins guarding the cave depths");
+    dal::insert_module_monster(conn, &mutant)?;
+
     Ok(SeededMonsters {
         entrance_guards: entrance_guards_id,
         bridge_archers: bridge_archers_id,
@@ -696,6 +804,7 @@ fn seed_monsters(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<
         wolves: wolves_id,
         yeemik_guards: yeemik_guards_id,
         amethyst_dragon: amethyst_dragon_id,
+        cragmaw_mutant: cragmaw_mutant_id,
     })
 }
 
@@ -1014,6 +1123,18 @@ fn seed_tokens(
         .with_faction_color("#dc2626"); // Red for enemy
     dal::insert_token_placement(conn, &dragon_placement)?;
     count += 1;
+
+    // Cragmaw Mutants - homebrew monsters in the cave depths
+    let mutant_positions = [(20, 12), (22, 13)];
+    for (i, (x, y)) in mutant_positions.iter().enumerate() {
+        let id = Uuid::new_v4().to_string();
+        let label = format!("Cragmaw Mutant {}", i + 1);
+        let placement = NewTokenPlacement::for_monster(&id, map_id, &monsters.cragmaw_mutant, *x, *y)
+            .with_label(&label)
+            .with_faction_color("#DC2626"); // Red for enemies
+        dal::insert_token_placement(conn, &placement)?;
+        count += 1;
+    }
 
     Ok(count)
 }

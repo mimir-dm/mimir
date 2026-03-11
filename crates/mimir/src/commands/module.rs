@@ -187,15 +187,41 @@ pub fn list_module_monsters_with_data(
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    // Convert to MonsterWithData with catalog lookup
+    // Convert to MonsterWithData with catalog or homebrew data lookup
     let result: Vec<MonsterWithData> = monsters
         .into_iter()
         .map(|m| {
-            // Look up the monster in the catalog
-            let monster_data = get_monster_by_name(&mut db, &m.monster_name, &m.monster_source)
-                .ok()
-                .flatten()
-                .and_then(|catalog_monster: Monster| catalog_monster.parse_data().ok());
+            let monster_data = if let Some(ref hb_id) = m.homebrew_monster_id {
+                // Homebrew monster — parse data from homebrew table
+                dal::get_campaign_homebrew_monster(&mut db, hb_id)
+                    .ok()
+                    .and_then(|hb| {
+                        serde_json::from_str::<serde_json::Value>(&hb.data).ok().map(|mut data| {
+                            if let Some(obj) = data.as_object_mut() {
+                                obj.insert("name".to_string(), serde_json::Value::String(hb.name));
+                                obj.insert("source".to_string(), serde_json::Value::String("Homebrew".to_string()));
+                                if let Some(cr) = hb.cr {
+                                    obj.insert("cr".to_string(), serde_json::Value::String(cr));
+                                }
+                                if let Some(ct) = hb.creature_type {
+                                    obj.insert("type".to_string(), serde_json::json!({"type": ct}));
+                                }
+                                if let Some(sz) = hb.size {
+                                    obj.insert("size".to_string(), serde_json::json!([sz]));
+                                }
+                            }
+                            data
+                        })
+                    })
+            } else if let (Some(ref name), Some(ref source)) = (&m.monster_name, &m.monster_source) {
+                // Catalog monster
+                get_monster_by_name(&mut db, name, source)
+                    .ok()
+                    .flatten()
+                    .and_then(|catalog_monster: Monster| catalog_monster.parse_data().ok())
+            } else {
+                None
+            };
 
             MonsterWithData {
                 monster: m,
@@ -212,14 +238,22 @@ pub fn list_module_monsters_with_data(
 #[serde(rename_all = "camelCase")]
 pub struct AddModuleMonsterRequest {
     pub module_id: String,
-    pub monster_name: String,
-    pub monster_source: String,
+    /// Catalog monster name (required for catalog monsters, omit for homebrew).
+    pub monster_name: Option<String>,
+    /// Catalog monster source (required for catalog monsters, omit for homebrew).
+    pub monster_source: Option<String>,
+    /// Homebrew monster ID (alternative to monster_name/monster_source).
+    pub homebrew_monster_id: Option<String>,
     pub quantity: Option<i32>,
     pub display_name: Option<String>,
     pub notes: Option<String>,
 }
 
 /// Add a monster to a module (or increment quantity if it already exists).
+///
+/// Supports two paths:
+/// - Catalog: provide `monster_name` + `monster_source`
+/// - Homebrew: provide `homebrew_monster_id`
 #[tauri::command]
 pub fn add_module_monster(
     state: State<'_, AppState>,
@@ -230,12 +264,28 @@ pub fn add_module_monster(
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Check if this monster already exists in the module
+    // Validate: must provide either catalog (name+source) or homebrew ID, not both
+    let is_catalog = request.monster_name.is_some() && request.monster_source.is_some();
+    let is_homebrew = request.homebrew_monster_id.is_some();
+
+    if is_catalog && is_homebrew {
+        return ApiResponse::err("Cannot specify both monster_name/monster_source and homebrew_monster_id");
+    }
+    if !is_catalog && !is_homebrew {
+        return ApiResponse::err("Must specify either monster_name+monster_source (catalog) or homebrew_monster_id (homebrew)");
+    }
+
+    // Check for existing duplicate in the module
     let existing = dal::list_module_monsters(&mut db, &request.module_id)
         .ok()
         .and_then(|monsters| {
             monsters.into_iter().find(|m| {
-                m.monster_name == request.monster_name && m.monster_source == request.monster_source
+                if is_homebrew {
+                    m.homebrew_monster_id.as_deref() == request.homebrew_monster_id.as_deref()
+                } else {
+                    m.monster_name.as_deref() == request.monster_name.as_deref()
+                        && m.monster_source.as_deref() == request.monster_source.as_deref()
+                }
             })
         });
 
@@ -257,19 +307,34 @@ pub fn add_module_monster(
             Err(e) => ApiResponse::err(e.to_string()),
         }
     } else {
-        // Create new module monster
         let id = Uuid::new_v4().to_string();
         let display_name_ref = request.display_name.as_deref();
         let notes_ref = request.notes.as_deref();
 
-        let new_monster = NewModuleMonster {
-            id: &id,
-            module_id: &request.module_id,
-            monster_name: &request.monster_name,
-            monster_source: &request.monster_source,
-            display_name: display_name_ref,
-            notes: notes_ref,
-            quantity: request.quantity.unwrap_or(1),
+        let new_monster = if is_homebrew {
+            let hb_id = request.homebrew_monster_id.as_deref().unwrap();
+
+            // Validate homebrew monster exists
+            if dal::get_campaign_homebrew_monster(&mut db, hb_id).is_err() {
+                return ApiResponse::err(format!("Homebrew monster '{}' not found", hb_id));
+            }
+
+            let mut m = NewModuleMonster::from_homebrew(&id, &request.module_id, hb_id);
+            m.display_name = display_name_ref;
+            m.notes = notes_ref;
+            m.quantity = request.quantity.unwrap_or(1);
+            m
+        } else {
+            NewModuleMonster {
+                id: &id,
+                module_id: &request.module_id,
+                monster_name: request.monster_name.as_deref(),
+                monster_source: request.monster_source.as_deref(),
+                homebrew_monster_id: None,
+                display_name: display_name_ref,
+                notes: notes_ref,
+                quantity: request.quantity.unwrap_or(1),
+            }
         };
 
         if let Err(e) = dal::insert_module_monster(&mut db, &new_monster) {
@@ -322,6 +387,24 @@ pub fn update_module_monster(
 
     match dal::get_module_monster(&mut db, &monster_id) {
         Ok(monster) => ApiResponse::ok(monster),
+        Err(e) => ApiResponse::err(e.to_string()),
+    }
+}
+
+/// Remove a monster from a module.
+#[tauri::command]
+pub fn remove_module_monster(
+    state: State<'_, AppState>,
+    monster_id: String,
+) -> ApiResponse<()> {
+    let mut db = match state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+
+    match dal::delete_module_monster(&mut db, &monster_id) {
+        Ok(0) => ApiResponse::err(format!("Module monster '{}' not found", monster_id)),
+        Ok(_) => ApiResponse::ok(()),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -570,15 +653,24 @@ pub fn serve_token_image(
         Err(e) => return ApiResponse::err(format!("Failed to get module monster: {}", e)),
     };
 
+    // Homebrew monsters don't have catalog token images
+    let (monster_name, monster_source) = match (&module_monster.monster_name, &module_monster.monster_source) {
+        (Some(name), Some(source)) => (name.clone(), source.clone()),
+        _ => {
+            tracing::debug!("No token image for homebrew monster");
+            return ApiResponse::ok(None);
+        }
+    };
+
     tracing::debug!(
         "Looking for token image: monster_name={}, monster_source={}",
-        module_monster.monster_name,
-        module_monster.monster_source
+        monster_name,
+        monster_source
     );
 
     // Images are stored in assets/catalog/bestiary/tokens/{source}/{name}.{ext}
     let img_base = state.paths.assets_dir.join("catalog").join("bestiary").join("tokens");
-    let source_dir = img_base.join(&module_monster.monster_source);
+    let source_dir = img_base.join(&monster_source);
 
     tracing::debug!("Token image source dir: {:?}, exists: {}", source_dir, source_dir.exists());
 
@@ -588,7 +680,7 @@ pub fn serve_token_image(
     let mut found_ext: Option<&str> = None;
 
     for ext in &extensions {
-        let path = source_dir.join(format!("{}.{}", &module_monster.monster_name, ext));
+        let path = source_dir.join(format!("{}.{}", &monster_name, ext));
         tracing::debug!("Trying path: {:?}, exists: {}", path, path.exists());
         if path.exists() {
             found_path = Some(path);
@@ -605,8 +697,8 @@ pub fn serve_token_image(
         _ => {
             tracing::debug!(
                 "No token image found for {}/{}",
-                module_monster.monster_source,
-                module_monster.monster_name
+                monster_source,
+                monster_name
             );
             return ApiResponse::ok(None);
         }

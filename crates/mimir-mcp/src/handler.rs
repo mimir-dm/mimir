@@ -59,6 +59,7 @@ impl MimirHandler {
             tools::module::update_module_tool(),
             tools::module::delete_module_tool(),
             tools::module::add_monster_to_module_tool(),
+            tools::module::remove_monster_from_module_tool(),
             tools::module::add_item_to_module_tool(),
             // Document tools
             tools::document::list_documents_tool(),
@@ -149,6 +150,9 @@ impl MimirHandler {
             "delete_module" => tools::module::delete_module(&self.context, args).await,
             "add_monster_to_module" => {
                 tools::module::add_monster_to_module(&self.context, args).await
+            }
+            "remove_monster_from_module" => {
+                tools::module::remove_monster_from_module(&self.context, args).await
             }
             "add_item_to_module" => tools::module::add_item_to_module(&self.context, args).await,
 
@@ -334,6 +338,7 @@ mod tests {
         "update_module",
         "delete_module",
         "add_monster_to_module",
+        "remove_monster_from_module",
         "add_item_to_module",
         // Document
         "list_documents",
