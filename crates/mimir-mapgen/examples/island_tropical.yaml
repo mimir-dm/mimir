@@ -9,20 +9,20 @@ noise:
   lacunarity: 2.0
   scale: 0.035
 
-island_mode: 1.8
+island_mode: 1.0
 
 terrain:
   slots:
-    - texture: "res://textures/terrain/terrain_sand.png"
+    - texture: "res://textures/terrain/terrain_grass.png"
       lower: 0.0
       upper: 0.35
-    - texture: "res://textures/terrain/terrain_dry_grass.png"
+    - texture: "res://textures/terrain/terrain_moss.png"
       lower: 0.3
       upper: 0.55
-    - texture: "res://textures/terrain/terrain_grass.png"
+    - texture: "res://textures/terrain/terrain_dry_grass.png"
       lower: 0.5
       upper: 0.75
-    - texture: "res://textures/terrain/terrain_moss.png"
+    - texture: "res://textures/terrain/terrain_sand.png"
       lower: 0.7
       upper: 1.0
   blend_width: 0.06
@@ -33,10 +33,10 @@ trees:
       textures:
         - "res://textures/objects/more_trees/oak_01.png"
         - "res://textures/objects/more_trees/oak_02.png"
-      min_distance: 450.0
-      noise_lower: 0.3
-      noise_upper: 0.6
-      probability: 0.5
+      min_distance: 350.0
+      noise_lower: 0.0
+      noise_upper: 0.5
+      probability: 0.6
       scale_min: 0.7
       scale_max: 1.1
       layer: 300
@@ -58,10 +58,10 @@ clutter:
     random_mirror: false
 
 water:
-  threshold: 0.55
+  threshold: 0.85
   deep_color: "ff1a6b5a"
   shallow_color: "ff30b89a"
   blend_distance: 60.0
   min_contour_points: 20
-  smooth_iterations: 3
+  smooth_iterations: 5
   pixels_per_cell: 64.0

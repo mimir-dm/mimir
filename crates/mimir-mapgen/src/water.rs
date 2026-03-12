@@ -58,40 +58,64 @@ pub fn generate_water(
     config: &WaterConfig,
     alloc: &NodeIdAllocator,
 ) -> Water {
-    generate_water_inner(noise_map, config, alloc, false)
+    generate_water_inner(noise_map, config, alloc, WaterMode::Contour)
 }
 
 /// Generate water with radial sampling mode for lake presets.
-/// When `radial` is true, casts rays from the center outward to find the
-/// threshold boundary, producing one clean closed polygon.
+/// Casts rays from the center outward to find the threshold boundary,
+/// producing one clean closed polygon.
 pub fn generate_water_radial(
     noise_map: &NoiseMap,
     config: &WaterConfig,
     alloc: &NodeIdAllocator,
 ) -> Water {
-    generate_water_inner(noise_map, config, alloc, true)
+    generate_water_inner(noise_map, config, alloc, WaterMode::Lake)
+}
+
+/// Generate water for island-mode maps (water ring around edges).
+pub fn generate_water_island(
+    noise_map: &NoiseMap,
+    config: &WaterConfig,
+    alloc: &NodeIdAllocator,
+) -> Water {
+    generate_water_inner(noise_map, config, alloc, WaterMode::Island)
+}
+
+#[derive(Clone, Copy)]
+enum WaterMode {
+    Contour,
+    Lake,
+    Island,
 }
 
 fn generate_water_inner(
     noise_map: &NoiseMap,
     config: &WaterConfig,
     alloc: &NodeIdAllocator,
-    radial: bool,
+    mode: WaterMode,
 ) -> Water {
-    let polygons: Vec<Vec<(f64, f64)>> = if radial {
-        radial_water_polygon(noise_map, config)
-    } else {
-        let contours = find_contours(noise_map, config.threshold);
-        let smoothed = smooth_contours(contours, config.smooth_iterations);
-        smoothed
-            .into_iter()
-            .filter(|c| c.len() >= config.min_contour_points)
-            .map(|c| {
-                c.iter()
-                    .map(|&(x, y)| (x * config.pixels_per_cell, y * config.pixels_per_cell))
-                    .collect()
-            })
-            .collect()
+    // Island mode uses a special tree structure: ocean rectangle parent with
+    // island shoreline child (transparent colors) to punch a hole.
+    if let WaterMode::Island = mode {
+        return generate_island_water_tree(noise_map, config, alloc);
+    }
+
+    let polygons: Vec<Vec<(f64, f64)>> = match mode {
+        WaterMode::Lake => radial_water_polygon(noise_map, config),
+        WaterMode::Island => unreachable!(),
+        WaterMode::Contour => {
+            let contours = find_contours(noise_map, config.threshold);
+            let smoothed = smooth_contours(contours, config.smooth_iterations);
+            smoothed
+                .into_iter()
+                .filter(|c| c.len() >= config.min_contour_points)
+                .map(|c| {
+                    c.iter()
+                        .map(|&(x, y)| (x * config.pixels_per_cell, y * config.pixels_per_cell))
+                        .collect()
+                })
+                .collect()
+        }
     };
 
     // Build root water tree with children for each polygon
@@ -125,6 +149,75 @@ fn generate_water_inner(
             shallow_color: "00000000".to_string(),
             blend_distance: 0.0,
             children,
+        }),
+    }
+}
+
+/// Build island water tree: ocean rectangle parent → island shoreline child (transparent hole).
+///
+/// This matches the Dungeondraft convention: the parent polygon fills ocean with water colors,
+/// and a child polygon with transparent colors ("00000000") cuts a hole for the island.
+fn generate_island_water_tree(
+    noise_map: &NoiseMap,
+    config: &WaterConfig,
+    alloc: &NodeIdAllocator,
+) -> Water {
+    let shoreline = island_shoreline(noise_map, config);
+    let ppc = config.pixels_per_cell;
+    let w = noise_map.width as f64 * ppc;
+    let h = noise_map.height as f64 * ppc;
+
+    // Ocean rectangle — extends 1 grid square beyond map borders (matching reference impl)
+    let margin = 256.0; // 1 grid square = 256px
+    let ocean_points = vec![
+        Vector2::new(-margin, -margin),
+        Vector2::new(w + margin, -margin),
+        Vector2::new(w + margin, h + margin),
+        Vector2::new(-margin, h + margin),
+    ];
+
+    // Island shoreline — child with transparent colors to punch a hole
+    let shore_points: Vec<Vector2> = shoreline
+        .iter()
+        .map(|&(x, y)| Vector2::new(x, y))
+        .collect();
+
+    let island_hole = WaterTree {
+        node_ref: alloc.next().parse::<i64>().unwrap_or(0),
+        polygon: PoolVector2Array::from_points(shore_points),
+        join: 0,
+        end: 0,
+        is_open: false,
+        deep_color: "00000000".to_string(),
+        shallow_color: "00000000".to_string(),
+        blend_distance: 0.0,
+        children: Vec::new(),
+    };
+
+    let ocean = WaterTree {
+        node_ref: alloc.next().parse::<i64>().unwrap_or(0),
+        polygon: PoolVector2Array::from_points(ocean_points),
+        join: 0,
+        end: 0,
+        is_open: false,
+        deep_color: config.deep_color.clone(),
+        shallow_color: config.shallow_color.clone(),
+        blend_distance: config.blend_distance,
+        children: vec![island_hole],
+    };
+
+    Water {
+        disable_border: config.disable_border,
+        tree: Some(WaterTree {
+            node_ref: alloc.next().parse::<i64>().unwrap_or(-1),
+            polygon: PoolVector2Array::new(),
+            join: 0,
+            end: 0,
+            is_open: false,
+            deep_color: "00000000".to_string(),
+            shallow_color: "00000000".to_string(),
+            blend_distance: 0.0,
+            children: vec![ocean],
         }),
     }
 }
@@ -185,6 +278,94 @@ fn radial_water_polygon(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<Vec<(
     } else {
         vec![]
     }
+}
+
+/// Trace the island shoreline via radial sampling.
+///
+/// Casts rays from the map center outward, finding where noise exceeds the
+/// water threshold. Returns a closed polygon of shoreline points in pixel coordinates.
+fn island_shoreline(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<(f64, f64)> {
+    let ncx = noise_map.width as f64 / 2.0;
+    let ncy = noise_map.height as f64 / 2.0;
+    let max_radius = (ncx * ncx + ncy * ncy).sqrt();
+    let num_rays: usize = 120;
+    let step = 0.5_f64;
+    let ppc = config.pixels_per_cell;
+
+    let mut radii: Vec<f64> = Vec::with_capacity(num_rays);
+
+    for i in 0..num_rays {
+        let angle = 2.0 * std::f64::consts::PI * (i as f64) / (num_rays as f64);
+        let dx = angle.cos();
+        let dy = angle.sin();
+
+        // Walk outward from center. Two phases:
+        // 1. "seeking land" — skip any initial above-threshold noise at center
+        // 2. "on land" — once we find land (below threshold), look for the shore
+        let mut boundary_r = max_radius;
+        let mut found_land = false;
+        let mut r = 0.0;
+        while r < max_radius {
+            let sx = ncx + dx * r;
+            let sy = ncy + dy * r;
+            if sx < 0.0
+                || sy < 0.0
+                || sx >= noise_map.width as f64
+                || sy >= noise_map.height as f64
+            {
+                boundary_r = r;
+                break;
+            }
+            let val = noise_map.sample(sx, sy);
+            if !found_land {
+                if val < config.threshold {
+                    found_land = true;
+                }
+            } else if val >= config.threshold {
+                boundary_r = r;
+                break;
+            }
+            r += step;
+        }
+
+        radii.push(boundary_r);
+    }
+
+    // Clamp radii: no ray should deviate more than 40% from the mean radius.
+    // This prevents deep concavities from noise valleys cutting into the island.
+    let mean_r: f64 = radii.iter().sum::<f64>() / radii.len() as f64;
+    let min_r = mean_r * 0.6;
+    let max_r = mean_r * 1.4;
+    for r in &mut radii {
+        *r = r.clamp(min_r, max_r);
+    }
+
+    // Heavy smoothing in radius space (circular averaging)
+    let smooth_passes = config.smooth_iterations.max(3) * 3; // triple the configured smoothing
+    for _ in 0..smooth_passes {
+        let prev = radii.clone();
+        for i in 0..num_rays {
+            let p = if i == 0 { num_rays - 1 } else { i - 1 };
+            let n = (i + 1) % num_rays;
+            radii[i] = (prev[p] + prev[i] + prev[n]) / 3.0;
+        }
+    }
+
+    // Convert smoothed radii to pixel coordinates
+    let mut shore: Vec<(f64, f64)> = Vec::with_capacity(num_rays + 1);
+    for i in 0..num_rays {
+        let angle = 2.0 * std::f64::consts::PI * (i as f64) / (num_rays as f64);
+        let dx = angle.cos();
+        let dy = angle.sin();
+        shore.push(((ncx + dx * radii[i]) * ppc, (ncy + dy * radii[i]) * ppc));
+    }
+
+    // Close the polygon
+    if let Some(&first) = shore.first() {
+        shore.push(first);
+    }
+
+    shore
 }
 
 /// Generate water from a river corridor polygon.

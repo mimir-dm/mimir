@@ -429,16 +429,17 @@ fn lake_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(1.5),
+            island_mode: Some(-1.0),
             terrain: Some(TerrainConfig {
                 slots: [
+                    // Low noise = edges (grass), high noise = center (near water = dirt/mud)
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
+                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
                         lower: 0.0,
                         upper: 0.35,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
                         lower: 0.3,
                         upper: 0.6,
                     },
@@ -448,7 +449,7 @@ fn lake_preset() -> BiomePreset {
                         upper: 0.8,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
                         lower: 0.75,
                         upper: 1.0,
                     },
@@ -496,7 +497,7 @@ fn lake_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.55,
+                threshold: 0.68,
                 deep_color: "ff2a7f6f".to_string(),
                 shallow_color: "ff3ac3b2".to_string(),
                 blend_distance: 50.0,
@@ -687,26 +688,27 @@ fn island_tropical_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.035,
             },
-            island_mode: Some(1.8),
+            island_mode: Some(1.0),
             terrain: Some(TerrainConfig {
                 slots: [
+                    // Low noise = center of island (lush), high noise = shore near water
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_sand.png".to_string(),
+                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
                         lower: 0.0,
                         upper: 0.35,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
                         lower: 0.3,
                         upper: 0.55,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
                         lower: 0.5,
                         upper: 0.75,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
+                        texture: "res://textures/terrain/terrain_sand.png".to_string(),
                         lower: 0.7,
                         upper: 1.0,
                     },
@@ -720,10 +722,10 @@ fn island_tropical_preset() -> BiomePreset {
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
                     ],
-                    min_distance: 450.0,
-                    noise_lower: 0.3,
-                    noise_upper: 0.6,
-                    probability: 0.5,
+                    min_distance: 350.0,
+                    noise_lower: 0.0,
+                    noise_upper: 0.5,
+                    probability: 0.6,
                     scale_min: 0.7,
                     scale_max: 1.1,
                     layer: 300,
@@ -754,7 +756,7 @@ fn island_tropical_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.55,
+                threshold: 0.85,
                 deep_color: "ff1a6b5a".to_string(),
                 shallow_color: "ff30b89a".to_string(),
                 blend_distance: 60.0,
@@ -794,11 +796,12 @@ fn island_forest_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(1.5),
+            island_mode: Some(1.0),
             terrain: Some(TerrainConfig {
                 slots: [
+                    // Low noise = center of island (forest floor), high noise = shore
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
+                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
                         lower: 0.0,
                         upper: 0.35,
                     },
@@ -808,12 +811,12 @@ fn island_forest_preset() -> BiomePreset {
                         upper: 0.6,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
                         lower: 0.55,
                         upper: 0.8,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
                         lower: 0.75,
                         upper: 1.0,
                     },
@@ -828,10 +831,10 @@ fn island_forest_preset() -> BiomePreset {
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
                         "res://textures/objects/more_trees/oak_03.png".to_string(),
                     ],
-                    min_distance: 400.0,
-                    noise_lower: 0.3,
-                    noise_upper: 0.65,
-                    probability: 0.6,
+                    min_distance: 300.0,
+                    noise_lower: 0.0,
+                    noise_upper: 0.55,
+                    probability: 0.8,
                     scale_min: 0.8,
                     scale_max: 1.2,
                     layer: 300,
@@ -862,7 +865,7 @@ fn island_forest_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.55,
+                threshold: 0.85,
                 deep_color: "ff1a5040".to_string(),
                 shallow_color: "ff2a8a6a".to_string(),
                 blend_distance: 45.0,
@@ -901,7 +904,7 @@ fn island_arctic_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(1.5),
+            island_mode: Some(1.0),
             terrain: Some(TerrainConfig {
                 slots: [
                     TerrainSlot {
@@ -934,7 +937,7 @@ fn island_arctic_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.55,
+                threshold: 0.85,
                 deep_color: "ff0f2a3d".to_string(),
                 shallow_color: "ff3a7a9a".to_string(),
                 blend_distance: 40.0,

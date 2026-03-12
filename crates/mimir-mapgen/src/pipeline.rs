@@ -541,11 +541,14 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 8. Generate water bodies
     if let Some(ref water_config) = config.water {
-        let is_lake_mode = config.island_mode.map_or(false, |v| v < 0.0);
-        let water = if is_lake_mode {
-            water::generate_water_radial(&noise_map, water_config, &alloc)
-        } else {
-            water::generate_water(&noise_map, water_config, &alloc)
+        let water = match config.island_mode {
+            Some(v) if v < 0.0 => {
+                water::generate_water_radial(&noise_map, water_config, &alloc)
+            }
+            Some(v) if v > 0.0 => {
+                water::generate_water_island(&noise_map, water_config, &alloc)
+            }
+            _ => water::generate_water(&noise_map, water_config, &alloc),
         };
         if let Some(ref tree) = water.tree {
             stats.water_polygons += tree.children.len();

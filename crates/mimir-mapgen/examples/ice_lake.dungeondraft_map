@@ -8,8 +8,8 @@
       "weekday": 4,
       "dst": false,
       "hour": 10,
-      "minute": 13,
-      "second": 16
+      "minute": 26,
+      "second": 57
     },
     "uses_default_assets": true,
     "asset_manifest": [],
