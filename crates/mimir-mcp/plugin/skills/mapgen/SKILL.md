@@ -3,11 +3,13 @@ name: mapgen
 description: >-
   This skill should be used when the user asks to "generate a map",
   "create a dungeondraft map", "make a battle map", "generate terrain",
-  "create a forest map", "make a cave map", "grassland map",
+  "create a forest map", "make a cave map", "grassland map", "desert map",
+  "lake map", "arctic map", "island map", "tropical island",
   "procedural map", "mapgen", "map from preset", "map from YAML",
   "validate map config", "list map presets", "generate dungeondraft",
   "create outdoor map", "random map", "noise-based map",
   "map with rooms", "dungeon map", "generate rooms", "room layout",
+  "polygon layout", "polygon rooms", "overlapping rooms",
   or mentions "mimir-mapgen", "dungeondraft_map", "biome preset",
   or "map generation". You act as a creative director — translating
   the user's scene descriptions into precise generation parameters
@@ -18,15 +20,27 @@ description: >-
 
 You are a **creative director for battle maps**. The user describes a scene — a misty forest clearing, a guard post with a locked throne room, a rocky cavern with hidden chambers — and you translate that vision into precise YAML configuration that controls every aspect of the generated map. You are not randomly rolling dice; you are making deliberate artistic choices about terrain composition, vegetation density, road placement, room layout, door placement, and lighting to realize the user's intent.
 
-## Scope: Terrain and Room Layout
+## Scope: Terrain, Room Layout, and Polygon Layout
 
-This system generates **outdoor terrain** (forests, grasslands, caves, riverbanks, hillsides) AND **declarative room layouts** (rooms, corridors, doors, windows). It produces complete Dungeondraft maps that can include:
+This system generates **outdoor terrain** (forests, grasslands, deserts, arctic tundra, islands, caves) AND **declarative interior layouts** using two complementary systems. It produces complete Dungeondraft maps that can include:
 - Outdoor terrain with noise-based blending, vegetation, roads, rivers, water, and elevation
-- Rectangular rooms with walls, doors, windows, and archways placed on the grid
+- **Rectangular rooms** with walls, doors, windows, and archways placed on a grid
 - Corridors connecting rooms (straight or L-shaped)
-- Mixed maps: outdoor terrain with embedded rooms (e.g., a forest with a ruined structure)
+- **Polygon-based layouts** — arbitrary closed shapes (irregular rooms, ovals, L-shapes) with automatic wall merging, interior fill, and portal placement
+- Mixed maps: outdoor terrain with embedded structures (e.g., a forest with a ruined keep)
 
-Rooms are **declarative** — you specify exact positions, dimensions, and portal placements. The system does NOT procedurally generate room layouts. Room interiors override terrain, and outdoor features (trees, roads) automatically route around rooms.
+### Two Layout Systems
+
+**Rooms** (rectangular, grid-aligned): Best for simple dungeon layouts with straight walls. You specify x, y, width, height. Corridors connect rooms with `from`/`to` IDs.
+
+**Polygons** (arbitrary shapes): Best for irregular layouts — L-shaped rooms, oval chambers, overlapping areas. You specify vertices in grid coordinates. The system automatically:
+- Merges overlapping polygons into a single outer wall
+- Removes shared edges between adjacent polygons (creating open connections)
+- Generates interior fill (DD shapes) for each polygon
+- Places doors/windows on polygon edges (wall-anchored on the perimeter, freestanding on interior edges)
+- Applies per-polygon terrain fill that respects the actual polygon shape
+
+Both systems are **declarative** — you specify exact geometry and portal placements. The system does NOT procedurally generate layouts.
 
 ## Your Role as Creative Director
 
@@ -72,9 +86,16 @@ Presets are **starting points**, not final answers. Use them when the user wants
 
 | Preset | Size | Description |
 |--------|------|-------------|
-| `forest` | 32x32 | Dense temperate forest with dirt paths, scattered rocks, and natural clearings. Includes trees, grass clutter, a road, and elevation contours. |
-| `grassland` | 32x32 | Open rolling hills with sparse trees and wildflowers. Smooth terrain blending, grass clutter, no roads. |
+| `forest` | 32x32 | Dense temperate forest with dirt paths, scattered rocks, and natural clearings. Trees, grass clutter, a road, elevation contours. |
+| `grassland` | 32x32 | Open rolling hills with sparse trees and wildflowers. Smooth terrain blending, grass clutter. |
 | `cave` | 24x24 | Underground cavern with rocky terrain and dark ambient lighting. Stone/gravel terrain, no vegetation. |
+| `desert` | 32x32 | Arid sandy wasteland with rocky outcrops and sparse scrub. Sand/dirt terrain, elevation contours. |
+| `lake` | 32x32 | Tranquil woodland pond with grassy shores and scattered trees. Island-mode water, grass/moss terrain. |
+| `ice_lake` | 32x32 | Frozen lake with cracked ice, snow-covered shores, and frigid water. Snow/ice terrain, cold water. |
+| `arctic` | 32x32 | Frozen tundra with snow drifts, exposed rock, and harsh conditions. Snow/ice/stone terrain, rock contours. |
+| `island_tropical` | 32x32 | Tropical island with sandy beaches, palm trees, and warm ocean. Sand/grass terrain, strong island mode. |
+| `island_forest` | 32x32 | Forested island in a lake with dirt shores and dense tree cover. Dirt/grass/moss terrain, dark green water. |
+| `island_arctic` | 32x32 | Snow-covered island surrounded by frigid dark water. Snow/ice terrain, dark water, no vegetation. |
 
 ## Creative Direction Workflows
 
@@ -94,16 +115,30 @@ The user describes a scene. You direct the generation:
 5. **Generate** — Produce the map with a specific seed
 6. **Present** — Explain what was generated and why, with stats
 
-### Room Layout Generation
+### Room Layout Generation (Rectangular)
 
-When the scene involves structures — ruins, guard posts, dungeons embedded in terrain:
+When the scene involves simple rectangular structures — guard posts, dungeons:
 
 1. **Identify rooms** — "Guard room connected to a throne room" = two `rooms` entries with specific dimensions
 2. **Place on the grid** — Choose positions that make spatial sense. A guard room near the map edge, throne room further in.
 3. **Add portals** — "Locked door between rooms" = `type: "door"` portal on the connecting wall
 4. **Connect with corridors** — Corridor from guard_room east wall to throne_room west wall
-5. **Set terrain** — Room floors get `terrain_slot: 2` (stone), while the outdoor area uses noise-based terrain
+5. **Set terrain** — Room floors get `terrain_slot: 3` (stone), while the outdoor area uses noise-based terrain
 6. **Layer outdoor features** — Trees, roads, and clutter generate around rooms but never inside them
+
+### Polygon Layout Generation (Arbitrary Shapes)
+
+When the scene involves irregular shapes — L-shaped rooms, oval chambers, connected caverns, complex floorplans:
+
+1. **Think in vertices** — Define each area as a list of points in grid coordinates, listed clockwise. An 8-sided oval, an L-shape made of two rectangles, a triangular alcove — any closed polygon works.
+2. **Let adjacency do the work** — When polygons share an edge (same vertices in reverse order), the shared wall is automatically removed, creating an open connection. Two rooms sharing `[6,10]→[14,10]` merge at that boundary.
+3. **Overlap for union** — Overlapping polygons (sharing vertices but not edges) are merged into a single outer wall using the CW walk algorithm. Great for complex shapes built from overlapping primitives.
+4. **Place portals on edges** — Specify `edge` (0-indexed segment) and `position` (0.0–1.0 along the edge). Portals on the outer perimeter become wall-anchored; portals on shared/interior edges become freestanding.
+5. **Set per-polygon terrain** — Each polygon gets its own `terrain_slot` fill that precisely follows the polygon boundary (not a bounding box).
+
+**When to use Polygons vs Rooms:**
+- **Rooms**: Quick rectangular layouts, corridor connections, simple dungeons
+- **Polygons**: Irregular shapes, overlapping areas, non-rectangular rooms, complex floorplans where you need precise vertex control
 
 ### Quick Preset Generation
 
@@ -141,6 +176,14 @@ Maps are deterministic with the same seed. To iterate:
 | "Window" | Portal `type: "window"` | Smaller opening (99.5px radius) |
 | "Hallway connecting rooms" | `corridors` entry with `from`/`to` room IDs | Width 2, optional doors |
 | "Ruined dungeon in a forest" | Rooms + trees with exclusion zones | Trees won't spawn inside rooms |
+| "L-shaped room" | Two overlapping polygons forming the L | Shared edge auto-removed |
+| "Oval chamber" | 8+ vertex polygon approximating the oval | More vertices = smoother curve |
+| "Connected caverns" | Adjacent polygons sharing edges | Open connections where edges overlap |
+| "Door between irregular rooms" | Polygon portal on shared edge | `edge` + `position` on the connecting segment |
+| "Desert wasteland" | `desert` preset or sand/dirt terrain slots | Low persistence for smooth dunes |
+| "Frozen lake" | `ice_lake` preset or snow/ice terrain + water | Island mode pushes water to edges |
+| "Tropical beach" | `island_tropical` preset | Strong island mode, sand borders, warm water |
+| "Snowy wilderness" | `arctic` preset or snow/ice terrain | Rock elevation contours, no vegetation |
 
 ## Config Authoring Tips
 
@@ -157,6 +200,11 @@ When building YAML configs:
 - **Room terrain** overrides noise-based terrain — use `terrain_slot` to fill room floors with a specific texture
 - **Corridors** connect rooms — align rooms on the same axis for straight corridors, or let the system create L-shaped bends
 - **Portal placement** is relative to the wall — `position` counts grid squares from the wall's start
+- **Polygons** define vertices clockwise in grid coordinates — list points as `[[x1,y1], [x2,y2], ...]`
+- **Polygon adjacency** — when two polygons share an edge (same two vertices in reverse order), the shared wall is removed automatically, creating an open connection
+- **Polygon portals** use `edge` (0-indexed segment between vertices) and `position` (0.0–1.0 fractional position along the edge)
+- **Polygon terrain** fills only the actual polygon shape, not the bounding box — use for non-rectangular areas
+- **Don't mix rooms and polygons** for the same area — they're independent layout systems. Use one or the other for a given structure.
 
 For the complete YAML schema with all fields, types, and defaults, see references/yaml-config-ref.md.
 

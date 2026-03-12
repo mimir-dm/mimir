@@ -227,6 +227,61 @@ elevation:
   pixels_per_cell: 64.0                  # f64 — coordinate scaling
 ```
 
+## Polygons
+
+Arbitrary closed shapes defined by vertices in grid coordinates. Use polygons for irregular rooms, oval chambers, L-shaped areas, or any non-rectangular layout. The system automatically merges overlapping polygons, removes shared edges, and generates walls, shapes (interior fill), and portals.
+
+```yaml
+polygons:
+  - id: "room_a"                   # string, required — unique identifier
+    points:                        # list of [x, y] vertices, clockwise
+      - [3, 6]
+      - [9, 6]
+      - [9, 14]
+      - [3, 14]
+    terrain_slot: 3                # usize, optional — terrain texture slot (0-3) for floor fill
+    wall_texture: "res://textures/walls/battlements.png"  # optional, default: battlements
+    portals:                       # optional — doors/windows on polygon edges
+      - edge: 0                   # usize — 0-indexed segment (edge 0 = points[0]→points[1])
+        position: 0.5             # f64 — fractional position along edge (0.0=start, 1.0=end)
+        type: door                # PortalType — door, window, archway, secret_door
+
+  - id: "corridor"
+    points: [[9, 10], [13, 10], [13, 11], [9, 11]]
+    terrain_slot: 3
+    portals:
+      - edge: 3                   # left edge (points[3]→points[0])
+        position: 0.5
+        type: door
+      - edge: 1                   # right edge (points[1]→points[2])
+        position: 0.5
+        type: door
+
+  - id: "room_b"
+    points: [[13, 6], [19, 6], [19, 14], [13, 14]]
+    terrain_slot: 3
+```
+
+**How adjacency works:**
+- When two polygons share an edge (e.g., room_a has `[9,6]→[9,14]` and room_b has `[9,14]→[9,6]`), the shared wall segment is automatically removed.
+- This creates open connections between adjacent polygons without needing corridors.
+- Portals on shared edges become freestanding (floating in the opening). Portals on the outer perimeter become wall-anchored.
+
+**How overlapping polygons work:**
+- Polygons that share vertices but have crossing or overlapping edges are merged into a single outer wall using the CW walk algorithm.
+- Interior edges are removed; only the outer union boundary becomes a wall.
+- Each polygon still gets its own interior fill (DD shape) and terrain override.
+
+**Edge indexing:**
+- Edges are 0-indexed segments between consecutive vertices.
+- Edge 0 = `points[0]` → `points[1]`, edge 1 = `points[1]` → `points[2]`, etc.
+- The last edge wraps: `points[N-1]` → `points[0]`.
+
+**Terrain fill:**
+- Unlike rooms (which use bounding-box fill), polygon terrain fill uses per-cell point-in-polygon testing.
+- Only cells whose center falls inside the polygon get the terrain override.
+- This means octagonal, oval, and irregular polygons get accurate fill boundaries.
+
 ## Rooms
 
 Declarative room definitions. Rooms are rectangular areas with walls, doors, and windows placed on the grid. Room interiors override noise-based terrain, and outdoor features (trees, clutter, roads) route around them.
@@ -326,6 +381,9 @@ These `res://` paths are commonly available in Dungeondraft's default asset pack
 - `res://textures/terrain/terrain_moss.png`
 - `res://textures/terrain/terrain_gravel.png`
 - `res://textures/terrain/terrain_stone.png`
+- `res://textures/terrain/terrain_sand.png`
+- `res://textures/terrain/terrain_snow.png`
+- `res://textures/terrain/terrain_ice.png`
 
 ### Objects
 - `res://textures/objects/trees/tree_01.png` through `tree_03.png`
