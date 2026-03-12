@@ -18,5 +18,7 @@ pub mod noise_gen;
 pub mod objects;
 pub mod paths;
 pub mod pipeline;
+pub mod polygons;
+pub mod rooms;
 pub mod terrain;
 pub mod water;

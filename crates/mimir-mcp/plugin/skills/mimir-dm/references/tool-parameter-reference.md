@@ -179,6 +179,22 @@ All update tools accept the same fields as their create counterparts plus `id` (
 - `source_class` — Filter by granting class (e.g., "Wizard")
 - `prepared_only` — Only return prepared spells (default: false)
 
+## Map Generation Tools
+
+### generate_map
+- `config_yaml` — YAML configuration string (mutually exclusive with `preset`)
+- `preset` — Biome preset name: `"forest"`, `"grassland"`, `"cave"` (mutually exclusive with `config_yaml`)
+- `output_path` (required) — Absolute path for the output `.dungeondraft_map` file
+- `seed` — Random seed override (integer) for reproducible generation
+
+### list_map_presets
+No parameters. Returns `{ presets: [{ name, description, default_size }] }`.
+
+### validate_map_config
+- `config_yaml` (required) — YAML configuration to validate
+
+Returns `{ valid: bool, errors: [{ field, message }] }` or `{ valid: false, parse_error: "..." }` if YAML is malformed.
+
 ## Campaign Management Tools
 
 ### create_campaign

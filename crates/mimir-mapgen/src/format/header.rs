@@ -55,7 +55,7 @@ pub struct CustomColorOverrides {
 pub struct EditorState {
     pub current_level: i32,
     pub camera_position: Vector2,
-    pub camera_zoom: f64,
+    pub camera_zoom: i32,
     pub guide_position: NullableVector2,
     pub trace_image: Option<serde_json::Value>,
     #[serde(default)]
@@ -74,7 +74,7 @@ pub struct EditorState {
     pub sharpen_fonts: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ColorPalettes {
     #[serde(default)]
     pub object_custom_colors: Vec<String>,
@@ -122,12 +122,12 @@ impl Default for EditorState {
         Self {
             current_level: 0,
             camera_position: Vector2::new(0.0, 0.0),
-            camera_zoom: 8.0,
+            camera_zoom: 8,
             guide_position: NullableVector2::Null,
             trace_image: None,
-            color_palettes: None,
-            object_tags_memory: None,
-            scatter_tags_memory: None,
+            color_palettes: Some(ColorPalettes::default()),
+            object_tags_memory: Some(serde_json::json!({"set": 0, "tags": []})),
+            scatter_tags_memory: Some(serde_json::json!({"set": 0, "tags": []})),
             object_library_memory: None,
             scatter_library_memory: None,
             path_library_memory: None,

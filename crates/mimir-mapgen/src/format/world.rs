@@ -83,6 +83,8 @@ pub struct Level {
     pub roofs: Option<Roofs>,
     #[serde(default)]
     pub texts: Vec<MapText>,
+    #[serde(default = "default_true")]
+    pub texts_vis: bool,
 }
 
 /// Lighting environment for a level.
@@ -128,12 +130,30 @@ pub struct Tiles {
     pub cells: PoolIntArray,
     #[serde(default)]
     pub colors: Vec<String>,
+    #[serde(default)]
+    pub lookup: BTreeMap<String, String>,
 }
 
 /// Cave bitmap.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cave {
     pub bitmap: PoolByteArray,
+    #[serde(default = "default_cave_color")]
+    pub ground_color: String,
+    #[serde(default = "default_cave_color")]
+    pub wall_color: String,
+    #[serde(default)]
+    pub entrance_bitmap: Option<PoolByteArray>,
+    #[serde(default = "default_cave_texture")]
+    pub texture: String,
+}
+
+fn default_cave_color() -> String {
+    "ff7f7e71".to_string()
+}
+
+fn default_cave_texture() -> String {
+    "res://textures/caves/colorable/floor.png".to_string()
 }
 
 /// Terrain configuration with 4-texture splat map.
@@ -181,7 +201,8 @@ impl Terrain {
 pub struct Water {
     #[serde(default)]
     pub disable_border: bool,
-    pub tree: WaterTree,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tree: Option<WaterTree>,
 }
 
 /// Recursive water polygon tree.
@@ -252,6 +273,10 @@ impl Level {
         layers.insert("900".to_string(), "Above Roofs".to_string());
 
         let cell_count = (width * height) as usize;
+        // Cave bitmap size: w*h*2 + floor(1.5*(w+h)) + 2
+        // (empirically determined from Dungeondraft's own format)
+        let cave_bitmap_size =
+            (width * height * 2 + (3 * (width + height)) / 2 + 2) as usize;
 
         Self {
             label: "Ground".to_string(),
@@ -261,27 +286,22 @@ impl Level {
             tiles: Some(Tiles {
                 cells: PoolIntArray::filled(-1, cell_count),
                 colors: vec!["ffffffff".to_string(); cell_count],
+                lookup: BTreeMap::new(),
             }),
             patterns: Vec::new(),
             walls: Vec::new(),
             portals: Vec::new(),
             cave: Some(Cave {
-                bitmap: PoolByteArray::from_vec(vec![0; cell_count]),
+                bitmap: PoolByteArray::from_vec(vec![0; cave_bitmap_size]),
+                ground_color: default_cave_color(),
+                wall_color: default_cave_color(),
+                entrance_bitmap: Some(PoolByteArray::from_vec(vec![0; cave_bitmap_size])),
+                texture: default_cave_texture(),
             }),
             terrain: None,
             water: Some(Water {
                 disable_border: false,
-                tree: WaterTree {
-                    node_ref: -2058744202,
-                    polygon: PoolVector2Array::new(),
-                    join: 0,
-                    end: 0,
-                    is_open: false,
-                    deep_color: "00000000".to_string(),
-                    shallow_color: "00000000".to_string(),
-                    blend_distance: 0.0,
-                    children: Vec::new(),
-                },
+                tree: None,
             }),
             materials: BTreeMap::new(),
             paths: Vec::new(),
@@ -289,6 +309,7 @@ impl Level {
             lights: Vec::new(),
             roofs: Some(Roofs::default()),
             texts: Vec::new(),
+            texts_vis: true,
         }
     }
 }

@@ -1,0 +1,38 @@
+name: "Arctic Island"
+width: 32
+height: 32
+seed: 42
+
+noise:
+  octaves: 5
+  persistence: 0.45
+  lacunarity: 2.0
+  scale: 0.03
+
+island_mode: 1.0
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_snow.png"
+      lower: 0.0
+      upper: 0.4
+    - texture: "res://textures/terrain/terrain_ice.png"
+      lower: 0.35
+      upper: 0.6
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.55
+      upper: 0.8
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.75
+      upper: 1.0
+  blend_width: 0.06
+  smooth_blending: true
+
+water:
+  threshold: 0.3
+  deep_color: "ff0f2a3d"
+  shallow_color: "ff3a7a9a"
+  blend_distance: 40.0
+  min_contour_points: 8
+  smooth_iterations: 3
+  pixels_per_cell: 64.0

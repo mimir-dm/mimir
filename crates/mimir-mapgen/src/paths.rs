@@ -23,6 +23,7 @@ pub enum Edge {
 
 /// Configuration for road generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct RoadConfig {
     /// Starting edge.
     pub from: Edge,
@@ -63,6 +64,7 @@ pub struct EdgePathConfig {
 
 /// Configuration for river generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct RiverConfig {
     /// Starting edge.
     pub from: Edge,

@@ -49,6 +49,7 @@ claude mcp add mimir \
 - `/mimir-campaigns` - List all available campaigns
 - `/create-module <name>` - Create a new module in the active campaign
 - `/search-monsters [query] [--cr <rating>]` - Search the monster catalog
+- `/generate-map [preset]` - Generate a procedural Dungeondraft map
 
 ## Getting Started
 
@@ -107,6 +108,11 @@ claude mcp add mimir \
 - `add_token_to_map` - Place a monster or NPC token on a map
 - `list_tokens_on_map` - List all tokens placed on a map
 - `remove_token` - Remove a token from a map
+
+### Map Generation
+- `generate_map` - Generate a Dungeondraft map from YAML config or biome preset
+- `list_map_presets` - List available biome presets (forest, grassland, cave)
+- `validate_map_config` - Validate a YAML map config without generating
 
 ### Catalog Search
 - `search_monsters` - Search monsters by name, CR, type
@@ -178,6 +184,19 @@ claude mcp add mimir \
 2. search_monsters(name="Goblin")
 3. add_token_to_map(map_id, monster_name="Goblin", x=5.0, y=3.0, label="Guard 1")
 4. add_token_to_map(map_id, monster_name="Goblin", x=7.0, y=3.0, label="Guard 2")
+```
+
+### Generating a Map
+
+```
+1. list_map_presets() — see available presets
+2. generate_map(preset="forest", output_path="/path/to/map.dungeondraft_map", seed=42)
+```
+
+Or with a custom YAML config:
+```
+1. validate_map_config(config_yaml="name: My Map\nwidth: 16\nheight: 16\n...")
+2. generate_map(config_yaml="...", output_path="/path/to/map.dungeondraft_map")
 ```
 
 ## Source Filtering

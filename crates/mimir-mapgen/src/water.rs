@@ -29,6 +29,7 @@ pub struct WaterConfig {
     /// Pixels per noise cell (for coordinate scaling).
     pub pixels_per_cell: f64,
     /// Whether to disable the water border effect.
+    #[serde(default)]
     pub disable_border: bool,
 }
 
@@ -91,7 +92,7 @@ pub fn generate_water(
 
     Water {
         disable_border: config.disable_border,
-        tree: WaterTree {
+        tree: Some(WaterTree {
             node_ref: alloc.next().parse::<i64>().unwrap_or(-1),
             polygon: PoolVector2Array::new(),
             join: 0,
@@ -101,7 +102,7 @@ pub fn generate_water(
             shallow_color: "00000000".to_string(),
             blend_distance: 0.0,
             children,
-        },
+        }),
     }
 }
 
@@ -158,7 +159,8 @@ mod tests {
 
         let water = generate_water(&noise, &config, &alloc);
         // Should have at least the root tree
-        assert_eq!(water.tree.deep_color, "00000000"); // Root is transparent
+        let tree = water.tree.as_ref().expect("Water should have a tree");
+        assert_eq!(tree.deep_color, "00000000"); // Root is transparent
         // With island mode, should find water contours at edges
     }
 
@@ -175,7 +177,8 @@ mod tests {
         let config = WaterConfig::default();
 
         let water = generate_water(&noise, &config, &alloc);
-        assert!(water.tree.children.is_empty());
+        let tree = water.tree.as_ref().expect("Water should have a tree");
+        assert!(tree.children.is_empty());
     }
 
     #[test]

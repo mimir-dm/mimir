@@ -1,0 +1,54 @@
+name: "Overlapping Ovals"
+width: 30
+height: 20
+seed: 42
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0
+      upper: 0.4
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.35
+      upper: 0.65
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.6
+      upper: 0.85
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.8
+      upper: 1.0
+  blend_width: 0.05
+  smooth_blending: false
+
+polygons:
+  - id: "oval_left"
+    points:
+      - [8, 10]
+      - [10, 7]
+      - [13, 6]
+      - [16, 7]
+      - [18, 10]
+      - [16, 13]
+      - [13, 14]
+      - [10, 13]
+    terrain_slot: 3
+    portals:
+      - edge: 0
+        position: 0.5
+        type: door
+
+  - id: "oval_right"
+    points:
+      - [14, 10]
+      - [16, 7]
+      - [19, 6]
+      - [22, 7]
+      - [24, 10]
+      - [22, 13]
+      - [19, 14]
+      - [16, 13]
+    terrain_slot: 3
+    portals:
+      - edge: 4
+        position: 0.5
+        type: door

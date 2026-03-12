@@ -1,0 +1,50 @@
+name: "Desert"
+width: 32
+height: 32
+seed: 42
+
+noise:
+  octaves: 4
+  persistence: 0.35
+  lacunarity: 2.0
+  scale: 0.025
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_sand.png"
+      lower: 0.0
+      upper: 0.45
+    - texture: "res://textures/terrain/terrain_dry_grass.png"
+      lower: 0.4
+      upper: 0.65
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.6
+      upper: 0.85
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.8
+      upper: 1.0
+  blend_width: 0.07
+  smooth_blending: true
+
+clutter:
+  - textures:
+      - "res://textures/objects/vegetation/grass/grass_01.png"
+    min_distance: 200.0
+    noise_lower: 0.5
+    noise_upper: 0.7
+    probability: 0.3
+    scale_min: 0.3
+    scale_max: 0.7
+    layer: 100
+    random_rotation: true
+    random_mirror: false
+
+elevation:
+  levels:
+    - threshold: 0.7
+      texture: "res://textures/paths/path_rocks.png"
+      width: 10.0
+      layer: 100
+      min_points: 6
+      smooth_iterations: 2
+  pixels_per_cell: 64.0

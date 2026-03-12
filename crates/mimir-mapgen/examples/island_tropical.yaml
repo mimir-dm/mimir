@@ -1,0 +1,67 @@
+name: "Tropical Island"
+width: 32
+height: 32
+seed: 42
+
+noise:
+  octaves: 5
+  persistence: 0.5
+  lacunarity: 2.0
+  scale: 0.035
+
+island_mode: 1.2
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_sand.png"
+      lower: 0.0
+      upper: 0.35
+    - texture: "res://textures/terrain/terrain_dry_grass.png"
+      lower: 0.3
+      upper: 0.55
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.5
+      upper: 0.75
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.7
+      upper: 1.0
+  blend_width: 0.06
+  smooth_blending: true
+
+trees:
+  - tree:
+      textures:
+        - "res://textures/objects/more_trees/oak_01.png"
+        - "res://textures/objects/more_trees/oak_02.png"
+      min_distance: 450.0
+      noise_lower: 0.3
+      noise_upper: 0.6
+      probability: 0.5
+      scale_min: 0.7
+      scale_max: 1.1
+      layer: 300
+      random_rotation: true
+      random_mirror: true
+
+clutter:
+  - textures:
+      - "res://textures/objects/vegetation/grass/grass_01.png"
+      - "res://textures/objects/vegetation/grass/grass_02.png"
+    min_distance: 70.0
+    noise_lower: 0.25
+    noise_upper: 0.6
+    probability: 0.6
+    scale_min: 0.4
+    scale_max: 0.9
+    layer: 100
+    random_rotation: true
+    random_mirror: false
+
+water:
+  threshold: 0.3
+  deep_color: "ff1a6b5a"
+  shallow_color: "ff30b89a"
+  blend_distance: 60.0
+  min_contour_points: 8
+  smooth_iterations: 3
+  pixels_per_cell: 64.0

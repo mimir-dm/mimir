@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 /// Configuration for noise map generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct NoiseConfig {
     /// Seed for deterministic generation.
     pub seed: u32,

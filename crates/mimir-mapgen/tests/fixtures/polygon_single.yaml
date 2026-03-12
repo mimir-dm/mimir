@@ -1,0 +1,26 @@
+name: "Single Polygon Test"
+width: 20
+height: 20
+seed: 42
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0
+      upper: 0.4
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.35
+      upper: 0.65
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.6
+      upper: 0.85
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.8
+      upper: 1.0
+  blend_width: 0.05
+  smooth_blending: false
+
+polygons:
+  - id: "room"
+    points: [[6, 6], [14, 6], [14, 14], [6, 14]]
+    terrain_slot: 3

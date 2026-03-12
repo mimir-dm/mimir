@@ -1,0 +1,60 @@
+name: "Three Rooms Two Corridors"
+width: 30
+height: 20
+seed: 42
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0
+      upper: 0.4
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.35
+      upper: 0.65
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.6
+      upper: 0.85
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.8
+      upper: 1.0
+  blend_width: 0.05
+  smooth_blending: false
+
+polygons:
+  - id: "room_a"
+    points: [[3, 6], [9, 6], [9, 14], [3, 14]]
+    terrain_slot: 3
+
+  - id: "corridor_ab"
+    points: [[9, 10], [13, 10], [13, 11], [9, 11]]
+    terrain_slot: 3
+    portals:
+      - edge: 3
+        position: 0.5
+        type: door
+      - edge: 1
+        position: 0.5
+        type: door
+
+  - id: "room_b"
+    points: [[13, 6], [19, 6], [19, 14], [13, 14]]
+    terrain_slot: 3
+    portals:
+      - edge: 0
+        position: 0.5
+        type: window
+
+  - id: "corridor_bc"
+    points: [[19, 10], [23, 10], [23, 11], [19, 11]]
+    terrain_slot: 3
+    portals:
+      - edge: 3
+        position: 0.5
+        type: door
+      - edge: 1
+        position: 0.5
+        type: door
+
+  - id: "room_c"
+    points: [[23, 6], [29, 6], [29, 14], [23, 14]]
+    terrain_slot: 3

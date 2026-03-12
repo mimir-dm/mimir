@@ -1,0 +1,75 @@
+name: "Forest"
+width: 32
+height: 32
+seed: 42
+
+noise:
+  octaves: 6
+  persistence: 0.5
+  lacunarity: 2.0
+  scale: 0.03
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0
+      upper: 0.3
+    - texture: "res://textures/terrain/terrain_dry_grass.png"
+      lower: 0.25
+      upper: 0.55
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.5
+      upper: 0.8
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.75
+      upper: 1.0
+  blend_width: 0.05
+  smooth_blending: false
+
+trees:
+  - tree:
+      textures:
+        - "res://textures/objects/more_trees/oak_01.png"
+        - "res://textures/objects/more_trees/oak_02.png"
+        - "res://textures/objects/more_trees/oak_03.png"
+      min_distance: 500.0
+      noise_lower: 0.4
+      noise_upper: 0.75
+      probability: 0.5
+      scale_min: 0.8
+      scale_max: 1.2
+      layer: 300
+      random_rotation: true
+      random_mirror: true
+
+clutter:
+  - textures:
+      - "res://textures/objects/vegetation/grass/grass_01.png"
+      - "res://textures/objects/vegetation/grass/grass_02.png"
+    min_distance: 80.0
+    noise_lower: 0.2
+    noise_upper: 0.7
+    probability: 0.6
+    scale_min: 0.5
+    scale_max: 1.0
+    layer: 100
+    random_rotation: true
+    random_mirror: false
+
+roads:
+  - {}
+
+elevation:
+  levels:
+    - threshold: 0.65
+      texture: "res://textures/paths/path_rocks.png"
+      width: 12.0
+      layer: 100
+      min_points: 8
+      smooth_iterations: 2
+      shadow:
+        texture: "res://textures/paths/path_rocks.png"
+        offset: 8.0
+        width: 16.0
+        layer: 50
+  pixels_per_cell: 64.0

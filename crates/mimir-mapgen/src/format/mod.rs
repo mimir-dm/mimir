@@ -9,6 +9,7 @@ pub mod header;
 pub mod world;
 
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub use entities::*;
@@ -21,6 +22,16 @@ pub use world::*;
 pub struct DungeondraftMap {
     pub header: Header,
     pub world: World,
+    /// Mod data section — required by Dungeondraft even if empty.
+    #[serde(rename = "mod", default)]
+    pub mod_data: ModData,
+}
+
+/// Mod data section at the root of a `.dungeondraft_map` file.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ModData {
+    #[serde(rename = ".node_table", default)]
+    pub node_table: BTreeMap<String, serde_json::Value>,
 }
 
 impl DungeondraftMap {
@@ -29,6 +40,7 @@ impl DungeondraftMap {
         Self {
             header: Header::new(true),
             world: World::new(width, height),
+            mod_data: ModData::default(),
         }
     }
 
@@ -72,15 +84,16 @@ impl NodeIdAllocator {
         }
     }
 
-    /// Allocate the next unique node ID as a string.
+    /// Allocate the next unique node ID as a hex string.
     pub fn next(&self) -> String {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
-        id.to_string()
+        format!("{:x}", id)
     }
 
-    /// Get the current next_node_id value (for writing to the world).
+    /// Get the current next_node_id value as a hex string (for writing to the world).
     pub fn current(&self) -> String {
-        self.next_id.load(Ordering::Relaxed).to_string()
+        let id = self.next_id.load(Ordering::Relaxed);
+        format!("{:x}", id)
     }
 }
 
@@ -117,10 +130,10 @@ mod tests {
     #[test]
     fn test_node_id_allocator() {
         let alloc = NodeIdAllocator::new(100);
-        assert_eq!(alloc.next(), "100");
-        assert_eq!(alloc.next(), "101");
-        assert_eq!(alloc.next(), "102");
-        assert_eq!(alloc.current(), "103");
+        assert_eq!(alloc.next(), "64");  // 100 decimal = 0x64
+        assert_eq!(alloc.next(), "65");
+        assert_eq!(alloc.next(), "66");
+        assert_eq!(alloc.current(), "67");
     }
 
     #[test]

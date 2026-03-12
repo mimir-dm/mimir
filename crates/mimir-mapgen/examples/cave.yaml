@@ -1,0 +1,32 @@
+name: "Cave"
+width: 24
+height: 24
+seed: 42
+
+noise:
+  octaves: 5
+  persistence: 0.6
+  lacunarity: 2.0
+  scale: 0.04
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.0
+      upper: 0.4
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.35
+      upper: 0.65
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.6
+      upper: 0.85
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.8
+      upper: 1.0
+  blend_width: 0.06
+  smooth_blending: false
+
+lighting:
+  ambient_light: "ff333333"
+  ambient_energy: 0.3
+  shadow_color: "cc000000"

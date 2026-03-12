@@ -496,7 +496,7 @@ mod tests {
         };
 
         let objects = place_objects(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
-        let refs: std::collections::HashSet<_> = objects.iter().map(|o| &o.node_ref).collect();
-        assert_eq!(refs.len(), objects.len(), "All node refs must be unique");
+        let refs: std::collections::HashSet<_> = objects.iter().map(|o| &o.node_id).collect();
+        assert_eq!(refs.len(), objects.len(), "All node IDs must be unique");
     }
 }
