@@ -429,7 +429,7 @@ fn lake_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(0.6),
+            island_mode: Some(1.5),
             terrain: Some(TerrainConfig {
                 slots: [
                     TerrainSlot {
@@ -496,11 +496,11 @@ fn lake_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.35,
+                threshold: 0.55,
                 deep_color: "ff2a7f6f".to_string(),
                 shallow_color: "ff3ac3b2".to_string(),
                 blend_distance: 50.0,
-                min_contour_points: 8,
+                min_contour_points: 20,
                 smooth_iterations: 3,
                 pixels_per_cell: 64.0,
                 disable_border: false,
@@ -535,27 +535,27 @@ fn ice_lake_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(0.5),
+            island_mode: Some(-1.0),
             terrain: Some(TerrainConfig {
                 slots: [
                     TerrainSlot {
                         texture: "res://textures/terrain/terrain_snow.png".to_string(),
                         lower: 0.0,
-                        upper: 0.4,
+                        upper: 0.3,
                     },
                     TerrainSlot {
                         texture: "res://textures/terrain/terrain_ice.png".to_string(),
-                        lower: 0.35,
-                        upper: 0.6,
-                    },
-                    TerrainSlot {
-                        texture: "res://textures/terrain/terrain_stone.png".to_string(),
-                        lower: 0.55,
-                        upper: 0.8,
+                        lower: 0.25,
+                        upper: 0.5,
                     },
                     TerrainSlot {
                         texture: "res://textures/terrain/terrain_gravel.png".to_string(),
-                        lower: 0.75,
+                        lower: 0.45,
+                        upper: 0.7,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_stone.png".to_string(),
+                        lower: 0.65,
                         upper: 1.0,
                     },
                 ],
@@ -568,11 +568,11 @@ fn ice_lake_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.3,
+                threshold: 0.68,
                 deep_color: "ff1a4a5e".to_string(),
                 shallow_color: "ff5ea8c0".to_string(),
                 blend_distance: 40.0,
-                min_contour_points: 8,
+                min_contour_points: 20,
                 smooth_iterations: 3,
                 pixels_per_cell: 64.0,
                 disable_border: false,
@@ -687,7 +687,7 @@ fn island_tropical_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.035,
             },
-            island_mode: Some(1.2),
+            island_mode: Some(1.8),
             terrain: Some(TerrainConfig {
                 slots: [
                     TerrainSlot {
@@ -754,11 +754,11 @@ fn island_tropical_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.3,
+                threshold: 0.55,
                 deep_color: "ff1a6b5a".to_string(),
                 shallow_color: "ff30b89a".to_string(),
                 blend_distance: 60.0,
-                min_contour_points: 8,
+                min_contour_points: 20,
                 smooth_iterations: 3,
                 pixels_per_cell: 64.0,
                 disable_border: false,
@@ -794,7 +794,7 @@ fn island_forest_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(1.0),
+            island_mode: Some(1.5),
             terrain: Some(TerrainConfig {
                 slots: [
                     TerrainSlot {
@@ -862,11 +862,11 @@ fn island_forest_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.35,
+                threshold: 0.55,
                 deep_color: "ff1a5040".to_string(),
                 shallow_color: "ff2a8a6a".to_string(),
                 blend_distance: 45.0,
-                min_contour_points: 8,
+                min_contour_points: 20,
                 smooth_iterations: 3,
                 pixels_per_cell: 64.0,
                 disable_border: false,
@@ -901,7 +901,7 @@ fn island_arctic_preset() -> BiomePreset {
                 lacunarity: 2.0,
                 scale: 0.03,
             },
-            island_mode: Some(1.0),
+            island_mode: Some(1.5),
             terrain: Some(TerrainConfig {
                 slots: [
                     TerrainSlot {
@@ -934,11 +934,11 @@ fn island_arctic_preset() -> BiomePreset {
             roads: vec![],
             rivers: vec![],
             water: Some(WaterConfig {
-                threshold: 0.3,
+                threshold: 0.55,
                 deep_color: "ff0f2a3d".to_string(),
                 shallow_color: "ff3a7a9a".to_string(),
                 blend_distance: 40.0,
-                min_contour_points: 8,
+                min_contour_points: 20,
                 smooth_iterations: 3,
                 pixels_per_cell: 64.0,
                 disable_border: false,

@@ -389,7 +389,13 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     let mut noise_map = NoiseMap::generate(noise_w, noise_h, &noise_config);
 
     if let Some(falloff) = config.island_mode {
-        noise_map.apply_island_mode(falloff);
+        if falloff < 0.0 {
+            // Negative = lake: push center up (water in center, land at edges)
+            noise_map.apply_lake_mode(falloff.abs());
+        } else {
+            // Positive = island: push edges up (water at edges, land in center)
+            noise_map.apply_island_mode(falloff);
+        }
     }
 
     // 2. Create base map
@@ -535,7 +541,12 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 8. Generate water bodies
     if let Some(ref water_config) = config.water {
-        let water = water::generate_water(&noise_map, water_config, &alloc);
+        let is_lake_mode = config.island_mode.map_or(false, |v| v < 0.0);
+        let water = if is_lake_mode {
+            water::generate_water_radial(&noise_map, water_config, &alloc)
+        } else {
+            water::generate_water(&noise_map, water_config, &alloc)
+        };
         if let Some(ref tree) = water.tree {
             stats.water_polygons += tree.children.len();
         }

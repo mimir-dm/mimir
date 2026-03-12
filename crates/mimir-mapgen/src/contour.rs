@@ -45,7 +45,106 @@ pub fn find_contours(noise_map: &NoiseMap, threshold: f64) -> Vec<Contour> {
         }
     }
 
-    contours
+    // Merge fragments that share endpoints into longer contours
+    merge_contours(contours)
+}
+
+/// Merge contour fragments that share endpoints.
+///
+/// The tracer often produces many small fragments that are actually one ring.
+/// This merges them by matching start/end points within a small tolerance.
+fn merge_contours(mut fragments: Vec<Contour>) -> Vec<Contour> {
+    if fragments.len() <= 1 {
+        return fragments;
+    }
+
+    let eps = 0.5; // tolerance for matching endpoints
+
+    let mut merged: Vec<Contour> = Vec::new();
+
+    while let Some(mut current) = fragments.pop() {
+        // Keep trying to extend the current contour
+        let mut changed = true;
+        while changed {
+            changed = false;
+            let cur_start = current[0];
+            let cur_end = current[current.len() - 1];
+
+            let mut best_idx = None;
+            let mut best_mode = 0u8; // 1=prepend, 2=append, 3=prepend-reversed, 4=append-reversed
+
+            for (i, frag) in fragments.iter().enumerate() {
+                if frag.is_empty() {
+                    continue;
+                }
+                let f_start = frag[0];
+                let f_end = frag[frag.len() - 1];
+
+                // frag end matches current start → prepend frag
+                let d1 = ((f_end.0 - cur_start.0).powi(2) + (f_end.1 - cur_start.1).powi(2)).sqrt();
+                if d1 < eps {
+                    best_idx = Some(i);
+                    best_mode = 1;
+                    break;
+                }
+                // frag start matches current end → append frag
+                let d2 = ((f_start.0 - cur_end.0).powi(2) + (f_start.1 - cur_end.1).powi(2)).sqrt();
+                if d2 < eps {
+                    best_idx = Some(i);
+                    best_mode = 2;
+                    break;
+                }
+                // frag start matches current start → prepend reversed frag
+                let d3 = ((f_start.0 - cur_start.0).powi(2) + (f_start.1 - cur_start.1).powi(2)).sqrt();
+                if d3 < eps {
+                    best_idx = Some(i);
+                    best_mode = 3;
+                    break;
+                }
+                // frag end matches current end → append reversed frag
+                let d4 = ((f_end.0 - cur_end.0).powi(2) + (f_end.1 - cur_end.1).powi(2)).sqrt();
+                if d4 < eps {
+                    best_idx = Some(i);
+                    best_mode = 4;
+                    break;
+                }
+            }
+
+            if let Some(idx) = best_idx {
+                let frag = fragments.remove(idx);
+                match best_mode {
+                    1 => {
+                        // prepend: frag + current (skip frag's last point, it overlaps)
+                        let mut new = frag;
+                        new.pop();
+                        new.extend(current);
+                        current = new;
+                    }
+                    2 => {
+                        // append: current + frag (skip frag's first point)
+                        current.extend(frag.into_iter().skip(1));
+                    }
+                    3 => {
+                        // prepend reversed frag
+                        let mut rev: Vec<_> = frag.into_iter().rev().collect();
+                        rev.pop();
+                        rev.extend(current);
+                        current = rev;
+                    }
+                    4 => {
+                        // append reversed frag
+                        let rev: Vec<_> = frag.into_iter().rev().collect();
+                        current.extend(rev.into_iter().skip(1));
+                    }
+                    _ => unreachable!(),
+                }
+                changed = true;
+            }
+        }
+        merged.push(current);
+    }
+
+    merged
 }
 
 /// Filter contours by minimum length (number of points).

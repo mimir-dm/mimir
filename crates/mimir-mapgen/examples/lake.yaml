@@ -9,7 +9,7 @@ noise:
   lacunarity: 2.0
   scale: 0.03
 
-island_mode: 0.6
+island_mode: 1.5
 
 terrain:
   slots:
@@ -58,10 +58,10 @@ clutter:
     random_mirror: false
 
 water:
-  threshold: 0.35
+  threshold: 0.55
   deep_color: "ff2a7f6f"
   shallow_color: "ff3ac3b2"
   blend_distance: 50.0
-  min_contour_points: 8
+  min_contour_points: 20
   smooth_iterations: 3
   pixels_per_cell: 64.0

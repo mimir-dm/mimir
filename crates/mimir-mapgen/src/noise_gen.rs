@@ -120,6 +120,18 @@ impl NoiseMap {
     /// Apply island mode: push values at edges toward 1.0 (high = water for terrain).
     /// This creates a landmass in the center with water around the edges.
     pub fn apply_island_mode(&mut self, falloff_strength: f64) {
+        self.apply_radial_falloff(falloff_strength, false);
+    }
+
+    /// Apply lake mode: push values at center toward 1.0 (high = water for terrain).
+    /// This creates water in the center with land around the edges.
+    pub fn apply_lake_mode(&mut self, falloff_strength: f64) {
+        self.apply_radial_falloff(falloff_strength, true);
+    }
+
+    /// Shared radial falloff. When `invert` is false, edges get pushed up (island).
+    /// When `invert` is true, center gets pushed up (lake).
+    fn apply_radial_falloff(&mut self, falloff_strength: f64, invert: bool) {
         let cx = self.width as f64 / 2.0;
         let cy = self.height as f64 / 2.0;
         let max_dist = (cx * cx + cy * cy).sqrt();
@@ -129,8 +141,8 @@ impl NoiseMap {
                 let dx = x as f64 - cx;
                 let dy = y as f64 - cy;
                 let dist = (dx * dx + dy * dy).sqrt() / max_dist;
-                // Quadratic falloff
-                let falloff = (dist * falloff_strength).powi(2).min(1.0);
+                let d = if invert { 1.0 - dist } else { dist };
+                let falloff = (d * falloff_strength).powi(2).min(1.0);
                 self.data[y][x] = (self.data[y][x] + falloff).min(1.0);
             }
         }

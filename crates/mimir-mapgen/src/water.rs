@@ -50,26 +50,49 @@ impl Default for WaterConfig {
 
 /// Generate water bodies from a noise map.
 ///
-/// Extracts contour polygons at the threshold, converts to pixel coordinates,
-/// and builds a DD WaterTree structure.
+/// For radial modes (island/lake), uses radial sampling to produce a single
+/// clean closed polygon. For natural noise, falls back to marching squares
+/// contour extraction.
 pub fn generate_water(
     noise_map: &NoiseMap,
     config: &WaterConfig,
     alloc: &NodeIdAllocator,
 ) -> Water {
-    let contours = find_contours(noise_map, config.threshold);
-    let smoothed = smooth_contours(contours, config.smooth_iterations);
+    generate_water_inner(noise_map, config, alloc, false)
+}
 
-    // Filter small contours and convert to pixel coordinates
-    let polygons: Vec<Vec<(f64, f64)>> = smoothed
-        .into_iter()
-        .filter(|c| c.len() >= config.min_contour_points)
-        .map(|c| {
-            c.iter()
-                .map(|&(x, y)| (x * config.pixels_per_cell, y * config.pixels_per_cell))
-                .collect()
-        })
-        .collect();
+/// Generate water with radial sampling mode for lake presets.
+/// When `radial` is true, casts rays from the center outward to find the
+/// threshold boundary, producing one clean closed polygon.
+pub fn generate_water_radial(
+    noise_map: &NoiseMap,
+    config: &WaterConfig,
+    alloc: &NodeIdAllocator,
+) -> Water {
+    generate_water_inner(noise_map, config, alloc, true)
+}
+
+fn generate_water_inner(
+    noise_map: &NoiseMap,
+    config: &WaterConfig,
+    alloc: &NodeIdAllocator,
+    radial: bool,
+) -> Water {
+    let polygons: Vec<Vec<(f64, f64)>> = if radial {
+        radial_water_polygon(noise_map, config)
+    } else {
+        let contours = find_contours(noise_map, config.threshold);
+        let smoothed = smooth_contours(contours, config.smooth_iterations);
+        smoothed
+            .into_iter()
+            .filter(|c| c.len() >= config.min_contour_points)
+            .map(|c| {
+                c.iter()
+                    .map(|&(x, y)| (x * config.pixels_per_cell, y * config.pixels_per_cell))
+                    .collect()
+            })
+            .collect()
+    };
 
     // Build root water tree with children for each polygon
     let children: Vec<WaterTree> = polygons
@@ -103,6 +126,64 @@ pub fn generate_water(
             blend_distance: 0.0,
             children,
         }),
+    }
+}
+
+/// Generate a single closed water polygon by radial sampling from the map center.
+///
+/// For each angle (0..360), casts a ray outward from the center and finds where
+/// the noise value drops below the threshold. This produces one clean closed polygon
+/// suitable for lake-mode maps where water is in the center.
+fn radial_water_polygon(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<Vec<(f64, f64)>> {
+    let cx = noise_map.width as f64 / 2.0;
+    let cy = noise_map.height as f64 / 2.0;
+    let max_radius = cx.max(cy);
+    let num_rays = 120; // one point every 3 degrees
+    let step = 0.5_f64; // sample every half cell along each ray
+
+    let mut points: Vec<(f64, f64)> = Vec::new();
+
+    for i in 0..num_rays {
+        let angle = 2.0 * std::f64::consts::PI * (i as f64) / (num_rays as f64);
+        let dx = angle.cos();
+        let dy = angle.sin();
+
+        // Walk outward from center until noise drops below threshold or we hit the edge
+        let mut boundary_r = max_radius; // default to edge if never drops
+        let mut r = 0.0;
+        while r < max_radius {
+            let sx = cx + dx * r;
+            let sy = cy + dy * r;
+
+            // Bounds check
+            if sx < 0.0 || sy < 0.0 || sx >= noise_map.width as f64 || sy >= noise_map.height as f64
+            {
+                boundary_r = r;
+                break;
+            }
+
+            let val = noise_map.sample(sx, sy);
+            if val < config.threshold {
+                boundary_r = r;
+                break;
+            }
+            r += step;
+        }
+
+        let px = (cx + dx * boundary_r) * config.pixels_per_cell;
+        let py = (cy + dy * boundary_r) * config.pixels_per_cell;
+        points.push((px, py));
+    }
+
+    // Close the polygon
+    if let Some(&first) = points.first() {
+        points.push(first);
+    }
+
+    if points.len() >= config.min_contour_points {
+        vec![points]
+    } else {
+        vec![]
     }
 }
 
