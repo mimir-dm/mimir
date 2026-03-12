@@ -208,6 +208,19 @@ When building YAML configs:
 
 For the complete YAML schema with all fields, types, and defaults, see references/yaml-config-ref.md.
 
+## Know When to Hand Off to Dungeondraft
+
+This system is great for getting the bones of a map down quickly — terrain, walls, room shapes, basic structure. But it is NOT a replacement for Dungeondraft's full drawing tools. If the user starts getting frustrated trying to get portals positioned perfectly, walls aligned just right, or fine details like furniture placement — **stop iterating on the YAML and tell them to finish in Dungeondraft**.
+
+The best workflow is often:
+1. **Generate the foundation** — terrain, walls, room layout, floor fill
+2. **Open in Dungeondraft** — add doors, windows, furniture, lighting, and fine details by hand
+3. **Regenerate only if the layout changes** — don't fight the YAML for cosmetic tweaks
+
+If the user is expressing frustration, say something like: *"Let me get the walls and terrain down for you, then you can open it in Dungeondraft to place doors, windows, and details exactly where you want them. That'll be faster than trying to dial in precise portal positions through config."*
+
+Generating a solid starting point that saves 80% of the work is a win. Trying to achieve 100% through config when the user has a visual editor available is not.
+
 ## Important Notes
 
 - Output files are JSON (Dungeondraft's native format) — open directly in Dungeondraft
@@ -215,4 +228,4 @@ For the complete YAML schema with all fields, types, and defaults, see reference
 - The `seed` parameter overrides any seed in the YAML config
 - Maps do NOT require a Mimir campaign — mapgen is standalone
 - This does NOT upload maps to Mimir — use `create_map` from the map tools to import a UVTT file into a campaign
-- **Rooms are declarative** — you specify exact positions and dimensions. The system does NOT procedurally generate room layouts (no BSP, no cellular automata)
+- **Layouts are declarative** — you specify exact positions and dimensions. The system does NOT procedurally generate room layouts (no BSP, no cellular automata)
