@@ -100,7 +100,7 @@ impl Default for RoadConfig {
             from: Edge::Left,
             to: Edge::Right,
             texture: "res://textures/paths/path_dirt.png".to_string(),
-            width: 80.0,
+            width: 512.0,
             layer: 100,
             step_distance: 64.0,
             fov: PI / 3.0,

@@ -42,42 +42,43 @@ fn test_baseline_map_roundtrip() {
 
 #[test]
 fn test_wall_portal_roundtrip() {
-    // Parse the test map that has walls with embedded portals
-    let json = std::fs::read_to_string("../../test.dungeondraft_map")
-        .expect("test.dungeondraft_map not found — run from workspace root");
-    let map = DungeondraftMap::from_json(&json).expect("Failed to parse test map with walls");
+    // Parse the three-rooms polygon fixture (1 merged wall, 1 wall-anchored + 4 freestanding portals)
+    let json = include_str!("fixtures/polygon_three_rooms.dungeondraft_map");
+    let map = DungeondraftMap::from_json(json).expect("Failed to parse three-rooms map");
 
     let level = map.ground_level().expect("No ground level");
 
-    // Verify walls parsed correctly (dungeon-test: 2 rooms + 2 corridor walls)
-    assert_eq!(level.walls.len(), 4, "Expected 4 walls");
-    assert!(level.walls[0].is_loop, "Wall 0 should be a closed loop (room)");
-    assert_eq!(level.walls[0].wall_type, 0, "Wall 0 should be type 0");
+    // Merged perimeter: 1 closed-loop wall
+    assert_eq!(level.walls.len(), 1, "Expected 1 merged wall");
+    assert!(level.walls[0].is_loop, "Wall 0 should be a closed loop");
+    assert_eq!(level.walls[0].wall_type, 0);
     assert_eq!(
         level.walls[0].texture,
-        "res://textures/walls/battlements.png"
+        "res://textures/walls/stone.png"
     );
     assert!(
         !level.walls[0].points.0.is_empty(),
         "Wall 0 should have points"
     );
 
-    // Wall 0 (guard_room) has 2 embedded portals
+    // 1 wall-anchored portal (window on room_b north wall)
     assert_eq!(
         level.walls[0].portals.len(),
-        2,
-        "Wall 0 should have 2 portals"
+        1,
+        "Wall 0 should have 1 wall-anchored portal"
     );
-    let door = &level.walls[0].portals[0];
-    assert_eq!(door.wall_id, level.walls[0].node_id);
+    let window = &level.walls[0].portals[0];
+    assert_eq!(window.wall_id, level.walls[0].node_id);
 
-    // Level has 1 freestanding portal (corridor door)
+    // 4 freestanding portals (doors on shared corridor edges)
     assert_eq!(
         level.portals.len(),
-        1,
-        "Level should have 1 freestanding portal"
+        4,
+        "Level should have 4 freestanding portals"
     );
-    assert_eq!(level.portals[0].wall_id, "ffffffff");
+    for portal in &level.portals {
+        assert_eq!(portal.wall_id, "ffffffff");
+    }
 
     // Round-trip: serialize and reparse
     let serialized = map.to_json().expect("Failed to serialize");
@@ -88,8 +89,6 @@ fn test_wall_portal_roundtrip() {
     assert_eq!(rlevel.walls.len(), level.walls.len());
     assert_eq!(rlevel.walls[0].portals.len(), level.walls[0].portals.len());
     assert_eq!(rlevel.portals.len(), level.portals.len());
-
-    // Verify wall points survived round-trip
     assert_eq!(
         rlevel.walls[0].points.0.len(),
         level.walls[0].points.0.len()
