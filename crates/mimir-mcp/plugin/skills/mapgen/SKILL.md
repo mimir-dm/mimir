@@ -96,6 +96,8 @@ Presets are **starting points**, not final answers. Use them when the user wants
 | `island_tropical` | 32x32 | Tropical island with sandy beaches, palm trees, and warm ocean. Sand/grass terrain, strong island mode. |
 | `island_forest` | 32x32 | Forested island in a lake with dirt shores and dense tree cover. Dirt/grass/moss terrain, dark green water. |
 | `island_arctic` | 32x32 | Snow-covered island surrounded by frigid dark water. Snow/ice terrain, dark water, no vegetation. |
+| `swamp` | 32x32 | Dark murky wetland with stagnant water pools, sparse dead trees, and dim ambient lighting. Low water threshold for lots of standing water. |
+| `forest_river` | 32x32 | Dense forest bisected by a meandering river with rocky banks. Same trees as forest, blue river water. |
 
 ## Creative Direction Workflows
 
@@ -167,6 +169,11 @@ Maps are deterministic with the same seed. To iterate:
 | "Twilight" | Lighting with `ambient_energy: 0.5`, warm `ambient_light` | See time-of-day presets in reference |
 | "Rocky hillside" | Elevation contours + rock clumps, stone terrain slots | Multiple threshold levels |
 | "River crossing" | River config with bank texture, road intersecting | Both road and river, crossing paths |
+| "Winding road" | Road with `style: meandering` | Sinusoidal S-curves instead of noise-following |
+| "Straight path" | Road with `style: straight` (default) | Greedy walk along noise ridges |
+| "Meandering stream" | River with `style: meandering` (default) | Natural S-curve river path |
+| "Tavern by the river" | Rooms + river — river auto-avoids rooms | See `tavern_river.yaml` example |
+| "Swamp" | `swamp` preset or low water threshold + dark lighting | Lots of standing water pools |
 | "Sparse undergrowth" | Clutter with low `probability` (0.3), high `min_distance` | Scattered grass/flowers |
 | "Foggy" | Low `ambient_energy` (0.4), grey `ambient_light` | "ff888888" ambient color |
 | "Guard room" | `rooms` entry with walls on all sides, door portal | 5x4 room with stone terrain |
