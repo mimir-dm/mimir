@@ -4,14 +4,14 @@ level: task
 title: "Gap analysis: MCP server, Claude Code plugin, and mapgen CLI docs"
 short_code: "MIMIR-T-0585"
 created_at: 2026-03-11T23:13:29.924247+00:00
-updated_at: 2026-03-11T23:13:29.924247+00:00
+updated_at: 2026-03-13T12:48:36.309774+00:00
 parent: MIMIR-I-0059
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -57,6 +57,8 @@ Analyze three undocumented systems and produce documentation plans for each.
 - `crates/mimir-mapgen/src/pipeline.rs` — MapConfig schema (YAML config reference)
 - `crates/mimir-mapgen/src/biomes.rs` — preset definitions
 - Root `README.md` and any existing MCP/plugin docs
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

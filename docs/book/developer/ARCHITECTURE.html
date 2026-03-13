@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="navy sidebar-visible" dir="ltr">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -12,21 +12,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="../favicon.svg">
-        <link rel="shortcut icon" href="../favicon.png">
-        <link rel="stylesheet" href="../css/variables.css">
-        <link rel="stylesheet" href="../css/general.css">
-        <link rel="stylesheet" href="../css/chrome.css">
-        <link rel="stylesheet" href="../css/print.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="../fonts/fonts.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
-        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
-        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -34,11 +33,12 @@
         <!-- Provide site root and default themes to javascript -->
         <script>
             const path_to_root = "../";
-            const default_light_theme = "navy";
+            const default_light_theme = "light";
             const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-ac4f52b4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc.js"></script>
+        <script src="../toc-aa677dde.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -52,7 +52,7 @@
             </div>
         </div>
     </div>
-    <div id="body-container">
+    <div id="mdbook-body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -76,61 +76,64 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
-            html.classList.remove('navy')
+            html.classList.remove('light')
             html.classList.add(theme);
             html.classList.add("js");
         </script>
 
-        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             let sidebar = null;
-            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            sidebar_toggle.checked = sidebar === 'visible';
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
                 <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <div id="page-wrapper" class="page-wrapper">
+        <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
-                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
                         </label>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
                         </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
                         </button>
                     </div>
 
@@ -138,297 +141,470 @@
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
-                        </a>
-                        <a href="https://github.com/mimir-dm/mimir" title="Git repository" aria-label="Git repository">
-                            <i id="git-repository-button" class="fa fa-github"></i>
-                        </a>
-                        <a href="https://github.com/mimir-dm/mimir/edit/main/docs/src/developer/ARCHITECTURE.md" title="Suggest an edit" aria-label="Suggest an edit">
-                            <i id="git-edit-button" class="fa fa-edit"></i>
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
 
                     </div>
                 </div>
 
-                <div id="search-wrapper" class="hidden">
-                    <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
                     </form>
-                    <div id="searchresults-outer" class="searchresults-outer hidden">
-                        <div id="searchresults-header" class="searchresults-header"></div>
-                        <ul id="searchresults">
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
                         </ul>
                     </div>
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>
-                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="content" class="content">
+                <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="mimir-architecture"><a class="header" href="#mimir-architecture">Mimir Architecture</a></h1>
-<p>This document provides a high-level overview of the Mimir codebase architecture for developers.</p>
-<h2 id="crate-overview"><a class="header" href="#crate-overview">Crate Overview</a></h2>
-<p>Mimir is organized as a Cargo workspace with 7 crates:</p>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│                    mimir-dm (Main App)                  │
-│                   Tauri Desktop Application             │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        ▼                 ▼                 ▼
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│ mimir-dm-core │ │ mimir-dm-llm  │ │ mimir-dm-print│
-│  Core Logic   │ │  LLM Layer    │ │  PDF Export   │
-└───────────────┘ └───────────────┘ └───────────────┘
+<p>Architecture documentation following the <a href="https://c4model.com/">C4 model</a>: Context → Containers → Components → Code.</p>
+<h2 id="level-1-system-context"><a class="header" href="#level-1-system-context">Level 1: System Context</a></h2>
+<p>Mimir is a local-first desktop application for D&amp;D 5e campaign management. It has no cloud dependencies — all data stays on the user’s machine.</p>
+<pre><code>                                    ┌─────────────────────┐
+                                    │    Dungeon Master    │
+                                    │      (User)          │
+                                    └──────────┬──────────┘
+                                               │
+                          ┌────────────────────┼────────────────────┐
+                          │                    │                    │
+                          ▼                    ▼                    ▼
+                   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+                   │   Mimir     │     │  Claude Code │     │ Dungeondraft│
+                   │ Desktop App │     │  (via MCP)   │     │  (Map Tool) │
+                   └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+                          │                   │                    │
+                          │                   │                    │
+                          ▼                   ▼                    ▼
+                   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+                   │   SQLite    │     │  MCP Sidecar │     │ .dd2vtt /   │
+                   │  Database   │◀────│   Server     │     │ .uvtt files │
+                   └─────────────┘     └─────────────┘     └─────────────┘
+</code></pre>
+<p><strong>Users:</strong> Dungeon Masters preparing and running D&amp;D 5e campaigns.</p>
+<p><strong>External systems:</strong></p>
+<ul>
+<li><strong>Claude Code</strong> — AI assistant that manages campaigns via the MCP sidecar server</li>
+<li><strong>Dungeondraft</strong> — Map authoring tool; Mimir imports UVTT maps and generates <code>.dungeondraft_map</code> files</li>
+<li><strong>5etools</strong> — Source of D&amp;D 5e catalog data (monsters, spells, items, etc.), imported into the database at build time</li>
+</ul>
+<h2 id="level-2-container-diagram"><a class="header" href="#level-2-container-diagram">Level 2: Container Diagram</a></h2>
+<p>The system is a Cargo workspace with 5 crates, a Vue 3 frontend, and a SQLite database.</p>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                    Mimir Desktop App                      │
+│  ┌────────────────────────┐  ┌────────────────────────┐  │
+│  │   Vue 3 Frontend       │  │   Tauri Shell (mimir)  │  │
+│  │   TypeScript + Pinia   │──│   Rust command handlers │  │
+│  │                        │  │                        │  │
+│  │   4 feature modules:   │  │   22 command modules   │  │
+│  │   campaigns, modules,  │  │   AppState management  │  │
+│  │   characters, sources  │  │                        │  │
+│  └────────────────────────┘  └───────────┬────────────┘  │
+│                                          │               │
+│              ┌───────────────────────────┼───────────┐   │
+│              │                           │           │   │
+│              ▼                           ▼           │   │
+│  ┌────────────────────────┐  ┌──────────────────┐    │   │
+│  │   mimir-core           │  │   mimir-print    │    │   │
+│  │   Domain logic, DAL,   │  │   Typst-based    │    │   │
+│  │   services, migrations │  │   PDF generation │    │   │
+│  └───────────┬────────────┘  └──────────────────┘    │   │
+│              │                                       │   │
+│              ▼                                       │   │
+│  ┌────────────────────────┐                          │   │
+│  │   SQLite Database      │                          │   │
+│  │   56 tables, WAL mode  │                          │   │
+│  └────────────────────────┘                          │   │
+└──────────────────────────────────────────────────────┘   │
+                                                           │
+┌──────────────────────────────────────────────────────┐   │
+│   MCP Sidecar (mimir-mcp)                            │   │
+│   Separate binary, launched by Tauri externalBin     │◀──┘
+│   142 tools across 10 categories                     │
+│   Depends on: mimir-core, mimir-mapgen               │
+└──────────────────────────────────────────────────────┘
 
-Standalone Utilities:
-├── mimir-dm-agent-test    (Agent test harness)
-├── mimir-5etools-splitter (Data processing)
-└── mimir-llm-eval         (LLM benchmarking)
+┌──────────────────────────────────────────────────────┐
+│   Map Generator CLI (mimir-mapgen)                   │
+│   Standalone binary + library                        │
+│   Procedural terrain, rooms, polygons → Dungeondraft │
+│   No database dependency                             │
+└──────────────────────────────────────────────────────┘
 </code></pre>
-<h3 id="mimir-dm-core"><a class="header" href="#mimir-dm-core">mimir-dm-core</a></h3>
-<p>The heart of the system containing:</p>
-<ul>
-<li><strong>Models</strong>: Domain types for campaigns, characters, D&amp;D catalog data</li>
-<li><strong>Services</strong>: Business logic (28 services)</li>
-<li><strong>DAL</strong>: Data Access Layer with repository traits</li>
-<li><strong>Migrations</strong>: 35 Diesel migrations for SQLite schema</li>
-</ul>
-<h3 id="mimir-dm-llm"><a class="header" href="#mimir-dm-llm">mimir-dm-llm</a></h3>
-<p>LLM provider abstraction layer:</p>
-<ul>
-<li><strong>Traits</strong>: <code>LlmProvider</code> interface for chat operations</li>
-<li><strong>Providers</strong>: Ollama implementation (OpenAI-compatible)</li>
-<li><strong>Config</strong>: Model configuration, rate limiting</li>
-</ul>
-<h3 id="mimir-dm-print"><a class="header" href="#mimir-dm-print">mimir-dm-print</a></h3>
-<p>PDF generation using Typst:</p>
-<ul>
-<li>Character sheets</li>
-<li>Campaign documents</li>
-<li>Markdown to Typst conversion</li>
-</ul>
-<h3 id="mimir-dm"><a class="header" href="#mimir-dm">mimir-dm</a></h3>
-<p>Tauri desktop application:</p>
-<ul>
-<li><strong>Commands</strong>: 50+ Tauri command handlers</li>
-<li><strong>Services</strong>: LLM integration, context management</li>
-<li><strong>State</strong>: Consolidated <code>AppState</code> struct</li>
-</ul>
-<h2 id="request-flow"><a class="header" href="#request-flow">Request Flow</a></h2>
-<pre><code>┌──────────┐    ┌─────────────┐    ┌─────────────┐    ┌──────────┐
-│ Frontend │───▶│   Tauri     │───▶│   Service   │───▶│ Database │
-│ (Vue 3)  │    │  Command    │    │   Layer     │    │ (SQLite) │
-└──────────┘    └─────────────┘    └─────────────┘    └──────────┘
-     ▲                │                   │
-     │                ▼                   │
-     │         ┌─────────────┐           │
-     └─────────│  AppState   │◀──────────┘
-               │  (db, llm)  │
-               └─────────────┘
+<h3 id="container-responsibilities"><a class="header" href="#container-responsibilities">Container responsibilities</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Container</th><th>Technology</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Vue 3 Frontend</strong></td><td>TypeScript, Pinia, Tiptap, Tailwind</td><td>UI: campaign dashboard, character sheets, play mode, player display</td></tr>
+<tr><td><strong>Tauri Shell (mimir)</strong></td><td>Rust, Tauri 2</td><td>IPC command handlers, AppState, window management</td></tr>
+<tr><td><strong>mimir-core</strong></td><td>Rust, Diesel ORM</td><td>Domain models, services, data access layer, migrations</td></tr>
+<tr><td><strong>mimir-print</strong></td><td>Rust, Typst</td><td>PDF generation: character sheets, spell cards, map prints</td></tr>
+<tr><td><strong>mimir-mcp</strong></td><td>Rust, rust-mcp-sdk</td><td>MCP server exposing campaign management to AI assistants</td></tr>
+<tr><td><strong>mimir-mapgen</strong></td><td>Rust, noise-rs, clap</td><td>Procedural map generation with YAML config or biome presets</td></tr>
+<tr><td><strong>SQLite Database</strong></td><td>SQLite 3, WAL mode</td><td>56 tables: campaigns, characters, maps, D&amp;D 5e catalog</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="crate-dependency-graph"><a class="header" href="#crate-dependency-graph">Crate dependency graph</a></h3>
+<pre><code>mimir ──────► mimir-core
+  │
+  └─────────► mimir-print
+
+mimir-mcp ──► mimir-core
+  │
+  └─────────► mimir-mapgen
+
+(mimir-core, mimir-print, mimir-mapgen have no internal crate dependencies)
 </code></pre>
-<h3 id="typical-command-flow"><a class="header" href="#typical-command-flow">Typical Command Flow</a></h3>
-<ol>
-<li><strong>Frontend</strong> invokes Tauri command (e.g., <code>get_campaign</code>)</li>
-<li><strong>Tauri Command</strong> extracts <code>State&lt;AppState&gt;</code> and parameters</li>
-<li><strong>Service</strong> performs business logic, accesses database</li>
-<li><strong>Response</strong> returned to frontend as JSON</li>
-</ol>
-<p>Example:</p>
-<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+<h2 id="level-3-component-diagrams"><a class="header" href="#level-3-component-diagrams">Level 3: Component Diagrams</a></h2>
+<h3 id="mimir-core--domain-logic"><a class="header" href="#mimir-core--domain-logic">mimir-core — Domain Logic</a></h3>
+<p>The shared library containing all business logic and data access.</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                        mimir-core                        │
+│                                                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Models     │  │   Services   │  │    DAL       │  │
+│  │              │  │              │  │              │  │
+│  │  campaign/   │  │  Campaign    │  │  Repository  │  │
+│  │  catalog/    │◀─│  Character   │──│  traits      │  │
+│  │  character/  │  │  Module      │  │              │  │
+│  │              │  │  Document    │  │  Diesel      │  │
+│  │  Domain      │  │  Map, Token  │  │  queries     │  │
+│  │  types and   │  │  Archive     │  │              │  │
+│  │  enums       │  │  Asset       │  └──────────────┘  │
+│  │              │  │  Homebrew    │                     │
+│  └──────────────┘  │              │  ┌──────────────┐  │
+│                    │  24 catalog  │  │  Migrations  │  │
+│                    │  services    │  │  29 migrations│  │
+│                    └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Service layer pattern</strong> (per <a href="/.metis/adr/MIMIR-A-0005.html">ADR-0005</a>):</p>
+<p>Services are stateful structs that borrow a database connection:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>#[tauri::command]
-pub async fn get_campaign(
-    campaign_id: i32,
-    state: State&lt;'_, AppState&gt;,
-) -&gt; Result&lt;ApiResponse&lt;Campaign&gt;, ApiError&gt; {
-    let mut conn = state.db.get_connection()?;
-    let campaign = CampaignService::get_by_id(&amp;mut conn, campaign_id)?;
-    Ok(ApiResponse::success(campaign))
-}
-<span class="boring">}</span></code></pre></pre>
-<h2 id="database-design"><a class="header" href="#database-design">Database Design</a></h2>
-<p>See <a href="/.metis/adr/MIMIR-A-0001.html">ADR-0001</a> for denormalized design rationale.</p>
-<h3 id="key-design-decisions"><a class="header" href="#key-design-decisions">Key Design Decisions</a></h3>
-<ul>
-<li><strong>Denormalized</strong>: Child entities (subclasses, subraces) contain full parent data</li>
-<li><strong>JSON Columns</strong>: Complex/variable data stored as JSON (see <a href="/.metis/adr/MIMIR-A-0003.html">ADR-0003</a>)</li>
-<li><strong>Multi-Ruleset</strong>: Content organized by rule system and source (see <a href="/.metis/adr/MIMIR-A-0002.html">ADR-0002</a>)</li>
-</ul>
-<h3 id="schema-overview-37-tables"><a class="header" href="#schema-overview-37-tables">Schema Overview (37 tables)</a></h3>
-<p><strong>Campaign Management:</strong></p>
-<ul>
-<li><code>campaigns</code>, <code>modules</code>, <code>sessions</code></li>
-<li><code>documents</code>, <code>template_documents</code></li>
-<li><code>workflow_cards</code></li>
-</ul>
-<p><strong>D&amp;D Catalog:</strong></p>
-<ul>
-<li><code>catalog_*</code> tables for each entity type (spells, monsters, items, etc.)</li>
-<li><code>uploaded_books</code>, <code>catalog_sources</code></li>
-</ul>
-<p><strong>Characters:</strong></p>
-<ul>
-<li><code>players</code>, <code>characters</code>, <code>character_versions</code></li>
-<li><code>campaign_players</code> (links players to campaigns)</li>
-</ul>
-<h2 id="service-layer"><a class="header" href="#service-layer">Service Layer</a></h2>
-<p>Services follow the stateful pattern per <a href="/.metis/adr/MIMIR-A-0005.html">ADR-0005</a>:</p>
-<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>pub struct SpellService&lt;'a&gt; {
+</span>pub struct CampaignService&lt;'a&gt; {
     pub conn: &amp;'a mut SqliteConnection,
 }
 
-impl&lt;'a&gt; SpellService&lt;'a&gt; {
+impl&lt;'a&gt; CampaignService&lt;'a&gt; {
     pub fn new(conn: &amp;'a mut SqliteConnection) -&gt; Self {
         Self { conn }
     }
 
-    pub fn search(&amp;mut self, filters: SpellFilters) -&gt; Result&lt;Vec&lt;SpellSummary&gt;&gt; {
-        // Query logic
+    pub fn create(&amp;mut self, input: CreateCampaignInput) -&gt; ServiceResult&lt;Campaign&gt; {
+        // Business logic + database access
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<h3 id="service-categories"><a class="header" href="#service-categories">Service Categories</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Category</th><th>Services</th><th>Purpose</th></tr></thead><tbody>
-<tr><td>Campaign</td><td>CampaignService, ModuleService, SessionService</td><td>Campaign management</td></tr>
-<tr><td>Catalog</td><td>SpellService, MonsterService, ItemService, etc.</td><td>D&amp;D reference data</td></tr>
-<tr><td>Character</td><td>CharacterService, CharacterCreationService</td><td>PC/NPC management</td></tr>
-<tr><td>Content</td><td>DocumentService, TemplateService</td><td>Document management</td></tr>
-</tbody></table>
+<span class="boring">}</span></code></pre>
+<p><strong>Service inventory:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Category</th><th>Services</th></tr>
+</thead>
+<tbody>
+<tr><td>Campaign</td><td>CampaignService, ModuleService, DocumentService, ArchiveService, AssetService</td></tr>
+<tr><td>Character</td><td>CharacterService, HomebrewService</td></tr>
+<tr><td>Map</td><td>MapService, TokenService</td></tr>
+<tr><td>Catalog (24)</td><td>SpellService, MonsterService, ItemService, ClassService, RaceService, BackgroundService, FeatService, ConditionService, SubclassService, and 15 more</td></tr>
+</tbody>
+</table>
 </div>
-<h2 id="llm-integration"><a class="header" href="#llm-integration">LLM Integration</a></h2>
-<pre><code>┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  LlmService  │───▶│ ChatProcessor│───▶│   Provider   │
-│  (Tauri)     │    │  (Tools)     │    │  (Ollama)    │
-└──────────────┘    └──────────────┘    └──────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │ ToolRegistry │
-                    │ (15+ tools)  │
-                    └─────────────┘
+<h3 id="tauri-shell--command-layer"><a class="header" href="#tauri-shell--command-layer">Tauri Shell — Command Layer</a></h3>
+<p>The <code>mimir</code> crate bridges the Vue frontend to core services via Tauri IPC commands.</p>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                      mimir (Tauri)                        │
+│                                                           │
+│  ┌─────────────┐    ┌──────────────────────────────────┐ │
+│  │  AppState    │    │         Commands (22 modules)    │ │
+│  │             │    │                                  │ │
+│  │  AppPaths   │    │  campaign     character    map   │ │
+│  │  (data_dir, │◀───│  module       document     print │ │
+│  │   db_path,  │    │  archive      homebrew*3   token │ │
+│  │   is_dev)   │    │  asset        source       dev   │ │
+│  │             │    │  dm_map       player_display     │ │
+│  └─────────────┘    │  catalog/ (8 sub-modules)        │ │
+│                     └──────────────────────────────────┘ │
+│                                                           │
+│  ┌──────────────────────────────────────────────────────┐ │
+│  │  Sidecar Management                                  │ │
+│  │  Launches mimir-mcp as externalBin process           │ │
+│  │  Configured in tauri.conf.json                       │ │
+│  └──────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
 </code></pre>
-<h3 id="tool-system"><a class="header" href="#tool-system">Tool System</a></h3>
-<p>Tools enable the LLM to interact with the application:</p>
+<p><strong>Request flow:</strong></p>
+<pre><code>Vue Component
+    │  invoke('get_campaign', { id: 42 })
+    ▼
+Tauri IPC
+    │  Deserialize params, inject State&lt;AppState&gt;
+    ▼
+Command Handler (commands/campaign.rs)
+    │  let mut conn = state.get_connection()?;
+    │  let mut svc = CampaignService::new(&amp;mut conn);
+    ▼
+CampaignService (mimir-core)
+    │  svc.get_by_id(42)?
+    ▼
+Diesel Query → SQLite
+    │
+    ▼
+Result&lt;ApiResponse&lt;Campaign&gt;, ApiError&gt; → JSON → Frontend
+</code></pre>
+<h3 id="vue-3-frontend"><a class="header" href="#vue-3-frontend">Vue 3 Frontend</a></h3>
+<p>Feature-based organization with 4 domain modules.</p>
+<pre><code>frontend/src/
+├── app/                    # App bootstrap, router, root layout
+├── features/
+│   ├── campaigns/          # Dashboard, module listing, homebrew tab
+│   │   ├── views/          # CampaignDashboardView, etc.
+│   │   ├── components/     # WorldTab, ModulesTab, PCsTab, NPCsTab, HomebrewTab
+│   │   └── composables/    # useDashboardState
+│   ├── characters/         # Creation wizard, character sheet, level-up
+│   │   ├── views/          # CharacterListView, CharacterSheetView
+│   │   └── components/     # CharacterCreationWizard, LevelUpDialog
+│   ├── modules/            # Module prep, play mode, player display
+│   │   ├── views/          # ModulePrepView, ModulePlayView
+│   │   └── components/     # ModuleMonsters, ModuleNPCs, ModuleMaps
+│   └── sources/            # D&amp;D 5e catalog browser
+│       └── composables/    # useCatalogSearch (instantiated 22×)
+├── components/             # Shared: TokenPalette, DmMapViewer, print dialogs
+├── stores/                 # Pinia: campaigns, characters, theme
+├── services/               # Tauri command wrappers
+└── types/                  # TypeScript interfaces (generated from Rust)
+</code></pre>
+<p><strong>Key architectural patterns:</strong></p>
 <ul>
-<li><strong>Character Tools</strong>: Cast spells, check slots, manage inventory</li>
-<li><strong>Query Tools</strong>: Search spells, monsters, items</li>
-<li><strong>Campaign Tools</strong>: Access session notes, module info</li>
+<li>Composition API with <code>&lt;script setup&gt;</code> exclusively</li>
+<li>Pinia setup stores (function-based, not options-based)</li>
+<li>Tauri <code>invoke()</code> for all backend communication</li>
+<li><code>ApiResponse&lt;T&gt;</code> wrapper for consistent error handling</li>
+<li>3 themes: light, dark, hyper (CSS variables + Pinia persistence)</li>
 </ul>
-<h2 id="key-patterns"><a class="header" href="#key-patterns">Key Patterns</a></h2>
-<h3 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h3>
-<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>// Application-level errors
-pub enum MimirError {
-    Database(DbError),
-    Print(String),
-    Llm(String),
-    NotFound(String),
-    // ...
-}
-
-// Database-level errors
-pub enum DbError {
-    NotFound { entity_type, id },
-    ConstraintViolation { field, message },
-    Query(diesel::result::Error),
-    // ...
-}
-<span class="boring">}</span></code></pre></pre>
-<h3 id="state-management"><a class="header" href="#state-management">State Management</a></h3>
-<p><code>AppState</code> consolidates all shared state:</p>
-<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>pub struct AppState {
-    pub db: Arc&lt;DatabaseService&gt;,       // Database connection pool
-    pub paths: Arc&lt;AppPaths&gt;,           // Application paths
-    pub context: ContextState,          // Conversation context
-    pub sessions: SessionManager,       // Chat sessions
-    pub llm: Arc&lt;Mutex&lt;Option&lt;LlmService&gt;&gt;&gt;, // LLM service
-}
-<span class="boring">}</span></code></pre></pre>
+<h3 id="mimir-mcp--mcp-sidecar-server"><a class="header" href="#mimir-mcp--mcp-sidecar-server">mimir-mcp — MCP Sidecar Server</a></h3>
+<p>Runs as a separate process, sharing the same SQLite database.</p>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                       mimir-mcp                           │
+│                                                           │
+│  ┌──────────────┐    ┌──────────────────────────────────┐ │
+│  │  MCP Server   │    │     Tools (142 total)            │ │
+│  │              │    │                                  │ │
+│  │  rust-mcp-   │    │  character (26)   campaign (20) │ │
+│  │  sdk 0.8     │    │  catalog (16)     map (16)      │ │
+│  │              │    │  module (16)      document (12) │ │
+│  │  stdio +     │◀───│  homebrew (10)    h_monster (10)│ │
+│  │  streamable  │    │  h_spell (10)     mapgen (6)    │ │
+│  │  HTTP        │    │                                  │ │
+│  └──────────────┘    └──────────────────────────────────┘ │
+│                                                           │
+│  ┌──────────────┐    ┌──────────────────────────────────┐ │
+│  │  Database     │    │  Claude Code Plugin              │ │
+│  │  Context      │    │  plugin/ directory with:         │ │
+│  │              │    │  - plugin.json (manifest)        │ │
+│  │  Shares same  │    │  - skills/ (mapgen, mimir-dm)   │ │
+│  │  SQLite DB    │    │  - agents/ (campaign authoring)  │ │
+│  │  as Tauri app │    │  - hooks/ (event handlers)       │ │
+│  └──────────────┘    └──────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Sidecar lifecycle:</strong></p>
+<ol>
+<li>Tauri launches <code>mimir-mcp</code> binary via <code>externalBin</code> configuration</li>
+<li>Binary built to <code>crates/mimir/binaries/mimir-mcp-{target-triple}</code></li>
+<li>Build scripts: <code>scripts/build-sidecar.{sh,ps1,mjs}</code></li>
+<li>Must be built before <code>cargo build -p mimir</code> (Tauri requirement)</li>
+</ol>
+<h3 id="mimir-mapgen--procedural-map-generator"><a class="header" href="#mimir-mapgen--procedural-map-generator">mimir-mapgen — Procedural Map Generator</a></h3>
+<p>Standalone library + CLI for generating Dungeondraft-compatible maps.</p>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                      mimir-mapgen                         │
+│                                                           │
+│  CLI Interface (clap)          Pipeline                   │
+│  ┌──────────────────┐         ┌──────────────────────┐   │
+│  │ generate          │         │  YAML Config         │   │
+│  │   --config / --preset      │       │              │   │
+│  │   --output         │────────│       ▼              │   │
+│  │   --seed           │        │  Noise Generation    │   │
+│  │ validate           │        │       │              │   │
+│  │ list-presets        │        │       ▼              │   │
+│  └──────────────────┘         │  Terrain Blending    │   │
+│                               │       │              │   │
+│  Core Modules (15)            │       ▼              │   │
+│  ┌──────────────────┐         │  Object Placement    │   │
+│  │ noise_gen         │         │  (trees, clutter)    │   │
+│  │ terrain           │         │       │              │   │
+│  │ objects            │         │       ▼              │   │
+│  │ paths (roads,      │         │  Paths &amp; Water      │   │
+│  │   rivers, meander) │         │  (exclusion zones)  │   │
+│  │ water             │         │       │              │   │
+│  │ rooms             │         │       ▼              │   │
+│  │ polygons          │         │  Rooms / Polygons    │   │
+│  │ elevation         │         │       │              │   │
+│  │ contour           │         │       ▼              │   │
+│  │ biomes (12        │         │  Dungeondraft        │   │
+│  │   presets)         │         │  Format Output       │   │
+│  │ format            │         │  (.dungeondraft_map) │   │
+│  │ pipeline          │         └──────────────────────┘   │
+│  │ distribution      │                                    │
+│  │ curves            │                                    │
+│  │ assets            │                                    │
+│  └──────────────────┘                                    │
+└──────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>No database dependency.</strong> Operates entirely on YAML config input → file output.</p>
+<h3 id="mimir-print--pdf-generation"><a class="header" href="#mimir-print--pdf-generation">mimir-print — PDF Generation</a></h3>
+<p>Typst-based document builder with pluggable sections.</p>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                       mimir-print                         │
+│                                                           │
+│  ┌──────────────┐    ┌──────────────────────────────────┐ │
+│  │ PrintService  │    │  Renderable Sections             │ │
+│  │              │    │                                  │ │
+│  │ Template     │    │  CharacterSection (2-page sheet) │ │
+│  │ resolution + │    │  CharacterBattleCardSection      │ │
+│  │ PDF compile  │    │  SpellCardsSection (3×3 grid)    │ │
+│  │              │    │  EquipmentCardsSection            │ │
+│  └──────────────┘    │  MonsterCardSection               │ │
+│                      │  TrapCardSection                  │ │
+│  ┌──────────────┐    │  TiledMapSection + MapPreview    │ │
+│  │ DocumentBuilder   │  TokenCutoutSection               │ │
+│  │              │    │  MarkdownSection                  │ │
+│  │ Assembles    │    └──────────────────────────────────┘ │
+│  │ sections into│                                        │
+│  │ multi-part   │    ┌──────────────────────────────────┐ │
+│  │ documents    │    │  Support Modules                  │ │
+│  └──────────────┘    │  markdown → Typst converter      │ │
+│                      │  map_renderer (grid, LOS, tokens) │ │
+│                      │  Typst World (font/file resolver) │ │
+│                      └──────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+</code></pre>
+<h2 id="level-4-key-design-decisions"><a class="header" href="#level-4-key-design-decisions">Level 4: Key Design Decisions</a></h2>
+<p>Detailed rationale lives in ADRs. Summary:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Decision</th><th>ADR</th><th>Rationale</th></tr>
+</thead>
+<tbody>
+<tr><td>Denormalized catalog data</td><td><a href="/.metis/adr/MIMIR-A-0001.html">ADR-0001</a></td><td>Child entities (subclasses, subraces) embed full parent data to avoid joins on read</td></tr>
+<tr><td>Multi-ruleset content</td><td><a href="/.metis/adr/MIMIR-A-0002.html">ADR-0002</a></td><td>Content organized by rule system and source for future expansion</td></tr>
+<tr><td>JSON columns</td><td><a href="/.metis/adr/MIMIR-A-0003.html">ADR-0003</a></td><td>Variable/complex fields (spell components, monster traits) stored as JSON</td></tr>
+<tr><td>Stateful services</td><td><a href="/.metis/adr/MIMIR-A-0005.html">ADR-0005</a></td><td>Services borrow <code>&amp;mut SqliteConnection</code> for lifetime-scoped transactions</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="database-schema-56-tables"><a class="header" href="#database-schema-56-tables">Database Schema (56 tables)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Category</th><th>Tables</th><th>Examples</th></tr>
+</thead>
+<tbody>
+<tr><td>Campaign (7)</td><td>campaigns, modules, documents, campaign_sources, campaign_assets, campaign_homebrew_*</td><td>Core user data</td></tr>
+<tr><td>Character (8)</td><td>characters, character_classes, character_spells, character_inventory, character_feats, character_features, character_proficiencies, character_sources</td><td>PC/NPC data</td></tr>
+<tr><td>Map &amp; Tokens (8)</td><td>maps, token_placements, light_sources, fog_revealed_areas, map_pois, map_traps, module_monsters, module_npcs</td><td>Spatial data</td></tr>
+<tr><td>D&amp;D Catalog (28)</td><td>spells, monsters, items, classes, races, backgrounds, feats, conditions, subclasses, etc.</td><td>Immutable 5etools data</td></tr>
+<tr><td>Management (5)</td><td>catalog_sources, books, spell_classes, spell_subclasses, item_attunement_classes</td><td>Relationships &amp; metadata</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="data-paths"><a class="header" href="#data-paths">Data Paths</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Environment</th><th>Database</th><th>Assets</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Production</strong></td><td><code>~/Library/Application Support/com.mimir.app/data/mimir.db</code></td><td><code>~/Library/Application Support/com.mimir.app/assets/</code></td></tr>
+<tr><td><strong>Development</strong></td><td><code>~/Library/Application Support/com.mimir.app/dev/data/mimir.db</code></td><td><code>~/Library/Application Support/com.mimir.app/dev/assets/</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Dev mode activated by debug assertions or <code>MIMIR_DEV</code> environment variable. Paths shown are macOS; Linux uses <code>~/.local/share/</code>, Windows uses <code>%APPDATA%</code>.</p>
 <h2 id="directory-structure"><a class="header" href="#directory-structure">Directory Structure</a></h2>
-<pre><code>crates/
-├── mimir-dm/                    # Main Tauri app
-│   ├── src/
-│   │   ├── main.rs             # Entry point
-│   │   ├── state.rs            # AppState
-│   │   ├── commands/           # Tauri commands
-│   │   │   ├── catalog/        # D&amp;D reference commands
-│   │   │   ├── campaign/       # Campaign management
-│   │   │   ├── character/      # Character operations
-│   │   │   └── chat/           # LLM chat commands
-│   │   └── services/           # Business logic
-│   │       ├── llm/            # LLM integration
-│   │       └── tools/          # LLM tool implementations
-│   └── frontend/               # Vue 3 frontend
+<pre><code>mimir/
+├── Cargo.toml                     # Workspace manifest (5 crates)
+├── crates/
+│   ├── mimir/                     # Tauri desktop application
+│   │   ├── src/
+│   │   │   ├── main.rs            # Entry point, plugin registration
+│   │   │   ├── state.rs           # AppState, AppPaths, dev/prod separation
+│   │   │   └── commands/          # 22 Tauri command modules
+│   │   │       └── catalog/       # 8 sub-modules for D&amp;D catalog queries
+│   │   ├── frontend/              # Vue 3 + TypeScript application
+│   │   │   └── src/
+│   │   │       ├── features/      # campaigns/, characters/, modules/, sources/
+│   │   │       ├── components/    # Shared: TokenPalette, DmMapViewer, print dialogs
+│   │   │       └── stores/        # Pinia: campaigns, characters, theme
+│   │   ├── binaries/              # Sidecar output (mimir-mcp-{target})
+│   │   └── tauri.conf.json        # Tauri config with externalBin sidecar
+│   │
+│   ├── mimir-core/                # Domain logic library
+│   │   └── src/
+│   │       ├── models/            # Domain types (catalog/, campaign/)
+│   │       ├── services/          # 9 core + 24 catalog services
+│   │       │   └── catalog/       # Spell, Monster, Item, Class, Race, etc.
+│   │       ├── dal/               # Data access layer
+│   │       └── migrations/        # 29 Diesel migrations
+│   │
+│   ├── mimir-mcp/                 # MCP sidecar server
+│   │   ├── src/
+│   │   │   ├── main.rs            # Server bootstrap (stdio + HTTP)
+│   │   │   └── tools/             # 10 tool modules (142 tools total)
+│   │   └── plugin/                # Claude Code plugin definition
+│   │       ├── plugin.json        # Manifest
+│   │       ├── skills/            # mapgen, mimir-dm, mimir-campaign
+│   │       └── agents/            # Campaign authoring agent
+│   │
+│   ├── mimir-print/               # PDF generation library
+│   │   └── src/
+│   │       ├── service.rs         # PrintService
+│   │       ├── builder.rs         # DocumentBuilder
+│   │       ├── sections/          # 9 renderable section types
+│   │       └── map_renderer.rs    # Map image rendering
+│   │
+│   └── mimir-mapgen/              # Map generation library + CLI
+│       ├── src/
+│       │   ├── main.rs            # CLI (generate, validate, list-presets)
+│       │   ├── pipeline.rs        # MapConfig, generation orchestration
+│       │   ├── biomes.rs          # 12 biome presets
+│       │   └── (13 more modules)  # noise, terrain, paths, water, rooms, etc.
+│       └── examples/              # YAML configs + generated maps
 │
-├── mimir-dm-core/              # Core business logic
-│   ├── src/
-│   │   ├── models/             # Domain models
-│   │   │   ├── catalog/        # D&amp;D entity types
-│   │   │   └── campaign/       # Campaign types
-│   │   ├── services/           # Business logic services
-│   │   ├── dal/                # Data access layer
-│   │   └── migrations/         # Database migrations
-│
-├── mimir-dm-llm/               # LLM abstraction
-│   └── src/
-│       ├── providers/          # Provider implementations
-│       └── traits/             # Provider interface
-│
-└── mimir-dm-print/             # PDF generation
-    └── src/
-        └── templates/          # Typst templates
+├── docs/                          # mdBook documentation
+├── scripts/                       # Build scripts (sidecar, CI)
+└── .metis/                        # Project management (ADRs, initiatives)
 </code></pre>
-<h2 id="development-guidelines"><a class="header" href="#development-guidelines">Development Guidelines</a></h2>
-<h3 id="adding-a-new-catalog-entity"><a class="header" href="#adding-a-new-catalog-entity">Adding a New Catalog Entity</a></h3>
-<ol>
-<li>Create model in <code>mimir-dm-core/src/models/catalog/</code></li>
-<li>Add migration in <code>mimir-dm-core/migrations/</code></li>
-<li>Create service in <code>mimir-dm-core/src/services/</code></li>
-<li>Add Tauri commands in <code>mimir-dm/src/commands/catalog/</code></li>
-<li>Update schema.rs after migration</li>
-</ol>
-<h3 id="adding-a-new-tool"><a class="header" href="#adding-a-new-tool">Adding a New Tool</a></h3>
-<ol>
-<li>Implement tool trait in <code>mimir-dm/src/services/tools/</code></li>
-<li>Register in <code>ToolRegistry</code></li>
-<li>Add tests in corresponding <code>*_test.rs</code> file</li>
-</ol>
-<h3 id="testing"><a class="header" href="#testing">Testing</a></h3>
-<pre><code class="language-bash"># Run all tests
-cargo test --workspace
-
-# Run core tests only
-cargo test -p mimir-dm-core
-
-# Run specific test
-cargo test test_name
-</code></pre>
-<h2 id="related-documentation"><a class="header" href="#related-documentation">Related Documentation</a></h2>
-<ul>
-<li><a href="/.metis/adr/MIMIR-A-0001.html">ADR-0001: Denormalized Database Design</a></li>
-<li><a href="/.metis/adr/MIMIR-A-0002.html">ADR-0002: Multi-Ruleset Architecture</a></li>
-<li><a href="/.metis/adr/MIMIR-A-0003.html">ADR-0003: JSON Storage Strategy</a></li>
-<li><a href="/.metis/adr/MIMIR-A-0005.html">ADR-0005: Service Layer Pattern</a></li>
-</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                             <a rel="prev" href="../developer/DEVELOPMENT.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
 
@@ -439,29 +615,18 @@ cargo test test_name
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                     <a rel="prev" href="../developer/DEVELOPMENT.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
             </nav>
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
 
 
@@ -470,17 +635,16 @@ cargo test test_name
         </script>
 
 
-        <script src="../elasticlunr.min.js"></script>
-        <script src="../mark.min.js"></script>
-        <script src="../searcher.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="../clipboard.min.js"></script>
-        <script src="../highlight.js"></script>
-        <script src="../book.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../mermaid.min.js"></script>
-        <script src="../mermaid-init.js"></script>
+
 
 
     </div>
