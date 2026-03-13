@@ -22,7 +22,7 @@ The selected module's dashboard with sections:
 
 - **Module Name** - Title of the adventure
 - **Play** - Enter Play Mode for this module
-- **Print** - Generate printable materials
+- **PDF** - Export module materials as PDF
 
 ## Content Sections
 
@@ -44,12 +44,12 @@ Non-player characters specific to this module:
 
 Battle maps and area maps:
 - Map cards with thumbnails
-- Click to open Token Setup
+- Click the Place Tokens button to open Token Setup
 - Upload new maps with the + button
 
-### Dangers
+### Monsters
 
-Quick view of monsters in this module (populated from Token Setup).
+Quick view of monsters in this module (populated from Token Setup). Includes both catalog and homebrew monsters.
 
 ## Actions
 
@@ -59,7 +59,7 @@ Quick view of monsters in this module (populated from Token Setup).
 | Select module | Click module in sidebar |
 | Enter Play Mode | Click "Play" button |
 | Upload map | Maps section → + button |
-| Open Token Setup | Click a map card |
+| Open Token Setup | Click Place Tokens button on a map card |
 | Add document | Documents section → + button |
 
 ## See Also

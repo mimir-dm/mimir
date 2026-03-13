@@ -5,7 +5,7 @@ Export your campaign as a portable archive for backup or transfer.
 ## Steps
 
 1. Open your campaign dashboard
-2. Click **Export** in the campaign header
+2. Click **Export Archive** in the campaign header
 3. Choose a save location
 4. The campaign exports as a `.tar.gz` archive
 
@@ -27,9 +27,10 @@ The archive contains:
 ## Importing
 
 To import an exported campaign:
-1. From the Home Screen, click **Import Campaign**
-2. Select the `.tar.gz` file
-3. The campaign appears in your campaign list
+1. Open the **Campaign Selector** dropdown in the header
+2. Click **Import Campaign**
+3. Select the `.tar.gz` file
+4. The campaign appears in your campaign list
 
 ## See Also
 

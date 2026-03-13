@@ -22,11 +22,11 @@ Each module has its own maps, monsters, NPCs, and documents.
    - **Module Name** - Descriptive title for the adventure
    - **Module Type** - Select type (Standard Adventure, Mystery, Dungeon Crawl, Heist, Horror, Political Intrigue)
    - **Description** (optional) - Notes about the module
-5. Click **Create**
+5. Click **Create Module**
 
 ## After Creation
 
-Your new module appears in the modules table with action buttons for Play, Open, and PDF export.
+Your new module appears in the module list. Select it to see its dashboard with **Play**, **PDF**, and **Delete** buttons.
 
 ## Organizing Modules
 

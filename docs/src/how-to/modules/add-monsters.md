@@ -1,13 +1,13 @@
 # Add Monsters
 
-Add monsters from the D&D 5e catalog to your maps via Token Setup.
+Add monsters from the D&D 5e catalog or your homebrew collection to your maps via Token Setup.
 
 ![Token Setup](../../images/reference/token-setup.png)
 
 ## Steps
 
 1. Open a module from the Modules tab
-2. Click a map card to open **Token Setup**
+2. Click the **Place Tokens** button on a map card to open **Token Setup**
 3. In the Token Palette, click **Monster**
 4. Search by name (e.g., "Goblin", "Dragon", "Zombie")
 5. Select a monster from the results
@@ -16,13 +16,7 @@ Add monsters from the D&D 5e catalog to your maps via Token Setup.
 
 ## Monster Search
 
-The search includes:
-- Monster name
-- Challenge rating
-- Type (beast, humanoid, undead, etc.)
-- Source book
-
-Results show CR and source for quick reference.
+Type a monster name in the search field to filter results. Results show CR and source for quick reference. Homebrew monsters you've created in the campaign's Homebrew tab also appear in search results alongside catalog entries.
 
 ## Token Options
 
@@ -38,11 +32,11 @@ To add multiple of the same monster:
 2. Click on the map to place each one
 3. Each placement creates a new token
 
-Or place one token and adjust quantities in the Token Inventory.
+Each click on the map places an individual token.
 
 ## Managing Monster Tokens
 
-Placed monsters appear in the Token Inventory (right panel):
+Placed monsters appear in the **Placed Tokens** panel (right side):
 - Click to select on map
 - Drag to reposition
 - Click **×** to delete
@@ -56,12 +50,17 @@ In Play Mode, click any monster in the sidebar to see:
 - Actions and special abilities
 - Legendary actions (if applicable)
 
+## Module Monsters Quick Select
+
+Once you've added monsters to a map, the Token Palette shows a **Module Monsters** section at the top with quick-select buttons for monsters already in the module. This saves time when placing the same monster on multiple maps.
+
 ## Tips
 
 - Add monsters during prep, not at the table
 - Use different colors to distinguish enemy groups
 - Hide tokens for surprise encounters
 - Search by CR to find level-appropriate challenges
+- Create homebrew monsters in the Homebrew tab if you need custom creatures
 
 ## See Also
 

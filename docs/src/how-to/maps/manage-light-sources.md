@@ -12,7 +12,7 @@ Light sources affect visibility in fog of war. This guide covers placing and con
 
 ## Placing Light Sources
 
-1. Open Token Setup (click a map)
+1. Open Token Setup (click the **Place Tokens** button on a map card)
 2. Find **Light Sources** in the Token Palette
 3. Click a light type (Torch, Lantern, or Candle)
 4. Click on the map to place

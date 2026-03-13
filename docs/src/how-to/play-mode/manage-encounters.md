@@ -21,16 +21,11 @@ The sidebar shows all monsters in the module:
 
 Click to select and view stats.
 
-## Adding Tokens During Play
+## Adding PCs to the Map
 
-### Quick Add Token
-1. Click **Add Token** in the toolbar
-2. Search for a monster
-3. Click to add to the module
-4. Click on the map to place
+Click the **Add PCs** button in the toolbar to place all campaign player characters on the current map.
 
-### Add All PCs
-Click **Add PCs** to place all campaign player characters on the map at their default positions.
+> **Note:** Monster tokens are placed during module prep in Token Setup. To add monsters during play, return to prep mode, add them via Token Setup, then re-enter Play Mode.
 
 ## Moving Tokens in Combat
 
@@ -45,7 +40,7 @@ Toggle token visibility to:
 - Reveal monsters during surprise rounds
 - Show reinforcements arriving
 
-Right-click a token to toggle visibility.
+Right-click a token and select the visibility option from the context menu.
 
 ## Tips
 

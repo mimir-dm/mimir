@@ -5,12 +5,11 @@ Create player characters using the character creation wizard.
 ## Access the Character Creator
 
 1. Click **Characters** in the header
-2. Click **+ New Character**
-3. Select **Player Character**
+2. Click **Create Character**
 
 ## Character Creation Wizard
 
-The wizard guides you through five steps:
+The wizard guides you through seven steps:
 
 ### Step 1: Basics
 - Character name
@@ -25,21 +24,31 @@ The wizard guides you through five steps:
 - Set starting level
 - Choose subclass if applicable
 
-### Step 4: Abilities
+### Step 4: Background
+- Select a background (Acolyte, Criminal, Noble, etc.)
+- Background grants proficiencies, languages, and starting equipment
+
+### Step 5: Abilities
 - Set ability scores
 - See computed modifiers
 
-### Step 5: Review
+### Step 6: Skills
+- Choose skill proficiencies based on class and background options
+- See computed skill bonuses
+
+### Step 7: Review
 - Review all selections
 - Make final adjustments
-- Click **Create**
+- Click **Create Character**
 
 ## After Creation
 
-Your character appears in:
-- Characters list
-- Available for campaign assignment
-- Character sheet view
+Your character appears in the Characters list and is available for campaign assignment. The character sheet has four tabs:
+
+- **Character** — Stats, combat info, ability scores, saving throws
+- **Equipment** — Inventory and item management
+- **Spells** — Complete class spell reference for caster classes (spell details, spell slots)
+- **Details** — Background, personality traits, ideals, bonds, flaws
 
 ## Editing Characters
 

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ac4f52b4.js";
+            window.path_to_searchindex_js = "../searchindex-d2b4b1dd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-aa677dde.js"></script>
+        <script src="../toc-5975c418.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -197,12 +197,13 @@
 <tbody>
 <tr><td><code>Scroll</code></td><td>Zoom in/out</td></tr>
 <tr><td><code>Click + Drag</code></td><td>Pan the map</td></tr>
-<tr><td><code>Cmd/Ctrl + 0</code></td><td>Reset view (fit map)</td></tr>
-<tr><td><code>+</code> / <code>-</code></td><td>Zoom in/out</td></tr>
+<tr><td><code>+</code> / <code>=</code></td><td>Zoom in</td></tr>
+<tr><td><code>-</code></td><td>Zoom out</td></tr>
+<tr><td><code>0</code></td><td>Reset view (fit map)</td></tr>
 </tbody>
 </table>
 </div>
-<h2 id="token-manipulation"><a class="header" href="#token-manipulation">Token Manipulation</a></h2>
+<h2 id="token-manipulation-play-mode"><a class="header" href="#token-manipulation-play-mode">Token Manipulation (Play Mode)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -212,20 +213,9 @@
 <tr><td><code>Click</code></td><td>Select token</td></tr>
 <tr><td><code>Drag</code></td><td>Move token</td></tr>
 <tr><td><code>Right-click</code></td><td>Token context menu</td></tr>
-<tr><td><code>Delete</code></td><td>Delete selected token</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="play-mode"><a class="header" href="#play-mode">Play Mode</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Shortcut</th><th>Action</th></tr>
-</thead>
-<tbody>
-<tr><td><code>Space</code></td><td>Toggle play/pause (if applicable)</td></tr>
-<tr><td><code>F11</code></td><td>Toggle fullscreen (player display)</td></tr>
-<tr><td><code>B</code></td><td>Toggle blackout</td></tr>
+<tr><td><code>h</code> / <code>H</code></td><td>Toggle visibility of selected token</td></tr>
+<tr><td><code>d</code> / <code>D</code></td><td>Toggle dead state of selected token</td></tr>
+<tr><td><code>Escape</code></td><td>Close context menu and deselect token</td></tr>
 </tbody>
 </table>
 </div>
@@ -236,7 +226,6 @@
 <tr><th>Shortcut</th><th>Action</th></tr>
 </thead>
 <tbody>
-<tr><td><code>Cmd/Ctrl + S</code></td><td>Save (auto-saves anyway)</td></tr>
 <tr><td><code>Cmd/Ctrl + B</code></td><td>Bold</td></tr>
 <tr><td><code>Cmd/Ctrl + I</code></td><td>Italic</td></tr>
 <tr><td><code>Cmd/Ctrl + Z</code></td><td>Undo</td></tr>
@@ -247,8 +236,8 @@
 <h2 id="notes"><a class="header" href="#notes">Notes</a></h2>
 <ul>
 <li><code>Cmd</code> is used on macOS, <code>Ctrl</code> on Windows/Linux</li>
-<li>Some shortcuts may vary by platform</li>
-<li>Shortcuts work when the relevant view has focus</li>
+<li>Shortcuts are ignored when typing in text inputs or textareas</li>
+<li>Token manipulation shortcuts require a token to be selected</li>
 </ul>
 
                     </main>

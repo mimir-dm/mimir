@@ -1,52 +1,59 @@
 # Manage Documents
 
-Mimir uses documents to organize campaign and module content. This guide covers creating, editing, and organizing documents.
+Mimir uses documents to organize campaign and module content — session notes, location descriptions, lore, encounter plans, and anything else you need for your game.
 
-## Document Types
+## Document Scope
 
-Documents are organized by their purpose:
-- **Campaign documents** - World-building, lore, factions
-- **Module documents** - Session prep, encounter notes, location descriptions
+Documents belong to either a campaign or a module:
 
-## Creating Documents
+- **Campaign documents** — World-building, lore, factions, and setting notes. Created from the Campaign tab on the dashboard.
+- **Module documents** — Session prep, encounter notes, and location descriptions. Created within a specific module's prep view.
 
-### Campaign Documents
-1. Go to the Campaign Dashboard
-2. Click the **Campaign** tab
-3. Use the document sidebar to create new documents
+## Creating a Document
 
-### Module Documents
-1. Open a module from the Modules tab
-2. Documents appear in the module dashboard
-3. Create documents from templates or blank
-
-## Document Templates
-
-Mimir provides templates for common document types:
-- Session notes
-- Location descriptions
-- NPC profiles
-- Encounter plans
-
-Templates include prompts and structure to guide your writing.
+1. Navigate to where you want the document:
+   - **Campaign tab** for campaign-level documents
+   - **Module prep view** for module documents
+2. Click the **+** button in the document sidebar
+3. Choose between two modes:
+   - **New Document** — Enter a title and create a blank markdown document
+   - **Upload File** — Drag and drop (or browse for) a markdown file or image. Supported formats: `.md`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`
+4. Click **Create**
 
 ## Editing Documents
 
-1. Click a document to open the editor
-2. Use the rich text editor to write content
-3. Changes save automatically
-4. Click **×** to close and return to the list
+Click a document in the sidebar to open it in the rich text editor.
 
-## Document Stages
+The editor supports:
+- **Headings** — H1, H2, H3
+- **Formatting** — Bold, italic, strikethrough
+- **Lists** — Bullet and numbered lists
+- **Blocks** — Blockquotes, horizontal rules
+- **Tables** — Insert and manage tables with rows and columns
+- **Undo/Redo** — Full history support
 
-Documents progress through stages based on your workflow:
-- **Draft** - Initial creation
-- **Review** - Ready for revision
-- **Complete** - Finished and ready for use
+Documents are written in Markdown under the hood. The editor renders markdown visually while preserving the underlying format.
 
-Mark documents complete when they're ready for play.
+### Auto-Save
+
+Changes save automatically as you type (after a brief pause). A status indicator shows:
+- **Saving...** — Changes being written
+- **Saved** — All changes persisted
+
+There is no manual save button — your work is always preserved.
+
+### PDF Export
+
+Click the **Export PDF** button in the editor header to export the current document as a PDF.
+
+## Reordering Documents
+
+Documents can be reordered using the **up/down arrow buttons** that appear when you hover over a document in the sidebar. This controls the display order within that document's scope (campaign or module).
+
+## Deleting Documents
+
+Hover over a document in the sidebar to reveal a **delete** button (trash icon). Click it and confirm to remove the document. This is permanent.
 
 ## See Also
 
 - [Create a Campaign](./create-campaign.md)
-- [Module Documents](../modules/module-documents.md)

@@ -34,6 +34,12 @@ Player characters:
 - Character assignments
 - Quick access to sheets
 
+### Homebrew Tab
+Custom content:
+- Homebrew items, monsters, and spells
+- Clone from the D&D catalog and modify
+- Available in character inventories and module encounters
+
 ## Module Board
 
 Each module has its own preparation space:
@@ -56,7 +62,7 @@ Battle and area maps:
 - Encounter locations
 - Token placements
 
-### Dangers
+### Monsters
 Monsters and hazards:
 - Encounter creatures
 - Traps and hazards

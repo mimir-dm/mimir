@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-ac4f52b4.js";
+            window.path_to_searchindex_js = "../../searchindex-d2b4b1dd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-aa677dde.js"></script>
+        <script src="../../toc-5975c418.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -175,54 +175,58 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="manage-documents"><a class="header" href="#manage-documents">Manage Documents</a></h1>
-<p>Mimir uses documents to organize campaign and module content. This guide covers creating, editing, and organizing documents.</p>
-<h2 id="document-types"><a class="header" href="#document-types">Document Types</a></h2>
-<p>Documents are organized by their purpose:</p>
+<p>Mimir uses documents to organize campaign and module content — session notes, location descriptions, lore, encounter plans, and anything else you need for your game.</p>
+<h2 id="document-scope"><a class="header" href="#document-scope">Document Scope</a></h2>
+<p>Documents belong to either a campaign or a module:</p>
 <ul>
-<li><strong>Campaign documents</strong> - World-building, lore, factions</li>
-<li><strong>Module documents</strong> - Session prep, encounter notes, location descriptions</li>
+<li><strong>Campaign documents</strong> — World-building, lore, factions, and setting notes. Created from the Campaign tab on the dashboard.</li>
+<li><strong>Module documents</strong> — Session prep, encounter notes, and location descriptions. Created within a specific module’s prep view.</li>
 </ul>
-<h2 id="creating-documents"><a class="header" href="#creating-documents">Creating Documents</a></h2>
-<h3 id="campaign-documents"><a class="header" href="#campaign-documents">Campaign Documents</a></h3>
+<h2 id="creating-a-document"><a class="header" href="#creating-a-document">Creating a Document</a></h2>
 <ol>
-<li>Go to the Campaign Dashboard</li>
-<li>Click the <strong>Campaign</strong> tab</li>
-<li>Use the document sidebar to create new documents</li>
-</ol>
-<h3 id="module-documents"><a class="header" href="#module-documents">Module Documents</a></h3>
-<ol>
-<li>Open a module from the Modules tab</li>
-<li>Documents appear in the module dashboard</li>
-<li>Create documents from templates or blank</li>
-</ol>
-<h2 id="document-templates"><a class="header" href="#document-templates">Document Templates</a></h2>
-<p>Mimir provides templates for common document types:</p>
+<li>Navigate to where you want the document:
 <ul>
-<li>Session notes</li>
-<li>Location descriptions</li>
-<li>NPC profiles</li>
-<li>Encounter plans</li>
+<li><strong>Campaign tab</strong> for campaign-level documents</li>
+<li><strong>Module prep view</strong> for module documents</li>
 </ul>
-<p>Templates include prompts and structure to guide your writing.</p>
+</li>
+<li>Click the <strong>+</strong> button in the document sidebar</li>
+<li>Choose between two modes:
+<ul>
+<li><strong>New Document</strong> — Enter a title and create a blank markdown document</li>
+<li><strong>Upload File</strong> — Drag and drop (or browse for) a markdown file or image. Supported formats: <code>.md</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.webp</code>, <code>.gif</code>, <code>.svg</code></li>
+</ul>
+</li>
+<li>Click <strong>Create</strong></li>
+</ol>
 <h2 id="editing-documents"><a class="header" href="#editing-documents">Editing Documents</a></h2>
-<ol>
-<li>Click a document to open the editor</li>
-<li>Use the rich text editor to write content</li>
-<li>Changes save automatically</li>
-<li>Click <strong>×</strong> to close and return to the list</li>
-</ol>
-<h2 id="document-stages"><a class="header" href="#document-stages">Document Stages</a></h2>
-<p>Documents progress through stages based on your workflow:</p>
+<p>Click a document in the sidebar to open it in the rich text editor.</p>
+<p>The editor supports:</p>
 <ul>
-<li><strong>Draft</strong> - Initial creation</li>
-<li><strong>Review</strong> - Ready for revision</li>
-<li><strong>Complete</strong> - Finished and ready for use</li>
+<li><strong>Headings</strong> — H1, H2, H3</li>
+<li><strong>Formatting</strong> — Bold, italic, strikethrough</li>
+<li><strong>Lists</strong> — Bullet and numbered lists</li>
+<li><strong>Blocks</strong> — Blockquotes, horizontal rules</li>
+<li><strong>Tables</strong> — Insert and manage tables with rows and columns</li>
+<li><strong>Undo/Redo</strong> — Full history support</li>
 </ul>
-<p>Mark documents complete when they’re ready for play.</p>
+<p>Documents are written in Markdown under the hood. The editor renders markdown visually while preserving the underlying format.</p>
+<h3 id="auto-save"><a class="header" href="#auto-save">Auto-Save</a></h3>
+<p>Changes save automatically as you type (after a brief pause). A status indicator shows:</p>
+<ul>
+<li><strong>Saving…</strong> — Changes being written</li>
+<li><strong>Saved</strong> — All changes persisted</li>
+</ul>
+<p>There is no manual save button — your work is always preserved.</p>
+<h3 id="pdf-export"><a class="header" href="#pdf-export">PDF Export</a></h3>
+<p>Click the <strong>Export PDF</strong> button in the editor toolbar to export the current document as a PDF.</p>
+<h2 id="reordering-documents"><a class="header" href="#reordering-documents">Reordering Documents</a></h2>
+<p>Documents can be reordered using the <strong>up/down arrow buttons</strong> that appear when you hover over a document in the sidebar. This controls the display order within that document’s scope (campaign or module).</p>
+<h2 id="deleting-documents"><a class="header" href="#deleting-documents">Deleting Documents</a></h2>
+<p>Right-click a document in the sidebar or use the delete action to remove it. This is permanent.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
 <ul>
 <li><a href="./create-campaign.html">Create a Campaign</a></li>
-<li><a href="../modules/module-documents.html">Module Documents</a></li>
 </ul>
 
                     </main>

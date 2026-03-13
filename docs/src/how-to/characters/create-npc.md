@@ -4,18 +4,23 @@ Create non-player characters for your campaigns and modules.
 
 ## Steps
 
-1. Click **Characters** in the header
-2. Click **+ New Character**
-3. Select **NPC**
+NPCs are created from the campaign dashboard:
+
+1. Open your campaign dashboard
+2. Go to the **NPCs** tab
+3. Click **Create NPC**
 
 ## NPC Creation
 
-NPC creation is simplified — only a name is required:
+NPC creation is simplified — only a name is required. Optional fields can be filled in during creation or edited later:
 
-1. Enter the NPC **Name**
-2. Click **Create**
-
-Additional details like race, class, role, and location can be edited after creation on the character detail view.
+1. Enter the NPC **Name** (required)
+2. Optionally fill in:
+   - **Race** — The NPC's race
+   - **Role** — Their function in the story (e.g., shopkeeper, quest giver, villain)
+   - **Location** — Where the party finds them
+   - **Faction** — Organization or group affiliation
+3. Click **Create**
 
 ## Assigning NPCs
 

@@ -6,37 +6,42 @@ Export maps to PDF for physical play or reference.
 
 1. Open Play Mode for your module
 2. Select the map you want to print
-3. Click **Print** in the toolbar
-4. Configure print options
-5. Click **Export PDF**
-6. Choose a save location
+3. Click the **Print** button in the map toolbar
+4. Configure print sections (see below)
+5. Click **Generate PDF**
+6. Preview the PDF, then save to your chosen location
 
-## Print Options
+## Print Sections
 
-- **Include Grid** - Overlay the grid on the map
-- **Include Tokens** - Show token positions
-- **Token Cutouts** - Generate separate token images for cutting
-- **Scale** - Adjust size for printing
+The print dialog has two independent sections that can be enabled together or separately.
 
-## Tiled Printing
+### Preview
 
-For large maps that span multiple pages:
-1. Enable tiled mode
-2. Set your paper size
-3. Mimir generates pages that align when assembled
+Fits the entire map on a single page — useful for DM reference or handouts.
+
+Options:
+- **Grid** — Overlay the grid on the map
+- **LOS Walls** — Show line-of-sight wall positions
+- **Starting Positions** — Show where tokens are placed
+
+### Play
+
+Prints at 1 inch = 5 feet scale, tiled across multiple pages for physical tabletop play. The dialog shows an estimated page count when tiling is needed.
+
+Options:
+- **Grid** — Overlay the grid on the map
+- **LOS Walls** — Show line-of-sight wall positions
+- **Token Cutouts** — Generate printable circular token images
 
 ## Token Cutouts
 
-Generate circular token images:
-1. Enable token cutouts
-2. Choose cutout size
-3. PDF includes a sheet of printable tokens
+When enabled in the Play section, the PDF includes a sheet of circular token images that can be cut out for use as physical tokens on the printed map.
 
 ## Tips
 
-- Print at actual scale (1 inch = 5 ft) for miniatures
-- Use card stock for durability
-- Laminate maps for dry-erase markers
+- Use the Preview section for quick DM reference sheets
+- Use the Play section with token cutouts for a complete physical play kit
+- Enable both sections to get everything in one PDF
 
 ## See Also
 

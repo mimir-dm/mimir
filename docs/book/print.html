@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ac4f52b4.js";
+            window.path_to_searchindex_js = "searchindex-d2b4b1dd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-aa677dde.js"></script>
+        <script src="toc-5975c418.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -233,7 +233,7 @@
 <li>Navigate the Mimir interface</li>
 <li>Create a new campaign</li>
 <li>Explore the Campaign Dashboard</li>
-<li>Understand the four dashboard tabs</li>
+<li>Understand the five dashboard tabs</li>
 </ul>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
 <ul>
@@ -278,7 +278,7 @@
 <li>Redirect you to the Campaign Dashboard</li>
 </ol>
 <h2 id="step-5-explore-the-campaign-dashboard"><a class="header" href="#step-5-explore-the-campaign-dashboard">Step 5: Explore the Campaign Dashboard</a></h2>
-<p>The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and four tabs for organizing different aspects of your game.</p>
+<p>The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and five tabs for organizing different aspects of your game.</p>
 <p><img src="images/tutorials/campaign-dashboard.png" alt="Campaign Dashboard"></p>
 <h3 id="the-dashboard-tabs"><a class="header" href="#the-dashboard-tabs">The Dashboard Tabs</a></h3>
 <h4 id="campaign-tab"><a class="header" href="#campaign-tab">Campaign Tab</a></h4>
@@ -313,9 +313,20 @@
 <li>Player-character relationships</li>
 <li>Quick access to character sheets</li>
 </ul>
-<p>Characters are created separately (in the Characters section) and assigned to campaigns here.</p>
+<p>Characters are created separately (in the Characters section) and assigned to campaigns here. Each character sheet has tabs for stats, equipment, spells, and details.</p>
+<h4 id="homebrew-tab"><a class="header" href="#homebrew-tab">Homebrew Tab</a></h4>
+<p>Custom content for your campaign. Create and manage:</p>
+<ul>
+<li>Homebrew items</li>
+<li>Homebrew monsters</li>
+<li>Homebrew spells</li>
+</ul>
+<p>Each can be created from scratch or cloned from the D&amp;D 5e catalog as a starting point.</p>
 <h2 id="step-6-campaign-actions"><a class="header" href="#step-6-campaign-actions">Step 6: Campaign Actions</a></h2>
-<p>The dashboard header includes an <strong>Export Archive</strong> button. This creates a backup of your entire campaign including:</p>
+<p>The dashboard header includes three buttons: <strong>Sources</strong>, <strong>PDF</strong>, and <strong>Export Archive</strong>.</p>
+<p><strong>Sources</strong> opens the Campaign Sources modal where you select which D&amp;D source books are available for this campaign. This controls which monsters, items, and spells appear in catalog searches.</p>
+<p><strong>PDF</strong> exports campaign documents as a PDF file.</p>
+<p><strong>Export Archive</strong> creates a backup of your entire campaign including:</p>
 <ul>
 <li>All documents and notes</li>
 <li>Module data</li>
@@ -341,6 +352,7 @@
 <tr><td>Create campaign</td><td>Campaign Selector → + New Campaign</td></tr>
 <tr><td>Switch campaigns</td><td>Campaign Selector dropdown</td></tr>
 <tr><td>Access dashboard</td><td>Click campaign name in selector</td></tr>
+<tr><td>Configure sources</td><td>Dashboard → Sources button</td></tr>
 <tr><td>Export backup</td><td>Dashboard → Export Archive</td></tr>
 <tr><td>Return home</td><td>Click Mimir skull icon</td></tr>
 </tbody>
@@ -414,19 +426,14 @@
 </ul>
 </li>
 <li>
-<p>Configure the map settings:</p>
-<ul>
-<li><strong>Name</strong> - Display name for the map</li>
-<li><strong>Grid Size</strong> - Pixels per grid square (typically 70-140)</li>
-<li><strong>Grid Offset</strong> - Adjust if the grid doesn’t align with the image</li>
-</ul>
+<p>Enter a <strong>Map Name</strong> for the map</p>
 </li>
 <li>
 <p>Click <strong>Upload</strong></p>
 </li>
 </ol>
 <blockquote>
-<p><strong>Tip:</strong> UVTT files from tools like Dungeondraft include grid configuration automatically, saving setup time.</p>
+<p><strong>Tip:</strong> UVTT files from tools like Dungeondraft include grid configuration automatically. For image files, you can configure the grid later in Token Setup (see Step 8).</p>
 </blockquote>
 <!-- Screenshot: map-upload.png -->
 <h2 id="step-5-open-token-setup"><a class="header" href="#step-5-open-token-setup">Step 5: Open Token Setup</a></h2>
@@ -445,10 +452,11 @@
 <h3 id="token-palette-sections"><a class="header" href="#token-palette-sections">Token Palette Sections</a></h3>
 <p>The palette contains several sections:</p>
 <ul>
+<li><strong>Module Monsters</strong> - Quick-select buttons for monsters already added to this module (appears once you’ve added monsters)</li>
 <li><strong>Monster</strong> - Search and add monsters from the D&amp;D 5e catalog</li>
 <li><strong>NPC</strong> - Add NPC tokens</li>
 <li><strong>Trap</strong> - Add traps and hazards</li>
-<li><strong>Object</strong> - Add generic object tokens</li>
+<li><strong>Marker</strong> - Add points of interest</li>
 <li><strong>Light Sources</strong> - Torch, Lantern, Candle</li>
 </ul>
 <h2 id="step-6-add-monsters"><a class="header" href="#step-6-add-monsters">Step 6: Add Monsters</a></h2>
@@ -461,6 +469,9 @@
 </ol>
 <!-- Screenshot: add-monsters.png -->
 <p>Repeat to add more monsters. Each placed monster appears in the Token Inventory on the right.</p>
+<blockquote>
+<p><strong>Tip:</strong> Homebrew monsters you’ve created in the Homebrew tab also appear in search results alongside catalog monsters.</p>
+</blockquote>
 <h3 id="token-options"><a class="header" href="#token-options">Token Options</a></h3>
 <p>When you select a token type from the palette, you can configure:</p>
 <ul>
@@ -501,29 +512,7 @@
 <li>Light sources affect fog of war in Play Mode</li>
 <li>Delete with the <strong>×</strong> button</li>
 </ul>
-<h2 id="step-8-configure-the-grid-image-files-only"><a class="header" href="#step-8-configure-the-grid-image-files-only">Step 8: Configure the Grid (Image Files Only)</a></h2>
-<blockquote>
-<p><strong>Note:</strong> Skip this step if you uploaded a UVTT file - the grid is configured automatically.</p>
-</blockquote>
-<p>If your map’s grid doesn’t align correctly:</p>
-<ol>
-<li>
-<p>Click the <strong>Grid</strong> button in the canvas controls</p>
-</li>
-<li>
-<p>Adjust settings:</p>
-<ul>
-<li><strong>Grid Size</strong> - Pixels per square</li>
-<li><strong>X Offset</strong> - Horizontal shift</li>
-<li><strong>Y Offset</strong> - Vertical shift</li>
-</ul>
-</li>
-<li>
-<p>Click <strong>Save</strong> to apply</p>
-</li>
-</ol>
-<p>The grid overlay shows your adjustments in real-time.</p>
-<h2 id="step-9-save-and-close"><a class="header" href="#step-9-save-and-close">Step 9: Save and Close</a></h2>
+<h2 id="step-8-save-and-close"><a class="header" href="#step-8-save-and-close">Step 8: Save and Close</a></h2>
 <p>Token placements save automatically. Click <strong>×</strong> or press Escape to close the Token Setup modal.</p>
 <p>Your module is now ready for play!</p>
 <h2 id="whats-next-1"><a class="header" href="#whats-next-1">What’s Next?</a></h2>
@@ -548,7 +537,7 @@
 <tr><td>Place token</td><td>Select in palette → click map</td></tr>
 <tr><td>Add light source</td><td>Light Sources → select → click map</td></tr>
 <tr><td>Toggle light</td><td>Token Inventory → Lit/Unlit button</td></tr>
-<tr><td>Configure grid</td><td>Grid button in canvas controls</td></tr>
+<tr><td>Delete token</td><td>× button in Token Inventory</td></tr>
 </tbody>
 </table>
 </div>
@@ -634,9 +623,8 @@
 <li><strong>Percentage</strong> - Current zoom level</li>
 <li><strong>Reset</strong> button - Fit map to view</li>
 </ul>
-<h3 id="token-management"><a class="header" href="#token-management">Token Management</a></h3>
+<h3 id="add-pcs"><a class="header" href="#add-pcs">Add PCs</a></h3>
 <ul>
-<li><strong>Add Token</strong> - Quick-add a monster token to the map</li>
 <li><strong>Add PCs</strong> - Place all campaign PCs on the map at once</li>
 </ul>
 <h3 id="reveal-map-toggle"><a class="header" href="#reveal-map-toggle">Reveal Map Toggle</a></h3>
@@ -663,10 +651,9 @@
 </ul>
 </li>
 </ul>
-<h3 id="viewport-sync"><a class="header" href="#viewport-sync">Viewport Sync</a></h3>
+<h3 id="print"><a class="header" href="#print">Print</a></h3>
 <ul>
-<li><strong>Sync</strong> - Auto-sync your view to the player display</li>
-<li><strong>Push View</strong> - Manually push current view to players</li>
+<li><strong>Print</strong> - Print the current map as PDF</li>
 </ul>
 <h2 id="step-4-working-with-tokens"><a class="header" href="#step-4-working-with-tokens">Step 4: Working with Tokens</a></h2>
 <h3 id="moving-tokens"><a class="header" href="#moving-tokens">Moving Tokens</a></h3>
@@ -682,7 +669,7 @@
 <li><strong>Visible</strong> - Players see the token</li>
 <li><strong>Hidden</strong> - Only DM sees (for surprise encounters)</li>
 </ul>
-<p>Right-click a token to toggle visibility.</p>
+<p>Right-click a token to open a context menu with visibility controls and other options.</p>
 <h3 id="interacting-with-monster-tokens"><a class="header" href="#interacting-with-monster-tokens">Interacting with Monster Tokens</a></h3>
 <p>Click a monster in the sidebar or on the map to open the Monster Stats Panel:</p>
 <ul>
@@ -736,13 +723,8 @@
 <li>Useful for dramatic reveals or bathroom breaks</li>
 </ul>
 <p>Click again to restore the view.</p>
-<h3 id="syncing-views"><a class="header" href="#syncing-views">Syncing Views</a></h3>
-<p>By default, auto-sync is enabled:</p>
-<ul>
-<li>When you pan/zoom, players see the same view</li>
-<li>Keeps everyone focused on the action</li>
-</ul>
-<p>Disable sync for independent viewing, then use <strong>Push View</strong> to manually update the player display.</p>
+<h3 id="player-display"><a class="header" href="#player-display">Player Display</a></h3>
+<p>The player display window automatically shows the current map with fog of war applied. When you switch maps or move tokens, the player view updates automatically.</p>
 <h2 id="step-7-taking-session-notes"><a class="header" href="#step-7-taking-session-notes">Step 7: Taking Session Notes</a></h2>
 <p>The collapsible notes panel at the bottom is perfect for:</p>
 <ul>
@@ -782,11 +764,10 @@
 <li>Use darkness to create tension</li>
 <li>Toggle lights for dramatic effect</li>
 </ul>
-<h3 id="player-display"><a class="header" href="#player-display">Player Display</a></h3>
+<h3 id="player-display-1"><a class="header" href="#player-display-1">Player Display</a></h3>
 <ul>
 <li>Use Blackout for reveals</li>
-<li>Sync view for guided exploration</li>
-<li>Push View for “cinematic” shots</li>
+<li>Move PCs to reveal new areas</li>
 </ul>
 <hr>
 <h2 id="quick-reference-2"><a class="header" href="#quick-reference-2">Quick Reference</a></h2>
@@ -958,35 +939,7 @@
 <li><strong>Map transitions</strong> - Switch maps without showing the change</li>
 <li><strong>Plot moments</strong> - Describe what happens before showing it</li>
 </ul>
-<h2 id="step-7-syncing-views"><a class="header" href="#step-7-syncing-views">Step 7: Syncing Views</a></h2>
-<p>Control whether players see your exact viewport:</p>
-<h3 id="auto-sync-default"><a class="header" href="#auto-sync-default">Auto-Sync (Default)</a></h3>
-<ul>
-<li>Your pan and zoom are mirrored</li>
-<li>Players see what you focus on</li>
-<li>Great for guided exploration</li>
-</ul>
-<h3 id="manual-sync"><a class="header" href="#manual-sync">Manual Sync</a></h3>
-<ol>
-<li>Click the <strong>Sync</strong> button to disable auto-sync</li>
-<li>Navigate freely on your screen</li>
-<li>Click <strong>Push View</strong> when ready to update players</li>
-</ol>
-<h3 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Scenario</th><th>Sync Setting</th></tr>
-</thead>
-<tbody>
-<tr><td>Guided dungeon crawl</td><td>Auto-sync ON</td></tr>
-<tr><td>Combat positioning</td><td>Auto-sync OFF, push when ready</td></tr>
-<tr><td>Looking ahead secretly</td><td>Auto-sync OFF</td></tr>
-<tr><td>Theater of the mind</td><td>Blackout ON</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="step-8-closing-the-display"><a class="header" href="#step-8-closing-the-display">Step 8: Closing the Display</a></h2>
+<h2 id="step-7-closing-the-display"><a class="header" href="#step-7-closing-the-display">Step 7: Closing the Display</a></h2>
 <p>When your session ends:</p>
 <ol>
 <li>Click <strong>Player Display</strong> button again, or</li>
@@ -1026,8 +979,7 @@
 <tr><td>Blackout</td><td>Eye icon (when display open)</td></tr>
 <tr><td>Reveal entire map</td><td>Reveal Map toggle</td></tr>
 <tr><td>Change lighting</td><td>Ambient light dropdown</td></tr>
-<tr><td>Sync views</td><td>Sync button (toggle)</td></tr>
-<tr><td>Push current view</td><td>Push View button</td></tr>
+<tr><td>Print map</td><td>Print button</td></tr>
 </tbody>
 </table>
 </div>
@@ -1104,54 +1056,58 @@
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="manage-documents"><a class="header" href="#manage-documents">Manage Documents</a></h1>
-<p>Mimir uses documents to organize campaign and module content. This guide covers creating, editing, and organizing documents.</p>
-<h2 id="document-types"><a class="header" href="#document-types">Document Types</a></h2>
-<p>Documents are organized by their purpose:</p>
+<p>Mimir uses documents to organize campaign and module content — session notes, location descriptions, lore, encounter plans, and anything else you need for your game.</p>
+<h2 id="document-scope"><a class="header" href="#document-scope">Document Scope</a></h2>
+<p>Documents belong to either a campaign or a module:</p>
 <ul>
-<li><strong>Campaign documents</strong> - World-building, lore, factions</li>
-<li><strong>Module documents</strong> - Session prep, encounter notes, location descriptions</li>
+<li><strong>Campaign documents</strong> — World-building, lore, factions, and setting notes. Created from the Campaign tab on the dashboard.</li>
+<li><strong>Module documents</strong> — Session prep, encounter notes, and location descriptions. Created within a specific module’s prep view.</li>
 </ul>
-<h2 id="creating-documents"><a class="header" href="#creating-documents">Creating Documents</a></h2>
-<h3 id="campaign-documents"><a class="header" href="#campaign-documents">Campaign Documents</a></h3>
+<h2 id="creating-a-document"><a class="header" href="#creating-a-document">Creating a Document</a></h2>
 <ol>
-<li>Go to the Campaign Dashboard</li>
-<li>Click the <strong>Campaign</strong> tab</li>
-<li>Use the document sidebar to create new documents</li>
-</ol>
-<h3 id="module-documents"><a class="header" href="#module-documents">Module Documents</a></h3>
-<ol>
-<li>Open a module from the Modules tab</li>
-<li>Documents appear in the module dashboard</li>
-<li>Create documents from templates or blank</li>
-</ol>
-<h2 id="document-templates"><a class="header" href="#document-templates">Document Templates</a></h2>
-<p>Mimir provides templates for common document types:</p>
+<li>Navigate to where you want the document:
 <ul>
-<li>Session notes</li>
-<li>Location descriptions</li>
-<li>NPC profiles</li>
-<li>Encounter plans</li>
+<li><strong>Campaign tab</strong> for campaign-level documents</li>
+<li><strong>Module prep view</strong> for module documents</li>
 </ul>
-<p>Templates include prompts and structure to guide your writing.</p>
+</li>
+<li>Click the <strong>+</strong> button in the document sidebar</li>
+<li>Choose between two modes:
+<ul>
+<li><strong>New Document</strong> — Enter a title and create a blank markdown document</li>
+<li><strong>Upload File</strong> — Drag and drop (or browse for) a markdown file or image. Supported formats: <code>.md</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.webp</code>, <code>.gif</code>, <code>.svg</code></li>
+</ul>
+</li>
+<li>Click <strong>Create</strong></li>
+</ol>
 <h2 id="editing-documents"><a class="header" href="#editing-documents">Editing Documents</a></h2>
-<ol>
-<li>Click a document to open the editor</li>
-<li>Use the rich text editor to write content</li>
-<li>Changes save automatically</li>
-<li>Click <strong>×</strong> to close and return to the list</li>
-</ol>
-<h2 id="document-stages"><a class="header" href="#document-stages">Document Stages</a></h2>
-<p>Documents progress through stages based on your workflow:</p>
+<p>Click a document in the sidebar to open it in the rich text editor.</p>
+<p>The editor supports:</p>
 <ul>
-<li><strong>Draft</strong> - Initial creation</li>
-<li><strong>Review</strong> - Ready for revision</li>
-<li><strong>Complete</strong> - Finished and ready for use</li>
+<li><strong>Headings</strong> — H1, H2, H3</li>
+<li><strong>Formatting</strong> — Bold, italic, strikethrough</li>
+<li><strong>Lists</strong> — Bullet and numbered lists</li>
+<li><strong>Blocks</strong> — Blockquotes, horizontal rules</li>
+<li><strong>Tables</strong> — Insert and manage tables with rows and columns</li>
+<li><strong>Undo/Redo</strong> — Full history support</li>
 </ul>
-<p>Mark documents complete when they’re ready for play.</p>
+<p>Documents are written in Markdown under the hood. The editor renders markdown visually while preserving the underlying format.</p>
+<h3 id="auto-save"><a class="header" href="#auto-save">Auto-Save</a></h3>
+<p>Changes save automatically as you type (after a brief pause). A status indicator shows:</p>
+<ul>
+<li><strong>Saving…</strong> — Changes being written</li>
+<li><strong>Saved</strong> — All changes persisted</li>
+</ul>
+<p>There is no manual save button — your work is always preserved.</p>
+<h3 id="pdf-export-1"><a class="header" href="#pdf-export-1">PDF Export</a></h3>
+<p>Click the <strong>Export PDF</strong> button in the editor toolbar to export the current document as a PDF.</p>
+<h2 id="reordering-documents"><a class="header" href="#reordering-documents">Reordering Documents</a></h2>
+<p>Documents can be reordered using the <strong>up/down arrow buttons</strong> that appear when you hover over a document in the sidebar. This controls the display order within that document’s scope (campaign or module).</p>
+<h2 id="deleting-documents"><a class="header" href="#deleting-documents">Deleting Documents</a></h2>
+<p>Right-click a document in the sidebar or use the delete action to remove it. This is permanent.</p>
 <h2 id="see-also-1"><a class="header" href="#see-also-1">See Also</a></h2>
 <ul>
 <li><a href="#create-a-campaign">Create a Campaign</a></li>
-<li><a href="#module-documents-1">Module Documents</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="export-campaign"><a class="header" href="#export-campaign">Export Campaign</a></h1>
@@ -1172,7 +1128,7 @@
 <li>Documents and session notes</li>
 <li>Character assignments</li>
 </ul>
-<h2 id="use-cases-1"><a class="header" href="#use-cases-1">Use Cases</a></h2>
+<h2 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h2>
 <ul>
 <li><strong>Backup</strong> - Regular exports protect against data loss</li>
 <li><strong>Transfer</strong> - Move campaigns to another computer</li>
@@ -1195,7 +1151,7 @@
 <p>How-to guides for working with battle maps.</p>
 <ul>
 <li><a href="#upload-a-map">Upload a Map</a> - Add map images and UVTT files</li>
-<li><a href="#configure-grid">Configure Grid</a> - Align the grid overlay</li>
+<li><a href="#grid-alignment">Configure Grid</a> - Align the grid overlay</li>
 <li><a href="#place-tokens">Place Tokens</a> - Add tokens to your map</li>
 <li><a href="#manage-light-sources">Manage Light Sources</a> - Set up dynamic lighting</li>
 <li><a href="#print-maps">Print Maps</a> - Export maps for printing</li>
@@ -1214,13 +1170,7 @@
 <li>Find the <strong>Maps</strong> section in the module dashboard</li>
 <li>Click the <strong>+</strong> button</li>
 <li>Choose your map file</li>
-<li>Configure map settings:
-<ul>
-<li><strong>Name</strong> - Display name for the map</li>
-<li><strong>Grid Size</strong> - Pixels per grid square</li>
-<li><strong>Grid Offset</strong> - X/Y offset if grid doesn’t align</li>
-</ul>
-</li>
+<li>Enter a <strong>Name</strong> for the map</li>
 <li>Click <strong>Upload</strong></li>
 </ol>
 <h2 id="uvtt-files"><a class="header" href="#uvtt-files">UVTT Files</a></h2>
@@ -1232,74 +1182,30 @@
 </ul>
 <p>When you upload a UVTT file, grid settings are imported automatically.</p>
 <h2 id="image-files"><a class="header" href="#image-files">Image Files</a></h2>
-<p>For standard image files, you’ll need to:</p>
-<ol>
-<li>Determine the grid size (pixels per square)</li>
-<li>Measure or estimate from the image</li>
-<li>Adjust offset if the grid doesn’t start at (0,0)</li>
-</ol>
+<p>For standard image files, the grid is not configured during upload. After uploading, open Token Setup and use the grid controls to set the grid size and offset. See <a href="#grid-alignment">Configure Grid</a> for details.</p>
 <h2 id="tips-1"><a class="header" href="#tips-1">Tips</a></h2>
 <ul>
-<li>Common grid sizes: 70px, 100px, 140px per square</li>
 <li>Use UVTT files when available for best fog of war support</li>
 <li>Name maps descriptively (e.g., “Goblin Cave - Entrance”, “Boss Chamber”)</li>
 </ul>
 <h2 id="see-also-3"><a class="header" href="#see-also-3">See Also</a></h2>
 <ul>
-<li><a href="#configure-grid">Configure Grid</a></li>
+<li><a href="#grid-alignment">Configure Grid</a></li>
 <li><a href="#place-tokens">Place Tokens</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="configure-grid"><a class="header" href="#configure-grid">Configure Grid</a></h1>
-<p>Adjust grid settings so tokens align properly with your map.</p>
-<blockquote>
-<p><strong>Note:</strong> UVTT files (from Dungeondraft and similar tools) include grid data automatically. You only need to configure the grid for standard image files (PNG, JPG, WebP).</p>
-</blockquote>
-<h2 id="when-to-configure"><a class="header" href="#when-to-configure">When to Configure</a></h2>
-<p>You may need to adjust the grid when:</p>
-<ul>
-<li>Using a standard image file (not UVTT)</li>
-<li>The overlay doesn’t match the map’s grid lines</li>
-<li>Tokens don’t snap to the right positions</li>
-</ul>
-<h2 id="steps-3"><a class="header" href="#steps-3">Steps</a></h2>
-<ol>
-<li>Open the Token Setup modal (click a map)</li>
-<li>Click <strong>Grid</strong> in the canvas controls</li>
-<li>Adjust settings:
-<ul>
-<li><strong>Grid Size</strong> - Pixels per square</li>
-<li><strong>X Offset</strong> - Horizontal shift in pixels</li>
-<li><strong>Y Offset</strong> - Vertical shift in pixels</li>
-</ul>
-</li>
-<li>Watch the grid overlay update in real-time</li>
-<li>Click <strong>Save</strong> when aligned</li>
-</ol>
-<h2 id="finding-the-right-grid-size"><a class="header" href="#finding-the-right-grid-size">Finding the Right Grid Size</a></h2>
-<h3 id="method-1-count-squares"><a class="header" href="#method-1-count-squares">Method 1: Count Squares</a></h3>
-<ol>
-<li>Measure the map width in pixels</li>
-<li>Count the number of squares horizontally</li>
-<li>Divide: <code>width ÷ squares = grid size</code></li>
-</ol>
-<h3 id="method-2-trial-and-error"><a class="header" href="#method-2-trial-and-error">Method 2: Trial and Error</a></h3>
-<ol>
-<li>Start with common values: 70, 100, or 140</li>
-<li>Adjust until the overlay matches</li>
-<li>Fine-tune with offset values</li>
-</ol>
-<h2 id="grid-offset"><a class="header" href="#grid-offset">Grid Offset</a></h2>
-<p>Use offset when the grid doesn’t start at the top-left corner:</p>
-<ul>
-<li><strong>X Offset</strong> - Shifts grid right (positive) or left (negative)</li>
-<li><strong>Y Offset</strong> - Shifts grid down (positive) or up (negative)</li>
-</ul>
+<h1 id="grid-alignment"><a class="header" href="#grid-alignment">Grid Alignment</a></h1>
+<p>How Mimir handles grid alignment for maps.</p>
+<h2 id="automatic-grid-detection"><a class="header" href="#automatic-grid-detection">Automatic Grid Detection</a></h2>
+<p><strong>UVTT files</strong> (from Dungeondraft, Foundry, and similar tools) include grid data embedded in the file. When you upload a UVTT file, Mimir reads the grid size and applies it automatically. No manual configuration is needed.</p>
+<h2 id="image-files-1"><a class="header" href="#image-files-1">Image Files</a></h2>
+<p>Standard image files (PNG, JPG, WebP) don’t include grid data. Mimir defaults to <strong>70 pixels per grid square</strong> for these files. The grid overlay in Token Setup uses this default for snapping tokens to positions.</p>
+<p>For best results with image maps, use files where the grid squares are approximately 70 pixels wide, or use UVTT format which includes precise grid information.</p>
 <h2 id="tips-2"><a class="header" href="#tips-2">Tips</a></h2>
 <ul>
-<li>UVTT files include grid data - less configuration needed</li>
-<li>Save your settings - they persist with the map</li>
-<li>Zoom in for precise alignment</li>
+<li>UVTT is the recommended format — it includes grid data, line-of-sight walls, and lighting information</li>
+<li>The grid overlay in Token Setup shows how tokens will snap to positions</li>
+<li>Token placement always snaps to the grid center of each square</li>
 </ul>
 <h2 id="see-also-4"><a class="header" href="#see-also-4">See Also</a></h2>
 <ul>
@@ -1308,7 +1214,7 @@
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="place-tokens"><a class="header" href="#place-tokens">Place Tokens</a></h1>
-<p>Place monsters, NPCs, and objects on your maps for encounters.</p>
+<p>Place monsters, NPCs, traps, markers, and light sources on your maps.</p>
 <p><img src="images/reference/token-setup.png" alt="Token Setup"></p>
 <h2 id="open-token-setup"><a class="header" href="#open-token-setup">Open Token Setup</a></h2>
 <ol>
@@ -1322,7 +1228,7 @@
 <li><strong>Monsters</strong> - Creatures added to this module</li>
 <li><strong>NPCs</strong> - Non-player characters assigned to the module</li>
 <li><strong>Traps</strong> - Hazards and traps</li>
-<li><strong>Objects</strong> - Generic object tokens</li>
+<li><strong>Markers</strong> - Points of interest</li>
 <li><strong>Light Sources</strong> - Torches, lanterns, candles</li>
 </ul>
 <h2 id="placing-a-token"><a class="header" href="#placing-a-token">Placing a Token</a></h2>
@@ -1363,7 +1269,7 @@
 <h2 id="see-also-5"><a class="header" href="#see-also-5">See Also</a></h2>
 <ul>
 <li><a href="#manage-light-sources">Manage Light Sources</a></li>
-<li><a href="#configure-grid">Configure Grid</a></li>
+<li><a href="#grid-alignment">Configure Grid</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="manage-light-sources"><a class="header" href="#manage-light-sources">Manage Light Sources</a></h1>
@@ -1406,7 +1312,7 @@
 <li><strong>Unlit</strong> - No effect on visibility</li>
 <li>Lights work with PC darkvision to determine what players see</li>
 </ul>
-<h2 id="use-cases-2"><a class="header" href="#use-cases-2">Use Cases</a></h2>
+<h2 id="use-cases-1"><a class="header" href="#use-cases-1">Use Cases</a></h2>
 <ul>
 <li><strong>Torches on walls</strong> - Simulate dungeon lighting</li>
 <li><strong>Lanterns with party</strong> - Light source that moves with PCs</li>
@@ -1427,46 +1333,149 @@
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="print-maps"><a class="header" href="#print-maps">Print Maps</a></h1>
 <p>Export maps to PDF for physical play or reference.</p>
-<h2 id="steps-4"><a class="header" href="#steps-4">Steps</a></h2>
+<h2 id="steps-3"><a class="header" href="#steps-3">Steps</a></h2>
 <ol>
 <li>Open Play Mode for your module</li>
 <li>Select the map you want to print</li>
-<li>Click <strong>Print</strong> in the toolbar</li>
-<li>Configure print options</li>
-<li>Click <strong>Export PDF</strong></li>
-<li>Choose a save location</li>
+<li>Click the <strong>Print</strong> button in the map toolbar</li>
+<li>Configure print sections (see below)</li>
+<li>Click <strong>Generate PDF</strong></li>
+<li>Preview the PDF, then save to your chosen location</li>
 </ol>
-<h2 id="print-options"><a class="header" href="#print-options">Print Options</a></h2>
+<h2 id="print-sections"><a class="header" href="#print-sections">Print Sections</a></h2>
+<p>The print dialog has two independent sections that can be enabled together or separately.</p>
+<h3 id="preview"><a class="header" href="#preview">Preview</a></h3>
+<p>Fits the entire map on a single page — useful for DM reference or handouts.</p>
+<p>Options:</p>
 <ul>
-<li><strong>Include Grid</strong> - Overlay the grid on the map</li>
-<li><strong>Include Tokens</strong> - Show token positions</li>
-<li><strong>Token Cutouts</strong> - Generate separate token images for cutting</li>
-<li><strong>Scale</strong> - Adjust size for printing</li>
+<li><strong>Grid</strong> — Overlay the grid on the map</li>
+<li><strong>LOS Walls</strong> — Show line-of-sight wall positions</li>
+<li><strong>Starting Positions</strong> — Show where tokens are placed</li>
 </ul>
-<h2 id="tiled-printing"><a class="header" href="#tiled-printing">Tiled Printing</a></h2>
-<p>For large maps that span multiple pages:</p>
-<ol>
-<li>Enable tiled mode</li>
-<li>Set your paper size</li>
-<li>Mimir generates pages that align when assembled</li>
-</ol>
+<h3 id="play"><a class="header" href="#play">Play</a></h3>
+<p>Prints at 1 inch = 5 feet scale, tiled across multiple pages for physical tabletop play. The dialog shows an estimated page count when tiling is needed.</p>
+<p>Options:</p>
+<ul>
+<li><strong>Grid</strong> — Overlay the grid on the map</li>
+<li><strong>LOS Walls</strong> — Show line-of-sight wall positions</li>
+<li><strong>Token Cutouts</strong> — Generate printable circular token images</li>
+</ul>
 <h2 id="token-cutouts"><a class="header" href="#token-cutouts">Token Cutouts</a></h2>
-<p>Generate circular token images:</p>
-<ol>
-<li>Enable token cutouts</li>
-<li>Choose cutout size</li>
-<li>PDF includes a sheet of printable tokens</li>
-</ol>
+<p>When enabled in the Play section, the PDF includes a sheet of circular token images that can be cut out for use as physical tokens on the printed map.</p>
 <h2 id="tips-5"><a class="header" href="#tips-5">Tips</a></h2>
 <ul>
-<li>Print at actual scale (1 inch = 5 ft) for miniatures</li>
-<li>Use card stock for durability</li>
-<li>Laminate maps for dry-erase markers</li>
+<li>Use the Preview section for quick DM reference sheets</li>
+<li>Use the Play section with token cutouts for a complete physical play kit</li>
+<li>Enable both sections to get everything in one PDF</li>
 </ul>
 <h2 id="see-also-7"><a class="header" href="#see-also-7">See Also</a></h2>
 <ul>
 <li><a href="#upload-a-map">Upload a Map</a></li>
 <li><a href="#export-campaign">Export Campaign</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="generate-a-map"><a class="header" href="#generate-a-map">Generate a Map</a></h1>
+<p>Use Mimir’s mapgen tool to procedurally generate Dungeondraft-format maps from biome presets or custom YAML configurations.</p>
+<h2 id="what-mapgen-creates"><a class="header" href="#what-mapgen-creates">What Mapgen Creates</a></h2>
+<p>Mapgen generates <code>.dungeondraft_map</code> files containing:</p>
+<ul>
+<li>Noise-based terrain with blended textures</li>
+<li>Trees, grass, and other vegetation</li>
+<li>Roads and rivers that follow the terrain</li>
+<li>Rooms with walls, doors, and windows</li>
+<li>Water bodies, elevation contours, and lighting</li>
+<li>Polygon-based layouts for irregular room shapes</li>
+</ul>
+<p>Output files open directly in Dungeondraft for further editing or UVTT export.</p>
+<h2 id="quick-start-using-a-preset"><a class="header" href="#quick-start-using-a-preset">Quick Start: Using a Preset</a></h2>
+<p>Generate a map from one of 12 built-in biome presets:</p>
+<pre><code class="language-bash">mimir-mapgen generate --preset forest --output my-forest.dungeondraft_map
+</code></pre>
+<p>Use a specific seed for reproducible results:</p>
+<pre><code class="language-bash">mimir-mapgen generate --preset forest --seed 42 --output my-forest.dungeondraft_map
+</code></pre>
+<h2 id="list-available-presets"><a class="header" href="#list-available-presets">List Available Presets</a></h2>
+<pre><code class="language-bash">mimir-mapgen list-presets
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Preset</th><th>Size</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>forest</code></td><td>32x32</td><td>Dense temperate forest with dirt paths, scattered rocks, and natural clearings</td></tr>
+<tr><td><code>grassland</code></td><td>32x32</td><td>Open rolling hills with sparse trees and wildflowers</td></tr>
+<tr><td><code>cave</code></td><td>24x24</td><td>Underground cavern with rocky terrain and dark ambient lighting</td></tr>
+<tr><td><code>desert</code></td><td>32x32</td><td>Arid sandy wasteland with rocky outcrops and sparse scrub</td></tr>
+<tr><td><code>lake</code></td><td>32x32</td><td>Tranquil woodland pond with grassy shores and scattered trees</td></tr>
+<tr><td><code>ice_lake</code></td><td>32x32</td><td>Frozen lake with cracked ice, snow-covered shores, and frigid water</td></tr>
+<tr><td><code>arctic</code></td><td>32x32</td><td>Frozen tundra with snow drifts, exposed rock, and harsh conditions</td></tr>
+<tr><td><code>island_tropical</code></td><td>32x32</td><td>Tropical island with sandy beaches, palm trees, and warm ocean</td></tr>
+<tr><td><code>island_forest</code></td><td>32x32</td><td>Forested island in a lake with dirt shores and dense tree cover</td></tr>
+<tr><td><code>island_arctic</code></td><td>32x32</td><td>Snow-covered island surrounded by frigid dark water</td></tr>
+<tr><td><code>swamp</code></td><td>32x32</td><td>Dark, murky wetland with stagnant water, dead trees, and dim lighting</td></tr>
+<tr><td><code>forest_river</code></td><td>32x32</td><td>Dense forest bisected by a meandering river with rocky banks</td></tr>
+</tbody>
+</table>
+</div>
+<p>Some presets have aliases (e.g., <code>tropical_island</code> for <code>island_tropical</code>, <code>pond</code> for <code>lake</code>).</p>
+<h2 id="custom-yaml-configs"><a class="header" href="#custom-yaml-configs">Custom YAML Configs</a></h2>
+<p>For full control, write a YAML configuration file:</p>
+<pre><code class="language-yaml">name: "Forest Clearing"
+width: 32
+height: 32
+seed: 42
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.0
+      upper: 0.5
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.4
+      upper: 0.7
+    - texture: "res://textures/terrain/terrain_stone.png"
+      lower: 0.6
+      upper: 0.9
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.8
+      upper: 1.0
+
+trees:
+  - tree:
+      textures:
+        - "res://textures/objects/more_trees/oak_01.png"
+        - "res://textures/objects/more_trees/oak_02.png"
+      min_distance: 500.0
+      noise_lower: 0.4
+      noise_upper: 0.75
+      probability: 0.5
+
+roads:
+  - {}
+</code></pre>
+<p>Generate from the config:</p>
+<pre><code class="language-bash">mimir-mapgen generate config.yaml --output clearing.dungeondraft_map
+</code></pre>
+<h2 id="validate-a-config"><a class="header" href="#validate-a-config">Validate a Config</a></h2>
+<p>Check a config for errors without generating:</p>
+<pre><code class="language-bash">mimir-mapgen validate config.yaml
+</code></pre>
+<h2 id="iterating-on-maps"><a class="header" href="#iterating-on-maps">Iterating on Maps</a></h2>
+<p>Maps are deterministic — the same seed and config produce the same map. To iterate:</p>
+<ol>
+<li>Generate with a specific seed</li>
+<li>Open in Dungeondraft and review</li>
+<li>Adjust config parameters</li>
+<li>Regenerate with the same seed to compare changes</li>
+<li>Try different seeds for different terrain layouts</li>
+</ol>
+<h2 id="using-via-ai-assistant"><a class="header" href="#using-via-ai-assistant">Using via AI Assistant</a></h2>
+<p>Mapgen is also available as an MCP tool (<code>generate_map</code>) through Mimir’s AI assistant integration. Describe the scene you want — “a misty forest clearing with a road” — and the assistant will build the YAML config and generate the map for you.</p>
+<h2 id="see-also-8"><a class="header" href="#see-also-8">See Also</a></h2>
+<ul>
+<li><a href="#upload-a-map">Upload a Map</a> — Import maps into Mimir modules</li>
+<li><a href="#mapgen-reference">Mapgen Reference</a> — Full YAML schema and configuration details</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="characters"><a class="header" href="#characters">Characters</a></h1>
@@ -1487,7 +1496,7 @@
 <li>Select <strong>Player Character</strong></li>
 </ol>
 <h2 id="character-creation-wizard"><a class="header" href="#character-creation-wizard">Character Creation Wizard</a></h2>
-<p>The wizard guides you through five steps:</p>
+<p>The wizard guides you through seven steps:</p>
 <h3 id="step-1-basics"><a class="header" href="#step-1-basics">Step 1: Basics</a></h3>
 <ul>
 <li>Character name</li>
@@ -1504,23 +1513,34 @@
 <li>Set starting level</li>
 <li>Choose subclass if applicable</li>
 </ul>
-<h3 id="step-4-abilities"><a class="header" href="#step-4-abilities">Step 4: Abilities</a></h3>
+<h3 id="step-4-background"><a class="header" href="#step-4-background">Step 4: Background</a></h3>
+<ul>
+<li>Select a background (Acolyte, Criminal, Noble, etc.)</li>
+<li>Background grants proficiencies, languages, and starting equipment</li>
+</ul>
+<h3 id="step-5-abilities"><a class="header" href="#step-5-abilities">Step 5: Abilities</a></h3>
 <ul>
 <li>Set ability scores</li>
 <li>See computed modifiers</li>
 </ul>
-<h3 id="step-5-review"><a class="header" href="#step-5-review">Step 5: Review</a></h3>
+<h3 id="step-6-skills"><a class="header" href="#step-6-skills">Step 6: Skills</a></h3>
+<ul>
+<li>Choose skill proficiencies based on class and background options</li>
+<li>See computed skill bonuses</li>
+</ul>
+<h3 id="step-7-review"><a class="header" href="#step-7-review">Step 7: Review</a></h3>
 <ul>
 <li>Review all selections</li>
 <li>Make final adjustments</li>
 <li>Click <strong>Create</strong></li>
 </ul>
 <h2 id="after-creation"><a class="header" href="#after-creation">After Creation</a></h2>
-<p>Your character appears in:</p>
+<p>Your character appears in the Characters list and is available for campaign assignment. The character sheet has four tabs:</p>
 <ul>
-<li>Characters list</li>
-<li>Available for campaign assignment</li>
-<li>Character sheet view</li>
+<li><strong>Character</strong> — Stats, combat info, ability scores, saving throws</li>
+<li><strong>Equipment</strong> — Inventory and item management</li>
+<li><strong>Spells</strong> — Complete class spell reference for caster classes (spell details, spell slots)</li>
+<li><strong>Details</strong> — Background, personality traits, ideals, bonds, flaws</li>
 </ul>
 <h2 id="editing-characters"><a class="header" href="#editing-characters">Editing Characters</a></h2>
 <ol>
@@ -1536,7 +1556,7 @@
 <li>Quick-create for NPCs doesn’t need all steps</li>
 <li>Level up uses a separate dialog</li>
 </ul>
-<h2 id="see-also-8"><a class="header" href="#see-also-8">See Also</a></h2>
+<h2 id="see-also-9"><a class="header" href="#see-also-9">See Also</a></h2>
 <ul>
 <li><a href="#assign-to-campaign">Assign to Campaign</a></li>
 <li><a href="#print-character-sheet">Print Character Sheet</a></li>
@@ -1544,19 +1564,26 @@
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="create-an-npc"><a class="header" href="#create-an-npc">Create an NPC</a></h1>
 <p>Create non-player characters for your campaigns and modules.</p>
-<h2 id="steps-5"><a class="header" href="#steps-5">Steps</a></h2>
+<h2 id="steps-4"><a class="header" href="#steps-4">Steps</a></h2>
 <ol>
 <li>Click <strong>Characters</strong> in the header</li>
 <li>Click <strong>+ New Character</strong></li>
 <li>Select <strong>NPC</strong></li>
 </ol>
 <h2 id="npc-creation"><a class="header" href="#npc-creation">NPC Creation</a></h2>
-<p>NPC creation is simplified — only a name is required:</p>
+<p>NPC creation is simplified — only a name is required. Optional fields can be filled in during creation or edited later:</p>
 <ol>
-<li>Enter the NPC <strong>Name</strong></li>
+<li>Enter the NPC <strong>Name</strong> (required)</li>
+<li>Optionally fill in:
+<ul>
+<li><strong>Race</strong> — The NPC’s race</li>
+<li><strong>Role</strong> — Their function in the story (e.g., shopkeeper, quest giver, villain)</li>
+<li><strong>Location</strong> — Where the party finds them</li>
+<li><strong>Faction</strong> — Organization or group affiliation</li>
+</ul>
+</li>
 <li>Click <strong>Create</strong></li>
 </ol>
-<p>Additional details like race, class, role, and location can be edited after creation on the character detail view.</p>
 <h2 id="assigning-npcs"><a class="header" href="#assigning-npcs">Assigning NPCs</a></h2>
 <p>NPCs can be assigned to:</p>
 <ul>
@@ -1583,7 +1610,7 @@
 <li>Include one distinctive trait or quirk</li>
 <li>Link to relevant plot threads in notes</li>
 </ul>
-<h2 id="see-also-9"><a class="header" href="#see-also-9">See Also</a></h2>
+<h2 id="see-also-10"><a class="header" href="#see-also-10">See Also</a></h2>
 <ul>
 <li><a href="#create-a-player-character">Create a Player Character</a></li>
 <li><a href="#assign-to-campaign">Assign to Campaign</a></li>
@@ -1648,10 +1675,146 @@
 <li>NPCs can belong to multiple modules</li>
 <li>Characters can be in multiple campaigns</li>
 </ul>
-<h2 id="see-also-10"><a class="header" href="#see-also-10">See Also</a></h2>
+<h2 id="see-also-11"><a class="header" href="#see-also-11">See Also</a></h2>
 <ul>
 <li><a href="#create-a-player-character">Create a Player Character</a></li>
 <li><a href="#create-an-npc">Create an NPC</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="manage-character-inventory"><a class="header" href="#manage-character-inventory">Manage Character Inventory</a></h1>
+<p>Add items, equip gear, attune magic items, and track currency on the Equipment tab.</p>
+<h2 id="accessing-the-equipment-tab"><a class="header" href="#accessing-the-equipment-tab">Accessing the Equipment Tab</a></h2>
+<ol>
+<li>Click <strong>Characters</strong> in the header</li>
+<li>Select a character</li>
+<li>Click the <strong>Equipment</strong> tab in the character sheet</li>
+</ol>
+<p>The Equipment tab has three sub-tabs: <strong>Inventory</strong>, <strong>Equipment</strong>, and <strong>Currency</strong>.</p>
+<h2 id="inventory-sub-tab"><a class="header" href="#inventory-sub-tab">Inventory Sub-Tab</a></h2>
+<h3 id="adding-items"><a class="header" href="#adding-items">Adding Items</a></h3>
+<ol>
+<li>Use the search box to find items (minimum 2 characters)</li>
+<li>Select an item from the dropdown results — both catalog and homebrew items appear</li>
+<li>Set the <strong>Quantity</strong> and optional <strong>Notes</strong></li>
+<li>Click <strong>Add to Inventory</strong></li>
+</ol>
+<p>Homebrew items are marked with an <strong>HB</strong> badge.</p>
+<h3 id="viewing-and-removing-items"><a class="header" href="#viewing-and-removing-items">Viewing and Removing Items</a></h3>
+<p>Your inventory lists all items with:</p>
+<ul>
+<li>Item name and source badge</li>
+<li>Quantity (shown as x2, x3, etc.)</li>
+<li>Equipped status</li>
+<li>Notes (if any)</li>
+</ul>
+<p>Click the <strong>−</strong> button to remove an item.</p>
+<h2 id="equipment-sub-tab"><a class="header" href="#equipment-sub-tab">Equipment Sub-Tab</a></h2>
+<p>Toggle items as equipped or unequipped using checkboxes. All inventory items appear in this list — check the box next to an item to mark it as equipped.</p>
+<h3 id="attunement"><a class="header" href="#attunement">Attunement</a></h3>
+<p>Below the equipped items list, the <strong>Attuned Items</strong> section shows magic items eligible for attunement with a counter (e.g., “Attuned Items 2/3”). Check the box to attune an item. The D&amp;D 5e limit of 3 attuned items is enforced.</p>
+<h2 id="currency-sub-tab"><a class="header" href="#currency-sub-tab">Currency Sub-Tab</a></h2>
+<p>Track character wealth with four fields:</p>
+<ul>
+<li><strong>Platinum (pp)</strong></li>
+<li><strong>Gold (gp)</strong></li>
+<li><strong>Silver (sp)</strong></li>
+<li><strong>Copper (cp)</strong></li>
+</ul>
+<p>A total gold value is calculated and displayed below.</p>
+<h2 id="see-also-12"><a class="header" href="#see-also-12">See Also</a></h2>
+<ul>
+<li><a href="#create-a-player-character">Create a Player Character</a></li>
+<li><a href="#print-character-sheet">Print Character Sheet</a> — Equipment Cards print option</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="manage-character-spells"><a class="header" href="#manage-character-spells">Manage Character Spells</a></h1>
+<p>View and manage spells for spellcasting characters.</p>
+<h2 id="accessing-the-spells-tab"><a class="header" href="#accessing-the-spells-tab">Accessing the Spells Tab</a></h2>
+<ol>
+<li>Click <strong>Characters</strong> in the header</li>
+<li>Select a spellcasting character</li>
+<li>Click the <strong>Spells</strong> tab in the character sheet</li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> The Spells tab only appears for characters with a spellcasting class (Wizard, Cleric, Bard, etc.). Non-casters won’t see this tab.</p>
+</blockquote>
+<h2 id="spells-tab-overview"><a class="header" href="#spells-tab-overview">Spells Tab Overview</a></h2>
+<p>The Spells tab displays three sections:</p>
+<h3 id="spellcasting-stats"><a class="header" href="#spellcasting-stats">Spellcasting Stats</a></h3>
+<p>Shows your spellcasting fundamentals:</p>
+<ul>
+<li><strong>Spell Save DC</strong> — Difficulty class for saving throws against your spells</li>
+<li><strong>Spell Attack</strong> — Your modifier for spell attack rolls</li>
+<li><strong>Spellcasting Ability</strong> — Which ability score powers your spells</li>
+</ul>
+<p>For multiclass characters, stats are shown for each spellcasting class separately.</p>
+<h3 id="spell-slots"><a class="header" href="#spell-slots">Spell Slots</a></h3>
+<p>Displays available spell slots by level (1st through 9th). Cantrips are marked as unlimited.</p>
+<h3 id="available-spells"><a class="header" href="#available-spells">Available Spells</a></h3>
+<p>Your class spells grouped by level (Cantrips through 9th level). Each level header shows the spell count and can be expanded or collapsed.</p>
+<p>Each spell card shows:</p>
+<ul>
+<li>Spell name and school of magic</li>
+<li>Tags: <strong>HB</strong> (homebrew), <strong>R</strong> (ritual), <strong>C</strong> (concentration)</li>
+<li>Expand a spell to see full details: casting time, range, components, duration, and description</li>
+</ul>
+<h2 id="how-spell-management-works"><a class="header" href="#how-spell-management-works">How Spell Management Works</a></h2>
+<p>Mimir displays all possible spells for your class — spell preparation and selection is a table activity managed by the player during the game. The Spells tab serves as a complete reference so players can browse their full spell list and look up details on the fly.</p>
+<h2 id="homebrew-spells"><a class="header" href="#homebrew-spells">Homebrew Spells</a></h2>
+<p>Homebrew spells created in the campaign’s Homebrew tab automatically appear alongside catalog spells in the character’s spell list, tagged with <strong>HB</strong>.</p>
+<h2 id="see-also-13"><a class="header" href="#see-also-13">See Also</a></h2>
+<ul>
+<li><a href="#create-a-player-character">Create a Player Character</a></li>
+<li><a href="#print-character-sheet">Print Character Sheet</a> — Spell Cards print option</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="level-up-a-character"><a class="header" href="#level-up-a-character">Level Up a Character</a></h1>
+<p>Advance a character to the next level using the level-up dialog.</p>
+<h2 id="steps-5"><a class="header" href="#steps-5">Steps</a></h2>
+<ol>
+<li>Click <strong>Characters</strong> in the header</li>
+<li>Select a character</li>
+<li>Click <strong>Level Up</strong> on the character sheet</li>
+<li>Work through the dialog steps</li>
+<li>Click <strong>Confirm Level Up</strong> on the final step</li>
+</ol>
+<h2 id="level-up-dialog"><a class="header" href="#level-up-dialog">Level-Up Dialog</a></h2>
+<p>The dialog guides you through up to 8 steps. Some steps only appear when relevant to the class and level.</p>
+<h3 id="step-1-select-class"><a class="header" href="#step-1-select-class">Step 1: Select Class</a></h3>
+<p>Choose which class to level up. For multiclass characters, you can select an existing class or add a new one.</p>
+<h3 id="step-2-choose-subclass"><a class="header" href="#step-2-choose-subclass">Step 2: Choose Subclass</a></h3>
+<p><em>Only appears at subclass selection levels (e.g., level 3 for most classes).</em></p>
+<p>Pick a subclass for the chosen class.</p>
+<h3 id="step-3-hit-points"><a class="header" href="#step-3-hit-points">Step 3: Hit Points</a></h3>
+<p>Choose how to gain HP for the new level:</p>
+<ul>
+<li><strong>Average</strong> — Take the class’s fixed average</li>
+<li><strong>Roll</strong> — Roll the hit die</li>
+<li><strong>Manual</strong> — Enter a specific value</li>
+</ul>
+<h3 id="step-4-ability-score-improvement"><a class="header" href="#step-4-ability-score-improvement">Step 4: Ability Score Improvement</a></h3>
+<p><em>Only appears at ASI levels (typically 4, 8, 12, 16, 19).</em></p>
+<p>Increase ability scores or choose a feat.</p>
+<h3 id="step-5-spells"><a class="header" href="#step-5-spells">Step 5: Spells</a></h3>
+<p><em>Only appears for spellcasting classes.</em></p>
+<p>Learn new cantrips or spells available at your new level. Search and select from your class’s spell list.</p>
+<h3 id="step-6-features"><a class="header" href="#step-6-features">Step 6: Features</a></h3>
+<p><em>Only appears when the new level grants feature choices.</em></p>
+<p>Select from available class features such as Fighting Style, Metamagic options, Battle Master Maneuvers, Warlock Invocations, or Expertise.</p>
+<h3 id="step-7-summary"><a class="header" href="#step-7-summary">Step 7: Summary</a></h3>
+<p>Review all features gained at this level.</p>
+<h3 id="step-8-review"><a class="header" href="#step-8-review">Step 8: Review</a></h3>
+<p>Final review of all changes before confirming. Click <strong>Confirm Level Up</strong> to apply.</p>
+<h2 id="navigation"><a class="header" href="#navigation">Navigation</a></h2>
+<ul>
+<li>Completed steps show a checkmark and can be clicked to revisit</li>
+<li>Use <strong>Back</strong> and <strong>Next</strong> to move between steps</li>
+<li><strong>Next</strong> is disabled until the current step is complete</li>
+</ul>
+<h2 id="see-also-14"><a class="header" href="#see-also-14">See Also</a></h2>
+<ul>
+<li><a href="#create-a-player-character">Create a Player Character</a></li>
+<li><a href="#manage-character-spells">Manage Character Spells</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="print-character-sheet"><a class="header" href="#print-character-sheet">Print Character Sheet</a></h1>
@@ -1664,13 +1827,19 @@
 <li>Configure print options</li>
 <li>Save the PDF</li>
 </ol>
-<h2 id="print-options-1"><a class="header" href="#print-options-1">Print Options</a></h2>
+<h2 id="print-options"><a class="header" href="#print-options">Print Options</a></h2>
 <p>The export dialog lets you select which sections to include:</p>
+<p><strong>Character Sheets:</strong></p>
 <ul>
-<li><strong>Compact Sheet</strong> (2-page) - Stats, combat, skills, equipment summary</li>
-<li><strong>Spell Cards</strong> - Printable cards for all spells (if the character is a caster)</li>
+<li><strong>Compact Sheet</strong> (2-page) — Stats, combat, skills, equipment summary</li>
+<li><strong>Battle Card</strong> — Half-page combat reference (AC, HP, attacks, saves)</li>
 </ul>
-<p>Both options are enabled by default. At least one must be selected to export.</p>
+<p><strong>Cards:</strong></p>
+<ul>
+<li><strong>Spell Cards</strong> — Printable cards for all spells (if the character is a caster)</li>
+<li><strong>Equipment Cards</strong> — Cards for weapons, magic items, and special ammunition</li>
+</ul>
+<p>Compact Sheet and Spell Cards are enabled by default. At least one option must be selected to export.</p>
 <h2 id="compact-sheet"><a class="header" href="#compact-sheet">Compact Sheet</a></h2>
 <p>The 2-page character sheet includes:</p>
 <ul>
@@ -1686,12 +1855,16 @@
 <li>Full inventory</li>
 <li>Currency</li>
 </ul>
+<h2 id="battle-card"><a class="header" href="#battle-card">Battle Card</a></h2>
+<p>A half-page combat quick reference — ideal for keeping at the table during encounters. Includes AC, HP, attack bonuses, and saving throw modifiers at a glance.</p>
 <h2 id="spell-cards"><a class="header" href="#spell-cards">Spell Cards</a></h2>
 <p>For spellcasters, spell cards are printed in a 3x3 grid:</p>
 <ul>
 <li>Each spell gets a card with name, level, school, casting time, range, components, and description</li>
 <li>Cut and use as physical references during play</li>
 </ul>
+<h2 id="equipment-cards"><a class="header" href="#equipment-cards">Equipment Cards</a></h2>
+<p>Cards for notable equipment — weapons, magic items, and special ammunition. Print and cut for physical item tracking at the table.</p>
 <h2 id="tips-9"><a class="header" href="#tips-9">Tips</a></h2>
 <ul>
 <li>Print before session for quick reference</li>
@@ -1699,7 +1872,7 @@
 <li>Update and reprint after level ups</li>
 <li>Keep a backup PDF</li>
 </ul>
-<h2 id="see-also-11"><a class="header" href="#see-also-11">See Also</a></h2>
+<h2 id="see-also-15"><a class="header" href="#see-also-15">See Also</a></h2>
 <ul>
 <li><a href="#create-a-player-character">Create a Player Character</a></li>
 <li><a href="#export-campaign">Export Campaign</a></li>
@@ -1710,7 +1883,7 @@
 <ul>
 <li><a href="#create-a-module">Create a Module</a> - Start a new adventure module</li>
 <li><a href="#add-monsters">Add Monsters</a> - Add monsters from the catalog</li>
-<li><a href="#module-documents-1">Module Documents</a> - Organize module content</li>
+<li><a href="#module-documents">Module Documents</a> - Organize module content</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="create-a-module"><a class="header" href="#create-a-module">Create a Module</a></h1>
@@ -1755,15 +1928,15 @@
 <li>Start with your first session’s content</li>
 <li>Add more modules as players progress</li>
 </ul>
-<h2 id="see-also-12"><a class="header" href="#see-also-12">See Also</a></h2>
+<h2 id="see-also-16"><a class="header" href="#see-also-16">See Also</a></h2>
 <ul>
 <li><a href="#add-monsters">Add Monsters</a></li>
-<li><a href="#module-documents-1">Module Documents</a></li>
+<li><a href="#module-documents">Module Documents</a></li>
 <li><a href="#upload-a-map">Upload a Map</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="add-monsters"><a class="header" href="#add-monsters">Add Monsters</a></h1>
-<p>Add monsters from the D&amp;D 5e catalog to your maps via Token Setup.</p>
+<p>Add monsters from the D&amp;D 5e catalog or your homebrew collection to your maps via Token Setup.</p>
 <p><img src="images/reference/token-setup.png" alt="Token Setup"></p>
 <h2 id="steps-8"><a class="header" href="#steps-8">Steps</a></h2>
 <ol>
@@ -1783,7 +1956,7 @@
 <li>Type (beast, humanoid, undead, etc.)</li>
 <li>Source book</li>
 </ul>
-<p>Results show CR and source for quick reference.</p>
+<p>Results show CR and source for quick reference. Homebrew monsters you’ve created in the campaign’s Homebrew tab also appear in search results alongside catalog entries.</p>
 <h2 id="token-options-2"><a class="header" href="#token-options-2">Token Options</a></h2>
 <p>Before placing, configure:</p>
 <ul>
@@ -1815,74 +1988,64 @@
 <li>Actions and special abilities</li>
 <li>Legendary actions (if applicable)</li>
 </ul>
+<h2 id="module-monsters-quick-select"><a class="header" href="#module-monsters-quick-select">Module Monsters Quick Select</a></h2>
+<p>Once you’ve added monsters to a map, the Token Palette shows a <strong>Module Monsters</strong> section at the top with quick-select buttons for monsters already in the module. This saves time when placing the same monster on multiple maps.</p>
 <h2 id="tips-11"><a class="header" href="#tips-11">Tips</a></h2>
 <ul>
 <li>Add monsters during prep, not at the table</li>
 <li>Use different colors to distinguish enemy groups</li>
 <li>Hide tokens for surprise encounters</li>
 <li>Search by CR to find level-appropriate challenges</li>
+<li>Create homebrew monsters in the Homebrew tab if you need custom creatures</li>
 </ul>
-<h2 id="see-also-13"><a class="header" href="#see-also-13">See Also</a></h2>
+<h2 id="see-also-17"><a class="header" href="#see-also-17">See Also</a></h2>
 <ul>
 <li><a href="#create-a-module">Create a Module</a></li>
 <li><a href="#place-tokens">Place Tokens</a></li>
 <li><a href="#manage-encounters">Manage Encounters</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="module-documents-1"><a class="header" href="#module-documents-1">Module Documents</a></h1>
-<p>Create and manage documents for your adventure modules.</p>
-<h2 id="document-types-1"><a class="header" href="#document-types-1">Document Types</a></h2>
-<p>Module documents help you prepare:</p>
-<ul>
-<li>Session notes</li>
-<li>Location descriptions</li>
-<li>Encounter plans</li>
-<li>Read-aloud text</li>
-<li>NPC dialogue</li>
-</ul>
-<h2 id="creating-documents-1"><a class="header" href="#creating-documents-1">Creating Documents</a></h2>
+<h1 id="module-documents"><a class="header" href="#module-documents">Module Documents</a></h1>
+<p>Create and manage documents within your adventure modules for session prep, location descriptions, encounter plans, and more.</p>
+<h2 id="creating-documents"><a class="header" href="#creating-documents">Creating Documents</a></h2>
 <ol>
 <li>Open a module from the Modules tab</li>
-<li>Find the <strong>Documents</strong> section</li>
-<li>Click to create a new document</li>
-<li>Choose a template or start blank</li>
-</ol>
-<h2 id="document-templates-1"><a class="header" href="#document-templates-1">Document Templates</a></h2>
-<p>Templates provide structure:</p>
+<li>Find the <strong>Documents</strong> section in the module prep view</li>
+<li>Click the <strong>+</strong> button to create a new document</li>
+<li>Choose between:
 <ul>
-<li>Pre-filled sections</li>
-<li>Prompts for common content</li>
-<li>Consistent formatting</li>
+<li><strong>New Document</strong> — Enter a title to create a blank markdown document</li>
+<li><strong>Upload File</strong> — Upload a markdown file or image (<code>.md</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.webp</code>, <code>.gif</code>, <code>.svg</code>)</li>
 </ul>
+</li>
+<li>Click <strong>Create</strong></li>
+</ol>
 <h2 id="editing-documents-1"><a class="header" href="#editing-documents-1">Editing Documents</a></h2>
 <ol>
-<li>Click a document to open the editor</li>
-<li>Write your content</li>
-<li>Changes auto-save</li>
-<li>Click <strong>×</strong> to close</li>
+<li>Click a document in the sidebar to open the editor</li>
+<li>Use the rich text toolbar for formatting:
+<ul>
+<li>Headings (H1, H2, H3)</li>
+<li>Bold, italic, strikethrough</li>
+<li>Bullet and numbered lists</li>
+<li>Blockquotes and horizontal rules</li>
+<li>Tables</li>
+</ul>
+</li>
+<li>Changes auto-save as you type — watch for the “Saved” indicator</li>
+<li>Click <strong>×</strong> to close and return to the document list</li>
 </ol>
-<h2 id="document-stages-1"><a class="header" href="#document-stages-1">Document Stages</a></h2>
-<p>Mark documents as complete when ready:</p>
-<ul>
-<li><strong>In Progress</strong> - Still working on it</li>
-<li><strong>Complete</strong> - Ready for the session</li>
-</ul>
-<p>Completed documents show a checkmark.</p>
-<h2 id="organizing-documents"><a class="header" href="#organizing-documents">Organizing Documents</a></h2>
-<p>Documents appear by stage:</p>
-<ul>
-<li>Work through stages as you prep</li>
-<li>Completed documents move to the bottom</li>
-<li>Keep track of what’s ready</li>
-</ul>
+<h2 id="reordering-documents-1"><a class="header" href="#reordering-documents-1">Reordering Documents</a></h2>
+<p>Hover over a document in the sidebar to reveal <strong>up/down arrow buttons</strong>. Click to change the display order.</p>
 <h2 id="tips-12"><a class="header" href="#tips-12">Tips</a></h2>
 <ul>
 <li>Create documents during prep, not at the table</li>
 <li>Use read-aloud text for atmospheric descriptions</li>
 <li>Keep encounter plans brief and scannable</li>
 <li>Session notes can be edited during play</li>
+<li>Export individual documents to PDF using the Export PDF button in the editor</li>
 </ul>
-<h2 id="see-also-14"><a class="header" href="#see-also-14">See Also</a></h2>
+<h2 id="see-also-18"><a class="header" href="#see-also-18">See Also</a></h2>
 <ul>
 <li><a href="#create-a-module">Create a Module</a></li>
 <li><a href="#manage-documents">Manage Documents</a></li>
@@ -1929,11 +2092,8 @@
 <li>Open the Player Display (if using second screen)</li>
 <li>You’re ready to play!</li>
 </ol>
-<h2 id="quick-start-options"><a class="header" href="#quick-start-options">Quick Start Options</a></h2>
-<h3 id="add-pcs-button"><a class="header" href="#add-pcs-button">Add PCs Button</a></h3>
-<p>Click <strong>Add PCs</strong> to place all campaign player characters on the map at once.</p>
-<h3 id="add-token-button"><a class="header" href="#add-token-button">Add Token Button</a></h3>
-<p>Click <strong>Add Token</strong> to quickly add a monster from the catalog.</p>
+<h2 id="adding-pcs-to-the-map"><a class="header" href="#adding-pcs-to-the-map">Adding PCs to the Map</a></h2>
+<p>Click the <strong>Add PCs</strong> button in the map toolbar to place all campaign player characters on the map at once.</p>
 <h2 id="ending-the-session"><a class="header" href="#ending-the-session">Ending the Session</a></h2>
 <p>Click <strong>End Session</strong> in the header to:</p>
 <ul>
@@ -1947,7 +2107,7 @@
 <li>Use Blackout mode while positioning tokens</li>
 <li>Save session notes as you play</li>
 </ul>
-<h2 id="see-also-15"><a class="header" href="#see-also-15">See Also</a></h2>
+<h2 id="see-also-19"><a class="header" href="#see-also-19">See Also</a></h2>
 <ul>
 <li><a href="#manage-encounters">Manage Encounters</a></li>
 <li><a href="#fog-of-war-2">Fog of War</a></li>
@@ -1973,16 +2133,11 @@
 <li><strong>Encounter Tag</strong> - Group label (if set)</li>
 </ul>
 <p>Click to select and view stats.</p>
-<h2 id="adding-tokens-during-play"><a class="header" href="#adding-tokens-during-play">Adding Tokens During Play</a></h2>
-<h3 id="quick-add-token"><a class="header" href="#quick-add-token">Quick Add Token</a></h3>
-<ol>
-<li>Click <strong>Add Token</strong> in the toolbar</li>
-<li>Search for a monster</li>
-<li>Click to add to the module</li>
-<li>Click on the map to place</li>
-</ol>
-<h3 id="add-all-pcs"><a class="header" href="#add-all-pcs">Add All PCs</a></h3>
-<p>Click <strong>Add PCs</strong> to place all campaign player characters on the map at their default positions.</p>
+<h2 id="adding-pcs-to-the-map-1"><a class="header" href="#adding-pcs-to-the-map-1">Adding PCs to the Map</a></h2>
+<p>Click the <strong>Add PCs</strong> button in the toolbar to place all campaign player characters on the current map.</p>
+<blockquote>
+<p><strong>Note:</strong> Monster tokens are placed during module prep in Token Setup. To add monsters during play, return to prep mode, add them via Token Setup, then re-enter Play Mode.</p>
+</blockquote>
 <h2 id="moving-tokens-in-combat"><a class="header" href="#moving-tokens-in-combat">Moving Tokens in Combat</a></h2>
 <ol>
 <li>Drag tokens to new positions</li>
@@ -2004,7 +2159,7 @@
 <li>Use encounter tags to group monsters by room/area</li>
 <li>Position hidden tokens before players enter areas</li>
 </ul>
-<h2 id="see-also-16"><a class="header" href="#see-also-16">See Also</a></h2>
+<h2 id="see-also-20"><a class="header" href="#see-also-20">See Also</a></h2>
 <ul>
 <li><a href="#fog-of-war-2">Fog of War</a></li>
 <li><a href="#start-a-session">Start a Session</a></li>
@@ -2074,7 +2229,7 @@
 <li>Reveal Map for town maps where fog doesn’t make sense</li>
 <li>Switch to Token mode for complex combat</li>
 </ul>
-<h2 id="see-also-17"><a class="header" href="#see-also-17">See Also</a></h2>
+<h2 id="see-also-21"><a class="header" href="#see-also-21">See Also</a></h2>
 <ul>
 <li><a href="#manage-light-sources">Manage Light Sources</a></li>
 <li><a href="#vision--lighting">Vision &amp; Lighting Reference</a></li>
@@ -2114,18 +2269,6 @@
 <li>Map transitions</li>
 <li>Bathroom breaks</li>
 </ul>
-<h2 id="viewport-sync-1"><a class="header" href="#viewport-sync-1">Viewport Sync</a></h2>
-<h3 id="auto-sync-default-1"><a class="header" href="#auto-sync-default-1">Auto-Sync (Default)</a></h3>
-<ul>
-<li>Your pan and zoom mirror to player display</li>
-<li>Players see what you focus on</li>
-</ul>
-<h3 id="manual-sync-1"><a class="header" href="#manual-sync-1">Manual Sync</a></h3>
-<ol>
-<li>Disable <strong>Sync</strong> in the toolbar</li>
-<li>Navigate freely on your screen</li>
-<li>Click <strong>Push View</strong> to update player display</li>
-</ol>
 <h2 id="switching-maps"><a class="header" href="#switching-maps">Switching Maps</a></h2>
 <ol>
 <li>Click a different map in the sidebar</li>
@@ -2144,10 +2287,278 @@
 <li>Use Blackout liberally for reveals</li>
 <li>Disable sync when planning ahead secretly</li>
 </ul>
-<h2 id="see-also-18"><a class="header" href="#see-also-18">See Also</a></h2>
+<h2 id="see-also-22"><a class="header" href="#see-also-22">See Also</a></h2>
 <ul>
 <li><a href="#fog-of-war-2">Fog of War</a></li>
 <li><a href="#player-display-setup">Tutorial: Player Display Setup</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="homebrew-content"><a class="header" href="#homebrew-content">Homebrew Content</a></h1>
+<p>Create custom items, monsters, and spells for your campaigns.</p>
+<h2 id="what-is-homebrew"><a class="header" href="#what-is-homebrew">What is Homebrew?</a></h2>
+<p>Homebrew content is custom D&amp;D material you create for your campaign. When the official catalog doesn’t have what you need — a custom magic sword, a unique creature, or a modified spell — you create it as homebrew.</p>
+<h2 id="where-to-find-it"><a class="header" href="#where-to-find-it">Where to Find It</a></h2>
+<p>Homebrew is managed from the <strong>Homebrew</strong> tab on the Campaign Dashboard (the 5th tab). Each campaign has its own homebrew content.</p>
+<h2 id="the-three-types"><a class="header" href="#the-three-types">The Three Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Creation Method</th><th>Used In</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Items</strong></td><td>Create from scratch or clone from catalog</td><td>Character inventory</td></tr>
+<tr><td><strong>Monsters</strong></td><td>Clone from catalog and modify</td><td>Module encounters, token placement</td></tr>
+<tr><td><strong>Spells</strong></td><td>Clone from catalog and modify</td><td>Character spell lists</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="clone-from-catalog"><a class="header" href="#clone-from-catalog">Clone from Catalog</a></h2>
+<p>For monsters and spells, the primary workflow is cloning: search the D&amp;D 5e catalog, select an entry, and Mimir creates a homebrew copy you can modify. Items can also be cloned or created from scratch.</p>
+<p>Cloned entries display “Based on [original name]” so you can track the source.</p>
+<h2 id="how-homebrew-integrates"><a class="header" href="#how-homebrew-integrates">How Homebrew Integrates</a></h2>
+<ul>
+<li><strong>Homebrew items</strong> appear in inventory search results when adding items to characters</li>
+<li><strong>Homebrew monsters</strong> appear in monster search when placing tokens in Token Setup</li>
+<li><strong>Homebrew spells</strong> appear in character spell lists alongside catalog spells</li>
+</ul>
+<p>All homebrew content is tagged with an <strong>HB</strong> badge throughout the UI.</p>
+<h2 id="guides"><a class="header" href="#guides">Guides</a></h2>
+<ul>
+<li><a href="#create-a-homebrew-item">Create a Homebrew Item</a></li>
+<li><a href="#create-a-homebrew-monster">Create a Homebrew Monster</a></li>
+<li><a href="#create-a-homebrew-spell">Create a Homebrew Spell</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="create-a-homebrew-item"><a class="header" href="#create-a-homebrew-item">Create a Homebrew Item</a></h1>
+<p>Create custom items for your campaign — weapons, armor, potions, magic items, and more.</p>
+<h2 id="navigate-to-homebrew-items"><a class="header" href="#navigate-to-homebrew-items">Navigate to Homebrew Items</a></h2>
+<ol>
+<li>Open your campaign dashboard</li>
+<li>Click the <strong>Homebrew</strong> tab</li>
+<li>Select the <strong>Items</strong> sub-tab</li>
+</ol>
+<h2 id="create-from-scratch"><a class="header" href="#create-from-scratch">Create from Scratch</a></h2>
+<ol>
+<li>Fill in the item form on the right panel</li>
+<li>Set the required and optional fields (see below)</li>
+<li>Click <strong>Create Item</strong></li>
+</ol>
+<h2 id="clone-from-catalog-1"><a class="header" href="#clone-from-catalog-1">Clone from Catalog</a></h2>
+<ol>
+<li>Click <strong>Clone from Catalog</strong></li>
+<li>Search for an existing item (minimum 2 characters)</li>
+<li>Results show name, type, rarity, and source</li>
+<li>Click an item to pre-fill the form with its data</li>
+<li>Modify fields as needed</li>
+<li>Click <strong>Create Item</strong></li>
+</ol>
+<p>If the name conflicts with an existing homebrew item, “ (Custom)“ is appended.</p>
+<h2 id="item-fields"><a class="header" href="#item-fields">Item Fields</a></h2>
+<h3 id="common-fields-all-items"><a class="header" href="#common-fields-all-items">Common Fields (All Items)</a></h3>
+<ul>
+<li><strong>Name</strong> (required) — Item name</li>
+<li><strong>Item Type</strong> — weapon, armor, potion, ring, rod, scroll, staff, wand, wondrous item, adventuring gear</li>
+<li><strong>Rarity</strong> — common, uncommon, rare, very rare, legendary, artifact</li>
+<li><strong>Weight</strong> — Weight in pounds</li>
+<li><strong>Value</strong> — Value in gold pieces</li>
+<li><strong>Requires Attunement</strong> — Checkbox; optionally specify attunement requirements (e.g., “by a spellcaster”)</li>
+<li><strong>Description</strong> — Item description and properties</li>
+</ul>
+<h3 id="weapon-fields"><a class="header" href="#weapon-fields">Weapon Fields</a></h3>
+<p>Shown when item type is <strong>weapon</strong>:</p>
+<ul>
+<li><strong>Category</strong> — Simple or martial</li>
+<li><strong>Bonus</strong> — +1, +2, or +3</li>
+<li><strong>Damage</strong> — Damage dice (e.g., 1d8)</li>
+<li><strong>Damage Type</strong> — Slashing, piercing, bludgeoning, fire, cold, etc.</li>
+<li><strong>Versatile Damage</strong> — Alternate damage when wielded two-handed</li>
+<li><strong>Range</strong> — Range in feet</li>
+<li><strong>Properties</strong> — Finesse, Heavy, Light, Reach, Thrown, Two-Handed, Versatile, Ammunition, Loading, Special</li>
+</ul>
+<h3 id="armor-fields"><a class="header" href="#armor-fields">Armor Fields</a></h3>
+<p>Shown when item type is <strong>armor</strong>:</p>
+<ul>
+<li><strong>AC</strong> — Base armor class</li>
+<li><strong>Bonus</strong> — +1, +2, or +3</li>
+<li><strong>Strength Required</strong> — Minimum strength score</li>
+<li><strong>Stealth Disadvantage</strong> — Whether the armor imposes disadvantage on Stealth checks</li>
+</ul>
+<h2 id="editing-items"><a class="header" href="#editing-items">Editing Items</a></h2>
+<p>Click an item in the list, then click <strong>Edit</strong> to modify its fields.</p>
+<h2 id="deleting-items"><a class="header" href="#deleting-items">Deleting Items</a></h2>
+<p>Click <strong>Delete</strong> on a selected item. If any characters have the item in their inventory, a warning shows which characters are affected.</p>
+<h2 id="see-also-23"><a class="header" href="#see-also-23">See Also</a></h2>
+<ul>
+<li><a href="#manage-character-inventory">Manage Character Inventory</a></li>
+<li><a href="how-to/homebrew">Homebrew Overview</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="create-a-homebrew-monster"><a class="header" href="#create-a-homebrew-monster">Create a Homebrew Monster</a></h1>
+<p>Create custom monsters by cloning and modifying entries from the D&amp;D 5e catalog.</p>
+<h2 id="navigate-to-homebrew-monsters"><a class="header" href="#navigate-to-homebrew-monsters">Navigate to Homebrew Monsters</a></h2>
+<ol>
+<li>Open your campaign dashboard</li>
+<li>Click the <strong>Homebrew</strong> tab</li>
+<li>Select the <strong>Monsters</strong> sub-tab</li>
+</ol>
+<h2 id="clone-from-catalog-2"><a class="header" href="#clone-from-catalog-2">Clone from Catalog</a></h2>
+<p>Homebrew monsters are created by cloning existing catalog entries:</p>
+<ol>
+<li>Click <strong>Clone from Catalog</strong></li>
+<li>Search for a monster (minimum 2 characters)</li>
+<li>Results show name, CR, size, type, and source</li>
+<li>Click a monster to create a homebrew copy immediately</li>
+</ol>
+<p>The new monster appears in your homebrew list with “Based on [original name]” shown in the detail view.</p>
+<h2 id="editing-monsters"><a class="header" href="#editing-monsters">Editing Monsters</a></h2>
+<ol>
+<li>Select a monster from the list</li>
+<li>Click <strong>Edit</strong></li>
+<li>Modify the <strong>Name</strong> and/or the <strong>JSON data</strong> containing the full stat block</li>
+<li>Save your changes</li>
+</ol>
+<p>The stat block data is stored as JSON. The detail pane shows extracted metadata: CR, size, and creature type.</p>
+<h2 id="using-homebrew-monsters"><a class="header" href="#using-homebrew-monsters">Using Homebrew Monsters</a></h2>
+<p>Homebrew monsters appear in monster search results alongside catalog entries when:</p>
+<ul>
+<li>Placing tokens in <strong>Token Setup</strong></li>
+<li>Browsing monsters in module prep</li>
+</ul>
+<p>They are tagged with an <strong>HB</strong> badge for identification.</p>
+<h2 id="deleting-monsters"><a class="header" href="#deleting-monsters">Deleting Monsters</a></h2>
+<p>Click <strong>Delete</strong> on a selected monster. If any modules reference the monster, a warning shows which modules are affected.</p>
+<h2 id="see-also-24"><a class="header" href="#see-also-24">See Also</a></h2>
+<ul>
+<li><a href="#add-monsters">Add Monsters to Module</a></li>
+<li><a href="how-to/homebrew">Homebrew Overview</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="create-a-homebrew-spell"><a class="header" href="#create-a-homebrew-spell">Create a Homebrew Spell</a></h1>
+<p>Create custom spells by cloning and modifying entries from the D&amp;D 5e catalog.</p>
+<h2 id="navigate-to-homebrew-spells"><a class="header" href="#navigate-to-homebrew-spells">Navigate to Homebrew Spells</a></h2>
+<ol>
+<li>Open your campaign dashboard</li>
+<li>Click the <strong>Homebrew</strong> tab</li>
+<li>Select the <strong>Spells</strong> sub-tab</li>
+</ol>
+<h2 id="clone-from-catalog-3"><a class="header" href="#clone-from-catalog-3">Clone from Catalog</a></h2>
+<p>Homebrew spells are created by cloning existing catalog entries:</p>
+<ol>
+<li>Click <strong>Clone from Catalog</strong></li>
+<li>Search for a spell (minimum 2 characters)</li>
+<li>Results show name, level, school, and source</li>
+<li>Click a spell to create a homebrew copy immediately</li>
+</ol>
+<p>The new spell appears in your homebrew list with “Based on [original name]” shown in the detail view.</p>
+<h2 id="editing-spells"><a class="header" href="#editing-spells">Editing Spells</a></h2>
+<ol>
+<li>Select a spell from the list</li>
+<li>Click <strong>Edit</strong></li>
+<li>Modify the <strong>Name</strong> and/or the <strong>JSON data</strong> containing the spell details</li>
+<li>Save your changes</li>
+</ol>
+<p>The detail pane shows extracted metadata: spell level and school of magic.</p>
+<h2 id="using-homebrew-spells"><a class="header" href="#using-homebrew-spells">Using Homebrew Spells</a></h2>
+<p>Homebrew spells appear automatically in character spell lists alongside catalog spells for spellcasting characters. They are tagged with an <strong>HB</strong> badge.</p>
+<h2 id="deleting-spells"><a class="header" href="#deleting-spells">Deleting Spells</a></h2>
+<p>Click <strong>Delete</strong> on a selected spell. A confirmation prompt appears before deletion.</p>
+<h2 id="see-also-25"><a class="header" href="#see-also-25">See Also</a></h2>
+<ul>
+<li><a href="#manage-character-spells">Manage Character Spells</a></li>
+<li><a href="how-to/homebrew">Homebrew Overview</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ai-assistant-integration"><a class="header" href="#ai-assistant-integration">AI Assistant Integration</a></h1>
+<p>Use Mimir with Claude Code for AI-assisted campaign management via natural language.</p>
+<h2 id="what-it-does"><a class="header" href="#what-it-does">What It Does</a></h2>
+<p>Mimir includes an MCP (Model Context Protocol) server that exposes 40+ tools to Claude Code, enabling you to manage campaigns, search catalogs, generate maps, and prep sessions through conversation. Ask “create a forest map” or “find CR 5 undead monsters” and the assistant handles it.</p>
+<h2 id="prerequisites-5"><a class="header" href="#prerequisites-5">Prerequisites</a></h2>
+<ul>
+<li>Mimir desktop app installed</li>
+<li><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a> installed</li>
+<li>The <code>mimir-mcp</code> binary (built with the app)</li>
+</ul>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<h3 id="for-app-users"><a class="header" href="#for-app-users">For App Users</a></h3>
+<p>The MCP server runs as a Tauri sidecar — it starts automatically when needed. Install the Claude Code plugin:</p>
+<pre><code class="language-bash">claude plugin add /path/to/mimir/crates/mimir-mcp/plugin
+</code></pre>
+<h3 id="database-path"><a class="header" href="#database-path">Database Path</a></h3>
+<p>The server auto-detects the Mimir database at <code>~/Library/Application Support/com.mimir.app/data/mimir.db</code>. Override with:</p>
+<pre><code class="language-bash">export MIMIR_DATABASE_PATH=/path/to/mimir.db
+</code></pre>
+<h2 id="slash-commands"><a class="header" href="#slash-commands">Slash Commands</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Command</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>/mimir-campaigns</code></td><td>List all available campaigns</td></tr>
+<tr><td><code>/create-module</code></td><td>Create a new module in the active campaign</td></tr>
+<tr><td><code>/search-monsters</code></td><td>Search the D&amp;D monster catalog by name, CR, or type</td></tr>
+<tr><td><code>/search-spells</code></td><td>Search the D&amp;D spell catalog</td></tr>
+<tr><td><code>/generate-map</code></td><td>Generate a procedural Dungeondraft map</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="skills"><a class="header" href="#skills">Skills</a></h2>
+<p>Specialized analysis tools that run multi-step workflows:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Skill</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>/mimir-dm</code></td><td>General campaign management — create campaigns, modules, NPCs, encounters</td></tr>
+<tr><td><code>/encounter-balance</code></td><td>Analyze encounter difficulty against party level and size</td></tr>
+<tr><td><code>/loot-audit</code></td><td>Audit treasure distribution across modules</td></tr>
+<tr><td><code>/session-prep</code></td><td>Pre-session checklist and readiness review</td></tr>
+<tr><td><code>/continuity-check</code></td><td>Find contradictions and plot holes across campaign documents</td></tr>
+<tr><td><code>/npc-network</code></td><td>Map NPC relationships and faction dynamics</td></tr>
+<tr><td><code>/pressure-test</code></td><td>Stress-test scenarios — “what if the players do X?”</td></tr>
+<tr><td><code>/mapgen</code></td><td>Creative direction for procedural map generation</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="example-workflows"><a class="header" href="#example-workflows">Example Workflows</a></h2>
+<p><strong>Campaign setup:</strong></p>
+<blockquote>
+<p>“Create a new campaign called ‘Curse of Strahd’ and add a module for Death House”</p>
+</blockquote>
+<p><strong>Monster search:</strong></p>
+<blockquote>
+<p>“Find all CR 3-5 undead monsters from the Monster Manual”</p>
+</blockquote>
+<p><strong>Map generation:</strong></p>
+<blockquote>
+<p>“Generate a dark swamp map with standing water and dim lighting”</p>
+</blockquote>
+<p><strong>Session prep:</strong></p>
+<blockquote>
+<p>“Run a session prep check on the Goblin Hideout module”</p>
+</blockquote>
+<p><strong>Character management:</strong></p>
+<blockquote>
+<p>“Add a +1 longsword to Aldric’s inventory”</p>
+</blockquote>
+<h2 id="tool-categories"><a class="header" href="#tool-categories">Tool Categories</a></h2>
+<p>The MCP server provides tools across these areas:</p>
+<ul>
+<li><strong>Campaign Management</strong> — Create, update, export/import campaigns</li>
+<li><strong>Module Management</strong> — Create modules, manage module content</li>
+<li><strong>Document Management</strong> — Create and edit campaign/module documents</li>
+<li><strong>Character Management</strong> — Create characters, manage inventory and spells</li>
+<li><strong>Map Management</strong> — Upload maps, place tokens, manage light sources</li>
+<li><strong>Map Generation</strong> — Generate Dungeondraft maps from presets or YAML configs</li>
+<li><strong>Catalog Search</strong> — Search monsters, spells, items, classes, races, backgrounds, feats, conditions</li>
+</ul>
+<h2 id="important-notes"><a class="header" href="#important-notes">Important Notes</a></h2>
+<ul>
+<li>MCP tools modify the database directly — there is no undo</li>
+<li><a href="#export-campaign">Export your campaign</a> regularly as a backup</li>
+<li>The assistant is the DM’s tool — it prompts for choices rather than making creative decisions autonomously</li>
+<li>Set the active campaign with <code>set_active_campaign</code> before using campaign-specific tools</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="ui-reference"><a class="header" href="#ui-reference">UI Reference</a></h1>
@@ -2159,7 +2570,7 @@
 <li><a href="#module-prep-view">Module Prep View</a> - Preparing adventure modules</li>
 <li><a href="#play-mode-2">Play Mode</a> - Running game sessions</li>
 <li><a href="#token-setup-modal">Token Setup Modal</a> - Placing and configuring tokens on maps</li>
-<li><a href="#player-display-1">Player Display</a> - The player-facing display window</li>
+<li><a href="#player-display-2">Player Display</a> - The player-facing display window</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="home-screen"><a class="header" href="#home-screen">Home Screen</a></h1>
@@ -2192,7 +2603,7 @@
 </tbody>
 </table>
 </div>
-<h2 id="see-also-19"><a class="header" href="#see-also-19">See Also</a></h2>
+<h2 id="see-also-26"><a class="header" href="#see-also-26">See Also</a></h2>
 <ul>
 <li><a href="#create-a-campaign">Create a Campaign</a></li>
 <li><a href="#campaign-dashboard">Campaign Dashboard</a></li>
@@ -2203,55 +2614,57 @@
 <p><img src="images/reference/campaign-dashboard.png" alt="Campaign Dashboard"></p>
 <h2 id="header"><a class="header" href="#header">Header</a></h2>
 <ul>
-<li><strong>Campaign Name</strong> - Displayed prominently at the top</li>
-<li><strong>Export</strong> - Export campaign as <code>.tar.gz</code> archive</li>
-<li><strong>Settings</strong> - Campaign configuration options</li>
+<li><strong>Campaign Name</strong> — Displayed prominently at the top</li>
+<li><strong>Sources</strong> — Configure which D&amp;D source books are enabled for this campaign</li>
+<li><strong>PDF</strong> — Export campaign documents as PDF</li>
+<li><strong>Export Archive</strong> — Export campaign as <code>.mimir-campaign.tar.gz</code> archive</li>
 </ul>
 <h2 id="tabs"><a class="header" href="#tabs">Tabs</a></h2>
 <h3 id="campaign-tab-1"><a class="header" href="#campaign-tab-1">Campaign Tab</a></h3>
-<p>World-building and campaign-level content:</p>
+<p>The world-building hub with a two-panel layout:</p>
+<p><strong>Sidebar (Left):</strong></p>
 <ul>
-<li><strong>Documents</strong> - Campaign documents organized by stage</li>
-<li><strong>World Building</strong> - Setting details, factions, locations</li>
-<li><strong>Timeline</strong> - Campaign events and history</li>
+<li><strong>Documents</strong> — Campaign-level documents for lore, setting notes, factions, and world-building. Create new documents with the + button. Reorder with up/down arrows.</li>
+<li><strong>Maps</strong> — Campaign-level maps (not tied to a specific module). Upload with the + button.</li>
+</ul>
+<p><strong>Main Panel (Right):</strong></p>
+<ul>
+<li>Opens the document editor when a document is selected</li>
+<li>Shows a map preview when a map is selected</li>
+<li>Maps can be exported to PDF or deleted from the preview</li>
 </ul>
 <h3 id="modules-tab-1"><a class="header" href="#modules-tab-1">Modules Tab</a></h3>
 <p>Adventure modules within this campaign:</p>
 <ul>
-<li><strong>Module List</strong> - Sidebar showing all modules</li>
-<li><strong>Module Dashboard</strong> - Selected module’s content</li>
-<li><strong>Create Module</strong> - Add new adventure modules</li>
+<li><strong>Module List</strong> — Table showing all modules with action buttons</li>
+<li><strong>Play</strong> — Enter Play Mode for a module</li>
+<li><strong>Open</strong> — Open the module prep view</li>
+<li><strong>PDF</strong> — Export module materials</li>
+<li><strong>Create Module</strong> — Add new adventure modules with the + button</li>
 </ul>
 <h3 id="npcs-tab-1"><a class="header" href="#npcs-tab-1">NPCs Tab</a></h3>
 <p>Non-player characters for this campaign:</p>
 <ul>
-<li><strong>NPC List</strong> - All NPCs across modules</li>
-<li><strong>NPC Details</strong> - Stats, notes, relationships</li>
-<li><strong>Create NPC</strong> - Add new NPCs</li>
+<li><strong>NPC List</strong> — All NPCs across modules</li>
+<li><strong>NPC Details</strong> — Stats, notes, role, location, faction</li>
+<li><strong>Create NPC</strong> — Add new NPCs</li>
 </ul>
 <h3 id="pcs-tab-1"><a class="header" href="#pcs-tab-1">PCs Tab</a></h3>
 <p>Player characters assigned to this campaign:</p>
 <ul>
-<li><strong>PC List</strong> - Characters in this campaign</li>
-<li><strong>Assign PC</strong> - Add existing characters</li>
-<li><strong>PC Details</strong> - Full character sheets</li>
+<li><strong>PC List</strong> — Characters in this campaign</li>
+<li><strong>Assign PC</strong> — Add existing characters</li>
+<li><strong>PC Details</strong> — Full character sheets with tabs for stats, equipment, spells, and details</li>
 </ul>
-<h2 id="document-stages-2"><a class="header" href="#document-stages-2">Document Stages</a></h2>
-<p>Documents progress through stages:</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Stage</th><th>Purpose</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>Pre-Production</strong></td><td>Early ideas and planning</td></tr>
-<tr><td><strong>Production</strong></td><td>Active development</td></tr>
-<tr><td><strong>Post-Production</strong></td><td>Refinement and polish</td></tr>
-<tr><td><strong>Archive</strong></td><td>Completed or retired content</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="see-also-20"><a class="header" href="#see-also-20">See Also</a></h2>
+<h3 id="homebrew-tab-1"><a class="header" href="#homebrew-tab-1">Homebrew Tab</a></h3>
+<p>Custom content for this campaign:</p>
+<ul>
+<li><strong>Items</strong> — Create or clone items from the catalog</li>
+<li><strong>Monsters</strong> — Clone and modify monsters from the catalog</li>
+<li><strong>Spells</strong> — Clone and modify spells from the catalog</li>
+</ul>
+<p>See <a href="how-to/homebrew">Homebrew Content</a> for detailed guides.</p>
+<h2 id="see-also-27"><a class="header" href="#see-also-27">See Also</a></h2>
 <ul>
 <li><a href="#module-prep-view">Module Prep View</a></li>
 <li><a href="#manage-documents">Manage Documents</a></li>
@@ -2298,8 +2711,8 @@
 <li>Click to open Token Setup</li>
 <li>Upload new maps with the + button</li>
 </ul>
-<h3 id="dangers"><a class="header" href="#dangers">Dangers</a></h3>
-<p>Quick view of monsters in this module (populated from Token Setup).</p>
+<h3 id="monsters"><a class="header" href="#monsters">Monsters</a></h3>
+<p>Quick view of monsters in this module (populated from Token Setup). Includes both catalog and homebrew monsters.</p>
 <h2 id="actions-1"><a class="header" href="#actions-1">Actions</a></h2>
 <div class="table-wrapper">
 <table>
@@ -2316,7 +2729,7 @@
 </tbody>
 </table>
 </div>
-<h2 id="see-also-21"><a class="header" href="#see-also-21">See Also</a></h2>
+<h2 id="see-also-28"><a class="header" href="#see-also-28">See Also</a></h2>
 <ul>
 <li><a href="#token-setup-modal">Token Setup Modal</a></li>
 <li><a href="#play-mode-2">Play Mode</a></li>
@@ -2371,14 +2784,12 @@
 <tbody>
 <tr><td><strong>Zoom</strong></td><td>+/- buttons, percentage display</td></tr>
 <tr><td><strong>Reset</strong></td><td>Fit map to view</td></tr>
-<tr><td><strong>Add Token</strong></td><td>Quick-add monster to map</td></tr>
-<tr><td><strong>Add PCs</strong></td><td>Place all campaign PCs</td></tr>
+<tr><td><strong>Add PCs</strong></td><td>Place all campaign PCs on the map</td></tr>
 <tr><td><strong>Reveal Map</strong></td><td>Toggle to bypass fog of war</td></tr>
+<tr><td><strong>Print</strong></td><td>Export map to PDF</td></tr>
 <tr><td><strong>LOS Toggle</strong></td><td>Switch between Fog and Token modes</td></tr>
 <tr><td><strong>Debug</strong></td><td>Visualize line of sight</td></tr>
 <tr><td><strong>Ambient Light</strong></td><td>Bright, Dim, or Dark</td></tr>
-<tr><td><strong>Sync</strong></td><td>Auto-sync view to player display</td></tr>
-<tr><td><strong>Push View</strong></td><td>Manual sync to player display</td></tr>
 </tbody>
 </table>
 </div>
@@ -2413,12 +2824,10 @@
 <p>When Player Display is open:</p>
 <ul>
 <li><strong>Blackout</strong> - Hide everything from players</li>
-<li><strong>Sync</strong> - Auto-mirror your view</li>
-<li><strong>Push View</strong> - Manual view update</li>
 </ul>
-<h2 id="see-also-22"><a class="header" href="#see-also-22">See Also</a></h2>
+<h2 id="see-also-29"><a class="header" href="#see-also-29">See Also</a></h2>
 <ul>
-<li><a href="#player-display-1">Player Display</a></li>
+<li><a href="#player-display-2">Player Display</a></li>
 <li><a href="#start-a-session">Start a Session</a></li>
 <li><a href="#fog-of-war-2">Fog of War</a></li>
 </ul>
@@ -2431,6 +2840,11 @@
 <h2 id="layout-3"><a class="header" href="#layout-3">Layout</a></h2>
 <h3 id="token-palette-left"><a class="header" href="#token-palette-left">Token Palette (Left)</a></h3>
 <p>Tools for adding content to the map:</p>
+<p><strong>Module Monsters</strong> (appears when monsters have been added)</p>
+<ul>
+<li>Quick-select buttons for monsters already in the module</li>
+<li>Shows name, encounter tag, and quantity</li>
+</ul>
 <p><strong>Monster</strong></p>
 <ul>
 <li>Search D&amp;D 5e monsters by name</li>
@@ -2447,10 +2861,10 @@
 <li>Add trap markers</li>
 <li>Configure trigger areas</li>
 </ul>
-<p><strong>Object</strong></p>
+<p><strong>Marker</strong></p>
 <ul>
-<li>Generic object tokens</li>
-<li>Furniture, obstacles, etc.</li>
+<li>Points of interest</li>
+<li>Landmarks, waypoints, etc.</li>
 </ul>
 <p><strong>Light Sources</strong></p>
 <ul>
@@ -2484,7 +2898,6 @@
 <p>Located above the map:</p>
 <ul>
 <li><strong>Zoom</strong> - +/- buttons and percentage</li>
-<li><strong>Grid</strong> - Open grid configuration (image files only)</li>
 <li><strong>Reset</strong> - Fit map to view</li>
 </ul>
 <h2 id="token-options-3"><a class="header" href="#token-options-3">Token Options</a></h2>
@@ -2501,16 +2914,6 @@
 </tbody>
 </table>
 </div>
-<h2 id="grid-configuration"><a class="header" href="#grid-configuration">Grid Configuration</a></h2>
-<p>For image files (not UVTT):</p>
-<ul>
-<li><strong>Grid Size</strong> - Pixels per square</li>
-<li><strong>X Offset</strong> - Horizontal adjustment</li>
-<li><strong>Y Offset</strong> - Vertical adjustment</li>
-</ul>
-<blockquote>
-<p><strong>Note:</strong> UVTT files include grid data automatically.</p>
-</blockquote>
 <h2 id="workflow"><a class="header" href="#workflow">Workflow</a></h2>
 <ol>
 <li>Open Token Setup (click map)</li>
@@ -2521,14 +2924,14 @@
 <li>Add light sources as needed</li>
 <li>Close modal (×) - saves automatically</li>
 </ol>
-<h2 id="see-also-23"><a class="header" href="#see-also-23">See Also</a></h2>
+<h2 id="see-also-30"><a class="header" href="#see-also-30">See Also</a></h2>
 <ul>
 <li><a href="#add-monsters">Add Monsters</a></li>
 <li><a href="#place-tokens">Place Tokens</a></li>
-<li><a href="#configure-grid">Configure Grid</a></li>
+<li><a href="#manage-light-sources">Manage Light Sources</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="player-display-1"><a class="header" href="#player-display-1">Player Display</a></h1>
+<h1 id="player-display-2"><a class="header" href="#player-display-2">Player Display</a></h1>
 <p>The Player Display is a separate window showing what players can see, designed for a second screen, TV, or projector.</p>
 <p><img src="images/reference/player-display-header.png" alt="Player Display Header"></p>
 <h2 id="opening-the-display-1"><a class="header" href="#opening-the-display-1">Opening the Display</a></h2>
@@ -2575,8 +2978,6 @@
 <tbody>
 <tr><td><strong>Blackout</strong></td><td>Show black screen to players</td></tr>
 <tr><td><strong>Reveal Map</strong></td><td>Bypass fog of war entirely</td></tr>
-<tr><td><strong>Sync</strong></td><td>Auto-mirror your pan/zoom</td></tr>
-<tr><td><strong>Push View</strong></td><td>Manual view update</td></tr>
 <tr><td><strong>Ambient Light</strong></td><td>Affects fog of war calculation</td></tr>
 </tbody>
 </table>
@@ -2590,18 +2991,6 @@
 <li>Create dramatic reveals</li>
 </ul>
 <p>Click again to restore the view.</p>
-<h2 id="view-syncing"><a class="header" href="#view-syncing">View Syncing</a></h2>
-<p><strong>Auto-Sync (Default)</strong></p>
-<ul>
-<li>Your pan and zoom are mirrored</li>
-<li>Players see what you focus on</li>
-</ul>
-<p><strong>Manual Sync</strong></p>
-<ol>
-<li>Disable Sync toggle</li>
-<li>Navigate freely on your screen</li>
-<li>Click Push View when ready</li>
-</ol>
 <h2 id="physical-setup"><a class="header" href="#physical-setup">Physical Setup</a></h2>
 <h3 id="tvmonitor"><a class="header" href="#tvmonitor">TV/Monitor</a></h3>
 <ul>
@@ -2634,7 +3023,7 @@
 </tbody>
 </table>
 </div>
-<h2 id="see-also-24"><a class="header" href="#see-also-24">See Also</a></h2>
+<h2 id="see-also-31"><a class="header" href="#see-also-31">See Also</a></h2>
 <ul>
 <li><a href="#play-mode-2">Play Mode</a></li>
 <li><a href="#use-player-display">Use Player Display</a></li>
@@ -2664,12 +3053,13 @@
 <tbody>
 <tr><td><code>Scroll</code></td><td>Zoom in/out</td></tr>
 <tr><td><code>Click + Drag</code></td><td>Pan the map</td></tr>
-<tr><td><code>Cmd/Ctrl + 0</code></td><td>Reset view (fit map)</td></tr>
-<tr><td><code>+</code> / <code>-</code></td><td>Zoom in/out</td></tr>
+<tr><td><code>+</code> / <code>=</code></td><td>Zoom in</td></tr>
+<tr><td><code>-</code></td><td>Zoom out</td></tr>
+<tr><td><code>0</code></td><td>Reset view (fit map)</td></tr>
 </tbody>
 </table>
 </div>
-<h2 id="token-manipulation"><a class="header" href="#token-manipulation">Token Manipulation</a></h2>
+<h2 id="token-manipulation-play-mode"><a class="header" href="#token-manipulation-play-mode">Token Manipulation (Play Mode)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2679,20 +3069,9 @@
 <tr><td><code>Click</code></td><td>Select token</td></tr>
 <tr><td><code>Drag</code></td><td>Move token</td></tr>
 <tr><td><code>Right-click</code></td><td>Token context menu</td></tr>
-<tr><td><code>Delete</code></td><td>Delete selected token</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="play-mode-3"><a class="header" href="#play-mode-3">Play Mode</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Shortcut</th><th>Action</th></tr>
-</thead>
-<tbody>
-<tr><td><code>Space</code></td><td>Toggle play/pause (if applicable)</td></tr>
-<tr><td><code>F11</code></td><td>Toggle fullscreen (player display)</td></tr>
-<tr><td><code>B</code></td><td>Toggle blackout</td></tr>
+<tr><td><code>h</code> / <code>H</code></td><td>Toggle visibility of selected token</td></tr>
+<tr><td><code>d</code> / <code>D</code></td><td>Toggle dead state of selected token</td></tr>
+<tr><td><code>Escape</code></td><td>Close context menu and deselect token</td></tr>
 </tbody>
 </table>
 </div>
@@ -2703,7 +3082,6 @@
 <tr><th>Shortcut</th><th>Action</th></tr>
 </thead>
 <tbody>
-<tr><td><code>Cmd/Ctrl + S</code></td><td>Save (auto-saves anyway)</td></tr>
 <tr><td><code>Cmd/Ctrl + B</code></td><td>Bold</td></tr>
 <tr><td><code>Cmd/Ctrl + I</code></td><td>Italic</td></tr>
 <tr><td><code>Cmd/Ctrl + Z</code></td><td>Undo</td></tr>
@@ -2714,14 +3092,14 @@
 <h2 id="notes"><a class="header" href="#notes">Notes</a></h2>
 <ul>
 <li><code>Cmd</code> is used on macOS, <code>Ctrl</code> on Windows/Linux</li>
-<li>Some shortcuts may vary by platform</li>
-<li>Shortcuts work when the relevant view has focus</li>
+<li>Shortcuts are ignored when typing in text inputs or textareas</li>
+<li>Token manipulation shortcuts require a token to be selected</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="file-formats"><a class="header" href="#file-formats">File Formats</a></h1>
 <p>Supported file formats in Mimir.</p>
 <h2 id="map-formats"><a class="header" href="#map-formats">Map Formats</a></h2>
-<h3 id="image-files-1"><a class="header" href="#image-files-1">Image Files</a></h3>
+<h3 id="image-files-2"><a class="header" href="#image-files-2">Image Files</a></h3>
 <p>Standard image formats for battle maps:</p>
 <div class="table-wrapper">
 <table>
@@ -2755,8 +3133,22 @@
 <li>Wall and door positions</li>
 <li>Light source data (some tools)</li>
 </ul>
+<h3 id="dungeondraft-map"><a class="header" href="#dungeondraft-map">Dungeondraft Map</a></h3>
+<p>Generated by Mimir’s mapgen system:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Extension</th><th><code>.dungeondraft_map</code></th></tr>
+</thead>
+<tbody>
+<tr><td>Source</td><td>Mimir mapgen (from YAML config or biome preset)</td></tr>
+<tr><td>Contents</td><td>Complete Dungeondraft map with terrain, walls, tokens</td></tr>
+</tbody>
+</table>
+</div>
+<p>Open directly in Dungeondraft for further editing or export to UVTT.</p>
 <h2 id="export-formats"><a class="header" href="#export-formats">Export Formats</a></h2>
-<h3 id="pdf-export-1"><a class="header" href="#pdf-export-1">PDF Export</a></h3>
+<h3 id="pdf-export-2"><a class="header" href="#pdf-export-2">PDF Export</a></h3>
 <p>Available for:</p>
 <ul>
 <li>Character sheets</li>
@@ -2767,9 +3159,9 @@
 <h3 id="archive-export"><a class="header" href="#archive-export">Archive Export</a></h3>
 <p>Campaign backup format:</p>
 <ul>
-<li><code>.tar.gz</code> archive containing all campaign data</li>
-<li>Maps, documents, characters</li>
-<li>Use for backup or transfer</li>
+<li><code>.mimir-campaign.tar.gz</code> archive containing all campaign data</li>
+<li>Maps, documents, characters, homebrew content</li>
+<li>Use for backup or transfer between installations</li>
 </ul>
 <h2 id="character-data"><a class="header" href="#character-data">Character Data</a></h2>
 <p>Characters are stored in the Mimir database:</p>
@@ -2907,6 +3299,617 @@
 <li>Fog Mode for exploration</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="mcp-server-reference"><a class="header" href="#mcp-server-reference">MCP Server Reference</a></h1>
+<p>Technical reference for Mimir’s Model Context Protocol (MCP) server — the sidecar that enables AI assistant integration.</p>
+<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
+<p>The MCP server (<code>mimir-mcp</code>) runs as a Tauri sidecar process. It connects to the same SQLite database as the main app and exposes 70 tools across 10 categories.</p>
+<h3 id="components"><a class="header" href="#components">Components</a></h3>
+<ul>
+<li><strong>Binary</strong>: <code>mimir-mcp</code> (built to <code>crates/mimir/binaries/mimir-mcp-{target-triple}</code>)</li>
+<li><strong>Protocol</strong>: MCP over stdio</li>
+<li><strong>Database</strong>: Shared SQLite database at <code>~/Library/Application Support/com.mimir.app/data/mimir.db</code></li>
+<li><strong>Plugin</strong>: Claude Code plugin at <code>crates/mimir-mcp/plugin/</code></li>
+</ul>
+<h3 id="configuration"><a class="header" href="#configuration">Configuration</a></h3>
+<p>The database path is auto-detected. Override with:</p>
+<pre><code class="language-bash">export MIMIR_DATABASE_PATH=/path/to/mimir.db
+</code></pre>
+<h2 id="tool-reference"><a class="header" href="#tool-reference">Tool Reference</a></h2>
+<h3 id="campaign-management-10-tools"><a class="header" href="#campaign-management-10-tools">Campaign Management (10 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list_campaigns</code></td><td>List all available campaigns</td></tr>
+<tr><td><code>set_active_campaign</code></td><td>Set the active campaign (required by most tools)</td></tr>
+<tr><td><code>get_campaign_details</code></td><td>Get campaign info including modules and characters</td></tr>
+<tr><td><code>get_campaign_sources</code></td><td>Get enabled source books for a campaign</td></tr>
+<tr><td><code>create_campaign</code></td><td>Create a new campaign</td></tr>
+<tr><td><code>update_campaign</code></td><td>Update campaign name or description</td></tr>
+<tr><td><code>delete_campaign</code></td><td>Delete a campaign and all its data</td></tr>
+<tr><td><code>export_campaign</code></td><td>Export campaign as shareable archive</td></tr>
+<tr><td><code>import_campaign</code></td><td>Import campaign from archive</td></tr>
+<tr><td><code>preview_archive</code></td><td>Preview archive contents without importing</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="module-management-8-tools"><a class="header" href="#module-management-8-tools">Module Management (8 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>create_module</code></td><td>Create new module in active campaign</td></tr>
+<tr><td><code>list_modules</code></td><td>List all modules in active campaign</td></tr>
+<tr><td><code>get_module_details</code></td><td>Get module info including documents, monsters, items</td></tr>
+<tr><td><code>update_module</code></td><td>Update module name or description</td></tr>
+<tr><td><code>delete_module</code></td><td>Delete module and all contents</td></tr>
+<tr><td><code>add_monster_to_module</code></td><td>Add monster from catalog or homebrew to module</td></tr>
+<tr><td><code>remove_monster_from_module</code></td><td>Remove monster from module</td></tr>
+<tr><td><code>add_item_to_module</code></td><td>Add catalog item as loot to module</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="document-management-6-tools"><a class="header" href="#document-management-6-tools">Document Management (6 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list_documents</code></td><td>List campaign-level or module-level documents</td></tr>
+<tr><td><code>read_document</code></td><td>Read full content of a document</td></tr>
+<tr><td><code>create_document</code></td><td>Create document (backstory, read_aloud, dm_notes, description, custom)</td></tr>
+<tr><td><code>edit_document</code></td><td>Edit document using search and replace</td></tr>
+<tr><td><code>delete_document</code></td><td>Delete a document</td></tr>
+<tr><td><code>reorder_document</code></td><td>Reorder documents by swapping sort positions</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="character-management-13-tools"><a class="header" href="#character-management-13-tools">Character Management (13 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list_characters</code></td><td>List characters with optional filters (type, module, location, faction)</td></tr>
+<tr><td><code>get_character</code></td><td>Get detailed character info including classes and inventory</td></tr>
+<tr><td><code>create_character</code></td><td>Create NPC or PC (auto-populates proficiencies from catalog)</td></tr>
+<tr><td><code>edit_character</code></td><td>Update ability scores, currency, race, background, traits</td></tr>
+<tr><td><code>delete_character</code></td><td>Delete character and all associated data</td></tr>
+<tr><td><code>level_up_character</code></td><td>Level up character (handles HP, multiclass, ASI/feats, spells)</td></tr>
+<tr><td><code>add_item_to_character</code></td><td>Add catalog item to character inventory</td></tr>
+<tr><td><code>remove_item_from_character</code></td><td>Remove item from character inventory</td></tr>
+<tr><td><code>update_character_inventory</code></td><td>Update item quantity, equipped, or attuned state</td></tr>
+<tr><td><code>get_character_inventory</code></td><td>Get inventory (filterable by equipped/attuned)</td></tr>
+<tr><td><code>add_character_spell</code></td><td>Add spell to character’s known spells</td></tr>
+<tr><td><code>remove_character_spell</code></td><td>Remove spell from character</td></tr>
+<tr><td><code>list_character_spells</code></td><td>List character’s known spells (filterable by class/prepared)</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="map-management-8-tools"><a class="header" href="#map-management-8-tools">Map Management (8 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>create_map</code></td><td>Upload UVTT file to create new map</td></tr>
+<tr><td><code>list_maps</code></td><td>List maps (optionally filtered by module)</td></tr>
+<tr><td><code>get_map</code></td><td>Get map details including token placements</td></tr>
+<tr><td><code>update_map</code></td><td>Update map metadata (name, description, lighting)</td></tr>
+<tr><td><code>delete_map</code></td><td>Delete map and associated UVTT asset</td></tr>
+<tr><td><code>add_token_to_map</code></td><td>Add monster or NPC token to map</td></tr>
+<tr><td><code>list_tokens_on_map</code></td><td>List all tokens (optionally visible only)</td></tr>
+<tr><td><code>remove_token</code></td><td>Remove token placement from map</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="map-generation-3-tools"><a class="header" href="#map-generation-3-tools">Map Generation (3 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>generate_map</code></td><td>Generate Dungeondraft map from YAML config or biome preset</td></tr>
+<tr><td><code>list_map_presets</code></td><td>List available biome presets</td></tr>
+<tr><td><code>validate_map_config</code></td><td>Validate YAML config without generating</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="catalog-search-8-tools"><a class="header" href="#catalog-search-8-tools">Catalog Search (8 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>search_monsters</code></td><td>Search monster catalog (includes homebrew from active campaign)</td></tr>
+<tr><td><code>search_items</code></td><td>Search item catalog</td></tr>
+<tr><td><code>search_spells</code></td><td>Search spell catalog</td></tr>
+<tr><td><code>search_races</code></td><td>Search race catalog</td></tr>
+<tr><td><code>search_classes</code></td><td>Search class catalog</td></tr>
+<tr><td><code>search_backgrounds</code></td><td>Search background catalog</td></tr>
+<tr><td><code>search_feats</code></td><td>Search feat catalog</td></tr>
+<tr><td><code>search_conditions</code></td><td>Search condition catalog</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="homebrew-items-5-tools"><a class="header" href="#homebrew-items-5-tools">Homebrew Items (5 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list_homebrew_items</code></td><td>List all homebrew items in active campaign</td></tr>
+<tr><td><code>get_homebrew_item</code></td><td>Get homebrew item by ID</td></tr>
+<tr><td><code>create_homebrew_item</code></td><td>Create new or clone from catalog</td></tr>
+<tr><td><code>update_homebrew_item</code></td><td>Update homebrew item</td></tr>
+<tr><td><code>delete_homebrew_item</code></td><td>Delete homebrew item</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="homebrew-monsters-5-tools"><a class="header" href="#homebrew-monsters-5-tools">Homebrew Monsters (5 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list_homebrew_monsters</code></td><td>List all homebrew monsters in active campaign</td></tr>
+<tr><td><code>get_homebrew_monster</code></td><td>Get homebrew monster by ID</td></tr>
+<tr><td><code>create_homebrew_monster</code></td><td>Create new or clone from catalog</td></tr>
+<tr><td><code>update_homebrew_monster</code></td><td>Update homebrew monster</td></tr>
+<tr><td><code>delete_homebrew_monster</code></td><td>Delete homebrew monster</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="homebrew-spells-5-tools"><a class="header" href="#homebrew-spells-5-tools">Homebrew Spells (5 tools)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list_homebrew_spells</code></td><td>List all homebrew spells in active campaign</td></tr>
+<tr><td><code>get_homebrew_spell</code></td><td>Get homebrew spell by ID</td></tr>
+<tr><td><code>create_homebrew_spell</code></td><td>Create new or clone from catalog</td></tr>
+<tr><td><code>update_homebrew_spell</code></td><td>Update homebrew spell</td></tr>
+<tr><td><code>delete_homebrew_spell</code></td><td>Delete homebrew spell</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="claude-code-plugin"><a class="header" href="#claude-code-plugin">Claude Code Plugin</a></h2>
+<h3 id="installation"><a class="header" href="#installation">Installation</a></h3>
+<pre><code class="language-bash">claude plugin add /path/to/mimir/crates/mimir-mcp/plugin
+</code></pre>
+<h3 id="slash-commands-1"><a class="header" href="#slash-commands-1">Slash Commands</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Command</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>/mimir-campaigns</code></td><td>List all available campaigns</td></tr>
+<tr><td><code>/create-module</code></td><td>Create a new module in the active campaign</td></tr>
+<tr><td><code>/search-monsters</code></td><td>Search the D&amp;D monster catalog</td></tr>
+<tr><td><code>/search-spells</code></td><td>Search the D&amp;D spell catalog</td></tr>
+<tr><td><code>/generate-map</code></td><td>Generate a procedural Dungeondraft map</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="skills-1"><a class="header" href="#skills-1">Skills</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Skill</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>/mimir-dm</code></td><td>General campaign management</td></tr>
+<tr><td><code>/encounter-balance</code></td><td>Analyze encounter difficulty</td></tr>
+<tr><td><code>/loot-audit</code></td><td>Audit treasure distribution</td></tr>
+<tr><td><code>/session-prep</code></td><td>Pre-session readiness review</td></tr>
+<tr><td><code>/continuity-check</code></td><td>Find contradictions across documents</td></tr>
+<tr><td><code>/npc-network</code></td><td>Map NPC relationships</td></tr>
+<tr><td><code>/pressure-test</code></td><td>Stress-test scenarios</td></tr>
+<tr><td><code>/mapgen</code></td><td>Creative direction for map generation</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="see-also-32"><a class="header" href="#see-also-32">See Also</a></h2>
+<ul>
+<li><a href="how-to/ai-assistant">AI Assistant How-To</a></li>
+<li><a href="#mapgen-reference">Mapgen Reference</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="mapgen-reference"><a class="header" href="#mapgen-reference">Mapgen Reference</a></h1>
+<p>Technical reference for <code>mimir-mapgen</code> — Mimir’s procedural map generator that outputs Dungeondraft-compatible <code>.dungeondraft_map</code> files.</p>
+<h2 id="cli-usage"><a class="header" href="#cli-usage">CLI Usage</a></h2>
+<pre><code class="language-bash">mimir-mapgen &lt;command&gt;
+</code></pre>
+<h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Command</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>generate</code></td><td>Generate a <code>.dungeondraft_map</code> from a YAML config or biome preset</td></tr>
+<tr><td><code>validate</code></td><td>Validate a YAML config without generating</td></tr>
+<tr><td><code>list-presets</code></td><td>List available biome presets</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="generate"><a class="header" href="#generate">Generate</a></h3>
+<pre><code class="language-bash"># From a YAML config file
+mimir-mapgen generate config.yaml -o output.dungeondraft_map
+
+# From a biome preset
+mimir-mapgen generate --preset forest -o output.dungeondraft_map
+
+# With a random seed override
+mimir-mapgen generate config.yaml --seed 42 -o output.dungeondraft_map
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-o</code>, <code>--output</code></td><td>Output file path (default: <code>output.dungeondraft_map</code>)</td></tr>
+<tr><td><code>-s</code>, <code>--seed</code></td><td>Random seed override (takes precedence over config file seed)</td></tr>
+<tr><td><code>-p</code>, <code>--preset</code></td><td>Generate from a biome preset instead of a config file</td></tr>
+</tbody>
+</table>
+</div>
+<p>You must provide either a config file path or <code>--preset</code>, but not both.</p>
+<h3 id="validate"><a class="header" href="#validate">Validate</a></h3>
+<pre><code class="language-bash">mimir-mapgen validate config.yaml
+</code></pre>
+<p>Reports validation errors without generating a map. Useful for checking configs before generation.</p>
+<h3 id="list-presets"><a class="header" href="#list-presets">List Presets</a></h3>
+<pre><code class="language-bash">mimir-mapgen list-presets
+</code></pre>
+<h2 id="biome-presets"><a class="header" href="#biome-presets">Biome Presets</a></h2>
+<p>12 built-in presets with sensible defaults for terrain, objects, and noise parameters.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Preset</th><th>Size</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>forest</code></td><td>32×32</td><td>Dense temperate forest with dirt paths, scattered rocks, and natural clearings</td></tr>
+<tr><td><code>grassland</code></td><td>32×32</td><td>Open rolling hills with sparse trees and wildflowers</td></tr>
+<tr><td><code>cave</code></td><td>24×24</td><td>Underground cavern with rocky terrain and dark ambient lighting</td></tr>
+<tr><td><code>desert</code></td><td>32×32</td><td>Arid sandy wasteland with rocky outcrops and sparse scrub</td></tr>
+<tr><td><code>lake</code></td><td>32×32</td><td>Tranquil woodland pond with grassy shores and scattered trees</td></tr>
+<tr><td><code>ice_lake</code></td><td>32×32</td><td>Frozen lake with cracked ice, snow-covered shores, and frigid water</td></tr>
+<tr><td><code>arctic</code></td><td>32×32</td><td>Frozen tundra with snow drifts, exposed rock, and harsh conditions</td></tr>
+<tr><td><code>island_tropical</code></td><td>32×32</td><td>Tropical island with sandy beaches, palm trees, and warm ocean</td></tr>
+<tr><td><code>island_forest</code></td><td>32×32</td><td>Forested island in a lake with dirt shores and dense tree cover</td></tr>
+<tr><td><code>island_arctic</code></td><td>32×32</td><td>Snow-covered island surrounded by frigid dark water</td></tr>
+<tr><td><code>swamp</code></td><td>32×32</td><td>Dark, murky wetland with stagnant water, dead trees, and dim lighting</td></tr>
+<tr><td><code>forest_river</code></td><td>32×32</td><td>Dense forest bisected by a meandering river with rocky banks</td></tr>
+</tbody>
+</table>
+</div>
+<p>Some presets accept alternate names: <code>lake</code>/<code>pond</code>, <code>swamp</code>/<code>marsh</code>/<code>bog</code>, <code>island_tropical</code>/<code>tropical_island</code> (hyphens also accepted).</p>
+<h2 id="yaml-configuration-schema"><a class="header" href="#yaml-configuration-schema">YAML Configuration Schema</a></h2>
+<h3 id="top-level-fields"><a class="header" href="#top-level-fields">Top-Level Fields</a></h3>
+<pre><code class="language-yaml">name: "My Forest Map"          # string, required — map display name
+width: 32                       # u32, required — width in grid squares
+height: 32                      # u32, required — height in grid squares
+seed: 42                        # u64, optional — random seed
+</code></pre>
+<h3 id="noise"><a class="header" href="#noise">Noise</a></h3>
+<p>Controls Perlin noise that drives terrain blending, object placement, and feature generation.</p>
+<pre><code class="language-yaml">noise:
+  seed: 0              # u32 — noise seed (separate from map seed)
+  octaves: 6           # u32 — noise layers (more = more detail)
+  persistence: 0.5     # f64 — amplitude decay per octave (0–1)
+  lacunarity: 2.0      # f64 — frequency multiplier per octave
+  scale: 0.03          # f64 — base frequency (lower = larger features)
+</code></pre>
+<h3 id="island-mode"><a class="header" href="#island-mode">Island Mode</a></h3>
+<p>Optional radial falloff creating island/clearing shapes where the center is low and edges are high.</p>
+<pre><code class="language-yaml">island_mode: 1.5       # f64, optional — falloff strength (higher = steeper)
+</code></pre>
+<h3 id="terrain"><a class="header" href="#terrain">Terrain</a></h3>
+<p>Defines 4 terrain texture slots and their noise-based blending.</p>
+<pre><code class="language-yaml">terrain:
+  slots:                        # exactly 4 slots required
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0                # f64 — noise range lower bound
+      upper: 0.3                # f64 — noise range upper bound
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.25
+      upper: 0.55
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.5
+      upper: 0.8
+    - texture: "res://textures/terrain/terrain_gravel.png"
+      lower: 0.75
+      upper: 1.0
+  blend_width: 0.05            # f64 — overlap width for blending
+  smooth_blending: false        # bool — smooth interpolation vs hard boundaries
+</code></pre>
+<p>Slots should have overlapping <code>lower</code>/<code>upper</code> ranges for natural blending. Each slot’s weight is determined by how well the noise value falls within its range.</p>
+<h3 id="trees"><a class="header" href="#trees">Trees</a></h3>
+<p>Array of tree configurations with optional shadow and canopy layers.</p>
+<pre><code class="language-yaml">trees:
+  - tree:
+      textures:                          # list of textures (randomly selected)
+        - "res://textures/objects/trees/tree_01.png"
+        - "res://textures/objects/trees/tree_02.png"
+      min_distance: 180.0                # f64 — minimum spacing (pixels)
+      noise_lower: 0.3                   # f64 — place only where noise &gt; this
+      noise_upper: 0.8                   # f64 — place only where noise &lt; this
+      probability: 0.8                   # f64 — placement chance (0–1)
+      scale_min: 0.8                     # f64 — minimum random scale
+      scale_max: 1.4                     # f64 — maximum random scale
+      layer: 300                         # i32 — Dungeondraft render layer
+      random_rotation: true              # bool — randomize rotation
+      random_mirror: true                # bool — randomly flip horizontally
+      custom_color: null                 # string, optional — ARGB hex override
+    shadow:                              # optional shadow beneath tree
+      texture: "res://textures/objects/trees/tree_shadow.png"
+      offset_x: 10.0                     # f64 — shadow offset X
+      offset_y: 15.0                     # f64 — shadow offset Y
+      scale_factor: 1.2                  # f64 — scale relative to tree
+      layer: 50                          # i32 — render layer (below tree)
+    canopy:                              # optional canopy on upper level
+      texture: "res://textures/objects/trees/tree_canopy.png"
+      scale_factor: 1.5                  # f64 — scale relative to tree
+      layer: 500                         # i32 — render layer (above tree)
+      level: 1                           # i32 — Dungeondraft level (1 = upper)
+</code></pre>
+<h3 id="clutter"><a class="header" href="#clutter">Clutter</a></h3>
+<p>Small decorative objects scattered across the map.</p>
+<pre><code class="language-yaml">clutter:
+  - textures:
+      - "res://textures/objects/grass/grass_01.png"
+    min_distance: 80.0
+    noise_lower: 0.2
+    noise_upper: 0.7
+    probability: 0.6
+    scale_min: 0.5
+    scale_max: 1.0
+    layer: 100
+    random_rotation: true
+    random_mirror: false
+    custom_color: null
+</code></pre>
+<h3 id="clumps"><a class="header" href="#clumps">Clumps</a></h3>
+<p>Clustered object groups (rock formations, flower patches).</p>
+<pre><code class="language-yaml">clumps:
+  - primary:                             # main object (placed via Poisson Disc)
+      textures:
+        - "res://textures/objects/rocks/rock_01.png"
+      min_distance: 200.0
+      noise_lower: 0.4
+      noise_upper: 0.9
+      probability: 0.5
+      scale_min: 0.8
+      scale_max: 1.2
+      layer: 150
+      random_rotation: true
+      random_mirror: false
+    secondary:                           # scattered around each primary
+      textures:
+        - "res://textures/objects/rocks/pebble_01.png"
+      scale_min: 0.3
+      scale_max: 0.6
+      layer: 100
+      random_rotation: true
+      random_mirror: false
+    scatter_count: 5                     # i32 — secondaries per primary
+    scatter_radius: 100.0                # f64 — scatter radius around primary
+</code></pre>
+<h3 id="roads"><a class="header" href="#roads">Roads</a></h3>
+<p>Road paths using noise-following walk (<code>straight</code>) or sinusoidal meander (<code>meandering</code>).</p>
+<pre><code class="language-yaml">roads:
+  - from: Left                           # Edge — start: Left, Right, Top, Bottom
+    to: Right                            # Edge — end side
+    texture: "res://textures/paths/path_dirt.png"
+    width: 512.0                         # f64 — road width in pixels (512 = 2 grid squares)
+    layer: 100                           # i32 — render layer
+    style: straight                      # PathStyle — "straight" or "meandering"
+    step_distance: 64.0                  # f64 — walk step size (pixels)
+    fov: 1.047                           # f64 — field of view angle (radians, default π/3)
+    noise_weight: 0.5                    # f64 — 0=all progress, 1=all noise
+    margin: 128.0                        # f64 — margin from map edge (pixels)
+    smooth_density: 8                    # usize — Bezier smoothing density
+    edge_paths:                          # optional — border textures along road sides
+      texture: "res://textures/paths/path_edge.png"
+      offset: 20.0                       # f64 — perpendicular offset from center
+      width: 8.0                         # f64 — edge path width
+      layer: 190                         # i32 — render layer
+</code></pre>
+<p>All road fields have defaults, so <code>roads: [{}]</code> produces a valid default road.</p>
+<p><strong>Path styles:</strong></p>
+<ul>
+<li><code>straight</code> — greedy walk following noise ridges/valleys. Roughly straight with gentle bends.</li>
+<li><code>meandering</code> — sinusoidal S-curves. More natural for rivers and winding roads.</li>
+</ul>
+<p>Roads automatically route around rooms and corridors.</p>
+<h3 id="rivers"><a class="header" href="#rivers">Rivers</a></h3>
+<p>River paths with water polygon and bank paths. Default style is <code>meandering</code>.</p>
+<pre><code class="language-yaml">rivers:
+  - from: Top                            # Edge — start side
+    to: Bottom                           # Edge — end side
+    width: 120.0                         # f64 — water width (pixels)
+    style: meandering                    # PathStyle — "straight" or "meandering"
+    step_distance: 64.0                  # f64 — walk step size
+    fov: 1.047                           # f64 — FOV for straight style
+    noise_weight: 0.5                    # f64 — noise following weight
+    margin: 128.0                        # f64 — margin from map edge
+    smooth_density: 8                    # usize — Bezier smoothing
+    deep_color: "ff3aa19a"               # string — ARGB hex for deep water
+    shallow_color: "ff3ac3b2"            # string — ARGB hex for shallow water
+    bank_texture: "res://textures/paths/path_rocks.png"
+    bank_width: 20.0                     # f64 — bank path width
+    bank_layer: 100                      # i32 — bank render layer
+</code></pre>
+<p>Rivers generate a water polygon between two banks plus bank paths on each side. Very wide rivers (1000+) can simulate coastlines. Rivers automatically route around rooms and corridors.</p>
+<h3 id="water-bodies"><a class="header" href="#water-bodies">Water Bodies</a></h3>
+<p>Noise-threshold water generation for lakes and ponds.</p>
+<pre><code class="language-yaml">water:
+  threshold: 0.75                        # f64 — noise values above this become water
+  deep_color: "ff3aa19a"                 # string — ARGB hex
+  shallow_color: "ff3ac3b2"              # string — ARGB hex
+  blend_distance: 40.0                   # f64 — edge blend distance
+  min_contour_points: 6                  # usize — minimum polygon size
+  smooth_iterations: 2                   # usize — edge smoothing passes
+  pixels_per_cell: 64.0                  # f64 — coordinate scaling
+  disable_border: false                  # bool — disable water border effect
+</code></pre>
+<h3 id="elevation-contours"><a class="header" href="#elevation-contours">Elevation Contours</a></h3>
+<p>Cliff and hill contour lines at noise thresholds.</p>
+<pre><code class="language-yaml">elevation:
+  levels:
+    - threshold: 0.65                    # f64 — noise threshold for this contour
+      texture: "res://textures/paths/path_rocks.png"
+      width: 12.0                        # f64 — contour line width
+      layer: 100                         # i32 — render layer
+      min_points: 8                      # usize — minimum contour length
+      smooth_iterations: 2              # usize — smoothing passes
+      shadow:                            # optional shadow below contour
+        texture: "res://textures/paths/path_rocks.png"
+        offset: 8.0                      # f64 — perpendicular offset
+        width: 16.0                      # f64 — shadow width
+        layer: 50                        # i32 — shadow layer
+  pixels_per_cell: 64.0                  # f64 — coordinate scaling
+</code></pre>
+<h3 id="rooms"><a class="header" href="#rooms">Rooms</a></h3>
+<p>Rectangular rooms with walls, doors, and terrain overrides. Outdoor features (trees, clutter, roads) automatically route around rooms.</p>
+<pre><code class="language-yaml">rooms:
+  - id: "guard_room"              # string, required — unique identifier
+    x: 4                          # u32 — grid X position (left edge)
+    y: 6                          # u32 — grid Y position (top edge)
+    width: 5                      # u32 — width in grid squares
+    height: 4                     # u32 — height in grid squares
+    terrain_slot: 3               # usize, optional — terrain texture slot (0–3)
+    walls:                        # optional — per-wall toggles (default: all true)
+      north: true
+      south: true
+      east: true
+      west: false                 # open side
+    portals:                      # optional — doors/windows on walls
+      - wall: "north"            # WallSide — north, south, east, west
+        position: 2              # u32 — grid offset along wall from start
+        type: "door"             # PortalType — door, window, archway, secret_door
+        width: 1                 # u32 — portal width in grid squares
+</code></pre>
+<p>All coordinates are in grid squares (256 pixels per grid square internally). Rooms must not overlap or extend beyond map boundaries.</p>
+<h3 id="corridors"><a class="header" href="#corridors">Corridors</a></h3>
+<p>Connections between rooms with parallel wall segments.</p>
+<pre><code class="language-yaml">corridors:
+  - from: "guard_room"           # string — source room ID
+    from_wall: "east"            # WallSide — exit wall of source
+    to: "throne_room"            # string — destination room ID
+    to_wall: "west"              # WallSide — entry wall of destination
+    width: 2                     # u32 — width in grid squares
+    terrain_slot: 3              # usize, optional — floor terrain slot
+    portals:                     # optional — doors at corridor ends
+      - end: "from"             # CorridorEnd — "from" or "to"
+        type: "door"            # PortalType
+        width: 1                # u32 — portal width
+</code></pre>
+<p>Corridors are straight when rooms are aligned on the connecting axis; L-shaped otherwise.</p>
+<h3 id="polygons"><a class="header" href="#polygons">Polygons</a></h3>
+<p>Arbitrary closed shapes defined by vertices in grid coordinates. Use for irregular rooms, oval chambers, or L-shaped areas.</p>
+<pre><code class="language-yaml">polygons:
+  - id: "room_a"                   # string, required — unique identifier
+    points:                        # list of [x, y] vertices, clockwise
+      - [3, 6]
+      - [9, 6]
+      - [9, 14]
+      - [3, 14]
+    terrain_slot: 3                # usize, optional — terrain texture slot (0–3)
+    wall_texture: "res://textures/walls/battlements.png"  # optional
+    portals:
+      - edge: 0                   # usize — 0-indexed segment (edge 0 = points[0]→points[1])
+        position: 0.5             # f64 — fractional position along edge (0.0–1.0)
+        type: door                # PortalType — door, window, archway, secret_door
+</code></pre>
+<p><strong>Adjacency:</strong> When two polygons share an edge, the shared wall is automatically removed, creating an open connection. <strong>Overlapping polygons</strong> are merged into a single outer wall. <strong>Edge indexing:</strong> edge 0 = <code>points[0]</code> → <code>points[1]</code>, the last edge wraps to <code>points[0]</code>.</p>
+<h3 id="portal-types"><a class="header" href="#portal-types">Portal Types</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>door</code></td><td>Standard door</td></tr>
+<tr><td><code>window</code></td><td>Standard window</td></tr>
+<tr><td><code>archway</code></td><td>Open archway</td></tr>
+<tr><td><code>secret_door</code></td><td>Hidden door</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="lighting"><a class="header" href="#lighting">Lighting</a></h3>
+<p>Ambient lighting and shadow configuration.</p>
+<pre><code class="language-yaml">lighting:
+  ambient_light: "ffffffff"              # string — ARGB hex ambient color
+  ambient_energy: 1.0                    # f64, optional — brightness multiplier
+  shadow_color: "66000000"               # string, optional — ARGB hex shadow color
+</code></pre>
+<h4 id="time-of-day-presets"><a class="header" href="#time-of-day-presets">Time-of-Day Presets</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Preset</th><th>Ambient Color</th><th>Energy</th><th>Shadow</th><th>Use Case</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dawn</code></td><td>Warm gold</td><td>0.7</td><td>Brown tint</td><td>Early morning encounters</td></tr>
+<tr><td><code>day</code></td><td>White</td><td>1.0</td><td>None</td><td>Default daylight</td></tr>
+<tr><td><code>dusk</code></td><td>Orange-red</td><td>0.6</td><td>Purple tint</td><td>Evening ambush, sunset</td></tr>
+<tr><td><code>night</code></td><td>Blue</td><td>0.3</td><td>Dark</td><td>Nighttime stealth, camp</td></tr>
+<tr><td><code>underground</code></td><td>Dark grey</td><td>0.2</td><td>Black</td><td>Caves, dungeons</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="common-dungeondraft-texture-paths"><a class="header" href="#common-dungeondraft-texture-paths">Common Dungeondraft Texture Paths</a></h2>
+<p>These <code>res://</code> paths reference Dungeondraft’s default asset pack.</p>
+<h3 id="terrain-1"><a class="header" href="#terrain-1">Terrain</a></h3>
+<ul>
+<li><code>res://textures/terrain/terrain_grass.png</code></li>
+<li><code>res://textures/terrain/terrain_dirt.png</code></li>
+<li><code>res://textures/terrain/terrain_dry_grass.png</code></li>
+<li><code>res://textures/terrain/terrain_moss.png</code></li>
+<li><code>res://textures/terrain/terrain_gravel.png</code></li>
+<li><code>res://textures/terrain/terrain_stone.png</code></li>
+<li><code>res://textures/terrain/terrain_sand.png</code></li>
+<li><code>res://textures/terrain/terrain_snow.png</code></li>
+<li><code>res://textures/terrain/terrain_ice.png</code></li>
+</ul>
+<h3 id="walls"><a class="header" href="#walls">Walls</a></h3>
+<ul>
+<li><code>res://textures/walls/battlements.png</code></li>
+<li><code>res://textures/walls/stone.png</code></li>
+<li><code>res://textures/walls/wood.png</code></li>
+<li><code>res://textures/walls/cave.png</code></li>
+</ul>
+<h3 id="portals"><a class="header" href="#portals">Portals</a></h3>
+<ul>
+<li><code>res://textures/portals/door_00.png</code></li>
+<li><code>res://textures/portals/window_03.png</code></li>
+<li><code>res://textures/portals/archway_00.png</code></li>
+<li><code>res://textures/portals/secret_00.png</code></li>
+</ul>
+<h2 id="see-also-33"><a class="header" href="#see-also-33">See Also</a></h2>
+<ul>
+<li><a href="#generate-a-map">Generate Maps How-To</a></li>
+<li><a href="#mcp-server-reference">MCP Server Reference</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="glossary"><a class="header" href="#glossary">Glossary</a></h1>
 <p>Definitions of terms used in Mimir.</p>
 <h2 id="a"><a class="header" href="#a">A</a></h2>
@@ -2924,7 +3927,9 @@
 <dt id="campaign"><a class="header" href="#campaign"><strong>Campaign</strong></a></dt>
 <dd>A collection of modules, characters, and documents representing a D&amp;D adventure series.</dd>
 <dt id="campaign-dashboard-1"><a class="header" href="#campaign-dashboard-1"><strong>Campaign Dashboard</strong></a></dt>
-<dd>The main interface for managing a campaign, with tabs for Campaign, Modules, NPCs, and PCs.</dd>
+<dd>The main interface for managing a campaign, with tabs for Campaign, Modules, NPCs, PCs, and Homebrew.</dd>
+<dt id="clone-from-catalog-4"><a class="header" href="#clone-from-catalog-4"><strong>Clone from Catalog</strong></a></dt>
+<dd>Creating a homebrew item, monster, or spell by copying an existing entry from the D&amp;D 5e catalog as a starting point, then customizing it.</dd>
 </dl>
 <h2 id="d"><a class="header" href="#d">D</a></h2>
 <dl>
@@ -2943,6 +3948,11 @@
 <dt id="fog-of-war-3"><a class="header" href="#fog-of-war-3"><strong>Fog of War</strong></a></dt>
 <dd>System that hides map areas outside PC vision. Reveals as characters move.</dd>
 </dl>
+<h2 id="h"><a class="header" href="#h">H</a></h2>
+<dl>
+<dt id="homebrew"><a class="header" href="#homebrew"><strong>Homebrew</strong></a></dt>
+<dd>Custom content created by the DM — items, monsters, and spells that don’t exist in the official D&amp;D catalog. Managed from the Homebrew tab on the Campaign Dashboard.</dd>
+</dl>
 <h2 id="g"><a class="header" href="#g">G</a></h2>
 <dl>
 <dt id="grid"><a class="header" href="#grid"><strong>Grid</strong></a></dt>
@@ -2957,6 +3967,12 @@
 </dl>
 <h2 id="m"><a class="header" href="#m">M</a></h2>
 <dl>
+<dt id="mapgen"><a class="header" href="#mapgen"><strong>Mapgen</strong></a></dt>
+<dd>The procedural map generation system that creates Dungeondraft-format maps from YAML configuration or biome presets.</dd>
+<dt id="marker"><a class="header" href="#marker"><strong>Marker</strong></a></dt>
+<dd>A token type for points of interest on a map — landmarks, waypoints, or other notable locations.</dd>
+<dt id="mcp-model-context-protocol"><a class="header" href="#mcp-model-context-protocol"><strong>MCP (Model Context Protocol)</strong></a></dt>
+<dd>The protocol used by Mimir’s AI assistant sidecar. Runs as a separate process and provides campaign management tools to AI clients like Claude.</dd>
 <dt id="module"><a class="header" href="#module"><strong>Module</strong></a></dt>
 <dd>A self-contained adventure within a campaign. Contains maps, monsters, NPCs, and documents.</dd>
 <dt id="monster"><a class="header" href="#monster"><strong>Monster</strong></a></dt>
@@ -2971,9 +3987,9 @@
 <dl>
 <dt id="pc-player-character"><a class="header" href="#pc-player-character"><strong>PC (Player Character)</strong></a></dt>
 <dd>A character controlled by a player. Created with full stats using the character wizard.</dd>
-<dt id="play-mode-4"><a class="header" href="#play-mode-4"><strong>Play Mode</strong></a></dt>
+<dt id="play-mode-3"><a class="header" href="#play-mode-3"><strong>Play Mode</strong></a></dt>
 <dd>The interface for running game sessions. Includes map display, monster stats, and session notes.</dd>
-<dt id="player-display-2"><a class="header" href="#player-display-2"><strong>Player Display</strong></a></dt>
+<dt id="player-display-3"><a class="header" href="#player-display-3"><strong>Player Display</strong></a></dt>
 <dd>A second window showing what players see. Applies fog of war and hides DM information.</dd>
 </dl>
 <h2 id="r"><a class="header" href="#r">R</a></h2>
@@ -2983,6 +3999,8 @@
 </dl>
 <h2 id="s"><a class="header" href="#s">S</a></h2>
 <dl>
+<dt id="sidecar"><a class="header" href="#sidecar"><strong>Sidecar</strong></a></dt>
+<dd>A companion process bundled with Mimir that provides the MCP server for AI assistant integration. Launches automatically when needed.</dd>
 <dt id="session-notes"><a class="header" href="#session-notes"><strong>Session Notes</strong></a></dt>
 <dd>Auto-saving text area in Play Mode for tracking HP, initiative, and events.</dd>
 </dl>
@@ -3112,7 +4130,7 @@
 <li>New modules start fresh</li>
 <li>Campaign-level content evolves</li>
 </ul>
-<h2 id="see-also-25"><a class="header" href="#see-also-25">See Also</a></h2>
+<h2 id="see-also-34"><a class="header" href="#see-also-34">See Also</a></h2>
 <ul>
 <li><a href="#the-two-board-system">The Two-Board System</a></li>
 <li><a href="#create-a-campaign">Create a Campaign</a></li>
@@ -3153,6 +4171,13 @@
 <li>Character assignments</li>
 <li>Quick access to sheets</li>
 </ul>
+<h3 id="homebrew-tab-2"><a class="header" href="#homebrew-tab-2">Homebrew Tab</a></h3>
+<p>Custom content:</p>
+<ul>
+<li>Homebrew items, monsters, and spells</li>
+<li>Clone from the D&amp;D catalog and modify</li>
+<li>Available in character inventories and module encounters</li>
+</ul>
 <h2 id="module-board"><a class="header" href="#module-board">Module Board</a></h2>
 <p>Each module has its own preparation space:</p>
 <h3 id="documents-1"><a class="header" href="#documents-1">Documents</a></h3>
@@ -3176,7 +4201,7 @@
 <li>Encounter locations</li>
 <li>Token placements</li>
 </ul>
-<h3 id="dangers-1"><a class="header" href="#dangers-1">Dangers</a></h3>
+<h3 id="monsters-1"><a class="header" href="#monsters-1">Monsters</a></h3>
 <p>Monsters and hazards:</p>
 <ul>
 <li>Encounter creatures</li>
@@ -3238,141 +4263,123 @@
 <li>Add detail as needed</li>
 <li>Skip what you don’t need</li>
 </ul>
-<h2 id="see-also-26"><a class="header" href="#see-also-26">See Also</a></h2>
+<h2 id="see-also-35"><a class="header" href="#see-also-35">See Also</a></h2>
 <ul>
 <li><a href="#campaigns-vs-modules">Campaigns vs Modules</a></li>
 <li><a href="#document-workflow">Document Workflow</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="document-workflow"><a class="header" href="#document-workflow">Document Workflow</a></h1>
-<p>How Mimir’s stage-based document system helps you track preparation progress.</p>
-<h2 id="the-challenge"><a class="header" href="#the-challenge">The Challenge</a></h2>
-<p>Preparing a D&amp;D session involves many pieces:</p>
+<p>How documents work in Mimir and how to use them effectively for session preparation.</p>
+<h2 id="documents-in-mimir"><a class="header" href="#documents-in-mimir">Documents in Mimir</a></h2>
+<p>Documents are markdown-based text entries for organizing your campaign and module content. They serve as your DM notebook — session notes, location descriptions, encounter plans, read-aloud text, and anything else you need.</p>
+<h2 id="two-scopes"><a class="header" href="#two-scopes">Two Scopes</a></h2>
+<p>Documents exist at two levels:</p>
+<h3 id="campaign-documents"><a class="header" href="#campaign-documents">Campaign Documents</a></h3>
+<p>Accessed from the <strong>Campaign tab</strong> on the dashboard. Use these for:</p>
 <ul>
-<li>Maps to upload</li>
-<li>Monsters to add</li>
-<li>Descriptions to write</li>
-<li>Notes to organize</li>
+<li>World-building and lore</li>
+<li>Faction descriptions</li>
+<li>Recurring NPC notes</li>
+<li>Campaign-wide information</li>
 </ul>
-<p>Without structure, it’s easy to lose track of what’s ready and what still needs work.</p>
-<h2 id="stage-based-progression"><a class="header" href="#stage-based-progression">Stage-Based Progression</a></h2>
-<p>Documents in Mimir progress through stages:</p>
-<h3 id="draft"><a class="header" href="#draft">Draft</a></h3>
-<p>Initial creation:</p>
+<p>Campaign documents persist across all modules and sessions.</p>
+<h3 id="module-documents-1"><a class="header" href="#module-documents-1">Module Documents</a></h3>
+<p>Accessed from a module’s <strong>Documents section</strong> in the prep view. Use these for:</p>
 <ul>
-<li>Just started</li>
-<li>Rough notes</li>
-<li>Placeholder content</li>
+<li>Session-specific encounter plans</li>
+<li>Location descriptions for this adventure</li>
+<li>Read-aloud text</li>
+<li>Tactical notes</li>
 </ul>
-<h3 id="review"><a class="header" href="#review">Review</a></h3>
-<p>Ready for revision:</p>
+<p>Module documents are self-contained within their module.</p>
+<h2 id="creating-documents-1"><a class="header" href="#creating-documents-1">Creating Documents</a></h2>
+<p>Click the <strong>+</strong> button in the document sidebar. Choose between:</p>
 <ul>
-<li>Content complete</li>
-<li>Needs polish</li>
-<li>Check for consistency</li>
+<li><strong>New Document</strong> — Create a blank markdown document with a title</li>
+<li><strong>Upload File</strong> — Import an existing markdown file or image</li>
 </ul>
-<h3 id="complete"><a class="header" href="#complete">Complete</a></h3>
-<p>Ready for play:</p>
+<h2 id="the-editor"><a class="header" href="#the-editor">The Editor</a></h2>
+<p>Documents use a rich text editor (Tiptap 3) with markdown under the hood. Formatting options:</p>
 <ul>
-<li>Finalized content</li>
-<li>All details filled in</li>
-<li>Session-ready</li>
+<li>Headings (H1, H2, H3)</li>
+<li>Bold, italic, strikethrough</li>
+<li>Bullet and numbered lists</li>
+<li>Blockquotes and horizontal rules</li>
+<li>Tables</li>
+<li>Undo/redo</li>
 </ul>
-<h2 id="visual-tracking"><a class="header" href="#visual-tracking">Visual Tracking</a></h2>
-<p>The document sidebar shows:</p>
-<ul>
-<li>Documents grouped by stage</li>
-<li>Visual indicators for completion</li>
-<li>Progress at a glance</li>
-</ul>
-<h2 id="templates"><a class="header" href="#templates">Templates</a></h2>
-<p>Mimir provides templates for common document types:</p>
-<h3 id="session-notes-1"><a class="header" href="#session-notes-1">Session Notes</a></h3>
-<ul>
-<li>Pre-session prep section</li>
-<li>During-session notes</li>
-<li>Post-session recap</li>
-</ul>
-<h3 id="location-description"><a class="header" href="#location-description">Location Description</a></h3>
-<ul>
-<li>Overview</li>
-<li>Key features</li>
-<li>Secrets and discoveries</li>
-</ul>
-<h3 id="encounter-plan"><a class="header" href="#encounter-plan">Encounter Plan</a></h3>
-<ul>
-<li>Setup and trigger</li>
-<li>Combatants</li>
-<li>Tactics</li>
-<li>Rewards</li>
-</ul>
-<h3 id="npc-profile"><a class="header" href="#npc-profile">NPC Profile</a></h3>
-<ul>
-<li>Appearance</li>
-<li>Personality</li>
-<li>Goals and motivations</li>
-<li>Useful information</li>
-</ul>
-<h2 id="workflow-benefits"><a class="header" href="#workflow-benefits">Workflow Benefits</a></h2>
-<h3 id="clear-progress"><a class="header" href="#clear-progress">Clear Progress</a></h3>
-<p>See exactly what’s ready:</p>
-<ul>
-<li>Incomplete documents need attention</li>
-<li>Complete documents are session-ready</li>
-<li>No guessing about preparation status</li>
-</ul>
-<h3 id="prioritization"><a class="header" href="#prioritization">Prioritization</a></h3>
-<p>Focus on what matters:</p>
-<ul>
-<li>Work through drafts</li>
-<li>Review before sessions</li>
-<li>Mark complete when done</li>
-</ul>
-<h3 id="confidence"><a class="header" href="#confidence">Confidence</a></h3>
-<p>Know you’re prepared:</p>
-<ul>
-<li>All complete = ready to play</li>
-<li>Incomplete = still working</li>
-<li>Review = almost there</li>
-</ul>
+<h3 id="auto-save-1"><a class="header" href="#auto-save-1">Auto-Save</a></h3>
+<p>All changes save automatically as you type. Watch for the “Saved” indicator — there’s no manual save step.</p>
+<h2 id="organization-1"><a class="header" href="#organization-1">Organization</a></h2>
+<h3 id="reordering"><a class="header" href="#reordering">Reordering</a></h3>
+<p>Use the <strong>up/down arrow buttons</strong> (visible on hover) to reorder documents in the sidebar.</p>
+<h3 id="pdf-export-3"><a class="header" href="#pdf-export-3">PDF Export</a></h3>
+<p>Click <strong>Export PDF</strong> in the editor toolbar to export a document as a PDF.</p>
 <h2 id="practical-tips"><a class="header" href="#practical-tips">Practical Tips</a></h2>
 <h3 id="before-first-session"><a class="header" href="#before-first-session">Before First Session</a></h3>
 <ol>
-<li>Create key documents as drafts</li>
-<li>Fill in essential content</li>
-<li>Mark complete when ready</li>
-</ol>
-<h3 id="ongoing-preparation"><a class="header" href="#ongoing-preparation">Ongoing Preparation</a></h3>
-<ol>
-<li>Add drafts as ideas come</li>
-<li>Review and polish before sessions</li>
-<li>Complete what you’ll need</li>
+<li>Create documents for key locations and encounters</li>
+<li>Write read-aloud descriptions</li>
+<li>Note important NPC dialogue</li>
 </ol>
 <h3 id="during-play"><a class="header" href="#during-play">During Play</a></h3>
-<ol>
-<li>Session notes auto-save</li>
-<li>Add observations and outcomes</li>
-<li>Reference prepared content</li>
-</ol>
-<h2 id="document-vs-session-notes"><a class="header" href="#document-vs-session-notes">Document vs Session Notes</a></h2>
-<h3 id="prepared-documents"><a class="header" href="#prepared-documents">Prepared Documents</a></h3>
-<ul>
-<li>Written before play</li>
-<li>Reference material</li>
-<li>Encounter plans, descriptions</li>
-</ul>
-<h3 id="session-notes-1-1"><a class="header" href="#session-notes-1-1">Session Notes</a></h3>
-<ul>
-<li>Written during play</li>
-<li>Real-time capture</li>
-<li>HP tracking, events, decisions</li>
-</ul>
-<p>Both have their place in your workflow.</p>
-<h2 id="see-also-27"><a class="header" href="#see-also-27">See Also</a></h2>
+<p>Session notes in Play Mode auto-save as you type — use them for initiative tracking, HP, and events. Prepared documents are separate and remain unmodified.</p>
+<h3 id="after-sessions"><a class="header" href="#after-sessions">After Sessions</a></h3>
+<p>Add follow-up notes to campaign documents to track story developments and player decisions.</p>
+<h2 id="see-also-36"><a class="header" href="#see-also-36">See Also</a></h2>
 <ul>
 <li><a href="#the-two-board-system">The Two-Board System</a></li>
 <li><a href="#manage-documents">Manage Documents</a></li>
-<li><a href="#module-documents-1">Module Documents</a></li>
+<li><a href="#module-documents">Module Documents</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="the-homebrew-system"><a class="header" href="#the-homebrew-system">The Homebrew System</a></h1>
+<p>How Mimir handles custom content and why it works the way it does.</p>
+<h2 id="why-homebrew"><a class="header" href="#why-homebrew">Why Homebrew?</a></h2>
+<p>The D&amp;D 5e catalog covers thousands of items, monsters, and spells — but every DM eventually needs something custom. A magic sword with unique properties, a modified monster, a spell variant. Mimir’s homebrew system lets you create and manage these alongside official content.</p>
+<h2 id="campaign-scoped"><a class="header" href="#campaign-scoped">Campaign-Scoped</a></h2>
+<p>Homebrew content belongs to a specific campaign. This is intentional:</p>
+<ul>
+<li>A magic sword in your “Curse of Strahd” campaign doesn’t clutter “Tomb of Annihilation”</li>
+<li>Different campaigns can have different homebrew with the same name</li>
+<li>Exporting a campaign includes all its homebrew</li>
+</ul>
+<h2 id="three-content-types"><a class="header" href="#three-content-types">Three Content Types</a></h2>
+<h3 id="items"><a class="header" href="#items">Items</a></h3>
+<p>The most flexible type. Items can be created <strong>from scratch</strong> with a structured form (name, type, rarity, weight, value, description) or <strong>cloned from the catalog</strong>. Weapon and armor types get additional fields for damage, AC, and properties.</p>
+<h3 id="monsters-2"><a class="header" href="#monsters-2">Monsters</a></h3>
+<p>Created by <strong>cloning from the catalog only</strong> — there’s no blank monster form. This is because monster stat blocks are complex JSON structures. Clone an existing monster and modify its data to create your variant.</p>
+<h3 id="spells"><a class="header" href="#spells">Spells</a></h3>
+<p>Same as monsters: <strong>clone-only</strong>. Spell data is structured JSON, so cloning provides a valid starting point that you can modify.</p>
+<h2 id="clone-from-catalog-5"><a class="header" href="#clone-from-catalog-5">Clone from Catalog</a></h2>
+<p>The clone workflow is the heart of the homebrew system:</p>
+<ol>
+<li>Search the D&amp;D 5e catalog for a similar entry</li>
+<li>Click to clone — Mimir creates a homebrew copy immediately</li>
+<li>Edit the copy to make your changes</li>
+<li>The homebrew entry tracks its origin (“Based on [original name]”)</li>
+</ol>
+<p>This approach is faster than creating from scratch and ensures the data structure is valid.</p>
+<h2 id="integration-points"><a class="header" href="#integration-points">Integration Points</a></h2>
+<p>Homebrew content isn’t isolated — it flows into the rest of Mimir:</p>
+<ul>
+<li><strong>Items</strong> appear in character inventory search results when adding equipment</li>
+<li><strong>Monsters</strong> appear in Token Setup when placing tokens on maps</li>
+<li><strong>Spells</strong> appear in character spell lists for spellcasting classes</li>
+</ul>
+<p>All homebrew entries are tagged with an <strong>HB</strong> badge so you can distinguish them from catalog content at a glance.</p>
+<h2 id="data-storage"><a class="header" href="#data-storage">Data Storage</a></h2>
+<p>Homebrew content is stored in the campaign database alongside catalog data. Items use structured fields (name, type, rarity, etc.) while monsters and spells store their full stat blocks as JSON. This means:</p>
+<ul>
+<li>Items have a user-friendly form editor</li>
+<li>Monsters and spells use a JSON text editor</li>
+<li>All three types support the clone-from-catalog workflow</li>
+</ul>
+<h2 id="see-also-37"><a class="header" href="#see-also-37">See Also</a></h2>
+<ul>
+<li><a href="how-to/homebrew">Homebrew How-To Guides</a></li>
+<li><a href="#the-two-board-system">The Two-Board System</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="vision-system"><a class="header" href="#vision-system">Vision System</a></h1>
@@ -3529,7 +4536,7 @@ Heavily obscured area. Results in:</p>
 <li>Bright = safety</li>
 <li>Sudden darkness = danger</li>
 </ul>
-<h2 id="see-also-28"><a class="header" href="#see-also-28">See Also</a></h2>
+<h2 id="see-also-38"><a class="header" href="#see-also-38">See Also</a></h2>
 <ul>
 <li><a href="#vision--lighting">Vision &amp; Lighting Reference</a></li>
 <li><a href="#manage-light-sources">Manage Light Sources</a></li>
@@ -8184,8 +9191,10 @@ You feel anxiety when players make unexpected choices. You find yourself steerin
 <h2 id="technical-reference"><a class="header" href="#technical-reference">Technical Reference</a></h2>
 <ul>
 <li><a href="developer/reference/frontend/README.html">Frontend Architecture</a> - Vue 3 / Tauri frontend structure</li>
-<li><a href="developer/reference/5e-tools-processing/README.html">5e Tools Processing</a> - D&amp;D data processing</li>
+<li><a href="developer/reference/5e-tools-processing/5etools-item-processing.html">5e Tools Processing</a> - D&amp;D data processing</li>
 <li><a href="developer/reference/source-data/README.html">Source Data</a> - Catalog data management</li>
+<li><a href="#mcp-server-reference">MCP Server</a> - MCP sidecar architecture and tools</li>
+<li><a href="#mapgen-reference">Mapgen Reference</a> - Map generation YAML schema and presets</li>
 </ul>
 <hr>
 <p>Looking for user documentation? Head back to the <a href="README.html">main documentation</a>.</p>
@@ -8735,20 +9744,28 @@ npm install
 cd ../../..
 </code></pre>
 <h3 id="development-mode"><a class="header" href="#development-mode">Development Mode</a></h3>
-<pre><code class="language-bash"># Run with hot reload (from project root)
-cd crates/mimir
-cargo tauri dev
-
-# Or using installed tauri-cli
-cd crates/mimir
-tauri dev
+<p>The recommended way to run in development mode is via the angreal task:</p>
+<pre><code class="language-bash">angreal dev launch
 </code></pre>
-<p>This starts:</p>
-<ul>
-<li>Vite dev server for frontend (hot reload)</li>
-<li>Rust backend in debug mode</li>
-<li>Application window with DevTools available</li>
-</ul>
+<p>This handles the Vite dev server and Tauri app startup correctly.</p>
+<h4 id="manual-development-mode"><a class="header" href="#manual-development-mode">Manual Development Mode</a></h4>
+<blockquote>
+<p><strong>Known issue:</strong> <code>cargo tauri dev</code> has a bug where it runs <code>npm run dev</code> from <code>crates/</code> instead of <code>crates/mimir/frontend</code>, causing the Vite dev server to fail. Use the workaround below.</p>
+</blockquote>
+<pre><code class="language-bash"># Terminal 1: Start Vite dev server manually
+cd crates/mimir/frontend
+npm run dev
+
+# Terminal 2: Run Rust backend (without Tauri's frontend handling)
+cargo run -p mimir --no-default-features
+</code></pre>
+<h4 id="sidecar-binary"><a class="header" href="#sidecar-binary">Sidecar Binary</a></h4>
+<p>The MCP sidecar binary must exist before building the <code>mimir</code> crate (required by <code>externalBin</code> in <code>tauri.conf.json</code>):</p>
+<pre><code class="language-bash"># Build the sidecar
+./scripts/build-sidecar.sh
+
+# Output: crates/mimir/binaries/mimir-mcp-{target-triple}
+</code></pre>
 <h3 id="production-build"><a class="header" href="#production-build">Production Build</a></h3>
 <pre><code class="language-bash"># Build optimized release
 cd crates/mimir

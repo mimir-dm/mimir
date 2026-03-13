@@ -7,24 +7,20 @@ Add characters to a campaign so they appear in Play Mode.
 ### From the Campaign Dashboard
 1. Open your campaign
 2. Go to the **PCs** tab
-3. Click **Add Character**
-4. Select characters from the list
-5. Click **Assign**
+3. Click **Add Existing** to assign an existing character, or **Create PC** to make a new one
+4. Select a character and click **Add to Campaign**
 
 ### From the Character List
 1. Click **Characters** in the header
-2. Find the character
-3. Click the character to open details
-4. Select a campaign from the dropdown
-5. Save changes
+2. Find an unassigned character
+3. Select a campaign from the dropdown — the character is assigned immediately
 
 ## Assigning NPCs
 
 ### Campaign-Level NPCs
 1. Open your campaign dashboard
 2. Go to the **NPCs** tab
-3. Click **Add NPC**
-4. Select or create an NPC
+3. Click **Create NPC** to add a new NPC
 
 ### Module-Level NPCs
 1. Open a module

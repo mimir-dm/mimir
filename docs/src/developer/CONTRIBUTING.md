@@ -213,7 +213,6 @@ mod tests {
     fn test_campaign_creation() {
         let campaign = Campaign::new("Test Campaign");
         assert_eq!(campaign.name, "Test Campaign");
-        assert_eq!(campaign.stage, CampaignStage::Spark);
     }
 }
 ```
@@ -221,11 +220,11 @@ mod tests {
 **Integration Tests:**
 Place in `tests/` directory:
 ```rust
-use mimir_dm_core::{establish_connection, run_migrations};
+use mimir_core::{create_connection, run_migrations};
 
 #[test]
 fn test_database_integration() {
-    let mut conn = establish_connection(":memory:").unwrap();
+    let mut conn = create_connection(":memory:").unwrap();
     run_migrations(&mut conn).unwrap();
     // Test database operations
 }

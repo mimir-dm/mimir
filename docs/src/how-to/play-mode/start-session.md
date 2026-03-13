@@ -11,8 +11,8 @@ Enter Play Mode to run your game session.
 
 1. Open your campaign
 2. Go to the **Modules** tab
-3. Find your module in the modules table
-4. Click the **Play** button in the module's row
+3. Select a module
+4. Click the **Play** button in the module header
 
 You're now in Play Mode.
 
@@ -24,7 +24,7 @@ Play Mode has a different layout:
 - **Header** - Navigation and display controls
 - **Left Sidebar** - Monsters and maps
 - **Main Area** - Tactical map view
-- **Bottom Panel** - Session notes
+- **Bottom Panel** - Play notes
 
 ## Initial Setup
 
@@ -34,13 +34,9 @@ When you enter Play Mode:
 3. Open the Player Display (if using second screen)
 4. You're ready to play!
 
-## Quick Start Options
+## Adding PCs to the Map
 
-### Add PCs Button
-Click **Add PCs** to place all campaign player characters on the map at once.
-
-### Add Token Button
-Click **Add Token** to quickly add a monster from the catalog.
+Click the **Add PCs** button in the map toolbar to place all campaign player characters on the map at once.
 
 ## Ending the Session
 

@@ -148,30 +148,7 @@ The Blackout button (eye icon) appears when the display is open:
 - **Map transitions** - Switch maps without showing the change
 - **Plot moments** - Describe what happens before showing it
 
-## Step 7: Syncing Views
-
-Control whether players see your exact viewport:
-
-### Auto-Sync (Default)
-- Your pan and zoom are mirrored
-- Players see what you focus on
-- Great for guided exploration
-
-### Manual Sync
-1. Click the **Sync** button to disable auto-sync
-2. Navigate freely on your screen
-3. Click **Push View** when ready to update players
-
-### Use Cases
-
-| Scenario | Sync Setting |
-|----------|-------------|
-| Guided dungeon crawl | Auto-sync ON |
-| Combat positioning | Auto-sync OFF, push when ready |
-| Looking ahead secretly | Auto-sync OFF |
-| Theater of the mind | Blackout ON |
-
-## Step 8: Closing the Display
+## Step 7: Closing the Display
 
 When your session ends:
 
@@ -209,8 +186,7 @@ The main Play Mode continues - you can reopen the display anytime.
 | Blackout | Eye icon (when display open) |
 | Reveal entire map | Reveal Map toggle |
 | Change lighting | Ambient light dropdown |
-| Sync views | Sync button (toggle) |
-| Push current view | Push View button |
+| Print map | Print button |
 
 ---
 

@@ -49,18 +49,20 @@ Light sources create areas of illumination:
 - Dim light extends to the listed range
 - Beyond dim light, darkness applies
 
-## Fog of War Modes
+## Fog of War Controls
 
-### Fog Mode
-Map areas outside PC vision are hidden:
+Two independent toggles in the map toolbar control visibility:
+
+### Fog Button
+Hides map areas outside PC vision:
 - Revealed as PCs move
 - Creates exploration atmosphere
 - Enemies hidden until seen
 
-### Token Mode
-Map is fully visible, but:
-- Enemy tokens hidden outside vision
-- Useful for complex maps
+### LOS Button
+Filters tokens by line of sight:
+- Map remains fully visible
+- Enemy tokens hidden outside PC vision
 - Players see geography, not threats
 
 ## Wall Occlusion
@@ -93,5 +95,5 @@ Only player character tokens reveal fog:
 - Use darkness for tension
 - Toggle lights for dramatic reveals
 - Reveal Map bypasses all vision
-- Token Mode for combat focus
-- Fog Mode for exploration
+- LOS for combat focus (tokens filtered, map visible)
+- Fog for exploration (map hidden outside vision)

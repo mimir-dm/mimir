@@ -6,54 +6,61 @@ The Campaign Dashboard is your central hub for managing a campaign. It uses a ta
 
 ## Header
 
-- **Campaign Name** - Displayed prominently at the top
-- **Export** - Export campaign as `.tar.gz` archive
-- **Settings** - Campaign configuration options
+- **Campaign Name** — Displayed prominently at the top
+- **Sources** — Configure which D&D source books are enabled for this campaign
+- **PDF** — Export campaign documents as PDF
+- **Export Archive** — Export campaign as `.mimir-campaign.tar.gz` archive
 
 ## Tabs
 
 ### Campaign Tab
 
-World-building and campaign-level content:
+The world-building hub with a two-panel layout:
 
-- **Documents** - Campaign documents organized by stage
-- **World Building** - Setting details, factions, locations
-- **Timeline** - Campaign events and history
+**Sidebar (Left):**
+- **Documents** — Campaign-level documents for lore, setting notes, factions, and world-building. Create new documents with the + button. Reorder with up/down arrows.
+- **Maps** — Campaign-level maps (not tied to a specific module). Upload with the + button.
+
+**Main Panel (Right):**
+- Opens the document editor when a document is selected
+- Shows a map preview when a map is selected
+- Maps can be exported to PDF or deleted from the preview
 
 ### Modules Tab
 
 Adventure modules within this campaign:
 
-- **Module List** - Sidebar showing all modules
-- **Module Dashboard** - Selected module's content
-- **Create Module** - Add new adventure modules
+- **Module List** — Table showing all modules with action buttons
+- **Play** — Enter Play Mode for a module
+- **Open** — Open the module prep view
+- **PDF** — Export module materials
+- **Create Module** — Add new adventure modules with the + button
 
 ### NPCs Tab
 
 Non-player characters for this campaign:
 
-- **NPC List** - All NPCs across modules
-- **NPC Details** - Stats, notes, relationships
-- **Create NPC** - Add new NPCs
+- **NPC List** — All NPCs across modules
+- **NPC Details** — Stats, notes, role, location, faction
+- **Create NPC** — Add new NPCs
 
 ### PCs Tab
 
 Player characters assigned to this campaign:
 
-- **PC List** - Characters in this campaign
-- **Assign PC** - Add existing characters
-- **PC Details** - Full character sheets
+- **PC List** — Characters in this campaign
+- **Add Existing** — Assign existing characters to the campaign
+- **PC Details** — Full character sheets with tabs for stats, equipment, spells, and details
 
-## Document Stages
+### Homebrew Tab
 
-Documents progress through stages:
+Custom content for this campaign:
 
-| Stage | Purpose |
-|-------|---------|
-| **Pre-Production** | Early ideas and planning |
-| **Production** | Active development |
-| **Post-Production** | Refinement and polish |
-| **Archive** | Completed or retired content |
+- **Items** — Create or clone items from the catalog
+- **Monsters** — Clone and modify monsters from the catalog
+- **Spells** — Clone and modify spells from the catalog
+
+See [Homebrew Content](../../how-to/homebrew/) for detailed guides.
 
 ## See Also
 

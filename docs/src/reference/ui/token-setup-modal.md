@@ -6,13 +6,17 @@ The Token Setup Modal is where you configure maps, place tokens, and prepare enc
 
 ## Opening Token Setup
 
-Click any map card in the Module Prep View to open Token Setup.
+Click the **Place Tokens** button on a map card in the Module Prep View to open Token Setup.
 
 ## Layout
 
 ### Token Palette (Left)
 
 Tools for adding content to the map:
+
+**Module Monsters** (appears when monsters have been added)
+- Quick-select buttons for monsters already in the module
+- Shows name, encounter tag, and quantity
 
 **Monster**
 - Search D&D 5e monsters by name
@@ -27,9 +31,9 @@ Tools for adding content to the map:
 - Add trap markers
 - Configure trigger areas
 
-**Object**
-- Generic object tokens
-- Furniture, obstacles, etc.
+**Marker**
+- Points of interest
+- Landmarks, waypoints, etc.
 
 **Light Sources**
 - Torch (20 ft bright / 40 ft dim)
@@ -45,7 +49,7 @@ The main map display:
 - **Zoom Controls** - Adjust view
 - **Pan** - Click and drag to move
 
-### Token Inventory (Right)
+### Placed Tokens (Right)
 
 All placed content:
 
@@ -64,7 +68,6 @@ All placed content:
 Located above the map:
 
 - **Zoom** - +/- buttons and percentage
-- **Grid** - Open grid configuration (image files only)
 - **Reset** - Fit map to view
 
 ## Token Options
@@ -77,19 +80,9 @@ When placing tokens:
 | **Color** | Border color for identification |
 | **Visible** | Whether players can see this token |
 
-## Grid Configuration
-
-For image files (not UVTT):
-
-- **Grid Size** - Pixels per square
-- **X Offset** - Horizontal adjustment
-- **Y Offset** - Vertical adjustment
-
-> **Note:** UVTT files include grid data automatically.
-
 ## Workflow
 
-1. Open Token Setup (click map)
+1. Open Token Setup (click Place Tokens on a map card)
 2. Select token type from palette
 3. Configure options if needed
 4. Click on map to place
@@ -101,4 +94,4 @@ For image files (not UVTT):
 
 - [Add Monsters](../../how-to/modules/add-monsters.md)
 - [Place Tokens](../../how-to/maps/place-tokens.md)
-- [Configure Grid](../../how-to/maps/configure-grid.md)
+- [Manage Light Sources](../../how-to/maps/manage-light-sources.md)

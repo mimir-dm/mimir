@@ -79,21 +79,23 @@ UVTT maps include wall data:
 
 Without wall data, vision is circular (line of sight to all directions).
 
-## Vision Modes
+## Vision Controls
 
-### Fog Mode
+Two independent toggles in the map toolbar control visibility:
+
+### Fog Button
 Default exploration mode:
 - Map hidden outside vision
 - Reveals as PCs explore
 - Maximum immersion
 
-### Token Mode
+### LOS Button
 Combat-focused mode:
 - Map fully visible
-- Enemy tokens hidden outside vision
+- Enemy tokens hidden outside PC vision
 - Geography known, enemies hidden
 
-### Reveal Mode
+### Reveal Map
 Override mode:
 - Everything visible
 - Bypasses all fog
@@ -115,13 +117,13 @@ This prevents accidental reveals from positioned enemies.
 ## Practical Considerations
 
 ### Dungeon Exploration
-- Use Fog mode
+- Enable the Fog button
 - Set ambient light to dim or dark
 - Place torches on walls
 - Reveal room by room
 
 ### Combat Encounters
-- Consider Token mode
+- Enable the LOS button (optionally disable Fog)
 - Players see the battlefield
 - Hidden reinforcements stay hidden
 

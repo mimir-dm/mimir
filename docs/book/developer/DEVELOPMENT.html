@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ac4f52b4.js";
+            window.path_to_searchindex_js = "../searchindex-d2b4b1dd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-aa677dde.js"></script>
+        <script src="../toc-5975c418.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -337,20 +337,28 @@ npm install
 cd ../../..
 </code></pre>
 <h3 id="development-mode"><a class="header" href="#development-mode">Development Mode</a></h3>
-<pre><code class="language-bash"># Run with hot reload (from project root)
-cd crates/mimir
-cargo tauri dev
-
-# Or using installed tauri-cli
-cd crates/mimir
-tauri dev
+<p>The recommended way to run in development mode is via the angreal task:</p>
+<pre><code class="language-bash">angreal dev launch
 </code></pre>
-<p>This starts:</p>
-<ul>
-<li>Vite dev server for frontend (hot reload)</li>
-<li>Rust backend in debug mode</li>
-<li>Application window with DevTools available</li>
-</ul>
+<p>This handles the Vite dev server and Tauri app startup correctly.</p>
+<h4 id="manual-development-mode"><a class="header" href="#manual-development-mode">Manual Development Mode</a></h4>
+<blockquote>
+<p><strong>Known issue:</strong> <code>cargo tauri dev</code> has a bug where it runs <code>npm run dev</code> from <code>crates/</code> instead of <code>crates/mimir/frontend</code>, causing the Vite dev server to fail. Use the workaround below.</p>
+</blockquote>
+<pre><code class="language-bash"># Terminal 1: Start Vite dev server manually
+cd crates/mimir/frontend
+npm run dev
+
+# Terminal 2: Run Rust backend (without Tauri's frontend handling)
+cargo run -p mimir --no-default-features
+</code></pre>
+<h4 id="sidecar-binary"><a class="header" href="#sidecar-binary">Sidecar Binary</a></h4>
+<p>The MCP sidecar binary must exist before building the <code>mimir</code> crate (required by <code>externalBin</code> in <code>tauri.conf.json</code>):</p>
+<pre><code class="language-bash"># Build the sidecar
+./scripts/build-sidecar.sh
+
+# Output: crates/mimir/binaries/mimir-mcp-{target-triple}
+</code></pre>
 <h3 id="production-build"><a class="header" href="#production-build">Production Build</a></h3>
 <pre><code class="language-bash"># Build optimized release
 cd crates/mimir

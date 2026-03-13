@@ -6,7 +6,7 @@ Export character sheets to PDF for printing.
 
 1. Click **Characters** in the header
 2. Find and click the character
-3. Click **Print** or **Export PDF**
+3. Click **Print PDF** on the character sheet
 4. Configure print options
 5. Save the PDF
 
@@ -14,10 +14,15 @@ Export character sheets to PDF for printing.
 
 The export dialog lets you select which sections to include:
 
-- **Compact Sheet** (2-page) - Stats, combat, skills, equipment summary
-- **Spell Cards** - Printable cards for all spells (if the character is a caster)
+**Character Sheets:**
+- **Compact Sheet** (2-page) — Stats, combat, skills, equipment summary
+- **Battle Card** — Half-page combat reference (AC, HP, attacks, saves)
 
-Both options are enabled by default. At least one must be selected to export.
+**Cards:**
+- **Spell Cards** — Printable cards for all spells (if the character is a caster)
+- **Equipment Cards** — Cards for weapons, magic items, and special ammunition
+
+Compact Sheet and Spell Cards are enabled by default. At least one option must be selected to export.
 
 ## Compact Sheet
 
@@ -34,11 +39,19 @@ The 2-page character sheet includes:
 - Full inventory
 - Currency
 
+## Battle Card
+
+A half-page combat quick reference — ideal for keeping at the table during encounters. Includes AC, HP, attack bonuses, and saving throw modifiers at a glance.
+
 ## Spell Cards
 
 For spellcasters, spell cards are printed in a 3x3 grid:
 - Each spell gets a card with name, level, school, casting time, range, components, and description
 - Cut and use as physical references during play
+
+## Equipment Cards
+
+Cards for notable equipment — weapons, magic items, and special ammunition. Print and cut for physical item tracking at the table.
 
 ## Tips
 

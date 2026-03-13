@@ -28,18 +28,20 @@ Players do NOT see:
 - Session notes
 - Debug visualizations
 
-## Fog of War Modes
+## Fog of War Controls
 
-![Player View - Token Mode](../../images/reference/player-view-token-los.png)
+Two independent toggles control what players see:
 
-**Fog Mode**
+![Player View - Token LOS](../../images/reference/player-view-token-los.png)
+
+**Fog**
 - Unrevealed areas are black
 - Reveals based on PC vision
 - Best for exploration
 
-**Token Mode**
-- Full map visible
-- Enemy tokens hidden outside vision
+**LOS**
+- Map remains fully visible
+- Enemy tokens hidden outside PC vision
 - Best for tactical combat
 
 ## DM Controls
@@ -50,8 +52,6 @@ When the Player Display is open, additional controls appear:
 |---------|----------|
 | **Blackout** | Show black screen to players |
 | **Reveal Map** | Bypass fog of war entirely |
-| **Sync** | Auto-mirror your pan/zoom |
-| **Push View** | Manual view update |
 | **Ambient Light** | Affects fog of war calculation |
 
 ## Blackout Mode
@@ -63,17 +63,6 @@ Click the eye icon (Blackout) to:
 - Create dramatic reveals
 
 Click again to restore the view.
-
-## View Syncing
-
-**Auto-Sync (Default)**
-- Your pan and zoom are mirrored
-- Players see what you focus on
-
-**Manual Sync**
-1. Disable Sync toggle
-2. Navigate freely on your screen
-3. Click Push View when ready
 
 ## Physical Setup
 

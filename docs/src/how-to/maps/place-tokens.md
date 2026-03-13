@@ -1,6 +1,6 @@
 # Place Tokens
 
-Place monsters, NPCs, and objects on your maps for encounters.
+Place monsters, NPCs, traps, markers, and light sources on your maps.
 
 ![Token Setup](../../images/reference/token-setup.png)
 
@@ -8,7 +8,7 @@ Place monsters, NPCs, and objects on your maps for encounters.
 
 1. Navigate to a module (Modules tab → select module)
 2. Find your map in the Maps section
-3. Click the map card to open Token Setup
+3. Click the **Place Tokens** button on the map card to open Token Setup
 
 ## Token Palette
 
@@ -16,7 +16,7 @@ The left panel shows available tokens:
 - **Monsters** - Creatures added to this module
 - **NPCs** - Non-player characters assigned to the module
 - **Traps** - Hazards and traps
-- **Objects** - Generic object tokens
+- **Markers** - Points of interest
 - **Light Sources** - Torches, lanterns, candles
 
 ## Placing a Token
@@ -35,7 +35,7 @@ Before placing, you can set:
 
 ## Managing Placed Tokens
 
-Tokens appear in the inventory panel (right side):
+Tokens appear in the **Placed Tokens** panel (right side):
 - Click to select on the map
 - Drag to reposition
 - Click **×** to delete

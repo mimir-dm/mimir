@@ -6,7 +6,6 @@ Quick reference for keyboard shortcuts in Mimir.
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd/Ctrl + ,` | Open Settings |
 | `Escape` | Close modal/panel |
 
 ## Map Navigation
@@ -15,31 +14,25 @@ Quick reference for keyboard shortcuts in Mimir.
 |----------|--------|
 | `Scroll` | Zoom in/out |
 | `Click + Drag` | Pan the map |
-| `Cmd/Ctrl + 0` | Reset view (fit map) |
-| `+` / `-` | Zoom in/out |
+| `+` / `=` | Zoom in |
+| `-` | Zoom out |
+| `0` | Reset view (1:1 zoom, centered) |
 
-## Token Manipulation
+## Token Manipulation (Play Mode)
 
 | Shortcut | Action |
 |----------|--------|
 | `Click` | Select token |
 | `Drag` | Move token |
 | `Right-click` | Token context menu |
-| `Delete` | Delete selected token |
-
-## Play Mode
-
-| Shortcut | Action |
-|----------|--------|
-| `Space` | Toggle play/pause (if applicable) |
-| `F11` | Toggle fullscreen (player display) |
-| `B` | Toggle blackout |
+| `h` / `H` | Toggle visibility of selected token |
+| `d` / `D` | Toggle dead state of selected token |
+| `Escape` | Close context menu and deselect token |
 
 ## Document Editor
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd/Ctrl + S` | Save (auto-saves anyway) |
 | `Cmd/Ctrl + B` | Bold |
 | `Cmd/Ctrl + I` | Italic |
 | `Cmd/Ctrl + Z` | Undo |
@@ -48,5 +41,5 @@ Quick reference for keyboard shortcuts in Mimir.
 ## Notes
 
 - `Cmd` is used on macOS, `Ctrl` on Windows/Linux
-- Some shortcuts may vary by platform
-- Shortcuts work when the relevant view has focus
+- Shortcuts are ignored when typing in text inputs or textareas
+- Token manipulation shortcuts require a token to be selected

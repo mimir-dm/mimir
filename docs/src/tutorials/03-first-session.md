@@ -84,8 +84,7 @@ The map toolbar (top of main area) provides essential controls:
 - **Percentage** - Current zoom level
 - **Reset** button - Fit map to view
 
-### Token Management
-- **Add Token** - Quick-add a monster token to the map
+### Add PCs
 - **Add PCs** - Place all campaign PCs on the map at once
 
 ### Reveal Map Toggle
@@ -104,9 +103,8 @@ When using UVTT maps with wall data:
   - **Dim** - Twilight or torchlight
   - **Dark** - Complete darkness (darkvision only)
 
-### Viewport Sync
-- **Sync** - Auto-sync your view to the player display
-- **Push View** - Manually push current view to players
+### Print
+- **Print** - Print the current map as PDF
 
 ## Step 4: Working with Tokens
 
@@ -124,7 +122,7 @@ Tokens have visibility states that affect what players see:
 - **Visible** - Players see the token
 - **Hidden** - Only DM sees (for surprise encounters)
 
-Right-click a token to toggle visibility.
+Right-click a token to open a context menu with visibility controls and other options.
 
 ### Interacting with Monster Tokens
 
@@ -184,13 +182,9 @@ Click the **Blackout** button (eye icon) to:
 
 Click again to restore the view.
 
-### Syncing Views
+### Player Display
 
-By default, auto-sync is enabled:
-- When you pan/zoom, players see the same view
-- Keeps everyone focused on the action
-
-Disable sync for independent viewing, then use **Push View** to manually update the player display.
+The player display window automatically shows the current map with fog of war applied. When you switch maps or move tokens, the player view updates automatically.
 
 ## Step 7: Taking Session Notes
 
@@ -235,8 +229,7 @@ Your module is ready for the next session right where you left off.
 
 ### Player Display
 - Use Blackout for reveals
-- Sync view for guided exploration
-- Push View for "cinematic" shots
+- Move PCs to reveal new areas
 
 ---
 

@@ -25,10 +25,14 @@
   - [Place Tokens](./how-to/maps/place-tokens.md)
   - [Manage Light Sources](./how-to/maps/manage-light-sources.md)
   - [Print Maps](./how-to/maps/print-map.md)
+  - [Generate Maps](./how-to/maps/generate-map.md)
 - [Characters](./how-to/characters/README.md)
   - [Create a Player Character](./how-to/characters/create-pc.md)
   - [Create an NPC](./how-to/characters/create-npc.md)
   - [Assign to Campaign](./how-to/characters/assign-to-campaign.md)
+  - [Manage Inventory](./how-to/characters/manage-inventory.md)
+  - [Manage Spells](./how-to/characters/manage-spells.md)
+  - [Level Up](./how-to/characters/level-up.md)
   - [Print Character Sheet](./how-to/characters/print-character-sheet.md)
 - [Modules](./how-to/modules/README.md)
   - [Create a Module](./how-to/modules/create-module.md)
@@ -39,6 +43,11 @@
   - [Manage Encounters](./how-to/play-mode/manage-encounters.md)
   - [Fog of War](./how-to/play-mode/fog-of-war.md)
   - [Use Player Display](./how-to/play-mode/use-player-display.md)
+- [Homebrew](./how-to/homebrew/README.md)
+  - [Create Items](./how-to/homebrew/create-item.md)
+  - [Create Monsters](./how-to/homebrew/create-monster.md)
+  - [Create Spells](./how-to/homebrew/create-spell.md)
+- [AI Assistant](./how-to/ai-assistant/README.md)
 
 ---
 
@@ -54,6 +63,8 @@
 - [Keyboard Shortcuts](./reference/keyboard-shortcuts.md)
 - [File Formats](./reference/file-formats.md)
 - [Vision & Lighting](./reference/vision-and-lighting.md)
+- [MCP Server](./reference/mcp-server.md)
+- [Mapgen](./reference/mapgen.md)
 - [Glossary](./reference/glossary.md)
 
 ---
@@ -63,6 +74,7 @@
 - [Campaigns vs Modules](./explanation/campaign-vs-module.md)
 - [The Two-Board System](./explanation/two-board-system.md)
 - [Document Workflow](./explanation/document-workflow.md)
+- [The Homebrew System](./explanation/homebrew-system.md)
 - [Vision System](./explanation/vision-system.md)
 
 ---

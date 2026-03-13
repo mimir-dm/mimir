@@ -14,20 +14,22 @@ Fog of war reveals areas based on:
 
 ## Vision Modes
 
-### Fog Mode
-- Map is hidden outside PC vision
+The toolbar has two independent toggle buttons that control visibility:
+
+### Fog Button
+- Hides the map outside PC vision
 - Only revealed areas are visible to players
 - Creates exploration atmosphere
 
-### Token Mode
+### LOS Button
 
-![Token Mode](../../images/reference/player-view-token-los.png)
+![Token LOS Mode](../../images/reference/player-view-token-los.png)
 
-- Entire map is visible
-- Enemy tokens are hidden outside PC vision
+- Filters enemy tokens by line of sight
+- Map remains fully visible
 - Useful for exploration without hiding geography
 
-Toggle between modes using the **LOS** switch in the toolbar.
+You can enable either or both toggles independently.
 
 ## Ambient Light
 
@@ -62,7 +64,7 @@ Standard image maps don't have wall data - vision is circular.
 - Use darkness for dungeon atmosphere
 - Toggle lights for dramatic effect
 - Reveal Map for town maps where fog doesn't make sense
-- Switch to Token mode for complex combat
+- Use LOS mode for complex combat where you want tokens filtered but the map visible
 
 ## See Also
 

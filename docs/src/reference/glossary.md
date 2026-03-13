@@ -18,7 +18,10 @@ Definitions of terms used in Mimir.
 : A collection of modules, characters, and documents representing a D&D adventure series.
 
 **Campaign Dashboard**
-: The main interface for managing a campaign, with tabs for Campaign, Modules, NPCs, and PCs.
+: The main interface for managing a campaign, with tabs for Campaign, Modules, NPCs, PCs, and Homebrew.
+
+**Clone from Catalog**
+: Creating a homebrew item, monster, or spell by copying an existing entry from the D&D 5e catalog as a starting point, then customizing it.
 
 ## D
 
@@ -41,7 +44,12 @@ Definitions of terms used in Mimir.
 ## G
 
 **Grid**
-: The square overlay on maps representing 5-foot spaces. Configurable size and offset.
+: The square overlay on maps representing 5-foot spaces. Auto-detected from UVTT files; defaults to 70 pixels per square for image files.
+
+## H
+
+**Homebrew**
+: Custom content created by the DM — items, monsters, and spells that don't exist in the official D&D catalog. Managed from the Homebrew tab on the Campaign Dashboard.
 
 ## L
 
@@ -52,6 +60,15 @@ Definitions of terms used in Mimir.
 : Calculation determining what characters can see based on walls and obstructions.
 
 ## M
+
+**Mapgen**
+: The procedural map generation system that creates Dungeondraft-format maps from YAML configuration or biome presets.
+
+**Marker**
+: A token type for points of interest on a map — landmarks, waypoints, or other notable locations.
+
+**MCP (Model Context Protocol)**
+: The protocol used by Mimir's AI assistant sidecar. Runs as a separate process and provides campaign management tools to AI clients like Claude.
 
 **Module**
 : A self-contained adventure within a campaign. Contains maps, monsters, NPCs, and documents.
@@ -82,7 +99,10 @@ Definitions of terms used in Mimir.
 
 ## S
 
-**Session Notes**
+**Sidecar**
+: A companion process bundled with Mimir that provides the MCP server for AI assistant integration. Launches automatically when needed.
+
+**Play Notes**
 : Auto-saving text area in Play Mode for tracking HP, initiative, and events.
 
 ## T
@@ -107,4 +127,4 @@ Definitions of terms used in Mimir.
 : How far a character can see, affected by darkvision and light sources.
 
 **Viewport**
-: The visible area of the map. Can be synced between DM and player display.
+: The visible area of the map. The DM and player display each have independent viewports.

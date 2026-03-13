@@ -1,122 +1,73 @@
 # Document Workflow
 
-How Mimir's stage-based document system helps you track preparation progress.
+How documents work in Mimir and how to use them effectively for session preparation.
 
-## The Challenge
+## Documents in Mimir
 
-Preparing a D&D session involves many pieces:
-- Maps to upload
-- Monsters to add
-- Descriptions to write
-- Notes to organize
+Documents are markdown-based text entries for organizing your campaign and module content. They serve as your DM notebook — session notes, location descriptions, encounter plans, read-aloud text, and anything else you need.
 
-Without structure, it's easy to lose track of what's ready and what still needs work.
+## Two Scopes
 
-## Stage-Based Progression
+Documents exist at two levels:
 
-Documents in Mimir progress through stages:
+### Campaign Documents
+Accessed from the **Campaign tab** on the dashboard. Use these for:
+- World-building and lore
+- Faction descriptions
+- Recurring NPC notes
+- Campaign-wide information
 
-### Draft
-Initial creation:
-- Just started
-- Rough notes
-- Placeholder content
+Campaign documents persist across all modules and sessions.
 
-### Review
-Ready for revision:
-- Content complete
-- Needs polish
-- Check for consistency
+### Module Documents
+Accessed from a module's **Documents section** in the prep view. Use these for:
+- Session-specific encounter plans
+- Location descriptions for this adventure
+- Read-aloud text
+- Tactical notes
 
-### Complete
-Ready for play:
-- Finalized content
-- All details filled in
-- Session-ready
+Module documents are self-contained within their module.
 
-## Visual Tracking
+## Creating Documents
 
-The document sidebar shows:
-- Documents grouped by stage
-- Visual indicators for completion
-- Progress at a glance
+Click the **+** button in the document sidebar. Choose between:
+- **New Document** — Create a blank markdown document with a title
+- **Upload File** — Import an existing markdown file or image
 
-## Templates
+## The Editor
 
-Mimir provides templates for common document types:
+Documents use a rich text editor (Tiptap 3) with markdown under the hood. Formatting options:
+- Headings (H1, H2, H3)
+- Bold, italic, strikethrough
+- Bullet and numbered lists
+- Blockquotes and horizontal rules
+- Tables
+- Undo/redo
 
-### Session Notes
-- Pre-session prep section
-- During-session notes
-- Post-session recap
+### Auto-Save
 
-### Location Description
-- Overview
-- Key features
-- Secrets and discoveries
+All changes save automatically as you type. Watch for the "Saved" indicator — there's no manual save step.
 
-### Encounter Plan
-- Setup and trigger
-- Combatants
-- Tactics
-- Rewards
+## Organization
 
-### NPC Profile
-- Appearance
-- Personality
-- Goals and motivations
-- Useful information
+### Reordering
+Use the **up/down arrow buttons** (visible on hover) to reorder documents in the sidebar.
 
-## Workflow Benefits
-
-### Clear Progress
-See exactly what's ready:
-- Incomplete documents need attention
-- Complete documents are session-ready
-- No guessing about preparation status
-
-### Prioritization
-Focus on what matters:
-- Work through drafts
-- Review before sessions
-- Mark complete when done
-
-### Confidence
-Know you're prepared:
-- All complete = ready to play
-- Incomplete = still working
-- Review = almost there
+### PDF Export
+Click **Export PDF** in the editor header to export a document as a PDF.
 
 ## Practical Tips
 
 ### Before First Session
-1. Create key documents as drafts
-2. Fill in essential content
-3. Mark complete when ready
-
-### Ongoing Preparation
-1. Add drafts as ideas come
-2. Review and polish before sessions
-3. Complete what you'll need
+1. Create documents for key locations and encounters
+2. Write read-aloud descriptions
+3. Note important NPC dialogue
 
 ### During Play
-1. Session notes auto-save
-2. Add observations and outcomes
-3. Reference prepared content
+Session notes in Play Mode auto-save as you type — use them for initiative tracking, HP, and events. Prepared documents are separate and remain unmodified.
 
-## Document vs Session Notes
-
-### Prepared Documents
-- Written before play
-- Reference material
-- Encounter plans, descriptions
-
-### Session Notes
-- Written during play
-- Real-time capture
-- HP tracking, events, decisions
-
-Both have their place in your workflow.
+### After Sessions
+Add follow-up notes to campaign documents to track story developments and player decisions.
 
 ## See Also
 

@@ -8,7 +8,7 @@ This tutorial walks you through creating your first campaign in Mimir. By the en
 - Navigate the Mimir interface
 - Create a new campaign
 - Explore the Campaign Dashboard
-- Understand the four dashboard tabs
+- Understand the five dashboard tabs
 
 ## Prerequisites
 
@@ -63,7 +63,7 @@ Click **Create Campaign**. Mimir will:
 
 ## Step 5: Explore the Campaign Dashboard
 
-The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and four tabs for organizing different aspects of your game.
+The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and five tabs for organizing different aspects of your game.
 
 ![Campaign Dashboard](../images/tutorials/campaign-dashboard.png)
 
@@ -100,11 +100,25 @@ Player characters in this campaign. Manage:
 - Player-character relationships
 - Quick access to character sheets
 
-Characters are created separately (in the Characters section) and assigned to campaigns here.
+Characters are created separately (in the Characters section) and assigned to campaigns here. Each character sheet has tabs for stats, equipment, spells, and details.
+
+#### Homebrew Tab
+Custom content for your campaign. Create and manage:
+- Homebrew items
+- Homebrew monsters
+- Homebrew spells
+
+Each can be created from scratch or cloned from the D&D 5e catalog as a starting point.
 
 ## Step 6: Campaign Actions
 
-The dashboard header includes an **Export Archive** button. This creates a backup of your entire campaign including:
+The dashboard header includes three buttons: **Sources**, **PDF**, and **Export Archive**.
+
+**Sources** opens the Campaign Sources modal where you select which D&D source books are available for this campaign. This controls which monsters, items, and spells appear in catalog searches.
+
+**PDF** exports campaign documents as a PDF file.
+
+**Export Archive** creates a backup of your entire campaign including:
 - All documents and notes
 - Module data
 - Maps and tokens
@@ -129,6 +143,7 @@ Your campaign is ready! Here are your next steps:
 | Create campaign | Campaign Selector → + New Campaign |
 | Switch campaigns | Campaign Selector dropdown |
 | Access dashboard | Click campaign name in selector |
+| Configure sources | Dashboard → Sources button |
 | Export backup | Dashboard → Export Archive |
 | Return home | Click Mimir skull icon |
 

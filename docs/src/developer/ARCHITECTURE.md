@@ -46,7 +46,7 @@ The system is a Cargo workspace with 5 crates, a Vue 3 frontend, and a SQLite da
 │  │   Vue 3 Frontend       │  │   Tauri Shell (mimir)  │  │
 │  │   TypeScript + Pinia   │──│   Rust command handlers │  │
 │  │                        │  │                        │  │
-│  │   4 feature modules:   │  │   22 command modules   │  │
+│  │   4 feature modules:   │  │   16 command modules   │  │
 │  │   campaigns, modules,  │  │   AppState management  │  │
 │  │   characters, sources  │  │                        │  │
 │  └────────────────────────┘  └───────────┬────────────┘  │
@@ -70,7 +70,7 @@ The system is a Cargo workspace with 5 crates, a Vue 3 frontend, and a SQLite da
 ┌──────────────────────────────────────────────────────┐   │
 │   MCP Sidecar (mimir-mcp)                            │   │
 │   Separate binary, launched by Tauri externalBin     │◀──┘
-│   142 tools across 10 categories                     │
+│   71 tools across 10 categories                      │
 │   Depends on: mimir-core, mimir-mapgen               │
 └──────────────────────────────────────────────────────┘
 
@@ -174,7 +174,7 @@ The `mimir` crate bridges the Vue frontend to core services via Tauri IPC comman
 │                      mimir (Tauri)                        │
 │                                                           │
 │  ┌─────────────┐    ┌──────────────────────────────────┐ │
-│  │  AppState    │    │         Commands (22 modules)    │ │
+│  │  AppState    │    │         Commands (16 modules)    │ │
 │  │             │    │                                  │ │
 │  │  AppPaths   │    │  campaign     character    map   │ │
 │  │  (data_dir, │◀───│  module       document     print │ │
@@ -256,13 +256,13 @@ Runs as a separate process, sharing the same SQLite database.
 │                       mimir-mcp                           │
 │                                                           │
 │  ┌──────────────┐    ┌──────────────────────────────────┐ │
-│  │  MCP Server   │    │     Tools (142 total)            │ │
+│  │  MCP Server   │    │     Tools (71 total)             │ │
 │  │              │    │                                  │ │
-│  │  rust-mcp-   │    │  character (26)   campaign (20) │ │
-│  │  sdk 0.8     │    │  catalog (16)     map (16)      │ │
-│  │              │    │  module (16)      document (12) │ │
-│  │  stdio +     │◀───│  homebrew (10)    h_monster (10)│ │
-│  │  streamable  │    │  h_spell (10)     mapgen (6)    │ │
+│  │  rust-mcp-   │    │  character (13)   campaign (10) │ │
+│  │  sdk 0.8     │    │  catalog (8)      map (8)       │ │
+│  │              │    │  module (8)       document (6)  │ │
+│  │  stdio +     │◀───│  homebrew (5)     h_monster (5) │ │
+│  │  streamable  │    │  h_spell (5)      mapgen (3)    │ │
 │  │  HTTP        │    │                                  │ │
 │  └──────────────┘    └──────────────────────────────────┘ │
 │                                                           │
@@ -397,7 +397,7 @@ mimir/
 │   │   ├── src/
 │   │   │   ├── main.rs            # Entry point, plugin registration
 │   │   │   ├── state.rs           # AppState, AppPaths, dev/prod separation
-│   │   │   └── commands/          # 22 Tauri command modules
+│   │   │   └── commands/          # 16 Tauri command modules
 │   │   │       └── catalog/       # 8 sub-modules for D&D catalog queries
 │   │   ├── frontend/              # Vue 3 + TypeScript application
 │   │   │   └── src/
@@ -418,7 +418,7 @@ mimir/
 │   ├── mimir-mcp/                 # MCP sidecar server
 │   │   ├── src/
 │   │   │   ├── main.rs            # Server bootstrap (stdio + HTTP)
-│   │   │   └── tools/             # 10 tool modules (142 tools total)
+│   │   │   └── tools/             # 10 tool modules (71 tools total)
 │   │   └── plugin/                # Claude Code plugin definition
 │   │       ├── plugin.json        # Manifest
 │   │       ├── skills/            # mapgen, mimir-dm, mimir-campaign

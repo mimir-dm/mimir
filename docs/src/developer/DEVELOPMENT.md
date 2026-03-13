@@ -184,20 +184,37 @@ cd ../../..
 
 ### Development Mode
 
-```bash
-# Run with hot reload (from project root)
-cd crates/mimir
-cargo tauri dev
+The recommended way to run in development mode is via the angreal task:
 
-# Or using installed tauri-cli
-cd crates/mimir
-tauri dev
+```bash
+angreal dev launch
 ```
 
-This starts:
-- Vite dev server for frontend (hot reload)
-- Rust backend in debug mode
-- Application window with DevTools available
+This handles the Vite dev server and Tauri app startup correctly.
+
+#### Manual Development Mode
+
+> **Known issue:** `cargo tauri dev` has a bug where it runs `npm run dev` from `crates/` instead of `crates/mimir/frontend`, causing the Vite dev server to fail. Use the workaround below.
+
+```bash
+# Terminal 1: Start Vite dev server manually
+cd crates/mimir/frontend
+npm run dev
+
+# Terminal 2: Run Rust backend (without Tauri's frontend handling)
+cargo run -p mimir --no-default-features
+```
+
+#### Sidecar Binary
+
+The MCP sidecar binary must exist before building the `mimir` crate (required by `externalBin` in `tauri.conf.json`):
+
+```bash
+# Build the sidecar
+./scripts/build-sidecar.sh
+
+# Output: crates/mimir/binaries/mimir-mcp-{target-triple}
+```
 
 ### Production Build
 
@@ -223,6 +240,7 @@ mimir/
 │   ├── mimir/             # Main application
 │   ├── mimir-core/        # Business logic
 │   ├── mimir-mcp/         # MCP server for Claude Code
+│   ├── mimir-mapgen/      # Procedural map generation
 │   └── mimir-print/       # PDF generation
 ├── docs/                      # Documentation
 ├── data/                      # D&D reference data
@@ -250,7 +268,6 @@ mimir/
 
 **Infrastructure Layer**
 - Database: SQLite with Diesel ORM
-- LLM: Ollama integration
 - File System: Campaign data storage
 
 ### Data Flow
@@ -399,11 +416,11 @@ mod tests {
 #### Integration Tests
 ```rust
 // In tests/integration_test.rs
-use mimir_dm_core::*;
+use mimir_core::*;
 
 #[test]
 fn test_database_workflow() {
-    let mut conn = establish_connection(":memory:").unwrap();
+    let mut conn = create_connection(":memory:").unwrap();
     run_migrations(&mut conn).unwrap();
 
     // Test full workflow
@@ -517,7 +534,7 @@ console.error('Error:', error);
 
 ```bash
 # Open development database (macOS)
-sqlite3 ~/Library/Application\ Support/com.mimir.app/dev/mimir.db
+sqlite3 ~/Library/Application\ Support/com.mimir.app/dev/data/mimir.db
 
 # Common commands
 .tables                # List tables
@@ -553,9 +570,9 @@ diesel migration redo
 
 #### Development Database Location
 
-- **macOS**: `~/Library/Application Support/com.mimir.app/dev/mimir.db`
-- **Linux**: `~/.local/share/com.mimir.app/dev/mimir.db`
-- **Windows**: `%APPDATA%\com.mimir.app/dev\mimir.db`
+- **macOS**: `~/Library/Application Support/com.mimir.app/dev/data/mimir.db`
+- **Linux**: `~/.local/share/com.mimir.app/dev/data/mimir.db`
+- **Windows**: `%APPDATA%\com.mimir.app\dev\data\mimir.db`
 
 ### Resetting Development Database
 

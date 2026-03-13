@@ -6,7 +6,7 @@ Play Mode is the interface for running game sessions. It provides tactical map d
 
 ## Entering Play Mode
 
-From the Modules tab, click the **Play** button in the module's table row.
+Select a module from the Modules tab, then click the **Play** button in the module header.
 
 ## Layout
 
@@ -51,16 +51,15 @@ Above the map canvas:
 |---------|----------|
 | **Zoom** | +/- buttons, percentage display |
 | **Reset** | Fit map to view |
-| **Add Token** | Quick-add monster to map |
-| **Add PCs** | Place all campaign PCs |
+| **Add PCs** | Place all campaign PCs on the map |
 | **Reveal Map** | Toggle to bypass fog of war |
-| **LOS Toggle** | Switch between Fog and Token modes |
-| **Debug** | Visualize line of sight |
+| **Print** | Export map to PDF |
+| **Fog** | Toggle fog of war (hide map outside PC vision) |
+| **LOS** | Toggle token line of sight (hide tokens outside PC vision) |
+| **Debug** | Toggle debug overlays (vision ranges, walls) |
 | **Ambient Light** | Bright, Dim, or Dark |
-| **Sync** | Auto-sync view to player display |
-| **Push View** | Manual sync to player display |
 
-### Session Notes (Bottom)
+### Play Notes (Bottom)
 
 Collapsible notes panel:
 - Auto-saves as you type
@@ -91,8 +90,6 @@ Collapsible notes panel:
 When Player Display is open:
 
 - **Blackout** - Hide everything from players
-- **Sync** - Auto-mirror your view
-- **Push View** - Manual view update
 
 ## See Also
 

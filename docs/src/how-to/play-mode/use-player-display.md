@@ -34,17 +34,6 @@ Use for:
 - Map transitions
 - Bathroom breaks
 
-## Viewport Sync
-
-### Auto-Sync (Default)
-- Your pan and zoom mirror to player display
-- Players see what you focus on
-
-### Manual Sync
-1. Disable **Sync** in the toolbar
-2. Navigate freely on your screen
-3. Click **Push View** to update player display
-
 ## Switching Maps
 
 1. Click a different map in the sidebar

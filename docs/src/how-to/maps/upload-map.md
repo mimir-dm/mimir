@@ -13,10 +13,7 @@ Add battle maps and area maps to your modules.
 2. Find the **Maps** section in the module dashboard
 3. Click the **+** button
 4. Choose your map file
-5. Configure map settings:
-   - **Name** - Display name for the map
-   - **Grid Size** - Pixels per grid square
-   - **Grid Offset** - X/Y offset if grid doesn't align
+5. Enter a **Name** for the map
 6. Click **Upload**
 
 ## UVTT Files
@@ -30,14 +27,10 @@ When you upload a UVTT file, grid settings are imported automatically.
 
 ## Image Files
 
-For standard image files, you'll need to:
-1. Determine the grid size (pixels per square)
-2. Measure or estimate from the image
-3. Adjust offset if the grid doesn't start at (0,0)
+For standard image files, Mimir defaults to 70 pixels per grid square. UVTT files provide precise grid data automatically. See [Grid Alignment](./configure-grid.md) for details.
 
 ## Tips
 
-- Common grid sizes: 70px, 100px, 140px per square
 - Use UVTT files when available for best fog of war support
 - Name maps descriptively (e.g., "Goblin Cave - Entrance", "Boss Chamber")
 

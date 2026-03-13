@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ac4f52b4.js";
+            window.path_to_searchindex_js = "../searchindex-d2b4b1dd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-aa677dde.js"></script>
+        <script src="../toc-5975c418.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -239,19 +239,14 @@
 </ul>
 </li>
 <li>
-<p>Configure the map settings:</p>
-<ul>
-<li><strong>Name</strong> - Display name for the map</li>
-<li><strong>Grid Size</strong> - Pixels per grid square (typically 70-140)</li>
-<li><strong>Grid Offset</strong> - Adjust if the grid doesn’t align with the image</li>
-</ul>
+<p>Enter a <strong>Map Name</strong> for the map</p>
 </li>
 <li>
 <p>Click <strong>Upload</strong></p>
 </li>
 </ol>
 <blockquote>
-<p><strong>Tip:</strong> UVTT files from tools like Dungeondraft include grid configuration automatically, saving setup time.</p>
+<p><strong>Tip:</strong> UVTT files from tools like Dungeondraft include grid configuration automatically. For image files, you can configure the grid later in Token Setup (see Step 8).</p>
 </blockquote>
 <!-- Screenshot: map-upload.png -->
 <h2 id="step-5-open-token-setup"><a class="header" href="#step-5-open-token-setup">Step 5: Open Token Setup</a></h2>
@@ -270,10 +265,11 @@
 <h3 id="token-palette-sections"><a class="header" href="#token-palette-sections">Token Palette Sections</a></h3>
 <p>The palette contains several sections:</p>
 <ul>
+<li><strong>Module Monsters</strong> - Quick-select buttons for monsters already added to this module (appears once you’ve added monsters)</li>
 <li><strong>Monster</strong> - Search and add monsters from the D&amp;D 5e catalog</li>
 <li><strong>NPC</strong> - Add NPC tokens</li>
 <li><strong>Trap</strong> - Add traps and hazards</li>
-<li><strong>Object</strong> - Add generic object tokens</li>
+<li><strong>Marker</strong> - Add points of interest</li>
 <li><strong>Light Sources</strong> - Torch, Lantern, Candle</li>
 </ul>
 <h2 id="step-6-add-monsters"><a class="header" href="#step-6-add-monsters">Step 6: Add Monsters</a></h2>
@@ -286,6 +282,9 @@
 </ol>
 <!-- Screenshot: add-monsters.png -->
 <p>Repeat to add more monsters. Each placed monster appears in the Token Inventory on the right.</p>
+<blockquote>
+<p><strong>Tip:</strong> Homebrew monsters you’ve created in the Homebrew tab also appear in search results alongside catalog monsters.</p>
+</blockquote>
 <h3 id="token-options"><a class="header" href="#token-options">Token Options</a></h3>
 <p>When you select a token type from the palette, you can configure:</p>
 <ul>
@@ -326,29 +325,7 @@
 <li>Light sources affect fog of war in Play Mode</li>
 <li>Delete with the <strong>×</strong> button</li>
 </ul>
-<h2 id="step-8-configure-the-grid-image-files-only"><a class="header" href="#step-8-configure-the-grid-image-files-only">Step 8: Configure the Grid (Image Files Only)</a></h2>
-<blockquote>
-<p><strong>Note:</strong> Skip this step if you uploaded a UVTT file - the grid is configured automatically.</p>
-</blockquote>
-<p>If your map’s grid doesn’t align correctly:</p>
-<ol>
-<li>
-<p>Click the <strong>Grid</strong> button in the canvas controls</p>
-</li>
-<li>
-<p>Adjust settings:</p>
-<ul>
-<li><strong>Grid Size</strong> - Pixels per square</li>
-<li><strong>X Offset</strong> - Horizontal shift</li>
-<li><strong>Y Offset</strong> - Vertical shift</li>
-</ul>
-</li>
-<li>
-<p>Click <strong>Save</strong> to apply</p>
-</li>
-</ol>
-<p>The grid overlay shows your adjustments in real-time.</p>
-<h2 id="step-9-save-and-close"><a class="header" href="#step-9-save-and-close">Step 9: Save and Close</a></h2>
+<h2 id="step-8-save-and-close"><a class="header" href="#step-8-save-and-close">Step 8: Save and Close</a></h2>
 <p>Token placements save automatically. Click <strong>×</strong> or press Escape to close the Token Setup modal.</p>
 <p>Your module is now ready for play!</p>
 <h2 id="whats-next"><a class="header" href="#whats-next">What’s Next?</a></h2>
@@ -373,7 +350,7 @@
 <tr><td>Place token</td><td>Select in palette → click map</td></tr>
 <tr><td>Add light source</td><td>Light Sources → select → click map</td></tr>
 <tr><td>Toggle light</td><td>Token Inventory → Lit/Unlit button</td></tr>
-<tr><td>Configure grid</td><td>Grid button in canvas controls</td></tr>
+<tr><td>Delete token</td><td>× button in Token Inventory</td></tr>
 </tbody>
 </table>
 </div>
