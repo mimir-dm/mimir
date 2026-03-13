@@ -48,7 +48,7 @@ Use `asi_ability1`/`asi_increase1` for the first increase and optionally `asi_ab
 Take a feat instead of an ASI:
 
 ```
-search_feats(name: "War Caster")
+search_catalog(category: "feat", name: "War Caster")
 
 level_up_character(
   character_id: "character-id",

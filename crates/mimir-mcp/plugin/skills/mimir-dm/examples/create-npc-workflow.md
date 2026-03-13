@@ -39,8 +39,8 @@ edit_character(
 Search the catalog first to find exact names and sources:
 
 ```
-search_races(name: "Human")
-search_backgrounds(name: "Soldier")
+search_catalog(category: "race", name: "Human")
+search_catalog(category: "background", name: "Soldier")
 
 edit_character(
   character_id: "character-id",
@@ -56,7 +56,7 @@ edit_character(
 Search for items first, then use the exact name from results:
 
 ```
-search_items(name: "Longsword")
+search_catalog(category: "item", name: "Longsword")
 
 add_item_to_character(
   character_id: "character-id",

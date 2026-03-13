@@ -52,7 +52,7 @@ Extract and catalog all named entities:
 
 #### Items
 - Extract named items in documents, module loot, and character inventories
-- Verify catalog references exist via `search_items`
+- Verify catalog references exist via `search_catalog(category: "item")`
 
 #### Timeline Events
 - Extract dates, times, and relative references ("X days ago")

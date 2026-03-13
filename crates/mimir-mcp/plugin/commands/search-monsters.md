@@ -12,7 +12,7 @@ allow_override: false
 
 # Search Monster Catalog
 
-Use `search_monsters` to find monsters matching the criteria.
+Use `search_catalog` with `category: "monster"` to find monsters matching the criteria.
 
 Parse the arguments:
 - If `query` looks like a creature type (undead, dragon, fiend, etc.), use `monster_type`

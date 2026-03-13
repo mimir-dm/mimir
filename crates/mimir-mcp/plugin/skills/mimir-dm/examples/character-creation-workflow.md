@@ -7,9 +7,9 @@ This example shows how to create a fully detailed PC from scratch.
 Find exact names for race, class, and background:
 
 ```
-search_races(name: "Half-Elf")
-search_classes(name: "Warlock")
-search_backgrounds(name: "Charlatan")
+search_catalog(category: "race", name: "Half-Elf")
+search_catalog(category: "class", name: "Warlock")
+search_catalog(category: "background", name: "Charlatan")
 ```
 
 Use the exact names and sources returned by the catalog.
@@ -54,7 +54,7 @@ edit_character(
 Search for items first, then use exact names:
 
 ```
-search_items(name: "Light Crossbow")
+search_catalog(category: "item", name: "Light Crossbow")
 
 add_item_to_character(
   character_id: "character-id",

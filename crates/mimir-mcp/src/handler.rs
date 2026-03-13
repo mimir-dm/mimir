@@ -91,37 +91,18 @@ impl MimirHandler {
             tools::map::add_token_to_map_tool(),
             tools::map::list_tokens_on_map_tool(),
             tools::map::remove_token_tool(),
-            // Homebrew tools
-            tools::homebrew::list_homebrew_items_tool(),
-            tools::homebrew::get_homebrew_item_tool(),
-            tools::homebrew::create_homebrew_item_tool(),
-            tools::homebrew::update_homebrew_item_tool(),
-            tools::homebrew::delete_homebrew_item_tool(),
-            // Homebrew monster tools
-            tools::homebrew_monster::list_homebrew_monsters_tool(),
-            tools::homebrew_monster::get_homebrew_monster_tool(),
-            tools::homebrew_monster::create_homebrew_monster_tool(),
-            tools::homebrew_monster::update_homebrew_monster_tool(),
-            tools::homebrew_monster::delete_homebrew_monster_tool(),
-            // Homebrew spell tools
-            tools::homebrew_spell::list_homebrew_spells_tool(),
-            tools::homebrew_spell::get_homebrew_spell_tool(),
-            tools::homebrew_spell::create_homebrew_spell_tool(),
-            tools::homebrew_spell::update_homebrew_spell_tool(),
-            tools::homebrew_spell::delete_homebrew_spell_tool(),
+            // Homebrew tools (items, monsters, spells — unified by content_type)
+            tools::homebrew::list_homebrew_tool(),
+            tools::homebrew::get_homebrew_tool(),
+            tools::homebrew::create_homebrew_tool(),
+            tools::homebrew::update_homebrew_tool(),
+            tools::homebrew::delete_homebrew_tool(),
             // Map generation tools
             tools::mapgen::generate_map_tool(),
             tools::mapgen::list_map_presets_tool(),
             tools::mapgen::validate_map_config_tool(),
-            // Catalog tools
-            tools::catalog::search_monsters_tool(),
-            tools::catalog::search_items_tool(),
-            tools::catalog::search_spells_tool(),
-            tools::catalog::search_races_tool(),
-            tools::catalog::search_classes_tool(),
-            tools::catalog::search_backgrounds_tool(),
-            tools::catalog::search_feats_tool(),
-            tools::catalog::search_conditions_tool(),
+            // Catalog search (all categories unified by category param)
+            tools::catalog::search_catalog_tool(),
         ]
     }
 
@@ -209,59 +190,20 @@ impl MimirHandler {
             "list_tokens_on_map" => tools::map::list_tokens_on_map(&self.context, args).await,
             "remove_token" => tools::map::remove_token(&self.context, args).await,
 
-            // Homebrew tools
-            "list_homebrew_items" => tools::homebrew::list_homebrew_items(&self.context, args).await,
-            "get_homebrew_item" => tools::homebrew::get_homebrew_item(&self.context, args).await,
-            "create_homebrew_item" => {
-                tools::homebrew::create_homebrew_item(&self.context, args).await
-            }
-            "update_homebrew_item" => {
-                tools::homebrew::update_homebrew_item(&self.context, args).await
-            }
-            "delete_homebrew_item" => {
-                tools::homebrew::delete_homebrew_item(&self.context, args).await
-            }
-
-            // Homebrew monster tools
-            "list_homebrew_monsters" => tools::homebrew_monster::list_homebrew_monsters(&self.context, args).await,
-            "get_homebrew_monster" => tools::homebrew_monster::get_homebrew_monster(&self.context, args).await,
-            "create_homebrew_monster" => {
-                tools::homebrew_monster::create_homebrew_monster(&self.context, args).await
-            }
-            "update_homebrew_monster" => {
-                tools::homebrew_monster::update_homebrew_monster(&self.context, args).await
-            }
-            "delete_homebrew_monster" => {
-                tools::homebrew_monster::delete_homebrew_monster(&self.context, args).await
-            }
-
-            // Homebrew spell tools
-            "list_homebrew_spells" => tools::homebrew_spell::list_homebrew_spells(&self.context, args).await,
-            "get_homebrew_spell" => tools::homebrew_spell::get_homebrew_spell(&self.context, args).await,
-            "create_homebrew_spell" => {
-                tools::homebrew_spell::create_homebrew_spell(&self.context, args).await
-            }
-            "update_homebrew_spell" => {
-                tools::homebrew_spell::update_homebrew_spell(&self.context, args).await
-            }
-            "delete_homebrew_spell" => {
-                tools::homebrew_spell::delete_homebrew_spell(&self.context, args).await
-            }
+            // Homebrew tools (items, monsters, spells — dispatched by content_type)
+            "list_homebrew" => tools::homebrew::list_homebrew(&self.context, args).await,
+            "get_homebrew" => tools::homebrew::get_homebrew(&self.context, args).await,
+            "create_homebrew" => tools::homebrew::create_homebrew(&self.context, args).await,
+            "update_homebrew" => tools::homebrew::update_homebrew(&self.context, args).await,
+            "delete_homebrew" => tools::homebrew::delete_homebrew(&self.context, args).await,
 
             // Map generation tools (no campaign context needed)
             "generate_map" => tools::mapgen::generate_map(args).await,
             "list_map_presets" => tools::mapgen::list_map_presets(args).await,
             "validate_map_config" => tools::mapgen::validate_map_config(args).await,
 
-            // Catalog tools
-            "search_monsters" => tools::catalog::search_monsters(&self.context, args).await,
-            "search_items" => tools::catalog::search_items(&self.context, args).await,
-            "search_spells" => tools::catalog::search_spells(&self.context, args).await,
-            "search_races" => tools::catalog::search_races(&self.context, args).await,
-            "search_classes" => tools::catalog::search_classes(&self.context, args).await,
-            "search_backgrounds" => tools::catalog::search_backgrounds(&self.context, args).await,
-            "search_feats" => tools::catalog::search_feats(&self.context, args).await,
-            "search_conditions" => tools::catalog::search_conditions(&self.context, args).await,
+            // Catalog search (dispatched by category param)
+            "search_catalog" => tools::catalog::search_catalog(&self.context, args).await,
 
             _ => Err(McpError::ToolNotFound(name.to_string())),
         }
@@ -379,37 +321,18 @@ mod tests {
         "add_token_to_map",
         "list_tokens_on_map",
         "remove_token",
-        // Homebrew
-        "list_homebrew_items",
-        "get_homebrew_item",
-        "create_homebrew_item",
-        "update_homebrew_item",
-        "delete_homebrew_item",
-        // Homebrew Monster
-        "list_homebrew_monsters",
-        "get_homebrew_monster",
-        "create_homebrew_monster",
-        "update_homebrew_monster",
-        "delete_homebrew_monster",
-        // Homebrew Spell
-        "list_homebrew_spells",
-        "get_homebrew_spell",
-        "create_homebrew_spell",
-        "update_homebrew_spell",
-        "delete_homebrew_spell",
+        // Homebrew (items, monsters, spells)
+        "list_homebrew",
+        "get_homebrew",
+        "create_homebrew",
+        "update_homebrew",
+        "delete_homebrew",
         // Map generation
         "generate_map",
         "list_map_presets",
         "validate_map_config",
         // Catalog
-        "search_monsters",
-        "search_items",
-        "search_spells",
-        "search_races",
-        "search_classes",
-        "search_backgrounds",
-        "search_feats",
-        "search_conditions",
+        "search_catalog",
     ];
 
     fn test_ctx() -> Arc<McpContext> {
@@ -875,29 +798,34 @@ mod tests {
     async fn catalog_searches_return_empty_on_fresh_db() {
         let handler = MimirHandler::with_context(test_ctx());
 
-        let catalog_tools = [
-            ("search_monsters", "monsters"),
-            ("search_items", "items"),
-            ("search_spells", "spells"),
-            ("search_races", "races"),
-            ("search_classes", "classes"),
-            ("search_backgrounds", "backgrounds"),
-            ("search_feats", "feats"),
-            ("search_conditions", "conditions"),
+        let categories = [
+            ("monster", "monsters"),
+            ("item", "items"),
+            ("spell", "spells"),
+            ("race", "races"),
+            ("class", "classes"),
+            ("background", "backgrounds"),
+            ("feat", "feats"),
+            ("condition", "conditions"),
         ];
 
-        for (tool, key) in catalog_tools {
-            let res = call_ok(&handler, tool, serde_json::json!({"name": "nonexistent"})).await;
+        for (category, key) in categories {
+            let res = call_ok(
+                &handler,
+                "search_catalog",
+                serde_json::json!({"category": category, "name": "nonexistent"}),
+            )
+            .await;
             assert_eq!(
                 res["count"].as_u64().unwrap(),
                 0,
-                "{} should return 0 results on empty DB",
-                tool
+                "search_catalog({}) should return 0 results on empty DB",
+                category
             );
             assert!(
                 res[key].as_array().unwrap().is_empty(),
                 "{} array should be empty",
-                tool
+                category
             );
         }
     }
@@ -967,14 +895,15 @@ mod tests {
         setup_campaign(&handler).await;
 
         // List — empty
-        let res = call_ok(&handler, "list_homebrew_monsters", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "monster"})).await;
         assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
 
         // Create
         let res = call_ok(
             &handler,
-            "create_homebrew_monster",
+            "create_homebrew",
             json!({
+                "content_type": "monster",
                 "name": "Frost Colossus",
                 "data": r#"{"name":"Frost Colossus","hp":{"average":200}}"#,
                 "cr": "20",
@@ -989,14 +918,14 @@ mod tests {
         assert_eq!(res["monster"]["cr"], "20");
 
         // List — has one
-        let res = call_ok(&handler, "list_homebrew_monsters", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "monster"})).await;
         assert_eq!(res["monsters"].as_array().unwrap().len(), 1);
 
         // Get
         let res = call_ok(
             &handler,
-            "get_homebrew_monster",
-            json!({"id": monster_id}),
+            "get_homebrew",
+            json!({"content_type": "monster", "id": monster_id}),
         )
         .await;
         assert_eq!(res["monster"]["name"], "Frost Colossus");
@@ -1005,8 +934,8 @@ mod tests {
         // Update
         let res = call_ok(
             &handler,
-            "update_homebrew_monster",
-            json!({"id": monster_id, "name": "Ice Titan", "cr": "25"}),
+            "update_homebrew",
+            json!({"content_type": "monster", "id": monster_id, "name": "Ice Titan", "cr": "25"}),
         )
         .await;
         assert_eq!(res["status"], "updated");
@@ -1016,14 +945,14 @@ mod tests {
         // Delete
         let res = call_ok(
             &handler,
-            "delete_homebrew_monster",
-            json!({"id": monster_id}),
+            "delete_homebrew",
+            json!({"content_type": "monster", "id": monster_id}),
         )
         .await;
         assert_eq!(res["status"], "deleted");
 
         // List — empty again
-        let res = call_ok(&handler, "list_homebrew_monsters", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "monster"})).await;
         assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
     }
 
@@ -1037,8 +966,9 @@ mod tests {
         // Create
         let res = call_ok(
             &handler,
-            "create_homebrew_spell",
+            "create_homebrew",
             json!({
+                "content_type": "spell",
                 "name": "Arcane Blast",
                 "data": r#"{"name":"Arcane Blast","level":3}"#,
                 "level": 3,
@@ -1050,14 +980,14 @@ mod tests {
         let spell_id = res["spell"]["id"].as_str().unwrap().to_string();
 
         // List
-        let res = call_ok(&handler, "list_homebrew_spells", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "spell"})).await;
         assert_eq!(res["spells"].as_array().unwrap().len(), 1);
 
         // Get
         let res = call_ok(
             &handler,
-            "get_homebrew_spell",
-            json!({"id": spell_id}),
+            "get_homebrew",
+            json!({"content_type": "spell", "id": spell_id}),
         )
         .await;
         assert_eq!(res["spell"]["name"], "Arcane Blast");
@@ -1066,8 +996,8 @@ mod tests {
         // Update
         let res = call_ok(
             &handler,
-            "update_homebrew_spell",
-            json!({"id": spell_id, "name": "Eldritch Blast", "level": 0}),
+            "update_homebrew",
+            json!({"content_type": "spell", "id": spell_id, "name": "Eldritch Blast", "level": 0}),
         )
         .await;
         assert_eq!(res["status"], "updated");
@@ -1076,14 +1006,14 @@ mod tests {
         // Delete
         let res = call_ok(
             &handler,
-            "delete_homebrew_spell",
-            json!({"id": spell_id}),
+            "delete_homebrew",
+            json!({"content_type": "spell", "id": spell_id}),
         )
         .await;
         assert_eq!(res["status"], "deleted");
 
         // List — empty
-        let res = call_ok(&handler, "list_homebrew_spells", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "spell"})).await;
         assert_eq!(res["spells"].as_array().unwrap().len(), 0);
     }
 
@@ -1097,8 +1027,9 @@ mod tests {
         // Create
         let res = call_ok(
             &handler,
-            "create_homebrew_item",
+            "create_homebrew",
             json!({
+                "content_type": "item",
                 "name": "Flame Blade",
                 "data": r#"{"name":"Flame Blade"}"#,
                 "item_type": "weapon",
@@ -1110,14 +1041,14 @@ mod tests {
         let item_id = res["item"]["id"].as_str().unwrap().to_string();
 
         // List
-        let res = call_ok(&handler, "list_homebrew_items", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "item"})).await;
         assert_eq!(res["items"].as_array().unwrap().len(), 1);
 
         // Get
         let res = call_ok(
             &handler,
-            "get_homebrew_item",
-            json!({"id": item_id}),
+            "get_homebrew",
+            json!({"content_type": "item", "id": item_id}),
         )
         .await;
         assert_eq!(res["item"]["name"], "Flame Blade");
@@ -1126,8 +1057,8 @@ mod tests {
         // Update
         let res = call_ok(
             &handler,
-            "update_homebrew_item",
-            json!({"id": item_id, "name": "Frost Blade", "rarity": "legendary"}),
+            "update_homebrew",
+            json!({"content_type": "item", "id": item_id, "name": "Frost Blade", "rarity": "legendary"}),
         )
         .await;
         assert_eq!(res["status"], "updated");
@@ -1136,14 +1067,14 @@ mod tests {
         // Delete
         let res = call_ok(
             &handler,
-            "delete_homebrew_item",
-            json!({"id": item_id}),
+            "delete_homebrew",
+            json!({"content_type": "item", "id": item_id}),
         )
         .await;
         assert_eq!(res["status"], "deleted");
 
         // List — empty
-        let res = call_ok(&handler, "list_homebrew_items", json!({})).await;
+        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "item"})).await;
         assert_eq!(res["items"].as_array().unwrap().len(), 0);
     }
 
@@ -1156,29 +1087,16 @@ mod tests {
 
         let fake_id = "00000000-0000-0000-0000-000000000000";
 
-        // Monster
-        let err = call_err(&handler, "get_homebrew_monster", json!({"id": fake_id})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)), "Should be a not-found error, not InvalidArguments");
+        for ct in ["monster", "spell", "item"] {
+            let err = call_err(&handler, "get_homebrew", json!({"content_type": ct, "id": fake_id})).await;
+            assert!(!matches!(err, McpError::InvalidArguments(_)), "get_homebrew({}) should be a not-found error", ct);
 
-        let err = call_err(&handler, "update_homebrew_monster", json!({"id": fake_id, "name": "x"})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)));
+            let err = call_err(&handler, "update_homebrew", json!({"content_type": ct, "id": fake_id, "name": "x"})).await;
+            assert!(!matches!(err, McpError::InvalidArguments(_)));
 
-        let err = call_err(&handler, "delete_homebrew_monster", json!({"id": fake_id})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)));
-
-        // Spell
-        let err = call_err(&handler, "get_homebrew_spell", json!({"id": fake_id})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)));
-
-        let err = call_err(&handler, "delete_homebrew_spell", json!({"id": fake_id})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)));
-
-        // Item
-        let err = call_err(&handler, "get_homebrew_item", json!({"id": fake_id})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)));
-
-        let err = call_err(&handler, "delete_homebrew_item", json!({"id": fake_id})).await;
-        assert!(!matches!(err, McpError::InvalidArguments(_)));
+            let err = call_err(&handler, "delete_homebrew", json!({"content_type": ct, "id": fake_id})).await;
+            assert!(!matches!(err, McpError::InvalidArguments(_)));
+        }
     }
 
     #[tokio::test]
@@ -1186,41 +1104,25 @@ mod tests {
         let handler = MimirHandler::with_context(test_ctx());
         setup_campaign(&handler).await;
 
-        // Monster — missing name
-        let err = call_err(
-            &handler,
-            "create_homebrew_monster",
-            json!({"data": "{}"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::InvalidArguments(_)));
+        for ct in ["monster", "spell", "item"] {
+            // Missing name
+            let err = call_err(
+                &handler,
+                "create_homebrew",
+                json!({"content_type": ct, "data": "{}"}),
+            )
+            .await;
+            assert!(matches!(err, McpError::InvalidArguments(_)));
 
-        // Monster — missing data
-        let err = call_err(
-            &handler,
-            "create_homebrew_monster",
-            json!({"name": "Test"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::InvalidArguments(_)));
-
-        // Spell — missing name
-        let err = call_err(
-            &handler,
-            "create_homebrew_spell",
-            json!({"data": "{}"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::InvalidArguments(_)));
-
-        // Item — missing name
-        let err = call_err(
-            &handler,
-            "create_homebrew_item",
-            json!({"data": "{}"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::InvalidArguments(_)));
+            // Missing data
+            let err = call_err(
+                &handler,
+                "create_homebrew",
+                json!({"content_type": ct, "name": "Test"}),
+            )
+            .await;
+            assert!(matches!(err, McpError::InvalidArguments(_)));
+        }
     }
 
     #[tokio::test]
@@ -1228,26 +1130,15 @@ mod tests {
         let handler = MimirHandler::with_context(test_ctx());
         setup_campaign(&handler).await;
 
-        let tools = [
-            "get_homebrew_monster",
-            "update_homebrew_monster",
-            "delete_homebrew_monster",
-            "get_homebrew_spell",
-            "update_homebrew_spell",
-            "delete_homebrew_spell",
-            "get_homebrew_item",
-            "update_homebrew_item",
-            "delete_homebrew_item",
-        ];
-
-        for tool in tools {
-            let err = call_err(&handler, tool, json!({})).await;
-            assert!(
-                matches!(err, McpError::InvalidArguments(_)),
-                "Tool '{}' should fail with InvalidArguments when id is missing, got: {:?}",
-                tool,
-                err
-            );
+        for ct in ["monster", "spell", "item"] {
+            for tool in ["get_homebrew", "update_homebrew", "delete_homebrew"] {
+                let err = call_err(&handler, tool, json!({"content_type": ct})).await;
+                assert!(
+                    matches!(err, McpError::InvalidArguments(_)),
+                    "{}(content_type={}) should fail with InvalidArguments when id is missing, got: {:?}",
+                    tool, ct, err
+                );
+            }
         }
     }
 
@@ -1256,19 +1147,12 @@ mod tests {
         let handler = MimirHandler::with_context(test_ctx());
         // No campaign set
 
-        let list_tools = [
-            "list_homebrew_monsters",
-            "list_homebrew_spells",
-            "list_homebrew_items",
-        ];
-
-        for tool in list_tools {
-            let err = call_err(&handler, tool, json!({})).await;
+        for ct in ["monster", "spell", "item"] {
+            let err = call_err(&handler, "list_homebrew", json!({"content_type": ct})).await;
             assert!(
                 matches!(err, McpError::NoActiveCampaign),
-                "Tool '{}' should fail with NoActiveCampaign, got: {:?}",
-                tool,
-                err
+                "list_homebrew(content_type={}) should fail with NoActiveCampaign, got: {:?}",
+                ct, err
             );
         }
     }
@@ -1278,28 +1162,14 @@ mod tests {
         let handler = MimirHandler::with_context(test_ctx());
         // No campaign set
 
-        let err = call_err(
-            &handler,
-            "create_homebrew_monster",
-            json!({"name": "Test", "data": "{}"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::NoActiveCampaign));
-
-        let err = call_err(
-            &handler,
-            "create_homebrew_spell",
-            json!({"name": "Test", "data": "{}"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::NoActiveCampaign));
-
-        let err = call_err(
-            &handler,
-            "create_homebrew_item",
-            json!({"name": "Test", "data": "{}"}),
-        )
-        .await;
-        assert!(matches!(err, McpError::NoActiveCampaign));
+        for ct in ["monster", "spell", "item"] {
+            let err = call_err(
+                &handler,
+                "create_homebrew",
+                json!({"content_type": ct, "name": "Test", "data": "{}"}),
+            )
+            .await;
+            assert!(matches!(err, McpError::NoActiveCampaign));
+        }
     }
 }

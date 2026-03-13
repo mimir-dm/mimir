@@ -115,14 +115,15 @@ claude mcp add mimir \
 - `validate_map_config` - Validate a YAML map config without generating
 
 ### Catalog Search
-- `search_monsters` - Search monsters by name, CR, type
-- `search_items` - Search items by name, rarity, type
-- `search_spells` - Search spells by name, level, school
-- `search_races` - Search races by name
-- `search_classes` - Search classes by name
-- `search_backgrounds` - Search backgrounds by name
-- `search_feats` - Search feats by name
-- `search_conditions` - Search conditions by name
+- `search_catalog` - Search the 5etools catalog by category:
+  - `category: "monster"` - Search monsters by name, CR, type
+  - `category: "item"` - Search items by name, rarity, type
+  - `category: "spell"` - Search spells by name, level, school
+  - `category: "race"` - Search races by name
+  - `category: "class"` - Search classes by name
+  - `category: "background"` - Search backgrounds by name
+  - `category: "feat"` - Search feats by name
+  - `category: "condition"` - Search conditions by name
 
 ## Common Workflows
 
@@ -137,7 +138,7 @@ claude mcp add mimir \
 ### Populating an Encounter
 
 ```
-1. search_monsters(name="goblin", cr="1/4")
+1. search_catalog(category="monster", name="goblin", cr="1/4")
 2. add_monster_to_module(module_id, monster_name="Goblin", count=6)
 3. add_monster_to_module(module_id, monster_name="Bugbear", count=1, notes="Leader")
 ```
@@ -154,9 +155,9 @@ claude mcp add mimir \
 ### Creating a Full PC
 
 ```
-1. search_races(name="Elf") — find exact race name/source
-2. search_classes(name="Ranger") — find exact class name
-3. search_backgrounds(name="Outlander") — find exact background name
+1. search_catalog(category="race", name="Elf") — find exact race name/source
+2. search_catalog(category="class", name="Ranger") — find exact class name
+3. search_catalog(category="background", name="Outlander") — find exact background name
 4. create_character(name="Thalion", character_type="pc", race_name="Elf", class_name="Ranger")
 5. edit_character(character_id, ability_scores=[10,16,14,12,14,8], currency=[0,15,0,0,0])
 6. add_item_to_character(character_id, item_name="Longbow", equipped=true)
@@ -173,7 +174,7 @@ claude mcp add mimir \
 ### Adding Treasure to a Module
 
 ```
-1. search_items(rarity="rare", item_type="wondrous item")
+1. search_catalog(category="item", rarity="rare", item_type="wondrous item")
 2. add_item_to_character(npc_id, item_name="Cloak of Protection")
 ```
 
@@ -181,7 +182,7 @@ claude mcp add mimir \
 
 ```
 1. create_map(module_id, name="Goblin Cave", file_path="/path/to/cave.uvtt")
-2. search_monsters(name="Goblin")
+2. search_catalog(category="monster", name="Goblin")
 3. add_token_to_map(map_id, monster_name="Goblin", x=5.0, y=3.0, label="Guard 1")
 4. add_token_to_map(map_id, monster_name="Goblin", x=7.0, y=3.0, label="Guard 2")
 ```

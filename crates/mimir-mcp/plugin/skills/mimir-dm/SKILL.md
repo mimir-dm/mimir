@@ -34,20 +34,20 @@ All subsequent operations require an active campaign.
 ## Important Patterns
 
 ### Read Before Edit
-Always call `get_character` / `read_document` / `get_module_details` / `get_homebrew_item` / `get_homebrew_monster` / `get_homebrew_spell` before making edits to confirm current state. Never edit blind.
+Always call `get_character` / `read_document` / `get_module_details` / `get_homebrew` before making edits to confirm current state. Never edit blind.
 
 ### Catalog Exact-Match
 Search tools return partial matches. When adding monsters, items, or equipment:
-1. Search the catalog first (`search_monsters`, `search_items`, `search_spells`, etc.)
+1. Search the catalog first (`search_catalog` with the appropriate `category`)
 2. Pick the **exact** matching name from results
 3. Use that exact name string in `add_monster_to_module` / `add_item_to_character`
 
 ### Clone From Catalog Before Creating Homebrew
 When a user wants a custom monster, item, or spell, **always try cloning from the catalog first** rather than building from scratch. A cloned entry preserves correct 5etools JSON structure and only needs targeted edits.
 
-1. Search the catalog for the closest match (`search_monsters`, `search_items`, `search_spells`)
+1. Search the catalog for the closest match (`search_catalog` with the appropriate `category`)
 2. Present options and let the user pick the base creature/item/spell
-3. Clone it with `create_homebrew_*` using `cloned_from_name` and `cloned_from_source`
+3. Clone it with `create_homebrew` (specifying `content_type`) using `cloned_from_name` and `cloned_from_source`
 4. Edit the `data` JSON to apply the user's requested changes
 
 Building homebrew JSON from scratch is error-prone — the data blobs follow 5etools format which has many nested structures. Cloning and modifying is almost always safer.
@@ -94,10 +94,10 @@ Campaign-level documents are not tied to any module — use them for world lore,
 1. Set the active campaign
 2. Create the module with `create_module` (name, type, description)
 3. Add narrative documents with `create_document` (module_id, backstory, read_aloud, dm_notes, description, custom)
-4. Search the catalog with `search_monsters` to find exact names
+4. Search the catalog with `search_catalog(category: "monster")` to find exact names
 5. Add monsters with `add_monster_to_module` (include count and notes)
-6. Search items with `search_items` and add loot with `add_item_to_module`
-7. Search spells with `search_spells` if the module involves spellcasting NPCs or traps
+6. Search items with `search_catalog(category: "item")` and add loot with `add_item_to_module`
+7. Search spells with `search_catalog(category: "spell")` if the module involves spellcasting NPCs or traps
 
 ### Create and Equip an NPC
 
@@ -110,7 +110,7 @@ Campaign-level documents are not tied to any module — use them for world lore,
 
 ### Create a Full PC
 
-1. Search `search_races`, `search_classes`, `search_backgrounds` to find exact names
+1. Search `search_catalog` with `category: "race"`, `"class"`, `"background"` to find exact names
 2. Create with `create_character` (name, character_type: "pc", race_name, class_name)
 3. Set ability scores and currency with `edit_character`
 4. Set race/background with `edit_character` (race_name, race_source, background_name, background_source)
@@ -124,9 +124,9 @@ Campaign-level documents are not tied to any module — use them for world lore,
 
 ### Populate an Encounter
 
-1. Search monsters by name, CR range, or type with `search_monsters`
+1. Search monsters by name, CR range, or type with `search_catalog(category: "monster")`
 2. Add each monster to the module with `add_monster_to_module` (specify count)
-3. Search spells with `search_spells` if encounter involves spellcasters
+3. Search spells with `search_catalog(category: "spell")` if encounter involves spellcasters
 4. Add treasure with `add_item_to_module`
 
 ### Upload and Populate a Map
@@ -151,7 +151,7 @@ Campaign-level documents are not tied to any module — use them for world lore,
 - `remove_character_spell` — remove a spell by name, optionally scoped to a specific class
 - `toggle_spell_prepared` — flip a spell's prepared/unprepared state (via Tauri command)
 
-Use `spell_source: "HB"` when adding homebrew spells. Verify the homebrew spell exists in the campaign with `list_homebrew_spells` before adding it to a character.
+Use `spell_source: "HB"` when adding homebrew spells. Verify the homebrew spell exists in the campaign with `list_homebrew(content_type: "spell")` before adding it to a character.
 
 ### Review Module Structure
 
@@ -162,25 +162,25 @@ Use `get_module_details` to see the full structure before editing — it returns
 Homebrew content lets the DM create custom items, monsters, and spells that don't exist in the catalog. The recommended workflow is **clone and edit**, not build from scratch.
 
 #### Homebrew Items
-1. Search the catalog with `search_items` to find a similar base item
-2. Clone with `create_homebrew_item` (name, data, item_type, rarity, cloned_from_name, cloned_from_source)
-3. Review with `get_homebrew_item`
-4. Edit with `update_homebrew_item` to refine the data JSON
-5. List all with `list_homebrew_items`
+1. Search the catalog with `search_catalog(category: "item")` to find a similar base item
+2. Clone with `create_homebrew(content_type: "item", name, data, item_type, rarity, cloned_from_name, cloned_from_source)`
+3. Review with `get_homebrew(content_type: "item", id)`
+4. Edit with `update_homebrew(content_type: "item", id)` to refine the data JSON
+5. List all with `list_homebrew(content_type: "item")`
 
 #### Homebrew Monsters
-1. Search the catalog with `search_monsters` to find a similar base creature
-2. Clone with `create_homebrew_monster` (name, data, cr, creature_type, size, cloned_from_name, cloned_from_source)
-3. Review with `get_homebrew_monster`
-4. Edit with `update_homebrew_monster` to adjust the stat block JSON
-5. List all with `list_homebrew_monsters`
+1. Search the catalog with `search_catalog(category: "monster")` to find a similar base creature
+2. Clone with `create_homebrew(content_type: "monster", name, data, cr, creature_type, size, cloned_from_name, cloned_from_source)`
+3. Review with `get_homebrew(content_type: "monster", id)`
+4. Edit with `update_homebrew(content_type: "monster", id)` to adjust the stat block JSON
+5. List all with `list_homebrew(content_type: "monster")`
 
 #### Homebrew Spells
-1. Search the catalog with `search_spells` to find a similar base spell
-2. Clone with `create_homebrew_spell` (name, data, level, school, cloned_from_name, cloned_from_source)
-3. Review with `get_homebrew_spell`
-4. Edit with `update_homebrew_spell` to adjust the spell data JSON
-5. List all with `list_homebrew_spells`
+1. Search the catalog with `search_catalog(category: "spell")` to find a similar base spell
+2. Clone with `create_homebrew(content_type: "spell", name, data, level, school, cloned_from_name, cloned_from_source)`
+3. Review with `get_homebrew(content_type: "spell", id)`
+4. Edit with `update_homebrew(content_type: "spell", id)` to adjust the spell data JSON
+5. List all with `list_homebrew(content_type: "spell")`
 6. Add to a character with `add_character_spell` (spell_source: "HB", source_class: the granting class)
 
 **Important**: The `data` field is a JSON string following 5etools format. Always clone from catalog to get the correct structure, then make targeted edits. If you must build from scratch, validate the JSON is well-formed before saving.

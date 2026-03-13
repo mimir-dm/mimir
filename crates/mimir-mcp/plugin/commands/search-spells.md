@@ -18,7 +18,7 @@ allow_override: false
 
 # Search Spell Catalog
 
-Use `search_spells` to find spells matching the criteria.
+Use `search_catalog` with `category: "spell"` to find spells matching the criteria.
 
 Parse the arguments:
 - If `query` is provided, use `name` for partial matching

@@ -42,7 +42,7 @@ create_document(
 ## Step 5: Add Monsters
 
 ```
-search_monsters(name: "ghost", cr_max: 5)
+search_catalog(category: "monster", name: "ghost", cr_max: 5)
 add_monster_to_module(module_id: "module-id", monster_name: "Ghost", count: 1)
 add_monster_to_module(module_id: "module-id", monster_name: "Shadow", count: 4)
 ```
@@ -50,6 +50,6 @@ add_monster_to_module(module_id: "module-id", monster_name: "Shadow", count: 4)
 ## Step 6: Add Treasure
 
 ```
-search_items(rarity: "uncommon", item_type: "wondrous item")
+search_catalog(category: "item", rarity: "uncommon", item_type: "wondrous item")
 add_item_to_module(module_id: "module-id", item_name: "Cloak of Protection")
 ```

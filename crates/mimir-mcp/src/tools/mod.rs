@@ -10,8 +10,6 @@ pub mod catalog;
 pub mod character;
 pub mod document;
 pub mod homebrew;
-pub mod homebrew_monster;
-pub mod homebrew_spell;
 pub mod map;
 pub mod mapgen;
 pub mod module;

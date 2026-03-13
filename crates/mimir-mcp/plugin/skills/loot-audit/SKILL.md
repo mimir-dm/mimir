@@ -45,7 +45,7 @@ get_character_inventory(character_id)
 
 For each item found:
 ```
-search_items(name: item_name)
+search_catalog(category: "item")(name: item_name)
 ```
 
 Extract rarity, type (weapon, armor, wondrous, etc.), attunement requirement, and value.
@@ -123,7 +123,7 @@ Calculate:
 ### Missing Item Types
 - Campaign needs more [type] items
 - Suggested additions:
-  - [Item] (search: `search_items(item_type: "X", rarity: "Y")`)
+  - [Item] (search: `search_catalog(category: "item")(item_type: "X", rarity: "Y")`)
 
 ### Rarity Adjustments
 - [Module] has [rarity] items too early

@@ -62,7 +62,7 @@ For each NPC players will likely encounter:
 ### 3. Encounter Readiness
 
 Review module monsters and maps:
-- [ ] Monster stat blocks accessible (verify via `search_monsters`)
+- [ ] Monster stat blocks accessible (verify via `search_catalog(category: "monster")`)
 - [ ] Tactics noted in DM notes
 - [ ] Terrain/environmental factors documented
 - [ ] Treasure/loot defined

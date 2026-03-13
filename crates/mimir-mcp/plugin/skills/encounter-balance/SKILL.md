@@ -38,7 +38,7 @@ list_maps(module_id: module_id)
 get_map(map_id: map_id)  # includes token positions
 ```
 
-**Important**: **Verify** the module exists and has monsters before analysis. If a monster is not found in the catalog via `search_monsters`, **flag** it as homebrew.
+**Important**: **Verify** the module exists and has monsters before analysis. If a monster is not found in the catalog via `search_catalog(category: "monster")`, **flag** it as homebrew.
 
 ### 3. Calculate Per Encounter
 

@@ -111,54 +111,59 @@ Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi
 - `location` — Filter NPCs by location string
 - `faction` — Filter NPCs by faction string
 
-### search_monsters
+### search_catalog
+- `category` (required) — `"monster"`, `"item"`, `"spell"`, `"race"`, `"class"`, `"background"`, `"feat"`, `"condition"`
 - `name` — Partial name match
+- `limit` — Max results (default: 20)
+
+**Monster-specific filters** (category: `"monster"`):
 - `cr_min` / `cr_max` — Challenge rating range (number)
 - `monster_type` — Type filter (e.g., `"undead"`, `"dragon"`)
-- `limit` — Max results (default: 20)
 
-### search_items
-- `name` — Partial name match
+**Item-specific filters** (category: `"item"`):
 - `rarity` — `"common"`, `"uncommon"`, `"rare"`, `"very rare"`, `"legendary"`, `"artifact"`
 - `item_type` — Type filter (e.g., `"weapon"`, `"armor"`, `"wondrous item"`)
-- `limit` — Max results (default: 20)
 
-### search_spells
-- `name` — Partial name match
+**Spell-specific filters** (category: `"spell"`):
 - `level` — Spell level (integer, 0 for cantrips)
 - `school` — School of magic (e.g., `"evocation"`, `"necromancy"`)
 - `class_name` — Filter by class spell list
-- `limit` — Max results (default: 20)
 
 ## Homebrew Tool Parameters
 
-### create_homebrew_item
-- `name` (required) — Item name
-- `data` (required) — JSON string with item data
+### create_homebrew
+- `content_type` (required) — `"item"`, `"monster"`, or `"spell"`
+- `name` (required) — Name of the homebrew entry
+- `data` (required) — JSON string with the entry data
+- `cloned_from_name` — Catalog entry this was based on
+- `cloned_from_source` — Source book of the base entry
+
+**Item-specific fields** (content_type: `"item"`):
 - `item_type` — `"weapon"`, `"armor"`, `"potion"`, `"ring"`, `"rod"`, `"scroll"`, `"staff"`, `"wand"`, `"wondrous item"`, `"adventuring gear"`
 - `rarity` — `"common"`, `"uncommon"`, `"rare"`, `"very rare"`, `"legendary"`, `"artifact"`
-- `cloned_from_name` — Catalog item this was based on
-- `cloned_from_source` — Source book of the base item
 
-### create_homebrew_monster
-- `name` (required) — Monster name
-- `data` (required) — JSON string with stat block
+**Monster-specific fields** (content_type: `"monster"`):
 - `cr` — Challenge rating (e.g., `"1/4"`, `"5"`, `"20"`)
 - `creature_type` — `"humanoid"`, `"dragon"`, `"undead"`, `"fiend"`, etc.
 - `size` — `"T"`, `"S"`, `"M"`, `"L"`, `"H"`, `"G"`
-- `cloned_from_name` — Catalog monster this was based on
-- `cloned_from_source` — Source book of the base monster
 
-### create_homebrew_spell
-- `name` (required) — Spell name
-- `data` (required) — JSON string with spell data
+**Spell-specific fields** (content_type: `"spell"`):
 - `level` — Spell level (integer, 0 for cantrip)
 - `school` — School of magic (e.g., `"evocation"`, `"necromancy"`)
-- `cloned_from_name` — Catalog spell this was based on
-- `cloned_from_source` — Source book of the base spell
 
-### update_homebrew_* tools
-All update tools accept the same fields as their create counterparts plus `id` (required). Only fields you provide will be updated.
+### update_homebrew
+Accepts the same fields as `create_homebrew` plus `id` (required). Only fields you provide will be updated.
+
+### get_homebrew
+- `content_type` (required) — `"item"`, `"monster"`, or `"spell"`
+- `id` (required) — The homebrew entry ID
+
+### list_homebrew
+- `content_type` (required) — `"item"`, `"monster"`, or `"spell"`
+
+### delete_homebrew
+- `content_type` (required) — `"item"`, `"monster"`, or `"spell"`
+- `id` (required) — The homebrew entry ID
 
 ## Character Spell Tools
 
