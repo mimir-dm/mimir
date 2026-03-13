@@ -72,7 +72,7 @@ roads:
   - from: Left
     to: Right
     texture: "res://textures/paths/path_dirt.png"
-    width: 256.0
+    width: 512.0
     layer: 100
     style: straight
     step_distance: 48.0

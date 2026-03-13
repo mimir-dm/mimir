@@ -204,7 +204,7 @@ pub fn generate_road_with_exclusions(
     let start = random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng);
     let target = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
 
-    let waypoints = match config.style {
+    let raw_waypoints = match config.style {
         PathStyle::Straight => greedy_walk(
             noise_map,
             start,
@@ -228,14 +228,20 @@ pub fn generate_road_with_exclusions(
             config.step_distance,
             rng,
             exclusion_zones,
-        ).eased,
+        ),
     };
 
-    if waypoints.len() < 2 {
+    if raw_waypoints.len() < 2 {
         return None;
     }
 
-    let smoothed = bezier_smooth(&waypoints, config.smooth_density);
+    // Smooth then clip to map bounds (meander extends beyond edges).
+    let smoothed_raw = bezier_smooth(&raw_waypoints, config.smooth_density);
+    let smoothed = clip_polyline_to_rect(&smoothed_raw, 0.0, 0.0, pixel_width, pixel_height);
+
+    if smoothed.len() < 2 {
+        return None;
+    }
 
     let road_vectors: Vec<Vector2> = smoothed.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
     let road = MapPath::new(&config.texture, road_vectors, config.width, &alloc.next())
@@ -293,44 +299,38 @@ pub fn generate_river_with_exclusions(
     let start = random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng);
     let target = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
 
-    // For meandering rivers we need both the eased centerline (for bank paths)
-    // and the raw shifted centerline (for water polygon — avoids pinch at edges).
-    let (waypoints, water_waypoints) = match config.style {
-        PathStyle::Meandering => {
-            let result = generate_meander(
-                start, target, pixel_width, pixel_height,
-                noise_map, config.width, config.step_distance,
-                rng, exclusion_zones,
-            );
-            (result.eased, result.raw_shifted)
-        }
-        PathStyle::Straight => {
-            let pts = greedy_walk(
-                noise_map, start, target, pixel_width, pixel_height,
-                config.step_distance, config.fov, config.noise_weight,
-                false, rng, exclusion_zones,
-            );
-            (pts.clone(), pts)
-        }
+    let raw_waypoints = match config.style {
+        PathStyle::Meandering => generate_meander(
+            start, target, pixel_width, pixel_height,
+            noise_map, config.width, config.step_distance,
+            rng, exclusion_zones,
+        ),
+        PathStyle::Straight => greedy_walk(
+            noise_map, start, target, pixel_width, pixel_height,
+            config.step_distance, config.fov, config.noise_weight,
+            false, rng, exclusion_zones,
+        ),
     };
 
-    if waypoints.len() < 2 {
+    if raw_waypoints.len() < 2 {
         return None;
     }
 
-    let smoothed = bezier_smooth(&waypoints, config.smooth_density);
-
-    // Generate bank paths on both sides
     let half_w = config.width / 2.0;
-    let left_bank = offset_polyline(&smoothed, half_w);
-    let right_bank = offset_polyline(&smoothed, -half_w);
+
+    // Smooth the full (extended) path, then offset to get banks.
+    // Clip bank polylines to map rect for clean edge rendering.
+    let smoothed_full = bezier_smooth(&raw_waypoints, config.smooth_density);
+    let left_bank_full = offset_polyline(&smoothed_full, half_w);
+    let right_bank_full = offset_polyline(&smoothed_full, -half_w);
+
+    let left_bank = clip_polyline_to_rect(&left_bank_full, 0.0, 0.0, pixel_width, pixel_height);
+    let right_bank = clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
 
     let left_vectors: Vec<Vector2> =
         left_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
-    let right_vectors: Vec<Vector2> = right_bank
-        .iter()
-        .map(|&(x, y)| Vector2::new(x, y))
-        .collect();
+    let right_vectors: Vec<Vector2> =
+        right_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
     let bank_paths = vec![
         MapPath::new(
@@ -349,18 +349,16 @@ pub fn generate_river_with_exclusions(
         .with_layer(config.bank_layer),
     ];
 
-    // Build water polygon from a heavily decimated centerline.
-    // Dense polygons + wide offsets cause self-intersecting inner curves at
-    // S-bends, which DD renders as diagonal line artifacts.
-    // Target ~20 points per side (matching the reference implementation).
+    // Build water polygon from a decimated centerline to avoid self-intersecting
+    // inner curves at S-bends. Target ~20 points per side.
     let water_center = {
         let target_pts = 20;
-        if water_waypoints.len() <= target_pts {
-            water_waypoints.clone()
+        if raw_waypoints.len() <= target_pts {
+            raw_waypoints.clone()
         } else {
-            let step = water_waypoints.len() / target_pts;
-            let mut pts: Vec<(f64, f64)> = water_waypoints.iter().step_by(step).copied().collect();
-            if let Some(&last) = water_waypoints.last() {
+            let step = raw_waypoints.len() / target_pts;
+            let mut pts: Vec<(f64, f64)> = raw_waypoints.iter().step_by(step).copied().collect();
+            if let Some(&last) = raw_waypoints.last() {
                 if pts.last() != Some(&last) {
                     pts.push(last);
                 }
@@ -371,15 +369,20 @@ pub fn generate_river_with_exclusions(
     let water_left = offset_polyline(&water_center, half_w);
     let water_right = offset_polyline(&water_center, -half_w);
 
-    // Assemble water polygon: left bank forward, right bank reversed, closed.
-    let mut water_polygon: Vec<(f64, f64)> = water_left.clone();
-    water_polygon.extend(water_right.into_iter().rev());
+    // Assemble water polygon: left bank forward, right bank reversed.
+    // No closing vertex — clip_polygon_to_rect uses modular indexing.
+    let mut raw_polygon: Vec<(f64, f64)> = water_left.clone();
+    raw_polygon.extend(water_right.into_iter().rev());
+
+    // Clip to map rectangle — Sutherland-Hodgman gives clean rectangular cuts.
+    let mut water_polygon = clip_polygon_to_rect(&raw_polygon, 0.0, 0.0, pixel_width, pixel_height);
+    // Close the polygon for DD.
     if let Some(&first) = water_polygon.first() {
         water_polygon.push(first);
     }
 
-    // Post-process: push corner points to nearest map edge so river bleeds off-screen.
-    fix_water_caps(&mut water_polygon, pixel_width, pixel_height, water_left.len());
+    // Clip the centerline for corridor exclusion data.
+    let smoothed = clip_polyline_to_rect(&smoothed_full, 0.0, 0.0, pixel_width, pixel_height);
 
     Some(RiverResult {
         bank_paths,
@@ -389,19 +392,12 @@ pub fn generate_river_with_exclusions(
     })
 }
 
-/// Result of meander generation: eased path for rendering, raw shifted for water polygon.
-struct MeanderResult {
-    /// Eased centerline (smooth entry/exit at map edges) — use for bank paths.
-    eased: Vec<(f64, f64)>,
-    /// Raw shifted centerline (no easing) — use for water polygon to avoid pinch.
-    raw_shifted: Vec<(f64, f64)>,
-}
-
 /// Generate a meandering centerline using sinusoidal displacement + noise.
 ///
-/// Walk from start to target in even steps along the main axis.
-/// At each step, displace perpendicular to the path using a sine wave
-/// plus noise perturbation. This produces natural-looking S-curves (meanders).
+/// The path is generated **longer than the map** (extended beyond both edges),
+/// then callers clip the result to the map rectangle. This means the sine wave
+/// is at full amplitude when it crosses the map boundary, producing clean
+/// entry/exit with no edge artifacts.
 fn generate_meander(
     start: (f64, f64),
     target: (f64, f64),
@@ -412,13 +408,12 @@ fn generate_meander(
     step_distance: f64,
     rng: &mut impl Rng,
     exclusion_zones: &[ExclusionZone],
-) -> MeanderResult {
+) -> Vec<(f64, f64)> {
     let dx = target.0 - start.0;
     let dy = target.1 - start.1;
     let total_dist = (dx * dx + dy * dy).sqrt();
     if total_dist < 1.0 {
-        let pts = vec![start, target];
-        return MeanderResult { eased: pts.clone(), raw_shifted: pts };
+        return vec![start, target];
     }
 
     // Unit vectors: forward along start→target, and perpendicular
@@ -429,64 +424,60 @@ fn generate_meander(
     // than the path itself. Cap at ~6 grid squares max displacement.
     let amplitude = (path_width * 3.0).min(pixel_width.min(pixel_height) * 0.08);
 
+    // Extend path beyond map edges so the sine is at full amplitude at boundaries.
+    // One wavelength extension on each side ensures smooth entry/exit after clipping.
+    let extension = total_dist * 0.4;
+    let ext_start = (start.0 - fwd.0 * extension, start.1 - fwd.1 * extension);
+    let ext_total = total_dist + extension * 2.0;
+
     // Single random phase offset
     let phase: f64 = rng.gen_range(0.0..std::f64::consts::TAU);
 
     let noise_scale_x = noise_map.width as f64 / pixel_width;
     let noise_scale_y = noise_map.height as f64 / pixel_height;
 
-    let num_steps = (total_dist / step_distance).ceil() as usize;
+    let num_steps = (ext_total / step_distance).ceil() as usize;
     let num_steps = num_steps.max(20);
     let mut points = Vec::with_capacity(num_steps + 1);
 
     for i in 0..=num_steps {
         let t = i as f64 / num_steps as f64;
 
-        // Base position along the straight line
-        let base_x = start.0 + dx * t;
-        let base_y = start.1 + dy * t;
+        // Base position along the extended straight line
+        let base_x = ext_start.0 + fwd.0 * ext_total * t;
+        let base_y = ext_start.1 + fwd.1 * ext_total * t;
 
-        // Single gentle sine wave (1.5 periods) — smooth meander
-        // Fade amplitude at endpoints so path meets edge cleanly
-        let fade = (t * std::f64::consts::PI).sin(); // 0 at ends, 1 in middle
-        let sine_offset = fade * amplitude *
+        // Single gentle sine wave (1.5 periods over original distance) — no fade
+        let sine_offset = amplitude *
             (2.0 * std::f64::consts::PI * t * 1.5 + phase).sin();
 
-        // Subtle noise perturbation for irregularity
-        let noise_val = noise_map.sample(base_x * noise_scale_x, base_y * noise_scale_y);
-        let noise_offset = fade * amplitude * 0.15 * (noise_val - 0.5);
+        // Subtle noise perturbation for irregularity (clamp sample coords to map)
+        let sample_x = base_x.clamp(0.0, pixel_width) * noise_scale_x;
+        let sample_y = base_y.clamp(0.0, pixel_height) * noise_scale_y;
+        let noise_val = noise_map.sample(sample_x, sample_y);
+        let noise_offset = amplitude * 0.15 * (noise_val - 0.5);
 
         let total_offset = sine_offset + noise_offset;
         let px = base_x + perp.0 * total_offset;
         let py = base_y + perp.1 * total_offset;
-
-        // Clamp to map bounds
-        let px = px.clamp(0.0, pixel_width);
-        let py = py.clamp(0.0, pixel_height);
 
         points.push((px, py));
     }
 
     // Shift the entire path perpendicular until no points intersect exclusion zones.
     // This preserves curve shape instead of distorting individual points.
-    // For a top→bottom path, perp is horizontal so we shift left/right.
-    // For a left→right path, perp is vertical so we shift up/down.
     if !exclusion_zones.is_empty() {
         let pad = path_width * 0.5 + 64.0;
         for _attempt in 0..20 {
-            // Find the point deepest inside a zone, measured along the perp axis.
-            // We'll shift the whole path by enough to clear that worst case.
-            let mut best_shift: Option<f64> = None; // signed shift along perp
+            let mut best_shift: Option<f64> = None;
             for &(px, py) in &points {
                 for zone in exclusion_zones {
                     if zone.contains(px, py) {
-                        // Project point and zone edges onto perp axis (relative to path start)
                         let pt_perp = (px - start.0) * perp.0 + (py - start.1) * perp.1;
                         let zone_center_perp =
                             ((zone.x + zone.width / 2.0) - start.0) * perp.0
                             + ((zone.y + zone.height / 2.0) - start.1) * perp.1;
 
-                        // Zone extent along perp: project all 4 corners, find min/max
                         let corners = [
                             (zone.x, zone.y),
                             (zone.x + zone.width, zone.y),
@@ -499,12 +490,9 @@ fn generate_meander(
                         let zone_min = projections.iter().cloned().fold(f64::INFINITY, f64::min);
                         let zone_max = projections.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
-                        // Push away from zone center along perp
                         let shift = if pt_perp >= zone_center_perp {
-                            // Push in +perp direction: need to clear zone_max
                             (zone_max - pt_perp) + pad
                         } else {
-                            // Push in -perp direction: need to clear zone_min
                             (zone_min - pt_perp) - pad
                         };
 
@@ -520,116 +508,164 @@ fn generate_meander(
                 }
             }
 
-            let Some(shift) = best_shift else { break }; // No intersections
+            let Some(shift) = best_shift else { break };
             if shift.abs() < 1.0 { break; }
 
-            // Translate all points along perp by the shift amount
             let dx = perp.0 * shift;
             let dy = perp.1 * shift;
             for pt in &mut points {
-                pt.0 = (pt.0 + dx).clamp(0.0, pixel_width);
-                pt.1 = (pt.1 + dy).clamp(0.0, pixel_height);
+                pt.0 += dx;
+                pt.1 += dy;
             }
         }
+    }
 
-        // Save raw shifted points before easing (for water polygon)
-        let raw_shifted = points.clone();
+    points
+}
 
-        // Ease the first/last few points back toward the map edge so the
-        // path enters/exits cleanly without a sharp fold.
-        let ease_count = 4.min(points.len() / 2);
+// ── Clipping ─────────────────────────────────────────────────────────────────
 
-        // Start edge
-        let mut edge_start = points[0];
-        snap_to_edge(&mut edge_start, start, pixel_width, pixel_height);
-        for i in 0..ease_count {
-            let t = i as f64 / ease_count as f64;
-            points[i].0 = edge_start.0 + (points[i].0 - edge_start.0) * t;
-            points[i].1 = edge_start.1 + (points[i].1 - edge_start.1) * t;
+/// Clip a polyline to a rectangle, keeping only the interior portion.
+/// For paths that enter and exit the rectangle once.
+fn clip_polyline_to_rect(
+    points: &[(f64, f64)],
+    x_min: f64, y_min: f64,
+    x_max: f64, y_max: f64,
+) -> Vec<(f64, f64)> {
+    fn inside(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool {
+        p.0 >= x_min && p.0 <= x_max && p.1 >= y_min && p.1 <= y_max
+    }
+
+    let mut result = Vec::new();
+
+    for window in points.windows(2) {
+        let (a, b) = (window[0], window[1]);
+        let a_in = inside(a, x_min, y_min, x_max, y_max);
+        let b_in = inside(b, x_min, y_min, x_max, y_max);
+
+        match (a_in, b_in) {
+            (true, true) => {
+                if result.is_empty() { result.push(a); }
+                result.push(b);
+            }
+            (true, false) => {
+                if result.is_empty() { result.push(a); }
+                if let Some((_, exit)) = clip_segment(a, b, x_min, y_min, x_max, y_max) {
+                    result.push(exit);
+                }
+            }
+            (false, true) => {
+                if let Some((entry, _)) = clip_segment(a, b, x_min, y_min, x_max, y_max) {
+                    result.push(entry);
+                }
+                result.push(b);
+            }
+            (false, false) => {
+                // Both outside — might still cross through for very long segments.
+                if let Some((entry, exit)) = clip_segment(a, b, x_min, y_min, x_max, y_max) {
+                    result.push(entry);
+                    result.push(exit);
+                }
+            }
         }
-        points[0] = edge_start;
+    }
 
-        // End edge
-        let n = points.len();
-        let mut edge_end = points[n - 1];
-        snap_to_edge(&mut edge_end, target, pixel_width, pixel_height);
-        for i in 0..ease_count {
-            let idx = n - 1 - i;
-            let t = i as f64 / ease_count as f64;
-            points[idx].0 = edge_end.0 + (points[idx].0 - edge_end.0) * t;
-            points[idx].1 = edge_end.1 + (points[idx].1 - edge_end.1) * t;
+    result
+}
+
+/// Clip a closed polygon to a rectangle using Sutherland-Hodgman.
+/// Input polygon should NOT have a repeated closing vertex.
+fn clip_polygon_to_rect(
+    polygon: &[(f64, f64)],
+    x_min: f64, y_min: f64,
+    x_max: f64, y_max: f64,
+) -> Vec<(f64, f64)> {
+    let mut output = polygon.to_vec();
+
+    // Clip against each edge in turn
+    output = sh_clip_edge(&output, |p| p.0 >= x_min, |a, b| {
+        let t = (x_min - a.0) / (b.0 - a.0);
+        (x_min, a.1 + t * (b.1 - a.1))
+    });
+    output = sh_clip_edge(&output, |p| p.0 <= x_max, |a, b| {
+        let t = (x_max - a.0) / (b.0 - a.0);
+        (x_max, a.1 + t * (b.1 - a.1))
+    });
+    output = sh_clip_edge(&output, |p| p.1 >= y_min, |a, b| {
+        let t = (y_min - a.1) / (b.1 - a.1);
+        (a.0 + t * (b.0 - a.0), y_min)
+    });
+    output = sh_clip_edge(&output, |p| p.1 <= y_max, |a, b| {
+        let t = (y_max - a.1) / (b.1 - a.1);
+        (a.0 + t * (b.0 - a.0), y_max)
+    });
+
+    output
+}
+
+/// One pass of Sutherland-Hodgman: clip polygon against a single edge.
+fn sh_clip_edge(
+    polygon: &[(f64, f64)],
+    inside: impl Fn((f64, f64)) -> bool,
+    intersect: impl Fn((f64, f64), (f64, f64)) -> (f64, f64),
+) -> Vec<(f64, f64)> {
+    if polygon.is_empty() { return vec![]; }
+
+    let mut output = Vec::new();
+    let n = polygon.len();
+
+    for i in 0..n {
+        let current = polygon[i];
+        let next = polygon[(i + 1) % n];
+        let cur_in = inside(current);
+        let nxt_in = inside(next);
+
+        match (cur_in, nxt_in) {
+            (true, true) => output.push(next),
+            (true, false) => output.push(intersect(current, next)),
+            (false, true) => {
+                output.push(intersect(current, next));
+                output.push(next);
+            }
+            (false, false) => {}
         }
-        points[n - 1] = edge_end;
-
-        return MeanderResult { eased: points, raw_shifted };
     }
 
-    MeanderResult { eased: points.clone(), raw_shifted: points }
+    output
 }
 
-/// Post-process a water polygon: push the first/last points of each bank
-/// side to the nearest map edge so the river bleeds off-screen cleanly.
-fn fix_water_caps(
-    polygon: &mut [(f64, f64)],
-    pixel_width: f64,
-    pixel_height: f64,
-    n_left: usize,
-) {
-    if polygon.len() < 4 || n_left == 0 {
-        return;
-    }
-    // Polygon layout: [left_0 .. left_{n-1}, right_{n-1}_rev .. right_0_rev, close]
-    // "Corner" indices that need to reach the map edge:
-    let corners = [
-        0,              // left bank start
-        n_left - 1,     // left bank end
-        n_left,         // right bank end (reversed)
-        polygon.len() - 2, // right bank start (reversed)
-    ];
-    for &idx in &corners {
-        if idx >= polygon.len() { continue; }
-        push_to_nearest_edge(&mut polygon[idx], pixel_width, pixel_height);
-    }
-    // Update close point
-    let first = polygon[0];
-    let last_idx = polygon.len() - 1;
-    polygon[last_idx] = first;
-}
+/// Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
+fn clip_segment(
+    a: (f64, f64), b: (f64, f64),
+    x_min: f64, y_min: f64, x_max: f64, y_max: f64,
+) -> Option<((f64, f64), (f64, f64))> {
+    let dx = b.0 - a.0;
+    let dy = b.1 - a.1;
+    let mut t_min = 0.0_f64;
+    let mut t_max = 1.0_f64;
 
-/// Push a point past the nearest map edge by a margin so it's off-screen.
-fn push_to_nearest_edge(pt: &mut (f64, f64), pixel_width: f64, pixel_height: f64) {
-    let margin = 512.0;
-    let to_left = pt.0;
-    let to_right = pixel_width - pt.0;
-    let to_top = pt.1;
-    let to_bottom = pixel_height - pt.1;
-    let min = to_left.min(to_right).min(to_top).min(to_bottom);
-    if min == to_left {
-        pt.0 = -margin;
-    } else if min == to_right {
-        pt.0 = pixel_width + margin;
-    } else if min == to_top {
-        pt.1 = -margin;
-    } else {
-        pt.1 = pixel_height + margin;
-    }
-}
+    let p = [-dx, dx, -dy, dy];
+    let q = [a.0 - x_min, x_max - a.0, a.1 - y_min, y_max - a.1];
 
-/// Direction pointing outward from a map edge (for extending paths off-screen).
+    for i in 0..4 {
+        if p[i].abs() < 1e-10 {
+            if q[i] < 0.0 { return None; }
+        } else {
+            let t = q[i] / p[i];
+            if p[i] < 0.0 {
+                t_min = t_min.max(t);
+            } else {
+                t_max = t_max.min(t);
+            }
+        }
+    }
 
-/// Snap a point back to whichever map edge the original point was on.
-fn snap_to_edge(pt: &mut (f64, f64), original: (f64, f64), pixel_width: f64, pixel_height: f64) {
-    const EDGE_THRESH: f64 = 1.0;
-    if original.0 <= EDGE_THRESH {
-        pt.0 = 0.0;
-    } else if original.0 >= pixel_width - EDGE_THRESH {
-        pt.0 = pixel_width;
-    }
-    if original.1 <= EDGE_THRESH {
-        pt.1 = 0.0;
-    } else if original.1 >= pixel_height - EDGE_THRESH {
-        pt.1 = pixel_height;
-    }
+    if t_min > t_max { return None; }
+
+    Some((
+        (a.0 + dx * t_min, a.1 + dy * t_min),
+        (a.0 + dx * t_max, a.1 + dy * t_max),
+    ))
 }
 
 /// Greedy pathfinding walk from start toward target.
