@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-12T12:44:59Z | 558 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-13T02:35:48Z | 558 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -7933,49 +7933,54 @@
 #### crates/mimir-mapgen/src/biomes.rs
 
 - pub `BiomePreset` struct L10-19 — `{ name: &'static str, description: &'static str, default_size: (u32, u32), confi...` — A biome preset with sensible defaults for all generation parameters.
-- pub `get_preset` function L22-42 — `(name: &str) -> Option<BiomePreset>` — Get a biome preset by name.
-- pub `list_presets` function L45-58 — `() -> Vec<BiomePreset>` — List all available presets.
--  `forest_preset` function L60-174 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `grassland_preset` function L176-252 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `cave_preset` function L254-319 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `desert_preset` function L321-408 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `lake_preset` function L410-515 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `ice_lake_preset` function L517-587 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `arctic_preset` function L589-666 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `island_tropical_preset` function L668-773 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `island_forest_preset` function L775-881 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `island_arctic_preset` function L883-953 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `tests` module L956-1061 — `-` — for terrain textures, object palettes, and noise parameters.
--  `test_get_preset` function L960-976 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_list_presets` function L979-993 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_forest_has_terrain` function L996-1000 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_cave_has_lighting` function L1003-1008 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_lake_has_water` function L1011-1015 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_ice_lake_has_water` function L1018-1022 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_desert_has_elevation` function L1025-1029 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_arctic_has_elevation` function L1032-1036 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_island_tropical_has_water_and_trees` function L1039-1044 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_island_forest_has_water_and_trees` function L1047-1052 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_island_arctic_has_water_no_trees` function L1055-1060 — `()` — for terrain textures, object palettes, and noise parameters.
+- pub `get_preset` function L22-46 — `(name: &str) -> Option<BiomePreset>` — Get a biome preset by name.
+- pub `list_presets` function L49-64 — `() -> Vec<BiomePreset>` — List all available presets.
+-  `forest_preset` function L66-180 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `grassland_preset` function L182-258 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `cave_preset` function L260-325 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `desert_preset` function L327-414 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `lake_preset` function L416-522 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `ice_lake_preset` function L524-594 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `arctic_preset` function L596-673 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `island_tropical_preset` function L675-781 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `island_forest_preset` function L783-890 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `island_arctic_preset` function L892-962 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `swamp_preset` function L964-1074 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `forest_river_preset` function L1076-1178 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `tests` module L1181-1314 — `-` — for terrain textures, object palettes, and noise parameters.
+-  `test_get_preset` function L1185-1206 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_list_presets` function L1209-1225 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_forest_has_terrain` function L1228-1232 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_cave_has_lighting` function L1235-1240 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_lake_has_water` function L1243-1247 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_ice_lake_has_water` function L1250-1254 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_desert_has_elevation` function L1257-1261 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_arctic_has_elevation` function L1264-1268 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_island_tropical_has_water_and_trees` function L1271-1276 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_island_forest_has_water_and_trees` function L1279-1284 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_island_arctic_has_water_no_trees` function L1287-1292 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_swamp_has_water_and_lighting` function L1295-1304 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_forest_river_has_river_and_trees` function L1307-1312 — `()` — for terrain textures, object palettes, and noise parameters.
 
 #### crates/mimir-mapgen/src/contour.rs
 
 - pub `Contour` type L8 — `= Vec<(f64, f64)>` — A contour polyline — a sequence of 2D points.
-- pub `find_contours` function L14-49 — `(noise_map: &NoiseMap, threshold: f64) -> Vec<Contour>` — Extract contour lines from a noise map at the given threshold.
-- pub `filter_contours` function L52-57 — `(contours: Vec<Contour>, min_points: usize) -> Vec<Contour>` — Filter contours by minimum length (number of points).
-- pub `smooth_contours` function L60-65 — `(contours: Vec<Contour>, iterations: usize) -> Vec<Contour>` — Smooth contours by averaging each point with its neighbors.
--  `smooth_polyline` function L67-86 — `(points: &[(f64, f64)], iterations: usize) -> Contour` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
--  `cell_case` function L89-111 — `(noise_map: &NoiseMap, x: usize, y: usize, threshold: f64) -> u8` — Compute the Marching Squares case index (0-15) for a cell.
--  `interpolate` function L114-120 — `(v1: f64, v2: f64, threshold: f64) -> f64` — Interpolate position along an edge between two values crossing the threshold.
--  `cell_segments` function L124-164 — `( noise_map: &NoiseMap, x: usize, y: usize, threshold: f64, ) -> Vec<((f64, f64)...` — Get the edge crossing point(s) for a given marching squares case.
--  `trace_contour` function L167-220 — `( noise_map: &NoiseMap, visited: &mut [Vec<bool>], start_x: usize, start_y: usiz...` — Trace a contour starting from the given cell.
--  `next_cell` function L223-249 — `( cx: usize, cy: usize, exit: (f64, f64), w: usize, h: usize, ) -> Option<(usize...` — Determine the next cell to visit based on the exit point.
--  `tests` module L252-338 — `-` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
--  `test_find_contours_basic` function L257-271 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
--  `test_no_contours_at_extremes` function L274-283 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
--  `test_filter_contours` function L286-294 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
--  `test_smooth_contours` function L297-313 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
--  `test_cell_case` function L316-337 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+- pub `find_contours` function L14-50 — `(noise_map: &NoiseMap, threshold: f64) -> Vec<Contour>` — Extract contour lines from a noise map at the given threshold.
+- pub `filter_contours` function L151-156 — `(contours: Vec<Contour>, min_points: usize) -> Vec<Contour>` — Filter contours by minimum length (number of points).
+- pub `smooth_contours` function L159-164 — `(contours: Vec<Contour>, iterations: usize) -> Vec<Contour>` — Smooth contours by averaging each point with its neighbors.
+-  `merge_contours` function L56-148 — `(mut fragments: Vec<Contour>) -> Vec<Contour>` — Merge contour fragments that share endpoints.
+-  `smooth_polyline` function L166-185 — `(points: &[(f64, f64)], iterations: usize) -> Contour` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+-  `cell_case` function L188-210 — `(noise_map: &NoiseMap, x: usize, y: usize, threshold: f64) -> u8` — Compute the Marching Squares case index (0-15) for a cell.
+-  `interpolate` function L213-219 — `(v1: f64, v2: f64, threshold: f64) -> f64` — Interpolate position along an edge between two values crossing the threshold.
+-  `cell_segments` function L223-263 — `( noise_map: &NoiseMap, x: usize, y: usize, threshold: f64, ) -> Vec<((f64, f64)...` — Get the edge crossing point(s) for a given marching squares case.
+-  `trace_contour` function L266-319 — `( noise_map: &NoiseMap, visited: &mut [Vec<bool>], start_x: usize, start_y: usiz...` — Trace a contour starting from the given cell.
+-  `next_cell` function L322-348 — `( cx: usize, cy: usize, exit: (f64, f64), w: usize, h: usize, ) -> Option<(usize...` — Determine the next cell to visit based on the exit point.
+-  `tests` module L351-437 — `-` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+-  `test_find_contours_basic` function L356-370 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+-  `test_no_contours_at_extremes` function L373-382 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+-  `test_filter_contours` function L385-393 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+-  `test_smooth_contours` function L396-412 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
+-  `test_cell_case` function L415-436 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
 
 #### crates/mimir-mapgen/src/curves.rs
 
@@ -8053,20 +8058,22 @@
 - pub `generate` function L46-88 — `(width: usize, height: usize, config: &NoiseConfig) -> Self` — Generate a noise map with the given dimensions and config.
 - pub `get` function L91-95 — `(&self, x: usize, y: usize) -> f64` — Get the value at (x, y), clamped to bounds.
 - pub `sample` function L98-118 — `(&self, x: f64, y: f64) -> f64` — Get a bilinearly interpolated value at fractional coordinates.
-- pub `apply_island_mode` function L122-137 — `(&mut self, falloff_strength: f64)` — Apply island mode: push values at edges toward 1.0 (high = water for terrain).
-- pub `apply_canyon_mode` function L140-151 — `(&mut self, levels: &[f64])` — Apply canyon mode: force values below each threshold down to create sharp level boundaries.
-- pub `to_byte_map` function L154-159 — `(&self) -> Vec<Vec<u8>>` — Convert to a 0-255 byte map for compatibility with reference impl conventions.
+- pub `apply_island_mode` function L122-124 — `(&mut self, falloff_strength: f64)` — Apply island mode: push values at edges toward 1.0 (high = water for terrain).
+- pub `apply_lake_mode` function L128-130 — `(&mut self, falloff_strength: f64)` — Apply lake mode: push values at center toward 1.0 (high = water for terrain).
+- pub `apply_canyon_mode` function L152-163 — `(&mut self, levels: &[f64])` — Apply canyon mode: force values below each threshold down to create sharp level boundaries.
+- pub `to_byte_map` function L166-171 — `(&self) -> Vec<Vec<u8>>` — Convert to a 0-255 byte map for compatibility with reference impl conventions.
 -  `NoiseConfig` type L24-34 — `impl Default for NoiseConfig` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
 -  `default` function L25-33 — `() -> Self` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `NoiseMap` type L44-160 — `= NoiseMap` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `tests` module L163-267 — `-` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_noise_map_dimensions` function L167-174 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_noise_map_normalized` function L177-193 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_noise_map_deterministic` function L196-204 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_noise_map_different_seeds` function L207-225 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_bilinear_sample` function L228-234 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_island_mode` function L237-252 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
--  `test_byte_map` function L255-266 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `NoiseMap` type L44-172 — `= NoiseMap` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `apply_radial_falloff` function L134-149 — `(&mut self, falloff_strength: f64, invert: bool)` — Shared radial falloff.
+-  `tests` module L175-279 — `-` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_noise_map_dimensions` function L179-186 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_noise_map_normalized` function L189-205 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_noise_map_deterministic` function L208-216 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_noise_map_different_seeds` function L219-237 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_bilinear_sample` function L240-246 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_island_mode` function L249-264 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
+-  `test_byte_map` function L267-278 — `()` — Provides configurable multi-octave Perlin noise with island/canyon modifiers.
 
 #### crates/mimir-mapgen/src/objects.rs
 
@@ -8094,28 +8101,42 @@
 
 #### crates/mimir-mapgen/src/paths.rs
 
-- pub `Edge` enum L17-22 — `Left | Right | Top | Bottom` — Which map edge a road/river starts or ends at.
-- pub `RoadConfig` struct L27-50 — `{ from: Edge, to: Edge, texture: String, width: f64, layer: i32, step_distance: ...` — Configuration for road generation.
-- pub `EdgePathConfig` struct L54-63 — `{ texture: String, offset: f64, width: f64, layer: i32 }` — Configuration for edge/border paths along roads.
-- pub `RiverConfig` struct L68-95 — `{ from: Edge, to: Edge, width: f64, step_distance: f64, fov: f64, noise_weight: ...` — Configuration for river generation.
-- pub `RoadResult` struct L136-145 — `{ road: MapPath, edge_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, cor...` — Result of road generation.
-- pub `RiverResult` struct L148-157 — `{ bank_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, corridor_half_widt...` — Result of river generation.
-- pub `generate_road` function L160-219 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road across the map using greedy pathfinding.
-- pub `generate_river` function L222-297 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river across the map.
--  `RoadConfig` type L97-113 — `impl Default for RoadConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `default` function L98-112 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `RiverConfig` type L115-133 — `impl Default for RiverConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `default` function L116-132 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `greedy_walk` function L304-383 — `( noise_map: &NoiseMap, start: (f64, f64), target: (f64, f64), pixel_width: f64,...` — Greedy pathfinding walk from start toward target.
--  `random_edge_point` function L386-399 — `( edge: Edge, width: f64, height: f64, margin: f64, rng: &mut impl Rng, ) -> (f6...` — Pick a random point along a map edge.
--  `tests` module L402-548 — `-` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_noise` function L408-417 — `() -> NoiseMap` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_greedy_walk_reaches_target` function L420-445 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_road` function L448-467 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_road_with_edges` function L470-491 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_river` function L494-509 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_road_deterministic` function L512-529 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_random_edge_point` function L532-547 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+- pub `Edge` enum L18-23 — `Left | Right | Top | Bottom` — Which map edge a road/river starts or ends at.
+- pub `PathStyle` enum L28-33 — `Straight | Meandering` — Path style: how the centerline is generated.
+- pub `RoadConfig` struct L44-69 — `{ from: Edge, to: Edge, texture: String, width: f64, layer: i32, style: PathStyl...` — Configuration for road generation.
+- pub `EdgePathConfig` struct L73-82 — `{ texture: String, offset: f64, width: f64, layer: i32 }` — Configuration for edge/border paths along roads.
+- pub `RiverConfig` struct L87-116 — `{ from: Edge, to: Edge, width: f64, style: PathStyle, step_distance: f64, fov: f...` — Configuration for river generation.
+- pub `RoadResult` struct L159-168 — `{ road: MapPath, edge_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, cor...` — Result of road generation.
+- pub `RiverResult` struct L171-180 — `{ bank_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, corridor_half_widt...` — Result of river generation.
+- pub `generate_road` function L183-192 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road across the map using greedy pathfinding.
+- pub `generate_road_with_exclusions` function L195-275 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road, avoiding exclusion zones (rooms).
+- pub `generate_river` function L278-287 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river across the map.
+- pub `generate_river_with_exclusions` function L290-393 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river, avoiding exclusion zones (rooms).
+-  `PathStyle` type L35-39 — `impl Default for PathStyle` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `default` function L36-38 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `RoadConfig` type L118-135 — `impl Default for RoadConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `default` function L119-134 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `RiverConfig` type L137-156 — `impl Default for RiverConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `default` function L138-155 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `generate_meander` function L401-524 — `( start: (f64, f64), target: (f64, f64), pixel_width: f64, pixel_height: f64, no...` — Generate a meandering centerline using sinusoidal displacement + noise.
+-  `clip_polyline_to_rect` function L530-574 — `( points: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> Ve...` — Clip a polyline to a rectangle, keeping only the interior portion.
+-  `inside` function L535-537 — `(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `clip_polygon_to_rect` function L578-604 — `( polygon: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> V...` — Clip a closed polygon to a rectangle using Sutherland-Hodgman.
+-  `sh_clip_edge` function L607-635 — `( polygon: &[(f64, f64)], inside: impl Fn((f64, f64)) -> bool, intersect: impl F...` — One pass of Sutherland-Hodgman: clip polygon against a single edge.
+-  `clip_segment` function L638-669 — `( a: (f64, f64), b: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64, ...` — Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
+-  `greedy_walk` function L676-761 — `( noise_map: &NoiseMap, start: (f64, f64), target: (f64, f64), pixel_width: f64,...` — Greedy pathfinding walk from start toward target.
+-  `random_edge_point` function L764-777 — `( edge: Edge, width: f64, height: f64, margin: f64, rng: &mut impl Rng, ) -> (f6...` — Pick a random point along a map edge.
+-  `tests` module L780-975 — `-` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_noise` function L786-795 — `() -> NoiseMap` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_greedy_walk_reaches_target` function L798-824 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_road` function L827-846 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_road_with_edges` function L849-870 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_river` function L873-888 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_road_deterministic` function L891-908 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_road_meandering_style` function L911-927 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_river_straight_style` function L930-945 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_path_style_serde` function L948-956 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_random_edge_point` function L959-974 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 
 #### crates/mimir-mapgen/src/pipeline.rs
 
@@ -8126,30 +8147,32 @@
 - pub `validate_config` function L130-181 — `(config: &MapConfig) -> Vec<ValidationError>` — Validate a MapConfig, returning a list of errors.
 - pub `GenerateResult` struct L324-329 — `{ map: DungeondraftMap, stats: GenerateStats }` — Result of map generation.
 - pub `GenerateStats` struct L333-340 — `{ objects_placed: usize, paths_generated: usize, water_polygons: usize, contour_...` — Statistics from map generation.
-- pub `generate` function L357-597 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
+- pub `generate` function L357-629 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
 -  `validate_rooms` function L183-280 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `validate_corridors` function L282-321 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
--  `tests` module L600-1023 — `-` — Config parsing, biome preset resolution, and staged map generation.
--  `minimal_config` function L603-624 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_minimal` function L627-633 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_terrain` function L636-650 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_roads` function L653-661 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_objects` function L664-674 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_deterministic` function L677-695 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_seed_override` function L698-704 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_lighting` function L707-720 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_lighting_presets` function L723-730 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_config` function L733-743 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_full_pipeline` function L746-776 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_rooms` function L779-868 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_outdoor_only_no_regression` function L871-891 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_out_of_bounds` function L894-906 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_overlap` function L909-930 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_duplicate_room_id` function L933-954 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_portal_out_of_wall` function L957-974 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_corridor_invalid_room_ref` function L977-992 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_terrain_slot_out_of_range` function L995-1007 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_zero_dimensions` function L1010-1022 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `tests` module L632-1112 — `-` — Config parsing, biome preset resolution, and staged map generation.
+-  `minimal_config` function L635-656 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_minimal` function L659-665 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_terrain` function L668-682 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_roads` function L685-693 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_objects` function L696-706 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_deterministic` function L709-727 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_seed_override` function L730-736 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_lighting` function L739-752 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_lighting_presets` function L755-762 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_config` function L765-775 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_full_pipeline` function L778-808 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_rooms` function L811-900 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_outdoor_only_no_regression` function L903-923 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_out_of_bounds` function L926-938 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_overlap` function L941-962 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_duplicate_room_id` function L965-986 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_portal_out_of_wall` function L989-1006 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_corridor_invalid_room_ref` function L1009-1024 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_terrain_slot_out_of_range` function L1027-1039 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_creates_water_without_water_config` function L1042-1075 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_water_not_overwritten_by_water_step` function L1078-1096 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_zero_dimensions` function L1099-1111 — `()` — Config parsing, biome preset resolution, and staged map generation.
 
 #### crates/mimir-mapgen/src/polygons.rs
 
@@ -8281,15 +8304,25 @@
 #### crates/mimir-mapgen/src/water.rs
 
 - pub `WaterConfig` struct L16-34 — `{ threshold: f64, deep_color: String, shallow_color: String, blend_distance: f64...` — Configuration for water body generation.
-- pub `generate_water` function L55-107 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water bodies from a noise map.
-- pub `water_from_polygon` function L112-133 — `( polygon: &[(f64, f64)], config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wa...` — Generate water from a river corridor polygon.
+- pub `generate_water` function L56-62 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water bodies from a noise map.
+- pub `generate_water_radial` function L67-73 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water with radial sampling mode for lake presets.
+- pub `generate_water_island` function L76-82 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water for island-mode maps (water ring around edges).
+- pub `water_from_polygon` function L374-395 — `( polygon: &[(f64, f64)], config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wa...` — Generate water from a river corridor polygon.
+- pub `water_from_river` function L398-419 — `( polygon: &[(f64, f64)], config: &crate::paths::RiverConfig, alloc: &NodeIdAllo...` — Build a WaterTree from a river polygon, using the river config's own colors.
+- pub `water_node_ref_pub` function L428-432 — `(alloc: &NodeIdAllocator) -> i64` — Public version of water_node_ref for use in pipeline.rs.
 -  `WaterConfig` type L36-49 — `impl Default for WaterConfig` — outputting DD-compatible WaterTree structures.
 -  `default` function L37-48 — `() -> Self` — outputting DD-compatible WaterTree structures.
--  `tests` module L136-218 — `-` — outputting DD-compatible WaterTree structures.
--  `test_generate_water_basic` function L141-165 — `()` — outputting DD-compatible WaterTree structures.
--  `test_generate_water_uniform` function L168-182 — `()` — outputting DD-compatible WaterTree structures.
--  `test_water_from_polygon` function L185-201 — `()` — outputting DD-compatible WaterTree structures.
--  `test_water_colors` function L204-217 — `()` — outputting DD-compatible WaterTree structures.
+-  `WaterMode` enum L85-89 — `Contour | Lake | Island` — outputting DD-compatible WaterTree structures.
+-  `generate_water_inner` function L91-154 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, mode: Wat...` — outputting DD-compatible WaterTree structures.
+-  `generate_island_water_tree` function L160-223 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Build island water tree: ocean rectangle parent → island shoreline child (transparent hole).
+-  `radial_water_polygon` function L230-281 — `(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<Vec<(f64, f64)>>` — Generate a single closed water polygon by radial sampling from the map center.
+-  `island_shoreline` function L287-369 — `(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<(f64, f64)>` — Trace the island shoreline via radial sampling.
+-  `water_node_ref` function L423-425 — `(alloc: &NodeIdAllocator) -> i64` — Generate a water tree node ref in the large negative range that DD expects.
+-  `tests` module L435-517 — `-` — outputting DD-compatible WaterTree structures.
+-  `test_generate_water_basic` function L440-464 — `()` — outputting DD-compatible WaterTree structures.
+-  `test_generate_water_uniform` function L467-481 — `()` — outputting DD-compatible WaterTree structures.
+-  `test_water_from_polygon` function L484-500 — `()` — outputting DD-compatible WaterTree structures.
+-  `test_water_colors` function L503-516 — `()` — outputting DD-compatible WaterTree structures.
 
 ### crates/mimir-mapgen/src/format
 
@@ -8426,20 +8459,21 @@
 - pub `to_json` function L53-55 — `(&self) -> Result<String, serde_json::Error>` — Serialize to JSON string.
 - pub `ground_level_mut` function L58-63 — `(&mut self) -> &mut Level` — Get a mutable reference to the ground level (level "0").
 - pub `ground_level` function L66-68 — `(&self) -> Option<&Level>` — Get a reference to the ground level.
-- pub `NodeIdAllocator` struct L76-78 — `{ next_id: AtomicU64 }` — Allocator for unique node reference IDs.
-- pub `new` function L81-85 — `(start: u64) -> Self` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
-- pub `next` function L88-91 — `(&self) -> String` — Allocate the next unique node ID as a hex string.
-- pub `current` function L94-97 — `(&self) -> String` — Get the current next_node_id value as a hex string (for writing to the world).
--  `DungeondraftMap` type L37-69 — `= DungeondraftMap` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `NodeIdAllocator` type L80-98 — `= NodeIdAllocator` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `NodeIdAllocator` type L100-104 — `impl Default for NodeIdAllocator` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `default` function L101-103 — `() -> Self` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `tests` module L107-172 — `-` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `test_new_map_serializes` function L111-118 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `test_new_map_roundtrip` function L121-128 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `test_node_id_allocator` function L131-137 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `test_terrain_splat_size` function L140-153 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
--  `test_map_object_builder` function L156-171 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+- pub `add_water_colors` function L72-81 — `(&mut self, deep: &str, shallow: &str)` — Add water colors to the header's color palettes.
+- pub `NodeIdAllocator` struct L89-91 — `{ next_id: AtomicU64 }` — Allocator for unique node reference IDs.
+- pub `new` function L94-98 — `(start: u64) -> Self` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+- pub `next` function L101-104 — `(&self) -> String` — Allocate the next unique node ID as a hex string.
+- pub `current` function L107-110 — `(&self) -> String` — Get the current next_node_id value as a hex string (for writing to the world).
+-  `DungeondraftMap` type L37-82 — `= DungeondraftMap` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `NodeIdAllocator` type L93-111 — `= NodeIdAllocator` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `NodeIdAllocator` type L113-117 — `impl Default for NodeIdAllocator` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `default` function L114-116 — `() -> Self` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `tests` module L120-185 — `-` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `test_new_map_serializes` function L124-131 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `test_new_map_roundtrip` function L134-141 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `test_node_id_allocator` function L144-150 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `test_terrain_splat_size` function L153-166 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
+-  `test_map_object_builder` function L169-184 — `()` — custom serde (de)serialization for Godot types (`Vector2`, `PoolByteArray`).
 
 #### crates/mimir-mapgen/src/format/world.rs
 
@@ -8492,8 +8526,8 @@
 
 -  `test_baseline_map_parse` function L6-24 — `()` — Round-trip test: parse baseline.dungeondraft_map → serialize → parse again.
 -  `test_baseline_map_roundtrip` function L27-41 — `()` — Round-trip test: parse baseline.dungeondraft_map → serialize → parse again.
--  `test_wall_portal_roundtrip` function L44-97 — `()` — Round-trip test: parse baseline.dungeondraft_map → serialize → parse again.
--  `test_wall_builder` function L100-143 — `()` — Round-trip test: parse baseline.dungeondraft_map → serialize → parse again.
+-  `test_wall_portal_roundtrip` function L44-96 — `()` — Round-trip test: parse baseline.dungeondraft_map → serialize → parse again.
+-  `test_wall_builder` function L99-142 — `()` — Round-trip test: parse baseline.dungeondraft_map → serialize → parse again.
 
 #### crates/mimir-mapgen/tests/polygon_snapshots.rs
 

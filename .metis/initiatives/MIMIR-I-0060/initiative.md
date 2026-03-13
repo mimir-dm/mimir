@@ -4,14 +4,14 @@ level: initiative
 title: "Declarative room and dungeon layout for mapgen"
 short_code: "MIMIR-I-0060"
 created_at: 2026-03-11T23:40:03.187330+00:00
-updated_at: 2026-03-12T00:02:25.052515+00:00
+updated_at: 2026-03-13T02:38:53.449193+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false

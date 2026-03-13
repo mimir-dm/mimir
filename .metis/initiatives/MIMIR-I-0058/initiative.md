@@ -4,14 +4,14 @@ level: initiative
 title: "Declarative Dungeondraft Map Generation"
 short_code: "MIMIR-I-0058"
 created_at: 2026-03-11T21:06:02.955630+00:00
-updated_at: 2026-03-11T21:23:21.932506+00:00
+updated_at: 2026-03-13T02:38:46.474106+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/completed"
 
 
 exit_criteria_met: false

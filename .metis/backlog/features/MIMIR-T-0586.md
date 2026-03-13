@@ -4,7 +4,7 @@ level: task
 title: "Add mapgen skill and commands to Claude Code plugin"
 short_code: "MIMIR-T-0586"
 created_at: 2026-03-11T23:20:21.849847+00:00
-updated_at: 2026-03-11T23:21:46.452346+00:00
+updated_at: 2026-03-13T02:38:35.947928+00:00
 parent: 
 blocked_by: []
 archived: false
@@ -12,7 +12,7 @@ archived: false
 tags:
   - "#task"
   - "#feature"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -27,6 +27,8 @@ Add a mapgen skill and slash commands to the Claude Code plugin so users can gen
 
 ## Priority
 - P1 — The mapgen tools exist but are undiscoverable without plugin guidance
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

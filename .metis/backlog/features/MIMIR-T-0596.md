@@ -4,7 +4,7 @@ level: task
 title: "Polygon-based room/corridor layout for proper DD interior fill"
 short_code: "MIMIR-T-0596"
 created_at: 2026-03-12T02:38:25.612642+00:00
-updated_at: 2026-03-12T02:42:41.460758+00:00
+updated_at: 2026-03-13T02:38:36.670493+00:00
 parent: 
 blocked_by: []
 archived: false
@@ -12,7 +12,7 @@ archived: false
 tags:
   - "#task"
   - "#feature"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -39,6 +39,8 @@ Allow YAML configs to define closed polygons as bounding areas. Each bounding ar
 - Irregular room shapes (not just rectangles)
 - Corridors as part of a larger polygon
 - L-shaped rooms, alcoves, etc.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
