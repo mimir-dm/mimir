@@ -66,6 +66,19 @@ impl DungeondraftMap {
     pub fn ground_level(&self) -> Option<&Level> {
         self.world.levels.get("0")
     }
+
+    /// Add water colors to the header's color palettes.
+    /// DD requires these to render water properly.
+    pub fn add_water_colors(&mut self, deep: &str, shallow: &str) {
+        if let Some(ref mut palettes) = self.header.editor_state.color_palettes {
+            if !palettes.deep_water_colors.contains(&deep.to_string()) {
+                palettes.deep_water_colors.push(deep.to_string());
+            }
+            if !palettes.shallow_water_colors.contains(&shallow.to_string()) {
+                palettes.shallow_water_colors.push(shallow.to_string());
+            }
+        }
+    }
 }
 
 /// Allocator for unique node reference IDs.

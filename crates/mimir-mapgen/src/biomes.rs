@@ -37,6 +37,10 @@ pub fn get_preset(name: &str) -> Option<BiomePreset> {
         "island_arctic" | "island-arctic" | "arctic_island" | "arctic-island" => {
             Some(island_arctic_preset())
         }
+        "swamp" | "marsh" | "bog" => Some(swamp_preset()),
+        "forest_river" | "forest-river" | "river_forest" | "river-forest" => {
+            Some(forest_river_preset())
+        }
         _ => None,
     }
 }
@@ -54,6 +58,8 @@ pub fn list_presets() -> Vec<BiomePreset> {
         island_tropical_preset(),
         island_forest_preset(),
         island_arctic_preset(),
+        swamp_preset(),
+        forest_river_preset(),
     ]
 }
 
@@ -955,6 +961,222 @@ fn island_arctic_preset() -> BiomePreset {
     }
 }
 
+fn swamp_preset() -> BiomePreset {
+    use crate::noise_gen::NoiseConfig;
+    use crate::objects::{ObjectConfig, TreeConfig};
+    use crate::terrain::{TerrainConfig, TerrainSlot};
+    use crate::water::WaterConfig;
+    use crate::pipeline::LightingConfig;
+
+    BiomePreset {
+        name: "swamp",
+        description: "Dark, murky wetland with stagnant water, dead trees, and dim lighting",
+        default_size: (32, 32),
+        config: MapConfig {
+            name: "Swamp Map".to_string(),
+            width: 32,
+            height: 32,
+            seed: None,
+            noise: NoiseConfig {
+                seed: 0,
+                octaves: 6,
+                persistence: 0.55,
+                lacunarity: 2.0,
+                scale: 0.035,
+            },
+            island_mode: Some(-1.0),
+            terrain: Some(TerrainConfig {
+                slots: [
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
+                        lower: 0.0,
+                        upper: 0.35,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
+                        lower: 0.3,
+                        upper: 0.55,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
+                        lower: 0.5,
+                        upper: 0.75,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        lower: 0.7,
+                        upper: 1.0,
+                    },
+                ],
+                blend_width: 0.07,
+                smooth_blending: true,
+            }),
+            trees: vec![TreeConfig {
+                tree: ObjectConfig {
+                    textures: vec![
+                        "res://textures/objects/more_trees/oak_01.png".to_string(),
+                        "res://textures/objects/more_trees/oak_02.png".to_string(),
+                    ],
+                    min_distance: 600.0,
+                    noise_lower: 0.3,
+                    noise_upper: 0.6,
+                    probability: 0.35,
+                    scale_min: 0.7,
+                    scale_max: 1.0,
+                    layer: 300,
+                    random_rotation: true,
+                    random_mirror: true,
+                    custom_color: None,
+                },
+                shadow: None,
+                canopy: None,
+            }],
+            clutter: vec![ObjectConfig {
+                textures: vec![
+                    "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
+                    "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
+                ],
+                min_distance: 90.0,
+                noise_lower: 0.15,
+                noise_upper: 0.55,
+                probability: 0.5,
+                scale_min: 0.4,
+                scale_max: 0.8,
+                layer: 100,
+                random_rotation: true,
+                random_mirror: false,
+                custom_color: None,
+            }],
+            clumps: vec![],
+            roads: vec![],
+            rivers: vec![],
+            water: Some(WaterConfig {
+                threshold: 0.5,
+                deep_color: "ff2e6d27".to_string(),
+                shallow_color: "c898d49a".to_string(),
+                blend_distance: 45.0,
+                min_contour_points: 15,
+                smooth_iterations: 3,
+                pixels_per_cell: 64.0,
+                disable_border: false,
+            }),
+            elevation: None,
+            lighting: Some(LightingConfig {
+                ambient_light: "ff3c3c3c".to_string(),
+                ambient_energy: Some(0.4),
+                shadow_color: Some("cc111111".to_string()),
+            }),
+            rooms: vec![],
+            corridors: vec![],
+            polygons: vec![],
+        },
+    }
+}
+
+fn forest_river_preset() -> BiomePreset {
+    use crate::noise_gen::NoiseConfig;
+    use crate::objects::{ObjectConfig, TreeConfig};
+    use crate::paths::RiverConfig;
+    use crate::terrain::{TerrainConfig, TerrainSlot};
+
+    BiomePreset {
+        name: "forest_river",
+        description: "Dense forest bisected by a meandering river with rocky banks",
+        default_size: (32, 32),
+        config: MapConfig {
+            name: "Forest River Map".to_string(),
+            width: 32,
+            height: 32,
+            seed: None,
+            noise: NoiseConfig {
+                seed: 0,
+                octaves: 6,
+                persistence: 0.5,
+                lacunarity: 2.0,
+                scale: 0.03,
+            },
+            island_mode: None,
+            terrain: Some(TerrainConfig {
+                slots: [
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
+                        lower: 0.0,
+                        upper: 0.3,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
+                        lower: 0.25,
+                        upper: 0.55,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
+                        lower: 0.5,
+                        upper: 0.8,
+                    },
+                    TerrainSlot {
+                        texture: "res://textures/terrain/terrain_gravel.png".to_string(),
+                        lower: 0.75,
+                        upper: 1.0,
+                    },
+                ],
+                blend_width: 0.05,
+                smooth_blending: false,
+            }),
+            trees: vec![TreeConfig {
+                tree: ObjectConfig {
+                    textures: vec![
+                        "res://textures/objects/more_trees/oak_01.png".to_string(),
+                        "res://textures/objects/more_trees/oak_02.png".to_string(),
+                        "res://textures/objects/more_trees/oak_03.png".to_string(),
+                    ],
+                    min_distance: 500.0,
+                    noise_lower: 0.4,
+                    noise_upper: 0.75,
+                    probability: 0.5,
+                    scale_min: 0.8,
+                    scale_max: 1.2,
+                    layer: 300,
+                    random_rotation: true,
+                    random_mirror: true,
+                    custom_color: None,
+                },
+                shadow: None,
+                canopy: None,
+            }],
+            clutter: vec![ObjectConfig {
+                textures: vec![
+                    "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
+                    "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
+                ],
+                min_distance: 80.0,
+                noise_lower: 0.2,
+                noise_upper: 0.7,
+                probability: 0.6,
+                scale_min: 0.5,
+                scale_max: 1.0,
+                layer: 100,
+                random_rotation: true,
+                random_mirror: false,
+                custom_color: None,
+            }],
+            clumps: vec![],
+            roads: vec![],
+            rivers: vec![RiverConfig {
+                deep_color: "ff45b1cd".to_string(),
+                shallow_color: "ff7dcade".to_string(),
+                bank_width: 32.0,
+                ..RiverConfig::default()
+            }],
+            water: None,
+            elevation: None,
+            lighting: None,
+            rooms: vec![],
+            corridors: vec![],
+            polygons: vec![],
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -974,6 +1196,11 @@ mod tests {
         assert!(get_preset("island-tropical").is_some()); // Hyphen variant
         assert!(get_preset("island_forest").is_some());
         assert!(get_preset("island_arctic").is_some());
+        assert!(get_preset("swamp").is_some());
+        assert!(get_preset("marsh").is_some()); // Alias for swamp
+        assert!(get_preset("bog").is_some()); // Alias for swamp
+        assert!(get_preset("forest_river").is_some());
+        assert!(get_preset("forest-river").is_some()); // Hyphen variant
         assert!(get_preset("Forest").is_some()); // Case insensitive
         assert!(get_preset("unknown").is_none());
     }
@@ -981,7 +1208,7 @@ mod tests {
     #[test]
     fn test_list_presets() {
         let presets = list_presets();
-        assert_eq!(presets.len(), 10);
+        assert_eq!(presets.len(), 12);
         let names: Vec<_> = presets.iter().map(|p| p.name).collect();
         assert!(names.contains(&"forest"));
         assert!(names.contains(&"grassland"));
@@ -993,6 +1220,8 @@ mod tests {
         assert!(names.contains(&"island_tropical"));
         assert!(names.contains(&"island_forest"));
         assert!(names.contains(&"island_arctic"));
+        assert!(names.contains(&"swamp"));
+        assert!(names.contains(&"forest_river"));
     }
 
     #[test]
@@ -1061,4 +1290,25 @@ mod tests {
         assert!(preset.config.island_mode.is_some());
         assert!(preset.config.trees.is_empty());
     }
+
+    #[test]
+    fn test_swamp_has_water_and_lighting() {
+        let preset = get_preset("swamp").unwrap();
+        assert!(preset.config.water.is_some());
+        assert!(preset.config.lighting.is_some());
+        assert!(preset.config.island_mode.is_some());
+        let water = preset.config.water.as_ref().unwrap();
+        assert_eq!(water.threshold, 0.5); // Low threshold = lots of water
+        let lighting = preset.config.lighting.as_ref().unwrap();
+        assert_eq!(lighting.ambient_light, "ff3c3c3c"); // Dark ambient
+    }
+
+    #[test]
+    fn test_forest_river_has_river_and_trees() {
+        let preset = get_preset("forest_river").unwrap();
+        assert!(!preset.config.rivers.is_empty());
+        assert!(!preset.config.trees.is_empty());
+        assert!(preset.config.water.is_none()); // River, not contour water
+    }
+
 }

@@ -426,13 +426,14 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     let mut corridors: Vec<(Vec<(f64, f64)>, f64)> = Vec::new();
 
     for road_config in &config.roads {
-        if let Some(result) = paths::generate_road(
+        if let Some(result) = paths::generate_road_with_exclusions(
             &noise_map,
             road_config,
             pixel_width,
             pixel_height,
             &alloc,
             &mut rng,
+            &exclusion_zones,
         ) {
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             map.ground_level_mut().paths.push(result.road);
@@ -457,13 +458,14 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 5. Generate rivers
     for river_config in &config.rivers {
-        if let Some(result) = paths::generate_river(
+        if let Some(result) = paths::generate_river_with_exclusions(
             &noise_map,
             river_config,
             pixel_width,
             pixel_height,
             &alloc,
             &mut rng,
+            &exclusion_zones,
         ) {
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             for bp in result.bank_paths {
@@ -471,19 +473,35 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
                 stats.paths_generated += 1;
             }
 
-            // Add river water
-            let water_config = config.water.as_ref().cloned().unwrap_or_default();
-            let river_water = water::water_from_polygon(
+            // Add river water as child of root tree (matching DD's structure).
+            let river_water = water::water_from_river(
                 &result.water_polygon,
-                &water_config,
+                river_config,
                 &alloc,
             );
-            if let Some(ref mut w) = map.ground_level_mut().water {
-                if let Some(ref mut tree) = w.tree {
-                    tree.children.push(river_water);
-                    stats.water_polygons += 1;
+            let level = map.ground_level_mut();
+            let water = level.water.get_or_insert_with(|| crate::format::world::Water {
+                disable_border: false,
+                tree: None,
+            });
+            let tree = water.tree.get_or_insert_with(|| {
+                crate::format::world::WaterTree {
+                    node_ref: water::water_node_ref_pub(&alloc),
+                    polygon: crate::format::godot_types::PoolVector2Array::new(),
+                    join: 0,
+                    end: 0,
+                    is_open: false,
+                    deep_color: "00000000".to_string(),
+                    shallow_color: "00000000".to_string(),
+                    blend_distance: 0.0,
+                    children: Vec::new(),
                 }
-            }
+            });
+            tree.children.push(river_water);
+            stats.water_polygons += 1;
+
+            // DD requires water colors in the header's color palettes
+            map.add_water_colors(&river_config.deep_color, &river_config.shallow_color);
         }
     }
 
@@ -1018,6 +1036,63 @@ mod tests {
         }];
         let errors = validate_config(&config);
         assert!(errors.iter().any(|e| e.message.contains("out of range")));
+    }
+
+    #[test]
+    fn test_river_creates_water_without_water_config() {
+        // When a river is configured but no `water:` section exists,
+        // the pipeline should still create a water tree for the river polygon.
+        let mut config = minimal_config();
+        config.width = 16;
+        config.height = 16;
+        config.terrain = Some(TerrainConfig::default());
+        config.rivers = vec![RiverConfig::default()];
+        config.water = None; // No explicit water config
+
+        let result = generate(&config, Some(42));
+
+        // River should have generated bank paths
+        assert!(result.stats.paths_generated >= 2, "Expected bank paths, got {}", result.stats.paths_generated);
+
+        // River water polygon should exist
+        assert!(result.stats.water_polygons > 0, "Expected water polygons from river, got 0");
+
+        let level = result.map.ground_level().unwrap();
+        let water = level.water.as_ref().expect("water should be Some after river generation");
+        let tree = water.tree.as_ref().expect("water tree should exist");
+        // Root is empty container; river is a child
+        assert!(tree.polygon.0.is_empty(), "root should have empty polygon");
+        assert_eq!(tree.children.len(), 1);
+        let river = &tree.children[0];
+        assert!(!river.polygon.0.is_empty(), "river polygon should be non-empty");
+        assert_eq!(river.deep_color, "ff3aa19a");
+        assert!(river.node_ref < 0, "ref should be large negative");
+
+        // Water colors should be in header palettes
+        let palettes = result.map.header.editor_state.color_palettes.as_ref().unwrap();
+        assert!(palettes.deep_water_colors.contains(&"ff3aa19a".to_string()));
+        assert!(palettes.shallow_water_colors.contains(&"ff3ac3b2".to_string()));
+    }
+
+    #[test]
+    fn test_river_water_not_overwritten_by_water_step() {
+        // When both river and water config exist, step 8 (water bodies)
+        // overwrites the river water. This test documents that behavior.
+        let mut config = minimal_config();
+        config.width = 16;
+        config.height = 16;
+        config.terrain = Some(TerrainConfig::default());
+        config.rivers = vec![RiverConfig::default()];
+        config.water = Some(WaterConfig::default());
+
+        let result = generate(&config, Some(42));
+
+        // Bank paths should still exist
+        assert!(result.stats.paths_generated >= 2);
+
+        // Water should exist (from step 8)
+        let level = result.map.ground_level().unwrap();
+        assert!(level.water.is_some(), "water should exist from water config");
     }
 
     #[test]

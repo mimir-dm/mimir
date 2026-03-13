@@ -124,7 +124,7 @@ fn generate_water_inner(
         .map(|poly| {
             let points: Vec<Vector2> = poly.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
             WaterTree {
-                node_ref: alloc.next().parse::<i64>().unwrap_or(0),
+                node_ref: water_node_ref(alloc),
                 polygon: PoolVector2Array::from_points(points),
                 join: 0,
                 end: 0,
@@ -140,7 +140,7 @@ fn generate_water_inner(
     Water {
         disable_border: config.disable_border,
         tree: Some(WaterTree {
-            node_ref: alloc.next().parse::<i64>().unwrap_or(-1),
+            node_ref: water_node_ref(alloc),
             polygon: PoolVector2Array::new(),
             join: 0,
             end: 0,
@@ -183,7 +183,7 @@ fn generate_island_water_tree(
         .collect();
 
     let island_hole = WaterTree {
-        node_ref: alloc.next().parse::<i64>().unwrap_or(0),
+        node_ref: water_node_ref(alloc),
         polygon: PoolVector2Array::from_points(shore_points),
         join: 0,
         end: 0,
@@ -195,7 +195,7 @@ fn generate_island_water_tree(
     };
 
     let ocean = WaterTree {
-        node_ref: alloc.next().parse::<i64>().unwrap_or(0),
+        node_ref: water_node_ref(alloc),
         polygon: PoolVector2Array::from_points(ocean_points),
         join: 0,
         end: 0,
@@ -209,7 +209,7 @@ fn generate_island_water_tree(
     Water {
         disable_border: config.disable_border,
         tree: Some(WaterTree {
-            node_ref: alloc.next().parse::<i64>().unwrap_or(-1),
+            node_ref: water_node_ref(alloc),
             polygon: PoolVector2Array::new(),
             join: 0,
             end: 0,
@@ -382,7 +382,7 @@ pub fn water_from_polygon(
         .collect();
 
     WaterTree {
-        node_ref: alloc.next().parse::<i64>().unwrap_or(0),
+        node_ref: water_node_ref(alloc),
         polygon: PoolVector2Array::from_points(points),
         join: 0,
         end: 0,
@@ -392,6 +392,43 @@ pub fn water_from_polygon(
         blend_distance: config.blend_distance,
         children: Vec::new(),
     }
+}
+
+/// Build a WaterTree from a river polygon, using the river config's own colors.
+pub fn water_from_river(
+    polygon: &[(f64, f64)],
+    config: &crate::paths::RiverConfig,
+    alloc: &NodeIdAllocator,
+) -> WaterTree {
+    let points: Vec<Vector2> = polygon
+        .iter()
+        .map(|&(x, y)| Vector2::new(x, y))
+        .collect();
+
+    WaterTree {
+        node_ref: water_node_ref(alloc),
+        polygon: PoolVector2Array::from_points(points),
+        join: 0,
+        end: 0,
+        is_open: false,
+        deep_color: config.deep_color.clone(),
+        shallow_color: config.shallow_color.clone(),
+        blend_distance: 2.0,
+        children: Vec::new(),
+    }
+}
+
+/// Generate a water tree node ref in the large negative range that DD expects.
+/// DD uses Godot node IDs which are large negative integers.
+fn water_node_ref(alloc: &NodeIdAllocator) -> i64 {
+    water_node_ref_pub(alloc)
+}
+
+/// Public version of water_node_ref for use in pipeline.rs.
+pub fn water_node_ref_pub(alloc: &NodeIdAllocator) -> i64 {
+    let id: u64 = u64::from_str_radix(&alloc.next(), 16).unwrap_or(1);
+    // Map sequential IDs to large negative range matching DD convention
+    -(100_000_000 + id as i64 * 7919) // prime multiplier for spread
 }
 
 #[cfg(test)]
