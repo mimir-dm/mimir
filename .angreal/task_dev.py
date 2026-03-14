@@ -13,9 +13,11 @@ import os
 PROJECT_ROOT = Path(angreal.get_root()).parent
 FRONTEND_DIR = PROJECT_ROOT / "crates" / "mimir" / "frontend"
 
-# Dev database path (matches crates/mimir/src/state.rs dev mode logic)
-DEV_DATA_DIR = Path.home() / "Library" / "Application Support" / "com.mimir.app" / "dev" / "data"
+# Dev paths (matches crates/mimir/src/state.rs dev mode logic)
+DEV_DIR = Path.home() / "Library" / "Application Support" / "com.mimir.app" / "dev"
+DEV_DATA_DIR = DEV_DIR / "data"
 DEV_DB_PATH = DEV_DATA_DIR / "mimir.db"
+DEV_ASSETS_DIR = DEV_DIR / "assets"
 
 # Production database path - NEVER touch this
 PROD_DATA_DIR = Path.home() / "Library" / "Application Support" / "com.mimir.app" / "data"
@@ -36,7 +38,15 @@ def reset():
         print("Dev database deleted. Restart the app to create a fresh one.")
     else:
         print(f"No dev database found at {DEV_DB_PATH}")
-        print("Nothing to do.")
+
+    # Clean extracted map images (JPEG/PNG generated from UVTT files)
+    if DEV_ASSETS_DIR.exists():
+        import shutil
+        asset_count = sum(1 for _ in DEV_ASSETS_DIR.iterdir())
+        if asset_count > 0:
+            shutil.rmtree(DEV_ASSETS_DIR)
+            DEV_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+            print(f"Cleared {asset_count} dev assets.")
 
     # Safety check: confirm prod DB is untouched
     if PROD_DB_PATH.exists():

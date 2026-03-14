@@ -175,6 +175,28 @@ fn blob_path_to_png(blob_path: &str) -> String {
     }
 }
 
+/// Convert a UVTT/dd2vtt blob path to its resolution metadata sidecar path.
+fn blob_path_to_meta(blob_path: &str) -> String {
+    if blob_path.ends_with(".dd2vtt") {
+        blob_path.replace(".dd2vtt", "_meta.json")
+    } else {
+        blob_path.replace(".uvtt", "_meta.json")
+    }
+}
+
+/// Cached resolution metadata written alongside the extracted image.
+/// Avoids re-parsing the full UVTT JSON (which contains the huge base64 image)
+/// on every command that needs grid dimensions.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MapResolutionMeta {
+    /// Pixels per grid cell, scaled to match the extracted (possibly resized) image.
+    pub pixels_per_grid: f64,
+    /// Grid columns (from UVTT map_size.x).
+    pub map_size_x: f64,
+    /// Grid rows (from UVTT map_size.y).
+    pub map_size_y: f64,
+}
+
 impl<'a> MapService<'a> {
     /// Create a new map service.
     pub fn new(conn: &'a mut SqliteConnection, app_data_dir: impl Into<PathBuf>) -> Self {
@@ -237,7 +259,6 @@ impl<'a> MapService<'a> {
         dal::insert_map(self.conn, &new_map)?;
 
         // Extract the PNG image from the UVTT file for direct serving.
-        // This avoids re-parsing the UVTT JSON and base64-encoding on every load.
         self.extract_map_image(&asset.blob_path);
 
         dal::get_map(self.conn, &map_id).map_err(ServiceError::from)
@@ -369,9 +390,11 @@ impl<'a> MapService<'a> {
             let file_path = self.app_data_dir.join(&asset.blob_path);
             let jpg_path = self.app_data_dir.join(blob_path_to_extracted(&asset.blob_path));
             let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
+            let meta_path = self.app_data_dir.join(blob_path_to_meta(&asset.blob_path));
             let _ = std::fs::remove_file(&file_path);
             let _ = std::fs::remove_file(&jpg_path);
             let _ = std::fs::remove_file(&png_path); // legacy cleanup
+            let _ = std::fs::remove_file(&meta_path);
             // Delete asset from database
             let _ = dal::delete_campaign_asset(self.conn, &asset.id);
         }
@@ -443,46 +466,77 @@ impl<'a> MapService<'a> {
     }
 
     /// Extract the image from a UVTT file, convert to JPEG, and write alongside.
-    ///
-    /// UVTT files are JSON with a base64-encoded PNG in the `image` field.
-    /// Converting to JPEG at 90% quality typically shrinks a 50MB PNG to ~5MB,
-    /// and the browser decodes JPEG faster than PNG. The UVTT coordinate system
-    /// is preserved — the frontend CSS-sizes the image to UVTT dimensions.
+    /// Also writes a `_meta.json` sidecar with the (scaled) resolution so that
+    /// subsequent commands never need to re-parse the full UVTT JSON.
     fn extract_map_image(&self, uvtt_blob_path: &str) {
-        let jpg_path = self.app_data_dir.join(
-            blob_path_to_extracted(uvtt_blob_path),
-        );
+        use std::time::Instant;
+        let t0 = Instant::now();
 
-        // Don't re-extract if already done
-        if jpg_path.exists() {
+        let jpg_path = self.app_data_dir.join(blob_path_to_extracted(uvtt_blob_path));
+        let meta_path = self.app_data_dir.join(blob_path_to_meta(uvtt_blob_path));
+
+        if jpg_path.exists() && meta_path.exists() {
+            tracing::info!("[extract] JPEG + meta already exist, skipping: {}", jpg_path.display());
             return;
         }
 
         let uvtt_path = self.app_data_dir.join(uvtt_blob_path);
+        tracing::info!("[extract] Reading UVTT file: {}", uvtt_path.display());
 
         let Ok(uvtt_bytes) = std::fs::read(&uvtt_path) else {
+            tracing::error!("[extract] Failed to read UVTT file");
             return;
         };
+        tracing::info!("[extract] UVTT read: {:.1}MB in {:.1}s",
+            uvtt_bytes.len() as f64 / 1_048_576.0, t0.elapsed().as_secs_f64());
 
+        let t1 = Instant::now();
         let Ok(uvtt_json) = serde_json::from_slice::<serde_json::Value>(&uvtt_bytes) else {
+            tracing::error!("[extract] Failed to parse UVTT JSON");
             return;
         };
+        tracing::info!("[extract] JSON parsed in {:.1}s", t1.elapsed().as_secs_f64());
+
+        // Extract resolution metadata from UVTT
+        let resolution = uvtt_json.get("resolution");
+        let raw_ppg = resolution
+            .and_then(|r| r.get("pixels_per_grid"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(70.0);
+        let map_size_x = resolution
+            .and_then(|r| r.get("map_size"))
+            .and_then(|ms| ms.get("x"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(25.0);
+        let map_size_y = resolution
+            .and_then(|r| r.get("map_size"))
+            .and_then(|ms| ms.get("y"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(25.0);
+        let original_width = (raw_ppg * map_size_x).round() as u32;
 
         let Some(image_b64) = uvtt_json.get("image").and_then(|v| v.as_str()) else {
+            tracing::error!("[extract] No image field in UVTT JSON");
             return;
         };
+        tracing::info!("[extract] Base64 image field: {:.1}MB", image_b64.len() as f64 / 1_048_576.0);
 
+        let t2 = Instant::now();
         use base64::Engine;
         let Ok(png_bytes) = base64::engine::general_purpose::STANDARD.decode(image_b64) else {
+            tracing::error!("[extract] Failed to decode base64");
             return;
         };
+        tracing::info!("[extract] Base64 decoded: {:.1}MB in {:.1}s",
+            png_bytes.len() as f64 / 1_048_576.0, t2.elapsed().as_secs_f64());
 
-        // Decode PNG with raised memory limits for large maps, cap at 4096px, re-encode as JPEG
+        let t3 = Instant::now();
         let mut reader = match image::ImageReader::new(std::io::Cursor::new(&png_bytes))
             .with_guessed_format()
         {
             Ok(r) => r,
-            Err(_) => {
+            Err(e) => {
+                tracing::error!("[extract] Failed to guess image format: {}", e);
                 let _ = std::fs::write(
                     self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
                     &png_bytes,
@@ -490,35 +544,138 @@ impl<'a> MapService<'a> {
                 return;
             }
         };
-        // Allow up to 2GB allocation for very large map images (14k x 14k @ 4 bytes = ~750MB)
+
         let mut limits = image::Limits::default();
         limits.max_alloc = Some(2 * 1024 * 1024 * 1024);
         reader.limits(limits);
 
         let Ok(mut img) = reader.decode() else {
-            // If image decode fails, fall back to writing raw PNG
+            tracing::error!("[extract] Failed to decode image (likely OOM), falling back to raw PNG");
             let _ = std::fs::write(
                 self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
                 &png_bytes,
             );
             return;
         };
+        tracing::info!("[extract] Image decoded: {}x{} in {:.1}s",
+            img.width(), img.height(), t3.elapsed().as_secs_f64());
 
-        // Cap resolution — keeps GPU memory under ~64MB per map.
-        // Grid alignment is preserved because the frontend CSS-sizes the
-        // image to UVTT coordinate dimensions, not file pixel dimensions.
-        const MAX_DIMENSION: u32 = 4096;
-        let (w, h) = (img.width(), img.height());
-        if w > MAX_DIMENSION || h > MAX_DIMENSION {
-            img = img.resize(MAX_DIMENSION, MAX_DIMENSION, image::imageops::FilterType::Lanczos3);
+        // Resize if wider than 4096px to reduce GPU memory
+        const MAX_WIDTH: u32 = 4096;
+        if img.width() > MAX_WIDTH {
+            let t_resize = Instant::now();
+            let scale = MAX_WIDTH as f64 / img.width() as f64;
+            let new_height = (img.height() as f64 * scale).round() as u32;
+            img = img.resize_exact(MAX_WIDTH, new_height, image::imageops::FilterType::Triangle);
+            tracing::info!("[extract] Resized to {}x{} in {:.1}s",
+                img.width(), img.height(), t_resize.elapsed().as_secs_f64());
         }
 
+        let t5 = Instant::now();
         let Ok(file) = std::fs::File::create(&jpg_path) else {
+            tracing::error!("[extract] Failed to create JPEG file");
             return;
         };
         let mut writer = std::io::BufWriter::new(file);
         let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut writer, 90);
         let _ = img.write_with_encoder(encoder);
+        tracing::info!("[extract] JPEG written in {:.1}s — total: {:.1}s",
+            t5.elapsed().as_secs_f64(), t0.elapsed().as_secs_f64());
+
+        // Compute scaled ppg and write resolution sidecar
+        let scale_factor = if original_width > 0 {
+            img.width() as f64 / original_width as f64
+        } else {
+            1.0
+        };
+        let meta = MapResolutionMeta {
+            pixels_per_grid: raw_ppg * scale_factor,
+            map_size_x,
+            map_size_y,
+        };
+        if let Ok(json) = serde_json::to_string(&meta) {
+            let _ = std::fs::write(&meta_path, json);
+            tracing::info!("[extract] Meta sidecar written: ppg={:.1} (scale={:.3})", meta.pixels_per_grid, scale_factor);
+        }
+    }
+
+    /// Read the cached resolution metadata sidecar for a map.
+    ///
+    /// Returns `None` if the sidecar doesn't exist yet (pre-existing maps that
+    /// haven't been re-extracted). Callers should fall back to UVTT parsing in
+    /// that case, which will also generate the sidecar for next time.
+    pub fn get_cached_resolution(&mut self, map: &Map) -> Option<MapResolutionMeta> {
+        let asset = dal::get_campaign_asset_optional(self.conn, &map.uvtt_asset_id).ok()??;
+        let meta_path = self.app_data_dir.join(blob_path_to_meta(&asset.blob_path));
+        let bytes = std::fs::read(&meta_path).ok()?;
+        serde_json::from_slice(&bytes).ok()
+    }
+
+    /// Ensure the resolution sidecar exists for a map, generating it if missing.
+    ///
+    /// For pre-existing maps that were extracted before the sidecar was added,
+    /// this reads the UVTT file once and writes the sidecar so future calls are fast.
+    pub fn ensure_resolution_meta(&mut self, map: &Map) -> Option<MapResolutionMeta> {
+        // Fast path: sidecar already exists
+        if let Some(meta) = self.get_cached_resolution(map) {
+            return Some(meta);
+        }
+
+        // Slow path: parse UVTT, write sidecar, return
+        let asset = dal::get_campaign_asset_optional(self.conn, &map.uvtt_asset_id).ok()??;
+        let uvtt_bytes = std::fs::read(self.app_data_dir.join(&asset.blob_path)).ok()?;
+        let uvtt_json: serde_json::Value = serde_json::from_slice(&uvtt_bytes).ok()?;
+
+        let resolution = uvtt_json.get("resolution");
+        let raw_ppg = resolution
+            .and_then(|r| r.get("pixels_per_grid"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(70.0);
+        let map_size_x = resolution
+            .and_then(|r| r.get("map_size"))
+            .and_then(|ms| ms.get("x"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(25.0);
+        let map_size_y = resolution
+            .and_then(|r| r.get("map_size"))
+            .and_then(|ms| ms.get("y"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(25.0);
+
+        // Compute scale factor from extracted image
+        let original_width = (raw_ppg * map_size_x).round() as u32;
+        let scale_factor = if original_width > 0 {
+            let jpg_path = self.app_data_dir.join(blob_path_to_extracted(&asset.blob_path));
+            let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
+            let img_path = if jpg_path.exists() {
+                Some(jpg_path)
+            } else if png_path.exists() {
+                Some(png_path)
+            } else {
+                None
+            };
+            img_path
+                .and_then(|p| image::ImageReader::open(p).ok())
+                .and_then(|r| r.into_dimensions().ok())
+                .map(|(w, _)| w as f64 / original_width as f64)
+                .unwrap_or(1.0)
+        } else {
+            1.0
+        };
+
+        let meta = MapResolutionMeta {
+            pixels_per_grid: raw_ppg * scale_factor,
+            map_size_x,
+            map_size_y,
+        };
+
+        // Write sidecar for next time
+        let meta_path = self.app_data_dir.join(blob_path_to_meta(&asset.blob_path));
+        if let Ok(json) = serde_json::to_string(&meta) {
+            let _ = std::fs::write(&meta_path, json);
+        }
+
+        Some(meta)
     }
 }
 

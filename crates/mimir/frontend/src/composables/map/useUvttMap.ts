@@ -85,26 +85,27 @@ export function useUvttMap(
     error.value = null
 
     try {
+      const t0 = performance.now()
       const response = await invoke<ApiResponse<UvttData>>('get_uvtt_map', {
         id: mapId.value
       })
+      const tInvoke = performance.now()
+      console.log(`[perf] useUvttMap: get_uvtt_map invoke: ${(tInvoke - t0).toFixed(0)}ms`)
 
       if (response.success && response.data) {
         uvttData.value = response.data
 
         // Convert to pixel coordinates
+        const tConvert = performance.now()
         walls.value = uvttWallsToPixels(response.data)
         portals.value = uvttPortalsToPixels(response.data)
         lights.value = uvttLightsToPixels(response.data)
+        console.log(`[perf] useUvttMap: pixel conversion: ${(performance.now() - tConvert).toFixed(0)}ms`)
 
         // Set ambient light from environment
         ambientLight.value = uvttAmbientToLevel(response.data.environment?.ambient_light)
 
-        console.log('useUvttMap: Loaded UVTT data')
-        console.log('  - walls:', walls.value.length)
-        console.log('  - portals:', portals.value.length)
-        console.log('  - lights:', lights.value.length)
-        console.log('  - ambient:', ambientLight.value, '(from:', response.data.environment?.ambient_light, ')')
+        console.log(`[perf] useUvttMap: walls=${walls.value.length} portals=${portals.value.length} lights=${lights.value.length} ambient=${ambientLight.value}`)
 
         // Store grid info
         pixelsPerGrid.value = response.data.resolution.pixels_per_grid
@@ -112,6 +113,7 @@ export function useUvttMap(
         gridRows.value = Math.round(response.data.resolution.map_size.y)
 
         isLoaded.value = true
+        console.log(`[perf] useUvttMap: total: ${(performance.now() - t0).toFixed(0)}ms`)
       } else {
         error.value = response.error || 'Failed to load UVTT data'
         isLoaded.value = false

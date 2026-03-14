@@ -56,37 +56,17 @@ pub struct MapResponse {
 
 /// Enrich a Map with UVTT data to create a MapResponse.
 pub(crate) fn enrich_map_with_uvtt(map: &Map, service: &mut MapService, _app_dir: &Path) -> MapResponse {
-    // Default values if UVTT parsing fails
+    // Default values if resolution metadata is unavailable
     let mut width_px = 0;
     let mut height_px = 0;
     let mut grid_size_px = None;
 
-    // Try to read and parse UVTT data
-    if let Ok(uvtt_bytes) = service.read_uvtt_file(map) {
-        if let Ok(uvtt_json) = serde_json::from_slice::<serde_json::Value>(&uvtt_bytes) {
-            let resolution = uvtt_json.get("resolution");
-
-            let pixels_per_grid = resolution
-                .and_then(|r| r.get("pixels_per_grid"))
-                .and_then(|v| v.as_i64())
-                .unwrap_or(70) as i32;
-
-            let map_size_x = resolution
-                .and_then(|r| r.get("map_size"))
-                .and_then(|ms| ms.get("x"))
-                .and_then(|v| v.as_f64())
-                .unwrap_or(25.0);
-
-            let map_size_y = resolution
-                .and_then(|r| r.get("map_size"))
-                .and_then(|ms| ms.get("y"))
-                .and_then(|v| v.as_f64())
-                .unwrap_or(25.0);
-
-            width_px = (pixels_per_grid as f64 * map_size_x) as i32;
-            height_px = (pixels_per_grid as f64 * map_size_y) as i32;
-            grid_size_px = Some(pixels_per_grid);
-        }
+    // Read cached resolution (fast: reads ~100 byte sidecar, no UVTT parsing)
+    if let Some(meta) = service.ensure_resolution_meta(map) {
+        let ppg = meta.pixels_per_grid.round() as i32;
+        width_px = (meta.pixels_per_grid * meta.map_size_x) as i32;
+        height_px = (meta.pixels_per_grid * meta.map_size_y) as i32;
+        grid_size_px = Some(ppg);
     }
 
     MapResponse {
@@ -161,14 +141,8 @@ pub(crate) fn transform_light_source(ls: LightSource, grid_size_px: i32) -> Ligh
 /// Get the grid size (pixels per grid) from a map's UVTT file.
 pub(crate) fn get_map_grid_size_for_lights(service: &mut MapService, map_id: &str) -> i32 {
     if let Ok(Some(map)) = service.get(map_id) {
-        if let Ok(uvtt_bytes) = service.read_uvtt_file(&map) {
-            if let Ok(uvtt_json) = serde_json::from_slice::<serde_json::Value>(&uvtt_bytes) {
-                return uvtt_json
-                    .get("resolution")
-                    .and_then(|r| r.get("pixels_per_grid"))
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(70) as i32;
-            }
+        if let Some(meta) = service.ensure_resolution_meta(&map) {
+            return meta.pixels_per_grid.round() as i32;
         }
     }
     70 // Default grid size

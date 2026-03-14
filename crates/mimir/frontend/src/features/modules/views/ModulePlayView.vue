@@ -413,11 +413,20 @@ onBeforeUnmount(() => {
 })
 
 onMounted(async () => {
+  const t0 = performance.now()
+  console.log('[perf] ModulePlayView: onMounted')
+
+  const t1 = performance.now()
   await loadModule()
+  console.log(`[perf]   loadModule: ${(performance.now() - t1).toFixed(0)}ms`)
+
+  const t2 = performance.now()
   await Promise.all([
     loadEncounters(),
     loadMaps()
   ])
+  console.log(`[perf]   loadEncounters+loadMaps: ${(performance.now() - t2).toFixed(0)}ms`)
+  console.log(`[perf] ModulePlayView: onMounted total: ${(performance.now() - t0).toFixed(0)}ms`)
 
   // Set up cross-reference click handlers for monster stats
   document.addEventListener('click', handleCrossRefClick as any)

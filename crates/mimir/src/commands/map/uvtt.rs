@@ -133,24 +133,11 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
         Err(e) => return ApiResponse::err(format!("Failed to parse UVTT JSON: {}", e)),
     };
 
-    // Extract resolution data
-    let resolution = uvtt_json.get("resolution");
-    let pixels_per_grid = resolution
-        .and_then(|r| r.get("pixels_per_grid"))
-        .and_then(|v| v.as_i64())
-        .unwrap_or(70) as i32;
-
-    let map_size_x = resolution
-        .and_then(|r| r.get("map_size"))
-        .and_then(|ms| ms.get("x"))
-        .and_then(|v| v.as_f64())
-        .unwrap_or(25.0);
-
-    let map_size_y = resolution
-        .and_then(|r| r.get("map_size"))
-        .and_then(|ms| ms.get("y"))
-        .and_then(|v| v.as_f64())
-        .unwrap_or(25.0);
+    // Use cached resolution (fast path) or fall back to UVTT JSON
+    let meta = service.ensure_resolution_meta(&map);
+    let pixels_per_grid = meta.as_ref().map(|m| m.pixels_per_grid.round() as i32).unwrap_or(70);
+    let map_size_x = meta.as_ref().map(|m| m.map_size_x).unwrap_or(25.0);
+    let map_size_y = meta.as_ref().map(|m| m.map_size_y).unwrap_or(25.0);
 
     // Extract line_of_sight (wall segments)
     let line_of_sight: Option<Vec<Vec<UvttPoint>>> = uvtt_json

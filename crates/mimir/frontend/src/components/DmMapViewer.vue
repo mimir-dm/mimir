@@ -1063,6 +1063,8 @@ async function loadTokens(mapId: string) {
 // Load images for all monster tokens (convention-based paths on backend)
 async function loadTokenImages() {
   const tokensWithImages = tokens.value.filter(t => t.token_type === 'monster')
+  console.log(`[perf]     loadTokenImages: ${tokensWithImages.length} monster tokens`)
+  const t0 = performance.now()
   const loadPromises = tokensWithImages.map(async (token) => {
     // Skip if already cached
     if (tokenImages.value.has(token.id)) return
@@ -1077,6 +1079,7 @@ async function loadTokenImages() {
     }
   })
   await Promise.all(loadPromises)
+  console.log(`[perf]     loadTokenImages: ${(performance.now() - t0).toFixed(0)}ms`)
 }
 
 // Send visible tokens to player display via IPC
@@ -1680,12 +1683,34 @@ const hexPoints = computed(() => {
 // Load map image and tokens when mapId changes
 watch(() => props.mapId, async (newId) => {
   if (newId) {
+    const t0 = performance.now()
+    console.log(`[perf] DmMapViewer: loading map ${newId}`)
+
+    const t1 = performance.now()
     await loadMapImage(newId)
+    console.log(`[perf]   loadMapImage: ${(performance.now() - t1).toFixed(0)}ms`)
+
+    const t2 = performance.now()
     await loadTokens(newId)
+    console.log(`[perf]   loadTokens: ${(performance.now() - t2).toFixed(0)}ms`)
+
+    const t3 = performance.now()
     await loadFogState(newId)
+    console.log(`[perf]   loadFogState: ${(performance.now() - t3).toFixed(0)}ms`)
+
+    const t4 = performance.now()
     await loadLightSources(newId)
+    console.log(`[perf]   loadLightSources: ${(performance.now() - t4).toFixed(0)}ms`)
+
+    const t5 = performance.now()
     await loadMapTraps(newId)
+    console.log(`[perf]   loadMapTraps: ${(performance.now() - t5).toFixed(0)}ms`)
+
+    const t6 = performance.now()
     await loadMapPois(newId)
+    console.log(`[perf]   loadMapPois: ${(performance.now() - t6).toFixed(0)}ms`)
+
+    console.log(`[perf] DmMapViewer: total load: ${(performance.now() - t0).toFixed(0)}ms`)
   } else {
     mapImageUrl.value = null
     mapName.value = ''
@@ -1732,7 +1757,9 @@ async function loadMapImage(id: string) {
 
   try {
     // Get map details
+    const tMap = performance.now()
     const mapResponse = await invoke<{ success: boolean; data?: any }>('get_map', { id })
+    console.log(`[perf]     get_map: ${(performance.now() - tMap).toFixed(0)}ms`)
     if (mapResponse.success && mapResponse.data) {
       mapName.value = mapResponse.data.name
       mapWidth.value = mapResponse.data.width_px
@@ -1740,7 +1767,9 @@ async function loadMapImage(id: string) {
     }
 
     // Get map image — backend returns a file path (fast) or data URL (legacy fallback)
+    const tImg = performance.now()
     const imageResponse = await invoke<{ success: boolean; data?: string }>('serve_map_image', { id })
+    console.log(`[perf]     serve_map_image: ${(performance.now() - tImg).toFixed(0)}ms`)
     if (imageResponse.success && imageResponse.data) {
       const src = imageResponse.data
       mapImageUrl.value = src.startsWith('data:') ? src : convertFileSrc(src)

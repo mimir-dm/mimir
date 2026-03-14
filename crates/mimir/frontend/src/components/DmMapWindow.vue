@@ -273,8 +273,18 @@ watch(activeMapId, () => {
 })
 
 onMounted(async () => {
+  const t0 = performance.now()
+  console.log('[perf] DmMapWindow: onMounted')
+
+  const t1 = performance.now()
   await loadModule()
+  console.log(`[perf]   loadModule: ${(performance.now() - t1).toFixed(0)}ms`)
+
+  const t2 = performance.now()
   await loadMaps()
+  console.log(`[perf]   loadMaps: ${(performance.now() - t2).toFixed(0)}ms`)
+
+  console.log(`[perf] DmMapWindow: onMounted total: ${(performance.now() - t0).toFixed(0)}ms`)
 })
 </script>
 

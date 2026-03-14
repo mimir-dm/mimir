@@ -63,8 +63,8 @@
       />
     </div>
 
-    <!-- Image Dimensions (read-only) -->
-    <div v-if="imageWidth && imageHeight" class="dimensions-info">
+    <!-- Image Dimensions (read-only, hidden for UVTT where dimensions come from backend) -->
+    <div v-if="imageWidth && imageHeight && imageWidth > 1" class="dimensions-info">
       <span>Image Size: {{ imageWidth }} x {{ imageHeight }} px</span>
     </div>
 

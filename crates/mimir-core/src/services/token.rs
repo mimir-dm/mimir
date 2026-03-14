@@ -377,19 +377,13 @@ impl<'a> TokenService<'a> {
 
     // ── Private helpers ────────────────────────────────────────────────────
 
-    /// Get the grid size (pixels per grid) from a map's UVTT file.
+    /// Get the grid size (pixels per grid) from the cached resolution sidecar.
     fn get_grid_size(&mut self, map_id: &str) -> i32 {
         let mut map_service = MapService::new(self.conn, self.app_dir);
 
         if let Ok(Some(map)) = map_service.get(map_id) {
-            if let Ok(uvtt_bytes) = map_service.read_uvtt_file(&map) {
-                if let Ok(uvtt_json) = serde_json::from_slice::<serde_json::Value>(&uvtt_bytes) {
-                    return uvtt_json
-                        .get("resolution")
-                        .and_then(|r| r.get("pixels_per_grid"))
-                        .and_then(|v| v.as_i64())
-                        .unwrap_or(70) as i32;
-                }
+            if let Some(meta) = map_service.ensure_resolution_meta(&map) {
+                return meta.pixels_per_grid.round() as i32;
             }
         }
         70 // Default grid size

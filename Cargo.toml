@@ -98,6 +98,17 @@ tauri = { version = "2" }
 opt-level = 0
 debug = true
 
+# Optimize image processing even in debug builds — pixel loops are
+# 10-50x slower without optimizations, making map extraction unusable.
+[profile.dev.package.image]
+opt-level = 3
+[profile.dev.package.png]
+opt-level = 3
+[profile.dev.package.fdeflate]
+opt-level = 3
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+
 [profile.release]
 opt-level = 3
 lto = true
