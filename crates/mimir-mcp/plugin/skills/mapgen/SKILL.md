@@ -132,7 +132,7 @@ When the scene involves simple rectangular structures — guard posts, dungeons:
 
 When the scene involves irregular shapes — L-shaped rooms, oval chambers, connected caverns, complex floorplans:
 
-1. **Think in vertices** — Define each area as a list of points in grid coordinates, listed clockwise. An 8-sided oval, an L-shape made of two rectangles, a triangular alcove — any closed polygon works.
+1. **Think in vertices** — Define each area as a list of points in grid coordinates, listed **clockwise** (y-down screen space). The vertices must describe a **simple, non-self-intersecting polygon** — imagine walking along the outside wall of a building, visiting each corner once and returning to the start. The path must NEVER cross over a previous edge, fold back on itself, or cut through the interior. An 8-sided oval, an L-shape, a triangular alcove — any closed polygon works, as long as the edges don't intersect. Self-intersecting polygons produce broken walls and rendering artifacts with no error message.
 2. **Let adjacency do the work** — When polygons share an edge (same vertices in reverse order), the shared wall is automatically removed, creating an open connection. Two rooms sharing `[6,10]→[14,10]` merge at that boundary.
 3. **Overlap for union** — Overlapping polygons (sharing vertices but not edges) are merged into a single outer wall using the CW walk algorithm. Great for complex shapes built from overlapping primitives.
 4. **Place portals on edges** — Specify `edge` (0-indexed segment) and `position` (0.0–1.0 along the edge). Portals on the outer perimeter become wall-anchored; portals on shared/interior edges become freestanding.
@@ -207,7 +207,7 @@ When building YAML configs:
 - **Room terrain** overrides noise-based terrain — use `terrain_slot` to fill room floors with a specific texture
 - **Corridors** connect rooms — align rooms on the same axis for straight corridors, or let the system create L-shaped bends
 - **Portal placement** is relative to the wall — `position` counts grid squares from the wall's start
-- **Polygons** define vertices clockwise in grid coordinates — list points as `[[x1,y1], [x2,y2], ...]`
+- **Polygons** define vertices clockwise in grid coordinates — list points as `[[x1,y1], [x2,y2], ...]`. The path MUST be a simple polygon that never crosses itself or folds back. Walk the perimeter in order, visiting each corner once.
 - **Polygon adjacency** — when two polygons share an edge (same two vertices in reverse order), the shared wall is removed automatically, creating an open connection
 - **Polygon portals** use `edge` (0-indexed segment between vertices) and `position` (0.0–1.0 fractional position along the edge)
 - **Polygon terrain** fills only the actual polygon shape, not the bounding box — use for non-rectangular areas

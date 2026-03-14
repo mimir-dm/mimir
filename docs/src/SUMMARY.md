@@ -65,6 +65,7 @@
 - [Vision & Lighting](./reference/vision-and-lighting.md)
 - [MCP Server](./reference/mcp-server.md)
 - [Mapgen](./reference/mapgen.md)
+- [Dungeondraft Texture Catalog](./reference/dd-texture-catalog.md)
 - [Glossary](./reference/glossary.md)
 
 ---

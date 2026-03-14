@@ -177,6 +177,9 @@ pub fn validate_config(config: &MapConfig) -> Vec<ValidationError> {
     // Corridor validation
     validate_corridors(config, &mut errors);
 
+    // Polygon validation
+    validate_polygons(config, &mut errors);
+
     errors
 }
 
@@ -318,6 +321,156 @@ fn validate_corridors(config: &MapConfig, errors: &mut Vec<ValidationError>) {
             }
         }
     }
+}
+
+fn validate_polygons(config: &MapConfig, errors: &mut Vec<ValidationError>) {
+    use std::collections::HashSet;
+    let mut seen_ids = HashSet::new();
+
+    for poly in &config.polygons {
+        let field_prefix = format!("polygons[{}]", poly.id);
+
+        // Duplicate ID
+        if !seen_ids.insert(&poly.id) {
+            errors.push(ValidationError {
+                field: format!("{}.id", field_prefix),
+                message: format!("Duplicate polygon ID \"{}\"", poly.id),
+            });
+        }
+
+        // Minimum 3 vertices
+        if poly.points.len() < 3 {
+            errors.push(ValidationError {
+                field: format!("{}.points", field_prefix),
+                message: format!(
+                    "Polygon needs at least 3 vertices, got {}",
+                    poly.points.len()
+                ),
+            });
+            continue; // can't do further geometric checks
+        }
+
+        // Duplicate consecutive vertices (degenerate edges)
+        for j in 0..poly.points.len() {
+            let next = (j + 1) % poly.points.len();
+            if poly.points[j] == poly.points[next] {
+                errors.push(ValidationError {
+                    field: format!("{}.points[{}]", field_prefix, j),
+                    message: format!(
+                        "Duplicate consecutive vertex at {:?} (edge {} has zero length)",
+                        poly.points[j], j
+                    ),
+                });
+            }
+        }
+
+        // Self-intersection: check every pair of non-adjacent edges
+        let n = poly.points.len();
+        for a in 0..n {
+            let a_next = (a + 1) % n;
+            for b in (a + 2)..n {
+                let b_next = (b + 1) % n;
+                // Skip the pair that shares the wrap-around vertex
+                if a == 0 && b_next == n {
+                    continue;
+                }
+                if let Some(crossing) = segment_intersection_point(
+                    poly.points[a],
+                    poly.points[a_next],
+                    poly.points[b],
+                    poly.points[b_next],
+                ) {
+                    errors.push(ValidationError {
+                        field: format!("{}.points", field_prefix),
+                        message: format!(
+                            "Self-intersecting polygon: edge {a} (point {a} [{a_x:.1},{a_y:.1}] → \
+                             point {a1} [{a1_x:.1},{a1_y:.1}]) crosses edge {b} (point {b} \
+                             [{b_x:.1},{b_y:.1}] → point {b1} [{b1_x:.1},{b1_y:.1}]) at \
+                             [{cx:.1},{cy:.1}]. Vertices must trace the outer perimeter in order \
+                             without the path ever crossing itself. Reorder the points so that \
+                             walking them in sequence describes a single, non-overlapping loop \
+                             around the shape.",
+                            a = a,
+                            a_x = poly.points[a][0], a_y = poly.points[a][1],
+                            a1 = a_next,
+                            a1_x = poly.points[a_next][0], a1_y = poly.points[a_next][1],
+                            b = b,
+                            b_x = poly.points[b][0], b_y = poly.points[b][1],
+                            b1 = b_next,
+                            b1_x = poly.points[b_next][0], b1_y = poly.points[b_next][1],
+                            cx = crossing[0], cy = crossing[1],
+                        ),
+                    });
+                }
+            }
+        }
+
+        // Terrain slot in range
+        if let Some(slot) = poly.terrain_slot {
+            if slot > 3 {
+                errors.push(ValidationError {
+                    field: format!("{}.terrain_slot", field_prefix),
+                    message: format!("Terrain slot {} out of range (0-3)", slot),
+                });
+            }
+        }
+
+        // Portal edge index in range
+        for (pi, portal) in poly.portals.iter().enumerate() {
+            if portal.edge >= poly.points.len() {
+                errors.push(ValidationError {
+                    field: format!("{}.portals[{}].edge", field_prefix, pi),
+                    message: format!(
+                        "Portal edge index {} out of range (polygon has {} edges)",
+                        portal.edge,
+                        poly.points.len()
+                    ),
+                });
+            }
+            if !(0.0..=1.0).contains(&portal.position) {
+                errors.push(ValidationError {
+                    field: format!("{}.portals[{}].position", field_prefix, pi),
+                    message: format!(
+                        "Portal position {} out of range (must be 0.0–1.0)",
+                        portal.position
+                    ),
+                });
+            }
+        }
+    }
+}
+
+/// If two line segments (p1→p2) and (p3→p4) properly cross, return the
+/// intersection point in grid coordinates. Returns `None` for non-crossing
+/// segments (including endpoint-only touching).
+fn segment_intersection_point(
+    p1: [f64; 2],
+    p2: [f64; 2],
+    p3: [f64; 2],
+    p4: [f64; 2],
+) -> Option<[f64; 2]> {
+    let d1 = cross_2d(p3, p4, p1);
+    let d2 = cross_2d(p3, p4, p2);
+    let d3 = cross_2d(p1, p2, p3);
+    let d4 = cross_2d(p1, p2, p4);
+
+    // Proper crossing: each segment straddles the line of the other
+    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+        && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+    {
+        // Parametric t along p1→p2 where the crossing occurs
+        let t = d1 / (d1 - d2);
+        let x = p1[0] + t * (p2[0] - p1[0]);
+        let y = p1[1] + t * (p2[1] - p1[1]);
+        Some([x, y])
+    } else {
+        None
+    }
+}
+
+/// 2D cross product: sign of (b-a) × (c-a).
+fn cross_2d(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
+    (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
 }
 
 /// Result of map generation.
@@ -1108,5 +1261,206 @@ mod tests {
         }];
         let errors = validate_config(&config);
         assert!(errors.iter().any(|e| e.message.contains("dimensions must be > 0")));
+    }
+
+    #[test]
+    fn test_validate_polygon_valid_square() {
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "square".to_string(),
+            points: vec![[2.0, 2.0], [6.0, 2.0], [6.0, 6.0], [2.0, 6.0]],
+            terrain_slot: Some(1),
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        assert!(
+            errors.is_empty(),
+            "Valid square polygon should pass: {:?}",
+            errors.iter().map(|e| &e.message).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_validate_polygon_self_intersecting_bowtie() {
+        // Bowtie shape: edges cross in the middle
+        //  0──────3
+        //   \    /
+        //    \  /    ← crossing at center
+        //    /  \
+        //   /    \
+        //  1──────2
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "bowtie".to_string(),
+            points: vec![[2.0, 2.0], [8.0, 8.0], [8.0, 2.0], [2.0, 8.0]],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        let crossing_errors: Vec<_> = errors
+            .iter()
+            .filter(|e| e.message.contains("Self-intersecting"))
+            .collect();
+        assert!(
+            !crossing_errors.is_empty(),
+            "Bowtie polygon should be detected as self-intersecting"
+        );
+        // Should include the crossing point
+        let msg = &crossing_errors[0].message;
+        assert!(msg.contains("crosses edge"), "Should name the crossing edges");
+        assert!(msg.contains("at ["), "Should include crossing coordinates");
+        assert!(
+            msg.contains("Reorder"),
+            "Should include guidance on fixing: {}",
+            msg
+        );
+    }
+
+    #[test]
+    fn test_validate_polygon_too_few_vertices() {
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "line".to_string(),
+            points: vec![[0.0, 0.0], [5.0, 5.0]],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("at least 3 vertices")));
+    }
+
+    #[test]
+    fn test_validate_polygon_duplicate_id() {
+        let square = PolygonConfig {
+            id: "room".to_string(),
+            points: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 4.0]],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        };
+        let mut config = minimal_config();
+        config.polygons = vec![square.clone(), square];
+        let errors = validate_config(&config);
+        assert!(errors.iter().any(|e| e.message.contains("Duplicate")));
+    }
+
+    #[test]
+    fn test_validate_polygon_duplicate_consecutive_vertex() {
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "degen".to_string(),
+            points: vec![
+                [2.0, 2.0],
+                [6.0, 2.0],
+                [6.0, 2.0], // duplicate of previous
+                [6.0, 6.0],
+                [2.0, 6.0],
+            ],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("zero length")));
+    }
+
+    #[test]
+    fn test_validate_polygon_portal_edge_out_of_range() {
+        use crate::polygons::PolygonPortalConfig;
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "tri".to_string(),
+            points: vec![[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![PolygonPortalConfig {
+                edge: 5, // only 3 edges exist
+                position: 0.5,
+                portal_type: crate::rooms::PortalType::Door,
+            }],
+        }];
+        let errors = validate_config(&config);
+        assert!(errors.iter().any(|e| e.message.contains("out of range")));
+    }
+
+    #[test]
+    fn test_validate_polygon_terrain_slot_out_of_range() {
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "bad_slot".to_string(),
+            points: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 4.0]],
+            terrain_slot: Some(7),
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        assert!(errors.iter().any(|e| e.message.contains("out of range")));
+    }
+
+    #[test]
+    fn test_validate_polygon_complex_valid_l_shape() {
+        // L-shape: 6 vertices, no crossings
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "l_shape".to_string(),
+            points: vec![
+                [2.0, 2.0],
+                [6.0, 2.0],
+                [6.0, 5.0],
+                [4.0, 5.0],
+                [4.0, 8.0],
+                [2.0, 8.0],
+            ],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        let polygon_errors: Vec<_> = errors
+            .iter()
+            .filter(|e| e.field.contains("polygon"))
+            .collect();
+        assert!(
+            polygon_errors.is_empty(),
+            "Valid L-shape should pass: {:?}",
+            polygon_errors.iter().map(|e| &e.message).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_validate_polygon_figure_eight_crossing() {
+        // Figure-8: the path crosses itself
+        //  0───1
+        //  |   |
+        //  3───2/5───4  ← edges 2→3 and 4→5 cross (or edges wrap through center)
+        //      |   |
+        //      6───7
+        // Actually simpler: just use a figure-8 with obvious crossing
+        let mut config = minimal_config();
+        config.polygons = vec![PolygonConfig {
+            id: "figure8".to_string(),
+            points: vec![
+                [0.0, 0.0],  // 0: top-left
+                [4.0, 0.0],  // 1: top-right
+                [0.0, 4.0],  // 2: bottom-left (crosses!)
+                [4.0, 4.0],  // 3: bottom-right (crosses!)
+            ],
+            terrain_slot: None,
+            wall_texture: "res://textures/walls/stone.png".to_string(),
+            portals: vec![],
+        }];
+        let errors = validate_config(&config);
+        assert!(
+            errors.iter().any(|e| e.message.contains("Self-intersecting")),
+            "Figure-8 should be caught: {:?}",
+            errors.iter().map(|e| &e.message).collect::<Vec<_>>()
+        );
     }
 }

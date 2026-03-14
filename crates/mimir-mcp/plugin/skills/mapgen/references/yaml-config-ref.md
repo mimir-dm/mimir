@@ -240,10 +240,16 @@ elevation:
 
 Arbitrary closed shapes defined by vertices in grid coordinates. Use polygons for irregular rooms, oval chambers, L-shaped areas, or any non-rectangular layout. The system automatically merges overlapping polygons, removes shared edges, and generates walls, shapes (interior fill), and portals.
 
+**CRITICAL — Polygon vertex rules:**
+- List vertices **clockwise** in grid coordinates (y-down screen space).
+- The path must be a **simple polygon**: walk the vertices in order and they must trace the outer boundary of the shape **without ever crossing over, folding back, or intersecting a previous edge**.
+- Think of it as walking along the outside wall of a building — you visit each corner exactly once and return to the start, always moving forward along the perimeter. The path never doubles back or cuts through the interior.
+- **Self-intersecting polygons will produce broken walls, missing fills, and rendering artifacts in Dungeondraft.** There is no validation — the system will silently produce garbage.
+
 ```yaml
 polygons:
   - id: "room_a"                   # string, required — unique identifier
-    points:                        # list of [x, y] vertices, clockwise
+    points:                        # list of [x, y] vertices, clockwise — MUST NOT self-intersect
       - [3, 6]
       - [9, 6]
       - [9, 14]
