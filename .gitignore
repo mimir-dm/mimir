@@ -43,6 +43,9 @@ agent_test_results/
 # TypeScript build cache
 *.tsbuildinfo
 
+# mdBook build output
+docs/book/
+
 # Tauri sidecar binaries (built at compile time)
 crates/mimir/binaries/*
 !crates/mimir/binaries/.gitkeep
