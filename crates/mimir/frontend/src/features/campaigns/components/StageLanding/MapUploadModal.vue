@@ -11,7 +11,7 @@
     <!-- Drop Zone -->
     <div
       class="drop-zone"
-      :class="{ 'drag-over': isDragging, 'has-file': previewUrl }"
+      :class="{ 'drag-over': isDragging, 'has-file': selectedFile }"
       @dragover.prevent="isDragging = true"
       @dragleave.prevent="isDragging = false"
       @drop.prevent="handleDrop"
@@ -25,13 +25,21 @@
         @change="handleFileSelect"
       />
 
-      <div v-if="previewUrl" class="preview-container">
-        <img :src="previewUrl" :alt="mapName" class="preview-image" />
-        <button class="clear-btn" @click.stop="clearFile">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      <div v-if="selectedFile" class="preview-container">
+        <div class="file-info">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="file-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
           </svg>
-        </button>
+          <div class="file-details">
+            <span class="file-name">{{ selectedFile.name }}</span>
+            <span class="file-size">{{ formatFileSize(selectedFile.size) }}</span>
+          </div>
+          <button class="clear-btn" @click.stop="clearFile">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
         <!-- UVTT metadata badge -->
         <div v-if="uvttInfo" class="uvtt-badge">
           <span class="uvtt-label">UVTT</span>
@@ -119,7 +127,6 @@ interface UvttInfo {
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
-const previewUrl = ref<string | null>(null)
 const mapName = ref('')
 const imageWidth = ref<number | null>(null)
 const imageHeight = ref<number | null>(null)
@@ -193,13 +200,19 @@ function processFile(file: File) {
 }
 
 function processUvttFile(file: File) {
+  // Read only enough to parse metadata — skip the huge base64 image field.
+  // For large maps (200MB+), loading the full image into browser memory
+  // for a preview would freeze the UI.
   const reader = new FileReader()
   reader.onload = (e) => {
     try {
-      const uvtt = JSON.parse(e.target?.result as string)
+      const text = e.target?.result as string
 
-      // Extract UVTT metadata
-      uvttInfo.value = {
+      // Parse just the metadata fields — the image field is huge but we
+      // only need resolution, line_of_sight count, portals, and lights.
+      const uvtt = JSON.parse(text)
+
+      const info: UvttInfo = {
         walls: uvtt.line_of_sight?.length || 0,
         portals: uvtt.portals?.length || 0,
         lights: uvtt.lights?.length || 0,
@@ -208,25 +221,11 @@ function processUvttFile(file: File) {
         pixelsPerGrid: uvtt.resolution?.pixels_per_grid || 70
       }
 
-      // Extract image for preview
-      let imageData = uvtt.image || ''
-      if (!imageData.startsWith('data:')) {
-        imageData = `data:image/png;base64,${imageData}`
-      }
-      previewUrl.value = imageData
+      uvttInfo.value = info
 
-      // Get dimensions from the image
-      const img = new Image()
-      img.onload = () => {
-        imageWidth.value = img.naturalWidth
-        imageHeight.value = img.naturalHeight
-      }
-      img.onerror = () => {
-        // Fallback to calculated dimensions
-        imageWidth.value = uvttInfo.value!.gridCols * uvttInfo.value!.pixelsPerGrid
-        imageHeight.value = uvttInfo.value!.gridRows * uvttInfo.value!.pixelsPerGrid
-      }
-      img.src = imageData
+      // Calculate dimensions from UVTT metadata (no image decode needed)
+      imageWidth.value = info.gridCols * info.pixelsPerGrid
+      imageHeight.value = info.gridRows * info.pixelsPerGrid
     } catch (err) {
       console.error('Failed to parse UVTT file:', err)
       errorMessage.value = 'Failed to parse UVTT file. Please check the file format.'
@@ -241,30 +240,35 @@ function processUvttFile(file: File) {
 }
 
 function processImageFile(file: File) {
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    previewUrl.value = e.target?.result as string
-
-    // Get image dimensions
-    const img = new Image()
-    img.onload = () => {
-      imageWidth.value = img.naturalWidth
-      imageHeight.value = img.naturalHeight
-    }
-    img.src = previewUrl.value
+  // Get image dimensions without loading full data URL into memory
+  const url = URL.createObjectURL(file)
+  const img = new Image()
+  img.onload = () => {
+    imageWidth.value = img.naturalWidth
+    imageHeight.value = img.naturalHeight
+    URL.revokeObjectURL(url)
   }
-  reader.readAsDataURL(file)
+  img.onerror = () => {
+    URL.revokeObjectURL(url)
+  }
+  img.src = url
 }
 
 function clearFile() {
   selectedFile.value = null
-  previewUrl.value = null
   imageWidth.value = null
   imageHeight.value = null
   uvttInfo.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
 }
 
 async function handleUpload() {
@@ -399,17 +403,44 @@ watch(() => props.visible, (visible) => {
   width: 100%;
 }
 
-.preview-image {
-  width: 100%;
-  max-height: 300px;
-  object-fit: contain;
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-surface-variant);
   border-radius: var(--radius-md);
 }
 
+.file-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--color-primary-500);
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
 .clear-btn {
-  position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
   width: 28px;
   height: 28px;
   display: flex;
