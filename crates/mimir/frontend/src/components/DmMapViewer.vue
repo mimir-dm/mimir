@@ -159,6 +159,7 @@
           :src="mapImageUrl"
           :alt="mapName"
           class="map-image"
+          decoding="async"
           @load="onImageLoad"
           ref="mapImage"
           draggable="false"
@@ -237,7 +238,7 @@
               <!-- White = fogged, Black = revealed -->
               <rect width="100%" height="100%" fill="white" />
               <!-- Use visibility polygons when UVTT data available -->
-              <g v-if="uvttLoaded" filter="url(#visionBlur)">
+              <g v-if="uvttLoaded" :filter="isInteracting ? undefined : 'url(#visionBlur)'">
                 <path
                   v-for="vis in visibilityPolygons"
                   :key="'vis-' + vis.tokenId"
@@ -246,7 +247,7 @@
                 />
               </g>
               <!-- Fall back to circles when no UVTT data -->
-              <g v-else filter="url(#visionBlur)">
+              <g v-else :filter="isInteracting ? undefined : 'url(#visionBlur)'">
                 <circle
                   v-for="vision in pcVision"
                   :key="'vision-' + vision.tokenId"
@@ -257,7 +258,7 @@
                 />
               </g>
               <!-- Map lights create visible pools in dim/dark conditions -->
-              <g v-if="currentAmbientLight !== 'bright' && mapLightZones.length > 0" filter="url(#visionBlur)">
+              <g v-if="currentAmbientLight !== 'bright' && mapLightZones.length > 0" :filter="isInteracting ? undefined : 'url(#visionBlur)'">
                 <circle
                   v-for="zone in mapLightZones"
                   :key="'maplight-' + zone.id"
@@ -1635,6 +1636,8 @@ function snapToGrid(x: number, y: number): { x: number; y: number } {
 // Map state
 const loading = ref(false)
 const mapImageUrl = ref<string | null>(null)
+const mapImageUrlFull = ref<string | null>(null)
+const mapImageUrlMid = ref<string | null>(null)
 const mapName = ref('')
 const mapWidth = ref(0)
 const mapHeight = ref(0)
@@ -1742,8 +1745,19 @@ async function loadMapImage(id: string) {
     const imageResponse = await invoke<{ success: boolean; data?: string }>('serve_map_image', { id })
     if (imageResponse.success && imageResponse.data) {
       const src = imageResponse.data
-      mapImageUrl.value = src.startsWith('data:') ? src : convertFileSrc(src)
+      const fullUrl = src.startsWith('data:') ? src : convertFileSrc(src)
+      mapImageUrlFull.value = fullUrl
+      mapImageUrl.value = fullUrl
     }
+
+    // Fetch mid-res variant for zoomed-out views (non-blocking)
+    invoke<{ success: boolean; data?: string | null }>('serve_map_image_mid', { id })
+      .then(res => {
+        if (res.success && res.data) {
+          mapImageUrlMid.value = convertFileSrc(res.data)
+        }
+      })
+      .catch(() => { /* mid-res not available, no-op */ })
   } catch (e) {
     console.error('DmMapViewer: Failed to load map:', e)
   } finally {
@@ -1755,6 +1769,17 @@ function onImageLoad() {
   imageLoaded.value = true
   resetView()
 }
+
+// Swap between full and mid-res image based on zoom level
+let resolutionSwapTimeout: ReturnType<typeof setTimeout> | null = null
+watch(zoom, (z) => {
+  if (!mapImageUrlMid.value || !mapImageUrlFull.value) return
+  if (resolutionSwapTimeout) clearTimeout(resolutionSwapTimeout)
+  // Debounce to avoid flickering during rapid zoom
+  resolutionSwapTimeout = setTimeout(() => {
+    mapImageUrl.value = z < 0.6 ? mapImageUrlMid.value : mapImageUrlFull.value
+  }, 200)
+})
 
 // Zoom controls
 function zoomIn() {

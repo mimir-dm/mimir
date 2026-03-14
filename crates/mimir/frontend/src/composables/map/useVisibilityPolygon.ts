@@ -196,6 +196,87 @@ function distance(p1: Point, p2: Point): number {
   return Math.sqrt(dx * dx + dy * dy)
 }
 
+// ── Spatial grid for wall lookup acceleration ──────────────────────────
+
+/**
+ * A spatial hash grid that indexes wall segments by the grid cells they
+ * overlap. Allows ray-wall tests to skip walls far from the ray path.
+ */
+class WallSpatialGrid {
+  private cells: Map<string, Wall[]> = new Map()
+  private cellSize: number
+
+  constructor(walls: Wall[], mapWidth: number, mapHeight: number) {
+    // Cell size targets ~10-20 cells per axis for typical maps
+    this.cellSize = Math.max(mapWidth, mapHeight) / 16
+
+    for (const wall of walls) {
+      // Find all cells this wall overlaps
+      const minX = Math.min(wall.p1.x, wall.p2.x)
+      const maxX = Math.max(wall.p1.x, wall.p2.x)
+      const minY = Math.min(wall.p1.y, wall.p2.y)
+      const maxY = Math.max(wall.p1.y, wall.p2.y)
+
+      const cx0 = Math.floor(minX / this.cellSize)
+      const cx1 = Math.floor(maxX / this.cellSize)
+      const cy0 = Math.floor(minY / this.cellSize)
+      const cy1 = Math.floor(maxY / this.cellSize)
+
+      for (let cy = cy0; cy <= cy1; cy++) {
+        for (let cx = cx0; cx <= cx1; cx++) {
+          const key = `${cx},${cy}`
+          let cell = this.cells.get(key)
+          if (!cell) {
+            cell = []
+            this.cells.set(key, cell)
+          }
+          cell.push(wall)
+        }
+      }
+    }
+  }
+
+  /**
+   * Get walls that could intersect a ray from origin in a given direction,
+   * bounded by maxRadius. Returns a deduplicated set of candidate walls.
+   */
+  getCandidateWalls(origin: Point, angle: number, maxRadius: number): Wall[] {
+    const dx = Math.cos(angle)
+    const dy = Math.sin(angle)
+
+    // Walk cells along the ray using a simple step approach
+    const seen = new Set<Wall>()
+    const candidates: Wall[] = []
+    const steps = Math.ceil(maxRadius / this.cellSize) + 1
+
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * maxRadius
+      const px = origin.x + dx * t
+      const py = origin.y + dy * t
+      const cx = Math.floor(px / this.cellSize)
+      const cy = Math.floor(py / this.cellSize)
+
+      // Check this cell and immediate neighbors (handles walls on cell boundaries)
+      for (let dy2 = -1; dy2 <= 1; dy2++) {
+        for (let dx2 = -1; dx2 <= 1; dx2++) {
+          const key = `${cx + dx2},${cy + dy2}`
+          const cell = this.cells.get(key)
+          if (cell) {
+            for (const wall of cell) {
+              if (!seen.has(wall)) {
+                seen.add(wall)
+                candidates.push(wall)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return candidates
+  }
+}
+
 /** Wall margin - extends visibility past wall lines to reveal wall artwork */
 const WALL_EXTENSION_PX = 12 // pixels to extend visibility past UVTT wall lines
 
@@ -305,6 +386,9 @@ export function calculateVisibilityPolygon(
     { p1: corners[3], p2: corners[0] }   // left
   ]
 
+  // Build spatial grid for fast wall lookup
+  const grid = new WallSpatialGrid(walls, mapWidth, mapHeight)
+
   // Cast rays to each endpoint (plus small offsets for edge detection)
   const hits: RayHit[] = []
   const epsilon = 0.0001
@@ -316,25 +400,24 @@ export function calculateVisibilityPolygon(
     for (const offset of [-epsilon, 0, epsilon]) {
       const angle = baseAngle + offset
 
-      // Find closest intersection, checking real walls first (with pullBack)
+      // Find closest intersection using spatial grid for real walls
       let closestHit: Point | null = null
       let closestDist = Infinity
-      let hitRealWall = false
 
-      // Check real walls first (with extension to show wall artwork)
-      for (const wall of walls) {
+      // Check candidate walls near this ray (with extension to show wall artwork)
+      const candidates = grid.getCandidateWalls(origin, angle, maxRadius)
+      for (const wall of candidates) {
         const intersection = raySegmentIntersection(origin, angle, wall, true)
         if (intersection) {
           const dist = distance(origin, intersection)
           if (dist < closestDist && dist <= maxRadius) {
             closestDist = dist
             closestHit = intersection
-            hitRealWall = true
           }
         }
       }
 
-      // Check boundary walls (no extension needed)
+      // Check boundary walls (no extension needed, always checked)
       for (const wall of boundaryWalls) {
         const intersection = raySegmentIntersection(origin, angle, wall, false)
         if (intersection) {
@@ -342,7 +425,6 @@ export function calculateVisibilityPolygon(
           if (dist < closestDist && dist <= maxRadius) {
             closestDist = dist
             closestHit = intersection
-            hitRealWall = false
           }
         }
       }

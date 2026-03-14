@@ -157,6 +157,24 @@ pub struct MapService<'a> {
     app_data_dir: PathBuf,
 }
 
+/// Convert a UVTT/dd2vtt blob path to its corresponding extracted image path.
+fn blob_path_to_extracted(blob_path: &str) -> String {
+    if blob_path.ends_with(".dd2vtt") {
+        blob_path.replace(".dd2vtt", ".jpg")
+    } else {
+        blob_path.replace(".uvtt", ".jpg")
+    }
+}
+
+/// Legacy: convert blob path to PNG (for fallback/cleanup).
+fn blob_path_to_png(blob_path: &str) -> String {
+    if blob_path.ends_with(".dd2vtt") {
+        blob_path.replace(".dd2vtt", ".png")
+    } else {
+        blob_path.replace(".uvtt", ".png")
+    }
+}
+
 impl<'a> MapService<'a> {
     /// Create a new map service.
     pub fn new(conn: &'a mut SqliteConnection, app_data_dir: impl Into<PathBuf>) -> Self {
@@ -346,14 +364,18 @@ impl<'a> MapService<'a> {
         // Delete the map record first (removes FK constraint to asset)
         dal::delete_map(self.conn, id)?;
 
-        // Now delete the UVTT asset file and extracted PNG from disk, and database record
+        // Now delete the UVTT asset file and all extracted variants from disk
         if let Ok(Some(asset)) = dal::get_campaign_asset_optional(self.conn, &asset_id) {
             let file_path = self.app_data_dir.join(&asset.blob_path);
-            let png_path = self.app_data_dir.join(
-                asset.blob_path.replace(".uvtt", ".png"),
+            let jpg_path = self.app_data_dir.join(blob_path_to_extracted(&asset.blob_path));
+            let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
+            let mid_path = jpg_path.with_file_name(
+                format!("{}_mid.jpg", jpg_path.file_stem().unwrap_or_default().to_string_lossy()),
             );
             let _ = std::fs::remove_file(&file_path);
-            let _ = std::fs::remove_file(&png_path);
+            let _ = std::fs::remove_file(&jpg_path);
+            let _ = std::fs::remove_file(&png_path); // legacy cleanup
+            let _ = std::fs::remove_file(&mid_path);
             // Delete asset from database
             let _ = dal::delete_campaign_asset(self.conn, &asset.id);
         }
@@ -390,45 +412,57 @@ impl<'a> MapService<'a> {
         std::fs::read(&file_path).map_err(ServiceError::from)
     }
 
-    /// Get the absolute path to the extracted PNG image for a map.
+    /// Get the absolute path to the extracted image for a map.
     ///
-    /// Returns `Some(path)` if the extracted image exists on disk,
-    /// `None` if it hasn't been extracted yet (pre-existing maps).
+    /// Looks for JPEG first (new format), then PNG (legacy), then extracts
+    /// from the UVTT file if neither exists. Returns `None` only if
+    /// extraction fails completely.
     pub fn get_map_image_path(&mut self, map: &Map) -> ServiceResult<Option<PathBuf>> {
         let asset = dal::get_campaign_asset_optional(self.conn, &map.uvtt_asset_id)?
             .ok_or_else(|| ServiceError::not_found("Asset", &map.uvtt_asset_id))?;
 
-        let png_path = self.app_data_dir.join(
-            asset.blob_path.replace(".uvtt", ".png"),
+        // Check for JPEG (current format)
+        let jpg_path = self.app_data_dir.join(
+            blob_path_to_extracted(&asset.blob_path),
         );
+        if jpg_path.exists() {
+            return Ok(Some(jpg_path));
+        }
 
+        // Check for legacy PNG
+        let png_path = self.app_data_dir.join(
+            blob_path_to_png(&asset.blob_path),
+        );
         if png_path.exists() {
-            Ok(Some(png_path))
+            return Ok(Some(png_path));
+        }
+
+        // Extract from UVTT for pre-existing maps
+        self.extract_map_image(&asset.blob_path);
+        if jpg_path.exists() {
+            Ok(Some(jpg_path))
         } else {
-            // Try to extract from UVTT for pre-existing maps
-            self.extract_map_image(&asset.blob_path);
-            if png_path.exists() {
-                Ok(Some(png_path))
-            } else {
-                Ok(None)
-            }
+            Ok(None)
         }
     }
 
-    /// Extract the PNG image from a UVTT file and write it alongside.
+    /// Extract the image from a UVTT file, convert to JPEG, and write alongside.
     ///
     /// UVTT files are JSON with a base64-encoded PNG in the `image` field.
-    /// Extracting once avoids re-parsing and base64-decoding on every load.
+    /// Converting to JPEG at 90% quality typically shrinks a 50MB PNG to ~5MB,
+    /// and the browser decodes JPEG faster than PNG. The UVTT coordinate system
+    /// is preserved — the frontend CSS-sizes the image to UVTT dimensions.
     fn extract_map_image(&self, uvtt_blob_path: &str) {
-        let uvtt_path = self.app_data_dir.join(uvtt_blob_path);
-        let png_path = self.app_data_dir.join(
-            uvtt_blob_path.replace(".uvtt", ".png"),
+        let jpg_path = self.app_data_dir.join(
+            blob_path_to_extracted(uvtt_blob_path),
         );
 
         // Don't re-extract if already done
-        if png_path.exists() {
+        if jpg_path.exists() {
             return;
         }
+
+        let uvtt_path = self.app_data_dir.join(uvtt_blob_path);
 
         let Ok(uvtt_bytes) = std::fs::read(&uvtt_path) else {
             return;
@@ -442,14 +476,53 @@ impl<'a> MapService<'a> {
             return;
         };
 
-        // Decode base64 to raw PNG bytes
         use base64::Engine;
         let Ok(png_bytes) = base64::engine::general_purpose::STANDARD.decode(image_b64) else {
             return;
         };
 
-        // Write alongside the UVTT file
-        let _ = std::fs::write(&png_path, &png_bytes);
+        // Decode PNG with raised memory limits for large maps, cap at 4096px, re-encode as JPEG
+        let mut reader = match image::ImageReader::new(std::io::Cursor::new(&png_bytes))
+            .with_guessed_format()
+        {
+            Ok(r) => r,
+            Err(_) => {
+                let _ = std::fs::write(
+                    self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
+                    &png_bytes,
+                );
+                return;
+            }
+        };
+        // Allow up to 2GB allocation for very large map images (14k x 14k @ 4 bytes = ~750MB)
+        let mut limits = image::Limits::default();
+        limits.max_alloc = Some(2 * 1024 * 1024 * 1024);
+        reader.limits(limits);
+
+        let Ok(mut img) = reader.decode() else {
+            // If image decode fails, fall back to writing raw PNG
+            let _ = std::fs::write(
+                self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
+                &png_bytes,
+            );
+            return;
+        };
+
+        // Cap resolution — keeps GPU memory under ~64MB per map.
+        // Grid alignment is preserved because the frontend CSS-sizes the
+        // image to UVTT coordinate dimensions, not file pixel dimensions.
+        const MAX_DIMENSION: u32 = 4096;
+        let (w, h) = (img.width(), img.height());
+        if w > MAX_DIMENSION || h > MAX_DIMENSION {
+            img = img.resize(MAX_DIMENSION, MAX_DIMENSION, image::imageops::FilterType::Lanczos3);
+        }
+
+        let Ok(file) = std::fs::File::create(&jpg_path) else {
+            return;
+        };
+        let mut writer = std::io::BufWriter::new(file);
+        let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut writer, 90);
+        let _ = img.write_with_encoder(encoder);
     }
 }
 

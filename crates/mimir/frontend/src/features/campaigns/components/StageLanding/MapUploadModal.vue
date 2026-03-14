@@ -165,9 +165,9 @@ function processFile(file: File) {
     return
   }
 
-  // Validate file size (max 50MB)
-  if (file.size > 50 * 1024 * 1024) {
-    errorMessage.value = 'File too large. Maximum size is 50MB.'
+  // Validate file size (max 500MB)
+  if (file.size > 500 * 1024 * 1024) {
+    errorMessage.value = 'File too large. Maximum size is 500MB.'
     return
   }
 
