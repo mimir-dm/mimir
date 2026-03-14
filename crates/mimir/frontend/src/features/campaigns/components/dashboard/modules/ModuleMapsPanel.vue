@@ -15,8 +15,19 @@
         class="map-card"
         @click="$emit('select', map)"
       >
-        <span class="map-name">{{ map.name }}</span>
-        <span class="map-size">{{ map.width_px }}x{{ map.height_px }}</span>
+        <div class="map-card-content">
+          <span class="map-name">{{ map.name }}</span>
+          <span class="map-size">{{ map.width_px }}x{{ map.height_px }}</span>
+        </div>
+        <button
+          class="btn-delete"
+          title="Delete Map"
+          @click.stop="$emit('delete', map)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+          </svg>
+        </button>
       </div>
     </div>
   </section>
@@ -47,6 +58,7 @@ defineProps<{
 defineEmits<{
   upload: []
   select: [map: MapData]
+  delete: [map: MapData]
 }>()
 </script>
 
@@ -108,7 +120,8 @@ defineEmits<{
 
 .map-card {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-surface-variant);
   border: 1px solid var(--color-border);
@@ -121,6 +134,13 @@ defineEmits<{
   border-color: var(--color-primary-500);
 }
 
+.map-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
 .map-name {
   font-size: 0.8rem;
   font-weight: 600;
@@ -130,5 +150,30 @@ defineEmits<{
 .map-size {
   font-size: 0.65rem;
   color: var(--color-text-secondary);
+}
+
+.btn-delete {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.map-card:hover .btn-delete {
+  opacity: 1;
+}
+
+.btn-delete:hover {
+  background: var(--color-error, #ef4444);
+  color: white;
 }
 </style>

@@ -4,15 +4,15 @@ level: task
 title: "VTT rendering performance degrades on large map images"
 short_code: "MIMIR-T-0626"
 created_at: 2026-03-14T11:36:11.521217+00:00
-updated_at: 2026-03-14T11:36:11.521217+00:00
+updated_at: 2026-03-14T12:40:50.680949+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#tech-debt"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -164,6 +164,10 @@ Load token images only when they enter the viewport (Intersection Observer), ins
 **Phase 3 (if needed):** Option D
 - Canvas/WebGL rewrite — only if Phase 1+2 don't suffice
 - *Estimated effort: XL*
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

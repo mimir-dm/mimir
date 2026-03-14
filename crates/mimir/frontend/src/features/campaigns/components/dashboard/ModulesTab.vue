@@ -83,6 +83,7 @@
                 :loading="loadingMaps"
                 @upload="showMapUploadModal = true"
                 @select="selectMap"
+                @delete="confirmDeleteMap"
               />
             </div>
 
@@ -698,6 +699,20 @@ async function loadModuleMaps() {
 function selectMap(map: MapData) {
   selectedMapForTokens.value = map
   showTokenSetupModal.value = true
+}
+
+// Delete a map from the module
+async function confirmDeleteMap(map: MapData) {
+  if (!confirm(`Delete map "${map.name}"? This cannot be undone.`)) {
+    return
+  }
+  try {
+    await invoke('delete_map', { id: map.id })
+    loadModuleMaps()
+  } catch (e) {
+    console.error('Failed to delete map:', e)
+    alert('Failed to delete map')
+  }
 }
 
 // Close token setup modal

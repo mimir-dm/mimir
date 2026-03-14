@@ -4,15 +4,15 @@ level: task
 title: "Cannot delete maps from a module after upload"
 short_code: "MIMIR-T-0624"
 created_at: 2026-03-14T11:29:49.906186+00:00
-updated_at: 2026-03-14T11:29:49.906186+00:00
+updated_at: 2026-03-14T12:25:59.278884+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#bug"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -37,10 +37,25 @@ Once a map is uploaded and associated with a module, there is no way to remove o
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
+## Acceptance Criteria
+
 - [ ] User can remove a map from a module (either delete or disassociate)
 - [ ] MCP tool supports the operation
 - [ ] UI reflects the change
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-14
+
+**Root cause**: The `ModuleMapsPanel.vue` component (used on the campaign dashboard's module tab) had no delete button. It only emitted `upload` and `select` events. A separate `ModuleMaps.vue` component existed with full action buttons (place tokens, print, delete) but was never imported anywhere — orphaned code.
+
+**Backend**: Already fully functional — `delete_map` Tauri command and `MapService::delete()` work for both campaign-level and module-associated maps. MCP `update_map` with `module_id: "campaign"` also supports disassociating a map.
+
+**Fix**:
+- Added delete button to `ModuleMapsPanel.vue` (shows on hover, trash icon, red on hover)
+- Added `delete` emit to the component's emit definitions
+- Wired `@delete="confirmDeleteMap"` handler in `ModulesTab.vue`
+- Handler shows confirmation dialog, calls `delete_map`, reloads map list
+- TypeScript type-checks clean
