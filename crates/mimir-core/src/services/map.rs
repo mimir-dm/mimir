@@ -369,13 +369,9 @@ impl<'a> MapService<'a> {
             let file_path = self.app_data_dir.join(&asset.blob_path);
             let jpg_path = self.app_data_dir.join(blob_path_to_extracted(&asset.blob_path));
             let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
-            let mid_path = jpg_path.with_file_name(
-                format!("{}_mid.jpg", jpg_path.file_stem().unwrap_or_default().to_string_lossy()),
-            );
             let _ = std::fs::remove_file(&file_path);
             let _ = std::fs::remove_file(&jpg_path);
             let _ = std::fs::remove_file(&png_path); // legacy cleanup
-            let _ = std::fs::remove_file(&mid_path);
             // Delete asset from database
             let _ = dal::delete_campaign_asset(self.conn, &asset.id);
         }

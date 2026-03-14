@@ -40,11 +40,6 @@
             </svg>
           </button>
         </div>
-        <!-- UVTT metadata badge -->
-        <div v-if="uvttInfo" class="uvtt-badge">
-          <span class="uvtt-label">UVTT</span>
-          <span class="uvtt-stats">{{ uvttInfo.walls }} walls · {{ uvttInfo.portals }} doors · {{ uvttInfo.lights }} lights</span>
-        </div>
       </div>
 
       <div v-else class="drop-prompt">
@@ -116,15 +111,6 @@ const emit = defineEmits<{
   uploaded: []
 }>()
 
-interface UvttInfo {
-  walls: number
-  portals: number
-  lights: number
-  gridCols: number
-  gridRows: number
-  pixelsPerGrid: number
-}
-
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const mapName = ref('')
@@ -133,7 +119,6 @@ const imageHeight = ref<number | null>(null)
 const isDragging = ref(false)
 const uploading = ref(false)
 const errorMessage = ref('')
-const uvttInfo = ref<UvttInfo | null>(null)
 
 const canUpload = computed(() => {
   return selectedFile.value && mapName.value.trim() && imageWidth.value && imageHeight.value
@@ -180,7 +165,6 @@ function processFile(file: File) {
 
   errorMessage.value = ''
   selectedFile.value = file
-  uvttInfo.value = null
 
   // Auto-generate map name from filename
   if (!mapName.value) {
@@ -191,52 +175,14 @@ function processFile(file: File) {
   }
 
   if (isUvtt) {
-    // Parse UVTT file
-    processUvttFile(file)
+    // UVTT files: dimensions come from the backend after upload.
+    // Skip parsing 200MB+ files in the browser just for metadata.
+    // Set placeholder dimensions so canUpload is satisfied.
+    imageWidth.value = 1
+    imageHeight.value = 1
   } else {
-    // Process image file
     processImageFile(file)
   }
-}
-
-function processUvttFile(file: File) {
-  // Read only enough to parse metadata — skip the huge base64 image field.
-  // For large maps (200MB+), loading the full image into browser memory
-  // for a preview would freeze the UI.
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    try {
-      const text = e.target?.result as string
-
-      // Parse just the metadata fields — the image field is huge but we
-      // only need resolution, line_of_sight count, portals, and lights.
-      const uvtt = JSON.parse(text)
-
-      const info: UvttInfo = {
-        walls: uvtt.line_of_sight?.length || 0,
-        portals: uvtt.portals?.length || 0,
-        lights: uvtt.lights?.length || 0,
-        gridCols: Math.round(uvtt.resolution?.map_size?.x || 0),
-        gridRows: Math.round(uvtt.resolution?.map_size?.y || 0),
-        pixelsPerGrid: uvtt.resolution?.pixels_per_grid || 70
-      }
-
-      uvttInfo.value = info
-
-      // Calculate dimensions from UVTT metadata (no image decode needed)
-      imageWidth.value = info.gridCols * info.pixelsPerGrid
-      imageHeight.value = info.gridRows * info.pixelsPerGrid
-    } catch (err) {
-      console.error('Failed to parse UVTT file:', err)
-      errorMessage.value = 'Failed to parse UVTT file. Please check the file format.'
-      clearFile()
-    }
-  }
-  reader.onerror = () => {
-    errorMessage.value = 'Failed to read file.'
-    clearFile()
-  }
-  reader.readAsText(file)
 }
 
 function processImageFile(file: File) {
@@ -258,7 +204,6 @@ function clearFile() {
   selectedFile.value = null
   imageWidth.value = null
   imageHeight.value = null
-  uvttInfo.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -327,7 +272,6 @@ function resetForm() {
   clearFile()
   mapName.value = ''
   errorMessage.value = ''
-  uvttInfo.value = null
 }
 
 function handleClose() {

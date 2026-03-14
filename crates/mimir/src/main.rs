@@ -195,7 +195,6 @@ fn main() {
             map::read_map_uvtt,
             map::get_uvtt_map,
             map::serve_map_image,
-            map::serve_map_image_mid,
             // Map commands - light sources
             map::list_light_sources,
             map::create_light_source,

@@ -311,37 +311,3 @@ pub fn serve_map_image(state: State<'_, AppState>, id: String) -> ApiResponse<St
     let data_url = format!("data:image/png;base64,{}", image_b64);
     ApiResponse::ok(data_url)
 }
-
-/// Return the file path to the mid-resolution variant of a map image.
-/// Returns null data if no mid-res variant exists (image too small to benefit).
-#[tauri::command]
-pub fn serve_map_image_mid(state: State<'_, AppState>, id: String) -> ApiResponse<Option<String>> {
-    let mut db = match state.connect() {
-        Ok(db) => db,
-        Err(e) => return ApiResponse::err(e),
-    };
-
-    let mut service = MapService::new(&mut db, &state.paths.app_dir);
-
-    let map = match service.get(&id) {
-        Ok(Some(map)) => map,
-        Ok(None) => return ApiResponse::err(format!("Map not found: {}", id)),
-        Err(e) => return ApiResponse::err(e.to_string()),
-    };
-
-    match service.get_map_image_path(&map) {
-        Ok(Some(full_path)) => {
-            let stem = full_path.file_stem().unwrap_or_default().to_string_lossy();
-            let ext = full_path.extension().unwrap_or_default().to_string_lossy();
-            let mid_path = full_path.with_file_name(
-                format!("{}_mid.{}", stem, ext),
-            );
-            if mid_path.exists() {
-                ApiResponse::ok(Some(mid_path.to_string_lossy().to_string()))
-            } else {
-                ApiResponse::ok(None)
-            }
-        }
-        _ => ApiResponse::ok(None),
-    }
-}
