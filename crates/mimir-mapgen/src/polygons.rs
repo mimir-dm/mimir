@@ -117,7 +117,7 @@ struct Segment {
 const EPS: f64 = 0.5;
 
 fn pts_eq(a: &[f64; 2], b: &[f64; 2]) -> bool {
-    (a[0] - b[0]).abs() < EPS && (a[1] - b[1]).abs() < EPS
+    (a[0] - b[0]).abs() <= EPS && (a[1] - b[1]).abs() <= EPS
 }
 
 // ── Step 1: Collect all edges ───────────────────────────────────────────
@@ -432,12 +432,34 @@ fn walk_cw_loops(segments: Vec<Segment>) -> Vec<Vec<[f64; 2]>> {
         }
 
         if chain.len() >= 3 {
-            loops.push(chain);
+            loops.push(remove_collinear_points(chain));
         }
     }
 
     // Filter out interior loops (contained within a larger loop).
     filter_interior_loops(loops)
+}
+
+/// Remove collinear midpoints from a closed polygon loop.
+/// If three consecutive points are collinear, the middle one is redundant.
+fn remove_collinear_points(pts: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
+    if pts.len() < 3 {
+        return pts;
+    }
+    let n = pts.len();
+    let mut keep = Vec::with_capacity(n);
+    for i in 0..n {
+        let prev = pts[(i + n - 1) % n];
+        let curr = pts[i];
+        let next = pts[(i + 1) % n];
+        // Cross product of (prev→curr) × (curr→next). Zero means collinear.
+        let cross = (curr[0] - prev[0]) * (next[1] - curr[1])
+            - (curr[1] - prev[1]) * (next[0] - curr[0]);
+        if cross.abs() > 0.1 {
+            keep.push(curr);
+        }
+    }
+    keep
 }
 
 /// Remove loops whose centroid lies inside a larger loop.
@@ -897,7 +919,7 @@ mod tests {
         let surviving = remove_shared_edges(edges);
         let loops = walk_cw_loops(surviving);
         assert_eq!(loops.len(), 1);
-        assert_eq!(loops[0].len(), 6); // rectangle with 2 notches at shared vertices
+        assert_eq!(loops[0].len(), 4); // clean rectangle, collinear midpoints collapsed
     }
 
     #[test]
@@ -1280,5 +1302,313 @@ mod tests {
         assert_eq!(result.portals.len(), 1);
         assert_eq!(result.portals[0].wall_id, "ffffffff");
         assert_eq!(result.walls[0].portals.len(), 0);
+    }
+
+    // ── Butting-up adjacency tests ────────────────────────────────────
+    //
+    // These verify that shared walls between adjacent polygons are
+    // properly removed, producing a single merged outer boundary.
+
+    /// Helper: count total wall vertex points across all walls in the result.
+    fn total_wall_points(result: &PolygonLayoutResult) -> usize {
+        result.walls.iter().map(|w| w.points.0.len()).sum()
+    }
+
+    #[test]
+    fn butting_side_by_side_horizontal() {
+        // Two rectangles sharing a vertical edge:
+        //  ┌───┬───┐
+        //  │ A │ B │
+        //  └───┴───┘
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "a".to_string(),
+                points: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 4.0], [0.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "b".to_string(),
+                points: vec![[5.0, 0.0], [10.0, 0.0], [10.0, 4.0], [5.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        // Shared vertical edge at x=5 should be removed → one merged wall
+        assert_eq!(result.walls.len(), 1, "Should produce 1 merged wall, got {}", result.walls.len());
+        assert!(result.walls[0].is_loop, "Merged wall should be a closed loop");
+        // Clean rectangle after collinear point collapse
+        assert_eq!(total_wall_points(&result), 4,
+            "Expected 4 vertices on merged boundary, got {}", total_wall_points(&result));
+    }
+
+    #[test]
+    fn butting_stacked_vertical() {
+        // Two rectangles sharing a horizontal edge:
+        //  ┌───┐
+        //  │ A │
+        //  ├───┤
+        //  │ B │
+        //  └───┘
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "top".to_string(),
+                points: vec![[2.0, 2.0], [8.0, 2.0], [8.0, 6.0], [2.0, 6.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "bottom".to_string(),
+                points: vec![[2.0, 6.0], [8.0, 6.0], [8.0, 10.0], [2.0, 10.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        assert_eq!(result.walls.len(), 1, "Stacked rooms should merge to 1 wall, got {}", result.walls.len());
+        assert!(result.walls[0].is_loop);
+        assert_eq!(total_wall_points(&result), 4,
+            "Expected 4 vertices after collinear collapse, got {}", total_wall_points(&result));
+    }
+
+    #[test]
+    fn butting_three_in_a_row() {
+        // Three rooms in a horizontal row, sharing two vertical edges:
+        //  ┌───┬───┬───┐
+        //  │ A │ B │ C │
+        //  └───┴───┴───┘
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "a".to_string(),
+                points: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "b".to_string(),
+                points: vec![[4.0, 0.0], [8.0, 0.0], [8.0, 4.0], [4.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "c".to_string(),
+                points: vec![[8.0, 0.0], [12.0, 0.0], [12.0, 4.0], [8.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        assert_eq!(result.walls.len(), 1, "Three adjacent rooms should merge to 1 wall, got {}", result.walls.len());
+        assert_eq!(total_wall_points(&result), 4,
+            "Expected 4 vertices (clean rectangle), got {}", total_wall_points(&result));
+    }
+
+    #[test]
+    fn butting_l_shaped_two_rects() {
+        // Two rectangles forming an L-shape, sharing a partial edge:
+        //  ┌─────┐
+        //  │  A  │
+        //  │  ┌──┘
+        //  │  │B
+        //  └──┘
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "top".to_string(),
+                points: vec![[0.0, 0.0], [6.0, 0.0], [6.0, 4.0], [0.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "leg".to_string(),
+                points: vec![[0.0, 4.0], [3.0, 4.0], [3.0, 8.0], [0.0, 8.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        assert_eq!(result.walls.len(), 1, "L-shape should merge to 1 wall, got {}", result.walls.len());
+        // L-shape boundary: [0,0]→[6,0]→[6,4]→[3,4]→[3,8]→[0,8]→back
+        // 6 vertices — [0,4] collapsed because [0,8]→[0,4]→[0,0] is collinear (all x=0).
+        assert_eq!(total_wall_points(&result), 6,
+            "Expected 6 vertices for L-shape, got {}", total_wall_points(&result));
+    }
+
+    #[test]
+    fn butting_t_junction() {
+        // A corridor meets a room on one side (T-junction):
+        //  ┌──────────┐
+        //  │   room   │
+        //  └──┬────┬──┘
+        //     │corr│
+        //     └────┘
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "room".to_string(),
+                points: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [0.0, 5.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "corridor".to_string(),
+                points: vec![[3.0, 5.0], [7.0, 5.0], [7.0, 9.0], [3.0, 9.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        assert_eq!(result.walls.len(), 1, "T-junction should merge to 1 wall, got {}", result.walls.len());
+        // T-shape: 8 vertices
+        assert_eq!(total_wall_points(&result), 8,
+            "Expected 8 vertices for T-shape, got {}", total_wall_points(&result));
+    }
+
+    #[test]
+    fn butting_four_rooms_grid() {
+        // 2x2 grid of rooms sharing edges:
+        //  ┌───┬───┐
+        //  │ A │ B │
+        //  ├───┼───┤
+        //  │ C │ D │
+        //  └───┴───┘
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "a".to_string(),
+                points: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 5.0], [0.0, 5.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "b".to_string(),
+                points: vec![[5.0, 0.0], [10.0, 0.0], [10.0, 5.0], [5.0, 5.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "c".to_string(),
+                points: vec![[0.0, 5.0], [5.0, 5.0], [5.0, 10.0], [0.0, 10.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "d".to_string(),
+                points: vec![[5.0, 5.0], [10.0, 5.0], [10.0, 10.0], [5.0, 10.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        // All 4 interior edges removed → single outer rectangle
+        assert_eq!(result.walls.len(), 1,
+            "2x2 grid should merge to 1 wall, got {} walls", result.walls.len());
+        // Clean rectangle: 4 corners, collinear midpoints collapsed
+        assert_eq!(total_wall_points(&result), 4,
+            "Expected 4 vertices for 2x2 grid outer rectangle, got {}", total_wall_points(&result));
+    }
+
+    #[test]
+    fn butting_does_not_merge_disjoint_rooms() {
+        // Two rooms with a gap between them — should NOT merge
+        let alloc = NodeIdAllocator::new(1);
+        let polygons = vec![
+            PolygonConfig {
+                id: "left".to_string(),
+                points: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "right".to_string(),
+                points: vec![[6.0, 0.0], [10.0, 0.0], [10.0, 4.0], [6.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ];
+
+        let result = generate_polygon_layout(&polygons, &alloc);
+
+        // No shared edge → two separate walls
+        assert_eq!(result.walls.len(), 2,
+            "Disjoint rooms should produce 2 walls, got {}", result.walls.len());
+    }
+
+    #[test]
+    fn butting_shared_wall_has_no_double_segments() {
+        // Verify at the segment level that shared edges are fully removed,
+        // not just masked by the walk.
+        let edges = collect_edges(&[
+            PolygonConfig {
+                id: "a".to_string(),
+                points: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 4.0], [0.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+            PolygonConfig {
+                id: "b".to_string(),
+                points: vec![[5.0, 0.0], [10.0, 0.0], [10.0, 4.0], [5.0, 4.0]],
+                terrain_slot: None,
+                wall_texture: default_wall_texture(),
+                portals: vec![],
+            },
+        ]);
+
+        // 8 edges total (4 per polygon)
+        assert_eq!(edges.len(), 8);
+
+        let split = split_at_crossings(edges);
+        let surviving = remove_shared_edges(split);
+
+        // Shared edge: A's [5,0]→[5,4] and B's [5,4]→[5,0] should BOTH be removed
+        // Leaving 6 edges (3 per polygon minus shared)
+        assert_eq!(surviving.len(), 6,
+            "Expected 6 surviving edges after removing shared edge, got {}.\nEdges: {:?}",
+            surviving.len(),
+            surviving.iter().map(|s| format!("[{:.0},{:.0}]→[{:.0},{:.0}]", s.start[0], s.start[1], s.end[0], s.end[1])).collect::<Vec<_>>());
+
+        // Verify no segment has both endpoints on x=5*256=1280 (the shared edge line)
+        let shared_x = 5.0 * PIXELS_PER_GRID;
+        for seg in &surviving {
+            let on_shared = (seg.start[0] - shared_x).abs() < 1.0
+                && (seg.end[0] - shared_x).abs() < 1.0;
+            assert!(!on_shared,
+                "Found surviving segment on shared edge: [{:.0},{:.0}]→[{:.0},{:.0}]",
+                seg.start[0], seg.start[1], seg.end[0], seg.end[1]);
+        }
     }
 }

@@ -4,15 +4,15 @@ level: task
 title: "Generated .dungeondraft_map files won't open in Dungeondraft"
 short_code: "MIMIR-T-0595"
 created_at: 2026-03-12T01:40:57.973869+00:00
-updated_at: 2026-03-12T01:40:57.973869+00:00
+updated_at: 2026-03-14T11:50:07.209667+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/backlog"
   - "#bug"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -105,6 +105,12 @@ Building up from known-good `test.dungeondraft_map` incrementally:
 - `radius: 128` = half a grid square = portal spans 1 grid square
 - Multi-square portals not supported natively — would need multiple adjacent portals
 - Our code was using `width * 128.0` for radius, should always be `128`
+
+## Acceptance Criteria
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

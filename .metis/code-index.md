@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-14T11:28:21Z | 554 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-14T12:09:33Z | 554 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -656,8 +656,8 @@
 │   │   ├── highlight-abc7f01d.js
 │   │   ├── mark-09e88c2c.min.js
 │   │   ├── searcher-c2a407aa.js
-│   │   ├── searchindex-d2b4b1dd.js
-│   │   └── toc-5975c418.js
+│   │   ├── searchindex-771f5ecf.js
+│   │   └── toc-f8369802.js
 │   ├── mermaid-init.js
 │   └── mermaid.min.js
 └── scripts/
@@ -8189,8 +8189,8 @@
 - pub `PolygonTerrainOverride` struct L57-62 — `{ points: Vec<[f64; 2]>, slot: usize }` — A terrain override that respects polygon boundaries (not just bounding box).
 - pub `apply` function L67-94 — `(&self, splat_data: &mut [u8], map_cells_x: usize)` — Apply this override to a terrain splat map, only filling cells
 - pub `PolygonLayoutResult` struct L99-105 — `{ walls: Vec<MapWall>, portals: Vec<MapPortal>, shape_wall_ids: Vec<serde_json::...` — Result of polygon layout generation.
-- pub `generate_polygon_layout` function L524-594 — `( polygons: &[PolygonConfig], alloc: &NodeIdAllocator, ) -> PolygonLayoutResult` — Generate the polygon-based layout.
-- pub `build_polygon_exclusion_zones` function L747-784 — `( polygons: &[PolygonConfig], ) -> Vec<crate::rooms::ExclusionZone>` — Build exclusion zones from polygon configs.
+- pub `generate_polygon_layout` function L546-616 — `( polygons: &[PolygonConfig], alloc: &NodeIdAllocator, ) -> PolygonLayoutResult` — Generate the polygon-based layout.
+- pub `build_polygon_exclusion_zones` function L769-806 — `( polygons: &[PolygonConfig], ) -> Vec<crate::rooms::ExclusionZone>` — Build exclusion zones from polygon configs.
 -  `default_wall_texture` function L34-36 — `() -> String` — Each polygon also registers a DD shape for interior fill.
 -  `default_position` function L51-53 — `() -> f64` — Each polygon also registers a DD shape for interior fill.
 -  `PolygonTerrainOverride` type L64-95 — `= PolygonTerrainOverride` — Each polygon also registers a DD shape for interior fill.
@@ -8204,32 +8204,42 @@
 -  `split_at_crossings` function L279-325 — `(edges: Vec<Segment>) -> Vec<Segment>` — Split all edges at crossing intersection points.
 -  `turn_angle` function L331-335 — `(d_fwd: &[f64; 2], d_out: &[f64; 2]) -> f64` — Signed turn angle from direction d_fwd to d_out.
 -  `walk_cw_loops` function L343-441 — `(segments: Vec<Segment>) -> Vec<Vec<[f64; 2]>>` — Walk the directed segment graph clockwise, using the leftmost-turn rule
--  `filter_interior_loops` function L444-474 — `(loops: Vec<Vec<[f64; 2]>>) -> Vec<Vec<[f64; 2]>>` — Remove loops whose centroid lies inside a larger loop.
--  `polygon_area` function L477-485 — `(pts: &[[f64; 2]]) -> f64` — Absolute area of a polygon (shoelace formula).
--  `polygon_centroid` function L488-493 — `(pts: &[[f64; 2]]) -> [f64; 2]` — Centroid of a polygon (average of vertices).
--  `point_in_polygon` function L496-513 — `(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool` — Point-in-polygon test using ray casting.
--  `point_on_segment` function L600-626 — `(point: &[f64; 2], seg_start: &[f64; 2], seg_end: &[f64; 2]) -> Option<f64>` — Check if a point lies on a line segment.
--  `edge_orientation` function L634-644 — `(edge_start: &[f64; 2], edge_end: &[f64; 2]) -> (Vector2, f64)` — Compute portal rotation and direction for an edge.
--  `generate_portals` function L653-744 — `( polygons: &[PolygonConfig], loops: &[Vec<[f64; 2]>], wall_ids: &[String], allo...` — Generate portals for all polygons after wall loop computation.
--  `tests` module L789-1284 — `-` — Each polygon also registers a DD shape for interior fill.
--  `single_square_no_removal` function L795-805 — `()` — Each polygon also registers a DD shape for interior fill.
--  `two_adjacent_squares_shared_edge_removed` function L808-827 — `()` — Each polygon also registers a DD shape for interior fill.
--  `partial_overlap_splits_edge` function L830-840 — `()` — Each polygon also registers a DD shape for interior fill.
--  `three_squares_in_a_row` function L843-864 — `()` — Each polygon also registers a DD shape for interior fill.
--  `chain_simple_square` function L869-879 — `()` — Each polygon also registers a DD shape for interior fill.
--  `chain_two_adjacent_squares_forms_one_loop` function L882-901 — `()` — Each polygon also registers a DD shape for interior fill.
--  `chain_l_shape` function L904-924 — `()` — Each polygon also registers a DD shape for interior fill.
--  `single_polygon_one_closed_wall` function L929-946 — `()` — Each polygon also registers a DD shape for interior fill.
--  `two_adjacent_polygons_one_closed_wall` function L949-975 — `()` — Each polygon also registers a DD shape for interior fill.
--  `exclusion_zones` function L978-995 — `()` — Each polygon also registers a DD shape for interior fill.
--  `portal_on_perimeter_wall_anchored` function L1000-1028 — `()` — Each polygon also registers a DD shape for interior fill.
--  `portal_on_shared_edge_freestanding` function L1031-1065 — `()` — Each polygon also registers a DD shape for interior fill.
--  `portal_position_pixels` function L1068-1089 — `()` — Each polygon also registers a DD shape for interior fill.
--  `multiple_portals_on_different_edges` function L1092-1117 — `()` — Each polygon also registers a DD shape for interior fill.
--  `three_rooms_corridor_portal_freestanding` function L1120-1157 — `()` — Each polygon also registers a DD shape for interior fill.
--  `overlapping_ovals_merge_to_one_wall` function L1162-1200 — `()` — Each polygon also registers a DD shape for interior fill.
--  `overlapping_ovals_with_portals` function L1203-1243 — `()` — Each polygon also registers a DD shape for interior fill.
--  `overlapping_ovals_interior_portal_freestanding` function L1246-1283 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `remove_collinear_points` function L445-463 — `(pts: Vec<[f64; 2]>) -> Vec<[f64; 2]>` — Remove collinear midpoints from a closed polygon loop.
+-  `filter_interior_loops` function L466-496 — `(loops: Vec<Vec<[f64; 2]>>) -> Vec<Vec<[f64; 2]>>` — Remove loops whose centroid lies inside a larger loop.
+-  `polygon_area` function L499-507 — `(pts: &[[f64; 2]]) -> f64` — Absolute area of a polygon (shoelace formula).
+-  `polygon_centroid` function L510-515 — `(pts: &[[f64; 2]]) -> [f64; 2]` — Centroid of a polygon (average of vertices).
+-  `point_in_polygon` function L518-535 — `(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool` — Point-in-polygon test using ray casting.
+-  `point_on_segment` function L622-648 — `(point: &[f64; 2], seg_start: &[f64; 2], seg_end: &[f64; 2]) -> Option<f64>` — Check if a point lies on a line segment.
+-  `edge_orientation` function L656-666 — `(edge_start: &[f64; 2], edge_end: &[f64; 2]) -> (Vector2, f64)` — Compute portal rotation and direction for an edge.
+-  `generate_portals` function L675-766 — `( polygons: &[PolygonConfig], loops: &[Vec<[f64; 2]>], wall_ids: &[String], allo...` — Generate portals for all polygons after wall loop computation.
+-  `tests` module L811-1614 — `-` — Each polygon also registers a DD shape for interior fill.
+-  `single_square_no_removal` function L817-827 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `two_adjacent_squares_shared_edge_removed` function L830-849 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `partial_overlap_splits_edge` function L852-862 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `three_squares_in_a_row` function L865-886 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `chain_simple_square` function L891-901 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `chain_two_adjacent_squares_forms_one_loop` function L904-923 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `chain_l_shape` function L926-946 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `single_polygon_one_closed_wall` function L951-968 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `two_adjacent_polygons_one_closed_wall` function L971-997 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `exclusion_zones` function L1000-1017 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `portal_on_perimeter_wall_anchored` function L1022-1050 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `portal_on_shared_edge_freestanding` function L1053-1087 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `portal_position_pixels` function L1090-1111 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `multiple_portals_on_different_edges` function L1114-1139 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `three_rooms_corridor_portal_freestanding` function L1142-1179 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `overlapping_ovals_merge_to_one_wall` function L1184-1222 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `overlapping_ovals_with_portals` function L1225-1265 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `overlapping_ovals_interior_portal_freestanding` function L1268-1305 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `total_wall_points` function L1313-1315 — `(result: &PolygonLayoutResult) -> usize` — Helper: count total wall vertex points across all walls in the result.
+-  `butting_side_by_side_horizontal` function L1318-1349 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_stacked_vertical` function L1352-1383 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_three_in_a_row` function L1386-1421 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_l_shaped_two_rects` function L1424-1456 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_t_junction` function L1459-1490 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_four_rooms_grid` function L1493-1540 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_does_not_merge_disjoint_rooms` function L1543-1568 — `()` — Each polygon also registers a DD shape for interior fill.
+-  `butting_shared_wall_has_no_double_segments` function L1571-1613 — `()` — Each polygon also registers a DD shape for interior fill.
 
 #### crates/mimir-mapgen/src/rooms.rs
 
@@ -9659,7 +9669,7 @@
 -  `setSearchUrlParameters` function L495-518 — `function setSearchUrlParameters(searchterm, action)`
 -  `doSearch` function L520-551 — `function doSearch(searchterm)`
 
-#### docs/book/toc-5975c418.js
+#### docs/book/toc-f8369802.js
 
 - pub `constructor` method L7-9 — `constructor()`
 - pub `connectedCallback` method L10-75 — `connectedCallback()`

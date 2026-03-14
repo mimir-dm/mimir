@@ -4,12 +4,12 @@
     "creation_date": {
       "year": 2026,
       "month": 3,
-      "day": 12,
-      "weekday": 4,
+      "day": 14,
+      "weekday": 6,
       "dst": false,
       "hour": 8,
-      "minute": 24,
-      "second": 55
+      "minute": 9,
+      "second": 4
     },
     "uses_default_assets": true,
     "asset_manifest": [],
@@ -85,7 +85,7 @@
         },
         "shapes": {
           "polygons": [
-            "PoolVector2Array( 1536, 1024, 3584, 1024, 3584, 2560, 3584, 4096, 1536, 4096, 1536, 2560 )"
+            "PoolVector2Array( 1536, 1024, 3584, 1024, 3584, 4096, 1536, 4096 )"
           ],
           "walls": [
             1
@@ -500,7 +500,7 @@
         "patterns": [],
         "walls": [
           {
-            "points": "PoolVector2Array( 1536, 1024, 3584, 1024, 3584, 2560, 3584, 4096, 1536, 4096, 1536, 2560 )",
+            "points": "PoolVector2Array( 1536, 1024, 3584, 1024, 3584, 4096, 1536, 4096 )",
             "texture": "res://textures/walls/stone.png",
             "color": "ff605f58",
             "loop": true,
