@@ -26,6 +26,7 @@
   - [Manage Light Sources](./how-to/maps/manage-light-sources.md)
   - [Print Maps](./how-to/maps/print-map.md)
   - [Generate Maps](./how-to/maps/generate-map.md)
+  - [Mapgen Standalone Tool](./how-to/maps/mapgen-standalone.md)
 - [Characters](./how-to/characters/README.md)
   - [Create a Player Character](./how-to/characters/create-pc.md)
   - [Create an NPC](./how-to/characters/create-npc.md)
