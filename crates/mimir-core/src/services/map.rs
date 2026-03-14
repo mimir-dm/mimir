@@ -217,6 +217,11 @@ impl<'a> MapService<'a> {
         }
 
         dal::insert_map(self.conn, &new_map)?;
+
+        // Extract the PNG image from the UVTT file for direct serving.
+        // This avoids re-parsing the UVTT JSON and base64-encoding on every load.
+        self.extract_map_image(&asset.blob_path);
+
         dal::get_map(self.conn, &map_id).map_err(ServiceError::from)
     }
 
@@ -341,10 +346,14 @@ impl<'a> MapService<'a> {
         // Delete the map record first (removes FK constraint to asset)
         dal::delete_map(self.conn, id)?;
 
-        // Now delete the UVTT asset file from disk and database
+        // Now delete the UVTT asset file and extracted PNG from disk, and database record
         if let Ok(Some(asset)) = dal::get_campaign_asset_optional(self.conn, &asset_id) {
             let file_path = self.app_data_dir.join(&asset.blob_path);
+            let png_path = self.app_data_dir.join(
+                asset.blob_path.replace(".uvtt", ".png"),
+            );
             let _ = std::fs::remove_file(&file_path);
+            let _ = std::fs::remove_file(&png_path);
             // Delete asset from database
             let _ = dal::delete_campaign_asset(self.conn, &asset.id);
         }
@@ -379,6 +388,68 @@ impl<'a> MapService<'a> {
 
         let file_path = self.app_data_dir.join(&asset.blob_path);
         std::fs::read(&file_path).map_err(ServiceError::from)
+    }
+
+    /// Get the absolute path to the extracted PNG image for a map.
+    ///
+    /// Returns `Some(path)` if the extracted image exists on disk,
+    /// `None` if it hasn't been extracted yet (pre-existing maps).
+    pub fn get_map_image_path(&mut self, map: &Map) -> ServiceResult<Option<PathBuf>> {
+        let asset = dal::get_campaign_asset_optional(self.conn, &map.uvtt_asset_id)?
+            .ok_or_else(|| ServiceError::not_found("Asset", &map.uvtt_asset_id))?;
+
+        let png_path = self.app_data_dir.join(
+            asset.blob_path.replace(".uvtt", ".png"),
+        );
+
+        if png_path.exists() {
+            Ok(Some(png_path))
+        } else {
+            // Try to extract from UVTT for pre-existing maps
+            self.extract_map_image(&asset.blob_path);
+            if png_path.exists() {
+                Ok(Some(png_path))
+            } else {
+                Ok(None)
+            }
+        }
+    }
+
+    /// Extract the PNG image from a UVTT file and write it alongside.
+    ///
+    /// UVTT files are JSON with a base64-encoded PNG in the `image` field.
+    /// Extracting once avoids re-parsing and base64-decoding on every load.
+    fn extract_map_image(&self, uvtt_blob_path: &str) {
+        let uvtt_path = self.app_data_dir.join(uvtt_blob_path);
+        let png_path = self.app_data_dir.join(
+            uvtt_blob_path.replace(".uvtt", ".png"),
+        );
+
+        // Don't re-extract if already done
+        if png_path.exists() {
+            return;
+        }
+
+        let Ok(uvtt_bytes) = std::fs::read(&uvtt_path) else {
+            return;
+        };
+
+        let Ok(uvtt_json) = serde_json::from_slice::<serde_json::Value>(&uvtt_bytes) else {
+            return;
+        };
+
+        let Some(image_b64) = uvtt_json.get("image").and_then(|v| v.as_str()) else {
+            return;
+        };
+
+        // Decode base64 to raw PNG bytes
+        use base64::Engine;
+        let Ok(png_bytes) = base64::engine::general_purpose::STANDARD.decode(image_b64) else {
+            return;
+        };
+
+        // Write alongside the UVTT file
+        let _ = std::fs::write(&png_path, &png_bytes);
     }
 }
 

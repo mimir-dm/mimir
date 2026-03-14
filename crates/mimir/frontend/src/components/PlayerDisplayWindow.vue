@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import TokenRenderer from '@/components/tokens/TokenRenderer.vue'
 import LightSourceRenderer from '@/components/lighting/LightSourceRenderer.vue'
 import LightOverlay from '@/components/los/LightOverlay.vue'
@@ -364,7 +364,8 @@ async function loadMapImage(mapId: string) {
     )
 
     if (response.success && response.data) {
-      mapState.value.imageUrl = response.data
+      const src = response.data
+      mapState.value.imageUrl = src.startsWith('data:') ? src : convertFileSrc(src)
     } else {
       errorMessage.value = response.error || 'Failed to load map image'
     }
@@ -568,7 +569,7 @@ function handleResize() {
         >
           <defs>
             <!-- Blur filter for soft vision edges (only used for circle fallback) -->
-            <filter id="playerVisionBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="playerVisionBlur" x="-10%" y="-10%" width="120%" height="120%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="12" />
             </filter>
             <mask id="playerFogMask">

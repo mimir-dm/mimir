@@ -263,7 +263,10 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
     })
 }
 
-/// Serve the map image as a data URL.
+/// Return the absolute file path to the map's extracted PNG image.
+///
+/// The frontend uses `convertFileSrc()` to turn this into a loadable URL.
+/// Falls back to the legacy data URL approach if extraction hasn't happened.
 #[tauri::command]
 pub fn serve_map_image(state: State<'_, AppState>, id: String) -> ApiResponse<String> {
     let mut db = match state.connect() {
@@ -280,25 +283,31 @@ pub fn serve_map_image(state: State<'_, AppState>, id: String) -> ApiResponse<St
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    // Read the UVTT file
+    // Try the fast path: return file path to extracted PNG
+    match service.get_map_image_path(&map) {
+        Ok(Some(path)) => {
+            return ApiResponse::ok(path.to_string_lossy().to_string());
+        }
+        Ok(None) => {} // Fall through to legacy path
+        Err(_) => {}    // Fall through to legacy path
+    }
+
+    // Legacy fallback: parse UVTT JSON, extract base64, return data URL
     let uvtt_bytes = match service.read_uvtt_file(&map) {
         Ok(data) => data,
         Err(e) => return ApiResponse::err(e.to_string()),
     };
 
-    // Parse as JSON
     let uvtt_json: serde_json::Value = match serde_json::from_slice(&uvtt_bytes) {
         Ok(v) => v,
         Err(e) => return ApiResponse::err(format!("Failed to parse UVTT JSON: {}", e)),
     };
 
-    // Extract the base64 image
     let image_b64 = match uvtt_json.get("image").and_then(|v| v.as_str()) {
         Some(img) => img,
         None => return ApiResponse::err("No image found in UVTT file".to_string()),
     };
 
-    // Return as data URL (UVTT images are typically PNG)
     let data_url = format!("data:image/png;base64,{}", image_b64);
     ApiResponse::ok(data_url)
 }

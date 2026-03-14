@@ -230,8 +230,8 @@
         >
           <defs>
             <!-- Blur filter for soft vision edges -->
-            <filter id="visionBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="20" />
+            <filter id="visionBlur" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="12" />
             </filter>
             <mask id="dmFogMask">
               <!-- White = fogged, Black = revealed -->
@@ -641,7 +641,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, toRef, type Ref } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
 import { useTokens } from '@/composables/map/useTokens'
@@ -1738,10 +1738,11 @@ async function loadMapImage(id: string) {
       mapHeight.value = mapResponse.data.height_px
     }
 
-    // Get map image
+    // Get map image — backend returns a file path (fast) or data URL (legacy fallback)
     const imageResponse = await invoke<{ success: boolean; data?: string }>('serve_map_image', { id })
     if (imageResponse.success && imageResponse.data) {
-      mapImageUrl.value = imageResponse.data
+      const src = imageResponse.data
+      mapImageUrl.value = src.startsWith('data:') ? src : convertFileSrc(src)
     }
   } catch (e) {
     console.error('DmMapViewer: Failed to load map:', e)

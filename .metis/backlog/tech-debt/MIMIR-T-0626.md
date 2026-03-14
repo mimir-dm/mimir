@@ -178,3 +178,27 @@ Load token images only when they enter the viewport (Intersection Observer), ins
 ## Status Updates
 
 *Investigation completed 2026-03-14 — see Options section above*
+
+### Phase 1 Implementation (2026-03-14)
+
+**Option A — Extract PNG on upload, serve as file URL:**
+- `MapService::create()` now calls `extract_map_image()` after upload — extracts the base64 PNG from the UVTT JSON and writes it as `assets/{uuid}.png` alongside the `.uvtt` file
+- `MapService::get_map_image_path()` returns the path to the extracted PNG, auto-extracting from UVTT for pre-existing maps on first access
+- `MapService::delete()` cleans up both `.uvtt` and `.png` files
+- `serve_map_image` command returns the file path (fast path) or falls back to legacy data URL
+- Frontend: all 3 consumers (`DmMapViewer`, `PlayerDisplayWindow`, `MapTokenSetupModal`) use `convertFileSrc()` from `@tauri-apps/api/core` to load file paths as `asset://` URLs
+- Tauri config: enabled `protocol-asset` feature and `assetProtocol` with CSP for `img-src asset:`
+
+**Option C — Optimize fog blur filter:**
+- Reduced `feGaussianBlur stdDeviation` from 20 to 12 in `DmMapViewer.vue`
+- Tightened filter region from `x="-50%" y="-50%" width="200%" height="200%"` to `x="-10%" y="-10%" width="120%" height="120%"` in both DM and player views
+- Reduces GPU workload by ~75% (filter area shrunk from 4x to 1.44x of content)
+
+**Option F — Skipped:** Token images already have per-token caching. Low marginal gain.
+
+**Files changed:**
+- `crates/mimir-core/src/services/map.rs` — extract_map_image, get_map_image_path, delete cleanup
+- `crates/mimir/src/commands/map/uvtt.rs` — serve file path instead of data URL
+- `crates/mimir/Cargo.toml` — protocol-asset feature
+- `crates/mimir/tauri.conf.json` — assetProtocol + CSP
+- `DmMapViewer.vue`, `PlayerDisplayWindow.vue`, `MapTokenSetupModal.vue` — convertFileSrc

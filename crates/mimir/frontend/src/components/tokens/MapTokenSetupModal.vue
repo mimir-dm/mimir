@@ -397,7 +397,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import TokenPalette from './TokenPalette.vue'
 import PoiEditModal from '@/components/map/PoiEditModal.vue'
@@ -705,7 +705,8 @@ async function loadMapImage() {
   try {
     const response = await invoke<{ success: boolean; data?: string }>('serve_map_image', { id: props.map.id })
     if (response.success && response.data) {
-      mapImageUrl.value = response.data
+      const src = response.data
+      mapImageUrl.value = src.startsWith('data:') ? src : convertFileSrc(src)
     }
   } catch (e) {
     console.error('Failed to load map image:', e)
