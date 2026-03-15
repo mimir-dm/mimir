@@ -181,49 +181,94 @@ Array of placed objects/sprites.
 
 ```json
 {
-  "ref": 12345,
-  "texture": "res://textures/objects/vegetation/trees/tree_big_green_03.png",
   "position": "Vector2( 1234.56, 789.01 )",
   "rotation": 0.0,
   "scale": "Vector2( 1, 1 )",
   "mirror": false,
+  "texture": "res://textures/objects/vegetation/trees/tree_big_green_03.png",
   "layer": 400,
-  "custom_color": null,
-  "block_light": false
+  "shadow": true,
+  "block_light": false,
+  "node_id": "6"
+}
+```
+
+With optional fields (custom color, prefab):
+```json
+{
+  "position": "Vector2( -455.505, 457.585 )",
+  "rotation": 1.047198,
+  "scale": "Vector2( 0.5, 0.5 )",
+  "mirror": false,
+  "texture": "res://textures/objects/vegetation/flowers/flowers_01.png",
+  "layer": 200,
+  "shadow": false,
+  "block_light": false,
+  "custom_color": "ff809dab",
+  "node_id": "32b",
+  "prefab_id": 14
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `ref` | int | Unique node ID (from `next_node_id`) |
+| `position` | Vector2 | Pixel coordinates (can be negative for off-canvas objects) |
+| `rotation` | float | Rotation in radians |
+| `scale` | Vector2 | Scale factor (negative X = horizontal mirror) |
+| `mirror` | bool | Horizontal flip flag |
 | `texture` | string | `res://` path to asset PNG |
-| `position` | Vector2 | Pixel coordinates |
-| `rotation` | float | Radians |
-| `scale` | Vector2 | Scale factor |
-| `mirror` | bool | Horizontal flip |
 | `layer` | int | Z-sorting layer (higher = on top) |
-| `custom_color` | string/null | ARGB hex color override |
+| `shadow` | bool | Whether object casts shadow |
 | `block_light` | bool | Whether object blocks dynamic lights |
+| `custom_color` | string (optional) | ARGB hex color tint (omitted if none) |
+| `node_id` | string | Hex node ID from `next_node_id` counter |
+| `prefab_id` | int (optional) | Groups objects from same prefab placement |
+
+*Note: Mirror can be achieved via `mirror: true` OR negative X scale (e.g., `Vector2( -0.5, 0.5 )`). Both appear in DD output. Verified from spike map (2026-03-14).*
 
 ## Paths
 
-Array of drawn paths (roads, rivers, cliffs).
+Array of drawn paths (roads, rivers, cliffs, decorative lines). Coordinates in `edit_points` are **relative to `position`**.
 
 ```json
 {
-  "ref": 12346,
-  "texture": "res://textures/paths/cliff.png",
-  "edit_points": "PoolVector2Array( x1, y1, x2, y2, ... )",
-  "width": 256,
+  "position": "Vector2( 2048, 768 )",
+  "rotation": 0,
+  "scale": "Vector2( 1, 1 )",
+  "edit_points": "PoolVector2Array( -256, 0, 3328, 0, 3584, 256, 3968, 384 )",
+  "smoothness": 1,
+  "texture": "res://textures/paths/battlements.png",
+  "width": 69,
   "layer": 100,
   "fade_in": false,
   "fade_out": false,
   "grow": false,
   "shrink": false,
   "block_light": false,
-  "smoothness": 0.5
+  "loop": true,
+  "node_id": "3"
 }
 ```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `position` | Vector2 | Origin point in pixel coords |
+| `rotation` | int/float | Path rotation (radians) |
+| `scale` | Vector2 | Scale factor |
+| `edit_points` | PoolVector2Array | Control points relative to `position` |
+| `smoothness` | float | Bezier smoothing (0 = angular, 1 = full smooth) |
+| `texture` | string | `res://` path to path texture |
+| `width` | float | Path width in pixels |
+| `layer` | int | DD layer |
+| `fade_in` | bool | Fade at start |
+| `fade_out` | bool | Fade at end |
+| `grow` | bool | Width grows from start |
+| `shrink` | bool | Width shrinks to end |
+| `block_light` | bool | Blocks dynamic light |
+| `loop` | bool | Closed path (last point connects to first) |
+| `node_id` | string | Hex node ID |
+
+*Verified from DD spike map (2026-03-14) and [Dungeondraft Modding API Pathway class](https://megasploot.github.io/DungeondraftModdingAPI/reference/Pathway/). Note: `edit_points` are relative to `position`, not absolute.*
 
 ### PoolVector2Array Encoding
 
@@ -269,18 +314,83 @@ Color is ARGB hex (alpha first). Range is in pixels.
 
 ## Patterns
 
-Filled polygon regions with a texture pattern.
+Polygon-bounded texture fills. Used for floor tiles inside rooms, water overlays, ground detail. Each entry in `Level.patterns`:
 
 ```json
 {
-  "ref": 12348,
-  "polygon": "PoolVector2Array( ... )",
-  "texture": "res://textures/patterns/pattern_name.png",
-  "color": "ffffffff",
-  "layer": 0,
-  "block_light": false
+  "position": "Vector2( 0, 0 )",
+  "shape_rotation": 0,
+  "scale": "Vector2( 1, 1 )",
+  "points": "PoolVector2Array( 2304, 1792, 2816, 1792, 2816, 2304, 2304, 2304 )",
+  "layer": 100,
+  "color": "ff929292",
+  "outline": false,
+  "texture": "res://textures/tilesets/simple/tileset_cobble.png",
+  "rotation": 0,
+  "node_id": "0"
 }
 ```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `position` | Vector2 | Position offset (typically 0,0) |
+| `shape_rotation` | int | Shape rotation (0) |
+| `scale` | Vector2 | Scale factor (typically 1,1) |
+| `points` | PoolVector2Array | Polygon boundary in pixel coords |
+| `layer` | int | DD layer (100, -100, etc.) |
+| `color` | string | ARGB hex tint |
+| `outline` | bool | Outline-only mode (false for fills) |
+| `texture` | string | `res://` path to tileset texture |
+| `rotation` | int | Texture rotation in degrees |
+| `node_id` | string | Hex node ID from `next_node_id` counter |
+
+*Verified from hand-authored DD map spike (2026-03-14).*
+
+## Materials (Scatter)
+
+Ground-level material scatter (ice, lava, acid, etc.) stored as bit-packed bitmaps per layer. `Level.materials` is a `BTreeMap<String, Vec<MaterialEntry>>` keyed by layer ID string (e.g., `"-400"` = Below Ground).
+
+```json
+{
+  "materials": {
+    "-400": [
+      {
+        "bitmap": "PoolByteArray( 0, 0, 0, ... )",
+        "texture": "res://textures/materials/acid_tile.png",
+        "smooth": true
+      },
+      {
+        "bitmap": "PoolByteArray( 0, 0, 0, ... )",
+        "texture": "res://textures/materials/ice_tile.png",
+        "smooth": true
+      },
+      {
+        "bitmap": "PoolByteArray( 0, 0, 0, ... )",
+        "texture": "res://textures/materials/lava_tile.png",
+        "smooth": true
+      }
+    ]
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `bitmap` | PoolByteArray | Flat bit-packed placement mask |
+| `texture` | string | `res://` path to material texture |
+| `smooth` | bool | Edge smoothing toggle |
+
+### Bitmap Encoding
+
+- **Cell grid**: `(map_width × 2 + 3) × (map_height × 2 + 3)` — each cell = 0.5 grid squares, +3 cells border for blend region
+- **Flat bit-packed** (NOT row-padded): bit index = `row × cell_width + col`
+- **Total bytes**: `ceil(cell_width × cell_height / 8)`
+- **Bit order**: LSB-first within each byte
+- **Example**: 35×20 map → 73×43 cells → 3139 bits → 393 bytes per material
+
+All materials in the same layer share the same bitmap dimensions. A `1` bit means the material is present at that cell; `0` means absent.
+
+*Verified by decoding acid scatter bitmap from DD spike map — produces correct blob shape matching the painted region (2026-03-14). Materials are managed via `MaterialMesh` objects per the [Dungeondraft Modding API Level class](https://megasploot.github.io/DungeondraftModdingAPI/reference/Level/), keyed by layer + texture with `GetOrMakeMaterialMesh(layer, texture, smoothDefault)`.*
 
 ## Godot Type Serialization
 

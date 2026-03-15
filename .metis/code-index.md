@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-14T12:09:33Z | 554 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-14T18:37:58Z | 546 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -649,15 +649,6 @@
 │           ├── service.rs
 │           └── world.rs
 ├── docs/
-│   ├── book/
-│   │   ├── book-a0b12cfe.js
-│   │   ├── clipboard-1626706a.min.js
-│   │   ├── elasticlunr-ef4e11c1.min.js
-│   │   ├── highlight-abc7f01d.js
-│   │   ├── mark-09e88c2c.min.js
-│   │   ├── searcher-c2a407aa.js
-│   │   ├── searchindex-771f5ecf.js
-│   │   └── toc-f8369802.js
 │   ├── mermaid-init.js
 │   └── mermaid.min.js
 └── scripts/
@@ -1127,15 +1118,15 @@
 #### crates/mimir/frontend/src/composables/map/useUvttMap.ts
 
 - pub `UvttMapState` interface L26-49 — `{ uvttData: : UvttData | null, walls: : Wall[], portals: : Portal[], lights: : L...`
-- pub `useUvttMap` function L59-215 — `function useUvttMap( mapId: Ref<string | null>, campaignId: Ref<string | null>, ...`
-- pub `UvttMapComposable` type L221 — `= ReturnType<typeof useUvttMap>`
+- pub `useUvttMap` function L59-217 — `function useUvttMap( mapId: Ref<string | null>, campaignId: Ref<string | null>, ...`
+- pub `UvttMapComposable` type L223 — `= ReturnType<typeof useUvttMap>`
 -  `ApiResponse` interface L20-24 — `{ success: : boolean, data: : T, error: : string }`
--  `loadUvttData` function L78-126 — `function loadUvttData()`
--  `togglePortal` function L129-134 — `function togglePortal(portalId: string)`
--  `setPortalState` function L137-142 — `function setPortalState(portalId: string, closed: boolean)`
--  `openAllPortals` function L145-147 — `function openAllPortals()`
--  `closeAllPortals` function L150-152 — `function closeAllPortals()`
--  `resetPortalStates` function L155-159 — `function resetPortalStates()`
+-  `loadUvttData` function L78-128 — `function loadUvttData()`
+-  `togglePortal` function L131-136 — `function togglePortal(portalId: string)`
+-  `setPortalState` function L139-144 — `function setPortalState(portalId: string, closed: boolean)`
+-  `openAllPortals` function L147-149 — `function openAllPortals()`
+-  `closeAllPortals` function L152-154 — `function closeAllPortals()`
+-  `resetPortalStates` function L157-161 — `function resetPortalStates()`
 
 #### crates/mimir/frontend/src/composables/map/useVisibilityPolygon.ts
 
@@ -1153,14 +1144,17 @@
 - pub `uvttWallsToPixels` function L112-129 — `function uvttWallsToPixels(uvtt: UvttData): Wall[]`
 - pub `uvttPortalsToPixels` function L132-144 — `function uvttPortalsToPixels(uvtt: UvttData): Portal[]`
 - pub `uvttLightsToPixels` function L168-183 — `function uvttLightsToPixels(uvtt: UvttData): Light[]`
-- pub `calculateVisibilityPolygon` function L259-388 — `function calculateVisibilityPolygon( origin: Point, walls: Wall[], maxRadius: nu...`
-- pub `polygonToSvgPath` function L394-402 — `function polygonToSvgPath(points: Point[]): string`
-- pub `useVisibilityPolygon` function L407-448 — `function useVisibilityPolygon( origin: Ref<Point | null>, walls: Ref<Wall[]>, po...`
-- pub `useMultiTokenVisibility` function L453-502 — `function useMultiTokenVisibility( tokens: Ref<Array<{ id: string; x: number; y: ...`
+- pub `constructor` method L209-237 — `constructor(walls: Wall[], mapWidth: number, mapHeight: number)`
+- pub `getCandidateWalls` method L243-277 — `getCandidateWalls(origin: Point, angle: number, maxRadius: number): Wall[]`
+- pub `calculateVisibilityPolygon` function L340-470 — `function calculateVisibilityPolygon( origin: Point, walls: Wall[], maxRadius: nu...`
+- pub `polygonToSvgPath` function L476-484 — `function polygonToSvgPath(points: Point[]): string`
+- pub `useVisibilityPolygon` function L489-530 — `function useVisibilityPolygon( origin: Ref<Point | null>, walls: Ref<Wall[]>, po...`
+- pub `useMultiTokenVisibility` function L535-584 — `function useMultiTokenVisibility( tokens: Ref<Array<{ id: string; x: number; y: ...`
 -  `argbToRgba` function L147-165 — `function argbToRgba(argb: string): string`
 -  `RayHit` interface L186-190 — `{ point: : Point, angle: : number, dist: : number }`
 -  `distance` function L193-197 — `function distance(p1: Point, p2: Point): number`
--  `raySegmentIntersection` function L203-247 — `function raySegmentIntersection( origin: Point, angle: number, seg: Wall, extend...`
+-  `WallSpatialGrid` class L205-278 — `-` — A spatial hash grid that indexes wall segments by the grid cells they
+-  `raySegmentIntersection` function L284-328 — `function raySegmentIntersection( origin: Point, angle: number, seg: Wall, extend...`
 
 #### crates/mimir/frontend/src/composables/map/useVisionCalculation.ts
 
@@ -3189,13 +3183,13 @@
 - pub `traps` module L10 — `-` — Split into sub-modules by functionality.
 - pub `pois` module L11 — `-` — Split into sub-modules by functionality.
 - pub `MapResponse` struct L32-55 — `{ id: String, campaign_id: String, module_id: Option<String>, name: String, desc...` — Map response with UVTT-derived fields for the frontend.
-- pub `LightSourceResponse` struct L123-136 — `{ id: String, map_id: String, token_id: Option<String>, token_name: Option<Strin...` — Light source response format for frontend.
--  `enrich_map_with_uvtt` function L58-114 — `(map: &Map, service: &mut MapService, _app_dir: &Path) -> MapResponse` — Enrich a Map with UVTT data to create a MapResponse.
--  `enrich_maps_with_uvtt` function L117-119 — `(maps: Vec<Map>, service: &mut MapService, app_dir: &Path) -> Vec<MapResponse>` — Enrich multiple maps with UVTT data.
--  `transform_light_source` function L139-159 — `(ls: LightSource, grid_size_px: i32) -> LightSourceResponse` — Transform a LightSource to LightSourceResponse with pixel coordinates.
--  `get_map_grid_size_for_lights` function L162-175 — `(service: &mut MapService, map_id: &str) -> i32` — Get the grid size (pixels per grid) from a map's UVTT file.
--  `base64_encode` function L182-185 — `(data: &[u8]) -> String` — Simple base64 encoding using the standard library.
--  `base64_decode` function L188-191 — `(s: &str) -> Result<Vec<u8>, base64::DecodeError>` — Simple base64 decoding.
+- pub `LightSourceResponse` struct L103-116 — `{ id: String, map_id: String, token_id: Option<String>, token_name: Option<Strin...` — Light source response format for frontend.
+-  `enrich_map_with_uvtt` function L58-94 — `(map: &Map, service: &mut MapService, _app_dir: &Path) -> MapResponse` — Enrich a Map with UVTT data to create a MapResponse.
+-  `enrich_maps_with_uvtt` function L97-99 — `(maps: Vec<Map>, service: &mut MapService, app_dir: &Path) -> Vec<MapResponse>` — Enrich multiple maps with UVTT data.
+-  `transform_light_source` function L119-139 — `(ls: LightSource, grid_size_px: i32) -> LightSourceResponse` — Transform a LightSource to LightSourceResponse with pixel coordinates.
+-  `get_map_grid_size_for_lights` function L142-149 — `(service: &mut MapService, map_id: &str) -> i32` — Get the grid size (pixels per grid) from a map's UVTT file.
+-  `base64_encode` function L156-159 — `(data: &[u8]) -> String` — Simple base64 encoding using the standard library.
+-  `base64_decode` function L162-165 — `(s: &str) -> Result<Vec<u8>, base64::DecodeError>` — Simple base64 decoding.
 
 #### crates/mimir/src/commands/map/pois.rs
 
@@ -3233,8 +3227,8 @@
 - pub `UvttResolution` struct L60-63 — `{ pixels_per_grid: i32, map_size: UvttMapSize }` — UVTT resolution data.
 - pub `UvttData` struct L67-77 — `{ resolution: UvttResolution, line_of_sight: Option<Vec<Vec<UvttPoint>>>, portal...` — Parsed UVTT data with resolution, walls, portals, lights, and environment.
 - pub `read_map_uvtt` function L85-105 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<String>` — Read the UVTT file data for a map (returned as base64).
-- pub `get_uvtt_map` function L109-264 — `(state: State<'_, AppState>, id: String) -> ApiResponse<UvttData>` — Get parsed UVTT data for a map (resolution, grid size, etc).
-- pub `serve_map_image` function L268-304 — `(state: State<'_, AppState>, id: String) -> ApiResponse<String>` — Serve the map image as a data URL.
+- pub `get_uvtt_map` function L109-251 — `(state: State<'_, AppState>, id: String) -> ApiResponse<UvttData>` — Get parsed UVTT data for a map (resolution, grid size, etc).
+- pub `serve_map_image` function L258-300 — `(state: State<'_, AppState>, id: String) -> ApiResponse<String>` — Return the absolute file path to the map's extracted PNG image.
 
 ### crates/mimir/src/commands/print
 
@@ -7131,48 +7125,57 @@
 - pub `move_to_module` function L136-141 — `(module_id: impl Into<String>) -> Self` — Move map to a module.
 - pub `move_to_campaign` function L144-149 — `() -> Self` — Move map to campaign level (out of any module).
 - pub `MapService` struct L155-158 — `{ conn: &'a mut SqliteConnection, app_data_dir: PathBuf }` — Service for managing maps.
-- pub `new` function L162-167 — `(conn: &'a mut SqliteConnection, app_data_dir: impl Into<PathBuf>) -> Self` — Create a new map service.
-- pub `create` function L172-221 — `(&mut self, input: CreateMapInput) -> ServiceResult<Map>` — Create a new map from a UVTT file.
-- pub `get` function L275-277 — `(&mut self, id: &str) -> ServiceResult<Option<Map>>` — Get a map by ID.
-- pub `get_required` function L280-282 — `(&mut self, id: &str) -> ServiceResult<Map>` — Get a map by ID, returning an error if not found.
-- pub `list_for_campaign` function L285-287 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Map>>` — List all maps for a campaign (including module maps).
-- pub `list_campaign_level` function L290-292 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Map>>` — List only campaign-level maps (not in any module).
-- pub `list_for_module` function L295-297 — `(&mut self, module_id: &str) -> ServiceResult<Vec<Map>>` — List all maps for a module.
-- pub `update` function L300-333 — `(&mut self, id: &str, input: UpdateMapInput) -> ServiceResult<Map>` — Update a map.
-- pub `delete` function L336-353 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a map and its associated UVTT asset.
-- pub `exists` function L356-358 — `(&mut self, id: &str) -> ServiceResult<bool>` — Check if a map exists.
-- pub `count_for_campaign` function L361-363 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count maps for a campaign.
-- pub `count_for_module` function L366-368 — `(&mut self, module_id: &str) -> ServiceResult<i64>` — Count maps for a module.
-- pub `get_uvtt_asset` function L371-373 — `(&mut self, map: &Map) -> ServiceResult<Option<CampaignAsset>>` — Get the UVTT asset for a map.
-- pub `read_uvtt_file` function L376-382 — `(&mut self, map: &Map) -> ServiceResult<Vec<u8>>` — Read the UVTT file data for a map.
+- pub `MapResolutionMeta` struct L191-198 — `{ pixels_per_grid: f64, map_size_x: f64, map_size_y: f64 }` — Cached resolution metadata written alongside the extracted image.
+- pub `new` function L202-207 — `(conn: &'a mut SqliteConnection, app_data_dir: impl Into<PathBuf>) -> Self` — Create a new map service.
+- pub `create` function L212-265 — `(&mut self, input: CreateMapInput) -> ServiceResult<Map>` — Create a new map from a UVTT file.
+- pub `get` function L319-321 — `(&mut self, id: &str) -> ServiceResult<Option<Map>>` — Get a map by ID.
+- pub `get_required` function L324-326 — `(&mut self, id: &str) -> ServiceResult<Map>` — Get a map by ID, returning an error if not found.
+- pub `list_for_campaign` function L329-331 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Map>>` — List all maps for a campaign (including module maps).
+- pub `list_campaign_level` function L334-336 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Map>>` — List only campaign-level maps (not in any module).
+- pub `list_for_module` function L339-341 — `(&mut self, module_id: &str) -> ServiceResult<Vec<Map>>` — List all maps for a module.
+- pub `update` function L344-377 — `(&mut self, id: &str, input: UpdateMapInput) -> ServiceResult<Map>` — Update a map.
+- pub `delete` function L380-403 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a map and its associated UVTT asset.
+- pub `exists` function L406-408 — `(&mut self, id: &str) -> ServiceResult<bool>` — Check if a map exists.
+- pub `count_for_campaign` function L411-413 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count maps for a campaign.
+- pub `count_for_module` function L416-418 — `(&mut self, module_id: &str) -> ServiceResult<i64>` — Count maps for a module.
+- pub `get_uvtt_asset` function L421-423 — `(&mut self, map: &Map) -> ServiceResult<Option<CampaignAsset>>` — Get the UVTT asset for a map.
+- pub `read_uvtt_file` function L426-432 — `(&mut self, map: &Map) -> ServiceResult<Vec<u8>>` — Read the UVTT file data for a map.
+- pub `get_map_image_path` function L439-466 — `(&mut self, map: &Map) -> ServiceResult<Option<PathBuf>>` — Get the absolute path to the extracted image for a map.
+- pub `get_cached_resolution` function L607-612 — `(&mut self, map: &Map) -> Option<MapResolutionMeta>` — Read the cached resolution metadata sidecar for a map.
+- pub `ensure_resolution_meta` function L618-679 — `(&mut self, map: &Map) -> Option<MapResolutionMeta>` — Ensure the resolution sidecar exists for a map, generating it if missing.
 -  `CreateMapInput` type L36-85 — `= CreateMapInput` — with metadata in the database.
 -  `UpdateMapInput` type L102-150 — `= UpdateMapInput` — with metadata in the database.
--  `upload_uvtt_asset` function L224-272 — `( &mut self, campaign_id: &str, module_id: Option<&str>, filename: &str, data: &...` — Helper to upload a UVTT file as an asset.
--  `tests` module L386-742 — `-` — with metadata in the database.
--  `setup_test_env` function L393-397 — `() -> (SqliteConnection, TempDir)` — with metadata in the database.
--  `create_test_campaign` function L399-404 — `(conn: &mut SqliteConnection) -> String` — with metadata in the database.
--  `create_test_module` function L406-411 — `(conn: &mut SqliteConnection, campaign_id: &str) -> String` — with metadata in the database.
--  `fake_uvtt_data` function L413-416 — `() -> Vec<u8>` — with metadata in the database.
--  `test_create_campaign_map` function L419-434 — `()` — with metadata in the database.
--  `test_create_module_map` function L437-452 — `()` — with metadata in the database.
--  `test_create_map_with_description` function L455-467 — `()` — with metadata in the database.
--  `test_create_map_invalid_campaign` function L470-479 — `()` — with metadata in the database.
--  `test_create_map_invalid_module` function L482-492 — `()` — with metadata in the database.
--  `test_uvtt_file_stored_on_disk` function L495-509 — `()` — with metadata in the database.
--  `test_get_map` function L512-524 — `()` — with metadata in the database.
--  `test_get_map_not_found` function L527-534 — `()` — with metadata in the database.
--  `test_list_for_campaign` function L537-557 — `()` — with metadata in the database.
--  `test_list_for_module` function L560-576 — `()` — with metadata in the database.
--  `test_update_map_name` function L579-592 — `()` — with metadata in the database.
--  `test_update_lighting_mode` function L595-609 — `()` — with metadata in the database.
--  `test_update_move_to_module` function L612-627 — `()` — with metadata in the database.
--  `test_update_move_to_campaign` function L630-645 — `()` — with metadata in the database.
--  `test_update_map_not_found` function L648-656 — `()` — with metadata in the database.
--  `test_delete_map` function L659-677 — `()` — with metadata in the database.
--  `test_delete_map_not_found` function L680-687 — `()` — with metadata in the database.
--  `test_count_maps` function L690-706 — `()` — with metadata in the database.
--  `test_auto_increment_sort_order` function L709-726 — `()` — with metadata in the database.
--  `test_get_uvtt_asset` function L729-741 — `()` — with metadata in the database.
+-  `blob_path_to_extracted` function L161-167 — `(blob_path: &str) -> String` — Convert a UVTT/dd2vtt blob path to its corresponding extracted image path.
+-  `blob_path_to_png` function L170-176 — `(blob_path: &str) -> String` — Legacy: convert blob path to PNG (for fallback/cleanup).
+-  `blob_path_to_meta` function L179-185 — `(blob_path: &str) -> String` — Convert a UVTT/dd2vtt blob path to its resolution metadata sidecar path.
+-  `upload_uvtt_asset` function L268-316 — `( &mut self, campaign_id: &str, module_id: Option<&str>, filename: &str, data: &...` — Helper to upload a UVTT file as an asset.
+-  `extract_map_image` function L471-600 — `(&self, uvtt_blob_path: &str)` — Extract the image from a UVTT file, convert to JPEG, and write alongside.
+-  `MAX_WIDTH` variable L564 — `: u32` — with metadata in the database.
+-  `tests` module L683-1039 — `-` — with metadata in the database.
+-  `setup_test_env` function L690-694 — `() -> (SqliteConnection, TempDir)` — with metadata in the database.
+-  `create_test_campaign` function L696-701 — `(conn: &mut SqliteConnection) -> String` — with metadata in the database.
+-  `create_test_module` function L703-708 — `(conn: &mut SqliteConnection, campaign_id: &str) -> String` — with metadata in the database.
+-  `fake_uvtt_data` function L710-713 — `() -> Vec<u8>` — with metadata in the database.
+-  `test_create_campaign_map` function L716-731 — `()` — with metadata in the database.
+-  `test_create_module_map` function L734-749 — `()` — with metadata in the database.
+-  `test_create_map_with_description` function L752-764 — `()` — with metadata in the database.
+-  `test_create_map_invalid_campaign` function L767-776 — `()` — with metadata in the database.
+-  `test_create_map_invalid_module` function L779-789 — `()` — with metadata in the database.
+-  `test_uvtt_file_stored_on_disk` function L792-806 — `()` — with metadata in the database.
+-  `test_get_map` function L809-821 — `()` — with metadata in the database.
+-  `test_get_map_not_found` function L824-831 — `()` — with metadata in the database.
+-  `test_list_for_campaign` function L834-854 — `()` — with metadata in the database.
+-  `test_list_for_module` function L857-873 — `()` — with metadata in the database.
+-  `test_update_map_name` function L876-889 — `()` — with metadata in the database.
+-  `test_update_lighting_mode` function L892-906 — `()` — with metadata in the database.
+-  `test_update_move_to_module` function L909-924 — `()` — with metadata in the database.
+-  `test_update_move_to_campaign` function L927-942 — `()` — with metadata in the database.
+-  `test_update_map_not_found` function L945-953 — `()` — with metadata in the database.
+-  `test_delete_map` function L956-974 — `()` — with metadata in the database.
+-  `test_delete_map_not_found` function L977-984 — `()` — with metadata in the database.
+-  `test_count_maps` function L987-1003 — `()` — with metadata in the database.
+-  `test_auto_increment_sort_order` function L1006-1023 — `()` — with metadata in the database.
+-  `test_get_uvtt_asset` function L1026-1038 — `()` — with metadata in the database.
 
 #### crates/mimir-core/src/services/mod.rs
 
@@ -7278,56 +7281,56 @@
 - pub `count` function L374-376 — `(&mut self, map_id: &str) -> ServiceResult<i64>` — Count tokens for a map.
 -  `CreateTokenInput` type L35-105 — `= CreateTokenInput` — Business logic for token placements on maps.
 -  `UpdateTokenInput` type L130-163 — `= UpdateTokenInput` — Business logic for token placements on maps.
--  `get_grid_size` function L381-396 — `(&mut self, map_id: &str) -> i32` — Get the grid size (pixels per grid) from a map's UVTT file.
--  `enrich` function L399-427 — `(&mut self, placement: TokenPlacement, grid_size_px: i32) -> ServiceResult<Token...` — Enrich a TokenPlacement with resolved names and computed coordinates.
--  `resolve_names` function L430-480 — `(&mut self, token: &TokenPlacement) -> (String, Option<String>, String)` — Resolve token type and name from monster/NPC references.
--  `normalize_size_code` function L484-494 — `(size: &str) -> String` — Normalize size codes (T, S, M, L, H, G) to full names.
--  `tests` module L497-1252 — `-` — Business logic for token placements on maps.
--  `setup_test_env` function L510-514 — `() -> (SqliteConnection, TempDir)` — Set up a test environment with an in-memory DB and temp directory.
--  `create_prerequisites` function L518-547 — `(conn: &mut SqliteConnection) -> (String, String, String)` — Create prerequisite entities: campaign -> module -> asset -> map.
--  `create_module_monster` function L550-555 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module monster in the DB and return its ID.
--  `create_module_npc` function L558-563 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module NPC in the DB and return its ID.
--  `test_create_pc_token` function L568-584 — `()` — Business logic for token placements on maps.
--  `test_create_monster_token` function L587-600 — `()` — Business logic for token placements on maps.
--  `test_create_npc_token` function L603-617 — `()` — Business logic for token placements on maps.
--  `test_create_token_with_label_and_color` function L620-634 — `()` — Business logic for token placements on maps.
--  `test_create_hidden_token` function L637-646 — `()` — Business logic for token placements on maps.
--  `test_get_token` function L651-668 — `()` — Business logic for token placements on maps.
--  `test_get_token_not_found` function L671-677 — `()` — Business logic for token placements on maps.
--  `test_list_tokens` function L682-700 — `()` — Business logic for token placements on maps.
--  `test_list_tokens_different_maps` function L703-733 — `()` — Business logic for token placements on maps.
--  `test_list_visible_filters_hidden` function L738-757 — `()` — Business logic for token placements on maps.
--  `test_list_visible_empty_when_all_hidden` function L760-771 — `()` — Business logic for token placements on maps.
--  `test_update_token_position` function L776-789 — `()` — Business logic for token placements on maps.
--  `test_update_token_hidden` function L792-804 — `()` — Business logic for token placements on maps.
--  `test_update_token_label` function L807-821 — `()` — Business logic for token placements on maps.
--  `test_update_token_faction_color` function L824-838 — `()` — Business logic for token placements on maps.
--  `test_update_not_found` function L841-848 — `()` — Business logic for token placements on maps.
--  `test_update_position` function L853-868 — `()` — Business logic for token placements on maps.
--  `test_update_position_not_found` function L871-877 — `()` — Business logic for token placements on maps.
--  `test_update_vision` function L882-898 — `()` — Business logic for token placements on maps.
--  `test_update_vision_not_found` function L901-907 — `()` — Business logic for token placements on maps.
--  `test_toggle_visibility` function L912-932 — `()` — Business logic for token placements on maps.
--  `test_toggle_visibility_not_found` function L935-941 — `()` — Business logic for token placements on maps.
--  `test_delete_token` function L946-958 — `()` — Business logic for token placements on maps.
--  `test_delete_not_found` function L961-967 — `()` — Business logic for token placements on maps.
--  `test_count_tokens` function L972-986 — `()` — Business logic for token placements on maps.
--  `test_count_after_delete` function L989-1001 — `()` — Business logic for token placements on maps.
--  `test_create_pc_without_label_fails` function L1006-1024 — `()` — Business logic for token placements on maps.
--  `test_create_both_monster_and_npc_fails` function L1027-1047 — `()` — Business logic for token placements on maps.
--  `test_pixel_coordinates_use_default_grid_size` function L1052-1065 — `()` — Business logic for token placements on maps.
--  `test_pc_token_defaults_to_medium` function L1070-1079 — `()` — Business logic for token placements on maps.
--  `test_npc_token_defaults_to_medium` function L1082-1092 — `()` — Business logic for token placements on maps.
--  `test_monster_token_with_missing_reference_errors` function L1097-1107 — `()` — Business logic for token placements on maps.
--  `test_npc_token_with_missing_reference_errors` function L1110-1120 — `()` — Business logic for token placements on maps.
--  `test_normalize_size_code_values` function L1125-1132 — `()` — Business logic for token placements on maps.
--  `test_normalize_size_code_case_insensitive` function L1135-1139 — `()` — Business logic for token placements on maps.
--  `test_normalize_size_code_unknown` function L1142-1145 — `()` — Business logic for token placements on maps.
--  `test_default_vision_values` function L1150-1162 — `()` — Business logic for token placements on maps.
--  `test_create_update_delete_sequence` function L1167-1199 — `()` — Business logic for token placements on maps.
--  `test_negative_coordinates_allowed` function L1204-1214 — `()` — Business logic for token placements on maps.
--  `test_create_token_input_builders` function L1219-1233 — `()` — Business logic for token placements on maps.
--  `test_update_token_input_builders` function L1236-1251 — `()` — Business logic for token placements on maps.
+-  `get_grid_size` function L381-390 — `(&mut self, map_id: &str) -> i32` — Get the grid size (pixels per grid) from the cached resolution sidecar.
+-  `enrich` function L393-421 — `(&mut self, placement: TokenPlacement, grid_size_px: i32) -> ServiceResult<Token...` — Enrich a TokenPlacement with resolved names and computed coordinates.
+-  `resolve_names` function L424-474 — `(&mut self, token: &TokenPlacement) -> (String, Option<String>, String)` — Resolve token type and name from monster/NPC references.
+-  `normalize_size_code` function L478-488 — `(size: &str) -> String` — Normalize size codes (T, S, M, L, H, G) to full names.
+-  `tests` module L491-1246 — `-` — Business logic for token placements on maps.
+-  `setup_test_env` function L504-508 — `() -> (SqliteConnection, TempDir)` — Set up a test environment with an in-memory DB and temp directory.
+-  `create_prerequisites` function L512-541 — `(conn: &mut SqliteConnection) -> (String, String, String)` — Create prerequisite entities: campaign -> module -> asset -> map.
+-  `create_module_monster` function L544-549 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module monster in the DB and return its ID.
+-  `create_module_npc` function L552-557 — `(conn: &mut SqliteConnection, module_id: &str) -> String` — Create a module NPC in the DB and return its ID.
+-  `test_create_pc_token` function L562-578 — `()` — Business logic for token placements on maps.
+-  `test_create_monster_token` function L581-594 — `()` — Business logic for token placements on maps.
+-  `test_create_npc_token` function L597-611 — `()` — Business logic for token placements on maps.
+-  `test_create_token_with_label_and_color` function L614-628 — `()` — Business logic for token placements on maps.
+-  `test_create_hidden_token` function L631-640 — `()` — Business logic for token placements on maps.
+-  `test_get_token` function L645-662 — `()` — Business logic for token placements on maps.
+-  `test_get_token_not_found` function L665-671 — `()` — Business logic for token placements on maps.
+-  `test_list_tokens` function L676-694 — `()` — Business logic for token placements on maps.
+-  `test_list_tokens_different_maps` function L697-727 — `()` — Business logic for token placements on maps.
+-  `test_list_visible_filters_hidden` function L732-751 — `()` — Business logic for token placements on maps.
+-  `test_list_visible_empty_when_all_hidden` function L754-765 — `()` — Business logic for token placements on maps.
+-  `test_update_token_position` function L770-783 — `()` — Business logic for token placements on maps.
+-  `test_update_token_hidden` function L786-798 — `()` — Business logic for token placements on maps.
+-  `test_update_token_label` function L801-815 — `()` — Business logic for token placements on maps.
+-  `test_update_token_faction_color` function L818-832 — `()` — Business logic for token placements on maps.
+-  `test_update_not_found` function L835-842 — `()` — Business logic for token placements on maps.
+-  `test_update_position` function L847-862 — `()` — Business logic for token placements on maps.
+-  `test_update_position_not_found` function L865-871 — `()` — Business logic for token placements on maps.
+-  `test_update_vision` function L876-892 — `()` — Business logic for token placements on maps.
+-  `test_update_vision_not_found` function L895-901 — `()` — Business logic for token placements on maps.
+-  `test_toggle_visibility` function L906-926 — `()` — Business logic for token placements on maps.
+-  `test_toggle_visibility_not_found` function L929-935 — `()` — Business logic for token placements on maps.
+-  `test_delete_token` function L940-952 — `()` — Business logic for token placements on maps.
+-  `test_delete_not_found` function L955-961 — `()` — Business logic for token placements on maps.
+-  `test_count_tokens` function L966-980 — `()` — Business logic for token placements on maps.
+-  `test_count_after_delete` function L983-995 — `()` — Business logic for token placements on maps.
+-  `test_create_pc_without_label_fails` function L1000-1018 — `()` — Business logic for token placements on maps.
+-  `test_create_both_monster_and_npc_fails` function L1021-1041 — `()` — Business logic for token placements on maps.
+-  `test_pixel_coordinates_use_default_grid_size` function L1046-1059 — `()` — Business logic for token placements on maps.
+-  `test_pc_token_defaults_to_medium` function L1064-1073 — `()` — Business logic for token placements on maps.
+-  `test_npc_token_defaults_to_medium` function L1076-1086 — `()` — Business logic for token placements on maps.
+-  `test_monster_token_with_missing_reference_errors` function L1091-1101 — `()` — Business logic for token placements on maps.
+-  `test_npc_token_with_missing_reference_errors` function L1104-1114 — `()` — Business logic for token placements on maps.
+-  `test_normalize_size_code_values` function L1119-1126 — `()` — Business logic for token placements on maps.
+-  `test_normalize_size_code_case_insensitive` function L1129-1133 — `()` — Business logic for token placements on maps.
+-  `test_normalize_size_code_unknown` function L1136-1139 — `()` — Business logic for token placements on maps.
+-  `test_default_vision_values` function L1144-1156 — `()` — Business logic for token placements on maps.
+-  `test_create_update_delete_sequence` function L1161-1193 — `()` — Business logic for token placements on maps.
+-  `test_negative_coordinates_allowed` function L1198-1208 — `()` — Business logic for token placements on maps.
+-  `test_create_token_input_builders` function L1213-1227 — `()` — Business logic for token placements on maps.
+-  `test_update_token_input_builders` function L1230-1245 — `()` — Business logic for token placements on maps.
 
 ### crates/mimir-core/src/services/catalog
 
@@ -9525,164 +9528,6 @@
 -  `test_no_threat_badge` function L1190-1201 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_page_break_with_five_traps` function L1204-1214 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
 -  `test_escape_typst_trap` function L1217-1220 — `()` — Shows trap name, type, trigger, effect, countermeasures, and full details.
-
-### docs/book
-
-> *Semantic summary to be generated by AI agent.*
-
-#### docs/book/book-a0b12cfe.js
-
--  `playground_text` function L9-20 — `function playground_text(playground, hidden = true)`
--  `fetch_with_timeout` function L23-28 — `function fetch_with_timeout(url, options, timeout = 6000)`
--  `handle_crate_list_update` function L47-70 — `function handle_crate_list_update(playground_block, playground_crates)`
--  `update_play_button` function L74-103 — `function update_play_button(pre_block, playground_crates)`
--  `run_rust_code` function L105-154 — `function run_rust_code(code_block)`
--  `showThemes` function L324-328 — `function showThemes()`
--  `updateThemeSelected` function L330-341 — `function updateThemeSelected()`
--  `hideThemes` function L343-347 — `function hideThemes()`
--  `get_saved_theme` function L349-357 — `function get_saved_theme()`
--  `delete_saved_theme` function L359-361 — `function delete_saved_theme()`
--  `get_theme` function L363-377 — `function get_theme()`
--  `set_theme` function L380-423 — `function set_theme(theme, store = true)`
--  `showSidebar` function L553-565 — `function showSidebar()`
--  `hideSidebar` function L567-579 — `function hideSidebar()`
--  `initResize` function L597-601 — `function initResize()`
--  `resize` function L602-613 — `function resize(e)`
--  `stopResize` function L615-619 — `function stopResize()`
--  `next` function L659-664 — `function next()`
--  `prev` function L665-670 — `function prev()`
--  `showHelp` function L671-702 — `function showHelp()`
--  `mouseHandler` function L677-688 — `-`
--  `escapeKeyHandler` function L691-698 — `-`
--  `hideHelp` function L703-705 — `function hideHelp()`
--  `hideTooltip` function L744-747 — `function hideTooltip(elem)`
--  `showTooltip` function L749-752 — `function showTooltip(elem, msg)`
--  `updateBorder` function L833-839 — `function updateBorder()`
-
-#### docs/book/clipboard-1626706a.min.js
-
--  `e` function L7 — `function e(t)`
--  `i` function L7 — `function i(t,e,n,o,r)`
--  `n` function L7 — `function n()`
--  `o` function L7 — `function o(t,e)`
--  `r` function L7 — `function r(t)`
--  `s` function L7 — `function s(t,e)`
-
-#### docs/book/elasticlunr-ef4e11c1.min.js
-
--  `e` function L10 — `function e(e)`
-
-#### docs/book/highlight-abc7f01d.js
-
-- pub `_collapse` method L6 — `_collapse(e)`
-- pub `_walk` method L6 — `_walk(e,n)`
-- pub `add` method L6 — `add(e)`
-- pub `addKeyword` method L6 — `addKeyword(e,n)`
-- pub `addRule` method L6 — `addRule(e,n)`
-- pub `addSublanguage` method L6 — `addSublanguage(e,n)`
-- pub `addText` method L6 — `addText(e)`
-- pub `closeAllNodes` method L6 — `closeAllNodes()`
-- pub `closeNode` method L6 — `closeNode(e)`
-- pub `compile` method L6 — `compile()`
-- pub `considerAll` method L6 — `considerAll()`
-- pub `constructor` method L6 — `constructor(e)`
-- pub `exec` method L6 — `exec(e)`
-- pub `finalize` method L6 — `finalize()`
-- pub `getMatcher` method L6 — `getMatcher(e)`
-- pub `ignoreMatch` method L6 — `ignoreMatch()`
-- pub `openNode` method L6 — `openNode(e)`
-- pub `root` method L6 — `root()`
-- pub `span` method L6 — `span(e)`
-- pub `toHTML` method L6 — `toHTML()`
-- pub `toJSON` method L6 — `toJSON()`
-- pub `top` method L6 — `top()`
-- pub `value` method L6 — `value()`
-- pub `walk` method L6 — `walk(e)`
--  `A` function L6 — `function A(e,{languageName:n})`
--  `E` function L6 — `function E(e)`
--  `I` function L6 — `function I(e)`
--  `N` function L6 — `const N = ()`
--  `S` function L6 — `function S(e,n)`
--  `T` function L6 — `function T(e)`
--  `a` function L6 — `function a(e)`
--  `a` class L6 — `-`
--  `b` function L6 — `function b(e,n,t,r)`
--  `c` function L6 — `function c(e)`
--  `c` class L6 — `-`
--  `c` function L6 — `function c(e,n)`
--  `d` function L6 — `function d(e)`
--  `e` function L6 — `function e(n)`
--  `h` function L6 — `function h(e)`
--  `i` function L6 — `function i(e,n)`
--  `l` function L6 — `function l()`
--  `l` class L6 — `-`
--  `m` function L6 — `function m(e,t,a,s)`
--  `n` class L6 — `-`
--  `n` function L6 — `function n(n,t)`
--  `o` function L6 — `-`
--  `p` function L6 — `function p(e)`
--  `r` function L6 — `function r(e,...n)`
--  `t` function L6 — `function t(e)`
--  `t` class L6 — `-`
--  `u` function L6 — `function u(e)`
--  `u` class L6 — `-`
--  `u` function L6 — `function u()`
--  `v` function L6 — `function v(e,n)`
--  `w` function L6 — `function w(e,n)`
--  `x` function L6 — `function x(t,r)`
--  `t` function L9 — `function t(e)`
--  `e` function L18 — `function e(e)`
--  `n` function L18 — `function n(...n)`
--  `a` function L19 — `function a(...n)`
--  `e` function L19 — `function e(e)`
--  `n` function L19 — `function n(e)`
--  `s` function L19 — `function s(...n)`
--  `r` function L20 — `function r(...e)`
--  `s` function L20 — `function s(e)`
--  `e` function L47 — `function e(...e)`
-
-#### docs/book/mark-09e88c2c.min.js
-
--  `a` function L7 — `function a(e)`
--  `e` function L7 — `function e(e,t)`
-
-#### docs/book/searcher-c2a407aa.js
-
--  `hasFocus` function L57-59 — `function hasFocus()`
--  `removeChildren` function L61-65 — `function removeChildren(elem)`
--  `parseURL` function L68-92 — `function parseURL(url)`
--  `renderURL` function L95-112 — `function renderURL(urlobject)`
--  `formatSearchMetric` function L131-139 — `function formatSearchMetric(count, searchterm)`
--  `formatSearchResult` function L141-161 — `function formatSearchResult(result, searchterms)`
--  `makeTeaser` function L163-259 — `function makeTeaser(body, searchterms)`
--  `init` function L261-276 — `function init(config)`
--  `initSearchInteractions` function L278-303 — `function initSearchInteractions(config)`
--  `unfocusSearchbar` function L307-314 — `function unfocusSearchbar()`
--  `doSearchOrMarkFromUrl` function L317-350 — `function doSearchOrMarkFromUrl()`
--  `hide` function L337-344 — `const hide = ()`
--  `globalKeyHandler` function L353-418 — `function globalKeyHandler(e)`
--  `loadSearchScript` function L420-434 — `function loadSearchScript(url, id)`
--  `showSearch` function L436-452 — `function showSearch(yes)`
--  `showResults` function L454-460 — `function showResults(yes)`
--  `searchIconClickHandler` function L463-471 — `function searchIconClickHandler()`
--  `searchbarKeyUpHandler` function L474-489 — `function searchbarKeyUpHandler()`
--  `setSearchUrlParameters` function L495-518 — `function setSearchUrlParameters(searchterm, action)`
--  `doSearch` function L520-551 — `function doSearch(searchterm)`
-
-#### docs/book/toc-f8369802.js
-
-- pub `constructor` method L7-9 — `constructor()`
-- pub `connectedCallback` method L10-75 — `connectedCallback()`
--  `MDBookSidebarScrollbox` class L6-76 — `-`
--  `toggleSection` function L69-71 — `function toggleSection(ev)`
--  `updateThreshold` function L113-203 — `function updateThreshold()`
--  `drawDebugLine` function L205-227 — `function drawDebugLine()`
--  `mdbookEnableThresholdDebug` function L229-233 — `function mdbookEnableThresholdDebug()`
--  `updateHeaderExpanded` function L240-249 — `function updateHeaderExpanded(currentA)`
--  `updateCurrentHeader` function L254-298 — `function updateCurrentHeader()`
--  `reloadCurrentHeader` function L301-307 — `function reloadCurrentHeader()`
--  `headerThresholdClick` function L313-335 — `function headerThresholdClick(event)`
--  `filterHeader` function L339-345 — `function filterHeader(source, dest)`
 
 ### docs
 
