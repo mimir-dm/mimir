@@ -640,11 +640,10 @@ fn lake_preset() -> BiomePreset {
 fn ice_lake_preset() -> BiomePreset {
     use crate::noise_gen::NoiseConfig;
     use crate::terrain::{TerrainConfig, TerrainSlot};
-    use crate::water::WaterConfig;
 
     BiomePreset {
         name: "ice_lake",
-        description: "Frozen lake with cracked ice, snow-covered shores, and frigid water",
+        description: "Frozen lake covered in solid ice, with snow-covered shores",
         default_size: (32, 32),
         config: MapConfig {
             name: "Ice Lake Map".to_string(),
@@ -690,25 +689,24 @@ fn ice_lake_preset() -> BiomePreset {
             clumps: vec![],
             roads: vec![],
             rivers: vec![],
-            water: Some(WaterConfig {
-                threshold: 0.68,
-                deep_color: "ff1a4a5e".to_string(),
-                shallow_color: "ff5ea8c0".to_string(),
-                blend_distance: 40.0,
-                min_contour_points: 20,
-                smooth_iterations: 3,
-                pixels_per_cell: 64.0,
-                disable_border: false,
-            }),
+            water: None,
             elevation: None,
             lighting: None,
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![water_overlay_pattern()],
+            pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
-            material_configs: vec![ice_material()],
+            material_configs: vec![MaterialScatterConfig {
+                region: MaterialRegion::Noise {
+                    noise_lower: 0.68,
+                    noise_upper: 1.0,
+                },
+                texture: "res://textures/materials/ice_tile.png".to_string(),
+                layer: "-400".to_string(),
+                smooth: true,
+            }],
         },
     }
 }
@@ -1391,9 +1389,10 @@ mod tests {
     }
 
     #[test]
-    fn test_ice_lake_has_water() {
+    fn test_ice_lake_has_ice_material() {
         let preset = get_preset("ice_lake").unwrap();
-        assert!(preset.config.water.is_some());
+        assert!(preset.config.water.is_none(), "Frozen lake should not have water");
+        assert!(!preset.config.material_configs.is_empty(), "Should have ice material");
         assert!(preset.config.island_mode.is_some());
     }
 
