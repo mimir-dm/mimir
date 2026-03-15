@@ -4,14 +4,14 @@ level: task
 title: "Material scatter: bit-packed bitmap generation for ice, lava, acid, and ground detail"
 short_code: "MIMIR-T-0632"
 created_at: 2026-03-15T00:42:44.314119+00:00
-updated_at: 2026-03-15T00:42:44.314119+00:00
+updated_at: 2026-03-15T12:03:55.585113+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Implement region-based material scatter generation. Materials are bit-packed bitmaps representing ground-level detail like ice, lava, acid, and debris. Each produces a `MaterialEntry` in `Level.materials` keyed by layer.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -63,4 +67,16 @@ Implement region-based material scatter generation. Materials are bit-packed bit
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-15
+- Created `src/materials.rs` with `generate_materials()` and 4 region types
+- Noise: noise-gated cell-by-cell bit setting
+- Room: point-in-polygon test against room boundary
+- Polygon: point-in-polygon test against polygon boundary
+- AlongPath: distance-to-polyline test against corridor width
+- Bitmap encoding: (w*2+3)*(h*2+3) cells, flat bit-packed LSB-first, 128px per cell, 1.5-cell border
+- Helper functions: point_in_polygon (ray casting), distance_to_polyline (segment projection)
+- Added `MaterialScatterConfig`, `MaterialRegion` enum with serde tagged union
+- Wired into pipeline after patterns, merges into `Level.materials`
+- Added `material_configs: Vec<MaterialScatterConfig>` to `MapConfig` (YAML key: `materials`)
+- 10 unit tests: bitmap dims, bit setting, noise/room/path/polygon regions, missing refs, multi-layer, point-in-polygon, distance-to-polyline
+- All 202 tests pass

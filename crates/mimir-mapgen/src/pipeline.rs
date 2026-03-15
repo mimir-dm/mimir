@@ -10,6 +10,7 @@ use crate::custom_paths::{self, CustomPathConfig};
 use crate::elevation::{self, ElevationConfig};
 use crate::format::{DungeondraftMap, NodeIdAllocator};
 use crate::lights::{self, LightConfig};
+use crate::materials::{self, MaterialScatterConfig};
 use crate::noise_gen::{NoiseConfig, NoiseMap};
 use crate::objects::{self, clear_corridor, ClumpConfig, ObjectConfig, TreeConfig};
 use crate::patterns::{self, PatternConfig};
@@ -84,6 +85,9 @@ pub struct MapConfig {
     /// Point light placement configs.
     #[serde(default)]
     pub lights: Vec<LightConfig>,
+    /// Material scatter configs (ice, lava, acid, ground detail).
+    #[serde(default, rename = "materials")]
+    pub material_configs: Vec<MaterialScatterConfig>,
 }
 
 /// Lighting/environment configuration.
@@ -867,7 +871,23 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().patterns.extend(pattern_entries);
     }
 
-    // 9c. Generate custom paths
+    // 9c. Generate material scatter
+    if !config.material_configs.is_empty() {
+        let material_map = materials::generate_materials(
+            &config.material_configs,
+            &noise_map,
+            &features,
+            config.width,
+            config.height,
+            &alloc,
+        );
+        let level = map.ground_level_mut();
+        for (layer_key, entries) in material_map {
+            level.materials.entry(layer_key).or_default().extend(entries);
+        }
+    }
+
+    // 9d. Generate custom paths
     if !config.custom_paths.is_empty() {
         let custom = custom_paths::generate_custom_paths(
             &config.custom_paths,
@@ -966,6 +986,7 @@ mod tests {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         }
     }
 

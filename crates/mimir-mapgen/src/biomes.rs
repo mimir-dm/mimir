@@ -178,6 +178,7 @@ fn forest_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -259,6 +260,7 @@ fn grassland_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -329,6 +331,7 @@ fn cave_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -421,6 +424,7 @@ fn desert_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -532,6 +536,7 @@ fn lake_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -607,6 +612,7 @@ fn ice_lake_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -689,6 +695,7 @@ fn arctic_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -800,6 +807,7 @@ fn island_tropical_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -912,6 +920,7 @@ fn island_forest_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -987,6 +996,7 @@ fn island_arctic_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -1102,6 +1112,7 @@ fn swamp_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }
@@ -1209,6 +1220,7 @@ fn forest_river_preset() -> BiomePreset {
             pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
+            material_configs: vec![],
         },
     }
 }

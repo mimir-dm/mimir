@@ -16,6 +16,7 @@ pub mod distribution;
 pub mod elevation;
 pub mod format;
 pub mod lights;
+pub mod materials;
 pub mod noise_gen;
 pub mod objects;
 pub mod paths;
