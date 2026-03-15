@@ -12,6 +12,7 @@ use crate::format::{DungeondraftMap, NodeIdAllocator};
 use crate::lights::{self, LightConfig};
 use crate::noise_gen::{NoiseConfig, NoiseMap};
 use crate::objects::{self, clear_corridor, ClumpConfig, ObjectConfig, TreeConfig};
+use crate::patterns::{self, PatternConfig};
 use crate::paths::{self, RiverConfig, RoadConfig};
 use crate::polygons::{self, PolygonConfig};
 use crate::rooms::{self, CorridorConfig, RoomConfig};
@@ -74,6 +75,9 @@ pub struct MapConfig {
     /// Closed polygon areas with shared-edge wall subtraction.
     #[serde(default)]
     pub polygons: Vec<PolygonConfig>,
+    /// Pattern placement configs (floor tiles, water overlays, noise regions).
+    #[serde(default, rename = "pattern_fills")]
+    pub pattern_configs: Vec<PatternConfig>,
     /// General-purpose path configs (waypoints, room-to-room, offset, intermittent).
     #[serde(default)]
     pub custom_paths: Vec<CustomPathConfig>,
@@ -850,7 +854,20 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().paths.extend(contour_paths);
     }
 
-    // 9b. Generate custom paths
+    // 9b. Generate patterns
+    if !config.pattern_configs.is_empty() {
+        let pattern_entries = patterns::generate_patterns(
+            &config.pattern_configs,
+            &noise_map,
+            &features,
+            pixel_width,
+            pixel_height,
+            &alloc,
+        );
+        map.ground_level_mut().patterns.extend(pattern_entries);
+    }
+
+    // 9c. Generate custom paths
     if !config.custom_paths.is_empty() {
         let custom = custom_paths::generate_custom_paths(
             &config.custom_paths,
@@ -946,6 +963,7 @@ mod tests {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            pattern_configs: vec![],
             custom_paths: vec![],
             lights: vec![],
         }

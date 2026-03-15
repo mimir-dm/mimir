@@ -19,6 +19,7 @@ pub mod lights;
 pub mod noise_gen;
 pub mod objects;
 pub mod paths;
+pub mod patterns;
 pub mod pipeline;
 pub mod polygons;
 pub mod rooms;

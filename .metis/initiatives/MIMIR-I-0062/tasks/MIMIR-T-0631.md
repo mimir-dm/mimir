@@ -4,14 +4,14 @@ level: task
 title: "Pattern placement: region-based texture fills for water, rooms, polygons, and noise areas"
 short_code: "MIMIR-T-0631"
 created_at: 2026-03-15T00:42:43.618169+00:00
-updated_at: 2026-03-15T00:42:43.618169+00:00
+updated_at: 2026-03-15T11:59:12.779374+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Implement region-based pattern placement. Patterns are polygon-bounded texture fills — used for floor tiles inside rooms, water overlays, courtyard surfaces, and noise-gated ground detail. Each produces a `MapPattern` entry pushed to `Level.patterns`.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -69,4 +73,14 @@ Implement region-based pattern placement. Patterns are polygon-bounded texture f
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-15
+- Created `src/patterns.rs` with `generate_patterns()` and 4 region types
+- Water: one pattern per water polygon from GeneratedFeatures
+- Room: fills named room boundary polygon
+- Polygon: fills named polygon boundary
+- Noise: uses `contour::find_contours` at midpoint threshold, scales to pixel coords
+- Added `PatternConfig`, `PatternRegion` enum with serde tagged union
+- Wired into pipeline after water/rooms/elevation, pushes to `Level.patterns`
+- Added `pattern_configs: Vec<PatternConfig>` to `MapConfig` (YAML key: `pattern_fills`)
+- 6 unit tests: water, room, polygon, noise regions, missing refs, multiple water polys
+- All 192 tests pass
