@@ -3,7 +3,86 @@
 //! Built-in presets (forest, grassland, cave) providing sensible defaults
 //! for terrain textures, object palettes, and noise parameters.
 
+use crate::lights::{LightConfig, LightPlacement};
+use crate::materials::{MaterialRegion, MaterialScatterConfig};
+use crate::patterns::{PatternConfig, PatternRegion};
 use crate::pipeline::MapConfig;
+
+// =============================================================================
+// Common light/pattern/material presets (Gull Rock reference values)
+// =============================================================================
+
+/// Ambient scatter lights for outdoor maps.
+fn ambient_scatter_lights() -> LightConfig {
+    LightConfig {
+        placement: LightPlacement::Scatter {
+            density: 3.0,
+            noise_lower: 0.0,
+            noise_upper: 0.8,
+            probability: 0.5,
+            margin: 0.1,
+        },
+        color: "96eaefca".to_string(),
+        intensity: 0.5,
+        range: 15.0,
+        shadows: false,
+        layer: 100,
+    }
+}
+
+/// Tree-top canopy glow lights.
+fn tree_top_lights() -> LightConfig {
+    LightConfig {
+        placement: LightPlacement::WithObjects {
+            group: "trees_0".to_string(),
+        },
+        color: "ffeaefca".to_string(),
+        intensity: 0.6,
+        range: 1.5,
+        shadows: false,
+        layer: 300,
+    }
+}
+
+/// Lights along a road/river path.
+fn path_lights(path_name: &str) -> LightConfig {
+    LightConfig {
+        placement: LightPlacement::AlongPath {
+            path: path_name.to_string(),
+            density: 0.2,
+        },
+        color: "baeaefca".to_string(),
+        intensity: 0.5,
+        range: 5.0,
+        shadows: false,
+        layer: 100,
+    }
+}
+
+/// Semi-transparent water overlay pattern.
+fn water_overlay_pattern() -> PatternConfig {
+    PatternConfig {
+        region: PatternRegion::Water,
+        texture: "res://textures/tilesets/simple/tileset_sand.png".to_string(),
+        color: "30ffffff".to_string(),
+        rotation: 0,
+        layer: -100,
+        outline: false,
+    }
+}
+
+/// Ice material scatter for cold biomes.
+fn ice_material() -> MaterialScatterConfig {
+    MaterialScatterConfig {
+        region: MaterialRegion::Noise {
+            noise_lower: 0.6,
+            noise_upper: 1.0,
+        },
+        texture: "res://textures/materials/ice_tile.png".to_string(),
+        layer: "-400".to_string(),
+        smooth: true,
+    }
+}
 
 /// A biome preset with sensible defaults for all generation parameters.
 #[derive(Debug, Clone)]
@@ -177,7 +256,11 @@ fn forest_preset() -> BiomePreset {
             polygons: vec![],
             pattern_configs: vec![],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![
+                ambient_scatter_lights(),
+                tree_top_lights(),
+                path_lights("road_0"),
+            ],
             material_configs: vec![],
         },
     }
@@ -259,7 +342,7 @@ fn grassland_preset() -> BiomePreset {
             polygons: vec![],
             pattern_configs: vec![],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights()],
             material_configs: vec![],
         },
     }
@@ -330,7 +413,20 @@ fn cave_preset() -> BiomePreset {
             polygons: vec![],
             pattern_configs: vec![],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![LightConfig {
+                placement: LightPlacement::Scatter {
+                    density: 4.0,
+                    noise_lower: 0.0,
+                    noise_upper: 1.0,
+                    probability: 0.3,
+                    margin: 0.1,
+                },
+                color: "64a0a0ff".to_string(),
+                intensity: 0.3,
+                range: 8.0,
+                shadows: true,
+                layer: 100,
+            }],
             material_configs: vec![],
         },
     }
@@ -423,7 +519,7 @@ fn desert_preset() -> BiomePreset {
             polygons: vec![],
             pattern_configs: vec![],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights()],
             material_configs: vec![],
         },
     }
@@ -533,9 +629,9 @@ fn lake_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
         },
     }
@@ -609,10 +705,10 @@ fn ice_lake_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
-            material_configs: vec![],
+            lights: vec![ambient_scatter_lights()],
+            material_configs: vec![ice_material()],
         },
     }
 }
@@ -694,8 +790,8 @@ fn arctic_preset() -> BiomePreset {
             polygons: vec![],
             pattern_configs: vec![],
             custom_paths: vec![],
-            lights: vec![],
-            material_configs: vec![],
+            lights: vec![ambient_scatter_lights()],
+            material_configs: vec![ice_material()],
         },
     }
 }
@@ -804,9 +900,9 @@ fn island_tropical_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
         },
     }
@@ -917,9 +1013,9 @@ fn island_forest_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
         },
     }
@@ -993,10 +1089,10 @@ fn island_arctic_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
-            material_configs: vec![],
+            lights: vec![ambient_scatter_lights()],
+            material_configs: vec![ice_material()],
         },
     }
 }
@@ -1109,9 +1205,9 @@ fn swamp_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
         },
     }
@@ -1217,9 +1313,9 @@ fn forest_river_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
-            pattern_configs: vec![],
+            pattern_configs: vec![water_overlay_pattern()],
             custom_paths: vec![],
-            lights: vec![],
+            lights: vec![ambient_scatter_lights(), tree_top_lights(), path_lights("road_0"), path_lights("river_0")],
             material_configs: vec![],
         },
     }

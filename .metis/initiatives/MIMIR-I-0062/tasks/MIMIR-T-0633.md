@@ -4,14 +4,14 @@ level: task
 title: "Biome preset updates: evaluate and enhance all 12 presets with lights, paths, patterns, and materials"
 short_code: "MIMIR-T-0633"
 created_at: 2026-03-15T00:42:49.076561+00:00
-updated_at: 2026-03-15T00:42:49.076561+00:00
+updated_at: 2026-03-15T12:26:14.006296+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Evaluate all 12 biome presets and enhance them with lights, paths, patterns, and materials where appropriate. Use the Gull Rock procedural forest configs as an aesthetic reference for tuning values. The presets should demonstrate the new capabilities and produce maps that are visually competitive without manual DD finishing.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -62,4 +66,20 @@ Evaluate all 12 biome presets and enhance them with lights, paths, patterns, and
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-15
+- Added reusable helper functions: `ambient_scatter_lights()`, `tree_top_lights()`, `path_lights()`, `water_overlay_pattern()`, `ice_material()`
+- Updated all 12 presets:
+  - **Forest**: ambient scatter + tree-top + road lights
+  - **Grassland**: ambient scatter
+  - **Cave**: dim blue scatter lights with shadows (underground theme)
+  - **Desert**: ambient scatter
+  - **Lake**: ambient scatter + tree-top + water overlay pattern
+  - **Ice Lake**: ambient scatter + water pattern + ice material scatter
+  - **Arctic**: ambient scatter + ice material scatter
+  - **Island Tropical**: ambient scatter + tree-top + water pattern
+  - **Island Forest**: ambient scatter + tree-top + water pattern
+  - **Island Arctic**: ambient scatter + water pattern + ice material
+  - **Swamp**: ambient scatter + tree-top + water pattern
+  - **Forest River**: ambient scatter + tree-top + road lights + river lights + water pattern
+- Regenerated all 14 example .dungeondraft_map files (12 presets + 2 config-based)
+- All 202 tests pass

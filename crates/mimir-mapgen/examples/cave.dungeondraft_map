@@ -4,12 +4,12 @@
     "creation_date": {
       "year": 2026,
       "month": 3,
-      "day": 12,
-      "weekday": 4,
+      "day": 15,
+      "weekday": 7,
       "dst": false,
-      "hour": 22,
-      "minute": 15,
-      "second": 44
+      "hour": 8,
+      "minute": 25,
+      "second": 16
     },
     "uses_default_assets": true,
     "asset_manifest": [],
@@ -47,7 +47,7 @@
     "format": 3,
     "width": 24,
     "height": 24,
-    "next_node_id": "1",
+    "next_node_id": "2",
     "next_prefab_id": "0",
     "msi": {
       "offset_map_size": 512,
@@ -695,7 +695,17 @@
         "materials": {},
         "paths": [],
         "objects": [],
-        "lights": [],
+        "lights": [
+          {
+            "position": "Vector2( 3713.0168661890475, 959.0538785083551 )",
+            "color": "64a0a0ff",
+            "range": 2048.0,
+            "intensity": 0.3,
+            "shadows": true,
+            "layer": 100,
+            "node_id": "1"
+          }
+        ],
         "roofs": {
           "shade": true,
           "shade_contrast": 0.5,
