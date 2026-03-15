@@ -53,32 +53,38 @@ fn deserialize_wall_id<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Str
 /// A placed object on the map.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapObject {
-    pub texture: String,
     pub position: Vector2,
-    pub scale: Vector2,
     pub rotation: f64,
+    pub scale: Vector2,
     #[serde(default)]
     pub mirror: bool,
+    pub texture: String,
     pub layer: i32,
-    pub node_id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub custom_color: Option<String>,
     #[serde(default)]
     pub shadow: bool,
+    #[serde(default)]
+    pub block_light: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_color: Option<String>,
+    pub node_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prefab_id: Option<i32>,
 }
 
 impl MapObject {
     pub fn new(texture: &str, position: Vector2, node_id: &str) -> Self {
         Self {
-            texture: texture.to_string(),
             position,
-            scale: Vector2::new(1.0, 1.0),
             rotation: 0.0,
+            scale: Vector2::new(1.0, 1.0),
             mirror: false,
+            texture: texture.to_string(),
             layer: 100,
-            node_id: node_id.to_string(),
-            custom_color: None,
             shadow: false,
+            block_light: false,
+            custom_color: None,
+            node_id: node_id.to_string(),
+            prefab_id: None,
         }
     }
 
@@ -108,34 +114,71 @@ impl MapObject {
     }
 }
 
-/// A path on the map (roads, rivers, cliffs, etc.).
+/// A path on the map (roads, rivers, cliffs, decorative lines, etc.).
+///
+/// DD paths use a `position` origin + relative `edit_points`. The constructor
+/// accepts absolute points and converts to this format automatically.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapPath {
+    pub position: Vector2,
+    #[serde(default)]
+    pub rotation: f64,
+    pub scale: Vector2,
+    pub edit_points: PoolVector2Array,
+    #[serde(default = "default_smoothness")]
+    pub smoothness: f64,
     pub texture: String,
-    pub color: String,
-    pub points: PoolVector2Array,
     pub width: f64,
     pub layer: i32,
-    pub node_id: String,
     #[serde(default)]
+    pub fade_in: bool,
+    #[serde(default)]
+    pub fade_out: bool,
+    #[serde(default)]
+    pub grow: bool,
+    #[serde(default)]
+    pub shrink: bool,
+    #[serde(default)]
+    pub block_light: bool,
+    #[serde(rename = "loop", default)]
     pub loop_path: bool,
+    pub node_id: String,
+}
+
+fn default_smoothness() -> f64 {
+    1.0
 }
 
 impl MapPath {
+    /// Create a new path from absolute points. The first point becomes `position`,
+    /// and all points are stored relative to it as `edit_points`.
     pub fn new(texture: &str, points: Vec<Vector2>, width: f64, node_id: &str) -> Self {
+        let position = points.first().cloned().unwrap_or(Vector2::new(0.0, 0.0));
+        let relative: Vec<Vector2> = points
+            .iter()
+            .map(|p| Vector2::new(p.x - position.x, p.y - position.y))
+            .collect();
         Self {
+            position,
+            rotation: 0.0,
+            scale: Vector2::new(1.0, 1.0),
+            edit_points: PoolVector2Array::from_points(relative),
+            smoothness: 1.0,
             texture: texture.to_string(),
-            color: "ffffffff".to_string(),
-            points: PoolVector2Array::from_points(points),
             width,
             layer: 100,
-            node_id: node_id.to_string(),
+            fade_in: false,
+            fade_out: false,
+            grow: false,
+            shrink: false,
+            block_light: false,
             loop_path: false,
+            node_id: node_id.to_string(),
         }
     }
 
-    pub fn with_color(mut self, color: &str) -> Self {
-        self.color = color.to_string();
+    pub fn with_color(self, _color: &str) -> Self {
+        // Color was removed from DD path format; kept as no-op for backward compat
         self
     }
 
@@ -146,6 +189,17 @@ impl MapPath {
 
     pub fn with_loop(mut self, loop_path: bool) -> Self {
         self.loop_path = loop_path;
+        self
+    }
+
+    pub fn with_smoothness(mut self, smoothness: f64) -> Self {
+        self.smoothness = smoothness;
+        self
+    }
+
+    pub fn with_fade(mut self, fade_in: bool, fade_out: bool) -> Self {
+        self.fade_in = fade_in;
+        self.fade_out = fade_out;
         self
     }
 }
@@ -343,11 +397,50 @@ impl MapPortal {
     }
 }
 
-/// A pattern (repeating texture region).
+/// A pattern — a polygon-bounded texture fill (floor tiles, water overlays, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapPattern {
-    #[serde(flatten)]
-    pub data: serde_json::Value,
+    pub position: Vector2,
+    #[serde(default)]
+    pub shape_rotation: i32,
+    pub scale: Vector2,
+    pub points: PoolVector2Array,
+    pub layer: i32,
+    pub color: String,
+    #[serde(default)]
+    pub outline: bool,
+    pub texture: String,
+    #[serde(default)]
+    pub rotation: i32,
+    pub node_id: String,
+}
+
+impl MapPattern {
+    /// Create a new pattern fill from a polygon boundary (in pixel coordinates).
+    pub fn new(texture: &str, points: Vec<Vector2>, color: &str, node_id: &str) -> Self {
+        Self {
+            position: Vector2::new(0.0, 0.0),
+            shape_rotation: 0,
+            scale: Vector2::new(1.0, 1.0),
+            points: PoolVector2Array::from_points(points),
+            layer: 100,
+            color: color.to_string(),
+            outline: false,
+            texture: texture.to_string(),
+            rotation: 0,
+            node_id: node_id.to_string(),
+        }
+    }
+
+    pub fn with_layer(mut self, layer: i32) -> Self {
+        self.layer = layer;
+        self
+    }
+
+    pub fn with_rotation(mut self, rotation: i32) -> Self {
+        self.rotation = rotation;
+        self
+    }
 }
 
 /// A text label on the map.

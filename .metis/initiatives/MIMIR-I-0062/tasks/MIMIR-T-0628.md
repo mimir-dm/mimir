@@ -4,14 +4,14 @@ level: task
 title: "Named ID system: config id fields and GeneratedFeatures registry"
 short_code: "MIMIR-T-0628"
 created_at: 2026-03-15T00:42:36.607569+00:00
-updated_at: 2026-03-15T00:42:36.607569+00:00
+updated_at: 2026-03-15T11:32:32.675767+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Add optional `id` fields to all existing config structs so that downstream features (lights, paths, patterns, materials) can reference generated geometry by name. Introduce a `GeneratedFeatures` registry that is populated during pipeline execution and passed to later stages.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -51,4 +55,13 @@ The registry is a simple `HashMap<String, FeatureGeometry>` where `FeatureGeomet
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-15
+- Added `id: Option<String>` with `#[serde(default)]` to: `RoadConfig`, `RiverConfig`, `ObjectConfig`, `TreeConfig`, `ClumpConfig`, `ContourLevel`
+- `RoomConfig` and `PolygonConfig` already had `id: String` (required for corridors/references)
+- Created `GeneratedFeatures` struct with HashMap registries for: paths, rooms, polygons, water_polygons, object_positions
+- Created `RoomGeometry` struct (center + boundary polygon)
+- Added `feature_name()` helper for auto-naming fallback (`{type}_{index}`)
+- Populated registry during `generate()`: rooms, polygons, roads, rivers, trees, clutter, clumps, elevation contours
+- Added `features` field to `GenerateResult`
+- Updated all Default impls and ~40 struct literals across biomes.rs, pipeline.rs, elevation.rs, objects.rs with `id: None`
+- All 171 tests pass, mimir-mcp compiles

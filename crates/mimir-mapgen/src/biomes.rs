@@ -113,8 +113,8 @@ fn forest_preset() -> BiomePreset {
                 blend_width: 0.05,
                 smooth_blending: false,
             }),
-            trees: vec![TreeConfig {
-                tree: ObjectConfig {
+            trees: vec![TreeConfig { id: None,
+                tree: ObjectConfig { id: None,
                     textures: vec![
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
@@ -134,7 +134,7 @@ fn forest_preset() -> BiomePreset {
                 shadow: None,
                 canopy: None,
             }],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
@@ -155,7 +155,7 @@ fn forest_preset() -> BiomePreset {
             rivers: vec![],
             water: None,
             elevation: Some(ElevationConfig {
-                levels: vec![ContourLevel {
+                levels: vec![ContourLevel { id: None,
                     threshold: 0.65,
                     texture: "res://textures/paths/path_rocks.png".to_string(),
                     width: 12.0,
@@ -228,7 +228,7 @@ fn grassland_preset() -> BiomePreset {
                 smooth_blending: true,
             }),
             trees: vec![],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
@@ -374,7 +374,7 @@ fn desert_preset() -> BiomePreset {
                 smooth_blending: true,
             }),
             trees: vec![],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                 ],
@@ -394,7 +394,7 @@ fn desert_preset() -> BiomePreset {
             rivers: vec![],
             water: None,
             elevation: Some(ElevationConfig {
-                levels: vec![ContourLevel {
+                levels: vec![ContourLevel { id: None,
                     threshold: 0.7,
                     texture: "res://textures/paths/path_rocks.png".to_string(),
                     width: 10.0,
@@ -463,8 +463,8 @@ fn lake_preset() -> BiomePreset {
                 blend_width: 0.06,
                 smooth_blending: true,
             }),
-            trees: vec![TreeConfig {
-                tree: ObjectConfig {
+            trees: vec![TreeConfig { id: None,
+                tree: ObjectConfig { id: None,
                     textures: vec![
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
@@ -483,7 +483,7 @@ fn lake_preset() -> BiomePreset {
                 shadow: None,
                 canopy: None,
             }],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
@@ -648,7 +648,7 @@ fn arctic_preset() -> BiomePreset {
             rivers: vec![],
             water: None,
             elevation: Some(ElevationConfig {
-                levels: vec![ContourLevel {
+                levels: vec![ContourLevel { id: None,
                     threshold: 0.6,
                     texture: "res://textures/paths/path_rocks.png".to_string(),
                     width: 14.0,
@@ -722,8 +722,8 @@ fn island_tropical_preset() -> BiomePreset {
                 blend_width: 0.06,
                 smooth_blending: true,
             }),
-            trees: vec![TreeConfig {
-                tree: ObjectConfig {
+            trees: vec![TreeConfig { id: None,
+                tree: ObjectConfig { id: None,
                     textures: vec![
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
@@ -742,7 +742,7 @@ fn island_tropical_preset() -> BiomePreset {
                 shadow: None,
                 canopy: None,
             }],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
@@ -830,8 +830,8 @@ fn island_forest_preset() -> BiomePreset {
                 blend_width: 0.05,
                 smooth_blending: false,
             }),
-            trees: vec![TreeConfig {
-                tree: ObjectConfig {
+            trees: vec![TreeConfig { id: None,
+                tree: ObjectConfig { id: None,
                     textures: vec![
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
@@ -851,7 +851,7 @@ fn island_forest_preset() -> BiomePreset {
                 shadow: None,
                 canopy: None,
             }],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
@@ -1011,8 +1011,8 @@ fn swamp_preset() -> BiomePreset {
                 blend_width: 0.07,
                 smooth_blending: true,
             }),
-            trees: vec![TreeConfig {
-                tree: ObjectConfig {
+            trees: vec![TreeConfig { id: None,
+                tree: ObjectConfig { id: None,
                     textures: vec![
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
@@ -1031,7 +1031,7 @@ fn swamp_preset() -> BiomePreset {
                 shadow: None,
                 canopy: None,
             }],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),
@@ -1122,8 +1122,8 @@ fn forest_river_preset() -> BiomePreset {
                 blend_width: 0.05,
                 smooth_blending: false,
             }),
-            trees: vec![TreeConfig {
-                tree: ObjectConfig {
+            trees: vec![TreeConfig { id: None,
+                tree: ObjectConfig { id: None,
                     textures: vec![
                         "res://textures/objects/more_trees/oak_01.png".to_string(),
                         "res://textures/objects/more_trees/oak_02.png".to_string(),
@@ -1143,7 +1143,7 @@ fn forest_river_preset() -> BiomePreset {
                 shadow: None,
                 canopy: None,
             }],
-            clutter: vec![ObjectConfig {
+            clutter: vec![ObjectConfig { id: None,
                 textures: vec![
                     "res://textures/objects/vegetation/grass/grass_01.png".to_string(),
                     "res://textures/objects/vegetation/grass/grass_02.png".to_string(),

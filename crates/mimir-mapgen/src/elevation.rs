@@ -14,6 +14,9 @@ use crate::noise_gen::NoiseMap;
 /// Configuration for a single elevation contour level.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContourLevel {
+    /// Optional identifier for cross-referencing.
+    #[serde(default)]
+    pub id: Option<String>,
     /// Noise threshold for this elevation level.
     pub threshold: f64,
     /// Cliff/contour path texture.
@@ -57,6 +60,7 @@ impl Default for ElevationConfig {
         Self {
             levels: vec![
                 ContourLevel {
+                    id: None,
                     threshold: 0.4,
                     texture: "res://textures/paths/path_rocks.png".to_string(),
                     width: 15.0,
@@ -71,6 +75,7 @@ impl Default for ElevationConfig {
                     }),
                 },
                 ContourLevel {
+                    id: None,
                     threshold: 0.6,
                     texture: "res://textures/paths/path_cliff.png".to_string(),
                     width: 20.0,
@@ -162,6 +167,7 @@ mod tests {
         let alloc = NodeIdAllocator::new(1);
         let config = ElevationConfig {
             levels: vec![ContourLevel {
+                id: None,
                 threshold: 0.5,
                 texture: "cliff.png".to_string(),
                 width: 15.0,
@@ -178,7 +184,7 @@ mod tests {
 
         for path in &paths {
             assert_eq!(path.texture, "cliff.png");
-            assert!(path.points.0.len() >= 3);
+            assert!(path.edit_points.0.len() >= 3);
         }
     }
 
@@ -241,6 +247,7 @@ mod tests {
         let ppc = 128.0;
         let config = ElevationConfig {
             levels: vec![ContourLevel {
+                id: None,
                 threshold: 0.5,
                 texture: "cliff.png".to_string(),
                 width: 10.0,
@@ -254,11 +261,16 @@ mod tests {
 
         let paths = generate_elevation(&noise, &config, &alloc);
         if let Some(path) = paths.first() {
-            // All coordinates should be scaled by pixels_per_cell
-            for pt in &path.points.0 {
+            // edit_points are relative to position; absolute = position + edit_point
+            let origin = &path.position;
+            for pt in &path.edit_points.0 {
+                let abs_x = origin.x + pt.x;
+                let abs_y = origin.y + pt.y;
                 // Points should be in pixel space (noise is 0-50, so max ~50*128=6400)
-                assert!(pt.x >= 0.0 && pt.x <= 50.0 * ppc);
-                assert!(pt.y >= 0.0 && pt.y <= 50.0 * ppc);
+                assert!(abs_x >= 0.0 && abs_x <= 50.0 * ppc,
+                    "abs_x={} out of range", abs_x);
+                assert!(abs_y >= 0.0 && abs_y <= 50.0 * ppc,
+                    "abs_y={} out of range", abs_y);
             }
         }
     }

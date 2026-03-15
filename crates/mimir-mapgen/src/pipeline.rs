@@ -479,6 +479,8 @@ pub struct GenerateResult {
     pub map: DungeondraftMap,
     /// Generation statistics.
     pub stats: GenerateStats,
+    /// Registry of generated feature geometry for cross-referencing.
+    pub features: GeneratedFeatures,
 }
 
 /// Statistics from map generation.
@@ -490,6 +492,60 @@ pub struct GenerateStats {
     pub contour_paths: usize,
     pub walls_generated: usize,
     pub portals_generated: usize,
+}
+
+/// Registry of generated feature geometry, used for cross-referencing.
+///
+/// Downstream stages (lights, custom paths, patterns, materials) look up
+/// generated geometry by name to compose features declaratively.
+#[derive(Debug, Default)]
+pub struct GeneratedFeatures {
+    /// Road/river/elevation path polylines (name → pixel-coordinate points).
+    pub paths: std::collections::HashMap<String, Vec<(f64, f64)>>,
+    /// Room boundaries (name → center + boundary polygon in pixels).
+    pub rooms: std::collections::HashMap<String, RoomGeometry>,
+    /// Polygon boundaries (name → boundary polygon in pixels).
+    pub polygons: std::collections::HashMap<String, Vec<(f64, f64)>>,
+    /// Water polygon boundaries (collected from water generation).
+    pub water_polygons: Vec<Vec<(f64, f64)>>,
+    /// Placed object positions by group name (name → positions in pixels).
+    pub object_positions: std::collections::HashMap<String, Vec<(f64, f64)>>,
+}
+
+/// Geometry for a generated room.
+#[derive(Debug, Clone)]
+pub struct RoomGeometry {
+    /// Center point in pixels.
+    pub center: (f64, f64),
+    /// Boundary polygon in pixels (closed).
+    pub boundary: Vec<(f64, f64)>,
+}
+
+impl GeneratedFeatures {
+    /// Get a path polyline by name.
+    pub fn get_path(&self, name: &str) -> Option<&Vec<(f64, f64)>> {
+        self.paths.get(name)
+    }
+
+    /// Get a room's geometry by name.
+    pub fn get_room(&self, name: &str) -> Option<&RoomGeometry> {
+        self.rooms.get(name)
+    }
+
+    /// Get a polygon boundary by name.
+    pub fn get_polygon(&self, name: &str) -> Option<&Vec<(f64, f64)>> {
+        self.polygons.get(name)
+    }
+
+    /// Get object positions by group name.
+    pub fn get_object_positions(&self, name: &str) -> Option<&Vec<(f64, f64)>> {
+        self.object_positions.get(name)
+    }
+}
+
+/// Resolve an optional ID or fall back to type_index naming.
+fn feature_name(id: &Option<String>, type_prefix: &str, index: usize) -> String {
+    id.clone().unwrap_or_else(|| format!("{}_{}", type_prefix, index))
 }
 
 /// Generate a complete `.dungeondraft_map` from a config.
@@ -551,6 +607,31 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         }
     }
 
+    // Feature registry for cross-referencing
+    let mut features = GeneratedFeatures::default();
+
+    // Register rooms into feature registry
+    for room in &config.rooms {
+        let cx = (room.x as f64 + room.width as f64 / 2.0) * 256.0;
+        let cy = (room.y as f64 + room.height as f64 / 2.0) * 256.0;
+        let x0 = room.x as f64 * 256.0;
+        let y0 = room.y as f64 * 256.0;
+        let x1 = (room.x + room.width) as f64 * 256.0;
+        let y1 = (room.y + room.height) as f64 * 256.0;
+        features.rooms.insert(room.id.clone(), RoomGeometry {
+            center: (cx, cy),
+            boundary: vec![(x0, y0), (x1, y0), (x1, y1), (x0, y1)],
+        });
+    }
+
+    // Register polygons into feature registry
+    for polygon in &config.polygons {
+        let boundary: Vec<(f64, f64)> = polygon.points.iter()
+            .map(|p| (p[0] * 256.0, p[1] * 256.0))
+            .collect();
+        features.polygons.insert(polygon.id.clone(), boundary);
+    }
+
     // 2. Create base map
     let mut map = DungeondraftMap::new(config.width, config.height);
 
@@ -578,7 +659,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // 4. Generate roads
     let mut corridors: Vec<(Vec<(f64, f64)>, f64)> = Vec::new();
 
-    for road_config in &config.roads {
+    for (i, road_config) in config.roads.iter().enumerate() {
         if let Some(result) = paths::generate_road_with_exclusions(
             &noise_map,
             road_config,
@@ -588,6 +669,10 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &mut rng,
             &exclusion_zones,
         ) {
+            // Register road path in feature registry
+            let name = feature_name(&road_config.id, "road", i);
+            features.paths.insert(name, result.corridor_points.clone());
+
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             map.ground_level_mut().paths.push(result.road);
             stats.paths_generated += 1;
@@ -610,7 +695,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     }
 
     // 5. Generate rivers
-    for river_config in &config.rivers {
+    for (i, river_config) in config.rivers.iter().enumerate() {
         if let Some(result) = paths::generate_river_with_exclusions(
             &noise_map,
             river_config,
@@ -620,6 +705,11 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &mut rng,
             &exclusion_zones,
         ) {
+            // Register river path and water polygon in feature registry
+            let name = feature_name(&river_config.id, "river", i);
+            features.paths.insert(name.clone(), result.corridor_points.clone());
+            features.water_polygons.push(result.water_polygon.clone());
+
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             for bp in result.bank_paths {
                 map.ground_level_mut().paths.push(bp);
@@ -661,7 +751,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // 6. Place objects
     let mut all_objects = Vec::new();
 
-    for tree_config in &config.trees {
+    for (i, tree_config) in config.trees.iter().enumerate() {
         let trees = objects::place_trees(
             &noise_map,
             tree_config,
@@ -670,10 +760,14 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
         );
+        // Register tree positions in feature registry
+        let name = feature_name(&tree_config.id, "trees", i);
+        let positions: Vec<(f64, f64)> = trees.iter().map(|o| (o.position.x, o.position.y)).collect();
+        features.object_positions.insert(name, positions);
         all_objects.extend(trees);
     }
 
-    for clutter_config in &config.clutter {
+    for (i, clutter_config) in config.clutter.iter().enumerate() {
         let clutter = objects::place_objects(
             &noise_map,
             clutter_config,
@@ -682,10 +776,13 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
         );
+        let name = feature_name(&clutter_config.id, "clutter", i);
+        let positions: Vec<(f64, f64)> = clutter.iter().map(|o| (o.position.x, o.position.y)).collect();
+        features.object_positions.insert(name, positions);
         all_objects.extend(clutter);
     }
 
-    for clump_config in &config.clumps {
+    for (i, clump_config) in config.clumps.iter().enumerate() {
         let clumps = objects::place_clumps(
             &noise_map,
             clump_config,
@@ -694,6 +791,9 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
         );
+        let name = feature_name(&clump_config.id, "clumps", i);
+        let positions: Vec<(f64, f64)> = clumps.iter().map(|o| (o.position.x, o.position.y)).collect();
+        features.object_positions.insert(name, positions);
         all_objects.extend(clumps);
     }
 
@@ -731,6 +831,14 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     if let Some(ref elev_config) = config.elevation {
         let contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
         stats.contour_paths = contour_paths.len();
+        // Register elevation contour paths in feature registry
+        for (i, (level_config, path)) in elev_config.levels.iter().zip(contour_paths.iter()).enumerate() {
+            let name = feature_name(&level_config.id, "elevation", i);
+            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                .map(|p| (path.position.x + p.x, path.position.y + p.y))
+                .collect();
+            features.paths.insert(name, points);
+        }
         map.ground_level_mut().paths.extend(contour_paths);
     }
 
@@ -778,7 +886,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // Update next_node_id
     map.world.next_node_id = alloc.current();
 
-    GenerateResult { map, stats }
+    GenerateResult { map, stats, features }
 }
 
 #[cfg(test)]
@@ -969,7 +1077,7 @@ mod tests {
         config.width = 20;
         config.height = 20;
         config.terrain = Some(TerrainConfig::default());
-        config.trees = vec![TreeConfig {
+        config.trees = vec![TreeConfig { id: None,
             tree: ObjectConfig {
                 textures: vec!["res://textures/objects/trees/tree_01.png".to_string()],
                 min_distance: 100.0,
@@ -1057,7 +1165,7 @@ mod tests {
         // Verify that configs without rooms produce the same output as before
         let mut config = minimal_config();
         config.terrain = Some(TerrainConfig::default());
-        config.trees = vec![TreeConfig {
+        config.trees = vec![TreeConfig { id: None,
             tree: ObjectConfig {
                 textures: vec!["res://textures/objects/trees/tree_01.png".to_string()],
                 min_distance: 100.0,

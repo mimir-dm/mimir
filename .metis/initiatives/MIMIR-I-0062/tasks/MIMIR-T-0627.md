@@ -4,14 +4,14 @@ level: task
 title: "Type format structs: MapPattern, MaterialEntry, and update MapPath/MapObject"
 short_code: "MIMIR-T-0627"
 created_at: 2026-03-15T00:42:35.930708+00:00
-updated_at: 2026-03-15T00:42:35.930708+00:00
+updated_at: 2026-03-15T00:56:54.660614+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Replace opaque `serde_json::Value` types in the DD format layer with properly typed Rust structs based on the spike findings (MIMIR-S-0001). Update existing structs that are missing fields. This unblocks all four feature tasks.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -53,4 +57,13 @@ Replace opaque `serde_json::Value` types in the DD format layer with properly ty
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-14
+- `MapPattern`: replaced `serde_json::Value` flatten with 10 typed fields (position, shape_rotation, scale, points, layer, color, outline, texture, rotation, node_id) + constructor + builder methods
+- `MaterialEntry`: new struct with bitmap, texture, smooth fields + `new()` and `set_bit()` helpers for bitmap encoding
+- `Level.materials`: changed from `BTreeMap<String, serde_json::Value>` to `BTreeMap<String, Vec<MaterialEntry>>`
+- `MapPath`: rewrote to use `position` + relative `edit_points` (matching DD format), added smoothness, fade_in/out, grow/shrink, block_light, loop fields. Constructor auto-converts absolute points to position+relative
+- `MapObject`: added `block_light`, `prefab_id` fields, reordered fields to match DD output
+- `MapLight`: verified — already had all needed fields
+- Fixed 3 test files referencing old `points` field → `edit_points`
+- Fixed `test_contour_pixel_scaling` to account for relative coordinates
+- All 171 tests pass

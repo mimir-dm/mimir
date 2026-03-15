@@ -15,6 +15,9 @@ use crate::noise_gen::NoiseMap;
 /// Configuration for a single object type to place.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ObjectConfig {
+    /// Optional identifier for cross-referencing.
+    #[serde(default)]
+    pub id: Option<String>,
     /// List of texture paths to randomly select from.
     pub textures: Vec<String>,
     /// Minimum distance between objects of this type.
@@ -40,6 +43,7 @@ pub struct ObjectConfig {
 impl Default for ObjectConfig {
     fn default() -> Self {
         Self {
+            id: None,
             textures: Vec::new(),
             min_distance: 20.0,
             noise_lower: 0.0,
@@ -58,6 +62,9 @@ impl Default for ObjectConfig {
 /// Configuration for tree placement with optional shadow and canopy layers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TreeConfig {
+    /// Optional identifier for cross-referencing (overrides tree.id if set).
+    #[serde(default)]
+    pub id: Option<String>,
     /// Base tree object config.
     pub tree: ObjectConfig,
     /// Optional shadow object placed underneath (lower layer).
@@ -93,6 +100,9 @@ pub struct CanopyConfig {
 /// Configuration for clump placement (primary + clustered secondaries).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClumpConfig {
+    /// Optional identifier for cross-referencing.
+    #[serde(default)]
+    pub id: Option<String>,
     /// Primary object config (placed by Poisson Disc).
     pub primary: ObjectConfig,
     /// Secondary objects scattered around each primary.
@@ -394,6 +404,7 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
         let config = TreeConfig {
+            id: None,
             tree: ObjectConfig {
                 textures: vec!["tree.png".to_string()],
                 min_distance: 300.0,
@@ -425,6 +436,7 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
         let config = ClumpConfig {
+            id: None,
             primary: ObjectConfig {
                 textures: vec!["rock.png".to_string()],
                 min_distance: 400.0,

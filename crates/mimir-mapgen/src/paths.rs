@@ -42,6 +42,9 @@ impl Default for PathStyle {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct RoadConfig {
+    /// Optional identifier for cross-referencing (e.g., from lights or paths config).
+    #[serde(default)]
+    pub id: Option<String>,
     /// Starting edge.
     pub from: Edge,
     /// Ending edge.
@@ -85,6 +88,9 @@ pub struct EdgePathConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct RiverConfig {
+    /// Optional identifier for cross-referencing.
+    #[serde(default)]
+    pub id: Option<String>,
     /// Starting edge.
     pub from: Edge,
     /// Ending edge.
@@ -118,6 +124,7 @@ pub struct RiverConfig {
 impl Default for RoadConfig {
     fn default() -> Self {
         Self {
+            id: None,
             from: Edge::Left,
             to: Edge::Right,
             texture: "res://textures/paths/path_dirt.png".to_string(),
@@ -137,6 +144,7 @@ impl Default for RoadConfig {
 impl Default for RiverConfig {
     fn default() -> Self {
         Self {
+            id: None,
             from: Edge::Top,
             to: Edge::Bottom,
             width: 120.0,
@@ -841,7 +849,7 @@ mod tests {
 
         let road = result.unwrap();
         assert!(road.corridor_points.len() >= 2);
-        assert!(road.road.points.0.len() >= 2);
+        assert!(road.road.edit_points.0.len() >= 2);
         assert_eq!(road.edge_paths.len(), 0); // No edge config
     }
 

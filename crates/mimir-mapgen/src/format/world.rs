@@ -40,6 +40,44 @@ pub struct MapSpaceInfo {
     pub seed: String,
 }
 
+/// A material scatter entry — a bit-packed bitmap for a single material texture on a layer.
+///
+/// Bitmap encoding: `(map_width * 2 + 3) × (map_height * 2 + 3)` cells,
+/// each cell = 0.5 grid squares, +3 border for blending.
+/// Flat bit-packed (NOT row-padded), LSB-first within each byte.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MaterialEntry {
+    pub bitmap: PoolByteArray,
+    pub texture: String,
+    #[serde(default = "default_true")]
+    pub smooth: bool,
+}
+
+impl MaterialEntry {
+    /// Create a new empty material bitmap for the given map dimensions.
+    pub fn new(texture: &str, map_width: u32, map_height: u32) -> Self {
+        let cell_w = map_width * 2 + 3;
+        let cell_h = map_height * 2 + 3;
+        let total_bits = (cell_w * cell_h) as usize;
+        let total_bytes = (total_bits + 7) / 8;
+        Self {
+            bitmap: PoolByteArray::from_vec(vec![0; total_bytes]),
+            texture: texture.to_string(),
+            smooth: true,
+        }
+    }
+
+    /// Set a bit at the given cell coordinates.
+    pub fn set_bit(&mut self, cell_x: u32, cell_y: u32, cell_width: u32) {
+        let bit_index = (cell_y * cell_width + cell_x) as usize;
+        let byte_index = bit_index / 8;
+        let bit_offset = bit_index % 8;
+        if byte_index < self.bitmap.0.len() {
+            self.bitmap.0[byte_index] |= 1 << bit_offset;
+        }
+    }
+}
+
 /// Grid configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Grid {
@@ -72,7 +110,7 @@ pub struct Level {
     #[serde(default)]
     pub water: Option<Water>,
     #[serde(default)]
-    pub materials: BTreeMap<String, serde_json::Value>,
+    pub materials: BTreeMap<String, Vec<MaterialEntry>>,
     #[serde(default)]
     pub paths: Vec<MapPath>,
     #[serde(default)]
