@@ -4,14 +4,14 @@ level: task
 title: "Point light placement: scatter, along-path, and with-objects modes"
 short_code: "MIMIR-T-0629"
 created_at: 2026-03-15T00:42:41.349107+00:00
-updated_at: 2026-03-15T00:42:41.349107+00:00
+updated_at: 2026-03-15T11:43:02.678413+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -62,6 +62,10 @@ Implement point light generation as a new pipeline stage. Three placement modes:
 
 ## Acceptance Criteria
 
+## Acceptance Criteria
+
+## Acceptance Criteria
+
 - [ ] `LightConfig` struct in `pipeline.rs` with placement enum (Scatter, AlongPath, WithObjects) and shared fields (color, intensity, range, shadows, layer, margin)
 - [ ] `Scatter` mode: Poisson disc placement gated by noise_lower/upper + probability. Reuses `distribution.rs`
 - [ ] `AlongPath` mode: accepts a named feature reference, samples points at `density` intervals along the path
@@ -90,4 +94,13 @@ Implement point light generation as a new pipeline stage. Three placement modes:
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-15
+- Created `src/lights.rs` with `generate_lights()` and 3 placement modes
+- Scatter: PoissonDisc + noise gating + probability + margin
+- AlongPath: samples at density intervals along named path from registry
+- WithObjects: one light per position in named object group
+- Added `LightConfig`, `LightPlacement` enum with serde tagged union
+- Wired into pipeline after objects/elevation, pushes to `Level.lights`
+- Added `lights: Vec<LightConfig>` to `MapConfig`
+- 8 unit tests: path sampling, light construction, scatter, along_path, with_objects, missing reference handling
+- All 179 tests pass

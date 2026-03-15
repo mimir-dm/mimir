@@ -14,6 +14,7 @@ pub mod curves;
 pub mod distribution;
 pub mod elevation;
 pub mod format;
+pub mod lights;
 pub mod noise_gen;
 pub mod objects;
 pub mod paths;

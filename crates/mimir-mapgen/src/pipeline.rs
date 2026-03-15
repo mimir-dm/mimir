@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::elevation::{self, ElevationConfig};
 use crate::format::{DungeondraftMap, NodeIdAllocator};
+use crate::lights::{self, LightConfig};
 use crate::noise_gen::{NoiseConfig, NoiseMap};
 use crate::objects::{self, clear_corridor, ClumpConfig, ObjectConfig, TreeConfig};
 use crate::paths::{self, RiverConfig, RoadConfig};
@@ -72,6 +73,9 @@ pub struct MapConfig {
     /// Closed polygon areas with shared-edge wall subtraction.
     #[serde(default)]
     pub polygons: Vec<PolygonConfig>,
+    /// Point light placement configs.
+    #[serde(default)]
+    pub lights: Vec<LightConfig>,
 }
 
 /// Lighting/environment configuration.
@@ -842,6 +846,20 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().paths.extend(contour_paths);
     }
 
+    // 9b. Generate point lights
+    if !config.lights.is_empty() {
+        let point_lights = lights::generate_lights(
+            &config.lights,
+            &noise_map,
+            &features,
+            pixel_width,
+            pixel_height,
+            &alloc,
+            &mut rng,
+        );
+        map.ground_level_mut().lights.extend(point_lights);
+    }
+
     // 10. Apply lighting
     if let Some(ref lighting) = config.lighting {
         let level = map.ground_level_mut();
@@ -913,6 +931,7 @@ mod tests {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            lights: vec![],
         }
     }
 
