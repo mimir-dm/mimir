@@ -175,6 +175,7 @@ fn forest_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -254,6 +255,7 @@ fn grassland_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -322,6 +324,7 @@ fn cave_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -412,6 +415,7 @@ fn desert_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -521,6 +525,7 @@ fn lake_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -594,6 +599,7 @@ fn ice_lake_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -674,6 +680,7 @@ fn arctic_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -783,6 +790,7 @@ fn island_tropical_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -893,6 +901,7 @@ fn island_forest_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -966,6 +975,7 @@ fn island_arctic_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -1079,6 +1089,7 @@ fn swamp_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }
@@ -1184,6 +1195,7 @@ fn forest_river_preset() -> BiomePreset {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         },
     }

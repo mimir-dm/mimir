@@ -4,14 +4,14 @@ level: task
 title: "General path generation: waypoints, room-to-room, offset, and intermittent styles"
 short_code: "MIMIR-T-0630"
 created_at: 2026-03-15T00:42:42.309130+00:00
-updated_at: 2026-03-15T00:42:42.309130+00:00
+updated_at: 2026-03-15T11:52:33.017410+00:00
 parent: MIMIR-I-0062
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Implement general-purpose path generation beyond the existing road/river generators. Four styles: waypoints (explicit coordinates), room-to-room (connect rooms by name), offset (companion path at perpendicular distance from a parent feature), intermittent (break a parent path into segments with random gaps). All produce `MapPath` entries. Existing roads/rivers remain untouched.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -57,4 +61,14 @@ Implement general-purpose path generation beyond the existing road/river generat
 
 ## Status Updates
 
-*To be added during implementation*
+### 2026-03-15
+- Created `src/custom_paths.rs` with `generate_custom_paths()` and 4 styles
+- Waypoints: grid coords → pixels, optional Bezier smoothing
+- RoomToRoom: looks up room centers from GeneratedFeatures registry
+- Offset: applies `curves::offset_polyline` at configurable distance from named parent
+- Intermittent: `break_into_segments()` with random segment lengths, gaps, and optional offset
+- Added `CustomPathConfig`, `PathStyle` enum with serde tagged union
+- Wired into pipeline after elevation, before lights
+- Added `custom_paths: Vec<CustomPathConfig>` to `MapConfig`
+- 7 unit tests: waypoints, smoothing, room-to-room, offset, intermittent, missing refs, segment breaking
+- All 186 tests pass

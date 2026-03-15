@@ -6,6 +6,7 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize};
 
+use crate::custom_paths::{self, CustomPathConfig};
 use crate::elevation::{self, ElevationConfig};
 use crate::format::{DungeondraftMap, NodeIdAllocator};
 use crate::lights::{self, LightConfig};
@@ -73,6 +74,9 @@ pub struct MapConfig {
     /// Closed polygon areas with shared-edge wall subtraction.
     #[serde(default)]
     pub polygons: Vec<PolygonConfig>,
+    /// General-purpose path configs (waypoints, room-to-room, offset, intermittent).
+    #[serde(default)]
+    pub custom_paths: Vec<CustomPathConfig>,
     /// Point light placement configs.
     #[serde(default)]
     pub lights: Vec<LightConfig>,
@@ -846,7 +850,18 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().paths.extend(contour_paths);
     }
 
-    // 9b. Generate point lights
+    // 9b. Generate custom paths
+    if !config.custom_paths.is_empty() {
+        let custom = custom_paths::generate_custom_paths(
+            &config.custom_paths,
+            &features,
+            &alloc,
+            &mut rng,
+        );
+        map.ground_level_mut().paths.extend(custom);
+    }
+
+    // 9c. Generate point lights
     if !config.lights.is_empty() {
         let point_lights = lights::generate_lights(
             &config.lights,
@@ -931,6 +946,7 @@ mod tests {
             rooms: vec![],
             corridors: vec![],
             polygons: vec![],
+            custom_paths: vec![],
             lights: vec![],
         }
     }
