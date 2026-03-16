@@ -147,7 +147,7 @@ impl Default for RiverConfig {
             id: None,
             from: Edge::Top,
             to: Edge::Bottom,
-            width: 120.0,
+            width: 768.0,
             style: PathStyle::Meandering,
             step_distance: 64.0,
             fov: PI / 3.0,
@@ -157,7 +157,7 @@ impl Default for RiverConfig {
             deep_color: "ff3aa19a".to_string(),
             shallow_color: "ff3ac3b2".to_string(),
             bank_texture: "res://textures/paths/path_rocks.png".to_string(),
-            bank_width: 20.0,
+            bank_width: 256.0,
             bank_layer: 100,
         }
     }
@@ -849,7 +849,7 @@ mod tests {
 
         let road = result.unwrap();
         assert!(road.corridor_points.len() >= 2);
-        assert!(road.road.edit_points.0.len() >= 2);
+        assert!(road.road.points.0.len() >= 2);
         assert_eq!(road.edge_paths.len(), 0); // No edge config
     }
 

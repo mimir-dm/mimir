@@ -381,7 +381,7 @@ mod tests {
         let paths = generate_custom_paths(&configs, &features, &alloc, &mut rng);
         assert_eq!(paths.len(), 1);
         // Smoothed path should have more points than the 3 input points
-        assert!(paths[0].edit_points.0.len() > 3);
+        assert!(paths[0].points.0.len() > 3);
     }
 
     #[test]
@@ -446,7 +446,7 @@ mod tests {
         let paths = generate_custom_paths(&configs, &features, &alloc, &mut rng);
         assert_eq!(paths.len(), 1);
         // Offset path should be shifted perpendicular
-        let first_y = paths[0].position.y + paths[0].edit_points.0[0].y;
+        let first_y = paths[0].points.0[0].y;
         assert!((first_y - (128.0 + 128.0)).abs() < 10.0 || (first_y - (128.0 - 128.0)).abs() < 10.0,
             "Offset path should be shifted from parent, got y={}", first_y);
     }

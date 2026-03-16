@@ -41,7 +41,7 @@ impl Default for WaterConfig {
             shallow_color: "ff3ac3b2".to_string(),
             blend_distance: 40.0,
             min_contour_points: 6,
-            smooth_iterations: 2,
+            smooth_iterations: 5,
             pixels_per_cell: 256.0 / 4.0, // 64px per noise cell at default resolution
             disable_border: false,
         }
@@ -110,9 +110,12 @@ fn generate_water_inner(
                 .into_iter()
                 .filter(|c| c.len() >= config.min_contour_points)
                 .map(|c| {
-                    c.iter()
+                    // Scale to pixel coords
+                    let pixel_pts: Vec<(f64, f64)> = c.iter()
                         .map(|&(x, y)| (x * config.pixels_per_cell, y * config.pixels_per_cell))
-                        .collect()
+                        .collect();
+                    // Apply Bezier smoothing for organic curves
+                    crate::curves::bezier_smooth(&pixel_pts, 4)
                 })
                 .collect()
         }
@@ -268,13 +271,17 @@ fn radial_water_polygon(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<Vec<(
         points.push((px, py));
     }
 
+    // Smooth the raw boundary with Bezier curves for organic edges
+    let smoothed = crate::curves::bezier_smooth(&points, 4);
+
     // Close the polygon
-    if let Some(&first) = points.first() {
-        points.push(first);
+    let mut closed = smoothed;
+    if let Some(&first) = closed.first() {
+        closed.push(first);
     }
 
-    if points.len() >= config.min_contour_points {
-        vec![points]
+    if closed.len() >= config.min_contour_points {
+        vec![closed]
     } else {
         vec![]
     }

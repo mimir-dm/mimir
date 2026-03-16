@@ -7,9 +7,9 @@
       "day": 15,
       "weekday": 7,
       "dst": false,
-      "hour": 8,
-      "minute": 25,
-      "second": 53
+      "hour": 12,
+      "minute": 27,
+      "second": 52
     },
     "uses_default_assets": true,
     "asset_manifest": [],
@@ -69,9 +69,7 @@
         "label": "Ground",
         "environment": {
           "baked_lighting": true,
-          "ambient_light": "ffffffff",
-          "ambient_energy": null,
-          "shadow_color": null
+          "ambient_light": "ffffffff"
         },
         "layers": {
           "-100": "Below Water",
