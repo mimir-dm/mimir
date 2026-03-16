@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-15T23:51:48Z | 550 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-16T12:45:01Z | 550 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -8046,11 +8046,11 @@
 - pub `generate_elevation` function L102-149 — `( noise_map: &NoiseMap, config: &ElevationConfig, alloc: &NodeIdAllocator, ) -> ...` — Generate elevation contour paths from a noise map.
 -  `ElevationConfig` type L58-96 — `impl Default for ElevationConfig` — Generates cliff and hill contour paths at configurable noise thresholds.
 -  `default` function L59-95 — `() -> Self` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `tests` module L152-273 — `-` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `tests` module L152-275 — `-` — Generates cliff and hill contour paths at configurable noise thresholds.
 -  `test_generate_elevation_basic` function L157-189 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
 -  `test_generate_elevation_with_shadows` function L192-217 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
 -  `test_generate_elevation_uniform` function L220-233 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `test_contour_pixel_scaling` function L236-272 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `test_contour_pixel_scaling` function L236-274 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
 
 #### crates/mimir-mapgen/src/lib.rs
 
@@ -8455,27 +8455,27 @@
 - pub `with_layer` function L101-104 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 - pub `with_mirror` function L106-109 — `(mut self, mirror: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 - pub `with_custom_color` function L111-114 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapPath` struct L123-132 — `{ texture: String, color: String, points: PoolVector2Array, width: f64, layer: i...` — A path on the map (roads, rivers, cliffs, decorative lines, etc.).
-- pub `new` function L135-145 — `(texture: &str, points: Vec<Vector2>, width: f64, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_color` function L147-150 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_layer` function L152-155 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_loop` function L157-160 — `(mut self, loop_path: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapLight` struct L165-175 — `{ position: Vector2, rotation: i32, range: f64, intensity: f64, color: String, t...` — A light source on the map.
-- pub `new` function L178-189 — `(position: Vector2, color: &str, range: f64, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapWall` struct L198-222 — `{ points: PoolVector2Array, texture: String, color: String, is_loop: bool, wall_...` — A wall segment — a polyline of connected wall segments.
-- pub `new_room` function L226-239 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new closed-polygon wall (room outline) with default settings.
-- pub `new_open` function L242-255 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new open polyline wall with default settings.
-- pub `with_color` function L257-260 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_portals` function L262-265 — `(mut self, portals: Vec<MapPortal>) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapPortal` struct L274-299 — `{ position: Vector2, rotation: f64, scale: Vector2, direction: Vector2, texture:...` — A portal (door/window/archway) — an opening in a wall.
-- pub `new` function L303-327 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a new portal attached to a wall.
-- pub `new_freestanding` function L330-351 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a freestanding portal (not attached to any wall).
-- pub `with_closed` function L353-356 — `(mut self, closed: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapPattern` struct L361-375 — `{ position: Vector2, shape_rotation: i32, scale: Vector2, points: PoolVector2Arr...` — A pattern — a polygon-bounded texture fill (floor tiles, water overlays, etc.).
-- pub `new` function L379-392 — `(texture: &str, points: Vec<Vector2>, color: &str, node_id: &str) -> Self` — Create a new pattern fill from a polygon boundary (in pixel coordinates).
-- pub `with_layer` function L394-397 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_rotation` function L399-402 — `(mut self, rotation: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapText` struct L407-416 — `{ text: String, position: Vector2, font_name: String, font_size: u32, font_color...` — A text label on the map.
+- pub `MapPath` struct L123-145 — `{ position: Vector2, rotation: i32, scale: Vector2, edit_points: PoolVector2Arra...` — A path on the map (roads, rivers, cliffs, decorative lines, etc.).
+- pub `new` function L154-176 — `(texture: &str, points: Vec<Vector2>, width: f64, node_id: &str) -> Self` — Create a path from absolute points.
+- pub `with_color` function L178-180 — `(self, _color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_layer` function L182-185 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_loop` function L187-190 — `(mut self, loop_path: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapLight` struct L195-205 — `{ position: Vector2, rotation: i32, range: f64, intensity: f64, color: String, t...` — A light source on the map.
+- pub `new` function L208-219 — `(position: Vector2, color: &str, range: f64, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapWall` struct L228-252 — `{ points: PoolVector2Array, texture: String, color: String, is_loop: bool, wall_...` — A wall segment — a polyline of connected wall segments.
+- pub `new_room` function L256-269 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new closed-polygon wall (room outline) with default settings.
+- pub `new_open` function L272-285 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new open polyline wall with default settings.
+- pub `with_color` function L287-290 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_portals` function L292-295 — `(mut self, portals: Vec<MapPortal>) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapPortal` struct L304-329 — `{ position: Vector2, rotation: f64, scale: Vector2, direction: Vector2, texture:...` — A portal (door/window/archway) — an opening in a wall.
+- pub `new` function L333-357 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a new portal attached to a wall.
+- pub `new_freestanding` function L360-381 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a freestanding portal (not attached to any wall).
+- pub `with_closed` function L383-386 — `(mut self, closed: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapPattern` struct L391-405 — `{ position: Vector2, shape_rotation: i32, scale: Vector2, points: PoolVector2Arr...` — A pattern — a polygon-bounded texture fill (floor tiles, water overlays, etc.).
+- pub `new` function L409-422 — `(texture: &str, points: Vec<Vector2>, color: &str, node_id: &str) -> Self` — Create a new pattern fill from a polygon boundary (in pixel coordinates).
+- pub `with_layer` function L424-427 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_rotation` function L429-432 — `(mut self, rotation: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapText` struct L437-446 — `{ text: String, position: Vector2, font_name: String, font_size: u32, font_color...` — A text label on the map.
 -  `serialize_wall_id` function L11-18 — `(value: &String, serializer: S) -> Result<S::Ok, S::Error>` — Custom serializer for wall_id: numeric hex strings serialize as integers,
 -  `deserialize_wall_id` function L21-51 — `(deserializer: D) -> Result<String, D::Error>` — Custom deserializer for wall_id: accepts both integer and string values.
 -  `WallIdVisitor` struct L24 — `-` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
@@ -8487,11 +8487,12 @@
 -  `visit_str` function L41-43 — `(self, v: &str) -> Result<String, E>` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 -  `visit_string` function L45-47 — `(self, v: String) -> Result<String, E>` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 -  `MapObject` type L74-115 — `= MapObject` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapPath` type L134-161 — `= MapPath` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapLight` type L177-190 — `= MapLight` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapWall` type L224-266 — `= MapWall` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapPortal` type L301-357 — `= MapPortal` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapPattern` type L377-403 — `= MapPattern` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `default_smoothness` function L147-149 — `() -> f64` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapPath` type L151-191 — `= MapPath` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapLight` type L207-220 — `= MapLight` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapWall` type L254-296 — `= MapWall` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapPortal` type L331-387 — `= MapPortal` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapPattern` type L407-433 — `= MapPattern` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 
 #### crates/mimir-mapgen/src/format/godot_types.rs
 
