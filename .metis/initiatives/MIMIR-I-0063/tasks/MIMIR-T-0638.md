@@ -4,14 +4,14 @@ level: task
 title: "Declarative lakes: placed water features with organic noise-perturbed shorelines"
 short_code: "MIMIR-T-0638"
 created_at: 2026-03-16T18:01:10.414192+00:00
-updated_at: 2026-03-16T18:01:10.414192+00:00
+updated_at: 2026-03-16T22:09:41.389587+00:00
 parent: MIMIR-I-0063
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Implement lakes as declarative placed features with center, radius, roughness, and color configuration. Generate organic noise-perturbed shorelines. Depress the noise map within lake boundaries to create natural basins. Contours terminate at lake edges. Object placement excludes lake areas.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -60,3 +64,15 @@ Implement lakes as declarative placed features with center, radius, roughness, a
 5. Object exclusion: add lake polygon + margin to exclusion list before Poisson disc sampling
 
 ## Status Updates
+
+### 2026-03-16
+- Created `lakes.rs` with `generate_lake()` — noise-perturbed shoreline from center/radius/roughness
+- Shoreline: 120 radial samples, noise perturbation scaled by roughness, Bezier smoothed
+- `depress_noise_for_lake()` — lowers noise map inside lake boundary with edge blending
+- Lake pipeline stage runs after noise, before contours — so contours respect the depression
+- Water tree added as child of root water node (DD format)
+- Lake registered in GeneratedFeatures (boundary + center) for downstream stages
+- Object exclusion: trees/clutter filtered from lake interior
+- Added `LakeConfig` to `MapConfig` with id, center, radius, roughness, colors, blend_distance
+- DD-validated: lake with organic shoreline, trees excluded, terrain shows basin
+- 5 unit tests (basic, organic, smooth, depression, point-in-polygon)

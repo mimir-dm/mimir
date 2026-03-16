@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::custom_paths::{self, CustomPathConfig};
 use crate::elevation::{self, ElevationConfig};
 use crate::format::{DungeondraftMap, NodeIdAllocator};
+use crate::lakes::{self, LakeConfig};
 use crate::lights::{self, LightConfig};
 use crate::materials::{self, MaterialScatterConfig};
 use crate::noise_gen::{NoiseConfig, NoiseMap};
@@ -88,6 +89,9 @@ pub struct MapConfig {
     /// Material scatter configs (ice, lava, acid, ground detail).
     #[serde(default, rename = "materials")]
     pub material_configs: Vec<MaterialScatterConfig>,
+    /// Declarative lake configs.
+    #[serde(default)]
+    pub lakes: Vec<LakeConfig>,
 }
 
 /// Lighting/environment configuration.
@@ -676,7 +680,52 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().terrain = Some(terrain);
     }
 
-    // 3b. Generate elevation contours (before roads/rivers so they can see contour data)
+    // 3b. Generate declarative lakes (before contours so noise depression affects contour lines)
+    let mut lake_exclusion_polygons: Vec<Vec<(f64, f64)>> = Vec::new();
+    for lake_config in &config.lakes {
+        let result = lakes::generate_lake(lake_config, &noise_map, &alloc);
+
+        // Depress noise map within lake boundary
+        lakes::depress_noise_for_lake(
+            &mut noise_map,
+            &result.shoreline,
+            lake_config.blend_distance * 256.0,
+        );
+
+        // Register lake in features
+        let center = (lake_config.center[0] * 256.0, lake_config.center[1] * 256.0);
+        features.rooms.insert(lake_config.id.clone(), RoomGeometry {
+            center,
+            boundary: result.shoreline.clone(),
+        });
+        features.water_polygons.push(result.shoreline.clone());
+        lake_exclusion_polygons.push(result.shoreline.clone());
+
+        // Add water tree as child
+        let level = map.ground_level_mut();
+        let water = level.water.get_or_insert_with(|| crate::format::world::Water {
+            disable_border: false,
+            tree: Some(crate::format::world::WaterTree {
+                node_ref: 0,
+                polygon: crate::format::godot_types::PoolVector2Array::new(),
+                join: 0,
+                end: 0,
+                is_open: false,
+                deep_color: "00000000".to_string(),
+                shallow_color: "00000000".to_string(),
+                blend_distance: 0.0,
+                children: Vec::new(),
+            }),
+        });
+        if let Some(ref mut tree) = water.tree {
+            tree.children.push(result.water_tree);
+        }
+
+        // Add lake colors to header palettes
+        map.add_water_colors(&lake_config.deep_color, &lake_config.shallow_color);
+    }
+
+    // 3c. Generate elevation contours (before roads/rivers so they can see contour data)
     let mut contour_paths = Vec::new();
     if let Some(ref elev_config) = config.elevation {
         contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
@@ -845,6 +894,15 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         all_objects.retain(|obj| !rooms::is_excluded(&exclusion_zones, obj.position.x, obj.position.y));
     }
 
+    // 7c. Filter objects from lake areas
+    if !lake_exclusion_polygons.is_empty() {
+        all_objects.retain(|obj| {
+            !lake_exclusion_polygons.iter().any(|poly| {
+                crate::lakes::point_in_lake(obj.position.x, obj.position.y, poly)
+            })
+        });
+    }
+
     stats.objects_placed = all_objects.len();
     map.ground_level_mut().objects = all_objects;
 
@@ -1010,6 +1068,7 @@ mod tests {
             custom_paths: vec![],
             lights: vec![],
             material_configs: vec![],
+            lakes: vec![],
         }
     }
 

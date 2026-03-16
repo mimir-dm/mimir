@@ -262,6 +262,7 @@ fn forest_preset() -> BiomePreset {
                 path_lights("road_0"),
             ],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -344,6 +345,7 @@ fn grassland_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -428,6 +430,7 @@ fn cave_preset() -> BiomePreset {
                 layer: 100,
             }],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -521,6 +524,7 @@ fn desert_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -633,6 +637,7 @@ fn lake_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -707,6 +712,7 @@ fn ice_lake_preset() -> BiomePreset {
                 layer: "-400".to_string(),
                 smooth: true,
             }],
+            lakes: vec![],
         },
     }
 }
@@ -790,6 +796,7 @@ fn arctic_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![ice_material()],
+            lakes: vec![],
         },
     }
 }
@@ -902,6 +909,7 @@ fn island_tropical_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -1015,6 +1023,7 @@ fn island_forest_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -1091,6 +1100,7 @@ fn island_arctic_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![ice_material()],
+            lakes: vec![],
         },
     }
 }
@@ -1207,6 +1217,7 @@ fn swamp_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -1315,6 +1326,7 @@ fn forest_river_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights(), path_lights("road_0"), path_lights("river_0")],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
