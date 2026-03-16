@@ -526,6 +526,10 @@ pub struct GeneratedFeatures {
     pub water_polygons: Vec<Vec<(f64, f64)>>,
     /// Placed object positions by group name (name → positions in pixels).
     pub object_positions: std::collections::HashMap<String, Vec<(f64, f64)>>,
+    /// Contour polylines in pixel coordinates (for corridor clipping).
+    pub contour_polylines: Vec<Vec<(f64, f64)>>,
+    /// Road/river corridors (centerline points + half-width) for contour clipping.
+    pub corridors: Vec<(Vec<(f64, f64)>, f64)>,
 }
 
 /// Geometry for a generated room.
@@ -672,6 +676,22 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().terrain = Some(terrain);
     }
 
+    // 3b. Generate elevation contours (before roads/rivers so they can see contour data)
+    let mut contour_paths = Vec::new();
+    if let Some(ref elev_config) = config.elevation {
+        contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
+        stats.contour_paths = contour_paths.len();
+        // Register contour polylines in feature registry (absolute coordinates)
+        for (i, (level_config, path)) in elev_config.levels.iter().zip(contour_paths.iter()).enumerate() {
+            let name = feature_name(&level_config.id, "elevation", i);
+            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                .map(|p| (path.position.x + p.x, path.position.y + p.y))
+                .collect();
+            features.paths.insert(name, points.clone());
+            features.contour_polylines.push(points);
+        }
+    }
+
     // 4. Generate roads
     let mut corridors: Vec<(Vec<(f64, f64)>, f64)> = Vec::new();
 
@@ -690,6 +710,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             features.paths.insert(name, result.corridor_points.clone());
 
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
+            features.corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             map.ground_level_mut().paths.push(result.road);
             stats.paths_generated += 1;
             for ep in result.edge_paths {
@@ -727,6 +748,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             features.water_polygons.push(result.water_polygon.clone());
 
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
+            features.corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             for bp in result.bank_paths {
                 map.ground_level_mut().paths.push(bp);
                 stats.paths_generated += 1;
@@ -843,19 +865,20 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().water = Some(water);
     }
 
-    // 9. Generate elevation contours
-    if let Some(ref elev_config) = config.elevation {
-        let contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
-        stats.contour_paths = contour_paths.len();
-        // Register elevation contour paths in feature registry
-        for (i, (level_config, path)) in elev_config.levels.iter().zip(contour_paths.iter()).enumerate() {
-            let name = feature_name(&level_config.id, "elevation", i);
-            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
-                .map(|p| (path.position.x + p.x, path.position.y + p.y))
-                .collect();
-            features.paths.insert(name, points);
-        }
-        map.ground_level_mut().paths.extend(contour_paths);
+    // 9. Clip contours against road/river corridors and add to level
+    if !contour_paths.is_empty() {
+        let clip_corridors: Vec<crate::contour_clip::Corridor> = features.corridors.iter()
+            .map(|(pts, hw)| crate::contour_clip::Corridor {
+                points: pts.clone(),
+                half_width: *hw + 32.0, // extra margin to avoid visual overlap
+            })
+            .collect();
+        let clipped = crate::contour_clip::clip_contours_against_corridors(
+            contour_paths,
+            &clip_corridors,
+            &alloc,
+        );
+        map.ground_level_mut().paths.extend(clipped);
     }
 
     // 9b. Generate patterns

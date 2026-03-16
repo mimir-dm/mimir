@@ -10,6 +10,7 @@
 pub mod assets;
 pub mod biomes;
 pub mod contour;
+pub mod contour_clip;
 pub mod curves;
 pub mod custom_paths;
 pub mod distribution;

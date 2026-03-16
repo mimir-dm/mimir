@@ -4,14 +4,14 @@ level: initiative
 title: "Expressive mapgen: lights, general paths, and patterns for Dungeondraft"
 short_code: "MIMIR-I-0062"
 created_at: 2026-03-14T19:07:01.770991+00:00
-updated_at: 2026-03-15T00:53:03.254963+00:00
+updated_at: 2026-03-16T20:48:08.104148+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/active"
+  - "#phase/completed"
 
 
 exit_criteria_met: false

@@ -4,14 +4,14 @@ level: initiative
 title: "Contour-aware terrain generation: physically plausible roads, rivers, and water"
 short_code: "MIMIR-I-0063"
 created_at: 2026-03-16T13:36:32.139085+00:00
-updated_at: 2026-03-16T18:00:59.175906+00:00
+updated_at: 2026-03-16T20:52:14.729768+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/decompose"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -137,6 +137,10 @@ Post-generation analysis that warns when terrain density conflicts with requeste
 ## Verification
 
 **Every task requires human-mediated testing before signoff.** Generated maps must be opened in Dungeondraft and visually verified. Automated tests confirm code correctness but cannot validate DD format compatibility or visual quality. No task is complete until the user has opened the output in DD and confirmed it works.
+
+## Status
+
+**Note:** Initiative was accidentally transitioned to `completed` instead of `active`. All tasks are still in `todo` and work has not started. Ignore the phase — track progress via individual tasks.
 
 ## Examples from Current Output
 

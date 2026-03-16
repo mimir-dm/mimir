@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-16T12:45:01Z | 550 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-16T21:06:02Z | 551 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -585,6 +585,7 @@
 │   │   │   ├── assets.rs
 │   │   │   ├── biomes.rs
 │   │   │   ├── contour.rs
+│   │   │   ├── contour_clip.rs
 │   │   │   ├── curves.rs
 │   │   │   ├── custom_paths.rs
 │   │   │   ├── distribution.rs
@@ -7990,6 +7991,19 @@
 -  `test_smooth_contours` function L396-412 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
 -  `test_cell_case` function L415-436 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
 
+#### crates/mimir-mapgen/src/contour_clip.rs
+
+- pub `Corridor` struct L11-14 — `{ points: Vec<(f64, f64)>, half_width: f64 }` — A corridor defined by a centerline polyline and half-width.
+- pub `clip_contours_against_corridors` function L20-57 — `( contours: Vec<MapPath>, corridors: &[Corridor], alloc: &NodeIdAllocator, ) -> ...` — Clip a set of MapPath contour lines against corridors.
+-  `split_polyline_by_corridors` function L60-87 — `( points: &[(f64, f64)], corridors: &[Corridor], ) -> Vec<Vec<(f64, f64)>>` — Split a polyline into segments that are outside all corridors.
+-  `is_inside_any_corridor` function L90-97 — `(point: (f64, f64), corridors: &[Corridor]) -> bool` — Check if a point is inside any corridor.
+-  `distance_to_polyline` function L100-121 — `(px: f64, py: f64, points: &[(f64, f64)]) -> f64` — Minimum distance from a point to a polyline.
+-  `tests` module L124-183 — `-` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_no_corridors_returns_unchanged` function L128-137 — `()` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_corridor_clips_middle` function L140-155 — `()` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_corridor_fully_covers_contour` function L158-174 — `()` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_distance_to_polyline` function L177-182 — `()` — contour polylines to remove segments that fall within corridor bounds.
+
 #### crates/mimir-mapgen/src/curves.rs
 
 - pub `cubic_bezier` function L8-25 — `( p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), p3: (f64, f64), t: f64, ) -> (...` — Evaluate a cubic Bezier curve at parameter `t` (0.0–1.0).
@@ -8057,22 +8071,23 @@
 - pub `assets` module L10 — `-` — `mimir-mapgen` generates `.dungeondraft_map` files from YAML configuration,
 - pub `biomes` module L11 — `-` — database layer.
 - pub `contour` module L12 — `-` — database layer.
-- pub `curves` module L13 — `-` — database layer.
-- pub `custom_paths` module L14 — `-` — database layer.
-- pub `distribution` module L15 — `-` — database layer.
-- pub `elevation` module L16 — `-` — database layer.
-- pub `format` module L17 — `-` — database layer.
-- pub `lights` module L18 — `-` — database layer.
-- pub `materials` module L19 — `-` — database layer.
-- pub `noise_gen` module L20 — `-` — database layer.
-- pub `objects` module L21 — `-` — database layer.
-- pub `paths` module L22 — `-` — database layer.
-- pub `patterns` module L23 — `-` — database layer.
-- pub `pipeline` module L24 — `-` — database layer.
-- pub `polygons` module L25 — `-` — database layer.
-- pub `rooms` module L26 — `-` — database layer.
-- pub `terrain` module L27 — `-` — database layer.
-- pub `water` module L28 — `-` — database layer.
+- pub `contour_clip` module L13 — `-` — database layer.
+- pub `curves` module L14 — `-` — database layer.
+- pub `custom_paths` module L15 — `-` — database layer.
+- pub `distribution` module L16 — `-` — database layer.
+- pub `elevation` module L17 — `-` — database layer.
+- pub `format` module L18 — `-` — database layer.
+- pub `lights` module L19 — `-` — database layer.
+- pub `materials` module L20 — `-` — database layer.
+- pub `noise_gen` module L21 — `-` — database layer.
+- pub `objects` module L22 — `-` — database layer.
+- pub `paths` module L23 — `-` — database layer.
+- pub `patterns` module L24 — `-` — database layer.
+- pub `pipeline` module L25 — `-` — database layer.
+- pub `polygons` module L26 — `-` — database layer.
+- pub `rooms` module L27 — `-` — database layer.
+- pub `terrain` module L28 — `-` — database layer.
+- pub `water` module L29 — `-` — database layer.
 
 #### crates/mimir-mapgen/src/lights.rs
 
@@ -8235,52 +8250,52 @@
 - pub `validate_config` function L146-200 — `(config: &MapConfig) -> Vec<ValidationError>` — Validate a MapConfig, returning a list of errors.
 - pub `GenerateResult` struct L493-500 — `{ map: DungeondraftMap, stats: GenerateStats, features: GeneratedFeatures }` — Result of map generation.
 - pub `GenerateStats` struct L504-511 — `{ objects_placed: usize, paths_generated: usize, water_polygons: usize, contour_...` — Statistics from map generation.
-- pub `GeneratedFeatures` struct L518-529 — `{ paths: std::collections::HashMap<String, Vec<(f64, f64)>>, rooms: std::collect...` — Registry of generated feature geometry, used for cross-referencing.
-- pub `RoomGeometry` struct L533-538 — `{ center: (f64, f64), boundary: Vec<(f64, f64)> }` — Geometry for a generated room.
-- pub `get_path` function L542-544 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a path polyline by name.
-- pub `get_room` function L547-549 — `(&self, name: &str) -> Option<&RoomGeometry>` — Get a room's geometry by name.
-- pub `get_polygon` function L552-554 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a polygon boundary by name.
-- pub `get_object_positions` function L557-559 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get object positions by group name.
-- pub `generate` function L582-960 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
+- pub `GeneratedFeatures` struct L518-533 — `{ paths: std::collections::HashMap<String, Vec<(f64, f64)>>, rooms: std::collect...` — Registry of generated feature geometry, used for cross-referencing.
+- pub `RoomGeometry` struct L537-542 — `{ center: (f64, f64), boundary: Vec<(f64, f64)> }` — Geometry for a generated room.
+- pub `get_path` function L546-548 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a path polyline by name.
+- pub `get_room` function L551-553 — `(&self, name: &str) -> Option<&RoomGeometry>` — Get a room's geometry by name.
+- pub `get_polygon` function L556-558 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a polygon boundary by name.
+- pub `get_object_positions` function L561-563 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get object positions by group name.
+- pub `generate` function L586-983 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
 -  `validate_rooms` function L202-299 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `validate_corridors` function L301-340 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `validate_polygons` function L342-457 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `segment_intersection_point` function L462-485 — `( p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], p4: [f64; 2], ) -> Option<[f64; 2]>` — If two line segments (p1→p2) and (p3→p4) properly cross, return the
 -  `cross_2d` function L488-490 — `(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64` — 2D cross product: sign of (b-a) × (c-a).
--  `GeneratedFeatures` type L540-560 — `= GeneratedFeatures` — Config parsing, biome preset resolution, and staged map generation.
--  `feature_name` function L563-565 — `(id: &Option<String>, type_prefix: &str, index: usize) -> String` — Resolve an optional ID or fall back to type_index naming.
--  `tests` module L963-1648 — `-` — Config parsing, biome preset resolution, and staged map generation.
--  `minimal_config` function L966-991 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_minimal` function L994-1000 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_terrain` function L1003-1017 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_roads` function L1020-1028 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_objects` function L1031-1041 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_deterministic` function L1044-1062 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_seed_override` function L1065-1071 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_lighting` function L1074-1087 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_lighting_presets` function L1090-1097 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_config` function L1100-1110 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_full_pipeline` function L1113-1143 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_rooms` function L1146-1235 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_outdoor_only_no_regression` function L1238-1258 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_out_of_bounds` function L1261-1273 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_overlap` function L1276-1297 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_duplicate_room_id` function L1300-1321 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_portal_out_of_wall` function L1324-1341 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_corridor_invalid_room_ref` function L1344-1359 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_terrain_slot_out_of_range` function L1362-1374 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_river_creates_water_without_water_config` function L1377-1410 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_river_water_not_overwritten_by_water_step` function L1413-1431 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_zero_dimensions` function L1434-1446 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_valid_square` function L1449-1464 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_self_intersecting_bowtie` function L1467-1501 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_too_few_vertices` function L1504-1517 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_duplicate_id` function L1520-1532 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_duplicate_consecutive_vertex` function L1535-1554 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_portal_edge_out_of_range` function L1557-1573 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_terrain_slot_out_of_range` function L1576-1587 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_complex_valid_l_shape` function L1590-1617 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_figure_eight_crossing` function L1620-1647 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `GeneratedFeatures` type L544-564 — `= GeneratedFeatures` — Config parsing, biome preset resolution, and staged map generation.
+-  `feature_name` function L567-569 — `(id: &Option<String>, type_prefix: &str, index: usize) -> String` — Resolve an optional ID or fall back to type_index naming.
+-  `tests` module L986-1671 — `-` — Config parsing, biome preset resolution, and staged map generation.
+-  `minimal_config` function L989-1014 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_minimal` function L1017-1023 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_terrain` function L1026-1040 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_roads` function L1043-1051 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_objects` function L1054-1064 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_deterministic` function L1067-1085 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_seed_override` function L1088-1094 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_lighting` function L1097-1110 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_lighting_presets` function L1113-1120 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_config` function L1123-1133 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_full_pipeline` function L1136-1166 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_rooms` function L1169-1258 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_outdoor_only_no_regression` function L1261-1281 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_out_of_bounds` function L1284-1296 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_overlap` function L1299-1320 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_duplicate_room_id` function L1323-1344 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_portal_out_of_wall` function L1347-1364 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_corridor_invalid_room_ref` function L1367-1382 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_terrain_slot_out_of_range` function L1385-1397 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_creates_water_without_water_config` function L1400-1433 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_water_not_overwritten_by_water_step` function L1436-1454 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_zero_dimensions` function L1457-1469 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_valid_square` function L1472-1487 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_self_intersecting_bowtie` function L1490-1524 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_too_few_vertices` function L1527-1540 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_duplicate_id` function L1543-1555 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_duplicate_consecutive_vertex` function L1558-1577 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_portal_edge_out_of_range` function L1580-1596 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_terrain_slot_out_of_range` function L1599-1610 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_complex_valid_l_shape` function L1613-1640 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_figure_eight_crossing` function L1643-1670 — `()` — Config parsing, biome preset resolution, and staged map generation.
 
 #### crates/mimir-mapgen/src/polygons.rs
 

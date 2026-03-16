@@ -4,14 +4,14 @@ level: task
 title: "Pipeline reorder: generate contours before roads/rivers + contour clipping at corridors"
 short_code: "MIMIR-T-0635"
 created_at: 2026-03-16T18:01:07.070480+00:00
-updated_at: 2026-03-16T18:01:07.070480+00:00
+updated_at: 2026-03-16T21:06:53.452589+00:00
 parent: MIMIR-I-0063
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -26,6 +26,10 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Reorder the mapgen pipeline so contours generate before roads and rivers. Add post-processing to clip contour paths around road and river corridors, preventing contour lines from visually crossing linear features.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -51,3 +55,12 @@ Reorder the mapgen pipeline so contours generate before roads and rivers. Add po
 4. Margin should default to ~2px beyond half-width to avoid visual overlap
 
 ## Status Updates
+
+### 2026-03-16
+- Reordered pipeline: contours now generate at step 3b (after terrain, before roads/rivers)
+- Created `contour_clip.rs` with `clip_contours_against_corridors()` — walks contour polylines, removes segments within corridor half-width + 32px margin
+- Added `contour_polylines` and `corridors` fields to `GeneratedFeatures`
+- Road and river generation now registers corridors in features registry
+- After roads/rivers, clipping pass trims contour paths before adding to level
+- DD-validated: gull-rock-forest cliffs no longer cross through road
+- 206 tests pass (4 new contour_clip tests)
