@@ -4,12 +4,12 @@
     "creation_date": {
       "year": 2026,
       "month": 3,
-      "day": 15,
-      "weekday": 7,
+      "day": 16,
+      "weekday": 1,
       "dst": false,
-      "hour": 12,
-      "minute": 27,
-      "second": 46
+      "hour": 16,
+      "minute": 14,
+      "second": 47
     },
     "uses_default_assets": true,
     "asset_manifest": [],
@@ -47,7 +47,7 @@
     "format": 3,
     "width": 32,
     "height": 32,
-    "next_node_id": "b",
+    "next_node_id": "2",
     "next_prefab_id": "0",
     "msi": {
       "offset_map_size": 512,
@@ -1162,104 +1162,14 @@
         "objects": [],
         "lights": [
           {
-            "position": "Vector2( 4896.767837661042, 7074.573391578948 )",
+            "position": "Vector2( 2826.871643839182, 1112.3500386666797 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "1"
-          },
-          {
-            "position": "Vector2( 6246.539199968505, 4898.2118328451215 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2"
-          },
-          {
-            "position": "Vector2( 2732.9454859956413, 6800.133962474872 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "3"
-          },
-          {
-            "position": "Vector2( 1674.9500364180599, 5613.359385298642 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "4"
-          },
-          {
-            "position": "Vector2( 5688.788794119793, 1876.5649804895252 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "5"
-          },
-          {
-            "position": "Vector2( 1644.6814447345805, 6510.560232321723 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "6"
-          },
-          {
-            "position": "Vector2( 5038.6662515610005, 872.8381898645043 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "7"
-          },
-          {
-            "position": "Vector2( 3130.2091503021097, 1378.9020507958599 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "8"
-          },
-          {
-            "position": "Vector2( 4010.748555883804, 1649.3005415554962 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "9"
-          },
-          {
-            "position": "Vector2( 1469.7751035657054, 2041.1034560352912 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "a"
           }
         ],
         "roofs": {

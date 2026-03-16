@@ -4,12 +4,12 @@
     "creation_date": {
       "year": 2026,
       "month": 3,
-      "day": 15,
-      "weekday": 7,
+      "day": 16,
+      "weekday": 1,
       "dst": false,
-      "hour": 12,
-      "minute": 27,
-      "second": 48
+      "hour": 16,
+      "minute": 14,
+      "second": 49
     },
     "uses_default_assets": true,
     "asset_manifest": [],
@@ -47,7 +47,7 @@
     "format": 3,
     "width": 32,
     "height": 32,
-    "next_node_id": "2f9",
+    "next_node_id": "2ec",
     "next_prefab_id": "0",
     "msi": {
       "offset_map_size": 512,
@@ -8901,204 +8901,74 @@
         ],
         "lights": [
           {
-            "position": "Vector2( 3720.425128842864, 2418.6190029080753 )",
+            "position": "Vector2( 2474.4254238595554, 1447.7333700198978 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c2"
           },
           {
-            "position": "Vector2( 3030.611526681968, 882.5776450724754 )",
+            "position": "Vector2( 4995.680053692993, 1008.7322735177929 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c3"
           },
           {
-            "position": "Vector2( 1911.130173494752, 1396.9570334905484 )",
+            "position": "Vector2( 3065.890273923842, 6746.108565845845 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c4"
           },
           {
-            "position": "Vector2( 4746.301610992764, 1625.1507280735154 )",
+            "position": "Vector2( 1755.1161161995371, 6055.983406583056 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c5"
           },
           {
-            "position": "Vector2( 4216.632571111361, 4758.153474592906 )",
+            "position": "Vector2( 5252.283118750954, 2380.4284211860468 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c6"
           },
           {
-            "position": "Vector2( 1306.9493293433886, 2429.132915820094 )",
+            "position": "Vector2( 4920.641315975862, 5201.310383427233 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c7"
           },
           {
-            "position": "Vector2( 1655.553396091363, 3801.7870833555276 )",
+            "position": "Vector2( 6351.917662559373, 4821.862677790868 )",
             "rotation": 0,
-            "range": 15.0,
+            "range": 10.0,
             "intensity": 0.5,
-            "color": "96eaefca",
+            "color": "64eaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
             "node_id": "2c8"
-          },
-          {
-            "position": "Vector2( 2462.9134485531677, 4797.965804903366 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2c9"
-          },
-          {
-            "position": "Vector2( 5241.355494711955, 2619.053789532706 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2ca"
-          },
-          {
-            "position": "Vector2( 4951.74686935836, 860.6619755083566 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2cb"
-          },
-          {
-            "position": "Vector2( 5133.969111546888, 4884.84807120089 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2cc"
-          },
-          {
-            "position": "Vector2( 5851.513765352304, 1923.787365189868 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2cd"
-          },
-          {
-            "position": "Vector2( 5919.972639424133, 4330.896884797958 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2ce"
-          },
-          {
-            "position": "Vector2( 6665.878601231381, 4993.878417024173 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2cf"
-          },
-          {
-            "position": "Vector2( 6061.714038426965, 2994.756851891935 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2d0"
-          },
-          {
-            "position": "Vector2( 1451.1981440136053, 4787.73615471842 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2d1"
-          },
-          {
-            "position": "Vector2( 2674.109067555869, 6206.3706686882515 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2d2"
-          },
-          {
-            "position": "Vector2( 5555.730017944239, 6423.720804578628 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2d3"
-          },
-          {
-            "position": "Vector2( 4109.221512475909, 6979.031137363952 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2d4"
-          },
-          {
-            "position": "Vector2( 6318.6090821706775, 6555.7672078818805 )",
-            "rotation": 0,
-            "range": 15.0,
-            "intensity": 0.5,
-            "color": "96eaefca",
-            "texture": "res://textures/lights/point.png",
-            "shadows": false,
-            "node_id": "2d5"
           },
           {
             "position": "Vector2( 4126.781699934888, 7105.952208248156 )",
@@ -9108,7 +8978,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2d6"
+            "node_id": "2c9"
           },
           {
             "position": "Vector2( 3746.1097411893365, 7407.654654857097 )",
@@ -9118,7 +8988,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2d7"
+            "node_id": "2ca"
           },
           {
             "position": "Vector2( 3749.5276948667674, 6791.551407807238 )",
@@ -9128,7 +8998,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2d8"
+            "node_id": "2cb"
           },
           {
             "position": "Vector2( 5844.1327335258975, 6093.589518650982 )",
@@ -9138,7 +9008,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2d9"
+            "node_id": "2cc"
           },
           {
             "position": "Vector2( 4125.258035498869, 6663.7215735320115 )",
@@ -9148,7 +9018,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2da"
+            "node_id": "2cd"
           },
           {
             "position": "Vector2( 3488.333462184312, 7787.131812228508 )",
@@ -9158,7 +9028,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2db"
+            "node_id": "2ce"
           },
           {
             "position": "Vector2( 3603.176944761109, 5739.310985209753 )",
@@ -9168,7 +9038,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2dc"
+            "node_id": "2cf"
           },
           {
             "position": "Vector2( 6535.986691703348, 5080.097598818205 )",
@@ -9178,7 +9048,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2dd"
+            "node_id": "2d0"
           },
           {
             "position": "Vector2( 6841.050176123675, 4980.308935912046 )",
@@ -9188,7 +9058,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2de"
+            "node_id": "2d1"
           },
           {
             "position": "Vector2( 6195.305049711502, 5087.832285245055 )",
@@ -9198,7 +9068,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2df"
+            "node_id": "2d2"
           },
           {
             "position": "Vector2( 7008.612706960074, 4435.381923933659 )",
@@ -9208,7 +9078,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e0"
+            "node_id": "2d3"
           },
           {
             "position": "Vector2( 3979.245262298696, 5382.485960674811 )",
@@ -9218,7 +9088,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e1"
+            "node_id": "2d4"
           },
           {
             "position": "Vector2( 6793.5619017355975, 4646.884735175058 )",
@@ -9228,7 +9098,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e2"
+            "node_id": "2d5"
           },
           {
             "position": "Vector2( 3669.7372466502984, 5011.764894212004 )",
@@ -9238,7 +9108,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e3"
+            "node_id": "2d6"
           },
           {
             "position": "Vector2( 4619.985116562743, 4819.7610092765935 )",
@@ -9248,7 +9118,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e4"
+            "node_id": "2d7"
           },
           {
             "position": "Vector2( 3495.559926097203, 5445.929403158689 )",
@@ -9258,7 +9128,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e5"
+            "node_id": "2d8"
           },
           {
             "position": "Vector2( 3254.065952592209, 5133.004198441362 )",
@@ -9268,7 +9138,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e6"
+            "node_id": "2d9"
           },
           {
             "position": "Vector2( 7203.447336199013, 4697.006854314846 )",
@@ -9278,7 +9148,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e7"
+            "node_id": "2da"
           },
           {
             "position": "Vector2( 4184.1427079636505, 4773.481523638414 )",
@@ -9288,7 +9158,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e8"
+            "node_id": "2db"
           },
           {
             "position": "Vector2( 3438.970194259978, 4812.899217456775 )",
@@ -9298,7 +9168,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2e9"
+            "node_id": "2dc"
           },
           {
             "position": "Vector2( 3635.372655174996, 4340.453982804975 )",
@@ -9308,7 +9178,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2ea"
+            "node_id": "2dd"
           },
           {
             "position": "Vector2( 6023.0060070643585, 4806.305493764042 )",
@@ -9318,7 +9188,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2eb"
+            "node_id": "2de"
           },
           {
             "position": "Vector2( 4230.757613744199, 5076.192498585929 )",
@@ -9328,7 +9198,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2ec"
+            "node_id": "2df"
           },
           {
             "position": "Vector2( 4174.754190368172, 4285.303124113825 )",
@@ -9338,7 +9208,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2ed"
+            "node_id": "2e0"
           },
           {
             "position": "Vector2( 2724.8872089277834, 4452.382862162501 )",
@@ -9348,7 +9218,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2ee"
+            "node_id": "2e1"
           },
           {
             "position": "Vector2( 4427.078076480147, 4589.10668886416 )",
@@ -9358,7 +9228,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2ef"
+            "node_id": "2e2"
           },
           {
             "position": "Vector2( 7316.378508279479, 4369.214155061227 )",
@@ -9368,7 +9238,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f0"
+            "node_id": "2e3"
           },
           {
             "position": "Vector2( 4446.8446879195535, 1969.9754850181982 )",
@@ -9378,7 +9248,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f1"
+            "node_id": "2e4"
           },
           {
             "position": "Vector2( 4702.603442379245, 1540.6481423110968 )",
@@ -9388,7 +9258,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f2"
+            "node_id": "2e5"
           },
           {
             "position": "Vector2( 5087.83052496418, 1622.592568399925 )",
@@ -9398,7 +9268,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f3"
+            "node_id": "2e6"
           },
           {
             "position": "Vector2( 4660.66502477349, 2293.5896214203426 )",
@@ -9408,7 +9278,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f4"
+            "node_id": "2e7"
           },
           {
             "position": "Vector2( 4146.534163223408, 1109.9139471858425 )",
@@ -9418,7 +9288,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f5"
+            "node_id": "2e8"
           },
           {
             "position": "Vector2( 3288.005018385704, 4177.873463795773 )",
@@ -9428,7 +9298,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f6"
+            "node_id": "2e9"
           },
           {
             "position": "Vector2( 4543.872100085126, 1127.3197917937964 )",
@@ -9438,7 +9308,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f7"
+            "node_id": "2ea"
           },
           {
             "position": "Vector2( 4846.469706835195, 1180.1494419073674 )",
@@ -9448,7 +9318,7 @@
             "color": "ffeaefca",
             "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "node_id": "2f8"
+            "node_id": "2eb"
           }
         ],
         "roofs": {
