@@ -184,7 +184,7 @@ mod tests {
 
         for path in &paths {
             assert_eq!(path.texture, "cliff.png");
-            assert!(path.points.0.len() >= 3);
+            assert!(path.edit_points.0.len() >= 3);
         }
     }
 
@@ -261,12 +261,14 @@ mod tests {
 
         let paths = generate_elevation(&noise, &config, &alloc);
         if let Some(path) = paths.first() {
-            // Points are in absolute pixel space
-            for pt in &path.points.0 {
-                assert!(pt.x >= 0.0 && pt.x <= 50.0 * ppc,
-                    "x={} out of range", pt.x);
-                assert!(pt.y >= 0.0 && pt.y <= 50.0 * ppc,
-                    "y={} out of range", pt.y);
+            // edit_points are relative to position
+            for pt in &path.edit_points.0 {
+                let abs_x = path.position.x + pt.x;
+                let abs_y = path.position.y + pt.y;
+                assert!(abs_x >= 0.0 && abs_x <= 50.0 * ppc,
+                    "abs_x={} out of range", abs_x);
+                assert!(abs_y >= 0.0 && abs_y <= 50.0 * ppc,
+                    "abs_y={} out of range", abs_y);
             }
         }
     }

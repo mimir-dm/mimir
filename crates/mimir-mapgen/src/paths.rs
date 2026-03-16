@@ -849,7 +849,7 @@ mod tests {
 
         let road = result.unwrap();
         assert!(road.corridor_points.len() >= 2);
-        assert!(road.road.points.0.len() >= 2);
+        assert!(road.road.edit_points.0.len() >= 2);
         assert_eq!(road.edge_paths.len(), 0); // No edge config
     }
 

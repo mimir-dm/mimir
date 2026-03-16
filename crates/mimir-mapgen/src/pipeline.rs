@@ -850,8 +850,8 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         // Register elevation contour paths in feature registry
         for (i, (level_config, path)) in elev_config.levels.iter().zip(contour_paths.iter()).enumerate() {
             let name = feature_name(&level_config.id, "elevation", i);
-            let points: Vec<(f64, f64)> = path.points.0.iter()
-                .map(|p| (p.x, p.y))
+            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                .map(|p| (path.position.x + p.x, path.position.y + p.y))
                 .collect();
             features.paths.insert(name, points);
         }
