@@ -4,14 +4,14 @@ level: initiative
 title: "Contour-aware terrain generation: physically plausible roads, rivers, and water"
 short_code: "MIMIR-I-0063"
 created_at: 2026-03-16T13:36:32.139085+00:00
-updated_at: 2026-03-16T13:36:32.139085+00:00
+updated_at: 2026-03-16T18:00:59.175906+00:00
 parent: MIMIR-V-0001
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/decompose"
 
 
 exit_criteria_met: false
