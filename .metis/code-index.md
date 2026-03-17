@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-17T01:34:02Z | 552 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-17T02:32:15Z | 552 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -8136,8 +8136,8 @@
 
 -  `Cli` struct L12-15 — `{ command: Commands }` — Declarative Dungeondraft map generator
 -  `Commands` enum L18-45 — `Generate | Validate | ListPresets`
--  `main` function L47-153 — `()`
--  `load_config` function L155-159 — `(path: &str) -> Result<MapConfig, Box<dyn std::error::Error>>`
+-  `main` function L47-156 — `()`
+-  `load_config` function L158-162 — `(path: &str) -> Result<MapConfig, Box<dyn std::error::Error>>`
 
 #### crates/mimir-mapgen/src/materials.rs
 
@@ -8220,7 +8220,7 @@
 - pub `generate_road` function L212-221 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road across the map using greedy pathfinding.
 - pub `generate_road_with_exclusions` function L224-310 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
 - pub `generate_river` function L313-322 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river across the map.
-- pub `generate_river_with_exclusions` function L325-456 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
+- pub `generate_river_with_exclusions` function L325-467 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
 -  `PathStyle` type L35-39 — `impl Default for PathStyle` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 -  `default` function L36-38 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 -  `default_effort` function L78-80 — `() -> f64` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
@@ -8228,29 +8228,30 @@
 -  `default` function L142-159 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 -  `RiverConfig` type L162-185 — `impl Default for RiverConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 -  `default` function L163-184 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `generate_meander` function L464-587 — `( start: (f64, f64), target: (f64, f64), pixel_width: f64, pixel_height: f64, no...` — Generate a meandering centerline using sinusoidal displacement + noise.
--  `clip_polyline_to_rect` function L593-637 — `( points: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> Ve...` — Clip a polyline to a rectangle, keeping only the interior portion.
--  `inside` function L598-600 — `(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `clip_polygon_to_rect` function L641-667 — `( polygon: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> V...` — Clip a closed polygon to a rectangle using Sutherland-Hodgman.
--  `sh_clip_edge` function L670-698 — `( polygon: &[(f64, f64)], inside: impl Fn((f64, f64)) -> bool, intersect: impl F...` — One pass of Sutherland-Hodgman: clip polygon against a single edge.
--  `clip_segment` function L701-732 — `( a: (f64, f64), b: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64, ...` — Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
--  `greedy_walk` function L739-840 — `( noise_map: &NoiseMap, start: (f64, f64), target: (f64, f64), pixel_width: f64,...` — Greedy pathfinding walk from start toward target.
--  `nearest_point_on_polygon` function L843-852 — `(polygon: &[(f64, f64)], target: (f64, f64)) -> (f64, f64)` — Find the nearest point on a polygon to a target point.
--  `count_contour_lines_crossed` function L856-871 — `( p0: (f64, f64), p1: (f64, f64), contour_polylines: &[Vec<(f64, f64)>], ) -> us...` — Count how many distinct contour polylines a line from p0 to p1 crosses.
--  `segments_intersect` function L874-891 — `( a1: (f64, f64), a2: (f64, f64), b1: (f64, f64), b2: (f64, f64), ) -> bool` — Test if two line segments intersect.
--  `cross_product_sign` function L893-895 — `(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `random_edge_point` function L898-911 — `( edge: Edge, width: f64, height: f64, margin: f64, rng: &mut impl Rng, ) -> (f6...` — Pick a random point along a map edge.
--  `tests` module L914-1111 — `-` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_noise` function L920-929 — `() -> NoiseMap` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_greedy_walk_reaches_target` function L932-960 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_road` function L963-982 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_road_with_edges` function L985-1006 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_river` function L1009-1024 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_road_deterministic` function L1027-1044 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_road_meandering_style` function L1047-1063 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_river_straight_style` function L1066-1081 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_path_style_serde` function L1084-1092 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_random_edge_point` function L1095-1110 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `generate_meander` function L475-598 — `( start: (f64, f64), target: (f64, f64), pixel_width: f64, pixel_height: f64, no...` — Generate a meandering centerline using sinusoidal displacement + noise.
+-  `clip_polyline_to_rect` function L604-648 — `( points: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> Ve...` — Clip a polyline to a rectangle, keeping only the interior portion.
+-  `inside` function L609-611 — `(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `clip_polygon_to_rect` function L652-678 — `( polygon: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> V...` — Clip a closed polygon to a rectangle using Sutherland-Hodgman.
+-  `sh_clip_edge` function L681-709 — `( polygon: &[(f64, f64)], inside: impl Fn((f64, f64)) -> bool, intersect: impl F...` — One pass of Sutherland-Hodgman: clip polygon against a single edge.
+-  `clip_segment` function L712-743 — `( a: (f64, f64), b: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64, ...` — Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
+-  `greedy_walk` function L750-851 — `( noise_map: &NoiseMap, start: (f64, f64), target: (f64, f64), pixel_width: f64,...` — Greedy pathfinding walk from start toward target.
+-  `polygon_center` function L854-862 — `(polygon: &[(f64, f64)]) -> (f64, f64)` — Compute the centroid of a polygon.
+-  `nearest_point_on_polygon` function L865-874 — `(polygon: &[(f64, f64)], target: (f64, f64)) -> (f64, f64)` — Find the nearest point on a polygon to a target point.
+-  `count_contour_lines_crossed` function L878-893 — `( p0: (f64, f64), p1: (f64, f64), contour_polylines: &[Vec<(f64, f64)>], ) -> us...` — Count how many distinct contour polylines a line from p0 to p1 crosses.
+-  `segments_intersect` function L896-913 — `( a1: (f64, f64), a2: (f64, f64), b1: (f64, f64), b2: (f64, f64), ) -> bool` — Test if two line segments intersect.
+-  `cross_product_sign` function L915-917 — `(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `random_edge_point` function L920-933 — `( edge: Edge, width: f64, height: f64, margin: f64, rng: &mut impl Rng, ) -> (f6...` — Pick a random point along a map edge.
+-  `tests` module L936-1133 — `-` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_noise` function L942-951 — `() -> NoiseMap` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_greedy_walk_reaches_target` function L954-982 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_road` function L985-1004 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_road_with_edges` function L1007-1028 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_river` function L1031-1046 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_road_deterministic` function L1049-1066 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_road_meandering_style` function L1069-1085 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_river_straight_style` function L1088-1103 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_path_style_serde` function L1106-1114 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_random_edge_point` function L1117-1132 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 
 #### crates/mimir-mapgen/src/patterns.rs
 
@@ -8276,54 +8277,55 @@
 - pub `lighting_from_time_of_day` function L111-140 — `(time: &str) -> Option<LightingConfig>` — Get a LightingConfig from a time-of-day preset name.
 - pub `ValidationError` struct L144-147 — `{ field: String, message: String }` — Validation errors for a MapConfig.
 - pub `validate_config` function L150-204 — `(config: &MapConfig) -> Vec<ValidationError>` — Validate a MapConfig, returning a list of errors.
-- pub `GenerateResult` struct L497-504 — `{ map: DungeondraftMap, stats: GenerateStats, features: GeneratedFeatures }` — Result of map generation.
-- pub `GenerateStats` struct L508-515 — `{ objects_placed: usize, paths_generated: usize, water_polygons: usize, contour_...` — Statistics from map generation.
-- pub `GeneratedFeatures` struct L522-537 — `{ paths: std::collections::HashMap<String, Vec<(f64, f64)>>, rooms: std::collect...` — Registry of generated feature geometry, used for cross-referencing.
-- pub `RoomGeometry` struct L541-546 — `{ center: (f64, f64), boundary: Vec<(f64, f64)> }` — Geometry for a generated room.
-- pub `get_path` function L550-552 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a path polyline by name.
-- pub `get_room` function L555-557 — `(&self, name: &str) -> Option<&RoomGeometry>` — Get a room's geometry by name.
-- pub `get_polygon` function L560-562 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a polygon boundary by name.
-- pub `get_object_positions` function L565-567 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get object positions by group name.
-- pub `generate` function L590-1059 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
+- pub `GenerateResult` struct L497-506 — `{ map: DungeondraftMap, stats: GenerateStats, features: GeneratedFeatures, warni...` — Result of map generation.
+- pub `TerrainWarning` enum L510-515 — `HighContourDensity | ContourCrossings` — Terrain passability warning.
+- pub `GenerateStats` struct L519-526 — `{ objects_placed: usize, paths_generated: usize, water_polygons: usize, contour_...` — Statistics from map generation.
+- pub `GeneratedFeatures` struct L533-548 — `{ paths: std::collections::HashMap<String, Vec<(f64, f64)>>, rooms: std::collect...` — Registry of generated feature geometry, used for cross-referencing.
+- pub `RoomGeometry` struct L552-557 — `{ center: (f64, f64), boundary: Vec<(f64, f64)> }` — Geometry for a generated room.
+- pub `get_path` function L561-563 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a path polyline by name.
+- pub `get_room` function L566-568 — `(&self, name: &str) -> Option<&RoomGeometry>` — Get a room's geometry by name.
+- pub `get_polygon` function L571-573 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a polygon boundary by name.
+- pub `get_object_positions` function L576-578 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get object positions by group name.
+- pub `generate` function L601-1108 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
 -  `validate_rooms` function L206-303 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `validate_corridors` function L305-344 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `validate_polygons` function L346-461 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
 -  `segment_intersection_point` function L466-489 — `( p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], p4: [f64; 2], ) -> Option<[f64; 2]>` — If two line segments (p1→p2) and (p3→p4) properly cross, return the
 -  `cross_2d` function L492-494 — `(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64` — 2D cross product: sign of (b-a) × (c-a).
--  `GeneratedFeatures` type L548-568 — `= GeneratedFeatures` — Config parsing, biome preset resolution, and staged map generation.
--  `feature_name` function L571-573 — `(id: &Option<String>, type_prefix: &str, index: usize) -> String` — Resolve an optional ID or fall back to type_index naming.
--  `tests` module L1062-1748 — `-` — Config parsing, biome preset resolution, and staged map generation.
--  `minimal_config` function L1065-1091 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_minimal` function L1094-1100 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_terrain` function L1103-1117 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_roads` function L1120-1128 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_objects` function L1131-1141 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_deterministic` function L1144-1162 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_seed_override` function L1165-1171 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_lighting` function L1174-1187 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_lighting_presets` function L1190-1197 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_config` function L1200-1210 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_full_pipeline` function L1213-1243 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_rooms` function L1246-1335 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_outdoor_only_no_regression` function L1338-1358 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_out_of_bounds` function L1361-1373 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_overlap` function L1376-1397 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_duplicate_room_id` function L1400-1421 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_portal_out_of_wall` function L1424-1441 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_corridor_invalid_room_ref` function L1444-1459 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_terrain_slot_out_of_range` function L1462-1474 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_river_creates_water_without_water_config` function L1477-1510 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_river_water_not_overwritten_by_water_step` function L1513-1531 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_zero_dimensions` function L1534-1546 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_valid_square` function L1549-1564 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_self_intersecting_bowtie` function L1567-1601 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_too_few_vertices` function L1604-1617 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_duplicate_id` function L1620-1632 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_duplicate_consecutive_vertex` function L1635-1654 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_portal_edge_out_of_range` function L1657-1673 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_terrain_slot_out_of_range` function L1676-1687 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_complex_valid_l_shape` function L1690-1717 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_figure_eight_crossing` function L1720-1747 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `GeneratedFeatures` type L559-579 — `= GeneratedFeatures` — Config parsing, biome preset resolution, and staged map generation.
+-  `feature_name` function L582-584 — `(id: &Option<String>, type_prefix: &str, index: usize) -> String` — Resolve an optional ID or fall back to type_index naming.
+-  `tests` module L1111-1797 — `-` — Config parsing, biome preset resolution, and staged map generation.
+-  `minimal_config` function L1114-1140 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_minimal` function L1143-1149 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_terrain` function L1152-1166 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_roads` function L1169-1177 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_objects` function L1180-1190 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_deterministic` function L1193-1211 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_seed_override` function L1214-1220 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_lighting` function L1223-1236 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_lighting_presets` function L1239-1246 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_config` function L1249-1259 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_full_pipeline` function L1262-1292 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_rooms` function L1295-1384 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_outdoor_only_no_regression` function L1387-1407 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_out_of_bounds` function L1410-1422 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_overlap` function L1425-1446 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_duplicate_room_id` function L1449-1470 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_portal_out_of_wall` function L1473-1490 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_corridor_invalid_room_ref` function L1493-1508 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_terrain_slot_out_of_range` function L1511-1523 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_creates_water_without_water_config` function L1526-1559 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_water_not_overwritten_by_water_step` function L1562-1580 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_zero_dimensions` function L1583-1595 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_valid_square` function L1598-1613 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_self_intersecting_bowtie` function L1616-1650 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_too_few_vertices` function L1653-1666 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_duplicate_id` function L1669-1681 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_duplicate_consecutive_vertex` function L1684-1703 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_portal_edge_out_of_range` function L1706-1722 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_terrain_slot_out_of_range` function L1725-1736 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_complex_valid_l_shape` function L1739-1766 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_figure_eight_crossing` function L1769-1796 — `()` — Config parsing, biome preset resolution, and staged map generation.
 
 #### crates/mimir-mapgen/src/polygons.rs
 

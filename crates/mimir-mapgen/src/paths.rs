@@ -331,31 +331,13 @@ pub fn generate_river_with_exclusions(
     rng: &mut impl Rng,
     exclusion_zones: &[ExclusionZone],
     contour_polylines: &[Vec<(f64, f64)>],
-    lake_shorelines: &std::collections::HashMap<String, Vec<(f64, f64)>>,
+    _lake_shorelines: &std::collections::HashMap<String, Vec<(f64, f64)>>,
 ) -> Option<RiverResult> {
-    // Resolve start: from lake shoreline or map edge
-    let start = if let Some(ref lake_id) = config.source {
-        if let Some(shoreline) = lake_shorelines.get(lake_id) {
-            // Find nearest shoreline point to the target edge
-            let edge_pt = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
-            nearest_point_on_polygon(shoreline, edge_pt)
-        } else {
-            random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng)
-        }
-    } else {
-        random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng)
-    };
-
-    // Resolve end: to lake shoreline or map edge
-    let target = if let Some(ref lake_id) = config.drain {
-        if let Some(shoreline) = lake_shorelines.get(lake_id) {
-            nearest_point_on_polygon(shoreline, start)
-        } else {
-            random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng)
-        }
-    } else {
-        random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng)
-    };
+    // Note: source/drain lake connections are not yet implemented —
+    // DD water polygon merging requires polygon boolean operations.
+    // Rivers currently always run edge-to-edge.
+    let start = random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng);
+    let target = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
 
     // Widen FOV at low effort for contour avoidance
     let effective_fov = config.fov + (1.0 - config.effort) * PI * 0.5;
@@ -387,8 +369,8 @@ pub fn generate_river_with_exclusions(
     let left_bank_full = offset_polyline(&smoothed_full, half_w);
     let right_bank_full = offset_polyline(&smoothed_full, -half_w);
 
-    let left_bank = clip_polyline_to_rect(&left_bank_full, 0.0, 0.0, pixel_width, pixel_height);
-    let right_bank = clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
+    let mut left_bank = clip_polyline_to_rect(&left_bank_full, 0.0, 0.0, pixel_width, pixel_height);
+    let mut right_bank = clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
 
     let left_vectors: Vec<Vector2> =
         left_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
@@ -837,6 +819,17 @@ fn greedy_walk(
     }
 
     path
+}
+
+/// Compute the centroid of a polygon.
+fn polygon_center(polygon: &[(f64, f64)]) -> (f64, f64) {
+    if polygon.is_empty() {
+        return (0.0, 0.0);
+    }
+    let n = polygon.len() as f64;
+    let sx: f64 = polygon.iter().map(|p| p.0).sum();
+    let sy: f64 = polygon.iter().map(|p| p.1).sum();
+    (sx / n, sy / n)
 }
 
 /// Find the nearest point on a polygon to a target point.
