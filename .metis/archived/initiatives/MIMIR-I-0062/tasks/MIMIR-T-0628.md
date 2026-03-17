@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:36.607569+00:00
 updated_at: 2026-03-15T11:32:32.675767+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Add optional `id` fields to all existing config structs so that downstream features (lights, paths, patterns, materials) can reference generated geometry by name. Introduce a `GeneratedFeatures` registry that is populated during pipeline execution and passed to later stages.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

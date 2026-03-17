@@ -7,7 +7,7 @@ created_at: 2026-03-16T18:01:08.138469+00:00
 updated_at: 2026-03-17T01:30:26.873784+00:00
 parent: MIMIR-I-0063
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Add an `effort` parameter (0.0-1.0) to `RoadConfig`. Modify the greedy walk scoring in road pathfinding to penalize contour crossings scaled by `(1.0 - effort)`. At effort=1.0, roads ignore contours entirely. When roads cross contours, the contour clipping pass from T-0635 clips contour paths at the road corridor edge.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

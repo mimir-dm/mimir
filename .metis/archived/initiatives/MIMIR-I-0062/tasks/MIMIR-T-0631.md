@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:43.618169+00:00
 updated_at: 2026-03-15T11:59:12.779374+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Implement region-based pattern placement. Patterns are polygon-bounded texture fills — used for floor tiles inside rooms, water overlays, courtyard surfaces, and noise-gated ground detail. Each produces a `MapPattern` entry pushed to `Level.patterns`.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:35.930708+00:00
 updated_at: 2026-03-15T00:56:54.660614+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Replace opaque `serde_json::Value` types in the DD format layer with properly typed Rust structs based on the spike findings (MIMIR-S-0001). Update existing structs that are missing fields. This unblocks all four feature tasks.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

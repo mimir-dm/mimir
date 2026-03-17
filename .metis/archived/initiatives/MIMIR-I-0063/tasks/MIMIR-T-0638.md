@@ -7,7 +7,7 @@ created_at: 2026-03-16T18:01:10.414192+00:00
 updated_at: 2026-03-16T22:09:41.389587+00:00
 parent: MIMIR-I-0063
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -26,6 +26,8 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Implement lakes as declarative placed features with center, radius, roughness, and color configuration. Generate organic noise-perturbed shorelines. Depress the noise map within lake boundaries to create natural basins. Contours terminate at lake edges. Object placement excludes lake areas.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

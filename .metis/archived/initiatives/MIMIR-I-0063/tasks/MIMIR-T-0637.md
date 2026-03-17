@@ -7,7 +7,7 @@ created_at: 2026-03-16T18:01:09.486048+00:00
 updated_at: 2026-03-17T01:36:50.203627+00:00
 parent: MIMIR-I-0063
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Rivers get the same effort model as roads but with inverted noise preference: river pathfinding prefers low noise values (valleys) instead of high. Add `effort` parameter to `RiverConfig`. Rivers can connect to lakes via source/drain references instead of only running edge-to-edge.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

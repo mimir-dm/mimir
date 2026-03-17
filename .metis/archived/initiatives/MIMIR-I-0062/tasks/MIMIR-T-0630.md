@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:42.309130+00:00
 updated_at: 2026-03-15T11:52:33.017410+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Implement general-purpose path generation beyond the existing road/river generators. Four styles: waypoints (explicit coordinates), room-to-room (connect rooms by name), offset (companion path at perpendicular distance from a parent feature), intermittent (break a parent path into segments with random gaps). All produce `MapPath` entries. Existing roads/rivers remain untouched.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

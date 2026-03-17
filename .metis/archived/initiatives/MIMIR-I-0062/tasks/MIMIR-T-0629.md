@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:41.349107+00:00
 updated_at: 2026-03-15T11:43:02.678413+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -59,6 +59,8 @@ Implement point light generation as a new pipeline stage. Three placement modes:
 - **Current Problems**: {What's difficult/slow/buggy now}
 - **Benefits of Fixing**: {What improves after refactoring}
 - **Risk Assessment**: {Risks of not addressing this}
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

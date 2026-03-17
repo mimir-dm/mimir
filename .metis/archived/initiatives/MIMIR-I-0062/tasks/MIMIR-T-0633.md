@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:49.076561+00:00
 updated_at: 2026-03-15T12:26:14.006296+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Evaluate all 12 biome presets and enhance them with lights, paths, patterns, and materials where appropriate. Use the Gull Rock procedural forest configs as an aesthetic reference for tuning values. The presets should demonstrate the new capabilities and produce maps that are visually competitive without manual DD finishing.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

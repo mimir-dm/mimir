@@ -7,7 +7,7 @@ created_at: 2026-03-16T18:01:11.642834+00:00
 updated_at: 2026-03-17T01:40:04.766709+00:00
 parent: MIMIR-I-0063
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Implement post-generation terrain analysis that calculates contour coverage percentage and emits warnings when terrain density conflicts with requested roads, rivers, or lakes. This helps users understand when their elevation/contour settings produce maps that are too mountainous for the requested features.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

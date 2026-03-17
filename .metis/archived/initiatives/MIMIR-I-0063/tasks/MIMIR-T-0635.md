@@ -7,7 +7,7 @@ created_at: 2026-03-16T18:01:07.070480+00:00
 updated_at: 2026-03-16T21:06:53.452589+00:00
 parent: MIMIR-I-0063
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -26,6 +26,8 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Reorder the mapgen pipeline so contours generate before roads and rivers. Add post-processing to clip contour paths around road and river corridors, preventing contour lines from visually crossing linear features.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 

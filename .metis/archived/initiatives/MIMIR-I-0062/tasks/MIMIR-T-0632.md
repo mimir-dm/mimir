@@ -7,7 +7,7 @@ created_at: 2026-03-15T00:42:44.314119+00:00
 updated_at: 2026-03-15T12:03:55.585113+00:00
 parent: MIMIR-I-0062
 blocked_by: []
-archived: false
+archived: true
 
 tags:
   - "#task"
@@ -25,6 +25,8 @@ initiative_id: MIMIR-I-0062
 ## Objective
 
 Implement region-based material scatter generation. Materials are bit-packed bitmaps representing ground-level detail like ice, lava, acid, and debris. Each produces a `MaterialEntry` in `Level.materials` keyed by layer.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
