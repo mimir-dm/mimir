@@ -501,6 +501,17 @@ pub struct GenerateResult {
     pub stats: GenerateStats,
     /// Registry of generated feature geometry for cross-referencing.
     pub features: GeneratedFeatures,
+    /// Terrain passability warnings.
+    pub warnings: Vec<TerrainWarning>,
+}
+
+/// Terrain passability warning.
+#[derive(Debug, Clone)]
+pub enum TerrainWarning {
+    /// Contour corridors cover a large percentage of the map.
+    HighContourDensity { coverage_percent: f64 },
+    /// Road/river pathfinding couldn't avoid contours well.
+    ContourCrossings { feature: String, crossings: usize },
 }
 
 /// Statistics from map generation.
@@ -746,6 +757,28 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
                     .collect();
                 features.paths.insert(name, points);
             }
+        }
+    }
+
+    // 3d. Terrain passability analysis
+    let mut warnings = Vec::new();
+    if !features.contour_polylines.is_empty() {
+        // Estimate contour corridor coverage
+        let map_area = pixel_width * pixel_height;
+        let contour_area: f64 = features.contour_polylines.iter().map(|poly| {
+            // Approximate area as polyline length * average contour width
+            let length: f64 = poly.windows(2).map(|w| {
+                let dx = w[1].0 - w[0].0;
+                let dy = w[1].1 - w[0].1;
+                (dx * dx + dy * dy).sqrt()
+            }).sum();
+            // Use 256px as approximate contour corridor width (1 grid square)
+            length * 256.0
+        }).sum();
+        let coverage = (contour_area / map_area * 100.0).min(100.0);
+        if coverage > 30.0 && (!config.roads.is_empty() || !config.rivers.is_empty()) {
+            eprintln!("Warning: contour corridors cover ~{:.0}% of map area — road/river generation may produce unrealistic paths. Consider fewer elevation levels or higher effort.", coverage);
+            warnings.push(TerrainWarning::HighContourDensity { coverage_percent: coverage });
         }
     }
 
@@ -1055,7 +1088,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // Update next_node_id
     map.world.next_node_id = alloc.current();
 
-    GenerateResult { map, stats, features }
+    GenerateResult { map, stats, features, warnings }
 }
 
 #[cfg(test)]
