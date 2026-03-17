@@ -4,14 +4,14 @@ level: task
 title: "River effort model: valley-following pathfinding with contour erosion and lake connections"
 short_code: "MIMIR-T-0637"
 created_at: 2026-03-16T18:01:09.486048+00:00
-updated_at: 2026-03-16T18:01:09.486048+00:00
+updated_at: 2026-03-17T01:36:50.203627+00:00
 parent: MIMIR-I-0063
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Rivers get the same effort model as roads but with inverted noise preference: river pathfinding prefers low noise values (valleys) instead of high. Add `effort` parameter to `RiverConfig`. Rivers can connect to lakes via source/drain references instead of only running edge-to-edge.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -53,3 +57,18 @@ Rivers get the same effort model as roads but with inverted noise preference: ri
 4. Pipeline order: noise -> contours -> lakes -> rivers -> roads -> contour clipping
 
 ## Status Updates
+
+### 2026-03-16
+- Added `source` and `drain` optional fields to `RiverConfig` for lake connections
+- River start/end resolved to nearest lake shoreline point when source/drain specified
+- `nearest_point_on_polygon()` helper for endpoint snapping
+- FOV widening at low effort (same as roads)
+- Contour avoidance penalty wired through (from T-0636)
+- Pipeline passes lake shoreline lookup to river generation
+- All tests pass
+
+### Known Issues (need follow-up)
+- River water polygon doesn't merge with lake water polygon — they're separate DD water tree children that overlap visually but aren't geometrically connected
+- River water polygon shape is rectangular (from convex hull of banks) not organic
+- River-to-lake connection needs the river water polygon to extend INTO the lake polygon or the lake polygon to have an inlet cut
+- These are water polygon shape issues, not pathfinding issues

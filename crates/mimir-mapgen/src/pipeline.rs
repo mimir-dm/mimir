@@ -790,6 +790,13 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     }
 
     // 5. Generate rivers
+    // Build lake shoreline lookup for river source/drain connections
+    let lake_shorelines: std::collections::HashMap<String, Vec<(f64, f64)>> = config.lakes.iter()
+        .filter_map(|lake| {
+            features.get_room(&lake.id).map(|geom| (lake.id.clone(), geom.boundary.clone()))
+        })
+        .collect();
+
     for (i, river_config) in config.rivers.iter().enumerate() {
         if let Some(result) = paths::generate_river_with_exclusions(
             &noise_map,
@@ -800,6 +807,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &mut rng,
             &exclusion_zones,
             &features.contour_polylines,
+            &lake_shorelines,
         ) {
             // Register river path and water polygon in feature registry
             let name = feature_name(&river_config.id, "river", i);

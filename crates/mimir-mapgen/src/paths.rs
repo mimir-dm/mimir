@@ -130,6 +130,12 @@ pub struct RiverConfig {
     /// Effort level for contour crossing (0.0 = follow valleys, 1.0 = ignore contours).
     #[serde(default = "default_effort")]
     pub effort: f64,
+    /// Optional lake ID where the river starts (overrides `from` edge).
+    #[serde(default)]
+    pub source: Option<String>,
+    /// Optional lake ID where the river ends (overrides `to` edge).
+    #[serde(default)]
+    pub drain: Option<String>,
 }
 
 impl Default for RoadConfig {
@@ -172,6 +178,8 @@ impl Default for RiverConfig {
             bank_width: 256.0,
             bank_layer: 100,
             effort: 0.5,
+            source: None,
+            drain: None,
         }
     }
 }
@@ -310,7 +318,7 @@ pub fn generate_river(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
 ) -> Option<RiverResult> {
-    generate_river_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[], &[])
+    generate_river_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[], &[], &std::collections::HashMap::new())
 }
 
 /// Generate a river, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
@@ -323,9 +331,34 @@ pub fn generate_river_with_exclusions(
     rng: &mut impl Rng,
     exclusion_zones: &[ExclusionZone],
     contour_polylines: &[Vec<(f64, f64)>],
+    lake_shorelines: &std::collections::HashMap<String, Vec<(f64, f64)>>,
 ) -> Option<RiverResult> {
-    let start = random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng);
-    let target = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
+    // Resolve start: from lake shoreline or map edge
+    let start = if let Some(ref lake_id) = config.source {
+        if let Some(shoreline) = lake_shorelines.get(lake_id) {
+            // Find nearest shoreline point to the target edge
+            let edge_pt = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
+            nearest_point_on_polygon(shoreline, edge_pt)
+        } else {
+            random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng)
+        }
+    } else {
+        random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng)
+    };
+
+    // Resolve end: to lake shoreline or map edge
+    let target = if let Some(ref lake_id) = config.drain {
+        if let Some(shoreline) = lake_shorelines.get(lake_id) {
+            nearest_point_on_polygon(shoreline, start)
+        } else {
+            random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng)
+        }
+    } else {
+        random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng)
+    };
+
+    // Widen FOV at low effort for contour avoidance
+    let effective_fov = config.fov + (1.0 - config.effort) * PI * 0.5;
 
     let raw_waypoints = match config.style {
         PathStyle::Meandering => generate_meander(
@@ -335,7 +368,7 @@ pub fn generate_river_with_exclusions(
         ),
         PathStyle::Straight => greedy_walk(
             noise_map, start, target, pixel_width, pixel_height,
-            config.step_distance, config.fov, config.noise_weight,
+            config.step_distance, effective_fov, config.noise_weight,
             false, // Rivers follow valleys (low noise)
             rng, exclusion_zones,
             contour_polylines, config.effort,
@@ -804,6 +837,18 @@ fn greedy_walk(
     }
 
     path
+}
+
+/// Find the nearest point on a polygon to a target point.
+fn nearest_point_on_polygon(polygon: &[(f64, f64)], target: (f64, f64)) -> (f64, f64) {
+    polygon.iter()
+        .min_by(|a, b| {
+            let da = (a.0 - target.0).powi(2) + (a.1 - target.1).powi(2);
+            let db = (b.0 - target.0).powi(2) + (b.1 - target.1).powi(2);
+            da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .cloned()
+        .unwrap_or(target)
 }
 
 /// Count how many distinct contour polylines a line from p0 to p1 crosses.
