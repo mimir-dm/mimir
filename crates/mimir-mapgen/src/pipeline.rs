@@ -730,14 +730,22 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     if let Some(ref elev_config) = config.elevation {
         contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
         stats.contour_paths = contour_paths.len();
-        // Register contour polylines in feature registry (absolute coordinates)
-        for (i, (level_config, path)) in elev_config.levels.iter().zip(contour_paths.iter()).enumerate() {
-            let name = feature_name(&level_config.id, "elevation", i);
+        // Register ALL contour polylines in feature registry (absolute coordinates)
+        for path in contour_paths.iter() {
             let points: Vec<(f64, f64)> = path.edit_points.0.iter()
                 .map(|p| (path.position.x + p.x, path.position.y + p.y))
                 .collect();
-            features.paths.insert(name, points.clone());
             features.contour_polylines.push(points);
+        }
+        // Also register named references per level (first contour matching each level)
+        for (i, level_config) in elev_config.levels.iter().enumerate() {
+            let name = feature_name(&level_config.id, "elevation", i);
+            if let Some(path) = contour_paths.get(i) {
+                let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                    .map(|p| (path.position.x + p.x, path.position.y + p.y))
+                    .collect();
+                features.paths.insert(name, points);
+            }
         }
     }
 
@@ -753,6 +761,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
             &exclusion_zones,
+            &features.contour_polylines,
         ) {
             // Register road path in feature registry
             let name = feature_name(&road_config.id, "road", i);
@@ -790,6 +799,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
             &exclusion_zones,
+            &features.contour_polylines,
         ) {
             // Register river path and water polygon in feature registry
             let name = feature_name(&river_config.id, "river", i);

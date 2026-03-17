@@ -4,14 +4,14 @@ level: task
 title: "Road effort model: elevation-aware pathfinding with configurable contour-crossing penalty"
 short_code: "MIMIR-T-0636"
 created_at: 2026-03-16T18:01:08.138469+00:00
-updated_at: 2026-03-16T18:01:08.138469+00:00
+updated_at: 2026-03-17T01:30:26.873784+00:00
 parent: MIMIR-I-0063
 blocked_by: []
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -25,6 +25,10 @@ initiative_id: MIMIR-I-0063
 ## Objective
 
 Add an `effort` parameter (0.0-1.0) to `RoadConfig`. Modify the greedy walk scoring in road pathfinding to penalize contour crossings scaled by `(1.0 - effort)`. At effort=1.0, roads ignore contours entirely. When roads cross contours, the contour clipping pass from T-0635 clips contour paths at the road corridor edge.
+
+## Acceptance Criteria
+
+## Acceptance Criteria
 
 ## Acceptance Criteria
 
@@ -52,3 +56,15 @@ Add an `effort` parameter (0.0-1.0) to `RoadConfig`. Modify the greedy walk scor
 4. After road path is finalized, contour clipping from T-0635 handles visual cleanup
 
 ## Status Updates
+
+### 2026-03-16
+- Added `effort` field to `RoadConfig` (default 0.5, serde default)
+- Added `effort` to `RiverConfig` as well (needed for compilation, used in T-0637)
+- Modified `greedy_walk` to accept contour polylines + effort parameter
+- Contour-crossing penalty: per distinct contour line crossed, `lines * 20.0 * (1.0 - effort)`
+- FOV widens at low effort: `effective_fov = fov + (1.0 - effort) * PI * 0.5` — lets road explore sideways routes around contours
+- `count_contour_lines_crossed()` + `segments_intersect()` helper functions
+- Fixed contour polyline registration: was only storing 2 (one per level), now stores all 43
+- Updated all callers of `generate_road_with_exclusions` and `generate_river_with_exclusions` to pass contour data
+- DD-validated: effort=0.0 on heavy contour map shows road meandering around cliffs
+- All tests pass

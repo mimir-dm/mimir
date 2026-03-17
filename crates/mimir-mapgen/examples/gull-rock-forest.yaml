@@ -136,6 +136,7 @@ roads:
     noise_weight: 0.5
     margin: 256.0
     smooth_density: 8
+    effort: 0.2
 
 # Elevation contours (cliff edges)
 elevation:

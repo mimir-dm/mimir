@@ -69,6 +69,14 @@ pub struct RoadConfig {
     pub smooth_density: usize,
     /// Optional edge paths (border textures along road sides).
     pub edge_paths: Option<EdgePathConfig>,
+    /// Effort level for contour crossing (0.0 = avoid contours, 1.0 = ignore contours).
+    /// Default 0.5.
+    #[serde(default = "default_effort")]
+    pub effort: f64,
+}
+
+fn default_effort() -> f64 {
+    0.5
 }
 
 /// Configuration for edge/border paths along roads.
@@ -119,6 +127,9 @@ pub struct RiverConfig {
     pub bank_width: f64,
     /// Bank layer.
     pub bank_layer: i32,
+    /// Effort level for contour crossing (0.0 = follow valleys, 1.0 = ignore contours).
+    #[serde(default = "default_effort")]
+    pub effort: f64,
 }
 
 impl Default for RoadConfig {
@@ -137,6 +148,7 @@ impl Default for RoadConfig {
             margin: 128.0,
             smooth_density: 8,
             edge_paths: None,
+            effort: 0.5,
         }
     }
 }
@@ -159,6 +171,7 @@ impl Default for RiverConfig {
             bank_texture: "res://textures/paths/path_rocks.png".to_string(),
             bank_width: 256.0,
             bank_layer: 100,
+            effort: 0.5,
         }
     }
 }
@@ -196,10 +209,10 @@ pub fn generate_road(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
 ) -> Option<RoadResult> {
-    generate_road_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[])
+    generate_road_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[], &[])
 }
 
-/// Generate a road, avoiding exclusion zones (rooms).
+/// Generate a road, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
 pub fn generate_road_with_exclusions(
     noise_map: &NoiseMap,
     config: &RoadConfig,
@@ -208,9 +221,13 @@ pub fn generate_road_with_exclusions(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
     exclusion_zones: &[ExclusionZone],
+    contour_polylines: &[Vec<(f64, f64)>],
 ) -> Option<RoadResult> {
     let start = random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng);
     let target = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
+
+    // Widen FOV at low effort so road can explore sideways routes around contours
+    let effective_fov = config.fov + (1.0 - config.effort) * PI * 0.5;
 
     let raw_waypoints = match config.style {
         PathStyle::Straight => greedy_walk(
@@ -220,11 +237,13 @@ pub fn generate_road_with_exclusions(
             pixel_width,
             pixel_height,
             config.step_distance,
-            config.fov,
+            effective_fov,
             config.noise_weight,
             true, // Roads follow ridges (high noise)
             rng,
             exclusion_zones,
+            contour_polylines,
+            config.effort,
         ),
         PathStyle::Meandering => generate_meander(
             start,
@@ -291,10 +310,10 @@ pub fn generate_river(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
 ) -> Option<RiverResult> {
-    generate_river_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[])
+    generate_river_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[], &[])
 }
 
-/// Generate a river, avoiding exclusion zones (rooms).
+/// Generate a river, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
 pub fn generate_river_with_exclusions(
     noise_map: &NoiseMap,
     config: &RiverConfig,
@@ -303,6 +322,7 @@ pub fn generate_river_with_exclusions(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
     exclusion_zones: &[ExclusionZone],
+    contour_polylines: &[Vec<(f64, f64)>],
 ) -> Option<RiverResult> {
     let start = random_edge_point(config.from, pixel_width, pixel_height, config.margin, rng);
     let target = random_edge_point(config.to, pixel_width, pixel_height, config.margin, rng);
@@ -316,7 +336,9 @@ pub fn generate_river_with_exclusions(
         PathStyle::Straight => greedy_walk(
             noise_map, start, target, pixel_width, pixel_height,
             config.step_distance, config.fov, config.noise_weight,
-            false, rng, exclusion_zones,
+            false, // Rivers follow valleys (low noise)
+            rng, exclusion_zones,
+            contour_polylines, config.effort,
         ),
     };
 
@@ -693,6 +715,8 @@ fn greedy_walk(
     prefer_high_noise: bool,
     rng: &mut impl Rng,
     exclusion_zones: &[ExclusionZone],
+    contour_polylines: &[Vec<(f64, f64)>],
+    effort: f64,
 ) -> Vec<(f64, f64)> {
     let mut path = vec![start];
     let mut current = start;
@@ -749,7 +773,21 @@ fn greedy_walk(
             let new_dist = (new_dx * new_dx + new_dy * new_dy).sqrt();
             let progress = (dist_to_target - new_dist) / step_distance;
 
-            let score = noise_score * noise_weight + progress * (1.0 - noise_weight);
+            // Contour-crossing penalty: count how many distinct contour
+            // polylines the step from current to (nx, ny) would cross.
+            // Penalizes per-contour-line, not per-segment, to avoid
+            // over-counting when a step crosses multiple segments of
+            // the same contour.
+            let contour_penalty = if effort < 1.0 && !contour_polylines.is_empty() {
+                let lines_crossed = count_contour_lines_crossed(
+                    current, (nx, ny), contour_polylines,
+                );
+                lines_crossed as f64 * 20.0 * (1.0 - effort)
+            } else {
+                0.0
+            };
+
+            let score = noise_score * noise_weight + progress * (1.0 - noise_weight) - contour_penalty;
 
             if score > best_score {
                 best_score = score;
@@ -766,6 +804,49 @@ fn greedy_walk(
     }
 
     path
+}
+
+/// Count how many distinct contour polylines a line from p0 to p1 crosses.
+/// A contour line is "crossed" if the step intersects any of its segments.
+fn count_contour_lines_crossed(
+    p0: (f64, f64),
+    p1: (f64, f64),
+    contour_polylines: &[Vec<(f64, f64)>],
+) -> usize {
+    let mut count = 0;
+    for polyline in contour_polylines {
+        let crosses = polyline.windows(2).any(|window| {
+            segments_intersect(p0, p1, window[0], window[1])
+        });
+        if crosses {
+            count += 1;
+        }
+    }
+    count
+}
+
+/// Test if two line segments intersect.
+fn segments_intersect(
+    a1: (f64, f64),
+    a2: (f64, f64),
+    b1: (f64, f64),
+    b2: (f64, f64),
+) -> bool {
+    let d1 = cross_product_sign(b1, b2, a1);
+    let d2 = cross_product_sign(b1, b2, a2);
+    let d3 = cross_product_sign(a1, a2, b1);
+    let d4 = cross_product_sign(a1, a2, b2);
+
+    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+        && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+    {
+        return true;
+    }
+    false
+}
+
+fn cross_product_sign(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64 {
+    (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)
 }
 
 /// Pick a random point along a map edge.
@@ -819,6 +900,8 @@ mod tests {
             true,
             &mut rng,
             &[],
+            &[], // no contours
+            1.0, // max effort (ignore contours)
         );
 
         assert!(path.len() >= 2);
