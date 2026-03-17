@@ -4,12 +4,12 @@
     "creation_date": {
       "year": 2026,
       "month": 3,
-      "day": 15,
-      "weekday": 7,
+      "day": 16,
+      "weekday": 1,
       "dst": false,
-      "hour": 8,
-      "minute": 25,
-      "second": 21
+      "hour": 16,
+      "minute": 14,
+      "second": 50
     },
     "uses_default_assets": true,
     "asset_manifest": [],
@@ -47,7 +47,7 @@
     "format": 3,
     "width": 32,
     "height": 32,
-    "next_node_id": "17",
+    "next_node_id": "6",
     "next_prefab_id": "0",
     "msi": {
       "offset_map_size": 512,
@@ -69,9 +69,7 @@
         "label": "Ground",
         "environment": {
           "baked_lighting": true,
-          "ambient_light": "ffffffff",
-          "ambient_energy": null,
-          "shadow_color": null
+          "ambient_light": "ffffffff"
         },
         "layers": {
           "-100": "Below Water",
@@ -1188,175 +1186,24 @@
         "objects": [],
         "lights": [
           {
-            "position": "Vector2( 4896.767837661042, 7074.573391578948 )",
-            "color": "96eaefca",
-            "range": 3840.0,
+            "position": "Vector2( 2088.5962646466924, 6978.66019000275 )",
+            "rotation": 0,
+            "range": 10.0,
             "intensity": 0.5,
+            "color": "64eaefca",
+            "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "layer": 100,
             "node_id": "4"
           },
           {
-            "position": "Vector2( 6499.223634383239, 7251.33122287026 )",
-            "color": "96eaefca",
-            "range": 3840.0,
+            "position": "Vector2( 1695.6822732491664, 2026.8158388413376 )",
+            "rotation": 0,
+            "range": 10.0,
             "intensity": 0.5,
+            "color": "64eaefca",
+            "texture": "res://textures/lights/point.png",
             "shadows": false,
-            "layer": 100,
             "node_id": "5"
-          },
-          {
-            "position": "Vector2( 6246.539199968505, 4898.2118328451215 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "6"
-          },
-          {
-            "position": "Vector2( 5349.611297219959, 5928.913855685054 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "7"
-          },
-          {
-            "position": "Vector2( 4183.9369699492245, 5561.860333117911 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "8"
-          },
-          {
-            "position": "Vector2( 3274.7507307706237, 4609.068991976347 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "9"
-          },
-          {
-            "position": "Vector2( 4380.808036485677, 4303.289856111453 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "a"
-          },
-          {
-            "position": "Vector2( 2537.8278742863986, 4882.042221297352 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "b"
-          },
-          {
-            "position": "Vector2( 1674.9500364180599, 5613.359385298642 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "c"
-          },
-          {
-            "position": "Vector2( 6813.899655316813, 1631.1531967016294 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "d"
-          },
-          {
-            "position": "Vector2( 4869.680481769392, 1781.8437580291325 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "e"
-          },
-          {
-            "position": "Vector2( 4467.599118983137, 3237.025037731848 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "f"
-          },
-          {
-            "position": "Vector2( 5038.6662515610005, 872.8381898645043 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "10"
-          },
-          {
-            "position": "Vector2( 1818.5777368542447, 4550.8736779861365 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "11"
-          },
-          {
-            "position": "Vector2( 2107.983936807163, 1278.4524099621149 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "12"
-          },
-          {
-            "position": "Vector2( 2490.7589583064064, 4070.4781232817445 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "13"
-          },
-          {
-            "position": "Vector2( 4010.748555883804, 1649.3005415554962 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "14"
-          },
-          {
-            "position": "Vector2( 1446.6148699763971, 2848.0425114857494 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "15"
-          },
-          {
-            "position": "Vector2( 1469.7751035657054, 2041.1034560352912 )",
-            "color": "96eaefca",
-            "range": 3840.0,
-            "intensity": 0.5,
-            "shadows": false,
-            "layer": 100,
-            "node_id": "16"
           }
         ],
         "roofs": {

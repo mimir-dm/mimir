@@ -1,0 +1,196 @@
+name: "Gull Rock Forest"
+width: 32
+height: 32
+seed: 42
+
+noise:
+  octaves: 6
+  persistence: 0.5
+  lacunarity: 2.0
+  scale: 0.03
+
+terrain:
+  slots:
+    - texture: "res://textures/terrain/terrain_dirt.png"
+      lower: 0.0
+      upper: 0.3
+    - texture: "res://textures/terrain/terrain_grass.png"
+      lower: 0.25
+      upper: 0.55
+    - texture: "res://textures/terrain/terrain_moss.png"
+      lower: 0.5
+      upper: 0.8
+    - texture: "res://textures/terrain/terrain_rocky.png"
+      lower: 0.75
+      upper: 1.0
+  blend_width: 0.05
+  smooth_blending: false
+
+# Two tree tiers — dense canopy trees and smaller understory
+trees:
+  - id: big_trees
+    tree:
+      textures:
+        - "res://textures/objects/vegetation/trees/tree_big_green_03.png"
+        - "res://textures/objects/vegetation/trees/tree_branch_02.png"
+        - "res://textures/objects/vegetation/trees/tree_branch_03.png"
+      min_distance: 640.0
+      noise_lower: 0.0
+      noise_upper: 0.4
+      probability: 1.0
+      scale_min: 0.9
+      scale_max: 1.1
+      layer: 400
+      random_rotation: true
+      random_mirror: true
+  - id: small_trees
+    tree:
+      textures:
+        - "res://textures/objects/vegetation/trees/tree_green_simple_04.png"
+        - "res://textures/objects/vegetation/trees/pine_tree_02.png"
+        - "res://textures/objects/vegetation/trees/tree_branch_01.png"
+      min_distance: 512.0
+      noise_lower: 0.4
+      noise_upper: 0.55
+      probability: 0.8
+      scale_min: 0.8
+      scale_max: 1.0
+      layer: 300
+      random_rotation: true
+      random_mirror: false
+
+# Ground clutter — grass patches and flowers
+clutter:
+  - textures:
+      - "res://textures/objects/vegetation/grass/grass_14.png"
+      - "res://textures/objects/vegetation/grass/grass_15.png"
+      - "res://textures/objects/vegetation/grass/grass_16.png"
+      - "res://textures/objects/vegetation/grass/grass_17.png"
+      - "res://textures/objects/vegetation/grass/grass_18.png"
+    min_distance: 100.0
+    noise_lower: 0.0
+    noise_upper: 0.9
+    probability: 0.4
+    scale_min: 0.5
+    scale_max: 1.0
+    layer: 100
+    random_rotation: true
+    random_mirror: true
+  - textures:
+      - "res://textures/objects/vegetation/flowers/flowers_01.png"
+      - "res://textures/objects/vegetation/flowers/flowers_02.png"
+      - "res://textures/objects/vegetation/flowers/flowers_03.png"
+    min_distance: 200.0
+    noise_lower: 0.3
+    noise_upper: 0.7
+    probability: 0.3
+    scale_min: 0.4
+    scale_max: 0.8
+    layer: 100
+    random_rotation: true
+    random_mirror: false
+
+# Boulder and fern clumps
+clumps:
+  - primary:
+      textures:
+        - "res://textures/objects/clutter/boulders/boulder_01.png"
+        - "res://textures/objects/clutter/boulders/boulder_04.png"
+      min_distance: 1024.0
+      noise_lower: 0.2
+      noise_upper: 0.95
+      probability: 0.2
+      scale_min: 0.8
+      scale_max: 1.2
+      layer: 200
+      random_rotation: true
+      random_mirror: true
+    secondary:
+      textures:
+        - "res://textures/objects/clutter/rubble/rubble_07.png"
+        - "res://textures/objects/clutter/rubble/rubble_08.png"
+        - "res://textures/objects/clutter/rubble/rubble_09.png"
+      min_distance: 10.0
+      noise_lower: 0.0
+      noise_upper: 1.0
+      probability: 1.0
+      scale_min: 0.5
+      scale_max: 0.8
+      layer: 100
+      random_rotation: true
+      random_mirror: true
+    secondary_count: [2, 4]
+    secondary_radius: 150.0
+
+# Road through the forest
+roads:
+  - id: main_road
+    from: Left
+    to: Right
+    texture: "res://textures/paths/path_dirt.png"
+    width: 512.0
+    layer: 100
+    style: straight
+    step_distance: 64.0
+    fov: 1.047
+    noise_weight: 0.5
+    margin: 256.0
+    smooth_density: 8
+    effort: 0.2
+
+# Elevation contours (cliff edges)
+elevation:
+  levels:
+    - id: high_cliff
+      threshold: 0.55
+      texture: "res://textures/paths/cliff.png"
+      width: 256.0
+      layer: 200
+      min_points: 8
+      smooth_iterations: 3
+    - id: mid_cliff
+      threshold: 0.4
+      texture: "res://textures/paths/cliff.png"
+      width: 200.0
+      layer: 200
+      min_points: 8
+      smooth_iterations: 3
+  pixels_per_cell: 64.0
+
+# Ambient lighting — dimmed forest canopy
+lighting:
+  ambient_light: "ff646464"
+  ambient_energy: 0.6
+  shadow_color: "66301830"
+
+# Point lights — ambient scatter + tree-top glow + road lights
+lights:
+  # Ambient scatter — cool blue moonlight
+  - placement:
+      type: scatter
+      density: 5.0
+      noise_lower: 0.0
+      noise_upper: 0.8
+      probability: 0.3
+      margin: 0.1
+    color: "6480a0ff"
+    intensity: 0.5
+    range: 10.0
+    shadows: false
+  # Tree-top glow — warm green canopy light
+  - placement:
+      type: with_objects
+      group: big_trees
+    color: "ff60cc60"
+    intensity: 0.4
+    range: 2.0
+    shadows: false
+  # Road torches — warm orange
+  - placement:
+      type: along_path
+      path: main_road
+      density: 0.2
+    color: "ffff8833"
+    intensity: 0.8
+    range: 4.0
+    shadows: true

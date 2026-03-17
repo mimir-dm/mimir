@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::custom_paths::{self, CustomPathConfig};
 use crate::elevation::{self, ElevationConfig};
 use crate::format::{DungeondraftMap, NodeIdAllocator};
+use crate::lakes::{self, LakeConfig};
 use crate::lights::{self, LightConfig};
 use crate::materials::{self, MaterialScatterConfig};
 use crate::noise_gen::{NoiseConfig, NoiseMap};
@@ -88,6 +89,9 @@ pub struct MapConfig {
     /// Material scatter configs (ice, lava, acid, ground detail).
     #[serde(default, rename = "materials")]
     pub material_configs: Vec<MaterialScatterConfig>,
+    /// Declarative lake configs.
+    #[serde(default)]
+    pub lakes: Vec<LakeConfig>,
 }
 
 /// Lighting/environment configuration.
@@ -497,6 +501,17 @@ pub struct GenerateResult {
     pub stats: GenerateStats,
     /// Registry of generated feature geometry for cross-referencing.
     pub features: GeneratedFeatures,
+    /// Terrain passability warnings.
+    pub warnings: Vec<TerrainWarning>,
+}
+
+/// Terrain passability warning.
+#[derive(Debug, Clone)]
+pub enum TerrainWarning {
+    /// Contour corridors cover a large percentage of the map.
+    HighContourDensity { coverage_percent: f64 },
+    /// Road/river pathfinding couldn't avoid contours well.
+    ContourCrossings { feature: String, crossings: usize },
 }
 
 /// Statistics from map generation.
@@ -526,6 +541,10 @@ pub struct GeneratedFeatures {
     pub water_polygons: Vec<Vec<(f64, f64)>>,
     /// Placed object positions by group name (name → positions in pixels).
     pub object_positions: std::collections::HashMap<String, Vec<(f64, f64)>>,
+    /// Contour polylines in pixel coordinates (for corridor clipping).
+    pub contour_polylines: Vec<Vec<(f64, f64)>>,
+    /// Road/river corridors (centerline points + half-width) for contour clipping.
+    pub corridors: Vec<(Vec<(f64, f64)>, f64)>,
 }
 
 /// Geometry for a generated room.
@@ -672,6 +691,97 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().terrain = Some(terrain);
     }
 
+    // 3b. Generate declarative lakes (before contours so noise depression affects contour lines)
+    let mut lake_exclusion_polygons: Vec<Vec<(f64, f64)>> = Vec::new();
+    for lake_config in &config.lakes {
+        let result = lakes::generate_lake(lake_config, &noise_map, &alloc);
+
+        // Depress noise map within lake boundary
+        lakes::depress_noise_for_lake(
+            &mut noise_map,
+            &result.shoreline,
+            lake_config.blend_distance * 256.0,
+        );
+
+        // Register lake in features
+        let center = (lake_config.center[0] * 256.0, lake_config.center[1] * 256.0);
+        features.rooms.insert(lake_config.id.clone(), RoomGeometry {
+            center,
+            boundary: result.shoreline.clone(),
+        });
+        features.water_polygons.push(result.shoreline.clone());
+        lake_exclusion_polygons.push(result.shoreline.clone());
+
+        // Add water tree as child
+        let level = map.ground_level_mut();
+        let water = level.water.get_or_insert_with(|| crate::format::world::Water {
+            disable_border: false,
+            tree: Some(crate::format::world::WaterTree {
+                node_ref: 0,
+                polygon: crate::format::godot_types::PoolVector2Array::new(),
+                join: 0,
+                end: 0,
+                is_open: false,
+                deep_color: "00000000".to_string(),
+                shallow_color: "00000000".to_string(),
+                blend_distance: 0.0,
+                children: Vec::new(),
+            }),
+        });
+        if let Some(ref mut tree) = water.tree {
+            tree.children.push(result.water_tree);
+        }
+
+        // Add lake colors to header palettes
+        map.add_water_colors(&lake_config.deep_color, &lake_config.shallow_color);
+    }
+
+    // 3c. Generate elevation contours (before roads/rivers so they can see contour data)
+    let mut contour_paths = Vec::new();
+    if let Some(ref elev_config) = config.elevation {
+        contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
+        stats.contour_paths = contour_paths.len();
+        // Register ALL contour polylines in feature registry (absolute coordinates)
+        for path in contour_paths.iter() {
+            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                .map(|p| (path.position.x + p.x, path.position.y + p.y))
+                .collect();
+            features.contour_polylines.push(points);
+        }
+        // Also register named references per level (first contour matching each level)
+        for (i, level_config) in elev_config.levels.iter().enumerate() {
+            let name = feature_name(&level_config.id, "elevation", i);
+            if let Some(path) = contour_paths.get(i) {
+                let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                    .map(|p| (path.position.x + p.x, path.position.y + p.y))
+                    .collect();
+                features.paths.insert(name, points);
+            }
+        }
+    }
+
+    // 3d. Terrain passability analysis
+    let mut warnings = Vec::new();
+    if !features.contour_polylines.is_empty() {
+        // Estimate contour corridor coverage
+        let map_area = pixel_width * pixel_height;
+        let contour_area: f64 = features.contour_polylines.iter().map(|poly| {
+            // Approximate area as polyline length * average contour width
+            let length: f64 = poly.windows(2).map(|w| {
+                let dx = w[1].0 - w[0].0;
+                let dy = w[1].1 - w[0].1;
+                (dx * dx + dy * dy).sqrt()
+            }).sum();
+            // Use 256px as approximate contour corridor width (1 grid square)
+            length * 256.0
+        }).sum();
+        let coverage = (contour_area / map_area * 100.0).min(100.0);
+        if coverage > 30.0 && (!config.roads.is_empty() || !config.rivers.is_empty()) {
+            eprintln!("Warning: contour corridors cover ~{:.0}% of map area — road/river generation may produce unrealistic paths. Consider fewer elevation levels or higher effort.", coverage);
+            warnings.push(TerrainWarning::HighContourDensity { coverage_percent: coverage });
+        }
+    }
+
     // 4. Generate roads
     let mut corridors: Vec<(Vec<(f64, f64)>, f64)> = Vec::new();
 
@@ -684,12 +794,14 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
             &exclusion_zones,
+            &features.contour_polylines,
         ) {
             // Register road path in feature registry
             let name = feature_name(&road_config.id, "road", i);
             features.paths.insert(name, result.corridor_points.clone());
 
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
+            features.corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             map.ground_level_mut().paths.push(result.road);
             stats.paths_generated += 1;
             for ep in result.edge_paths {
@@ -711,6 +823,13 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     }
 
     // 5. Generate rivers
+    // Build lake shoreline lookup for river source/drain connections
+    let lake_shorelines: std::collections::HashMap<String, Vec<(f64, f64)>> = config.lakes.iter()
+        .filter_map(|lake| {
+            features.get_room(&lake.id).map(|geom| (lake.id.clone(), geom.boundary.clone()))
+        })
+        .collect();
+
     for (i, river_config) in config.rivers.iter().enumerate() {
         if let Some(result) = paths::generate_river_with_exclusions(
             &noise_map,
@@ -720,6 +839,8 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &alloc,
             &mut rng,
             &exclusion_zones,
+            &features.contour_polylines,
+            &lake_shorelines,
         ) {
             // Register river path and water polygon in feature registry
             let name = feature_name(&river_config.id, "river", i);
@@ -727,6 +848,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             features.water_polygons.push(result.water_polygon.clone());
 
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
+            features.corridors.push((result.corridor_points.clone(), result.corridor_half_width));
             for bp in result.bank_paths {
                 map.ground_level_mut().paths.push(bp);
                 stats.paths_generated += 1;
@@ -823,6 +945,15 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         all_objects.retain(|obj| !rooms::is_excluded(&exclusion_zones, obj.position.x, obj.position.y));
     }
 
+    // 7c. Filter objects from lake areas
+    if !lake_exclusion_polygons.is_empty() {
+        all_objects.retain(|obj| {
+            !lake_exclusion_polygons.iter().any(|poly| {
+                crate::lakes::point_in_lake(obj.position.x, obj.position.y, poly)
+            })
+        });
+    }
+
     stats.objects_placed = all_objects.len();
     map.ground_level_mut().objects = all_objects;
 
@@ -843,19 +974,20 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         map.ground_level_mut().water = Some(water);
     }
 
-    // 9. Generate elevation contours
-    if let Some(ref elev_config) = config.elevation {
-        let contour_paths = elevation::generate_elevation(&noise_map, elev_config, &alloc);
-        stats.contour_paths = contour_paths.len();
-        // Register elevation contour paths in feature registry
-        for (i, (level_config, path)) in elev_config.levels.iter().zip(contour_paths.iter()).enumerate() {
-            let name = feature_name(&level_config.id, "elevation", i);
-            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
-                .map(|p| (path.position.x + p.x, path.position.y + p.y))
-                .collect();
-            features.paths.insert(name, points);
-        }
-        map.ground_level_mut().paths.extend(contour_paths);
+    // 9. Clip contours against road/river corridors and add to level
+    if !contour_paths.is_empty() {
+        let clip_corridors: Vec<crate::contour_clip::Corridor> = features.corridors.iter()
+            .map(|(pts, hw)| crate::contour_clip::Corridor {
+                points: pts.clone(),
+                half_width: *hw + 32.0, // extra margin to avoid visual overlap
+            })
+            .collect();
+        let clipped = crate::contour_clip::clip_contours_against_corridors(
+            contour_paths,
+            &clip_corridors,
+            &alloc,
+        );
+        map.ground_level_mut().paths.extend(clipped);
     }
 
     // 9b. Generate patterns
@@ -956,7 +1088,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // Update next_node_id
     map.world.next_node_id = alloc.current();
 
-    GenerateResult { map, stats, features }
+    GenerateResult { map, stats, features, warnings }
 }
 
 #[cfg(test)]
@@ -987,6 +1119,7 @@ mod tests {
             custom_paths: vec![],
             lights: vec![],
             material_configs: vec![],
+            lakes: vec![],
         }
     }
 

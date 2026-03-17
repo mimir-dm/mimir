@@ -85,6 +85,30 @@ jobs:
           name: mimir-mcp-${{ matrix.target }}
           path: crates/mimir/binaries/mimir-mcp-${{ matrix.target }}.exe
 
+      - name: Build mimir-mapgen binary
+        run: cargo build --release --package mimir-mapgen ${{ matrix.args }}
+
+      - name: Upload mimir-mapgen binary (unix cross-compiled)
+        if: matrix.platform != 'windows-latest' && matrix.args != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimir-mapgen-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/mimir-mapgen
+
+      - name: Upload mimir-mapgen binary (unix native)
+        if: matrix.platform != 'windows-latest' && matrix.args == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimir-mapgen-${{ matrix.target }}
+          path: target/release/mimir-mapgen
+
+      - name: Upload mimir-mapgen binary (windows)
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimir-mapgen-${{ matrix.target }}
+          path: target/release/mimir-mapgen.exe
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -116,18 +140,33 @@ jobs:
           path: mcp-binaries
           merge-multiple: false
 
+      - name: Download all mimir-mapgen artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mimir-mapgen-*
+          path: mapgen-binaries
+          merge-multiple: false
+
       - name: Get version from tag
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload MCP binaries to release
+      - name: Upload MCP and mapgen binaries to release
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           TAG="app-v${{ steps.version.outputs.version }}"
-          echo "Uploading MCP binaries to release ${TAG}..."
+          echo "Uploading binaries to release ${TAG}..."
 
           for dir in mcp-binaries/mimir-mcp-*/; do
+            for file in "$dir"*; do
+              filename=$(basename "$file")
+              echo "Uploading $filename..."
+              gh release upload "$TAG" "$file" --clobber
+            done
+          done
+
+          for dir in mapgen-binaries/mimir-mapgen-*/; do
             for file in "$dir"*; do
               filename=$(basename "$file")
               echo "Uploading $filename..."

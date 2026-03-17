@@ -132,9 +132,9 @@ pub struct Environment {
     pub baked_lighting: bool,
     #[serde(default = "default_ambient_light")]
     pub ambient_light: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ambient_energy: Option<f64>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shadow_color: Option<String>,
 }
 
@@ -339,7 +339,17 @@ impl Level {
             terrain: None,
             water: Some(Water {
                 disable_border: false,
-                tree: None,
+                tree: Some(WaterTree {
+                    node_ref: 0,
+                    polygon: PoolVector2Array::new(),
+                    join: 0,
+                    end: 0,
+                    is_open: false,
+                    deep_color: "00000000".to_string(),
+                    shallow_color: "00000000".to_string(),
+                    blend_distance: 0.0,
+                    children: Vec::new(),
+                }),
             }),
             materials: BTreeMap::new(),
             paths: Vec::new(),

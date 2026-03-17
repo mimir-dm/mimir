@@ -174,15 +174,15 @@ pub fn generate_lights(
 
 /// Create a MapLight from config and position.
 fn make_light(config: &LightConfig, x: f64, y: f64, alloc: &NodeIdAllocator) -> MapLight {
-    MapLight {
-        position: Vector2::new(x, y),
-        color: config.color.clone(),
-        range: config.range * 256.0, // grid squares to pixels
-        intensity: config.intensity,
-        shadows: config.shadows,
-        layer: config.layer,
-        node_id: alloc.next(),
-    }
+    let mut light = MapLight::new(
+        Vector2::new(x, y),
+        &config.color,
+        config.range, // DD range is in grid squares, not pixels
+        &alloc.next(),
+    );
+    light.intensity = config.intensity;
+    light.shadows = config.shadows;
+    light
 }
 
 /// Sample points at regular intervals along a polyline.
@@ -265,7 +265,7 @@ mod tests {
         let light = make_light(&config, 100.0, 200.0, &alloc);
         assert_eq!(light.position.x, 100.0);
         assert_eq!(light.position.y, 200.0);
-        assert_eq!(light.range, 5.0 * 256.0); // converted to pixels
+        assert_eq!(light.range, 5.0); // DD range is in grid squares
         assert_eq!(light.intensity, 0.5);
         assert_eq!(light.color, "ffeaefca");
     }

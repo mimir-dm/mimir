@@ -16,15 +16,15 @@ use crate::pipeline::MapConfig;
 fn ambient_scatter_lights() -> LightConfig {
     LightConfig {
         placement: LightPlacement::Scatter {
-            density: 3.0,
+            density: 5.0,
             noise_lower: 0.0,
             noise_upper: 0.8,
-            probability: 0.5,
+            probability: 0.3,
             margin: 0.1,
         },
-        color: "96eaefca".to_string(),
+        color: "64eaefca".to_string(),
         intensity: 0.5,
-        range: 15.0,
+        range: 10.0,
         shadows: false,
         layer: 100,
     }
@@ -171,11 +171,11 @@ fn forest_preset() -> BiomePreset {
                     TerrainSlot {
                         texture: "res://textures/terrain/terrain_dirt.png".to_string(),
                         lower: 0.0,
-                        upper: 0.3,
+                        upper: 0.25,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
-                        lower: 0.25,
+                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        lower: 0.2,
                         upper: 0.55,
                     },
                     TerrainSlot {
@@ -184,7 +184,7 @@ fn forest_preset() -> BiomePreset {
                         upper: 0.8,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_gravel.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
                         lower: 0.75,
                         upper: 1.0,
                     },
@@ -262,6 +262,7 @@ fn forest_preset() -> BiomePreset {
                 path_lights("road_0"),
             ],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -344,6 +345,7 @@ fn grassland_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -428,6 +430,7 @@ fn cave_preset() -> BiomePreset {
                 layer: 100,
             }],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -521,6 +524,7 @@ fn desert_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -620,7 +624,7 @@ fn lake_preset() -> BiomePreset {
                 shallow_color: "ff3ac3b2".to_string(),
                 blend_distance: 50.0,
                 min_contour_points: 20,
-                smooth_iterations: 3,
+                smooth_iterations: 8,
                 pixels_per_cell: 64.0,
                 disable_border: false,
             }),
@@ -633,6 +637,7 @@ fn lake_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -707,6 +712,7 @@ fn ice_lake_preset() -> BiomePreset {
                 layer: "-400".to_string(),
                 smooth: true,
             }],
+            lakes: vec![],
         },
     }
 }
@@ -790,6 +796,7 @@ fn arctic_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![ice_material()],
+            lakes: vec![],
         },
     }
 }
@@ -821,17 +828,17 @@ fn island_tropical_preset() -> BiomePreset {
                 slots: [
                     // Low noise = center of island (lush), high noise = shore near water
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
                         lower: 0.0,
-                        upper: 0.35,
+                        upper: 0.3,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_moss.png".to_string(),
-                        lower: 0.3,
+                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        lower: 0.25,
                         upper: 0.55,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
+                        texture: "res://textures/terrain/terrain_sand.png".to_string(),
                         lower: 0.5,
                         upper: 0.75,
                     },
@@ -902,6 +909,7 @@ fn island_tropical_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -1015,6 +1023,7 @@ fn island_forest_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -1091,6 +1100,7 @@ fn island_arctic_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights()],
             material_configs: vec![ice_material()],
+            lakes: vec![],
         },
     }
 }
@@ -1207,6 +1217,7 @@ fn swamp_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights()],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }
@@ -1239,11 +1250,11 @@ fn forest_river_preset() -> BiomePreset {
                     TerrainSlot {
                         texture: "res://textures/terrain/terrain_dirt.png".to_string(),
                         lower: 0.0,
-                        upper: 0.3,
+                        upper: 0.25,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_dry_grass.png".to_string(),
-                        lower: 0.25,
+                        texture: "res://textures/terrain/terrain_grass.png".to_string(),
+                        lower: 0.2,
                         upper: 0.55,
                     },
                     TerrainSlot {
@@ -1252,7 +1263,7 @@ fn forest_river_preset() -> BiomePreset {
                         upper: 0.8,
                     },
                     TerrainSlot {
-                        texture: "res://textures/terrain/terrain_gravel.png".to_string(),
+                        texture: "res://textures/terrain/terrain_dirt.png".to_string(),
                         lower: 0.75,
                         upper: 1.0,
                     },
@@ -1315,6 +1326,7 @@ fn forest_river_preset() -> BiomePreset {
             custom_paths: vec![],
             lights: vec![ambient_scatter_lights(), tree_top_lights(), path_lights("road_0"), path_lights("river_0")],
             material_configs: vec![],
+            lakes: vec![],
         },
     }
 }

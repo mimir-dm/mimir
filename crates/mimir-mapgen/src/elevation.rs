@@ -261,12 +261,10 @@ mod tests {
 
         let paths = generate_elevation(&noise, &config, &alloc);
         if let Some(path) = paths.first() {
-            // edit_points are relative to position; absolute = position + edit_point
-            let origin = &path.position;
+            // edit_points are relative to position
             for pt in &path.edit_points.0 {
-                let abs_x = origin.x + pt.x;
-                let abs_y = origin.y + pt.y;
-                // Points should be in pixel space (noise is 0-50, so max ~50*128=6400)
+                let abs_x = path.position.x + pt.x;
+                let abs_y = path.position.y + pt.y;
                 assert!(abs_x >= 0.0 && abs_x <= 50.0 * ppc,
                     "abs_x={} out of range", abs_x);
                 assert!(abs_y >= 0.0 && abs_y <= 50.0 * ppc,

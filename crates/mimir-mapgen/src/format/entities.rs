@@ -116,13 +116,14 @@ impl MapObject {
 
 /// A path on the map (roads, rivers, cliffs, decorative lines, etc.).
 ///
-/// DD paths use a `position` origin + relative `edit_points`. The constructor
-/// accepts absolute points and converts to this format automatically.
+/// Uses `position` + relative `edit_points` format matching the Gull Rock
+/// procedural generator (confirmed working in DD). The constructor accepts
+/// absolute points and converts to position + relative edit_points.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapPath {
     pub position: Vector2,
     #[serde(default)]
-    pub rotation: f64,
+    pub rotation: i32,
     pub scale: Vector2,
     pub edit_points: PoolVector2Array,
     #[serde(default = "default_smoothness")]
@@ -138,8 +139,6 @@ pub struct MapPath {
     pub grow: bool,
     #[serde(default)]
     pub shrink: bool,
-    #[serde(default)]
-    pub block_light: bool,
     #[serde(rename = "loop", default)]
     pub loop_path: bool,
     pub node_id: String,
@@ -150,8 +149,8 @@ fn default_smoothness() -> f64 {
 }
 
 impl MapPath {
-    /// Create a new path from absolute points. The first point becomes `position`,
-    /// and all points are stored relative to it as `edit_points`.
+    /// Create a path from absolute points. First point becomes `position`,
+    /// remaining are stored as relative `edit_points`.
     pub fn new(texture: &str, points: Vec<Vector2>, width: f64, node_id: &str) -> Self {
         let position = points.first().cloned().unwrap_or(Vector2::new(0.0, 0.0));
         let relative: Vec<Vector2> = points
@@ -160,7 +159,7 @@ impl MapPath {
             .collect();
         Self {
             position,
-            rotation: 0.0,
+            rotation: 0,
             scale: Vector2::new(1.0, 1.0),
             edit_points: PoolVector2Array::from_points(relative),
             smoothness: 1.0,
@@ -171,15 +170,13 @@ impl MapPath {
             fade_out: false,
             grow: false,
             shrink: false,
-            block_light: false,
             loop_path: false,
             node_id: node_id.to_string(),
         }
     }
 
     pub fn with_color(self, _color: &str) -> Self {
-        // Color was removed from DD path format; kept as no-op for backward compat
-        self
+        self // no-op, DD paths don't have color
     }
 
     pub fn with_layer(mut self, layer: i32) -> Self {
@@ -191,28 +188,19 @@ impl MapPath {
         self.loop_path = loop_path;
         self
     }
-
-    pub fn with_smoothness(mut self, smoothness: f64) -> Self {
-        self.smoothness = smoothness;
-        self
-    }
-
-    pub fn with_fade(mut self, fade_in: bool, fade_out: bool) -> Self {
-        self.fade_in = fade_in;
-        self.fade_out = fade_out;
-        self
-    }
 }
 
 /// A light source on the map.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MapLight {
     pub position: Vector2,
-    pub color: String,
+    #[serde(default)]
+    pub rotation: i32,
     pub range: f64,
     pub intensity: f64,
+    pub color: String,
+    pub texture: String,
     pub shadows: bool,
-    pub layer: i32,
     pub node_id: String,
 }
 
@@ -220,11 +208,12 @@ impl MapLight {
     pub fn new(position: Vector2, color: &str, range: f64, node_id: &str) -> Self {
         Self {
             position,
-            color: color.to_string(),
+            rotation: 0,
             range,
             intensity: 1.0,
+            color: color.to_string(),
+            texture: "res://textures/lights/point.png".to_string(),
             shadows: true,
-            layer: 100,
             node_id: node_id.to_string(),
         }
     }

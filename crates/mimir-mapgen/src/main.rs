@@ -115,6 +115,9 @@ fn main() {
             eprintln!("  Paths generated: {}", result.stats.paths_generated);
             eprintln!("  Water polygons: {}", result.stats.water_polygons);
             eprintln!("  Contour paths: {}", result.stats.contour_paths);
+            if !result.warnings.is_empty() {
+                eprintln!("  Warnings: {}", result.warnings.len());
+            }
             eprintln!("  Output: {}", output_path.display());
         }
 

@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-03-14T18:37:58Z | 546 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-03-17T02:32:15Z | 552 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -585,7 +585,9 @@
 │   │   │   ├── assets.rs
 │   │   │   ├── biomes.rs
 │   │   │   ├── contour.rs
+│   │   │   ├── contour_clip.rs
 │   │   │   ├── curves.rs
+│   │   │   ├── custom_paths.rs
 │   │   │   ├── distribution.rs
 │   │   │   ├── elevation.rs
 │   │   │   ├── format/
@@ -594,11 +596,15 @@
 │   │   │   │   ├── header.rs
 │   │   │   │   ├── mod.rs
 │   │   │   │   └── world.rs
+│   │   │   ├── lakes.rs
 │   │   │   ├── lib.rs
+│   │   │   ├── lights.rs
 │   │   │   ├── main.rs
+│   │   │   ├── materials.rs
 │   │   │   ├── noise_gen.rs
 │   │   │   ├── objects.rs
 │   │   │   ├── paths.rs
+│   │   │   ├── patterns.rs
 │   │   │   ├── pipeline.rs
 │   │   │   ├── polygons.rs
 │   │   │   ├── rooms.rs
@@ -7931,35 +7937,40 @@
 
 #### crates/mimir-mapgen/src/biomes.rs
 
-- pub `BiomePreset` struct L10-19 — `{ name: &'static str, description: &'static str, default_size: (u32, u32), confi...` — A biome preset with sensible defaults for all generation parameters.
-- pub `get_preset` function L22-46 — `(name: &str) -> Option<BiomePreset>` — Get a biome preset by name.
-- pub `list_presets` function L49-64 — `() -> Vec<BiomePreset>` — List all available presets.
--  `forest_preset` function L66-180 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `grassland_preset` function L182-258 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `cave_preset` function L260-325 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `desert_preset` function L327-414 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `lake_preset` function L416-522 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `ice_lake_preset` function L524-594 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `arctic_preset` function L596-673 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `island_tropical_preset` function L675-781 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `island_forest_preset` function L783-890 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `island_arctic_preset` function L892-962 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `swamp_preset` function L964-1074 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `forest_river_preset` function L1076-1178 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
--  `tests` module L1181-1314 — `-` — for terrain textures, object palettes, and noise parameters.
--  `test_get_preset` function L1185-1206 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_list_presets` function L1209-1225 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_forest_has_terrain` function L1228-1232 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_cave_has_lighting` function L1235-1240 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_lake_has_water` function L1243-1247 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_ice_lake_has_water` function L1250-1254 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_desert_has_elevation` function L1257-1261 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_arctic_has_elevation` function L1264-1268 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_island_tropical_has_water_and_trees` function L1271-1276 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_island_forest_has_water_and_trees` function L1279-1284 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_island_arctic_has_water_no_trees` function L1287-1292 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_swamp_has_water_and_lighting` function L1295-1304 — `()` — for terrain textures, object palettes, and noise parameters.
--  `test_forest_river_has_river_and_trees` function L1307-1312 — `()` — for terrain textures, object palettes, and noise parameters.
+- pub `BiomePreset` struct L89-98 — `{ name: &'static str, description: &'static str, default_size: (u32, u32), confi...` — A biome preset with sensible defaults for all generation parameters.
+- pub `get_preset` function L101-125 — `(name: &str) -> Option<BiomePreset>` — Get a biome preset by name.
+- pub `list_presets` function L128-143 — `() -> Vec<BiomePreset>` — List all available presets.
+-  `ambient_scatter_lights` function L16-31 — `() -> LightConfig` — Ambient scatter lights for outdoor maps.
+-  `tree_top_lights` function L34-45 — `() -> LightConfig` — Tree-top canopy glow lights.
+-  `path_lights` function L48-60 — `(path_name: &str) -> LightConfig` — Lights along a road/river path.
+-  `water_overlay_pattern` function L63-72 — `() -> PatternConfig` — Semi-transparent water overlay pattern.
+-  `ice_material` function L75-85 — `() -> MaterialScatterConfig` — Ice material scatter for cold biomes.
+-  `forest_preset` function L145-268 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `grassland_preset` function L270-351 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `cave_preset` function L353-436 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `desert_preset` function L438-530 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `lake_preset` function L532-643 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `ice_lake_preset` function L645-718 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `arctic_preset` function L720-802 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `island_tropical_preset` function L804-915 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `island_forest_preset` function L917-1029 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `island_arctic_preset` function L1031-1106 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `swamp_preset` function L1108-1223 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `forest_river_preset` function L1225-1332 — `() -> BiomePreset` — for terrain textures, object palettes, and noise parameters.
+-  `tests` module L1335-1469 — `-` — for terrain textures, object palettes, and noise parameters.
+-  `test_get_preset` function L1339-1360 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_list_presets` function L1363-1379 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_forest_has_terrain` function L1382-1386 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_cave_has_lighting` function L1389-1394 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_lake_has_water` function L1397-1401 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_ice_lake_has_ice_material` function L1404-1409 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_desert_has_elevation` function L1412-1416 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_arctic_has_elevation` function L1419-1423 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_island_tropical_has_water_and_trees` function L1426-1431 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_island_forest_has_water_and_trees` function L1434-1439 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_island_arctic_has_water_no_trees` function L1442-1447 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_swamp_has_water_and_lighting` function L1450-1459 — `()` — for terrain textures, object palettes, and noise parameters.
+-  `test_forest_river_has_river_and_trees` function L1462-1467 — `()` — for terrain textures, object palettes, and noise parameters.
 
 #### crates/mimir-mapgen/src/contour.rs
 
@@ -7981,6 +7992,19 @@
 -  `test_smooth_contours` function L396-412 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
 -  `test_cell_case` function L415-436 — `()` — Extracts contour polylines from 2D scalar fields at configurable thresholds.
 
+#### crates/mimir-mapgen/src/contour_clip.rs
+
+- pub `Corridor` struct L11-14 — `{ points: Vec<(f64, f64)>, half_width: f64 }` — A corridor defined by a centerline polyline and half-width.
+- pub `clip_contours_against_corridors` function L20-57 — `( contours: Vec<MapPath>, corridors: &[Corridor], alloc: &NodeIdAllocator, ) -> ...` — Clip a set of MapPath contour lines against corridors.
+-  `split_polyline_by_corridors` function L60-87 — `( points: &[(f64, f64)], corridors: &[Corridor], ) -> Vec<Vec<(f64, f64)>>` — Split a polyline into segments that are outside all corridors.
+-  `is_inside_any_corridor` function L90-97 — `(point: (f64, f64), corridors: &[Corridor]) -> bool` — Check if a point is inside any corridor.
+-  `distance_to_polyline` function L100-121 — `(px: f64, py: f64, points: &[(f64, f64)]) -> f64` — Minimum distance from a point to a polyline.
+-  `tests` module L124-183 — `-` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_no_corridors_returns_unchanged` function L128-137 — `()` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_corridor_clips_middle` function L140-155 — `()` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_corridor_fully_covers_contour` function L158-174 — `()` — contour polylines to remove segments that fall within corridor bounds.
+-  `test_distance_to_polyline` function L177-182 — `()` — contour polylines to remove segments that fall within corridor bounds.
+
 #### crates/mimir-mapgen/src/curves.rs
 
 - pub `cubic_bezier` function L8-25 — `( p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), p3: (f64, f64), t: f64, ) -> (...` — Evaluate a cubic Bezier curve at parameter `t` (0.0–1.0).
@@ -7995,6 +8019,24 @@
 -  `test_polyline_length` function L181-185 — `()` — Cubic Bezier evaluation for smoothing polylines into natural curves.
 -  `test_offset_polyline` function L188-195 — `()` — Cubic Bezier evaluation for smoothing polylines into natural curves.
 -  `test_segment_normal` function L198-203 — `()` — Cubic Bezier evaluation for smoothing polylines into natural curves.
+
+#### crates/mimir-mapgen/src/custom_paths.rs
+
+- pub `CustomPathConfig` struct L21-40 — `{ style: PathStyle, texture: String, width: f64, color: String, layer: i32, smoo...` — Configuration for a custom path.
+- pub `PathStyle` enum L57-98 — `Waypoints | RoomToRoom | Offset | Intermittent` — Path generation style.
+- pub `generate_custom_paths` function L101-239 — `( configs: &[CustomPathConfig], features: &GeneratedFeatures, alloc: &NodeIdAllo...` — Generate custom paths from configs.
+-  `default_color` function L42-44 — `() -> String` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `default_layer` function L46-48 — `() -> i32` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `default_smooth` function L50-52 — `() -> usize` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `break_into_segments` function L242-332 — `( points: &[(f64, f64)], segment_length: f64, variation: f64, gap: f64, rng: &mu...` — Break a polyline into intermittent segments with gaps.
+-  `tests` module L335-545 — `-` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_waypoints_basic` function L339-360 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_waypoints_with_smoothing` function L363-385 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_room_to_room` function L388-419 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_offset_path` function L422-452 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_intermittent_path` function L455-485 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_missing_reference` function L488-524 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
+-  `test_break_into_segments` function L527-544 — `()` — - **Intermittent**: break a parent path into segments with random gaps.
 
 #### crates/mimir-mapgen/src/distribution.rs
 
@@ -8013,42 +8055,110 @@
 
 #### crates/mimir-mapgen/src/elevation.rs
 
-- pub `ContourLevel` struct L16-31 — `{ threshold: f64, texture: String, width: f64, layer: i32, min_points: usize, sm...` — Configuration for a single elevation contour level.
-- pub `ShadowPathConfig` struct L35-44 — `{ texture: String, offset: f64, width: f64, layer: i32 }` — Configuration for shadow paths below cliffs.
-- pub `ElevationConfig` struct L48-53 — `{ levels: Vec<ContourLevel>, pixels_per_cell: f64 }` — Configuration for elevation contour generation.
-- pub `generate_elevation` function L97-144 — `( noise_map: &NoiseMap, config: &ElevationConfig, alloc: &NodeIdAllocator, ) -> ...` — Generate elevation contour paths from a noise map.
--  `ElevationConfig` type L55-91 — `impl Default for ElevationConfig` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `default` function L56-90 — `() -> Self` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `tests` module L147-265 — `-` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `test_generate_elevation_basic` function L152-183 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `test_generate_elevation_with_shadows` function L186-211 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `test_generate_elevation_uniform` function L214-227 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
--  `test_contour_pixel_scaling` function L230-264 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
+- pub `ContourLevel` struct L16-34 — `{ id: Option<String>, threshold: f64, texture: String, width: f64, layer: i32, m...` — Configuration for a single elevation contour level.
+- pub `ShadowPathConfig` struct L38-47 — `{ texture: String, offset: f64, width: f64, layer: i32 }` — Configuration for shadow paths below cliffs.
+- pub `ElevationConfig` struct L51-56 — `{ levels: Vec<ContourLevel>, pixels_per_cell: f64 }` — Configuration for elevation contour generation.
+- pub `generate_elevation` function L102-149 — `( noise_map: &NoiseMap, config: &ElevationConfig, alloc: &NodeIdAllocator, ) -> ...` — Generate elevation contour paths from a noise map.
+-  `ElevationConfig` type L58-96 — `impl Default for ElevationConfig` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `default` function L59-95 — `() -> Self` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `tests` module L152-275 — `-` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `test_generate_elevation_basic` function L157-189 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `test_generate_elevation_with_shadows` function L192-217 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `test_generate_elevation_uniform` function L220-233 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
+-  `test_contour_pixel_scaling` function L236-274 — `()` — Generates cliff and hill contour paths at configurable noise thresholds.
+
+#### crates/mimir-mapgen/src/lakes.rs
+
+- pub `LakeConfig` struct L16-35 — `{ id: String, center: [f64; 2], radius: f64, roughness: f64, deep_color: String,...` — Configuration for a declarative lake.
+- pub `LakeResult` struct L51-56 — `{ shoreline: Vec<(f64, f64)>, water_tree: WaterTree }` — Result of lake generation.
+- pub `generate_lake` function L61-130 — `( config: &LakeConfig, noise_map: &NoiseMap, _alloc: &NodeIdAllocator, ) -> Lake...` — Generate a lake with organic noise-perturbed shoreline.
+- pub `depress_noise_for_lake` function L136-164 — `( noise_map: &mut NoiseMap, shoreline: &[(f64, f64)], blend_distance_px: f64, )` — Depress the noise map within a lake shoreline polygon.
+- pub `point_in_lake` function L177-179 — `(x: f64, y: f64, polygon: &[(f64, f64)]) -> bool` — Check if a point is inside a lake polygon (public for object exclusion).
+-  `default_roughness` function L37-39 — `() -> f64` — lake boundary to create a natural basin.
+-  `default_deep_color` function L40-42 — `() -> String` — lake boundary to create a natural basin.
+-  `default_shallow_color` function L43-45 — `() -> String` — lake boundary to create a natural basin.
+-  `default_blend_distance` function L46-48 — `() -> f64` — lake boundary to create a natural basin.
+-  `rand_ref` function L167-174 — `() -> i64` — Generate a random reference number for water tree nodes.
+-  `point_in_polygon` function L182-198 — `(x: f64, y: f64, polygon: &[(f64, f64)]) -> bool` — Point-in-polygon test using ray casting.
+-  `distance_to_polygon_edge` function L201-222 — `(px: f64, py: f64, polygon: &[(f64, f64)]) -> f64` — Distance from a point to the nearest edge of a polygon.
+-  `tests` module L225-328 — `-` — lake boundary to create a natural basin.
+-  `test_generate_lake_basic` function L230-247 — `()` — lake boundary to create a natural basin.
+-  `test_shoreline_is_organic` function L250-274 — `()` — lake boundary to create a natural basin.
+-  `test_zero_roughness_is_smooth` function L277-301 — `()` — lake boundary to create a natural basin.
+-  `test_depress_noise` function L304-320 — `()` — lake boundary to create a natural basin.
+-  `test_point_in_polygon` function L323-327 — `()` — lake boundary to create a natural basin.
 
 #### crates/mimir-mapgen/src/lib.rs
 
 - pub `assets` module L10 — `-` — `mimir-mapgen` generates `.dungeondraft_map` files from YAML configuration,
 - pub `biomes` module L11 — `-` — database layer.
 - pub `contour` module L12 — `-` — database layer.
-- pub `curves` module L13 — `-` — database layer.
-- pub `distribution` module L14 — `-` — database layer.
-- pub `elevation` module L15 — `-` — database layer.
-- pub `format` module L16 — `-` — database layer.
-- pub `noise_gen` module L17 — `-` — database layer.
-- pub `objects` module L18 — `-` — database layer.
-- pub `paths` module L19 — `-` — database layer.
-- pub `pipeline` module L20 — `-` — database layer.
-- pub `polygons` module L21 — `-` — database layer.
-- pub `rooms` module L22 — `-` — database layer.
-- pub `terrain` module L23 — `-` — database layer.
-- pub `water` module L24 — `-` — database layer.
+- pub `contour_clip` module L13 — `-` — database layer.
+- pub `curves` module L14 — `-` — database layer.
+- pub `custom_paths` module L15 — `-` — database layer.
+- pub `distribution` module L16 — `-` — database layer.
+- pub `elevation` module L17 — `-` — database layer.
+- pub `format` module L18 — `-` — database layer.
+- pub `lakes` module L19 — `-` — database layer.
+- pub `lights` module L20 — `-` — database layer.
+- pub `materials` module L21 — `-` — database layer.
+- pub `noise_gen` module L22 — `-` — database layer.
+- pub `objects` module L23 — `-` — database layer.
+- pub `paths` module L24 — `-` — database layer.
+- pub `patterns` module L25 — `-` — database layer.
+- pub `pipeline` module L26 — `-` — database layer.
+- pub `polygons` module L27 — `-` — database layer.
+- pub `rooms` module L28 — `-` — database layer.
+- pub `terrain` module L29 — `-` — database layer.
+- pub `water` module L30 — `-` — database layer.
+
+#### crates/mimir-mapgen/src/lights.rs
+
+- pub `LightConfig` struct L21-36 — `{ placement: LightPlacement, color: String, intensity: f64, range: f64, shadows:...` — Configuration for a single light placement group.
+- pub `LightPlacement` enum L45-75 — `Scatter | AlongPath | WithObjects` — How lights are placed on the map.
+- pub `generate_lights` function L88-173 — `( configs: &[LightConfig], noise_map: &NoiseMap, features: &GeneratedFeatures, p...` — Generate lights from a list of configs.
+-  `default_layer` function L38-40 — `() -> i32` — - **With objects**: One light per placed object in a named group.
+-  `default_one` function L77-79 — `() -> f64` — - **With objects**: One light per placed object in a named group.
+-  `default_margin` function L81-83 — `() -> f64` — - **With objects**: One light per placed object in a named group.
+-  `make_light` function L176-186 — `(config: &LightConfig, x: f64, y: f64, alloc: &NodeIdAllocator) -> MapLight` — Create a MapLight from config and position.
+-  `sample_along_path` function L189-217 — `(points: &[(f64, f64)], interval: f64) -> Vec<(f64, f64)>` — Sample points at regular intervals along a polyline.
+-  `tests` module L220-428 — `-` — - **With objects**: One light per placed object in a named group.
+-  `test_sample_along_path_basic` function L224-230 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_sample_along_path_multi_segment` function L233-237 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_sample_along_path_empty` function L240-246 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_make_light` function L249-271 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_scatter_generates_lights` function L274-307 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_along_path_generates_lights` function L310-346 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_with_objects_generates_lights` function L349-382 — `()` — - **With objects**: One light per placed object in a named group.
+-  `test_missing_reference_produces_no_lights` function L385-427 — `()` — - **With objects**: One light per placed object in a named group.
 
 #### crates/mimir-mapgen/src/main.rs
 
 -  `Cli` struct L12-15 — `{ command: Commands }` — Declarative Dungeondraft map generator
 -  `Commands` enum L18-45 — `Generate | Validate | ListPresets`
--  `main` function L47-153 — `()`
--  `load_config` function L155-159 — `(path: &str) -> Result<MapConfig, Box<dyn std::error::Error>>`
+-  `main` function L47-156 — `()`
+-  `load_config` function L158-162 — `(path: &str) -> Result<MapConfig, Box<dyn std::error::Error>>`
+
+#### crates/mimir-mapgen/src/materials.rs
+
+- pub `MaterialScatterConfig` struct L22-33 — `{ region: MaterialRegion, texture: String, layer: String, smooth: bool }` — Configuration for a material scatter placement.
+- pub `MaterialRegion` enum L46-71 — `Noise | Room | Polygon | AlongPath` — Region type for material scatter.
+- pub `generate_materials` function L77-161 — `( configs: &[MaterialScatterConfig], noise_map: &NoiseMap, features: &GeneratedF...` — Generate material scatter from configs.
+-  `default_layer` function L35-37 — `() -> String` — Flat bit-packed, LSB-first within each byte.
+-  `default_true` function L39-41 — `() -> bool` — Flat bit-packed, LSB-first within each byte.
+-  `point_in_polygon` function L164-180 — `(x: f64, y: f64, polygon: &[(f64, f64)]) -> bool` — Point-in-polygon test using ray casting.
+-  `distance_to_polyline` function L183-204 — `(px: f64, py: f64, points: &[(f64, f64)]) -> f64` — Minimum distance from a point to a polyline.
+-  `tests` module L207-380 — `-` — Flat bit-packed, LSB-first within each byte.
+-  `test_bitmap_dimensions` function L212-218 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_bitmap_dimensions_square` function L221-227 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_set_bit` function L230-237 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_noise_region` function L240-262 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_room_region` function L265-289 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_along_path_region` function L292-316 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_missing_reference` function L319-337 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_point_in_polygon` function L340-345 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_distance_to_polyline` function L348-353 — `()` — Flat bit-packed, LSB-first within each byte.
+-  `test_multiple_layers` function L356-379 — `()` — Flat bit-packed, LSB-first within each byte.
 
 #### crates/mimir-mapgen/src/noise_gen.rs
 
@@ -8076,114 +8186,146 @@
 
 #### crates/mimir-mapgen/src/objects.rs
 
-- pub `ObjectConfig` struct L17-38 — `{ textures: Vec<String>, min_distance: f64, noise_lower: f64, noise_upper: f64, ...` — Configuration for a single object type to place.
-- pub `TreeConfig` struct L60-67 — `{ tree: ObjectConfig, shadow: Option<ShadowConfig>, canopy: Option<CanopyConfig>...` — Configuration for tree placement with optional shadow and canopy layers.
-- pub `ShadowConfig` struct L71-80 — `{ texture: String, offset: Vector2, layer: i32, scale_factor: f64 }` — Shadow configuration for trees.
-- pub `CanopyConfig` struct L84-91 — `{ texture: String, layer: i32, scale_factor: f64 }` — Canopy configuration for trees (level 1 overhead foliage).
-- pub `ClumpConfig` struct L95-104 — `{ primary: ObjectConfig, secondary: ObjectConfig, secondary_count: (u32, u32), s...` — Configuration for clump placement (primary + clustered secondaries).
-- pub `place_objects` function L115-173 — `( noise_map: &NoiseMap, config: &ObjectConfig, pixel_width: f64, pixel_height: f...` — Place simple objects using noise-gated Poisson Disc sampling.
-- pub `place_trees` function L176-222 — `( noise_map: &NoiseMap, config: &TreeConfig, pixel_width: f64, pixel_height: f64...` — Place trees with optional shadow and canopy objects.
-- pub `place_clumps` function L225-287 — `( noise_map: &NoiseMap, config: &ClumpConfig, pixel_width: f64, pixel_height: f6...` — Place clumps: primary objects with clustered secondaries around each.
-- pub `clear_corridor` function L295-304 — `(objects: &mut Vec<MapObject>, corridor: &[Point], half_width: f64)` — Remove objects that fall within a corridor (e.g., road clearing).
--  `ObjectConfig` type L40-56 — `impl Default for ObjectConfig` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `default` function L41-55 — `() -> Self` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `tests` module L307-502 — `-` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_noise` function L313-315 — `() -> NoiseMap` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_place_objects_basic` function L318-336 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_place_objects_noise_gated` function L339-364 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_place_objects_deterministic` function L367-388 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_place_trees_with_shadow` function L391-419 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_place_clumps` function L422-450 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_clear_corridor` function L453-465 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_custom_color` function L468-485 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
--  `test_unique_node_refs` function L488-501 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+- pub `ObjectConfig` struct L17-41 — `{ id: Option<String>, textures: Vec<String>, min_distance: f64, noise_lower: f64...` — Configuration for a single object type to place.
+- pub `TreeConfig` struct L64-74 — `{ id: Option<String>, tree: ObjectConfig, shadow: Option<ShadowConfig>, canopy: ...` — Configuration for tree placement with optional shadow and canopy layers.
+- pub `ShadowConfig` struct L78-87 — `{ texture: String, offset: Vector2, layer: i32, scale_factor: f64 }` — Shadow configuration for trees.
+- pub `CanopyConfig` struct L91-98 — `{ texture: String, layer: i32, scale_factor: f64 }` — Canopy configuration for trees (level 1 overhead foliage).
+- pub `ClumpConfig` struct L102-114 — `{ id: Option<String>, primary: ObjectConfig, secondary: ObjectConfig, secondary_...` — Configuration for clump placement (primary + clustered secondaries).
+- pub `place_objects` function L125-183 — `( noise_map: &NoiseMap, config: &ObjectConfig, pixel_width: f64, pixel_height: f...` — Place simple objects using noise-gated Poisson Disc sampling.
+- pub `place_trees` function L186-232 — `( noise_map: &NoiseMap, config: &TreeConfig, pixel_width: f64, pixel_height: f64...` — Place trees with optional shadow and canopy objects.
+- pub `place_clumps` function L235-297 — `( noise_map: &NoiseMap, config: &ClumpConfig, pixel_width: f64, pixel_height: f6...` — Place clumps: primary objects with clustered secondaries around each.
+- pub `clear_corridor` function L305-314 — `(objects: &mut Vec<MapObject>, corridor: &[Point], half_width: f64)` — Remove objects that fall within a corridor (e.g., road clearing).
+-  `ObjectConfig` type L43-60 — `impl Default for ObjectConfig` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `default` function L44-59 — `() -> Self` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `tests` module L317-514 — `-` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_noise` function L323-325 — `() -> NoiseMap` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_place_objects_basic` function L328-346 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_place_objects_noise_gated` function L349-374 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_place_objects_deterministic` function L377-398 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_place_trees_with_shadow` function L401-430 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_place_clumps` function L433-462 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_clear_corridor` function L465-477 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_custom_color` function L480-497 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
+-  `test_unique_node_refs` function L500-513 — `()` — Uses noise-gated Poisson Disc sampling for natural object distribution.
 
 #### crates/mimir-mapgen/src/paths.rs
 
 - pub `Edge` enum L18-23 — `Left | Right | Top | Bottom` — Which map edge a road/river starts or ends at.
 - pub `PathStyle` enum L28-33 — `Straight | Meandering` — Path style: how the centerline is generated.
-- pub `RoadConfig` struct L44-69 — `{ from: Edge, to: Edge, texture: String, width: f64, layer: i32, style: PathStyl...` — Configuration for road generation.
-- pub `EdgePathConfig` struct L73-82 — `{ texture: String, offset: f64, width: f64, layer: i32 }` — Configuration for edge/border paths along roads.
-- pub `RiverConfig` struct L87-116 — `{ from: Edge, to: Edge, width: f64, style: PathStyle, step_distance: f64, fov: f...` — Configuration for river generation.
-- pub `RoadResult` struct L159-168 — `{ road: MapPath, edge_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, cor...` — Result of road generation.
-- pub `RiverResult` struct L171-180 — `{ bank_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, corridor_half_widt...` — Result of river generation.
-- pub `generate_road` function L183-192 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road across the map using greedy pathfinding.
-- pub `generate_road_with_exclusions` function L195-275 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road, avoiding exclusion zones (rooms).
-- pub `generate_river` function L278-287 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river across the map.
-- pub `generate_river_with_exclusions` function L290-393 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river, avoiding exclusion zones (rooms).
+- pub `RoadConfig` struct L44-76 — `{ id: Option<String>, from: Edge, to: Edge, texture: String, width: f64, layer: ...` — Configuration for road generation.
+- pub `EdgePathConfig` struct L84-93 — `{ texture: String, offset: f64, width: f64, layer: i32 }` — Configuration for edge/border paths along roads.
+- pub `RiverConfig` struct L98-139 — `{ id: Option<String>, from: Edge, to: Edge, width: f64, style: PathStyle, step_d...` — Configuration for river generation.
+- pub `RoadResult` struct L188-197 — `{ road: MapPath, edge_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, cor...` — Result of road generation.
+- pub `RiverResult` struct L200-209 — `{ bank_paths: Vec<MapPath>, corridor_points: Vec<(f64, f64)>, corridor_half_widt...` — Result of river generation.
+- pub `generate_road` function L212-221 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road across the map using greedy pathfinding.
+- pub `generate_road_with_exclusions` function L224-310 — `( noise_map: &NoiseMap, config: &RoadConfig, pixel_width: f64, pixel_height: f64...` — Generate a road, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
+- pub `generate_river` function L313-322 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river across the map.
+- pub `generate_river_with_exclusions` function L325-467 — `( noise_map: &NoiseMap, config: &RiverConfig, pixel_width: f64, pixel_height: f6...` — Generate a river, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
 -  `PathStyle` type L35-39 — `impl Default for PathStyle` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
 -  `default` function L36-38 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `RoadConfig` type L118-135 — `impl Default for RoadConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `default` function L119-134 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `RiverConfig` type L137-156 — `impl Default for RiverConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `default` function L138-155 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `generate_meander` function L401-524 — `( start: (f64, f64), target: (f64, f64), pixel_width: f64, pixel_height: f64, no...` — Generate a meandering centerline using sinusoidal displacement + noise.
--  `clip_polyline_to_rect` function L530-574 — `( points: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> Ve...` — Clip a polyline to a rectangle, keeping only the interior portion.
--  `inside` function L535-537 — `(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `clip_polygon_to_rect` function L578-604 — `( polygon: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> V...` — Clip a closed polygon to a rectangle using Sutherland-Hodgman.
--  `sh_clip_edge` function L607-635 — `( polygon: &[(f64, f64)], inside: impl Fn((f64, f64)) -> bool, intersect: impl F...` — One pass of Sutherland-Hodgman: clip polygon against a single edge.
--  `clip_segment` function L638-669 — `( a: (f64, f64), b: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64, ...` — Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
--  `greedy_walk` function L676-761 — `( noise_map: &NoiseMap, start: (f64, f64), target: (f64, f64), pixel_width: f64,...` — Greedy pathfinding walk from start toward target.
--  `random_edge_point` function L764-777 — `( edge: Edge, width: f64, height: f64, margin: f64, rng: &mut impl Rng, ) -> (f6...` — Pick a random point along a map edge.
--  `tests` module L780-975 — `-` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_noise` function L786-795 — `() -> NoiseMap` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_greedy_walk_reaches_target` function L798-824 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_road` function L827-846 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_road_with_edges` function L849-870 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_generate_river` function L873-888 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_road_deterministic` function L891-908 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_road_meandering_style` function L911-927 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_river_straight_style` function L930-945 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_path_style_serde` function L948-956 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
--  `test_random_edge_point` function L959-974 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `default_effort` function L78-80 — `() -> f64` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `RoadConfig` type L141-160 — `impl Default for RoadConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `default` function L142-159 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `RiverConfig` type L162-185 — `impl Default for RiverConfig` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `default` function L163-184 — `() -> Self` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `generate_meander` function L475-598 — `( start: (f64, f64), target: (f64, f64), pixel_width: f64, pixel_height: f64, no...` — Generate a meandering centerline using sinusoidal displacement + noise.
+-  `clip_polyline_to_rect` function L604-648 — `( points: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> Ve...` — Clip a polyline to a rectangle, keeping only the interior portion.
+-  `inside` function L609-611 — `(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `clip_polygon_to_rect` function L652-678 — `( polygon: &[(f64, f64)], x_min: f64, y_min: f64, x_max: f64, y_max: f64, ) -> V...` — Clip a closed polygon to a rectangle using Sutherland-Hodgman.
+-  `sh_clip_edge` function L681-709 — `( polygon: &[(f64, f64)], inside: impl Fn((f64, f64)) -> bool, intersect: impl F...` — One pass of Sutherland-Hodgman: clip polygon against a single edge.
+-  `clip_segment` function L712-743 — `( a: (f64, f64), b: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64, ...` — Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
+-  `greedy_walk` function L750-851 — `( noise_map: &NoiseMap, start: (f64, f64), target: (f64, f64), pixel_width: f64,...` — Greedy pathfinding walk from start toward target.
+-  `polygon_center` function L854-862 — `(polygon: &[(f64, f64)]) -> (f64, f64)` — Compute the centroid of a polygon.
+-  `nearest_point_on_polygon` function L865-874 — `(polygon: &[(f64, f64)], target: (f64, f64)) -> (f64, f64)` — Find the nearest point on a polygon to a target point.
+-  `count_contour_lines_crossed` function L878-893 — `( p0: (f64, f64), p1: (f64, f64), contour_polylines: &[Vec<(f64, f64)>], ) -> us...` — Count how many distinct contour polylines a line from p0 to p1 crosses.
+-  `segments_intersect` function L896-913 — `( a1: (f64, f64), a2: (f64, f64), b1: (f64, f64), b2: (f64, f64), ) -> bool` — Test if two line segments intersect.
+-  `cross_product_sign` function L915-917 — `(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `random_edge_point` function L920-933 — `( edge: Edge, width: f64, height: f64, margin: f64, rng: &mut impl Rng, ) -> (f6...` — Pick a random point along a map edge.
+-  `tests` module L936-1133 — `-` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_noise` function L942-951 — `() -> NoiseMap` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_greedy_walk_reaches_target` function L954-982 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_road` function L985-1004 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_road_with_edges` function L1007-1028 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_generate_river` function L1031-1046 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_road_deterministic` function L1049-1066 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_road_meandering_style` function L1069-1085 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_river_straight_style` function L1088-1103 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_path_style_serde` function L1106-1114 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+-  `test_random_edge_point` function L1117-1132 — `()` — Greedy pathfinding along noise ridges/valleys with Bezier smoothing.
+
+#### crates/mimir-mapgen/src/patterns.rs
+
+- pub `PatternConfig` struct L18-35 — `{ region: PatternRegion, texture: String, color: String, rotation: i32, layer: i...` — Configuration for a pattern placement.
+- pub `PatternRegion` enum L48-68 — `Water | Room | Polygon | Noise` — Region type for pattern placement.
+- pub `generate_patterns` function L71-139 — `( configs: &[PatternConfig], noise_map: &NoiseMap, features: &GeneratedFeatures,...` — Generate patterns from configs.
+-  `default_color` function L37-39 — `() -> String` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `default_layer` function L41-43 — `() -> i32` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `to_vectors` function L142-144 — `(points: &[(f64, f64)]) -> Vec<Vector2>` — Convert (f64, f64) tuples to Vector2 list.
+-  `make_pattern` function L147-151 — `(config: &PatternConfig, points: Vec<Vector2>, alloc: &NodeIdAllocator) -> MapPa...` — Create a MapPattern from config and boundary polygon.
+-  `tests` module L154-304 — `-` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `test_water_region` function L159-183 — `()` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `test_room_region` function L186-207 — `()` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `test_polygon_region` function L210-230 — `()` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `test_noise_region` function L233-253 — `()` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `test_missing_reference` function L256-282 — `()` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
+-  `test_multiple_water_polygons` function L285-303 — `()` — Each produces a `MapPattern` entry pushed to `Level.patterns`.
 
 #### crates/mimir-mapgen/src/pipeline.rs
 
-- pub `MapConfig` struct L24-75 — `{ name: String, width: u32, height: u32, seed: Option<u64>, noise: NoiseConfig, ...` — Top-level map generation configuration.
-- pub `LightingConfig` struct L79-88 — `{ ambient_light: String, ambient_energy: Option<f64>, shadow_color: Option<Strin...` — Lighting/environment configuration.
-- pub `lighting_from_time_of_day` function L91-120 — `(time: &str) -> Option<LightingConfig>` — Get a LightingConfig from a time-of-day preset name.
-- pub `ValidationError` struct L124-127 — `{ field: String, message: String }` — Validation errors for a MapConfig.
-- pub `validate_config` function L130-184 — `(config: &MapConfig) -> Vec<ValidationError>` — Validate a MapConfig, returning a list of errors.
-- pub `GenerateResult` struct L477-482 — `{ map: DungeondraftMap, stats: GenerateStats }` — Result of map generation.
-- pub `GenerateStats` struct L486-493 — `{ objects_placed: usize, paths_generated: usize, water_polygons: usize, contour_...` — Statistics from map generation.
-- pub `generate` function L510-782 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
--  `validate_rooms` function L186-283 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
--  `validate_corridors` function L285-324 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
--  `validate_polygons` function L326-441 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
--  `segment_intersection_point` function L446-469 — `( p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], p4: [f64; 2], ) -> Option<[f64; 2]>` — If two line segments (p1→p2) and (p3→p4) properly cross, return the
--  `cross_2d` function L472-474 — `(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64` — 2D cross product: sign of (b-a) × (c-a).
--  `tests` module L785-1466 — `-` — Config parsing, biome preset resolution, and staged map generation.
--  `minimal_config` function L788-809 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_minimal` function L812-818 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_terrain` function L821-835 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_roads` function L838-846 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_objects` function L849-859 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_deterministic` function L862-880 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_seed_override` function L883-889 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_lighting` function L892-905 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_lighting_presets` function L908-915 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_config` function L918-928 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_full_pipeline` function L931-961 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_with_rooms` function L964-1053 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_generate_outdoor_only_no_regression` function L1056-1076 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_out_of_bounds` function L1079-1091 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_overlap` function L1094-1115 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_duplicate_room_id` function L1118-1139 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_portal_out_of_wall` function L1142-1159 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_corridor_invalid_room_ref` function L1162-1177 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_terrain_slot_out_of_range` function L1180-1192 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_river_creates_water_without_water_config` function L1195-1228 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_river_water_not_overwritten_by_water_step` function L1231-1249 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_room_zero_dimensions` function L1252-1264 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_valid_square` function L1267-1282 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_self_intersecting_bowtie` function L1285-1319 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_too_few_vertices` function L1322-1335 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_duplicate_id` function L1338-1350 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_duplicate_consecutive_vertex` function L1353-1372 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_portal_edge_out_of_range` function L1375-1391 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_terrain_slot_out_of_range` function L1394-1405 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_complex_valid_l_shape` function L1408-1435 — `()` — Config parsing, biome preset resolution, and staged map generation.
--  `test_validate_polygon_figure_eight_crossing` function L1438-1465 — `()` — Config parsing, biome preset resolution, and staged map generation.
+- pub `MapConfig` struct L29-95 — `{ name: String, width: u32, height: u32, seed: Option<u64>, noise: NoiseConfig, ...` — Top-level map generation configuration.
+- pub `LightingConfig` struct L99-108 — `{ ambient_light: String, ambient_energy: Option<f64>, shadow_color: Option<Strin...` — Lighting/environment configuration.
+- pub `lighting_from_time_of_day` function L111-140 — `(time: &str) -> Option<LightingConfig>` — Get a LightingConfig from a time-of-day preset name.
+- pub `ValidationError` struct L144-147 — `{ field: String, message: String }` — Validation errors for a MapConfig.
+- pub `validate_config` function L150-204 — `(config: &MapConfig) -> Vec<ValidationError>` — Validate a MapConfig, returning a list of errors.
+- pub `GenerateResult` struct L497-506 — `{ map: DungeondraftMap, stats: GenerateStats, features: GeneratedFeatures, warni...` — Result of map generation.
+- pub `TerrainWarning` enum L510-515 — `HighContourDensity | ContourCrossings` — Terrain passability warning.
+- pub `GenerateStats` struct L519-526 — `{ objects_placed: usize, paths_generated: usize, water_polygons: usize, contour_...` — Statistics from map generation.
+- pub `GeneratedFeatures` struct L533-548 — `{ paths: std::collections::HashMap<String, Vec<(f64, f64)>>, rooms: std::collect...` — Registry of generated feature geometry, used for cross-referencing.
+- pub `RoomGeometry` struct L552-557 — `{ center: (f64, f64), boundary: Vec<(f64, f64)> }` — Geometry for a generated room.
+- pub `get_path` function L561-563 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a path polyline by name.
+- pub `get_room` function L566-568 — `(&self, name: &str) -> Option<&RoomGeometry>` — Get a room's geometry by name.
+- pub `get_polygon` function L571-573 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get a polygon boundary by name.
+- pub `get_object_positions` function L576-578 — `(&self, name: &str) -> Option<&Vec<(f64, f64)>>` — Get object positions by group name.
+- pub `generate` function L601-1108 — `(config: &MapConfig, seed_override: Option<u64>) -> GenerateResult` — Generate a complete `.dungeondraft_map` from a config.
+-  `validate_rooms` function L206-303 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
+-  `validate_corridors` function L305-344 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
+-  `validate_polygons` function L346-461 — `(config: &MapConfig, errors: &mut Vec<ValidationError>)` — Config parsing, biome preset resolution, and staged map generation.
+-  `segment_intersection_point` function L466-489 — `( p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], p4: [f64; 2], ) -> Option<[f64; 2]>` — If two line segments (p1→p2) and (p3→p4) properly cross, return the
+-  `cross_2d` function L492-494 — `(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64` — 2D cross product: sign of (b-a) × (c-a).
+-  `GeneratedFeatures` type L559-579 — `= GeneratedFeatures` — Config parsing, biome preset resolution, and staged map generation.
+-  `feature_name` function L582-584 — `(id: &Option<String>, type_prefix: &str, index: usize) -> String` — Resolve an optional ID or fall back to type_index naming.
+-  `tests` module L1111-1797 — `-` — Config parsing, biome preset resolution, and staged map generation.
+-  `minimal_config` function L1114-1140 — `() -> MapConfig` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_minimal` function L1143-1149 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_terrain` function L1152-1166 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_roads` function L1169-1177 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_objects` function L1180-1190 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_deterministic` function L1193-1211 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_seed_override` function L1214-1220 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_lighting` function L1223-1236 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_lighting_presets` function L1239-1246 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_config` function L1249-1259 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_full_pipeline` function L1262-1292 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_with_rooms` function L1295-1384 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_generate_outdoor_only_no_regression` function L1387-1407 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_out_of_bounds` function L1410-1422 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_overlap` function L1425-1446 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_duplicate_room_id` function L1449-1470 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_portal_out_of_wall` function L1473-1490 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_corridor_invalid_room_ref` function L1493-1508 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_terrain_slot_out_of_range` function L1511-1523 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_creates_water_without_water_config` function L1526-1559 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_river_water_not_overwritten_by_water_step` function L1562-1580 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_room_zero_dimensions` function L1583-1595 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_valid_square` function L1598-1613 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_self_intersecting_bowtie` function L1616-1650 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_too_few_vertices` function L1653-1666 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_duplicate_id` function L1669-1681 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_duplicate_consecutive_vertex` function L1684-1703 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_portal_edge_out_of_range` function L1706-1722 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_terrain_slot_out_of_range` function L1725-1736 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_complex_valid_l_shape` function L1739-1766 — `()` — Config parsing, biome preset resolution, and staged map generation.
+-  `test_validate_polygon_figure_eight_crossing` function L1769-1796 — `()` — Config parsing, biome preset resolution, and staged map generation.
 
 #### crates/mimir-mapgen/src/polygons.rs
 
@@ -8328,22 +8470,22 @@
 - pub `generate_water` function L56-62 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water bodies from a noise map.
 - pub `generate_water_radial` function L67-73 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water with radial sampling mode for lake presets.
 - pub `generate_water_island` function L76-82 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Generate water for island-mode maps (water ring around edges).
-- pub `water_from_polygon` function L374-395 — `( polygon: &[(f64, f64)], config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wa...` — Generate water from a river corridor polygon.
-- pub `water_from_river` function L398-419 — `( polygon: &[(f64, f64)], config: &crate::paths::RiverConfig, alloc: &NodeIdAllo...` — Build a WaterTree from a river polygon, using the river config's own colors.
-- pub `water_node_ref_pub` function L428-432 — `(alloc: &NodeIdAllocator) -> i64` — Public version of water_node_ref for use in pipeline.rs.
+- pub `water_from_polygon` function L381-402 — `( polygon: &[(f64, f64)], config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wa...` — Generate water from a river corridor polygon.
+- pub `water_from_river` function L405-426 — `( polygon: &[(f64, f64)], config: &crate::paths::RiverConfig, alloc: &NodeIdAllo...` — Build a WaterTree from a river polygon, using the river config's own colors.
+- pub `water_node_ref_pub` function L435-439 — `(alloc: &NodeIdAllocator) -> i64` — Public version of water_node_ref for use in pipeline.rs.
 -  `WaterConfig` type L36-49 — `impl Default for WaterConfig` — outputting DD-compatible WaterTree structures.
 -  `default` function L37-48 — `() -> Self` — outputting DD-compatible WaterTree structures.
 -  `WaterMode` enum L85-89 — `Contour | Lake | Island` — outputting DD-compatible WaterTree structures.
--  `generate_water_inner` function L91-154 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, mode: Wat...` — outputting DD-compatible WaterTree structures.
--  `generate_island_water_tree` function L160-223 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Build island water tree: ocean rectangle parent → island shoreline child (transparent hole).
--  `radial_water_polygon` function L230-281 — `(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<Vec<(f64, f64)>>` — Generate a single closed water polygon by radial sampling from the map center.
--  `island_shoreline` function L287-369 — `(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<(f64, f64)>` — Trace the island shoreline via radial sampling.
--  `water_node_ref` function L423-425 — `(alloc: &NodeIdAllocator) -> i64` — Generate a water tree node ref in the large negative range that DD expects.
--  `tests` module L435-517 — `-` — outputting DD-compatible WaterTree structures.
--  `test_generate_water_basic` function L440-464 — `()` — outputting DD-compatible WaterTree structures.
--  `test_generate_water_uniform` function L467-481 — `()` — outputting DD-compatible WaterTree structures.
--  `test_water_from_polygon` function L484-500 — `()` — outputting DD-compatible WaterTree structures.
--  `test_water_colors` function L503-516 — `()` — outputting DD-compatible WaterTree structures.
+-  `generate_water_inner` function L91-157 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, mode: Wat...` — outputting DD-compatible WaterTree structures.
+-  `generate_island_water_tree` function L163-226 — `( noise_map: &NoiseMap, config: &WaterConfig, alloc: &NodeIdAllocator, ) -> Wate...` — Build island water tree: ocean rectangle parent → island shoreline child (transparent hole).
+-  `radial_water_polygon` function L233-288 — `(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<Vec<(f64, f64)>>` — Generate a single closed water polygon by radial sampling from the map center.
+-  `island_shoreline` function L294-376 — `(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<(f64, f64)>` — Trace the island shoreline via radial sampling.
+-  `water_node_ref` function L430-432 — `(alloc: &NodeIdAllocator) -> i64` — Generate a water tree node ref in the large negative range that DD expects.
+-  `tests` module L442-524 — `-` — outputting DD-compatible WaterTree structures.
+-  `test_generate_water_basic` function L447-471 — `()` — outputting DD-compatible WaterTree structures.
+-  `test_generate_water_uniform` function L474-488 — `()` — outputting DD-compatible WaterTree structures.
+-  `test_water_from_polygon` function L491-507 — `()` — outputting DD-compatible WaterTree structures.
+-  `test_water_colors` function L510-523 — `()` — outputting DD-compatible WaterTree structures.
 
 ### crates/mimir-mapgen/src/format
 
@@ -8351,31 +8493,34 @@
 
 #### crates/mimir-mapgen/src/format/entities.rs
 
-- pub `MapObject` struct L55-68 — `{ texture: String, position: Vector2, scale: Vector2, rotation: f64, mirror: boo...` — A placed object on the map.
-- pub `new` function L71-83 — `(texture: &str, position: Vector2, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_scale` function L85-88 — `(mut self, scale: f64) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_rotation` function L90-93 — `(mut self, radians: f64) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_layer` function L95-98 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_mirror` function L100-103 — `(mut self, mirror: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_custom_color` function L105-108 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapPath` struct L113-122 — `{ texture: String, color: String, points: PoolVector2Array, width: f64, layer: i...` — A path on the map (roads, rivers, cliffs, etc.).
-- pub `new` function L125-135 — `(texture: &str, points: Vec<Vector2>, width: f64, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_color` function L137-140 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_layer` function L142-145 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_loop` function L147-150 — `(mut self, loop_path: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapLight` struct L155-163 — `{ position: Vector2, color: String, range: f64, intensity: f64, shadows: bool, l...` — A light source on the map.
-- pub `new` function L166-176 — `(position: Vector2, color: &str, range: f64, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapWall` struct L185-209 — `{ points: PoolVector2Array, texture: String, color: String, is_loop: bool, wall_...` — A wall segment — a polyline of connected wall segments.
-- pub `new_room` function L213-226 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new closed-polygon wall (room outline) with default settings.
-- pub `new_open` function L229-242 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new open polyline wall with default settings.
-- pub `with_color` function L244-247 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `with_portals` function L249-252 — `(mut self, portals: Vec<MapPortal>) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapPortal` struct L261-286 — `{ position: Vector2, rotation: f64, scale: Vector2, direction: Vector2, texture:...` — A portal (door/window/archway) — an opening in a wall.
-- pub `new` function L290-314 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a new portal attached to a wall.
-- pub `new_freestanding` function L317-338 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a freestanding portal (not attached to any wall).
-- pub `with_closed` function L340-343 — `(mut self, closed: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
-- pub `MapPattern` struct L348-351 — `{ data: serde_json::Value }` — A pattern (repeating texture region).
-- pub `MapText` struct L355-364 — `{ text: String, position: Vector2, font_name: String, font_size: u32, font_color...` — A text label on the map.
+- pub `MapObject` struct L55-72 — `{ position: Vector2, rotation: f64, scale: Vector2, mirror: bool, texture: Strin...` — A placed object on the map.
+- pub `new` function L75-89 — `(texture: &str, position: Vector2, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_scale` function L91-94 — `(mut self, scale: f64) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_rotation` function L96-99 — `(mut self, radians: f64) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_layer` function L101-104 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_mirror` function L106-109 — `(mut self, mirror: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_custom_color` function L111-114 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapPath` struct L123-145 — `{ position: Vector2, rotation: i32, scale: Vector2, edit_points: PoolVector2Arra...` — A path on the map (roads, rivers, cliffs, decorative lines, etc.).
+- pub `new` function L154-176 — `(texture: &str, points: Vec<Vector2>, width: f64, node_id: &str) -> Self` — Create a path from absolute points.
+- pub `with_color` function L178-180 — `(self, _color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_layer` function L182-185 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_loop` function L187-190 — `(mut self, loop_path: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapLight` struct L195-205 — `{ position: Vector2, rotation: i32, range: f64, intensity: f64, color: String, t...` — A light source on the map.
+- pub `new` function L208-219 — `(position: Vector2, color: &str, range: f64, node_id: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapWall` struct L228-252 — `{ points: PoolVector2Array, texture: String, color: String, is_loop: bool, wall_...` — A wall segment — a polyline of connected wall segments.
+- pub `new_room` function L256-269 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new closed-polygon wall (room outline) with default settings.
+- pub `new_open` function L272-285 — `(points: Vec<Vector2>, texture: &str, node_id: &str) -> Self` — Create a new open polyline wall with default settings.
+- pub `with_color` function L287-290 — `(mut self, color: &str) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_portals` function L292-295 — `(mut self, portals: Vec<MapPortal>) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapPortal` struct L304-329 — `{ position: Vector2, rotation: f64, scale: Vector2, direction: Vector2, texture:...` — A portal (door/window/archway) — an opening in a wall.
+- pub `new` function L333-357 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a new portal attached to a wall.
+- pub `new_freestanding` function L360-381 — `( position: Vector2, rotation: f64, direction: Vector2, texture: &str, radius: f...` — Create a freestanding portal (not attached to any wall).
+- pub `with_closed` function L383-386 — `(mut self, closed: bool) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapPattern` struct L391-405 — `{ position: Vector2, shape_rotation: i32, scale: Vector2, points: PoolVector2Arr...` — A pattern — a polygon-bounded texture fill (floor tiles, water overlays, etc.).
+- pub `new` function L409-422 — `(texture: &str, points: Vec<Vector2>, color: &str, node_id: &str) -> Self` — Create a new pattern fill from a polygon boundary (in pixel coordinates).
+- pub `with_layer` function L424-427 — `(mut self, layer: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `with_rotation` function L429-432 — `(mut self, rotation: i32) -> Self` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+- pub `MapText` struct L437-446 — `{ text: String, position: Vector2, font_name: String, font_size: u32, font_color...` — A text label on the map.
 -  `serialize_wall_id` function L11-18 — `(value: &String, serializer: S) -> Result<S::Ok, S::Error>` — Custom serializer for wall_id: numeric hex strings serialize as integers,
 -  `deserialize_wall_id` function L21-51 — `(deserializer: D) -> Result<String, D::Error>` — Custom deserializer for wall_id: accepts both integer and string values.
 -  `WallIdVisitor` struct L24 — `-` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
@@ -8386,11 +8531,13 @@
 -  `visit_u64` function L37-39 — `(self, v: u64) -> Result<String, E>` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 -  `visit_str` function L41-43 — `(self, v: &str) -> Result<String, E>` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 -  `visit_string` function L45-47 — `(self, v: String) -> Result<String, E>` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapObject` type L70-109 — `= MapObject` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapPath` type L124-151 — `= MapPath` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapLight` type L165-177 — `= MapLight` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapWall` type L211-253 — `= MapWall` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
--  `MapPortal` type L288-344 — `= MapPortal` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapObject` type L74-115 — `= MapObject` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `default_smoothness` function L147-149 — `() -> f64` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapPath` type L151-191 — `= MapPath` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapLight` type L207-220 — `= MapLight` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapWall` type L254-296 — `= MapWall` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapPortal` type L331-387 — `= MapPortal` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
+-  `MapPattern` type L407-433 — `= MapPattern` — Map entity types: objects, paths, lights, walls, patterns, portals, texts.
 
 #### crates/mimir-mapgen/src/format/godot_types.rs
 
@@ -8500,32 +8647,36 @@
 
 - pub `World` struct L11-32 — `{ format: u32, width: u32, height: u32, next_node_id: String, next_prefab_id: St...` — The world section of a `.dungeondraft_map` file.
 - pub `MapSpaceInfo` struct L36-41 — `{ offset_map_size: u32, max_offset_distance: f64, cell_size: u32, seed: String }` — Map space info for material scatter.
-- pub `Grid` struct L45-48 — `{ color: String, texture: String }` — Grid configuration.
-- pub `Level` struct L52-88 — `{ label: String, environment: Environment, layers: BTreeMap<String, String>, sha...` — A single level (floor) in the map.
-- pub `Environment` struct L92-101 — `{ baked_lighting: bool, ambient_light: String, ambient_energy: Option<f64>, shad...` — Lighting environment for a level.
-- pub `Shapes` struct L120-125 — `{ polygons: Vec<serde_json::Value>, walls: Vec<serde_json::Value> }` — Wall and polygon shapes.
-- pub `Tiles` struct L129-135 — `{ cells: PoolIntArray, colors: Vec<String>, lookup: BTreeMap<String, String> }` — Tile grid data.
-- pub `Cave` struct L139-149 — `{ bitmap: PoolByteArray, ground_color: String, wall_color: String, entrance_bitm...` — Cave bitmap.
-- pub `Terrain` struct L161-172 — `{ enabled: bool, expand_slots: bool, smooth_blending: bool, texture_1: String, t...` — Terrain configuration with 4-texture splat map.
-- pub `new_uniform` function L179-196 — `(width: u32, height: u32, textures: [String; 4]) -> Self` — Create a new terrain with uniform texture_1 coverage.
-- pub `Water` struct L201-206 — `{ disable_border: bool, tree: Option<WaterTree> }` — Water configuration.
-- pub `WaterTree` struct L210-226 — `{ node_ref: i64, polygon: PoolVector2Array, join: i32, end: i32, is_open: bool, ...` — Recursive water polygon tree.
-- pub `Roofs` struct L230-239 — `{ shade: bool, shade_contrast: f64, sun_direction: f64, roofs: Vec<serde_json::V...` — Roof configuration.
-- pub `new_ground` function L264-314 — `(width: u32, height: u32) -> Self` — Create a default ground-level level.
-- pub `new` function L319-346 — `(width: u32, height: u32) -> Self` — Create a new empty world with the given dimensions (in grid squares).
--  `default_ambient_light` function L103-105 — `() -> String` — Dungeondraft world and level types.
--  `Environment` type L107-116 — `impl Default for Environment` — Dungeondraft world and level types.
--  `default` function L108-115 — `() -> Self` — Dungeondraft world and level types.
--  `default_cave_color` function L151-153 — `() -> String` — Dungeondraft world and level types.
--  `default_cave_texture` function L155-157 — `() -> String` — Dungeondraft world and level types.
--  `Terrain` type L174-197 — `= Terrain` — Dungeondraft world and level types.
--  `default_true` function L241-243 — `() -> bool` — Dungeondraft world and level types.
--  `default_shade_contrast` function L244-246 — `() -> f64` — Dungeondraft world and level types.
--  `default_sun_direction` function L247-249 — `() -> f64` — Dungeondraft world and level types.
--  `Roofs` type L251-260 — `impl Default for Roofs` — Dungeondraft world and level types.
--  `default` function L252-259 — `() -> Self` — Dungeondraft world and level types.
--  `Level` type L262-315 — `= Level` — Dungeondraft world and level types.
--  `World` type L317-347 — `= World` — Dungeondraft world and level types.
+- pub `MaterialEntry` struct L49-54 — `{ bitmap: PoolByteArray, texture: String, smooth: bool }` — A material scatter entry — a bit-packed bitmap for a single material texture on a layer.
+- pub `new` function L58-68 — `(texture: &str, map_width: u32, map_height: u32) -> Self` — Create a new empty material bitmap for the given map dimensions.
+- pub `set_bit` function L71-78 — `(&mut self, cell_x: u32, cell_y: u32, cell_width: u32)` — Set a bit at the given cell coordinates.
+- pub `Grid` struct L83-86 — `{ color: String, texture: String }` — Grid configuration.
+- pub `Level` struct L90-126 — `{ label: String, environment: Environment, layers: BTreeMap<String, String>, sha...` — A single level (floor) in the map.
+- pub `Environment` struct L130-139 — `{ baked_lighting: bool, ambient_light: String, ambient_energy: Option<f64>, shad...` — Lighting environment for a level.
+- pub `Shapes` struct L158-163 — `{ polygons: Vec<serde_json::Value>, walls: Vec<serde_json::Value> }` — Wall and polygon shapes.
+- pub `Tiles` struct L167-173 — `{ cells: PoolIntArray, colors: Vec<String>, lookup: BTreeMap<String, String> }` — Tile grid data.
+- pub `Cave` struct L177-187 — `{ bitmap: PoolByteArray, ground_color: String, wall_color: String, entrance_bitm...` — Cave bitmap.
+- pub `Terrain` struct L199-210 — `{ enabled: bool, expand_slots: bool, smooth_blending: bool, texture_1: String, t...` — Terrain configuration with 4-texture splat map.
+- pub `new_uniform` function L217-234 — `(width: u32, height: u32, textures: [String; 4]) -> Self` — Create a new terrain with uniform texture_1 coverage.
+- pub `Water` struct L239-244 — `{ disable_border: bool, tree: Option<WaterTree> }` — Water configuration.
+- pub `WaterTree` struct L248-264 — `{ node_ref: i64, polygon: PoolVector2Array, join: i32, end: i32, is_open: bool, ...` — Recursive water polygon tree.
+- pub `Roofs` struct L268-277 — `{ shade: bool, shade_contrast: f64, sun_direction: f64, roofs: Vec<serde_json::V...` — Roof configuration.
+- pub `new_ground` function L302-362 — `(width: u32, height: u32) -> Self` — Create a default ground-level level.
+- pub `new` function L367-394 — `(width: u32, height: u32) -> Self` — Create a new empty world with the given dimensions (in grid squares).
+-  `MaterialEntry` type L56-79 — `= MaterialEntry` — Dungeondraft world and level types.
+-  `default_ambient_light` function L141-143 — `() -> String` — Dungeondraft world and level types.
+-  `Environment` type L145-154 — `impl Default for Environment` — Dungeondraft world and level types.
+-  `default` function L146-153 — `() -> Self` — Dungeondraft world and level types.
+-  `default_cave_color` function L189-191 — `() -> String` — Dungeondraft world and level types.
+-  `default_cave_texture` function L193-195 — `() -> String` — Dungeondraft world and level types.
+-  `Terrain` type L212-235 — `= Terrain` — Dungeondraft world and level types.
+-  `default_true` function L279-281 — `() -> bool` — Dungeondraft world and level types.
+-  `default_shade_contrast` function L282-284 — `() -> f64` — Dungeondraft world and level types.
+-  `default_sun_direction` function L285-287 — `() -> f64` — Dungeondraft world and level types.
+-  `Roofs` type L289-298 — `impl Default for Roofs` — Dungeondraft world and level types.
+-  `default` function L290-297 — `() -> Self` — Dungeondraft world and level types.
+-  `Level` type L300-363 — `= Level` — Dungeondraft world and level types.
+-  `World` type L365-395 — `= World` — Dungeondraft world and level types.
 
 ### crates/mimir-mapgen/tests
 
