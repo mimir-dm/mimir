@@ -1,6 +1,6 @@
 # Home Screen
 
-The Home Screen is your starting point in Mimir. From here you can access campaigns, characters, and reference materials.
+The Home Screen is your starting point in Mimir. From here you can access campaigns, characters, reference materials, and application settings.
 
 ![Home Screen](../../images/reference/home-screen.png)
 
@@ -8,29 +8,51 @@ The Home Screen is your starting point in Mimir. From here you can access campai
 
 ### Header Bar
 
-The header bar is consistent across the application:
+The header bar is consistent across the entire application — it appears on every screen:
 
-- **Mimir Logo** (skull icon) - Returns to the home screen from anywhere
-- **Campaign Selector** - Switch between campaigns
-- **Characters** - View and manage all characters
-- **Reference** - D&D 5e reference materials (monsters, spells, items)
-- **Settings** (gear icon) - Configure application preferences
+| Element | Position | Function |
+|---------|----------|----------|
+| **Mimir Logo** (skull icon) | Left | Returns to the home screen from anywhere |
+| **Campaign Selector** | Left-center | Dropdown to switch campaigns or create new ones |
+| **Characters** | Center | Opens the character list (all campaigns) |
+| **Reference** | Center | Opens the D&D 5e reference browser in a new window |
+| **Settings** (gear icon) | Right | Application preferences and catalog management |
+
+### Campaign Selector
+
+The campaign selector dropdown shows:
+- All active (non-archived) campaigns
+- **+ New Campaign** button at the bottom
+- **Import Campaign** option for loading archives
+
+Selecting a campaign navigates to its [Campaign Dashboard](./campaign-dashboard.md).
 
 ### Main Content
 
-The home screen displays the Mimir landing with the floating skull and tagline.
+The home screen displays the Mimir landing with the floating skull and tagline. The skull artwork adapts to the active theme (light, dark, or hyper).
 
 ## Actions
 
-| Action | How To |
-|--------|--------|
-| Open campaign | Campaign Selector dropdown → select campaign |
-| Create campaign | Campaign Selector → + New Campaign |
-| Access characters | Click "Characters" in header |
-| Access reference | Click "Reference" in header |
-| Open settings | Click gear icon in header |
+| Action | Location |
+|--------|----------|
+| Open a campaign | Campaign Selector dropdown |
+| Create a campaign | Campaign Selector → + New Campaign |
+| Import a campaign | Campaign Selector → Import Campaign |
+| Access characters | "Characters" link in header |
+| Open reference browser | "Reference" link in header (opens new window) |
+| Open settings | Gear icon in header |
+| Return home | Mimir skull icon |
+
+## Settings Screen
+
+Accessible via the gear icon. The Settings screen provides:
+
+- **Catalog Management** — Import source data archives, enable/disable source books
+- **Theme Selection** — Light, Dark, or Hyper theme
+- **Application Info** — Version number, data paths, dev mode status
 
 ## See Also
 
 - [Create a Campaign](../../how-to/campaigns/create-campaign.md)
 - [Campaign Dashboard](./campaign-dashboard.md)
+- [Keyboard Shortcuts](../keyboard-shortcuts.md)

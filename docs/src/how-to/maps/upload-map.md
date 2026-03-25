@@ -1,11 +1,13 @@
 # Upload a Map
 
-Add battle maps and area maps to your modules.
+Add battle maps and area maps to your campaign modules.
 
 ## Supported Formats
 
-- **Image files** - PNG, JPG, WebP
-- **UVTT files** - Universal VTT format (includes grid and wall data)
+| Format | Extensions | Grid Data | Walls/Doors | Lighting |
+|--------|-----------|-----------|-------------|----------|
+| **UVTT** | `.dd2vtt`, `.uvtt` | Embedded | Embedded | Embedded |
+| **Image** | `.png`, `.jpg`, `.webp` | Default (70px) | None | None |
 
 ## Steps
 
@@ -16,25 +18,27 @@ Add battle maps and area maps to your modules.
 5. Enter a **Name** for the map
 6. Click **Upload**
 
-## UVTT Files
+The map appears as a card in the Maps section. Click it to open Token Setup.
 
-UVTT (Universal VTT) files from tools like Dungeondraft contain:
-- Map image
-- Grid configuration
-- Wall and door data for line of sight
+## UVTT Files (Recommended)
 
-When you upload a UVTT file, grid settings are imported automatically.
+UVTT files from tools like [Dungeondraft](https://dungeondraft.net/) include grid, wall, door, and lighting data that Mimir imports automatically. This gives you line-of-sight fog of war, accurate token snapping, and dynamic lighting out of the box.
+
+See [Map Formats](../../explanation/map-formats.md) for details on what UVTT files contain and why they're preferred.
 
 ## Image Files
 
-For standard image files, Mimir defaults to 70 pixels per grid square. UVTT files provide precise grid data automatically. See [Grid Alignment](./configure-grid.md) for details.
+Standard image files work for basic token placement but lack wall data, so fog of war operates as a simple grid reveal. Mimir defaults to 70 pixels per grid square. See [Configure Grid](./configure-grid.md) for details.
 
 ## Tips
 
-- Use UVTT files when available for best fog of war support
-- Name maps descriptively (e.g., "Goblin Cave - Entrance", "Boss Chamber")
+- **Always prefer UVTT** when available — the fog of war and lighting experience is dramatically better
+- Maps can belong to a specific module or to the campaign at large
+- You can upload multiple maps per module (one per room/area is common for dungeon crawls)
 
 ## See Also
 
-- [Configure Grid](./configure-grid.md)
-- [Place Tokens](./place-tokens.md)
+- [Configure Grid](./configure-grid.md) — Grid alignment details
+- [Place Tokens](./place-tokens.md) — Adding monsters and NPCs to maps
+- [Map Formats](../../explanation/map-formats.md) — Understanding UVTT and alternatives
+- [Generate Maps](./generate-map.md) — Create maps procedurally

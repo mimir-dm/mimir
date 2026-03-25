@@ -8,10 +8,11 @@ Welcome to Mimir, your local-first D&D 5e campaign management tool. Named after 
 
 **New to Mimir?** Start with our tutorials:
 
-1. **[Your First Campaign](./tutorials/01-first-campaign.md)** - Create a campaign and explore the dashboard
-2. **[Your First Module](./tutorials/02-first-module.md)** - Build an adventure with maps and monsters
-3. **[Running Your First Session](./tutorials/03-first-session.md)** - Use Play Mode to run an encounter
-4. **[Player Display Setup](./tutorials/04-player-display.md)** - Set up a second screen for players
+1. **[Your First Campaign](./tutorials/01-first-campaign.md)** — Create a campaign and explore the dashboard
+2. **[Your First Module](./tutorials/02-first-module.md)** — Build an adventure with maps and monsters
+3. **[Running Your First Session](./tutorials/03-first-session.md)** — Use Play Mode to run an encounter
+4. **[Player Display Setup](./tutorials/04-player-display.md)** — Set up a second screen for players
+5. **[Creating Homebrew Content](./tutorials/05-homebrew-content.md)** — Make custom items, monsters, and spells
 
 ## Features
 
