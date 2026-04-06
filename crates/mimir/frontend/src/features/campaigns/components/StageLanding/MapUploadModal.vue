@@ -99,6 +99,7 @@ import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { dataEvents } from '@/utils/dataEvents'
+import { buildUvttBase64FromImage, isUvttFilename, uvttFilenameForUpload } from './mapUploadUtils'
 
 const props = defineProps<{
   visible: boolean
@@ -148,7 +149,7 @@ function handleDrop(event: DragEvent) {
 }
 
 function processFile(file: File) {
-  const isUvtt = file.name.toLowerCase().endsWith('.dd2vtt') || file.name.toLowerCase().endsWith('.uvtt')
+  const isUvtt = isUvttFilename(file.name)
 
   // Validate file type
   const validImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
@@ -223,8 +224,15 @@ async function handleUpload() {
   errorMessage.value = ''
 
   try {
-    // Convert file to base64
-    const base64Data = await fileToBase64(selectedFile.value)
+    const file = selectedFile.value
+    const uvttDataBase64 = isUvttFilename(file.name)
+      ? await fileToBase64(file)
+      : buildUvttBase64FromImage(
+        await fileToBase64(file),
+        imageWidth.value,
+        imageHeight.value
+      )
+    const uploadFilename = uvttFilenameForUpload(file.name)
 
     // Upload map (handles both UVTT and images)
     const response = await invoke<{ success: boolean; error?: string; data?: unknown }>('create_map', {
@@ -232,8 +240,8 @@ async function handleUpload() {
         campaign_id: props.campaignId,
         module_id: props.moduleId ?? null,
         name: mapName.value.trim(),
-        filename: selectedFile.value.name,
-        uvtt_data_base64: base64Data
+        filename: uploadFilename,
+        uvtt_data_base64: uvttDataBase64
       }
     })
 
