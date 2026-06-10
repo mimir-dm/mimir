@@ -392,8 +392,8 @@ const confirmDelete = async () => {
 
 .error-message {
   padding: var(--spacing-md);
-  background-color: var(--color-error) / 0.1;
-  border: 1px solid var(--color-error) / 0.2;
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
   border-radius: var(--radius-md);
   color: var(--color-error);
 }
@@ -432,7 +432,7 @@ const confirmDelete = async () => {
 .campaign-select:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 2px var(--color-primary-500) / 0.2;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
 }
 
 /* Delete dialog */

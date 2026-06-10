@@ -147,7 +147,7 @@ const handleCancel = () => {
 .form-textarea:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-500) / 0.1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 10%, transparent);
 }
 
 .form-textarea {
@@ -202,8 +202,8 @@ const handleCancel = () => {
 .error-message {
   margin-top: var(--spacing-md);
   padding: var(--spacing-md);
-  background-color: var(--color-error) / 0.1;
-  border: 1px solid var(--color-error) / 0.2;
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
   border-radius: var(--radius-md);
   color: var(--color-error);
   font-size: 0.875rem;
