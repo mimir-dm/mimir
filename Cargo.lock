@@ -3297,7 +3297,7 @@ dependencies = [
 
 [[package]]
 name = "mimir"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -3322,7 +3322,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-core"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3350,7 +3350,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-mapgen"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3368,7 +3368,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-mcp"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3392,7 +3392,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-print"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "base64 0.22.1",
  "chrono",
