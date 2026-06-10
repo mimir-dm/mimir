@@ -24,11 +24,11 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const { activeTab, setTab, isPlayMode } = useDashboardState(props.campaignId)
+const { activeTab, setTab } = useDashboardState(props.campaignId)
 
-// Hide tab bar in play mode
+// Hide tab bar on full-screen routes
 const hideTabBar = computed(() => {
-  return isPlayMode.value || route.meta.hideTabBar === true
+  return route.meta.hideTabBar === true
 })
 
 function onTabClick(tabId: DashboardTab) {

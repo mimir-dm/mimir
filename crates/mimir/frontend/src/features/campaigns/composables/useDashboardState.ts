@@ -55,11 +55,6 @@ export function useDashboardState(campaignId: string | number) {
     return selectedModuleId.value !== null && route.path.includes('/modules/')
   })
 
-  // Check if in play mode (full-screen, hides tabs)
-  const isPlayMode = computed(() => {
-    return route.path.includes('/play')
-  })
-
   // Save tab preference when it changes
   watch(activeTab, (newTab) => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}${campaignId}`, newTab)
@@ -81,16 +76,6 @@ export function useDashboardState(campaignId: string | number) {
     router.push(`/campaigns/${campaignId}/dashboard/modules`)
   }
 
-  // Start play session for a module
-  function startSession(moduleId: string | number) {
-    router.push(`/campaigns/${campaignId}/dashboard/modules/${moduleId}/play`)
-  }
-
-  // End play session (return to modules)
-  function endSession() {
-    router.push(`/campaigns/${campaignId}/dashboard/modules`)
-  }
-
   // Get tab config by id
   function getTabConfig(tabId: DashboardTab): DashboardTabConfig | undefined {
     return dashboardTabs.find(t => t.id === tabId)
@@ -101,7 +86,6 @@ export function useDashboardState(campaignId: string | number) {
     activeTab,
     selectedModuleId,
     isModuleDetailOpen,
-    isPlayMode,
 
     // Tab configs
     dashboardTabs,
@@ -110,8 +94,6 @@ export function useDashboardState(campaignId: string | number) {
     // Actions
     setTab,
     selectModule,
-    closeModuleDetail,
-    startSession,
-    endSession
+    closeModuleDetail
   }
 }

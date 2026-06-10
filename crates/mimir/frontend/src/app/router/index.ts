@@ -58,25 +58,12 @@ const routes: RouteRecordRaw[] = [
         name: 'dashboard-homebrew',
         component: () => import('../../features/campaigns/components/dashboard/HomebrewTab.vue')
       },
-      {
-        path: 'modules/:moduleId/play',
-        name: 'dashboard-play',
-        component: () => import('../../features/modules/views/ModulePlayView.vue'),
-        props: true,
-        meta: { hideTabBar: true, fullScreen: true }
-      },
     ]
   },
   {
     path: '/modules/:id',
     name: 'module-detail',
     component: () => import('../../features/modules/views/ModuleDetailView.vue'),
-    props: true
-  },
-  {
-    path: '/modules/:id/play',
-    name: 'module-play',
-    component: () => import('../../features/modules/views/ModulePlayView.vue'),
     props: true
   },
   {
