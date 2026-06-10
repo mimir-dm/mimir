@@ -8,7 +8,7 @@ This tutorial walks you through creating your first campaign in Mimir. By the en
 - Navigate the Mimir interface
 - Create a new campaign
 - Explore the Campaign Dashboard
-- Understand the five dashboard tabs
+- Import catalog data for the next tutorials
 
 ## Prerequisites
 
@@ -30,16 +30,10 @@ The header bar contains:
 
 ## Step 2: Create a New Campaign
 
-There are two ways to create a campaign:
-
-### Option A: Using the Campaign Selector
 1. Click the **Campaign Selector** dropdown in the header
-2. Click **+ New Campaign**
+2. Click **Create New Campaign**
 
-### Option B: Direct Navigation
-1. Navigate to `/campaigns/new` in the URL
-
-Either method opens the **Create New Campaign** form.
+The **Create New Campaign** form opens.
 
 ## Step 3: Fill in Campaign Details
 
@@ -63,52 +57,9 @@ Click **Create Campaign**. Mimir will:
 
 ## Step 5: Explore the Campaign Dashboard
 
-The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and five tabs for organizing different aspects of your game.
+The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and tabs for the different aspects of your game — Campaign, Modules, NPCs, PCs, and Homebrew. See the [Campaign Dashboard reference](../reference/ui/campaign-dashboard.md) for what each tab contains; you'll work in the Modules tab in the [next tutorial](./02-first-module.md).
 
 ![Campaign Dashboard](../images/tutorials/campaign-dashboard.png)
-
-### The Dashboard Tabs
-
-#### Campaign Tab
-The world-building hub. Use this tab for:
-- Campaign setting notes
-- Lore and history
-- Factions and organizations
-- World documents
-
-This is where you develop the broader context of your campaign world.
-
-#### Modules Tab
-Adventure modules are self-contained adventures within your campaign. This tab shows:
-- All modules in the campaign
-- Module status (preparation stage)
-- Quick actions to edit or play modules
-
-You'll create your first module in the [next tutorial](./02-first-module.md).
-
-#### NPCs Tab
-Non-player characters for this campaign. Track:
-- Major NPCs and villains
-- Recurring characters
-- NPC relationships and notes
-
-NPCs can be shared across modules or specific to one adventure.
-
-#### PCs Tab
-Player characters in this campaign. Manage:
-- Character assignments
-- Player-character relationships
-- Quick access to character sheets
-
-Characters are created separately (in the Characters section) and assigned to campaigns here. Each character sheet has tabs for stats, equipment, spells, and details.
-
-#### Homebrew Tab
-Custom content for your campaign. Create and manage:
-- Homebrew items
-- Homebrew monsters
-- Homebrew spells
-
-Each can be created from scratch or cloned from the D&D 5e catalog as a starting point.
 
 ## Step 6: Campaign Actions
 
@@ -126,26 +77,19 @@ The dashboard header includes three buttons: **Sources**, **PDF**, and **Export 
 
 Use this regularly for backups or when moving campaigns between computers.
 
+## Step 7: Import Catalog Data
+
+Before the next tutorial you'll need catalog data imported — Tutorial 2 searches the catalog for monsters, and Mimir ships with none. Follow [Manage Campaign Sources](../how-to/campaigns/manage-sources.md) to download a source archive and import it, then come back here.
+
 ## What's Next?
 
 Your campaign is ready! Here are your next steps:
 
 1. **[Create your first module](./02-first-module.md)** - Build an adventure with maps and encounters
-2. **Add characters** - Create PCs for your players
+2. **[Add characters](../how-to/characters/create-pc.md)** - Create PCs for your players
 3. **Explore the Reference** - Browse monsters, spells, and items for inspiration
 
----
-
-## Quick Reference
-
-| Action | How To |
-|--------|--------|
-| Create campaign | Campaign Selector → + New Campaign |
-| Switch campaigns | Campaign Selector dropdown |
-| Access dashboard | Click campaign name in selector |
-| Configure sources | Dashboard → Sources button |
-| Export backup | Dashboard → Export Archive |
-| Return home | Click Mimir skull icon |
+For details on anything you saw in this tutorial, see the [Campaign Dashboard reference](../reference/ui/campaign-dashboard.md) and [Create a Campaign](../how-to/campaigns/create-campaign.md).
 
 ---
 

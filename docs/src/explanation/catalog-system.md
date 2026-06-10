@@ -79,6 +79,6 @@ You might wonder why Mimir doesn't ship with a pre-populated catalog. Three reas
 
 ## See Also
 
-- [Manage Campaign Sources](../how-to/campaigns/create-campaign.md) — Configuring which books are active
+- [Manage Campaign Sources](../how-to/campaigns/manage-sources.md) — Configuring which books are active
 - [The Homebrew System](./homebrew-system.md) — Creating custom content
 - [File Formats](../reference/file-formats.md) — Technical details on data formats

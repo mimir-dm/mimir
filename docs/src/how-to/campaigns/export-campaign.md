@@ -7,7 +7,7 @@ Export your campaign as a portable archive for backup or transfer.
 1. Open your campaign dashboard
 2. Click **Export Archive** in the campaign header
 3. Choose a save location
-4. The campaign exports as a `.tar.gz` archive
+4. The campaign exports as a `.mimir-campaign.tar.gz` archive
 
 ## What's Included
 
@@ -29,7 +29,7 @@ The archive contains:
 To import an exported campaign:
 1. Open the **Campaign Selector** dropdown in the header
 2. Click **Import Campaign**
-3. Select the `.tar.gz` file
+3. Select the `.mimir-campaign.tar.gz` file
 4. The campaign appears in your campaign list
 
 ## See Also

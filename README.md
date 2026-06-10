@@ -19,9 +19,10 @@ curl -sSL https://raw.githubusercontent.com/mimir-dm/mimir/main/scripts/install.
 
 Mimir includes a [Claude Code](https://claude.ai/code) plugin for AI-assisted campaign authoring directly from the terminal.
 
-**Install from GitHub:**
-```bash
-claude plugins add github:mimir-dm/mimir/crates/mimir-mcp/plugin
+**Install from GitHub** (inside a Claude Code session):
+```
+/plugin marketplace add mimir-dm/mimir
+/plugin install mimir-dm@mimir
 ```
 
 **Or manually:**

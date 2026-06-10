@@ -17,7 +17,7 @@ You'll be redirected to your new campaign's dashboard.
 
 ## What Gets Created
 
-When you create a campaign, Mimir automatically generates **11 template documents** to give you a starting structure — Campaign Pitch, World Primer, Character Guidelines, Safety Tools, House Rules, and more. These appear in the Campaign tab of your dashboard. Edit or delete them as needed — they're a starting point, not a requirement.
+When you create a campaign, Mimir automatically generates **11 template documents** to give you a starting structure: Campaign Pitch, Starting Scenario, World Primer, Character Guidelines, Table Expectations, Character Integration, Campaign Bible, Safety Tools, House Rules, Player Secrets, and Faction Overview. These appear in the Campaign tab of your dashboard. Edit or delete them as needed — they're a starting point, not a requirement.
 
 ## Configure Campaign Sources
 

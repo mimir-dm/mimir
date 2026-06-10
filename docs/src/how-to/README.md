@@ -7,6 +7,8 @@ These practical guides help you accomplish specific tasks in Mimir. Unlike tutor
 ### Campaigns
 - [Create a Campaign](./campaigns/create-campaign.md)
 - [Manage Documents](./campaigns/manage-documents.md)
+- [Manage Sources](./campaigns/manage-sources.md)
+- [Archive & Restore](./campaigns/archive-campaign.md)
 - [Export Campaign](./campaigns/export-campaign.md)
 
 ### Maps
@@ -15,11 +17,16 @@ These practical guides help you accomplish specific tasks in Mimir. Unlike tutor
 - [Place Tokens](./maps/place-tokens.md)
 - [Manage Light Sources](./maps/manage-light-sources.md)
 - [Print Maps](./maps/print-map.md)
+- [Generate Maps](./maps/generate-map.md)
+- [Mapgen Standalone Tool](./maps/mapgen-standalone.md)
 
 ### Characters
 - [Create a Player Character](./characters/create-pc.md)
 - [Create an NPC](./characters/create-npc.md)
 - [Assign to Campaign](./characters/assign-to-campaign.md)
+- [Manage Inventory](./characters/manage-inventory.md)
+- [Manage Spells](./characters/manage-spells.md)
+- [Level Up](./characters/level-up.md)
 - [Print Character Sheet](./characters/print-character-sheet.md)
 
 ### Modules
@@ -31,7 +38,16 @@ These practical guides help you accomplish specific tasks in Mimir. Unlike tutor
 - [Start a Session](./play-mode/start-session.md)
 - [Manage Encounters](./play-mode/manage-encounters.md)
 - [Fog of War](./play-mode/fog-of-war.md)
+- [Manage Traps & POIs](./play-mode/manage-traps-and-pois.md)
 - [Use Player Display](./play-mode/use-player-display.md)
+
+### Homebrew
+- [Create Items](./homebrew/create-item.md)
+- [Create Monsters](./homebrew/create-monster.md)
+- [Create Spells](./homebrew/create-spell.md)
+
+### AI Assistant
+- [AI Assistant](./ai-assistant/README.md)
 
 ---
 

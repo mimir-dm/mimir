@@ -4,10 +4,10 @@ Welcome to the Mimir contributor guide! This comprehensive guide covers everythi
 
 ## Quick Links
 
-- [Main Contributing Guide](../../CONTRIBUTING.md) - Quick reference for contributors
-- [Development Setup](DEVELOPMENT.md) - Detailed development environment setup
-- [GitHub Repository](https://github.com/mimir/mimir)
-- [Issue Tracker](https://github.com/mimir/mimir/issues)
+- [Development Setup](./DEVELOPMENT.md) - Detailed development environment setup
+- [Architecture](./ARCHITECTURE.md) - Technical architecture overview
+- [GitHub Repository](https://github.com/mimir-dm/mimir)
+- [Issue Tracker](https://github.com/mimir-dm/mimir/issues)
 
 ## Table of Contents
 
@@ -18,7 +18,8 @@ Welcome to the Mimir contributor guide! This comprehensive guide covers everythi
 5. [Pull Request Process](#pull-request-process)
 6. [Architecture Overview](#architecture-overview)
 7. [Design Principles](#design-principles)
-8. [Release Process](#release-process)
+8. [CI and Releases](#ci-and-releases)
+9. [Release Process](#release-process)
 
 ## Getting Started
 
@@ -29,7 +30,7 @@ Welcome! Here's how to make your first contribution:
 1. **Find an issue** - Look for issues labeled `good first issue` or `help wanted`
 2. **Comment on the issue** - Let us know you're working on it
 3. **Fork and clone** - Create your own fork and clone it locally
-4. **Set up your environment** - Follow the [Development Setup](DEVELOPMENT.md) guide
+4. **Set up your environment** - Follow the [Development Setup](./DEVELOPMENT.md) guide
 5. **Make your changes** - Implement your fix or feature
 6. **Submit a PR** - Create a pull request with your changes
 
@@ -115,17 +116,20 @@ cargo clippy --fix
 - Follow the Rust API Guidelines
 
 **Example:**
+
+Campaign IDs are TEXT UUIDs (`String`), not integers:
+
 ```rust
 /// Retrieves a campaign by ID from the database.
 ///
 /// # Arguments
 /// * `conn` - Database connection
-/// * `id` - Campaign ID to retrieve
+/// * `id` - Campaign ID (UUID string) to retrieve
 ///
 /// # Returns
 /// * `Ok(Campaign)` - The campaign if found
 /// * `Err(String)` - Error message if not found
-pub fn get_campaign(conn: &mut SqliteConnection, id: i32) -> Result<Campaign, String> {
+pub fn get_campaign(conn: &mut SqliteConnection, id: &str) -> Result<Campaign, String> {
     campaigns::table
         .find(id)
         .first(conn)
@@ -204,6 +208,9 @@ function handleSave() {
 ### Rust Testing
 
 **Unit Tests:**
+
+New campaigns are built with `NewCampaign::new(id, name)` — the ID is a caller-supplied UUID string:
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -211,14 +218,17 @@ mod tests {
 
     #[test]
     fn test_campaign_creation() {
-        let campaign = Campaign::new("Test Campaign");
+        let campaign = NewCampaign::new("test-id", "Test Campaign")
+            .with_description("A test campaign");
+        assert_eq!(campaign.id, "test-id");
         assert_eq!(campaign.name, "Test Campaign");
     }
 }
 ```
 
 **Integration Tests:**
-Place in `tests/` directory:
+Place in the crate's `tests/` directory. Existing targets: `catalog_import` and `srd_smoke_test` in `mimir-core`; `cli_integration`, `format_roundtrip`, and `polygon_snapshots` in `mimir-mapgen`.
+
 ```rust
 use mimir_core::{create_connection, run_migrations};
 
@@ -253,18 +263,25 @@ describe('CampaignCard', () => {
 ### Running Tests
 
 ```bash
-# All tests
-cargo test --workspace
+# Rust tests (recommended)
+angreal test unit
+# Underlying command:
+#   cargo test --workspace --exclude mimir -- --test-threads=1
+# (excludes the Tauri crate, which needs the sidecar binary to build;
+#  --test-threads=1 avoids SQLite locking issues)
+
+# Frontend tests
 cd crates/mimir/frontend && npm test
 
-# Unit tests only
-angreal test unit
-
 # With coverage
-npm run test:coverage
+angreal test coverage                    # Rust (cargo-tarpaulin)
+npm run test:coverage                    # Frontend
 
-# Specific test
-cargo test test_campaign_creation
+# Specific integration test target
+cargo test -p mimir-core --test catalog_import -- --test-threads=1
+
+# Specific test by name
+cargo test -p mimir-core test_campaign_creation -- --test-threads=1
 ```
 
 ## Pull Request Process
@@ -355,6 +372,7 @@ Mimir follows a clean architecture pattern with clear separation of concerns:
 - **mimir** - Tauri app shell and command handlers
 - **mimir-core** - Business logic, domain models, database
 - **mimir-mcp** - MCP server for Claude Code integration
+- **mimir-mapgen** - Procedural map generation (library + CLI)
 - **mimir-print** - PDF generation via Typst
 
 ## Design Principles
@@ -367,6 +385,30 @@ Mimir follows a clean architecture pattern with clear separation of concerns:
 6. **Domain-Driven Design** - Model the D&D campaign management domain
 7. **Progressive Enhancement** - Core features work without LLM
 8. **Cross-Platform** - Native experience on Windows, macOS, Linux
+
+## CI and Releases
+
+### Continuous Integration
+
+CI (`.github/workflows/ci.yml`) runs on pushes and pull requests to `main`:
+
+- **Build matrix**: macOS (aarch64 and x86_64), Ubuntu 22.04, and Windows — each builds the MCP sidecar then the full Tauri app
+- **Frontend tests**: vitest on Ubuntu
+- **Core crate tests**: `angreal test unit --core` on Ubuntu
+- **SRD smoke test** (heavy integration, `cargo test -p mimir-core --test srd_smoke_test`): runs **only on pushes to `main`**, not on pull requests
+- **Coverage**: cargo-tarpaulin on `mimir-core`, run with explicit flags and `continue-on-error: true`, so CI reports coverage but does not fail on it. The 50% floor (`fail-under = 50` in `tarpaulin.toml`) is enforced only by the local `angreal test coverage` task
+
+### Releases
+
+Releases (`.github/workflows/release.yml`) are triggered by pushing a tag matching `v*.*.*`:
+
+1. The same four-platform matrix builds the sidecar, the `mimir-mapgen` binary, and the Tauri app bundles
+2. `tauri-action` creates a **draft** GitHub release tagged `app-v<version>`
+3. A follow-up job attaches the `mimir-mcp` sidecar and `mimir-mapgen` binaries for every target to that release
+
+### Documentation Deploys
+
+Pushes to `main` that touch `docs/**` trigger `.github/workflows/docs.yml`, which builds the mdBook and deploys it to the external repository `mimir-dm/mimir-dm.github.io` (GitHub Pages).
 
 ## Release Process
 
@@ -385,13 +427,13 @@ We follow [Semantic Versioning](https://semver.org/):
 3. Update version in `tauri.conf.json`
 4. Create git tag: `git tag vX.Y.Z`
 5. Push tag: `git push origin vX.Y.Z`
-6. GitHub Actions builds and creates release
+6. GitHub Actions builds the matrix and creates a draft release `app-vX.Y.Z` with sidecar and mapgen binaries attached
 
 ## Questions and Help
 
 ### Getting Help
 
-- **Documentation** - Check this guide and [DEVELOPMENT.md](DEVELOPMENT.md)
+- **Documentation** - Check this guide and [DEVELOPMENT.md](./DEVELOPMENT.md)
 - **Issues** - Search existing issues or create a new one
 - **Discussions** - Use GitHub Discussions for questions
 - **Pull Requests** - Ask questions in PR comments

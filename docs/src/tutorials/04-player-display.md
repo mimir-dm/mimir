@@ -12,7 +12,7 @@ This tutorial walks you through setting up and using the Player Display - a seco
 
 ## Prerequisites
 
-- Completed [Tutorial 3](./03-first-session.md) (Play Mode basics)
+- Completed [Tutorial 3](./03-first-session.md) (DM Map window basics)
 - Ideally: a second monitor, TV, or projector for players
 
 ## The Two-Screen Setup
@@ -44,20 +44,20 @@ On your computer:
 3. Arrange screens to match physical layout
 4. Note which screen is secondary
 
-## Step 2: Enter Play Mode
+## Step 2: Open the DM Map Window
 
 1. Open your campaign
 2. Go to the **Modules** tab
-3. Select a module and click **Play**
-4. Make sure a map is active (click one in the sidebar)
+3. Select a module and click **Play** — the DM Map window opens
+4. Make sure a map is selected in the **Map** dropdown at the top left of the window
 
 ## Step 3: Open the Player Display
 
-In the Play Mode header:
+In the DM Map window's toolbar:
 
-1. Click the **Player Display** button
+1. Click the **Display** button
 2. A new window opens
-3. The button changes to show "Display Open"
+3. The button changes to show **Display On**
 
 ![Player Display Button](../images/tutorials/player-display-header.png)
 
@@ -78,10 +78,9 @@ Drag the Player Display window to your secondary screen:
 
 Your view shows everything:
 - All tokens (visible and hidden)
-- Monster names and quantities
+- Token names and labels
 - Full toolbar and controls
-- Line of sight visualization (debug mode)
-- Session notes panel
+- Line of sight visualization (debug overlays)
 
 ### What Players See
 
@@ -100,11 +99,11 @@ The player display shows:
 
 ### Fog of War
 
-Fog of war updates automatically based on:
+With **Fog** enabled in the map toolbar (UVTT maps only — fog needs wall data), fog of war updates automatically based on:
 - Where PC tokens are positioned
 - Their vision radius (including darkvision)
 - Active light sources
-- Walls and obstacles (UVTT maps)
+- Walls and obstacles
 
 Move a PC token and watch the fog update in real-time on both screens.
 
@@ -134,95 +133,36 @@ Change this to match the in-game environment (dungeon, night, etc.).
 
 ## Step 6: Using Blackout Mode
 
-The Blackout button (eye icon) appears when the display is open:
+The **Blackout** button (a crossed-out-eye icon with the tooltip "Toggle Blackout") appears next to **Display On** in the DM Map window toolbar while the display is open:
 
 1. Click **Blackout** to hide everything from players
-2. The player screen goes completely black
+2. The player screen blacks out and shows "Display Paused"
 3. Click again to restore the view
 
-### When to Use Blackout
-
-- **Before the session** - Set up tokens without revealing
-- **Dramatic reveals** - Build anticipation
-- **Breaks** - Bathroom/snack breaks
-- **Map transitions** - Switch maps without showing the change
-- **Plot moments** - Describe what happens before showing it
+Blackout is handy whenever you want to change something without the players watching — setup, map transitions, or a dramatic reveal.
 
 ## Step 7: Closing the Display
 
 When your session ends:
 
-1. Click **Player Display** button again, or
+1. Click the **Display On** button again, or
 2. Close the player display window directly
-3. The button returns to its original state
+3. The button returns to **Display**
 
-The main Play Mode continues - you can reopen the display anytime.
+The DM Map window stays open - you can reopen the display anytime.
 
-## Physical Setup Tips
+## Setup Tips
 
-### TV/Monitor Setup
-- Position so all players can see
-- Adjust brightness for room lighting
-- Consider a TV mount or stand
+For in-person play, position the TV, monitor, or projector so all players can see it, and adjust brightness for the room. For remote play, screen-share the Player Display window through your video call app.
 
-### Projector Setup
-- Project onto table or wall
-- Calibrate for grid accuracy
-- Consider ambient light levels
-
-### Virtual Setup
-- Share the player window via screen share
-- Use a separate browser window for remote players
-- Consider latency for viewport updates
-
----
-
-## Quick Reference
-
-| Action | How To |
-|--------|--------|
-| Open player display | Play Mode → Player Display button |
-| Close player display | Click button again or close window |
-| Blackout | Eye icon (when display open) |
-| Reveal entire map | Reveal Map toggle |
-| Change lighting | Ambient light dropdown |
-| Print map | Print button |
-
----
-
-## Troubleshooting
-
-### Display Opens on Wrong Screen
-- Drag window to correct screen
-- Maximize after moving
-
-### Players See Hidden Tokens
-- Check token visibility settings
-- Ensure "visible to players" is off for hidden tokens
-
-### Fog Not Updating
-- Verify PC tokens are marked visible
-- Check that PCs have a token on the active map
-- Confirm UVTT wall data loaded (for wall occlusion)
-
-### No Second Window
-- Check popup blocker settings
-- Try clicking the button again
-- Restart Play Mode
+If something isn't working, see [Troubleshooting](../reference/troubleshooting.md).
 
 ---
 
 ## Next Steps
 
-You've completed the tutorial series! You can now:
-
-- Create and manage campaigns
-- Build adventure modules with maps and encounters
-- Run sessions with fog of war
-- Use a second screen for players
-
-Explore the [How-To Guides](../how-to/README.md) for specific tasks, or check the [Reference](../reference/README.md) for detailed documentation.
+You can now create campaigns, build modules with maps and encounters, run sessions with fog of war, and use a second screen for players. One tutorial remains: creating your own homebrew content.
 
 ---
 
-*Return to: [Tutorials Overview](./README.md)*
+*Next tutorial: [Creating Homebrew Content](./05-homebrew-content.md)*

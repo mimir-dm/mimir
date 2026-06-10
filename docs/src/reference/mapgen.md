@@ -62,7 +62,7 @@ mimir-mapgen list-presets
 | `cave` | 24×24 | Underground cavern with rocky terrain and dark ambient lighting |
 | `desert` | 32×32 | Arid sandy wasteland with rocky outcrops and sparse scrub |
 | `lake` | 32×32 | Tranquil woodland pond with grassy shores and scattered trees |
-| `ice_lake` | 32×32 | Frozen lake with cracked ice, snow-covered shores, and frigid water |
+| `ice_lake` | 32×32 | Frozen lake covered in solid ice, with snow-covered shores |
 | `arctic` | 32×32 | Frozen tundra with snow drifts, exposed rock, and harsh conditions |
 | `island_tropical` | 32×32 | Tropical island with sandy beaches, palm trees, and warm ocean |
 | `island_forest` | 32×32 | Forested island in a lake with dirt shores and dense tree cover |
@@ -89,11 +89,11 @@ Controls Perlin noise that drives terrain blending, object placement, and featur
 
 ```yaml
 noise:
-  seed: 0              # u32 — noise seed (separate from map seed)
-  octaves: 6           # u32 — noise layers (more = more detail)
-  persistence: 0.5     # f64 — amplitude decay per octave (0–1)
-  lacunarity: 2.0      # f64 — frequency multiplier per octave
-  scale: 0.03          # f64 — base frequency (lower = larger features)
+  seed: 0              # u32 — noise seed (separate from map seed), default 0
+  octaves: 6           # usize — noise layers (more = more detail), default 6
+  persistence: 0.5     # f64 — amplitude decay per octave (0–1), default 0.5
+  lacunarity: 2.0      # f64 — frequency multiplier per octave, default 2.0
+  scale: 0.01          # f64 — base frequency (lower = larger features), default 0.01
 ```
 
 ### Island Mode
@@ -135,7 +135,8 @@ Array of tree configurations with optional shadow and canopy layers.
 
 ```yaml
 trees:
-  - tree:
+  - id: "oaks"                           # string, optional — name for cross-referencing (e.g., from lights)
+    tree:
       textures:                          # list of textures (randomly selected)
         - "res://textures/objects/trees/tree_01.png"
         - "res://textures/objects/trees/tree_02.png"
@@ -151,16 +152,16 @@ trees:
       custom_color: null                 # string, optional — ARGB hex override
     shadow:                              # optional shadow beneath tree
       texture: "res://textures/objects/trees/tree_shadow.png"
-      offset_x: 10.0                     # f64 — shadow offset X
-      offset_y: 15.0                     # f64 — shadow offset Y
+      offset: "Vector2( 10, 15 )"        # Vector2 — offset from tree position in pixels (Godot string form)
       scale_factor: 1.2                  # f64 — scale relative to tree
       layer: 50                          # i32 — render layer (below tree)
-    canopy:                              # optional canopy on upper level
+    canopy:                              # optional canopy placed on level 1 (overhead foliage)
       texture: "res://textures/objects/trees/tree_canopy.png"
       scale_factor: 1.5                  # f64 — scale relative to tree
       layer: 500                         # i32 — render layer (above tree)
-      level: 1                           # i32 — Dungeondraft level (1 = upper)
 ```
+
+All fields of the inner `tree` object block are required except `id` and `custom_color`. The shadow `offset` is a Vector2, written in Godot's string form: `"Vector2( x, y )"`.
 
 ### Clutter
 
@@ -168,7 +169,8 @@ Small decorative objects scattered across the map.
 
 ```yaml
 clutter:
-  - textures:
+  - id: "grass"                          # string, optional — name for cross-referencing
+    textures:
       - "res://textures/objects/grass/grass_01.png"
     min_distance: 80.0
     noise_lower: 0.2
@@ -182,13 +184,16 @@ clutter:
     custom_color: null
 ```
 
+Each clutter entry is an object config with the same fields as the `tree` block above; all fields are required except `id` and `custom_color`.
+
 ### Clumps
 
 Clustered object groups (rock formations, flower patches).
 
 ```yaml
 clumps:
-  - primary:                             # main object (placed via Poisson Disc)
+  - id: "rock_piles"                     # string, optional — name for cross-referencing
+    primary:                             # main object (placed via Poisson Disc)
       textures:
         - "res://textures/objects/rocks/rock_01.png"
       min_distance: 200.0
@@ -203,14 +208,20 @@ clumps:
     secondary:                           # scattered around each primary
       textures:
         - "res://textures/objects/rocks/pebble_01.png"
+      min_distance: 30.0
+      noise_lower: 0.0
+      noise_upper: 1.0
+      probability: 1.0
       scale_min: 0.3
       scale_max: 0.6
       layer: 100
       random_rotation: true
       random_mirror: false
-    scatter_count: 5                     # i32 — secondaries per primary
-    scatter_radius: 100.0                # f64 — scatter radius around primary
+    secondary_count: [3, 6]              # [u32, u32] — min/max secondaries per primary
+    secondary_radius: 100.0              # f64 — max distance of secondaries from primary (pixels)
 ```
+
+`primary` and `secondary` are both full object configs (same fields and requirements as the `tree` block above).
 
 ### Roads
 
@@ -218,17 +229,19 @@ Road paths using noise-following walk (`straight`) or sinusoidal meander (`meand
 
 ```yaml
 roads:
-  - from: Left                           # Edge — start: Left, Right, Top, Bottom
-    to: Right                            # Edge — end side
-    texture: "res://textures/paths/path_dirt.png"
-    width: 512.0                         # f64 — road width in pixels (512 = 2 grid squares)
-    layer: 100                           # i32 — render layer
-    style: straight                      # PathStyle — "straight" or "meandering"
-    step_distance: 64.0                  # f64 — walk step size (pixels)
-    fov: 1.047                           # f64 — field of view angle (radians, default π/3)
-    noise_weight: 0.5                    # f64 — 0=all progress, 1=all noise
-    margin: 128.0                        # f64 — margin from map edge (pixels)
-    smooth_density: 8                    # usize — Bezier smoothing density
+  - id: "main_road"                      # string, optional — name for cross-referencing (lights, custom paths)
+    from: Left                           # Edge — start: Left, Right, Top, Bottom (default Left)
+    to: Right                            # Edge — end side (default Right)
+    texture: "res://textures/paths/path_dirt.png"   # default "res://textures/paths/path_dirt.png"
+    width: 512.0                         # f64 — road width in pixels (512 = 2 grid squares), default 512.0
+    layer: 100                           # i32 — render layer, default 100
+    style: straight                      # PathStyle — "straight" or "meandering", default straight
+    step_distance: 64.0                  # f64 — walk step size (pixels), default 64.0
+    fov: 1.047                           # f64 — field of view angle (radians), default π/3
+    noise_weight: 0.5                    # f64 — 0=all progress, 1=all noise, default 0.5
+    margin: 128.0                        # f64 — margin from map edge (pixels), default 128.0
+    smooth_density: 8                    # usize — Bezier smoothing density, default 8
+    effort: 0.5                          # f64 — contour crossing: 0.0 avoids contours, 1.0 ignores them, default 0.5
     edge_paths:                          # optional — border textures along road sides
       texture: "res://textures/paths/path_edge.png"
       offset: 20.0                       # f64 — perpendicular offset from center
@@ -250,23 +263,29 @@ River paths with water polygon and bank paths. Default style is `meandering`.
 
 ```yaml
 rivers:
-  - from: Top                            # Edge — start side
-    to: Bottom                           # Edge — end side
-    width: 120.0                         # f64 — water width (pixels)
-    style: meandering                    # PathStyle — "straight" or "meandering"
-    step_distance: 64.0                  # f64 — walk step size
-    fov: 1.047                           # f64 — FOV for straight style
-    noise_weight: 0.5                    # f64 — noise following weight
-    margin: 128.0                        # f64 — margin from map edge
-    smooth_density: 8                    # usize — Bezier smoothing
-    deep_color: "ff3aa19a"               # string — ARGB hex for deep water
-    shallow_color: "ff3ac3b2"            # string — ARGB hex for shallow water
-    bank_texture: "res://textures/paths/path_rocks.png"
-    bank_width: 20.0                     # f64 — bank path width
-    bank_layer: 100                      # i32 — bank render layer
+  - id: "east_river"                     # string, optional — name for cross-referencing
+    from: Top                            # Edge — start side (default Top)
+    to: Bottom                           # Edge — end side (default Bottom)
+    width: 768.0                         # f64 — water width (pixels), default 768.0
+    style: meandering                    # PathStyle — "straight" or "meandering", default meandering
+    step_distance: 64.0                  # f64 — walk step size, default 64.0
+    fov: 1.047                           # f64 — FOV for straight style, default π/3
+    noise_weight: 0.5                    # f64 — noise following weight, default 0.5
+    margin: 128.0                        # f64 — margin from map edge, default 128.0
+    smooth_density: 8                    # usize — Bezier smoothing, default 8
+    deep_color: "ff3aa19a"               # string — ARGB hex for deep water, default "ff3aa19a"
+    shallow_color: "ff3ac3b2"            # string — ARGB hex for shallow water, default "ff3ac3b2"
+    bank_texture: "res://textures/paths/path_rocks.png"  # default "res://textures/paths/path_rocks.png"
+    bank_width: 256.0                    # f64 — bank path width, default 256.0
+    bank_layer: 100                      # i32 — bank render layer, default 100
+    effort: 0.5                          # f64 — contour crossing: 0.0 follows valleys, 1.0 ignores contours, default 0.5
+    source: null                         # string, optional — lake id where the river starts (overrides `from`)
+    drain: null                          # string, optional — lake id where the river ends (overrides `to`)
 ```
 
 Rivers generate a water polygon between two banks plus bank paths on each side. Very wide rivers (1000+) can simulate coastlines. Rivers automatically route around rooms and corridors.
+
+`source` and `drain` connect a river to declarative lakes (see [Lakes](#lakes)) by their `id`. When set, the river starts/ends at the lake shoreline instead of a map edge.
 
 ### Water Bodies
 
@@ -282,6 +301,21 @@ water:
   smooth_iterations: 2                   # usize — edge smoothing passes
   pixels_per_cell: 64.0                  # f64 — coordinate scaling
   disable_border: false                  # bool — disable water border effect
+```
+
+### Lakes
+
+Declarative lakes placed by center and radius, with a noise-perturbed organic shoreline. The noise map is depressed inside the lake to form a basin.
+
+```yaml
+lakes:
+  - id: "north_lake"                     # string, required — unique id (referenced by river source/drain)
+    center: [16, 10]                     # [f64, f64], required — center in grid squares
+    radius: 5.0                          # f64, required — approximate radius in grid squares
+    roughness: 0.4                       # f64 — shoreline jaggedness 0.0–1.0, default 0.4
+    deep_color: "ff2a7f6f"               # string — ARGB hex, default "ff2a7f6f"
+    shallow_color: "ff3ac3b2"            # string — ARGB hex, default "ff3ac3b2"
+    blend_distance: 3.0                  # f64 — water edge blend distance, default 3.0
 ```
 
 ### Elevation Contours
@@ -358,7 +392,7 @@ Arbitrary closed shapes defined by vertices in grid coordinates. Use for irregul
 ```yaml
 polygons:
   - id: "room_a"                   # string, required — unique identifier
-    points:                        # list of [x, y] vertices, clockwise
+    points:                        # list of [x, y] vertices tracing the perimeter in order
       - [3, 6]
       - [9, 6]
       - [9, 14]
@@ -371,6 +405,8 @@ polygons:
         type: door                # PortalType — door, window, archway, secret_door
 ```
 
+Vertices may be listed clockwise or counter-clockwise; validation only rejects self-intersecting outlines and degenerate (zero-length) edges, plus polygons with fewer than 3 vertices.
+
 **Adjacency:** When two polygons share an edge, the shared wall is automatically removed, creating an open connection. **Overlapping polygons** are merged into a single outer wall. **Edge indexing:** edge 0 = `points[0]` → `points[1]`, the last edge wraps to `points[0]`.
 
 ### Portal Types
@@ -382,26 +418,134 @@ polygons:
 | `archway` | Open archway |
 | `secret_door` | Hidden door |
 
+### Pattern Fills
+
+Polygon-bounded texture fills — floor tiles inside rooms, water overlays, or noise-gated ground detail. Key: `pattern_fills`.
+
+```yaml
+pattern_fills:
+  - region:                              # PatternRegion, required — where to place the pattern
+      type: room                         # "water" | "room" | "polygon" | "noise"
+      name: "guard_room"                 # room/polygon id (room and polygon types only)
+    texture: "res://textures/patterns/tile_01.png"   # string, required — tileset texture
+    color: "ffffffff"                    # string — ARGB hex tint, default "ffffffff"
+    rotation: 0                          # i32 — texture rotation in degrees, default 0
+    layer: 100                           # i32 — render layer, default 100
+    outline: false                       # bool — outline instead of fill, default false
+```
+
+**Region types:**
+
+| `type` | Extra fields | Fills |
+|--------|-------------|-------|
+| `water` | none | Each generated water polygon |
+| `room` | `name` (string — room id) | The named room's boundary |
+| `polygon` | `name` (string — polygon id) | The named polygon's boundary |
+| `noise` | `noise_lower`, `noise_upper` (f64) | Contours where noise falls in the range |
+
+### Custom Paths
+
+General-purpose paths beyond roads and rivers.
+
+```yaml
+custom_paths:
+  - style:                               # PathStyle, required — how the path is generated
+      type: waypoints                    # "waypoints" | "room_to_room" | "offset" | "intermittent"
+      points:                            # waypoints style: [x, y] in grid squares
+        - [4, 4]
+        - [12, 8]
+        - [20, 6]
+    texture: "res://textures/paths/path_dirt.png"    # string, required
+    width: 1.0                           # f64, required — width in grid squares
+    color: "ffffffff"                    # string — ARGB hex, default "ffffffff"
+    layer: 100                           # i32 — render layer, default 100
+    smooth: 8                            # usize — Bezier smoothing density (0 = none), default 8
+    loop_path: false                     # bool — close the path into a loop, default false
+```
+
+**Style types:**
+
+| `type` | Fields | Behavior |
+|--------|--------|----------|
+| `waypoints` | `points` (list of `[x, y]` in grid squares) | Explicit path through the points |
+| `room_to_room` | `from`, `to` (string — room ids) | Connects the two rooms' centers |
+| `offset` | `along` (string — feature id), `offset` (f64, grid squares, positive = left), `reverse` (bool, default false) | Companion path at a perpendicular distance from a named road/river/feature |
+| `intermittent` | `along` (string), `segment_length` (f64), `segment_variation` (f64, default 0), `gap` (f64), `offset` (f64, default 0), `reverse` (bool, default false) | Breaks a parent path into segments with gaps |
+
+### Lights
+
+Point light placement.
+
+```yaml
+lights:
+  - placement:                           # LightPlacement, required — placement mode
+      type: scatter                      # "scatter" | "along_path" | "with_objects"
+      density: 6.0                       # f64, required — minimum spacing in grid squares
+      noise_lower: 0.0                   # f64 — lower noise bound, default 0.0
+      noise_upper: 1.0                   # f64 — upper noise bound, default 1.0
+      probability: 1.0                   # f64 — keep chance per point, default 1.0
+      margin: 0.1                        # f64 — edge margin fraction (0.0–0.5), default 0.1
+    color: "ffeaefca"                    # string, required — ARGB hex
+    intensity: 0.6                       # f64, required — typical range 0.0–1.0
+    range: 4.0                           # f64, required — light range in grid squares
+    shadows: false                       # bool — cast shadows, default false
+    layer: 100                           # i32 — render layer, default 100
+```
+
+**Placement types:**
+
+| `type` | Fields | Behavior |
+|--------|--------|----------|
+| `scatter` | `density` (f64, required), `noise_lower`, `noise_upper`, `probability`, `margin` | Poisson disc scatter gated by noise and probability |
+| `along_path` | `path` (string — road/river/feature id), `density` (f64 — lights per grid square of path) | Lights at intervals along a named path |
+| `with_objects` | `group` (string — tree/clutter/clump id) | One light per placed object in the named group |
+
+### Materials
+
+Ground-level material scatter (ice, lava, acid, debris) as bit-packed bitmaps.
+
+```yaml
+materials:
+  - region:                              # MaterialRegion, required — where to place material
+      type: noise                        # "noise" | "room" | "polygon" | "along_path"
+      noise_lower: 0.0                   # f64 — lower noise bound (noise type)
+      noise_upper: 0.25                  # f64 — upper noise bound (noise type)
+    texture: "res://textures/materials/ice.png"      # string, required
+    layer: "-400"                        # string — Dungeondraft layer id, default "-400" (Below Ground)
+    smooth: true                         # bool — edge smoothing, default true
+```
+
+**Region types:**
+
+| `type` | Extra fields | Fills |
+|--------|-------------|-------|
+| `noise` | `noise_lower`, `noise_upper` (f64) | Cells where noise falls in the range |
+| `room` | `name` (string — room id) | Inside the named room |
+| `polygon` | `name` (string — polygon id) | Inside the named polygon |
+| `along_path` | `path` (string — feature id), `width` (f64 — corridor half-width in grid squares) | Within a distance of the named path |
+
 ### Lighting
 
 Ambient lighting and shadow configuration.
 
 ```yaml
 lighting:
-  ambient_light: "ffffffff"              # string — ARGB hex ambient color
+  ambient_light: "ffffffff"              # string, required — ARGB hex ambient color
   ambient_energy: 1.0                    # f64, optional — brightness multiplier
   shadow_color: "66000000"               # string, optional — ARGB hex shadow color
 ```
 
-#### Time-of-Day Presets
+#### Time-of-Day Reference Values
 
-| Preset | Ambient Color | Energy | Shadow | Use Case |
-|--------|--------------|--------|--------|----------|
-| `dawn` | Warm gold | 0.7 | Brown tint | Early morning encounters |
-| `day` | White | 1.0 | None | Default daylight |
-| `dusk` | Orange-red | 0.6 | Purple tint | Evening ambush, sunset |
-| `night` | Blue | 0.3 | Dark | Nighttime stealth, camp |
-| `underground` | Dark grey | 0.2 | Black | Caves, dungeons |
+There is no YAML key, CLI flag, or MCP parameter that selects a time-of-day preset. The values below are reference colors to copy into an explicit `lighting:` block:
+
+| Time of day | `ambient_light` | `ambient_energy` | `shadow_color` |
+|-------------|-----------------|------------------|----------------|
+| Dawn | `fff5d0a0` | 0.7 | `66483020` |
+| Day | `ffffffff` | omit | omit |
+| Dusk | `ffdd8866` | 0.6 | `66301830` |
+| Night | `ff4466aa` | 0.3 | `cc000020` |
+| Underground | `ff333333` | 0.2 | `cc000000` |
 
 ## Common Dungeondraft Texture Paths
 

@@ -4,28 +4,29 @@ Run combat encounters effectively during your session.
 
 ## Viewing Monster Stats
 
-In Play Mode, click any monster in the sidebar to open the Monster Stats Panel:
+Monster stats live in the main window, which stays on the campaign dashboard while the DM Map window is open. On the module dashboard, click any monster in the Dangers panel to open the Monster Stats Panel:
 - Full stat block
 - Ability scores and saves
 - Actions and attacks
 - Special abilities
 
-The panel slides in from the right, keeping the map visible.
+The panel opens alongside the dashboard, so your main screen becomes the reference screen while the map runs in its own window.
+
+> **Tip:** Double-click a monster token in the DM Map window to select that monster in the dashboard automatically.
 
 ## Monster Quick List
 
-The sidebar shows all monsters in the module:
+The Dangers panel lists all monsters in the module:
 - **Quantity** - Number of each monster (e.g., "3×")
-- **Name** - Monster name
-- **Encounter Tag** - Group label (if set)
+- **Name** - Monster name (custom display name if one is set)
 
 Click to select and view stats.
 
 ## Adding PCs to the Map
 
-Click the **Add PCs** button in the toolbar to place all campaign player characters on the current map.
+Click the **Add PCs** button in the DM Map window's map toolbar to place all campaign player characters on the current map.
 
-> **Note:** Monster tokens are placed during module prep in Token Setup. To add monsters during play, return to prep mode, add them via Token Setup, then re-enter Play Mode.
+> **Note:** Monster tokens are placed in Token Setup — click the map's card in the module dashboard's Maps section. The dashboard stays available in the main window during a session, so you can place additional monsters there mid-session.
 
 ## Moving Tokens in Combat
 
@@ -40,13 +41,13 @@ Toggle token visibility to:
 - Reveal monsters during surprise rounds
 - Show reinforcements arriving
 
-Right-click a token and select the visibility option from the context menu.
+Right-click a token and select **Hide from Players** / **Show to Players** (or select the token and press **H**).
 
 ## Tips
 
 - Open monster stats before combat starts
-- Track HP in session notes
-- Use encounter tags to group monsters by room/area
+- Track HP in the module's Play Notes document (Documents panel on the module dashboard)
+- Use display names and notes to distinguish monsters by room/area
 - Position hidden tokens before players enter areas
 
 ## See Also

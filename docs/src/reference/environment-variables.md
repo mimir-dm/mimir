@@ -59,6 +59,16 @@ The path supports `~` and `$HOME` expansion.
 
 > **Note on Linux:** The MCP server respects the `XDG_DATA_HOME` environment variable. If unset, it falls back to `~/.local/share/`.
 
+### `MIMIR_SEED_ASSETS`
+
+Development only. Path to the seed-asset directory (sample UVTT maps, token images) used when seeding the dev database from the in-app Dev Tools.
+
+```bash
+export MIMIR_SEED_ASSETS=/path/to/mimir/crates/mimir-core/src/seed/assets
+```
+
+**Default:** Not set. The seeder walks parent directories looking for `crates/mimir-core/src/seed/assets`; the variable is only needed when running from a location where that walk fails.
+
 ## Build System
 
 ### `TAURI_ENV_TARGET_TRIPLE`

@@ -33,7 +33,7 @@ Mimir is a local-first desktop application for D&D 5e campaign management. It ha
 **External systems:**
 - **Claude Code** — AI assistant that manages campaigns via the MCP sidecar server
 - **Dungeondraft** — Map authoring tool; Mimir imports UVTT maps and generates `.dungeondraft_map` files
-- **5etools** — Source of D&D 5e catalog data (monsters, spells, items, etc.), imported into the database at build time
+- **5etools** — Source of D&D 5e catalog data (monsters, spells, items, etc.), imported into the database at runtime by the user from the Sources UI (`crates/mimir-core/src/import/`)
 
 ## Level 2: Container Diagram
 
@@ -63,14 +63,15 @@ The system is a Cargo workspace with 5 crates, a Vue 3 frontend, and a SQLite da
 │              ▼                                       │   │
 │  ┌────────────────────────┐                          │   │
 │  │   SQLite Database      │                          │   │
-│  │   56 tables, WAL mode  │                          │   │
+│  │   56 tables + FTS5,    │                          │   │
+│  │   WAL mode             │                          │   │
 │  └────────────────────────┘                          │   │
 └──────────────────────────────────────────────────────┘   │
                                                            │
 ┌──────────────────────────────────────────────────────┐   │
 │   MCP Sidecar (mimir-mcp)                            │   │
 │   Separate binary, launched by Tauri externalBin     │◀──┘
-│   71 tools across 10 categories                      │
+│   54 tools across 8 categories                       │
 │   Depends on: mimir-core, mimir-mapgen               │
 └──────────────────────────────────────────────────────┘
 
@@ -92,7 +93,7 @@ The system is a Cargo workspace with 5 crates, a Vue 3 frontend, and a SQLite da
 | **mimir-print** | Rust, Typst | PDF generation: character sheets, spell cards, map prints |
 | **mimir-mcp** | Rust, rust-mcp-sdk | MCP server exposing campaign management to AI assistants |
 | **mimir-mapgen** | Rust, noise-rs, clap | Procedural map generation with YAML config or biome presets |
-| **SQLite Database** | SQLite 3, WAL mode | 56 tables: campaigns, characters, maps, D&D 5e catalog |
+| **SQLite Database** | SQLite 3, WAL mode | 56 schema tables plus FTS5 indexes: campaigns, characters, maps, D&D 5e catalog |
 
 ### Crate dependency graph
 
@@ -229,8 +230,8 @@ frontend/src/
 │   ├── characters/         # Creation wizard, character sheet, level-up
 │   │   ├── views/          # CharacterListView, CharacterSheetView
 │   │   └── components/     # CharacterCreationWizard, LevelUpDialog
-│   ├── modules/            # Module prep, play mode, player display
-│   │   ├── views/          # ModulePrepView, ModulePlayView
+│   ├── modules/            # Module prep, player display
+│   │   ├── views/          # ModulePrepView
 │   │   └── components/     # ModuleMonsters, ModuleNPCs, ModuleMaps
 │   └── sources/            # D&D 5e catalog browser
 │       └── composables/    # useCatalogSearch (instantiated 22×)
@@ -256,13 +257,13 @@ Runs as a separate process, sharing the same SQLite database.
 │                       mimir-mcp                           │
 │                                                           │
 │  ┌──────────────┐    ┌──────────────────────────────────┐ │
-│  │  MCP Server   │    │     Tools (71 total)             │ │
+│  │  MCP Server   │    │     Tools (54 total)             │ │
 │  │              │    │                                  │ │
 │  │  rust-mcp-   │    │  character (13)   campaign (10) │ │
-│  │  sdk 0.8     │    │  catalog (8)      map (8)       │ │
-│  │              │    │  module (8)       document (6)  │ │
-│  │  stdio +     │◀───│  homebrew (5)     h_monster (5) │ │
-│  │  streamable  │    │  h_spell (5)      mapgen (3)    │ │
+│  │  sdk 0.8     │    │  module (8)       map (8)       │ │
+│  │              │    │  document (6)     homebrew (5)  │ │
+│  │  stdio +     │◀───│  mapgen (3)       catalog (1)   │ │
+│  │  streamable  │    │                                  │ │
 │  │  HTTP        │    │                                  │ │
 │  └──────────────┘    └──────────────────────────────────┘ │
 │                                                           │
@@ -368,7 +369,7 @@ Detailed rationale lives in ADRs. Summary:
 | JSON columns | [ADR-0003](/.metis/adr/MIMIR-A-0003.md) | Variable/complex fields (spell components, monster traits) stored as JSON |
 | Stateful services | [ADR-0005](/.metis/adr/MIMIR-A-0005.md) | Services borrow `&mut SqliteConnection` for lifetime-scoped transactions |
 
-### Database Schema (56 tables)
+### Database Schema (56 schema tables plus FTS5 indexes)
 
 | Category | Tables | Examples |
 |----------|--------|----------|
@@ -418,7 +419,7 @@ mimir/
 │   ├── mimir-mcp/                 # MCP sidecar server
 │   │   ├── src/
 │   │   │   ├── main.rs            # Server bootstrap (stdio + HTTP)
-│   │   │   └── tools/             # 10 tool modules (71 tools total)
+│   │   │   └── tools/             # 8 tool modules (54 tools total)
 │   │   └── plugin/                # Claude Code plugin definition
 │   │       ├── plugin.json        # Manifest
 │   │       ├── skills/            # mapgen, mimir-dm, mimir-campaign

@@ -1,4 +1,4 @@
-# The Two-Board System
+# The Two-Board Method
 
 ## Overview: Organizing Creative Chaos
 

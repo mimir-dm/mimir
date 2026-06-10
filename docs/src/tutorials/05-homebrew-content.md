@@ -13,7 +13,9 @@ This tutorial walks you through creating custom items, monsters, and spells for 
 ## Prerequisites
 
 - A campaign created ([Tutorial 1](./01-first-campaign.md))
-- Catalog data imported (monsters, items, and spells should appear in Reference searches)
+- Catalog data imported ([Manage Campaign Sources](../how-to/campaigns/manage-sources.md)) — monsters, items, and spells should appear in Reference searches
+- A module with a map ([Tutorial 2](./02-first-module.md)) — Step 5 places the homebrew monster via Token Setup
+- A PC [created](../how-to/characters/create-pc.md) and [assigned to the campaign](../how-to/characters/assign-to-campaign.md) — Step 5 adds the item and spell to a character sheet; the spell step needs a spellcaster
 
 ## What is Homebrew?
 
@@ -51,18 +53,6 @@ Let's create a unique magic sword for your campaign.
 
 Your item appears in the homebrew items list with an **HB** badge.
 
-### Alternative: Clone from Catalog
-
-If your custom item is similar to an existing one:
-
-1. Click **Clone from Catalog**
-2. Search for "Longsword" (or whatever base item you want)
-3. Click the result — Mimir creates a copy immediately
-4. Click **Edit** to modify the cloned item
-5. Change the name, adjust properties, update the description
-
-Cloning is faster when you want a variant of something that already exists.
-
 ## Step 3: Create a Custom Monster
 
 Monster stat blocks are complex, so Mimir uses a clone-only approach: you start from a catalog monster and modify it.
@@ -84,7 +74,7 @@ The cloned monster appears in your list immediately. The detail view shows "Base
 
 8. Save your changes
 
-> **Tip:** You don't need to understand the full JSON structure to make simple changes. Find the field you want to modify (like `"hp"` or `"ac"`) and update its value.
+> **Tip:** The stat block is edited as JSON in the 5etools data format, but you don't need to understand the full structure to make simple changes — find the field you want (like `"hp"` or `"ac"`) and update its value. See [Create a Homebrew Monster](../how-to/homebrew/create-monster.md) and [The Homebrew System](../explanation/homebrew-system.md) for how this data is structured and stored.
 
 ## Step 4: Create a Custom Spell
 
@@ -100,6 +90,8 @@ Like monsters, spells are cloned from the catalog.
    - The damage type from fire to cold
    - Update the description text accordingly
 8. Save your changes
+
+Spell data uses the same JSON editing approach as monsters — see [Create a Homebrew Spell](../how-to/homebrew/create-spell.md) for the details.
 
 ## Step 5: Use Homebrew in Your Module
 

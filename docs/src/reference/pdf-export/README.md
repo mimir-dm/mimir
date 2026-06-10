@@ -1,64 +1,69 @@
 # PDF Export
 
-Mimir generates PDF documents from campaign data using [Typst](https://typst.app/), a modern typesetting system. The PDF export functionality lives in the mimir-print crate and supports character sheets, spell cards, and campaign documents.
+Mimir generates PDFs from campaign data using [Typst](https://typst.app/), a modern typesetting system compiled in-process by the `mimir-print` crate. Every export returns the finished PDF to the frontend as base64 data, where it can be previewed and saved to disk.
 
-## Template System
+## Export Types
 
-The export system uses Typst templates that define document layout and styling. Each template is a `.typ` file that receives JSON data from the application and renders it into a formatted PDF. Templates are organized by content type into character/, spells/, and campaign/ directories, with shared components in a components/ directory.
-
-Character templates include a full sheet format for comprehensive character reference, a condensed summary for quick lookup, and a combined sheet-with-spells variant for spellcasters. Spell templates support individual cards, multi-up layouts for printing decks, and compact list formats. Campaign templates handle single documents like session notes as well as combined bundles that compile multiple documents into one PDF.
-
-## Rendering Pipeline
-
-When you request a PDF export, the application serializes the relevant data to JSON and passes it to the PrintService along with the template path. The service writes the JSON to a temporary file, invokes the Typst compiler with the template, and captures the resulting PDF bytes. These bytes can be returned as base64 for display or written directly to a file.
-
-The template accesses its data through Typst's `json()` function, reading from a data.json file that the service creates in the compilation directory. This approach keeps templates portable and testable independent of the application.
-
-## Data Format
-
-Templates expect JSON data matching the Rust structs being exported. A character export includes character_name, level, race, and class strings alongside an abilities object containing the six scores. Hit point data arrives as separate current_hp and max_hp fields. The exact schema varies by template, but follows the patterns established in the domain model.
-
-```json
-{
-  "character_name": "Thorin Ironforge",
-  "level": 5,
-  "race": "Dwarf",
-  "class": "Cleric",
-  "abilities": {
-    "strength": 14,
-    "dexterity": 10,
-    "constitution": 16,
-    "intelligence": 12,
-    "wisdom": 18,
-    "charisma": 8
-  },
-  "current_hp": 38,
-  "max_hp": 45
-}
-```
+| Export | Contents | Triggered from |
+|--------|----------|----------------|
+| Character | Full character sheet, plus optional compact sheet, battle card, spell cards, and equipment cards | Character print dialog ([how-to](../../how-to/characters/print-character-sheet.md)) |
+| Single document | One campaign document rendered from its markdown content | Document editor ([how-to](../../how-to/campaigns/manage-documents.md)) |
+| Campaign | Campaign documents, module content, NPCs, map previews, true-scale tiled maps, and token cutouts, toggled per section | Campaign export dialog |
+| Module | Module documents, monster cards, trap cards, points of interest, NPCs, play notes, and map preview/play pages, toggled per section | Module export dialog ([how-to](../../how-to/modules/module-documents.md)) |
+| Map | Preview page (fit to one page) and/or true-scale tiled play pages with token cutouts | Map print dialog ([how-to](../../how-to/maps/print-map.md)) |
+| Monster cards | Half-page reference cards for one monster, or all monsters in a module | `export_monster_card` / `export_module_monsters` commands |
+| Trap cards | Half-page reference cards for one or more traps | `export_trap_card` / `export_trap_cards` commands |
 
 ## Tauri Commands
 
+The application registers twelve print commands (`crates/mimir/src/main.rs`), implemented in `crates/mimir/src/commands/print/`.
+
 | Command | Parameters | Description |
 |---------|------------|-------------|
-| `generate_pdf` | template_path, data | Render a template to PDF and return base64 |
-| `list_templates` | — | List available templates with metadata |
-| `save_pdf` | path, pdf_base64 | Write base64 PDF data to a file |
+| `list_print_templates` | — | List `.typ` files found under the app data `templates/` directory |
+| `export_character` | `character_id`, `options?` | Character sheet with optional compact sheet, battle card, spell cards, equipment cards |
+| `export_campaign_document` | `document_id` | Render a single campaign document |
+| `export_campaign_documents` | `campaign_id`, `options?` | Combined campaign PDF with per-section toggles |
+| `export_module_documents` | `module_id`, `options?` | Combined module PDF with per-section toggles |
+| `print_map` | `map_id`, `options?` | Map preview and/or tiled play pages |
+| `generate_character_sheet` | `character_id`, `template?` | Legacy API; currently returns a "not yet implemented" error |
+| `save_pdf` | `pdf_base64`, `path` | Decode base64 PDF data and write it to a file |
+| `export_module_monsters` | `module_id`, `options?` | Cards for every monster in a module |
+| `export_monster_card` | `monster_name`, `monster_source`, `options?` | Card for a single catalog monster |
+| `export_trap_card` | `trap_name`, `trap_source`, `options?` | Card for a single trap |
+| `export_trap_cards` | `traps` (list of name/source pairs), `options?` | Cards for multiple traps |
 
-## PrintService API
+Card commands accept a `show_cut_lines` option. Map and module options include grid overlay, line-of-sight walls, starting positions, and token cutout toggles.
 
-The Rust PrintService provides the underlying functionality that the Tauri commands wrap. Creating a service requires passing the templates root directory. The `render_to_pdf` method accepts a template path relative to that root and a serializable data reference, returning PDF bytes on success. The `save_pdf` method writes those bytes to a specified path. The `list_templates` method scans the templates directory and returns metadata for each discovered template. The `template_exists` method provides a quick check for template availability.
+All rendering commands return `ApiResponse<PrintResult>`, where `PrintResult` contains `pdf_base64` (the PDF as base64) and `size_bytes` (the decoded size). `save_pdf` returns `ApiResponse<()>` and `list_print_templates` returns a list of `{ id, name, category }` entries.
 
-## Custom Templates
+## Section Types
 
-Adding custom templates requires creating a new `.typ` file in the appropriate templates subdirectory. The template should read its data using `json("data.json")` and use Typst markup to define the document structure. Once saved, the template appears automatically in the `list_templates` output and can be used with `generate_pdf`.
+PDFs are assembled from typed sections (`crates/mimir-print/src/sections/`), each of which produces Typst markup:
 
-Typst documentation at [typst.app/docs](https://typst.app/docs/) covers the markup language, styling options, and available functions. Templates can import shared components and use Typst's full typesetting capabilities including custom fonts, vector graphics, and complex layouts.
+| Section | Description |
+|---------|-------------|
+| Markdown document | Campaign/module documents with optional YAML frontmatter (`title`, `type`) converted from markdown to Typst |
+| Character sheet | Basic info, ability scores, classes, and roleplay elements |
+| Character battle card | Half-page (3.875" × 5.125") combat reference cards in a 2×2 layout, for PCs and NPCs |
+| Monster cards | Half-page (3.875" × 5.125") stat-block cards in a 2×2 layout |
+| Spell cards | Multi-up cards; long descriptions split at natural boundaries onto foldable continuation cards |
+| Equipment cards | 2.5" × 3.25" cards for weapons, special ammo, and magic items |
+| Map preview | Map fit to a single page, with options for grid overlay, line-of-sight walls drawn as red lines, and starting positions as numbered circles |
+| Tiled map | Map rendered at true scale across multiple labeled pages for physical play |
+| Token cutouts | Fold-in-half paper standees sized by creature category (tiny through gargantuan), with per-token quantity |
+| Trap cards | Half-page (3.875" × 5.125") cards showing trigger, effect, countermeasures, and details |
 
-## Troubleshooting
+## Rendering Pipeline
 
-PDF generation failures usually stem from template syntax errors or missing data fields. Verify the template compiles independently using the Typst CLI before integrating with the application. Check that all fields referenced in the template exist in the provided data.
+Each command gathers data from the database, builds the relevant sections, and assembles them with a `DocumentBuilder`. The combined Typst source is compiled in-memory by the Typst compiler library inside a custom `MimirTypstWorld` — no external Typst CLI and no temporary data files are involved. Images (maps, tokens) are passed to the compiler as in-memory virtual files.
 
-Font rendering issues occur when templates reference fonts not available on the system. Typst uses system fonts by default, so either install the required fonts or modify templates to use bundled alternatives. Font names must match exactly including capitalization.
+Shared Typst components are embedded in the application binary (`crates/mimir-print/src/embedded_templates.rs`): `_shared/styles.typ`, `_shared/components.typ`, and `_shared/icons.typ`. Imports of these paths are resolved from the embedded copies before any disk lookup. The embedded styles define grayscale, print-friendly colors and the font stacks Inter / Helvetica / Arial (headings and body) and JetBrains Mono / Consolas (monospace).
 
-Large PDFs typically result from embedded raster images. Optimize images before including them in exports, prefer vector graphics where possible, and consider splitting very large documents into multiple PDFs.
+Fonts are not bundled: the compiler uses system fonts, discovered once per process via `fontdb` (`crates/mimir-print/src/world.rs`). If the first font in a stack is not installed, Typst falls back through the stack.
+
+## Template Directory
+
+`list_print_templates` scans the `templates/` directory inside the application data directory, recursively collecting `.typ` files (anything under a `_shared/` directory is skipped). Each entry's `id` is its relative path without the extension, its `category` is the first directory component, and its `name` is the title-cased file name. If the directory does not exist, the command returns an empty list.
+
+This listing is informational only: the export commands above generate their Typst source from the embedded section types and embedded shared components, and do not render user-supplied `.typ` files.

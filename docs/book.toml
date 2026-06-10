@@ -18,7 +18,6 @@ default-theme = "navy"
 preferred-dark-theme = "navy"
 smart-punctuation = true
 mathjax-support = false
-copy-fonts = true
 additional-css = []
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
 no-section-label = false

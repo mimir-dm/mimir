@@ -2,52 +2,48 @@
 
 Mimir supports importing D&D 5e source books for reference and catalog population. The source system allows you to browse book content, search the extracted catalog data, and navigate cross-references between game elements.
 
-## Book Data Files
+Mimir ships with no game content — not even the System Reference Document (SRD). All catalog data comes from archives you import. See [The Catalog System](../../explanation/catalog-system.md) for why, and [Manage Campaign Sources](../../how-to/campaigns/manage-sources.md) for the import procedure.
 
-Book data files are available from the [Mimir Resources](https://github.com/mimir-dm/resources/releases) repository. These archives contain structured JSON representations of book content including chapter text, images, and extracted game data like spells and monsters. The repository organizes books into three categories: core rulebooks (PHB, DMG, MM), supplements (XGE, TCE, FTD), and setting guides (ERLW, EGW, VRGR).
+## Archive Format
 
-Each book archive follows a consistent structure with a metadata.json file describing the book, a book/ directory containing chapter content, and an img/ directory with cover art and interior illustrations. Books that contain game mechanics also include directories for that content type, such as spells/ for spellcasting sourcebooks or bestiary/ for monster compendiums.
+Source data is imported from gzip-compressed tar archives (`.tar.gz`) containing JSON data in the format established by the [5etools](https://5e.tools/) community project. The archive must include a `books.json` file describing the available sources; the importer streams the archive directly without extracting it to disk.
+
+Pre-packaged archives are available from the [Mimir Resources](https://github.com/mimir-dm/resources/releases) releases page. Two archive types are published:
+
+| Archive | Contents |
+|---------|----------|
+| Data archive | 5etools-format JSON (books, spells, monsters, items, and other entities) |
+| Image archive | Token art, cover art, and book illustrations (`5etools-img-*` prefixed paths) |
+
+The importer only processes source books whose group is `core` (PHB, DMG, MM) or `supplement` (XGE, TCE, etc.). Books in other groups — setting books (Eberron, Ravnica, Theros), adventures, DM screens, homebrew — are skipped.
 
 ## Catalog Population
 
-When you import a book, Mimir extracts game content into the catalog database for searching. The extraction process reads content-specific JSON files and populates the appropriate catalog tables. Spells go into catalog_spells, monsters into catalog_monsters, and items into catalog_items. The system also extracts classes, races, feats, backgrounds, conditions, and actions when present.
+When you import a data archive, Mimir extracts game content into catalog tables in the local SQLite database. Spells go into the `spells` table, monsters into `monsters`, items into `items`, and so on for classes, races, feats, backgrounds, conditions, actions, and other entity types. Magic item variants are expanded during import (a +1/+2/+3 weapon template generates an entry per base item).
 
-The catalog tables store both summary information for search results and complete details for individual entries. This denormalized approach allows fast searching across thousands of entries while still providing full stat blocks and descriptions when viewing a specific item.
+The catalog tables store both summary information for search results and complete details for individual entries, allowing fast searching across thousands of entries while still providing full stat blocks and descriptions for a specific entry.
 
 ## Cross-Reference System
 
-Book content contains tagged references using the `{@type name|source}` syntax. A reference like `{@spell fireball|PHB}` identifies a spell named "fireball" from the Player's Handbook. The content renderer converts these tags into clickable links that display tooltips on hover and full details in a modal on click.
+Book content contains tagged references using the `{@type name|source}` syntax. A reference like `{@spell fireball|PHB}` identifies a spell named "fireball" from the Player's Handbook. The content renderer converts these tags into clickable links that display tooltips on hover and full details on click.
 
-The cross-reference system supports spells, creatures, items, conditions, actions, classes, races, feats, and backgrounds. When you click a reference, the system queries the catalog database for the matching entry and displays its complete information. References to content from books you haven't imported will appear as plain text rather than links.
+The cross-reference system supports spells, creatures, items, conditions, actions, classes, races, feats, and backgrounds. References to content from sources you haven't imported appear as plain text rather than links.
 
 ## Storage Location
 
-Imported books are stored in the application data directory alongside the SQLite database. On macOS this is `~/Library/Application Support/com.mimir.app/`, with equivalent locations on Windows and Linux. Each book occupies its own subdirectory under books/, preserving the original archive structure for image serving and content retrieval.
+Catalog data lives in the SQLite database in the application data directory. On macOS this is `~/Library/Application Support/com.mimir.app/`, with equivalent locations on Windows and Linux. Imported images are stored under `assets/catalog/` in the same directory and are served on demand.
 
 ## Tauri Commands
 
-The source system exposes library and content commands through Tauri IPC.
-
-### Library Commands
+The source system exposes the following commands through Tauri IPC.
 
 | Command | Parameters | Description |
 |---------|------------|-------------|
-| `upload_book_archive` | file_path | Import a book from a .tar.gz archive |
-| `list_library_books` | — | List all imported books with metadata |
-| `remove_book_from_library` | book_id | Remove a book and its catalog entries |
-
-### Content Commands
-
-| Command | Parameters | Description |
-|---------|------------|-------------|
-| `get_book_content` | book_id, section | Retrieve chapter content by section path |
-| `serve_book_image` | book_id, image_path | Serve an image from the book's img directory |
-| `lookup_reference` | ref_type, ref_name, source | Resolve a cross-reference to catalog data |
-
-## Troubleshooting
-
-Import failures typically result from invalid archive format or missing required files. The archive must be a valid gzip-compressed tar file containing the expected directory structure with metadata.json at the root. Permission errors can occur if the application data directory is not writable.
-
-Missing cross-references usually indicate the referenced content comes from a book that hasn't been imported. Some references point to SRD content that Mimir includes by default, but references to non-SRD material require importing the source book.
-
-Images that fail to load are served on-demand from the book's img/ directory. Verify the directory exists and contains the expected files by checking the book's storage location in the application data directory.
+| `import_catalog_from_zip` | archive_path | Import catalog data from a `.tar.gz` archive |
+| `import_catalog_images` | archive_path | Import images from a `.tar.gz` image archive |
+| `list_catalog_sources` | — | List all imported sources with metadata |
+| `set_source_enabled` | source_code, enabled | Enable or disable a source |
+| `delete_catalog_source` | source_code | Remove a source and its catalog entries |
+| `list_library_books` | — | List sources that have readable book content |
+| `get_book_content` | book_id | Retrieve book content for the reader view |
+| `serve_book_image` | book_id, image_path | Serve an image as a base64 data URL |

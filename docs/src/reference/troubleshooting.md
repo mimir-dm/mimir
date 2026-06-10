@@ -12,6 +12,10 @@ Known issues, their causes, and resolutions.
 | Map image blank | [Maps](#map-image-doesnt-display) | Asset file missing |
 | Player display won't open | [Display](#player-display-window-wont-open) | No map loaded in play mode |
 | Player display black | [Display](#player-display-shows-black-screen) | Blackout mode enabled |
+| Display on wrong screen | [Display](#display-opens-on-wrong-screen) | Window opened on primary monitor |
+| Players see hidden tokens | [Display](#players-see-hidden-tokens) | Token marked visible to players |
+| Fog not updating | [Display](#fog-not-updating) | PC tokens hidden or missing from active map |
+| No second window | [Display](#no-second-window-appears) | Window failed to open |
 | MCP can't find campaigns | [MCP](#claude-code-cant-find-campaigns) | Database path mismatch |
 | MCP sidecar won't start | [MCP](#mcp-sidecar-wont-start) | Binary not built |
 | Blank character PDF | [PDF](#character-sheet-export-is-blank) | Missing character data |
@@ -23,23 +27,17 @@ Known issues, their causes, and resolutions.
 
 **Cause:** Another process has an exclusive lock on the SQLite database. This can happen if a previous Mimir instance didn't shut down cleanly, or if you're accessing the database with an external tool like `sqlite3` while Mimir is running.
 
-**Fix:**
-1. Close all Mimir windows
-2. Check for lingering processes: look for `mimir` or `mimir-mcp` processes and quit them
-3. Relaunch Mimir
+**Resolution:** Close all Mimir windows, quit any lingering `mimir` or `mimir-mcp` processes, then relaunch Mimir.
 
 ### Missing catalog data
 
 **Cause:** Source data hasn't been imported, or the desired source books aren't enabled for the campaign.
 
-**Fix:**
-1. Check if any data exists: open the Reference browser (header bar) and search for a common monster like "Goblin"
-2. If no results at all, you need to import catalog data via Settings
-3. If some results appear but specific content is missing, check Campaign Sources — the source book may not be enabled for this campaign
+**Resolution:** Open the Reference browser (header bar) and search for a common monster like "Goblin" to check whether any data exists. If no results at all, import catalog data via Settings. If some results appear but specific content is missing, check Campaign Sources — the source book may not be enabled for this campaign.
 
 ### Dev vs production database
 
-Mimir uses separate databases for development and production builds:
+**Cause:** Mimir uses separate databases for development and production builds. If you're seeing different data than expected, you may be running a dev build that points to the dev database.
 
 | Build | Database Path (macOS) |
 |-------|----------------------|
@@ -58,27 +56,27 @@ Mimir uses separate databases for development and production builds:
 | Production | `%APPDATA%/com.mimir.app/data/mimir.db` |
 | Development | `%APPDATA%/com.mimir.app/dev/data/mimir.db` |
 
-If you're seeing different data than expected, you may be running a dev build that points to the dev database.
+**Resolution:** Confirm which build you're running and which database path it uses.
 
 ## Maps
 
-### Fog of war doesn't follow walls
+### Fog of war controls are missing
 
-**Cause:** The map was uploaded as a plain image (PNG/JPG) rather than a UVTT file. Image maps don't contain wall data, so fog of war operates as a simple grid reveal instead of line-of-sight.
+**Cause:** The map was uploaded as a plain image (PNG/JPG) rather than a UVTT file. Image maps don't contain wall data, so fog of war is not available at all — the Fog and LOS controls only appear for UVTT maps.
 
-**Fix:** Re-upload the map in UVTT format (`.dd2vtt` or `.uvtt`) if available. Only UVTT files include the wall geometry needed for true line-of-sight fog of war.
+**Resolution:** Re-upload the map in UVTT format (`.dd2vtt` or `.uvtt`) if available; only UVTT files include the wall geometry needed for fog of war. On image maps, use Reveal Map and per-token Hide from Players instead.
 
 ### Tokens don't snap to grid
 
 **Cause:** Grid alignment mismatch. Image files default to 70 pixels per grid square. If the map image uses a different grid size, tokens won't align.
 
-**Fix:** Use UVTT format maps, which embed precise grid data. For image maps, ensure the grid squares are approximately 70 pixels wide.
+**Resolution:** Use UVTT format maps, which embed precise grid data. For image maps, ensure the grid squares are approximately 70 pixels wide.
 
 ### Map image doesn't display
 
 **Cause:** The map asset file may have been moved or deleted from the assets directory.
 
-**Fix:** Check that the file exists at `~/Library/Application Support/com.mimir.app/assets/` (or the platform-equivalent). If the asset is missing, re-upload the map.
+**Resolution:** Check that the file exists at `~/Library/Application Support/com.mimir.app/assets/` (or the platform-equivalent). If the asset is missing, re-upload the map.
 
 ## Player Display
 
@@ -86,24 +84,43 @@ If you're seeing different data than expected, you may be running a dev build th
 
 **Cause:** The player display is a separate Tauri window. It requires the main application to be running and a map to be loaded in play mode.
 
-**Fix:**
-1. Enter Play Mode from a module (click the play button on a module)
-2. Load a map in the play view
-3. Click the player display button in the play mode toolbar
+**Resolution:** Enter Play Mode from a module (click the play button on a module), load a map in the play view, then click the player display button in the play mode toolbar.
 
 ### Player display shows black screen
 
 **Cause:** Blackout mode is enabled, or no map has been sent to the display.
 
-**Fix:**
-1. Check the blackout toggle in the play mode toolbar — if active, toggle it off
-2. Ensure a map is loaded and has been sent to the player display
+**Resolution:** Check the blackout toggle in the play mode toolbar — if active, toggle it off. Ensure a map is loaded and has been sent to the player display.
 
 ### Player display is out of sync
 
 **Cause:** The display viewport hasn't been updated after the DM moved the view.
 
-**Fix:** The DM viewport updates are sent to the player display via Tauri events. If the display falls behind, toggle the player display closed and reopen it.
+**Resolution:** The DM viewport updates are sent to the player display via Tauri events. If the display falls behind, toggle the player display closed and reopen it.
+
+### Display opens on wrong screen
+
+**Cause:** The operating system opens the window on the primary (or last-used) monitor rather than the player-facing screen.
+
+**Resolution:** Drag the window to the correct screen, then maximize it after moving.
+
+### Players see hidden tokens
+
+**Cause:** Tokens intended to be hidden are marked visible to players.
+
+**Resolution:** Check token visibility settings; ensure hidden tokens are not marked visible to players.
+
+### Fog not updating
+
+**Cause:** PC tokens are hidden or not placed on the active map, or the map lacks UVTT wall data for wall occlusion.
+
+**Resolution:** Verify PC tokens are visible and placed on the active map. Confirm UVTT wall data loaded for wall occlusion.
+
+### No second window appears
+
+**Cause:** The player display window failed to open.
+
+**Resolution:** Click Player Display again; if it still doesn't appear, restart Play Mode.
 
 ## MCP Server
 
@@ -111,22 +128,13 @@ If you're seeing different data than expected, you may be running a dev build th
 
 **Cause:** The MCP server connects to a database path that may differ from what the main app uses.
 
-**Fix:**
-1. Verify the database path: the MCP server uses `MIMIR_DATABASE_PATH` if set, otherwise platform defaults
-2. If you're using a non-standard database location, set the environment variable:
-   ```bash
-   export MIMIR_DATABASE_PATH=/path/to/your/mimir.db
-   ```
-3. Ensure you've called `set_active_campaign` — most MCP tools require an active campaign
+**Resolution:** Verify the database path — the MCP server uses `MIMIR_DATABASE_PATH` if set, otherwise platform defaults. If you're using a non-standard database location, set the environment variable (`export MIMIR_DATABASE_PATH=/path/to/your/mimir.db`). Also ensure you've called `set_active_campaign` — most MCP tools require an active campaign.
 
 ### MCP sidecar won't start
 
 **Cause:** The sidecar binary may not be built or may be missing from the expected path.
 
-**Fix:**
-1. Check that the binary exists at `crates/mimir/binaries/mimir-mcp-{target-triple}` (e.g., `mimir-mcp-aarch64-apple-darwin`)
-2. Rebuild: `bash scripts/build-sidecar.sh`
-3. If running from a release build, the sidecar should be bundled automatically
+**Resolution:** Check that the binary exists at `crates/mimir/binaries/mimir-mcp-{target-triple}` (e.g., `mimir-mcp-aarch64-apple-darwin`). Rebuild with `bash scripts/build-sidecar.sh`. If running from a release build, the sidecar should be bundled automatically.
 
 ## PDF Export
 
@@ -134,13 +142,13 @@ If you're seeing different data than expected, you may be running a dev build th
 
 **Cause:** The character may not have enough data populated (class, level, ability scores).
 
-**Fix:** Ensure the character has at least a name, one class with a level, and ability scores set. The PDF template requires these fields to render.
+**Resolution:** Ensure the character has at least a name, one class with a level, and ability scores set. The PDF template requires these fields to render.
 
 ### PDF export is slow
 
 **Cause:** Typst compilation for complex documents (especially those with many monster stat blocks or maps) takes time.
 
-**Fix:** This is expected for large exports. Campaign document PDFs with many pages take longer than individual character sheets.
+**Resolution:** This is expected for large exports. Campaign document PDFs with many pages take longer than individual character sheets.
 
 ## Application
 
@@ -148,33 +156,10 @@ If you're seeing different data than expected, you may be running a dev build th
 
 **Cause:** Could be a missing dependency, corrupted installation, or port conflict.
 
-**Fix:**
-1. Try launching from the terminal to see error output
-2. Check logs at:
-   - **macOS:** `~/Library/Application Support/com.mimir.app/logs/`
-   - **Linux:** `~/.local/share/com.mimir.app/logs/`
-   - **Windows:** `%APPDATA%/com.mimir.app/logs/`
-
-### Vite dev server issues (development)
-
-**Cause:** `cargo tauri dev` runs `npm run dev` from the wrong directory (`crates/` instead of `crates/mimir/frontend`).
-
-**Fix:** Run the Vite dev server manually, then start the Rust backend separately:
-
-```bash
-# Terminal 1: Start Vite
-cd crates/mimir/frontend
-npm run dev
-
-# Terminal 2: Start Rust backend
-cargo run -p mimir --no-default-features
-```
-
-Or use the angreal helper if available:
-
-```bash
-angreal dev launch
-```
+**Resolution:** Launch from the terminal to see error output, and check logs at:
+- **macOS:** `~/Library/Application Support/com.mimir.app/logs/`
+- **Linux:** `~/.local/share/com.mimir.app/logs/`
+- **Windows:** `%APPDATA%/com.mimir.app/logs/`
 
 ## Log Files
 

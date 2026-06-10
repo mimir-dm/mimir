@@ -13,8 +13,8 @@ This tutorial walks you through creating an adventure module in Mimir. By the en
 
 ## Prerequisites
 
-- A campaign created ([Tutorial 1](./01-first-campaign.md))
-- A map image (PNG, JPG, or UVTT file)
+- A campaign created and catalog data imported ([Tutorial 1](./01-first-campaign.md))
+- A map file: a PNG/JPG image or a UVTT file — a universal VTT export format that embeds grid, wall, and lighting data (see [Map Formats](../explanation/map-formats.md)). You can export UVTT from Dungeondraft, download maps from free map sites, or build one with [Mimir's map generator](../how-to/maps/generate-map.md). **Use a UVTT map if you can** — to follow Tutorial 3's fog-of-war steps you'll need one (fog depends on UVTT wall data); a plain image works for everything else.
 
 ## What is a Module?
 
@@ -47,12 +47,9 @@ You'll see the module sidebar (left) and the main panel (right).
 
 Your new module appears in the modules list.
 
-## Step 3: Explore the Module Dashboard
+## Step 3: Open the Module Dashboard
 
-The modules table shows each module with action buttons:
-- **Play** - Enter Play Mode for this module (enabled when module is ready or active)
-- **Open** - Open the module board for prep
-- **PDF** - Export maps and materials to PDF
+Click your new module in the modules list. The module dashboard opens in the main panel, with **Play**, **PDF**, and **Delete** buttons in its header and sections for documents, NPCs, maps, and dangers below.
 
 ## Step 4: Upload a Map
 
@@ -65,7 +62,9 @@ The modules table shows each module with action buttons:
 
 4. Click **Upload**
 
-> **Tip:** UVTT files from tools like Dungeondraft include grid configuration automatically. For image files, you can configure the grid later in Token Setup (see Step 8).
+The map appears as a card in the Maps section, showing its name and pixel dimensions.
+
+> **Tip:** UVTT files from tools like Dungeondraft include grid configuration automatically. For image files, you can [configure the grid](../how-to/maps/configure-grid.md) in Token Setup.
 
 <!-- Screenshot: map-upload.png -->
 
@@ -73,7 +72,7 @@ The modules table shows each module with action buttons:
 
 The Token Setup modal is where you add monsters, place tokens, and configure your map.
 
-1. Click a map card in the Maps section
+1. Click your map's card in the Maps section
 2. The Token Setup modal opens showing:
    - **Token Palette** (left) - Token types and monster search
    - **Map Canvas** (center) - The map with grid overlay
@@ -81,64 +80,30 @@ The Token Setup modal is where you add monsters, place tokens, and configure you
 
 ![Token Setup Modal](../images/tutorials/token-setup.png)
 
-### Token Palette Sections
+The palette has more token types than we'll use here — see the [Token Setup Modal reference](../reference/ui/token-setup-modal.md) for all of them.
 
-The palette contains several sections:
+## Step 6: Add a Monster
 
-- **Module Monsters** - Quick-select buttons for monsters already added to this module (appears once you've added monsters)
-- **Monster** - Search and add monsters from the D&D 5e catalog
-- **NPC** - Add NPC tokens
-- **Trap** - Add traps and hazards
-- **Marker** - Add points of interest
-- **Light Sources** - Torch, Lantern, Candle
-
-## Step 6: Add Monsters
+This step searches the catalog, so it requires the source data you imported in [Tutorial 1](./01-first-campaign.md#step-7-import-catalog-data) ([Manage Campaign Sources](../how-to/campaigns/manage-sources.md)).
 
 1. In the Token Palette, click **Monster**
-2. Search for a monster by name (e.g., "Goblin", "Wolf", "Bugbear")
-3. Select a monster from the search results
-4. Configure token options (size, color, visibility)
-5. Click on the map to place the monster token
+2. Search for "Goblin"
+3. Select **Goblin** from the search results
+4. Click on the map to place the monster token
 
 <!-- Screenshot: add-monsters.png -->
 
-Repeat to add more monsters. Each placed monster appears in the Token Inventory on the right.
+The goblin appears on the map and in the Token Inventory on the right. Repeat to place a second goblin if you like — drag tokens to reposition them, or click the **×** in the inventory to delete one.
 
-> **Tip:** Homebrew monsters you've created in the Homebrew tab also appear in search results alongside catalog monsters.
+## Step 7: Add a Light Source
 
-### Token Options
-
-When you select a token type from the palette, you can configure:
-- **Size** - Tiny, Small, Medium, Large, Huge, Gargantuan
-- **Color** - Token border color for identification
-- **Visible to Players** - Toggle whether players can see this token
-
-### Managing Placed Tokens
-
-Placed tokens appear in the Token Inventory (right panel):
-- Click a token to select it on the map
-- Drag tokens to reposition them
-- Right-click for a context menu with options
-- Click the **×** to delete a token
-
-## Step 7: Add Light Sources
-
-For dynamic lighting and fog of war:
+A light source feeds Mimir's dynamic lighting — the engine that computes illuminated areas from lights and walls — and fog of war, which hides unexplored or unseen areas from players (see the [glossary](../reference/glossary.md)).
 
 1. In the Token Palette, find the **Light Sources** section
-2. Click a light type:
-   - **Torch** - 20 ft bright / 40 ft dim
-   - **Lantern** - 30 ft bright / 60 ft dim
-   - **Candle** - 5 ft bright / 10 ft dim
+2. Click **Torch**
+3. Click on the map to place the torch
 
-3. Click on the map to place the light source
-
-### Managing Light Sources
-
-Light sources appear in the Token Inventory under "Light Sources":
-- **Lit/Unlit** button - Toggle whether the light is active
-- Light sources affect fog of war in Play Mode
-- Delete with the **×** button
+The torch appears in the Token Inventory under "Light Sources" with a **Lit/Unlit** toggle. It will illuminate the area around it in the DM Map window during play.
 
 ## Step 8: Save and Close
 
@@ -154,20 +119,7 @@ Your module is prepared with maps, monsters, and tokens. Continue to:
 2. **Add more content** - Upload additional maps, add NPCs, create documents
 3. **Prepare multiple modules** - Create the next chapter of your adventure
 
----
-
-## Quick Reference
-
-| Action | How To |
-|--------|--------|
-| Create module | Modules tab → + button |
-| Upload map | Maps section → + button |
-| Open token setup | Click a map card |
-| Add monsters | Token Setup → Monster → search → click map |
-| Place token | Select in palette → click map |
-| Add light source | Light Sources → select → click map |
-| Toggle light | Token Inventory → Lit/Unlit button |
-| Delete token | × button in Token Inventory |
+For full details on token placement, see [Place Tokens on a Map](../how-to/maps/place-tokens.md) and the [Token Setup Modal reference](../reference/ui/token-setup-modal.md).
 
 ---
 

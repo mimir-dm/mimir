@@ -28,11 +28,15 @@ See [Map Formats](../../explanation/map-formats.md) for details on what UVTT fil
 
 ## Image Files
 
-Standard image files work for basic token placement but lack wall data, so fog of war operates as a simple grid reveal. Mimir defaults to 70 pixels per grid square. See [Configure Grid](./configure-grid.md) for details.
+Standard image files work for basic token placement but lack wall data, so fog of war is not available — the Fog and LOS controls only appear for UVTT maps. On image maps, use the Reveal Map toggle and per-token Hide from Players instead. Mimir defaults to 70 pixels per grid square. See [Configure Grid](./configure-grid.md) for details.
+
+## Generated Maps
+
+Maps produced by `mimir-mapgen` are `.dungeondraft_map` files. Mimir cannot open `.dungeondraft_map` files directly — map uploads accept only UVTT (`.dd2vtt`, `.uvtt`) and image files. To use a generated map in Mimir, open it in Dungeondraft (a paid tool) and export it as Universal VTT.
 
 ## Tips
 
-- **Always prefer UVTT** when available — the fog of war and lighting experience is dramatically better
+- **Always prefer UVTT** when available — fog of war and dynamic lighting only work on UVTT maps
 - Maps can belong to a specific module or to the campaign at large
 - You can upload multiple maps per module (one per room/area is common for dungeon crawls)
 

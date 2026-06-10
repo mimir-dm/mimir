@@ -29,6 +29,13 @@ Quick reference for keyboard shortcuts in Mimir.
 | `d` / `D` | Toggle dead state of selected token |
 | `Escape` | Close context menu and deselect token |
 
+## Player Display Window
+
+| Shortcut | Action |
+|----------|--------|
+| `F11` | Toggle fullscreen |
+| `R` | Reset view (fit map to screen) |
+
 ## Document Editor
 
 | Shortcut | Action |

@@ -6,100 +6,38 @@ How Mimir's campaign and module boards help you manage preparation.
 
 The Two-Board System comes from Kanban methodology, adapted for D&D preparation. Instead of one overwhelming to-do list, you have structured workflows at two levels.
 
-## Campaign Board
+## Two Levels of Preparation
 
-The Campaign Dashboard organizes high-level work:
+The **campaign board** holds everything that outlives a single adventure: world-building documents, recurring NPCs, player characters, and homebrew content. The **module board** holds everything specific to one adventure: its documents, NPCs, maps, and monsters.
 
-### Campaign Tab
-World-building and setting:
-- Lore documents
-- Faction descriptions
-- World maps
-- Historical notes
+The split matters because the two kinds of content have different lifespans and different moments of use. Campaign content accumulates slowly and gets referenced for years; module content is prepared intensively for a few sessions and then becomes history. Keeping them on separate boards means each board only shows what is relevant at its level.
 
-### Modules Tab
-Adventure management:
-- List of all modules
-- Module status tracking
-- Quick access to prep and play
-
-### NPCs Tab
-Recurring characters:
-- Major NPCs
-- Villains
-- Allies and contacts
-
-### PCs Tab
-Player characters:
-- Character assignments
-- Quick access to sheets
-
-### Homebrew Tab
-Custom content:
-- Homebrew items, monsters, and spells
-- Clone from the D&D catalog and modify
-- Available in character inventories and module encounters
-
-## Module Board
-
-Each module has its own preparation space:
-
-### Documents
-Session-specific prep:
-- Encounter plans
-- Read-aloud text
-- Location descriptions
-
-### NPCs
-Location-specific characters:
-- Quest givers
-- Shopkeepers
-- Informants
-
-### Maps
-Battle and area maps:
-- Dungeon layouts
-- Encounter locations
-- Token placements
-
-### Monsters
-Monsters and hazards:
-- Encounter creatures
-- Traps and hazards
-- Grouped by location
+For what each board actually contains, see the [Campaign Dashboard](../reference/ui/campaign-dashboard.md) and [Module Prep View](../reference/ui/module-prep-view.md) references.
 
 ## Workflow Philosophy
 
 ### Prepare Once, Use Forever
 
-Campaign content persists across modules:
-- Write the villain's backstory once
-- Reference from any module
-- Update as the story evolves
+Campaign content persists across modules. You write the villain's backstory once, reference it from any module, and update it as the story evolves. Nothing needs to be copied between adventures.
 
 ### Module-Focused Sessions
 
-When running a session:
-- Enter Play Mode for the specific module
-- Everything you need is there
-- No digging through campaign-wide content
+When running a session, you enter Play Mode for one specific module. Everything you need for that session is already gathered on its board — no digging through campaign-wide content at the table.
 
 ### Progressive Preparation
 
-You don't have to prepare everything:
-1. Create campaign with basic info
-2. Add first module with first session content
-3. Expand as you play
-4. Add modules as needed
+You don't have to prepare everything up front. A campaign can start with little more than basic info and a first module containing the first session's content. As you play, you expand what exists and add new modules when the story calls for them. The boards make this incremental approach natural: an empty section is an invitation, not an error.
 
 ## Information Flow
 
 ### Campaign → Module
+
 - NPCs can be assigned to modules
 - Campaign PCs appear in Play Mode
 - Setting context informs module content
 
 ### Module → Campaign
+
 - Session notes inform campaign evolution
 - Completed modules become campaign history
 - NPCs discovered in modules can become recurring
@@ -125,3 +63,5 @@ You don't have to prepare everything:
 
 - [Campaigns vs Modules](./campaign-vs-module.md)
 - [Document Workflow](./document-workflow.md)
+- [Campaign Dashboard](../reference/ui/campaign-dashboard.md)
+- [Module Prep View](../reference/ui/module-prep-view.md)

@@ -43,12 +43,15 @@ Quick start:
 git clone https://github.com/mimir-dm/mimir.git
 cd mimir
 
+# Build the MCP sidecar binary (required before cargo build — Tauri's externalBin config expects it)
+bash scripts/build-sidecar.sh
+
 # Install dependencies
 cargo build
 cd crates/mimir/frontend && npm install
 
-# Run in development mode
-cd ../.. && cargo tauri dev
+# Run in development mode (requires angreal: pip install 'angreal>=2')
+cd ../.. && angreal dev launch
 ```
 
 ## Code Style Guidelines
@@ -78,14 +81,15 @@ cd ../.. && cargo tauri dev
 Before submitting a pull request:
 
 ```bash
-# Run Rust tests
-cargo test --workspace
+# Run Rust tests (recommended)
+angreal test unit
+# Underlying command:
+#   cargo test --workspace --exclude mimir -- --test-threads=1
+# (excludes the Tauri crate, which needs the sidecar binary to build;
+#  --test-threads=1 avoids SQLite locking issues)
 
 # Run frontend tests
 cd crates/mimir/frontend && npm test
-
-# Run unit tests only (faster, via angreal)
-angreal test unit
 ```
 
 All tests must pass before your PR can be merged.
@@ -125,6 +129,7 @@ mimir/
 ├── crates/                      # Rust workspace
 │   ├── mimir/                  # Main Tauri app (lib name: mimir_lib)
 │   ├── mimir-core/             # Core business logic, DAL, models
+│   ├── mimir-mapgen/           # Procedural map generation (library + CLI)
 │   ├── mimir-mcp/              # MCP server for Claude integration
 │   └── mimir-print/            # PDF export / Typst rendering
 ├── docs/                        # Documentation (mdBook)

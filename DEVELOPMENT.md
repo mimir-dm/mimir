@@ -45,9 +45,13 @@ git clone https://github.com/mimir-dm/mimir.git
 cd mimir
 ```
 
-### 2. Install Rust Dependencies
+### 2. Build the MCP Sidecar, Then Rust Dependencies
 
 ```bash
+# Build the sidecar first — tauri.conf.json declares it as externalBin,
+# so the mimir crate fails to build if the binary is missing
+bash scripts/build-sidecar.sh
+
 cargo build
 ```
 
@@ -61,12 +65,17 @@ npm install
 cd ../../..
 ```
 
-### 4. Install Development Tools (Optional)
+### 4. Install Angreal (Recommended)
+
+Angreal is the project's task runner (`angreal dev launch`, `angreal test unit`, `angreal dev reset`, `angreal docs serve`). It requires Python and pip:
 
 ```bash
-# Install angreal for test management
 pip install 'angreal>=2'
+```
 
+Optional extras:
+
+```bash
 # Install Tauri CLI globally (optional, faster startup)
 cargo install tauri-cli
 ```
@@ -75,18 +84,29 @@ cargo install tauri-cli
 
 ### Development Mode
 
-From the project root:
+The recommended way to run in development mode is the angreal task, from the project root:
 
 ```bash
-cd crates/mimir
-cargo tauri dev
+angreal dev launch
 ```
 
 This will:
-- Build the Vue frontend with hot reload
-- Start the Rust backend in debug mode
-- Launch the application window
-- Watch for changes and rebuild automatically
+- Install frontend dependencies if needed
+- Start the Vite dev server with hot reload
+- Build the MCP sidecar binary if it is missing
+- Launch the app with `cargo run -p mimir --no-default-features`
+
+> **Known issue:** `cargo tauri dev` runs `npm run dev` from `crates/` instead of
+> `crates/mimir/frontend`, so the Vite dev server fails to start. If you can't use
+> angreal, run the two halves manually:
+>
+> ```bash
+> # Terminal 1
+> cd crates/mimir/frontend && npm run dev
+>
+> # Terminal 2 (project root)
+> cargo run -p mimir --no-default-features
+> ```
 
 ### Frontend-Only Development
 
@@ -104,8 +124,12 @@ This starts the Vite development server on http://localhost:5173, but Tauri comm
 ### Run All Tests
 
 ```bash
-# All Rust tests
-cargo test --workspace
+# Rust tests (recommended)
+angreal test unit
+# Underlying command:
+#   cargo test --workspace --exclude mimir -- --test-threads=1
+# (excludes the Tauri crate, which needs the sidecar binary to build;
+#  --test-threads=1 avoids SQLite locking issues)
 
 # Frontend tests
 cd crates/mimir/frontend && npm test
@@ -117,15 +141,16 @@ npm run test:coverage
 ### Run Specific Test Suites
 
 ```bash
-# Unit tests only (via angreal)
-angreal test unit
-
 # Specific crate tests
-cargo test -p mimir-core
+cargo test -p mimir-core -- --test-threads=1
 cargo test -p mimir-print
 
-# Specific test file
-cargo test --test integration_test
+# Specific integration test targets
+cargo test -p mimir-core --test catalog_import -- --test-threads=1
+cargo test -p mimir-core --test srd_smoke_test -- --test-threads=1
+cargo test -p mimir-mapgen --test cli_integration
+cargo test -p mimir-mapgen --test format_roundtrip
+cargo test -p mimir-mapgen --test polygon_snapshots
 ```
 
 ### Frontend Testing
@@ -202,6 +227,11 @@ mimir/
 │   │   │   ├── context.rs         # Database context
 │   │   │   └── tools/             # MCP tool handlers
 │   │   ├── plugin/                # Claude Code plugin definition
+│   │   └── Cargo.toml
+│   │
+│   ├── mimir-mapgen/               # Procedural map generation (library + CLI)
+│   │   ├── src/                   # Noise, terrain, paths, rooms, biome presets
+│   │   ├── examples/              # YAML configs + generated maps
 │   │   └── Cargo.toml
 │   │
 │   └── mimir-print/                # PDF export via Typst
@@ -314,17 +344,14 @@ cargo build
 
 **Database migration errors**
 ```bash
-# Delete development database (macOS)
-rm -rf ~/Library/Application\ Support/com.mimir.app/dev/
-
-# Delete development database (Linux)
-rm -rf ~/.local/share/com.mimir.app/dev/
+# Reset the dev database (deletes ONLY the dev DB, never production)
+angreal dev reset
 
 # Restart the app to recreate
 ```
 
 **Frontend hot reload not working**
-- Stop the app and restart with `cargo tauri dev`
+- Stop the app and restart with `angreal dev launch`
 - Check console for build errors
 - Ensure Vite dev server is running
 
@@ -332,7 +359,7 @@ rm -rf ~/.local/share/com.mimir.app/dev/
 
 Force development mode with environment variable:
 ```bash
-MIMIR_DEV=1 cargo tauri dev
+MIMIR_DEV=1 cargo run -p mimir --no-default-features
 ```
 
 This uses a separate database at `com.mimir.app/dev/data/mimir.db` and enables debug logging.

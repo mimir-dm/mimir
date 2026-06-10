@@ -26,14 +26,9 @@ Same as monsters: **clone-only**. Spell data is structured JSON, so cloning prov
 
 ## Clone from Catalog
 
-The clone workflow is the heart of the homebrew system:
+The clone workflow is the heart of the homebrew system. Rather than starting from a blank form, you find a similar catalog entry and clone it — Mimir creates a homebrew copy immediately, ready to edit, and the copy remembers its origin ("Based on [original name]").
 
-1. Search the D&D 5e catalog for a similar entry
-2. Click to clone — Mimir creates a homebrew copy immediately
-3. Edit the copy to make your changes
-4. The homebrew entry tracks its origin ("Based on [original name]")
-
-This approach is faster than creating from scratch and ensures the data structure is valid.
+This approach is faster than creating from scratch and ensures the data structure is valid: a cloned monster or spell is guaranteed to have a well-formed stat block, because it started as one. For the step-by-step procedure, see [Create a Homebrew Item](../how-to/homebrew/create-item.md).
 
 ## Integration Points
 

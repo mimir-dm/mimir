@@ -4,22 +4,30 @@ Technical reference for Mimir's Model Context Protocol (MCP) server — the side
 
 ## Architecture
 
-The MCP server (`mimir-mcp`) runs as a Tauri sidecar process. It connects to the same SQLite database as the main app and exposes 71 tools across 10 categories.
+The MCP server (`mimir-mcp`) runs as a Tauri sidecar process. It connects to the same SQLite database as the main app and exposes 54 tools across 8 categories.
 
 ### Components
 
 - **Binary**: `mimir-mcp` (built to `crates/mimir/binaries/mimir-mcp-{target-triple}`)
 - **Protocol**: MCP over stdio
-- **Database**: Shared SQLite database at `~/Library/Application Support/com.mimir.app/data/mimir.db`
+- **Database**: Shared SQLite database (same file the desktop app uses; default location varies by platform — see below)
 - **Plugin**: Claude Code plugin at `crates/mimir-mcp/plugin/`
 
 ### Configuration
 
-The database path is auto-detected. Override with:
+The database path is resolved from the `MIMIR_DATABASE_PATH` environment variable, falling back to a platform default:
 
-```bash
-export MIMIR_DATABASE_PATH=/path/to/mimir.db
-```
+| Platform | Default database path |
+|----------|----------------------|
+| macOS | `~/Library/Application Support/com.mimir.app/data/mimir.db` |
+| Linux | `$XDG_DATA_HOME/com.mimir.app/data/mimir.db` (falls back to `~/.local/share/com.mimir.app/data/mimir.db` when `XDG_DATA_HOME` is unset) |
+| Windows | No default — `MIMIR_DATABASE_PATH` must be set |
+
+See [Environment Variables](./environment-variables.md) for details.
+
+### Errors
+
+Most tools operate on an active campaign. Until a campaign is selected with `set_active_campaign`, campaign-scoped tools return a `NoActiveCampaign` error (`No active campaign. Use set_active_campaign first.`). The active campaign is held in memory per server process — it is not persisted, so each new server process starts with no campaign selected.
 
 ## Tool Reference
 
@@ -101,56 +109,65 @@ export MIMIR_DATABASE_PATH=/path/to/mimir.db
 | `list_map_presets` | List available biome presets |
 | `validate_map_config` | Validate YAML config without generating |
 
-### Catalog Search (8 tools)
+### Catalog Search (1 tool)
+
+A single `search_catalog` tool searches all catalog categories.
 
 | Tool | Description |
 |------|-------------|
-| `search_monsters` | Search monster catalog (includes homebrew from active campaign) |
-| `search_items` | Search item catalog |
-| `search_spells` | Search spell catalog |
-| `search_races` | Search race catalog |
-| `search_classes` | Search class catalog |
-| `search_backgrounds` | Search background catalog |
-| `search_feats` | Search feat catalog |
-| `search_conditions` | Search condition catalog |
+| `search_catalog` | Search the D&D 5e catalog by category |
 
-### Homebrew Items (5 tools)
+**Parameters:**
 
-| Tool | Description |
-|------|-------------|
-| `list_homebrew_items` | List all homebrew items in active campaign |
-| `get_homebrew_item` | Get homebrew item by ID |
-| `create_homebrew_item` | Create new or clone from catalog |
-| `update_homebrew_item` | Update homebrew item |
-| `delete_homebrew_item` | Delete homebrew item |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `category` | string (required) | One of: `monster`, `item`, `spell`, `race`, `class`, `background`, `feat`, `condition` |
+| `name` | string | Search by name (partial match) |
+| `limit` | integer | Maximum results (default: 20) |
+| `cr_min` / `cr_max` | number | Challenge rating range (monsters only) |
+| `monster_type` | string | Creature type, e.g. `undead`, `dragon` (monsters only) |
+| `include_homebrew` | boolean | Include homebrew monsters from the active campaign (monsters only, default: true) |
+| `rarity` | string | `common`, `uncommon`, `rare`, `very rare`, `legendary`, `artifact` (items only) |
+| `item_type` | string | e.g. `weapon`, `armor`, `wondrous item` (items only) |
+| `level` | integer | Spell level, 0 for cantrips (spells only) |
+| `school` | string | School of magic, e.g. `evocation` (spells only) |
+| `class_name` | string | Filter by class spell list (spells only) |
 
-### Homebrew Monsters (5 tools)
+Results are filtered to the active campaign's enabled sources when a campaign is set.
 
-| Tool | Description |
-|------|-------------|
-| `list_homebrew_monsters` | List all homebrew monsters in active campaign |
-| `get_homebrew_monster` | Get homebrew monster by ID |
-| `create_homebrew_monster` | Create new or clone from catalog |
-| `update_homebrew_monster` | Update homebrew monster |
-| `delete_homebrew_monster` | Delete homebrew monster |
+### Homebrew Content (5 tools)
 
-### Homebrew Spells (5 tools)
+Homebrew items, monsters, and spells share a unified tool set. Every call takes a
+`content_type` parameter: `item`, `monster`, or `spell`.
 
 | Tool | Description |
 |------|-------------|
-| `list_homebrew_spells` | List all homebrew spells in active campaign |
-| `get_homebrew_spell` | Get homebrew spell by ID |
-| `create_homebrew_spell` | Create new or clone from catalog |
-| `update_homebrew_spell` | Update homebrew spell |
-| `delete_homebrew_spell` | Delete homebrew spell |
+| `list_homebrew` | List homebrew content of one type in the active campaign |
+| `get_homebrew` | Get a homebrew entry by ID |
+| `create_homebrew` | Create new homebrew, or clone from the catalog with `cloned_from_name` + `cloned_from_source` |
+| `update_homebrew` | Update a homebrew entry |
+| `delete_homebrew` | Delete a homebrew entry by ID |
+
+**`create_homebrew` parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `content_type` | string (required) | `item`, `monster`, or `spell` |
+| `name` | string (required) | Name of the homebrew content |
+| `data` | string | JSON string with content data. Required when not cloning; when cloning, fields here override the catalog data |
+| `item_type` | string | Items only: `weapon`, `armor`, `potion`, `ring`, `rod`, `scroll`, `staff`, `wand`, `wondrous item`, `adventuring gear` |
+| `rarity` | string | Items only: `common`, `uncommon`, `rare`, `very rare`, `legendary`, `artifact` |
+| `cr` | string | Monsters only, e.g. `1/4`, `1`, `5`, `20` |
+| `creature_type` | string | Monsters only, e.g. `humanoid`, `dragon`, `undead` |
+| `size` | string | Monsters only: `T`, `S`, `M`, `L`, `H`, `G` |
+| `level` | integer | Spells only: 0 for cantrip, 1–9 |
+| `school` | string | Spells only, e.g. `evocation`, `necromancy` |
+| `cloned_from_name` | string | Catalog entry to clone from; must be used with `cloned_from_source` |
+| `cloned_from_source` | string | Source book of the cloned entry (e.g. `PHB`, `DMG`, `MM`) |
 
 ## Claude Code Plugin
 
-### Installation
-
-```bash
-claude plugin add /path/to/mimir/crates/mimir-mcp/plugin
-```
+For installation and setup, see the [AI Assistant How-To](../how-to/ai-assistant/README.md).
 
 ### Slash Commands
 

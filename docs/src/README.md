@@ -42,9 +42,23 @@ This documentation is organized using the [Diataxis](https://diataxis.fr/) frame
 | **[Reference](./reference/README.md)** | Detailed feature documentation |
 | **[Understanding Mimir](./explanation/README.md)** | Concepts and design philosophy |
 
-## Download
+## Installation
 
-Get the latest release from [GitHub Releases](https://github.com/mimir-dm/mimir/releases).
+**macOS / Linux** — one-line install:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/mimir-dm/mimir/main/scripts/install.sh | sh
+```
+
+This installs the Mimir app (to `~/Applications` on macOS, `~/.local/bin` on Linux). On macOS it also installs the `mimir-mcp` CLI to `~/.local/bin`; on Linux the script installs the app only — download `mimir-mcp-<target-triple>` from [GitHub Releases](https://github.com/mimir-dm/mimir/releases) or build it with `cargo build --release -p mimir-mcp`.
+
+To pin a specific version:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/mimir-dm/mimir/main/scripts/install.sh | sh -s -- --version X.Y.Z
+```
+
+**Windows** — download and run the `.msi` installer from [GitHub Releases](https://github.com/mimir-dm/mimir/releases).
 
 **Supported Platforms:** macOS, Windows, Linux
 

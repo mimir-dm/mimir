@@ -1,76 +1,37 @@
 # Document Workflow
 
-How documents work in Mimir and how to use them effectively for session preparation.
+Why documents in Mimir are organized the way they are, and how they fit into the life of a campaign.
 
-## Documents in Mimir
+Documents are markdown-based text entries — your DM notebook. The mechanics of creating, editing, reordering, and exporting them are covered in [Manage Documents](../how-to/campaigns/manage-documents.md); this page explains the design behind them.
 
-Documents are markdown-based text entries for organizing your campaign and module content. They serve as your DM notebook — session notes, location descriptions, encounter plans, read-aloud text, and anything else you need.
+## Why Two Scopes
 
-## Two Scopes
+Every document belongs to a campaign, and optionally to one module within it. This mirrors the [Two-Board System](./two-board-system.md): content has a natural lifespan, and the scope encodes it.
 
-Documents exist at two levels:
+**Campaign documents** are the long-lived layer — world lore, faction descriptions, house rules, recurring NPC notes. They are written once and consulted across many adventures, so they live where every module can see them.
 
-### Campaign Documents
-Accessed from the **Campaign tab** on the dashboard. Use these for:
-- World-building and lore
-- Faction descriptions
-- Recurring NPC notes
-- Campaign-wide information
+**Module documents** are the working layer — encounter plans, read-aloud text, location descriptions for one adventure. They are self-contained within their module, so when you prep or run that module, you see exactly the notes that matter and nothing else. When the module is finished, its documents become a record of what happened rather than clutter in your active workspace.
 
-Campaign documents persist across all modules and sessions.
+The alternative — one flat pile of notes — forces you to re-sort your own material every session. Scoping does that sorting once, at creation time.
 
-### Module Documents
-Accessed from a module's **Documents section** in the prep view. Use these for:
-- Session-specific encounter plans
-- Location descriptions for this adventure
-- Read-aloud text
-- Tactical notes
+## The Template Philosophy
 
-Module documents are self-contained within their module.
+A new campaign isn't empty: Mimir generates a set of starter documents (Campaign Pitch, World Primer, House Rules, Safety Tools, and others — see the [Data Model](../reference/data-model.md#campaigns) for the full list). These templates encode the campaign-genesis methodology from the [Campaign Framework](../campaign-framework/README.md): the questions worth answering before play begins.
 
-## Creating Documents
+The templates are ordinary documents — rename, rewrite, or delete them freely. Their purpose is to replace a blank page with a prompt, not to impose structure.
 
-Click the **+** button in the document sidebar. Choose between:
-- **New Document** — Create a blank markdown document with a title
-- **Upload File** — Import an existing markdown file or image
+## From Prep to Play
 
-## The Editor
+Documents flow through the campaign lifecycle:
 
-Documents use a rich text editor (Tiptap 3) with markdown under the hood. Formatting options:
-- Headings (H1, H2, H3)
-- Bold, italic, strikethrough
-- Bullet and numbered lists
-- Blockquotes and horizontal rules
-- Tables
-- Undo/redo
+**During prep**, you write into campaign documents as the world takes shape and into module documents as a specific session approaches. Because everything auto-saves, prep notes are always current — there is no "publish" step between preparing and running.
 
-### Auto-Save
+**During play**, prepared documents are read-only reference material in spirit: each module's auto-created Play Notes document is the surface for in-the-moment tracking (initiative, HP, events), so your carefully written prep is not overwritten by table chaos.
 
-All changes save automatically as you type. Watch for the "Saved" indicator — there's no manual save step.
-
-## Organization
-
-### Reordering
-Use the **up/down arrow buttons** (visible on hover) to reorder documents in the sidebar.
-
-### PDF Export
-Click **Export PDF** in the editor header to export a document as a PDF.
-
-## Practical Tips
-
-### Before First Session
-1. Create documents for key locations and encounters
-2. Write read-aloud descriptions
-3. Note important NPC dialogue
-
-### During Play
-Session notes in Play Mode auto-save as you type — use them for initiative tracking, HP, and events. Prepared documents are separate and remain unmodified.
-
-### After Sessions
-Add follow-up notes to campaign documents to track story developments and player decisions.
+**After play**, observations migrate upward: session outcomes get folded into campaign documents, turning module-level events into campaign-level history. This is the Module → Campaign information flow described in the Two-Board System.
 
 ## See Also
 
-- [The Two-Board System](./two-board-system.md)
-- [Manage Documents](../how-to/campaigns/manage-documents.md)
-- [Module Documents](../how-to/modules/module-documents.md)
+- [Manage Documents](../how-to/campaigns/manage-documents.md) — Creating, editing, reordering, exporting
+- [Module Documents](../how-to/modules/module-documents.md) — Module-scoped document tasks
+- [The Two-Board System](./two-board-system.md) — The structure documents live in

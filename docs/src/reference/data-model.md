@@ -99,7 +99,7 @@ A level 5 Fighter / level 3 Wizard has two entries.
 | `item_source` | Source book for the item |
 | `quantity` | Number of items |
 | `equipped` | Whether the item is worn/held (integer: 0/1) |
-| `attuned` | Whether the item is attuned (integer: 0/1, max 3 per character) |
+| `attuned` | Whether the item is attuned (integer: 0/1). Mimir counts attuned items but does not enforce the D&D 5e three-attunement rule |
 | `notes` | Optional notes about the item |
 
 ### Character Spells
@@ -115,7 +115,7 @@ A level 5 Fighter / level 3 Wizard has two entries.
 
 | Field | Description |
 |-------|-------------|
-| `proficiency_type` | skill, tool, language, or saving_throw |
+| `proficiency_type` | `skill`, `save`, `tool`, `weapon`, `armor`, or `language` |
 | `name` | Proficiency name (e.g., "Perception") |
 | `expertise` | Whether the character has expertise (integer: 0/1) |
 
@@ -125,13 +125,13 @@ A level 5 Fighter / level 3 Wizard has two entries.
 |-------|-------------|
 | `feat_name` | Feat name |
 | `feat_source` | Source book for the feat |
-| `source_type` | How the feat was acquired (e.g., class feature, ASI) |
+| `source_type` | How the feat was acquired: `asi`, `race`, `class`, or `bonus` |
 
 ### Character Features
 
 | Field | Description |
 |-------|-------------|
-| `feature_type` | Type of feature (class, subclass, racial, etc.) |
+| `feature_type` | `fighting_style`, `metamagic`, `maneuver`, `invocation`, or `pact_boon` (see [Characters](./characters/README.md)) |
 | `feature_name` | Feature name |
 | `feature_source` | Source book |
 | `source_class` | Which class grants the feature |
@@ -228,7 +228,7 @@ Maps support several overlay types:
 
 **Light Sources** (`light_sources` table) — Dynamic lights with grid position, bright/dim radius, color, and active state.
 
-**Fog Revealed Areas** (`fog_revealed_areas` table) — Rectangles tracking which map areas have been revealed to players (x, y, width, height).
+**Fog Revealed Areas** (`fog_revealed_areas` table) — Rectangles tracking which map areas have been revealed to players (x, y, width, height). Written by the fog reveal commands (`reveal_rect`, `reveal_circle`, `reveal_all`); these are currently not surfaced in the UI — live fog rendering is computed from PC token vision instead (see [Vision System](../explanation/vision-system.md)).
 
 **Points of Interest** (`map_pois` table) — Named markers with descriptions, icons, colors, and visibility at specific grid positions.
 

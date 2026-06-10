@@ -28,12 +28,13 @@ Tools for adding content to the map:
 - Select from module NPCs
 
 **Trap**
-- Add trap markers
-- Configure trigger areas
+- Place trap markers at grid positions
+- Optionally link a catalog trap (search by name) — the marker takes the trap's name
+- Trap records store name, description, trigger/effect descriptions, detection DC, triggered state, and player visibility
 
 **Marker**
-- Points of interest
-- Landmarks, waypoints, etc.
+- Place point-of-interest (POI) markers at grid positions
+- POI records store name, description, icon, color, and player visibility
 
 **Light Sources**
 - Torch (20 ft bright / 40 ft dim)
@@ -46,10 +47,11 @@ The main map display:
 
 - **Grid Overlay** - Aligned to map squares
 - **Placed Tokens** - All tokens on this map
+- **Trap/POI Markers** - Drag to move; right-click for actions (visibility, trigger/reset for traps, edit for POIs, delete)
 - **Zoom Controls** - Adjust view
 - **Pan** - Click and drag to move
 
-### Placed Tokens (Right)
+### Placed Content (Right)
 
 All placed content:
 
@@ -62,6 +64,15 @@ All placed content:
 - All placed lights
 - Lit/Unlit toggle
 - Delete with × button
+
+**Traps**
+- Shows name, DC (if set), and triggered state
+- Vis/Hid toggle for player visibility
+- Delete with × button
+
+**Points of Interest**
+- Shows name and icon type
+- Edit, Vis/Hid toggle, and delete buttons
 
 ## Canvas Controls
 
@@ -80,18 +91,10 @@ When placing tokens:
 | **Color** | Border color for identification |
 | **Visible** | Whether players can see this token |
 
-## Workflow
-
-1. Open Token Setup (click Place Tokens on a map card)
-2. Select token type from palette
-3. Configure options if needed
-4. Click on map to place
-5. Repeat for all tokens
-6. Add light sources as needed
-7. Close modal (×) - saves automatically
-
 ## See Also
 
+- [Place Tokens](../../how-to/maps/place-tokens.md) — Step-by-step placement workflow
+- [Manage Traps and POIs](../../how-to/play-mode/manage-traps-and-pois.md) — Placing and running trap/POI markers
 - [Add Monsters](../../how-to/modules/add-monsters.md)
-- [Place Tokens](../../how-to/maps/place-tokens.md)
 - [Manage Light Sources](../../how-to/maps/manage-light-sources.md)
+- [Play Mode](./play-mode.md) — Where placed content is used in session

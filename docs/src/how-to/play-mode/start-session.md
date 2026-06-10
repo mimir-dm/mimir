@@ -1,11 +1,12 @@
 # Start a Session
 
-Enter Play Mode to run your game session.
+Open the DM Map window to run your game session.
 
 ## Prerequisites
 
 - A module with at least one map
 - Tokens placed on the map (optional but recommended)
+- PCs assigned to the campaign (needed for fog of war and the **Add PCs** button)
 
 ## Steps
 
@@ -14,45 +15,44 @@ Enter Play Mode to run your game session.
 3. Select a module
 4. Click the **Play** button in the module header
 
-You're now in Play Mode.
+The **DM Map** window opens in a separate window. Your main window stays on the campaign dashboard — keep it open for monster stat lookups and notes during play. (You can also click **Play** in the modules table on the campaign landing page.)
 
-## Play Mode Interface
+## The DM Map Window
 
-![Play Mode](../../images/reference/dm-view.png)
+The window contains:
+- **Map selector** (top left) - Dropdown of the module's maps plus campaign-level maps (suffixed "(Campaign)")
+- **Display / Blackout / Fullscreen** (top right) - Display and Blackout control the Player Display; Fullscreen applies to the DM Map window itself (the Player Display has its own F11 fullscreen)
+- **Map toolbar** - Zoom, Add PCs, Reveal Map, and (on UVTT maps) Fog, LOS, and ambient light
+- **Map canvas** - The tactical view with all tokens
 
-Play Mode has a different layout:
-- **Header** - Navigation and display controls
-- **Left Sidebar** - Monsters and maps
-- **Main Area** - Tactical map view
-- **Bottom Panel** - Play notes
+See [DM Map Window](../../reference/ui/dm-map-window.md) for the full reference.
 
 ## Initial Setup
 
-When you enter Play Mode:
-1. Select the starting map from the sidebar
-2. Position PC tokens on the map
-3. Open the Player Display (if using second screen)
-4. You're ready to play!
+1. Select the starting map from the **Map** dropdown
+2. Click **Add PCs** in the map toolbar to place all campaign PCs, then drag them to the party's starting position
+3. On UVTT maps, click **Fog** in the map toolbar if you want fog of war (it starts off)
+4. Click **Display** to open the Player Display (if using a second screen)
+5. You're ready to play
 
-## Adding PCs to the Map
+> **Tip:** Open the display and click **Blackout** while you position tokens, then turn Blackout off to reveal the scene.
 
-Click the **Add PCs** button in the map toolbar to place all campaign player characters on the map at once.
+## Session Notes
+
+Use the module's **Play Notes** document: in the main window, open the module dashboard and click **Play Notes** in the Documents panel. It auto-saves as you type.
 
 ## Ending the Session
 
-Click **End Session** in the header to:
-- Save all notes
-- Preserve token positions
-- Return to the module dashboard
+There is no explicit end-session action:
 
-## Tips
+1. Click **Display On** to close the Player Display
+2. Close the DM Map window
 
-- Enter Play Mode before players arrive to set up
-- Use Blackout mode while positioning tokens
-- Save session notes as you play
+Token positions are saved automatically and restored the next time you click **Play**.
 
 ## See Also
 
 - [Manage Encounters](./manage-encounters.md)
 - [Fog of War](./fog-of-war.md)
 - [Use Player Display](./use-player-display.md)
+- [DM Map Window Reference](../../reference/ui/dm-map-window.md)

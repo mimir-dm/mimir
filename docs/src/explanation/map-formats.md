@@ -25,7 +25,7 @@ When you upload a UVTT file, Mimir extracts all of this automatically. Fog of wa
 
 ## Image Files
 
-You can also upload plain images (PNG, JPG, WebP) as maps. These work for basic token placement but lack wall data, so fog of war operates as a simple reveal grid rather than true line-of-sight.
+You can also upload plain images (PNG, JPG, WebP) as maps. These work for basic token placement but lack wall data, so fog of war is not available at all — the Fog and LOS controls only appear for UVTT maps. On image maps, the available tools are the Reveal Map toggle and per-token Hide from Players.
 
 Mimir defaults to 70 pixels per grid square for image files. If your map image uses a different grid size, token snapping may not align perfectly. For best results, use UVTT format.
 
@@ -45,9 +45,11 @@ For full control, write a YAML configuration that describes the map you want dec
 
 The generator outputs `.dungeondraft_map` files — the same format Dungeondraft uses natively. This means generated maps can be:
 
-- Used directly in Mimir with full fog of war and lighting support
 - Opened in Dungeondraft for hand-editing and polish
+- Exported from Dungeondraft as UVTT for use in Mimir (with full fog of war and lighting support)
 - Shared with other tools that support the format
+
+Mimir cannot open `.dungeondraft_map` files directly — map uploads accept only UVTT (`.dd2vtt`, `.uvtt`) and image files. To use a generated map in Mimir, open it in Dungeondraft (a paid tool) and export it as Universal VTT.
 
 ### Standalone CLI
 
@@ -63,9 +65,9 @@ Mimir chose the Dungeondraft format for several reasons:
 
 ## The Trade-Offs
 
-Each approach has different strengths. UVTT files give the richest play experience (fog of war, lighting, doors) but require a map-making tool. Images are the most accessible — any map image works — but lose advanced features. Procedural generation is fastest for outdoor terrain and random encounters, but produces maps that may need hand-editing in Dungeondraft for complex interior layouts.
+Each approach has different strengths. UVTT files give the richest play experience (fog of war, lighting, doors) but require a map-making tool. Images are the most accessible — any map image works — but lose advanced features. Procedural generation is fastest for outdoor terrain and random encounters, but its output requires a pass through Dungeondraft (to export UVTT) before Mimir can use it, and complex interior layouts may need hand-editing there anyway.
 
-The choice often depends on the encounter: a carefully planned boss fight deserves a hand-crafted UVTT map; a random wilderness encounter can use a generated biome; a map from an online artist works fine as an image with basic fog of war.
+The choice often depends on the encounter: a carefully planned boss fight deserves a hand-crafted UVTT map; a random wilderness encounter can use a generated biome; a map from an online artist works fine as a plain image for token play (no fog of war).
 
 ## See Also
 

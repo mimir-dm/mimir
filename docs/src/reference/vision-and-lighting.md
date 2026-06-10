@@ -1,99 +1,89 @@
 # Vision & Lighting
 
-How D&D 5e vision rules work in Mimir's fog of war system.
+Reference values and rules used by Mimir's fog of war calculation.
 
-## Vision Basics
+For the toolbar controls, see [Play Mode](./ui/play-mode.md). For step-by-step usage, see [Fog of War](../how-to/play-mode/fog-of-war.md). For the design rationale, see [Vision System](../explanation/vision-system.md).
 
-Mimir calculates what players can see based on:
-- Token positions
-- Vision radius
-- Light sources
-- Wall obstructions (UVTT maps)
+## Scale
 
-## Vision Types
+One grid square equals 5 feet. All ranges below are in feet and converted to map pixels using the map's grid size.
 
-### Normal Vision
-Characters without special vision see based on ambient light:
-- **Bright light** - Full visibility
-- **Dim light** - Disadvantage on Perception
-- **Darkness** - Cannot see
+## Token Vision Values
 
-### Darkvision
-Characters with darkvision can see in darkness as if it were dim light:
-- Range varies by race (typically 60 ft)
-- Colors appear as shades of gray
-- Cannot see in magical darkness
+Each token carries four vision-related values:
+
+| Value | Meaning | Notes |
+|-------|---------|-------|
+| Bright vision | Sight range in bright light | Unset = unlimited |
+| Dim vision | Sight range in dim light | Unset = unlimited |
+| Dark vision | Sight range in darkness | 0 = blind in darkness; 60 ft = typical darkvision |
+| Light radius | Dim radius of light the token carries | 0 = no light; bright radius is half the dim radius |
 
 ## Ambient Light Levels
 
-Set the base lighting for the entire map:
+| Level | Description | Vision range used |
+|-------|-------------|-------------------|
+| Bright | Daylight, well-lit rooms | Bright vision (usually unlimited) |
+| Dim | Twilight, torchlit edges | Dim vision; rendered as dim sight |
+| Darkness | Underground, night | The larger of dark vision and the token's own light radius; darkvision counts as dim sight |
 
-| Level | Description | Effect |
-|-------|-------------|--------|
-| Bright | Daylight, well-lit rooms | Full visibility |
-| Dim | Twilight, torchlit | Reduced visibility |
-| Dark | Underground, night | Darkvision or light required |
+The ambient level initializes from the map's UVTT data when present and can be overridden per session from the map toolbar.
 
-## Light Sources
-
-Light sources create areas of illumination:
+## Light Source Presets
 
 | Source | Bright Light | Dim Light |
 |--------|-------------|-----------|
 | Candle | 5 ft | 10 ft |
 | Torch | 20 ft | 40 ft |
 | Lantern | 30 ft | 60 ft |
+| Spell / Custom | 20 ft | 40 ft (defaults; editable) |
 
-### Light Radius Calculation
-- Bright light radius at full effect
-- Dim light extends to the listed range
-- Beyond dim light, darkness applies
+Token-carried light uses the token's light radius value as the dim radius, with the bright radius at half that distance.
 
-## Fog of War Controls
+## Light Level at a Point
 
-Two independent toggles in the map toolbar control visibility:
+The effective light level at a point is the best of:
 
-### Fog Button
-Hides map areas outside PC vision:
-- Revealed as PCs move
-- Creates exploration atmosphere
-- Enemies hidden until seen
+- Bright, if the point is within any active source's bright radius
+- Dim, if the point is within any active source's dim radius (when ambient is darkness)
+- The ambient level otherwise
 
-### LOS Button
-Filters tokens by line of sight:
-- Map remains fully visible
-- Enemy tokens hidden outside PC vision
-- Players see geography, not threats
+A token must be inside a light's radius to benefit from it: the light level at the token's own position determines which vision range applies.
+
+## What Reveals Fog
+
+| Token | Reveals fog? |
+|-------|--------------|
+| PC token, visible to players | Yes |
+| PC token, individually hidden | No |
+| NPC token | No |
+| Monster token | No |
+
+## Visibility States
+
+The **Fog** and **LOS** toggles are separate buttons but not fully independent: enabling Fog forces LOS on, and the LOS button is locked until Fog is turned off. **Reveal Map** overrides both. The resulting states:
+
+| State | Map (player view) | Tokens (player view) |
+|-------|-------------------|----------------------|
+| Fog off, LOS off | Fully visible | All player-visible tokens shown |
+| LOS only | Fully visible | Only tokens within party line of sight |
+| Fog on (LOS forced on) | Hidden outside party vision | Only tokens within party line of sight |
+| Reveal Map | Fully visible | All player-visible tokens shown |
+
+Individually hidden tokens are never shown to players, in any state. See [Play Mode](./ui/play-mode.md) for the controls themselves.
 
 ## Wall Occlusion
 
-UVTT maps include wall data:
-- Walls block line of sight
-- Vision stops at wall boundaries
-- Doors can be toggled open/closed
+UVTT maps include wall and portal (door) data:
 
-Standard image maps use circular vision without obstructions.
+- Vision is computed as a visibility polygon by raycasting against walls
+- Closed doors block vision; open doors do not
+- The Fog and LOS toggles are only available on maps with UVTT data
 
-## PC Vision Only
+Maps without wall data use circular (radius-only) vision with no obstructions.
 
-Only player character tokens reveal fog:
-- NPCs do not create vision
-- Monster tokens do not reveal areas
-- Prevents accidental reveals from hidden enemies
+## See Also
 
-## How Vision Is Calculated
-
-1. For each PC token, calculate vision radius
-2. Apply darkvision if applicable
-3. Add light source bonuses
-4. Check wall obstructions (UVTT)
-5. Union all PC vision areas
-6. Reveal combined area to players
-
-## Tips for DMs
-
-- Use darkness for tension
-- Toggle lights for dramatic reveals
-- Reveal Map bypasses all vision
-- LOS for combat focus (tokens filtered, map visible)
-- Fog for exploration (map hidden outside vision)
+- [Fog of War](../how-to/play-mode/fog-of-war.md) — task recipes
+- [Vision System](../explanation/vision-system.md) — how the D&D 5e rules map to the implementation
+- [Play Mode](./ui/play-mode.md) — toolbar controls

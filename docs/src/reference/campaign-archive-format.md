@@ -4,131 +4,142 @@ Technical reference for Mimir's campaign export/import archive format.
 
 ## Overview
 
-Campaign archives are `.tar.gz` files containing a complete snapshot of a campaign — metadata, modules, characters, documents, maps, homebrew, and assets. Archives are self-contained and portable between machines and Mimir installations.
+Campaign archives are gzip-compressed tar files with the extension `.mimir-campaign.tar.gz`. An archive contains a complete snapshot of one campaign — metadata, modules, documents, characters, maps, tokens, homebrew content, and binary assets. Archives are self-contained and portable between machines and Mimir installations.
+
+| Property | Value |
+|----------|-------|
+| Format identifier | `mimir-campaign` |
+| Format version | `2.0` |
+| File extension | `.mimir-campaign.tar.gz` |
+| Export filename | `<campaign-name-slug>.mimir-campaign.tar.gz` (lowercased, non-alphanumeric characters replaced with hyphens; consecutive separators collapsed to a single hyphen; leading and trailing hyphens stripped) |
 
 ## Archive Structure
 
 ```
-campaign-export/
-├── manifest.json           # Archive metadata
-├── campaign.json           # Campaign data
-├── characters/
-│   ├── {character-id}.json # One file per character
-│   └── ...
-├── modules/
-│   ├── {module-id}.json    # One file per module
-│   └── ...
-├── documents/
-│   ├── {document-id}.json  # One file per document
-│   └── ...
-├── maps/
-│   ├── {map-id}.json       # Map metadata and overlays
-│   └── ...
-├── homebrew/
-│   ├── items/
-│   │   └── {item-id}.json
-│   ├── monsters/
-│   │   └── {monster-id}.json
-│   └── spells/
-│       └── {spell-id}.json
+<slug>.mimir-campaign.tar.gz
+├── manifest.json                    # Archive metadata
+├── data.json                        # All campaign data
 └── assets/
-    ├── {file-hash}         # Binary assets (maps, images)
-    └── ...
+    └── {asset-id}/{filename}        # One file per campaign asset
 ```
+
+The archive contains exactly two JSON files plus one entry per asset. Asset files are stored under their original asset ID and filename; binary content is not hashed or deduplicated.
 
 ## Manifest
 
-The `manifest.json` file contains archive metadata:
+`manifest.json` contains archive metadata:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `version` | string | Archive format version |
-| `created_at` | string | ISO 8601 export timestamp |
-| `campaign_id` | string | Original campaign UUID |
+| `version` | string | Archive format version (`"2.0"`) |
+| `format` | string | Format identifier (`"mimir-campaign"`) |
+| `created_at` | string | ISO 8601 export timestamp (UTC) |
 | `campaign_name` | string | Campaign name at export time |
 | `mimir_version` | string | Mimir version that created the archive |
+| `counts` | object | Entity counts (see below) |
+| `catalog_references` | array | Catalog items referenced by campaign documents |
+
+### Counts
+
+| Field | Type |
+|-------|------|
+| `modules` | number |
+| `documents` | number |
+| `characters` | number |
+| `maps` | number |
+| `tokens` | number |
+| `module_monsters` | number |
+| `module_npcs` | number |
+| `assets` | number |
+| `homebrew_items` | number |
+| `homebrew_monsters` | number |
+| `homebrew_spells` | number |
+
+### Catalog References
+
+Each entry identifies a catalog item that campaign documents reference but the archive does not contain:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Reference type: `monster`, `spell`, `item`, `creature`, `condition`, `feat`, `race`, `class`, or `background` |
+| `name` | string | Item name |
+| `source` | string | Source book code |
+
+References are extracted at export time by scanning document content for `{@type name|source}` tags.
 
 ## Campaign Data
 
-The `campaign.json` file contains:
+`data.json` contains all campaign entities in a single JSON object:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Campaign UUID |
-| `name` | string | Campaign name |
-| `description` | string | Campaign description |
+| `campaign` | object | Campaign record |
 | `sources` | string[] | Enabled source book codes |
-| `created_at` | string | Original creation timestamp |
-| `updated_at` | string | Last modification timestamp |
+| `modules` | array | Module records |
+| `documents` | array | Document records (full text content) |
+| `characters` | array | Characters with related data (see below) |
+| `maps` | array | Maps with related data (see below) |
+| `tokens` | array | Token placements across all maps |
+| `module_monsters` | array | Monster references attached to modules |
+| `module_npcs` | array | NPCs attached to modules |
+| `assets` | array | Asset records (filename, MIME type, blob path) |
+| `homebrew_items` | array | Campaign homebrew items |
+| `homebrew_monsters` | array | Campaign homebrew monsters |
+| `homebrew_spells` | array | Campaign homebrew spells |
 
-## Character Files
+### Character Entries
 
-Each character is a separate JSON file containing:
+Each character entry contains the base character fields (flattened) plus:
 
-- Base character data (name, race, class, ability scores, HP, AC)
-- Class entries (multiclass levels and subclasses)
-- Inventory items with quantity, equipped, and attuned state
-- Known spells with prepared state and granting class
-- Proficiencies (skills, tools, languages, saving throws)
-- Feats and class features
+| Field | Contents |
+|-------|----------|
+| `classes` | Class entries (levels, subclasses, starting-class flag) |
+| `inventory` | Inventory items |
+| `spells` | Known spells |
+| `proficiencies` | Proficiency entries |
+| `features` | Class features |
+| `feats` | Feats |
 
-## Module Files
+### Map Entries
 
-Each module JSON file contains:
+Each map entry contains the base map fields (flattened) plus:
 
-- Module metadata (name, description, type, sort order)
-- Monster references (catalog monster names, quantities, notes)
-- NPC data (name, role, description, stat block)
-- Token placements (positions, visibility, faction colors)
-
-## Document Files
-
-Each document JSON file contains:
-
-- Document metadata (title, type, sort order)
-- Parent reference (campaign_id or module_id)
-- Full text content
-
-## Map Files
-
-Each map JSON file contains:
-
-- Map metadata (name, lighting mode, fog state)
-- Light source definitions (positions, colors, radii)
-- Fog of war state (revealed areas)
-- Points of interest (positions, descriptions)
-- Trap placements (positions, detection info)
-- Reference to the map asset file (by hash)
+| Field | Contents |
+|-------|----------|
+| `pois` | Points of interest |
+| `traps` | Trap placements |
+| `light_sources` | Light source definitions |
+| `fog_areas` | Fog of war revealed areas |
 
 ## Asset Files
 
-Binary files (map images, token art) stored by their SHA-256 content hash. This deduplicates assets — if two maps use the same image, it's stored once.
+Binary files (map images, token art) are stored in the archive at `assets/{asset-id}/{filename}`, where `{asset-id}` is the asset's UUID at export time and `{filename}` is its original filename.
 
 ## Import Behavior
 
-When importing an archive:
+When an archive is imported:
 
-1. **New UUIDs** are generated for all entities to avoid conflicts with existing data
-2. **Internal references** (e.g., module_id on documents) are remapped to the new UUIDs
-3. **Assets** are copied to the importing machine's assets directory
-4. **Campaign sources** are restored but only take effect if the corresponding catalog data has been imported
-5. The imported campaign appears in the campaign list as a new entry
+1. The archive is extracted and `data.json` is parsed; import fails if `data.json` is missing or unparseable. The manifest's `format` field is not checked during import — that validation happens only in archive preview (see [Preview](#preview))
+2. New UUIDs are generated for all entities, so imports never conflict with existing data
+3. Internal references (module, document, character, map, asset, and monster/NPC IDs) are remapped to the new UUIDs
+4. Asset files are copied into the importing installation's assets directory under `campaigns/{new-campaign-id}/{filename}`
+5. Campaign sources are restored; they take effect only if the corresponding catalog data exists in the importing installation
+6. If the campaign name already exists, a numeric suffix is appended (e.g., `Name (2)`), unless a name override is supplied
 
 Importing the same archive twice creates two independent copies of the campaign.
 
 ## Preview
 
-The `preview_archive` tool/command reads the manifest and entity counts without performing a full import. Use this to inspect an archive before importing:
+An archive preview reads `manifest.json` without extracting or importing the rest of the archive. Preview is where the manifest's `format` field is validated: archives whose `format` is not `"mimir-campaign"` are rejected. The preview contains:
 
 | Field | Description |
 |-------|-------------|
-| Campaign name | From manifest |
-| Module count | Number of module files |
-| Character count | Number of character files |
-| Document count | Number of document files |
-| Map count | Number of map files |
-| Homebrew counts | Items, monsters, spells |
-| Archive size | Total file size |
+| `campaign_name` | From manifest |
+| `counts` | Entity counts from manifest |
+| `catalog_references` | Catalog items the campaign references |
+| `mimir_version` | Mimir version that created the archive |
+| `created_at` | Export timestamp |
+| `archive_version` | Archive format version |
 
 ## See Also
 

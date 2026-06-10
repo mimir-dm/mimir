@@ -31,10 +31,8 @@ Definitions of terms used in Mimir.
 **Document**
 : A text entry for notes, descriptions, or session prep. Can be attached to campaigns or modules.
 
-## E
-
-**Encounter Tag**
-: A label for grouping monsters by location or encounter (e.g., "Cave Entrance", "Boss Room").
+**Dynamic Lighting**
+: Per-token vision and light radii computed against walls and light sources on UVTT maps. See [Vision & Lighting](./vision-and-lighting.md).
 
 ## F
 
@@ -87,7 +85,10 @@ Definitions of terms used in Mimir.
 : A character controlled by a player. Created with full stats using the character wizard.
 
 **Play Mode**
-: The interface for running game sessions. Includes map display, monster stats, and session notes.
+: Running a session: clicking Play on a module opens the DM Map window for the battle map while the main window stays on the campaign dashboard for stats and documents.
+
+**Play Notes**
+: An auto-created module document for tracking HP, initiative, and events during a session. Opened from the Documents panel on the module dashboard; auto-saves as you type. Also called session notes.
 
 **Player Display**
 : A second window showing what players see. Applies fog of war and hides DM information.
@@ -101,9 +102,6 @@ Definitions of terms used in Mimir.
 
 **Sidecar**
 : A companion process bundled with Mimir that provides the MCP server for AI assistant integration. Launches automatically when needed.
-
-**Play Notes**
-: Auto-saving text area in Play Mode for tracking HP, initiative, and events.
 
 ## T
 

@@ -12,9 +12,11 @@ Mapgen generates `.dungeondraft_map` files containing:
 - Water bodies, elevation contours, and lighting
 - Polygon-based layouts for irregular room shapes
 
-Output files open directly in Dungeondraft for further editing or UVTT export.
+Output files open directly in Dungeondraft for further editing or UVTT export. Mimir cannot open `.dungeondraft_map` files directly — to use a generated map in Mimir, open it in Dungeondraft (a paid tool) and export it as Universal VTT.
 
 ## Quick Start: Using a Preset
+
+**Prerequisite:** the `mimir-mapgen` binary is not bundled with the Mimir app. Either download a pre-built binary from [GitHub Releases](https://github.com/mimir-dm/mimir/releases) (attached to each release for every platform) or build it from source with `cargo build -p mimir-mapgen --release`. See [Install and Use Mapgen as a Standalone Tool](./mapgen-standalone.md) for details.
 
 Generate a map from one of 12 built-in biome presets:
 
@@ -34,22 +36,15 @@ mimir-mapgen generate --preset forest --seed 42 --output my-forest.dungeondraft_
 mimir-mapgen list-presets
 ```
 
+Example presets:
+
 | Preset | Size | Description |
 |--------|------|-------------|
 | `forest` | 32x32 | Dense temperate forest with dirt paths, scattered rocks, and natural clearings |
-| `grassland` | 32x32 | Open rolling hills with sparse trees and wildflowers |
 | `cave` | 24x24 | Underground cavern with rocky terrain and dark ambient lighting |
-| `desert` | 32x32 | Arid sandy wasteland with rocky outcrops and sparse scrub |
-| `lake` | 32x32 | Tranquil woodland pond with grassy shores and scattered trees |
-| `ice_lake` | 32x32 | Frozen lake with cracked ice, snow-covered shores, and frigid water |
-| `arctic` | 32x32 | Frozen tundra with snow drifts, exposed rock, and harsh conditions |
-| `island_tropical` | 32x32 | Tropical island with sandy beaches, palm trees, and warm ocean |
-| `island_forest` | 32x32 | Forested island in a lake with dirt shores and dense tree cover |
-| `island_arctic` | 32x32 | Snow-covered island surrounded by frigid dark water |
-| `swamp` | 32x32 | Dark, murky wetland with stagnant water, dead trees, and dim lighting |
 | `forest_river` | 32x32 | Dense forest bisected by a meandering river with rocky banks |
 
-Some presets have aliases (e.g., `tropical_island` for `island_tropical`, `pond` for `lake`).
+See the [Mapgen Reference](../../reference/mapgen.md#biome-presets) for the full table of all 12 presets and their aliases.
 
 ## Custom YAML Configs
 
@@ -75,6 +70,8 @@ terrain:
     - texture: "res://textures/terrain/terrain_gravel.png"
       lower: 0.8
       upper: 1.0
+  blend_width: 0.05
+  smooth_blending: true
 
 trees:
   - tree:
@@ -85,6 +82,11 @@ trees:
       noise_lower: 0.4
       noise_upper: 0.75
       probability: 0.5
+      scale_min: 0.8
+      scale_max: 1.2
+      layer: 300
+      random_rotation: true
+      random_mirror: true
 
 roads:
   - {}
@@ -120,5 +122,6 @@ Mapgen is also available as an MCP tool (`generate_map`) through Mimir's AI assi
 
 ## See Also
 
-- [Upload a Map](./upload-map.md) — Import maps into Mimir modules
+- [Install and Use Mapgen as a Standalone Tool](./mapgen-standalone.md) — Installation and a full worked example
+- [Upload a Map](./upload-map.md) — Import maps into Mimir modules (UVTT or image files)
 - [Mapgen Reference](../../reference/mapgen.md) — Full YAML schema and configuration details

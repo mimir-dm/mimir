@@ -33,8 +33,11 @@ You can find your exact database path in Mimir's Settings > Integrations tab.
 
 ### Claude Code Plugin Installation
 
-```bash
-claude plugin add /path/to/mimir/crates/mimir-mcp/plugin
+Inside a Claude Code session, add the Mimir marketplace and install the plugin:
+
+```
+/plugin marketplace add mimir-dm/mimir
+/plugin install mimir-dm@mimir
 ```
 
 Or add the MCP server directly:

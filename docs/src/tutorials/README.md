@@ -10,6 +10,7 @@ Each tutorial builds on the previous one, taking you from a complete beginner to
 2. **[Your First Module](./02-first-module.md)** - Build an adventure module with maps and monsters
 3. **[Running Your First Session](./03-first-session.md)** - Use Play Mode to run an encounter
 4. **[Player Display Setup](./04-player-display.md)** - Set up a second screen for your players
+5. **[Creating Homebrew Content](./05-homebrew-content.md)** - Create custom items, monsters, and spells
 
 ## Prerequisites
 

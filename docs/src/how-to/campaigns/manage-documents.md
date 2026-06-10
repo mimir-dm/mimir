@@ -54,6 +54,12 @@ Documents can be reordered using the **up/down arrow buttons** that appear when 
 
 Hover over a document in the sidebar to reveal a **delete** button (trash icon). Click it and confirm to remove the document. This is permanent.
 
+## Session Notes
+
+Every module gets an auto-created **Play Notes** document for in-session tracking (HP, initiative, events). Open it from the module's Documents panel during play — it auto-saves like any other document.
+
 ## See Also
 
 - [Create a Campaign](./create-campaign.md)
+- [Module Documents](../modules/module-documents.md)
+- [Start a Session](../play-mode/start-session.md)

@@ -1,252 +1,97 @@
 # Running Your First Session
 
-This tutorial walks you through using Play Mode to run a game session. You'll learn how to manage maps, control fog of war, move tokens, and keep session notes.
+This tutorial walks you through running a game session with the DM Map window. You'll learn how to open the battle map, place your party, control fog of war, show the map to players, and keep session notes.
 
 **Time to complete:** 10-15 minutes
 
 **What you'll learn:**
-- Enter and exit Play Mode
-- Navigate the Play Mode interface
-- Control fog of war and line of sight
-- Move tokens and manage encounters
-- Use session notes
+- Open the DM Map window for a module
+- Select the active map and place PC tokens
+- Control fog of war
+- Open the Player Display and move tokens during play
+- Keep session notes
+- End the session
 
 ## Prerequisites
 
 - A module with at least one map and some tokens ([Tutorial 2](./02-first-module.md))
-- Understanding of the Campaign Dashboard
+- At least one PC [created](../how-to/characters/create-pc.md) and [assigned to the campaign](../how-to/characters/assign-to-campaign.md) — fog of war reveals around PC tokens, so you need a PC to see anything
+- For the fog-of-war step, your map must be a UVTT file (it carries the wall data fog needs)
 
-## Step 1: Enter Play Mode
+## Step 1: Open the DM Map Window
 
-There are two ways to start a play session:
-
-### From the Module Dashboard
 1. Open your campaign and go to the **Modules** tab
 2. Select your module from the sidebar
 3. Click the **Play** button in the module header
 
-### From the Maps List
-1. In the module dashboard, find your map in the Maps section
-2. Click the map, then use the Play action
+A separate **DM Map** window opens showing your module's battle map. Your main window stays on the campaign dashboard — keep it nearby, you'll use it for monster stats and notes during play.
 
-Either method takes you to Play Mode.
+## Step 2: Select Your Map
 
-## Step 2: Tour the Play Mode Interface
+At the top left of the DM Map window is a **Map** dropdown.
 
-Play Mode has a different layout optimized for running the game:
+1. Open the dropdown — it lists your module's maps plus any campaign-level maps (suffixed "(Campaign)")
+2. Select the map you prepared in Tutorial 2 (the first module map is usually selected automatically)
 
-<!-- Screenshot: play-mode.png -->
+The map loads in the window with its grid and the monster tokens and light sources you placed in Tutorial 2.
 
-### Header Bar
+## Step 3: Place Your PCs
 
-- **Back to Prep** - Return to the module dashboard
-- **Module Name** - Shows which module you're playing
-- **PLAY MODE** badge - Visual confirmation you're in play mode
-- **Player Display** - Open/close the player display window
-- **Blackout** - Hide everything from players temporarily
-- **End Session** - Exit play mode
+PC tokens aren't placed during prep — you add them at the table.
 
-### Left Sidebar
+1. Click **Add PCs** in the map toolbar
 
-A collapsible panel containing:
+A token appears for each PC assigned to the campaign, placed in a small formation in the top-left corner of the map. Drag each PC token to where the party enters the map.
 
-**Monsters** - All monsters in the module
-- Shows quantity (e.g., "3× Goblin")
-- Click to view stat block
-- Grouped by encounter tag
+To move any token: click and hold, drag, release. Tokens snap to grid squares.
 
-**Maps** - All maps in the module
-- Click to switch the active map
-- Active map shows a play icon
-- Maps from other modules in the campaign are also available
+## Step 4: Turn On Fog of War
 
-### Main Area
+Fog starts **off**. To hide everything the party can't see:
 
-The tactical map display with:
-- Current map image
-- Grid overlay
-- Token positions
-- Fog of war (if using UVTT maps with walls)
+1. Click **Fog** in the map toolbar
 
-### Bottom Panel
+On your view, areas outside the party's vision turn semi-transparent gray; players see nothing there at all. While Fog is on, **LOS** (token line of sight) is forced on too, so enemies outside the party's sight stay hidden automatically.
 
-**Session Notes** - Collapsible notes area
-- Auto-saves as you type
-- Persists between sessions
-- Great for tracking HP, initiative, events
+> **Note:** The **Fog** and **LOS** buttons only appear for UVTT maps — fog needs the wall data UVTT files carry. On a plain image map, work with **Reveal Map** and per-token visibility instead (right-click a token → **Hide from Players**).
 
-## Step 3: Understanding the Map Controls
+Try the ambient light dropdown too: set it to **Dark** and watch the visible area shrink to your placed torch and the PCs' darkvision. See [Control Fog of War](../how-to/play-mode/fog-of-war.md) for the full set of controls.
 
-The map toolbar (top of main area) provides essential controls:
+## Step 5: Open the Player Display
 
-### Zoom Controls
-- **−/+** buttons - Zoom in and out
-- **Percentage** - Current zoom level
-- **Reset** button - Fit map to view
+The Player Display is a second window for your players (a TV, projector, or shared screen).
 
-### Add PCs
-- **Add PCs** - Place all campaign PCs on the map at once
+1. Click **Display** in the DM Map window's top toolbar
+2. A new window opens, and the button changes to **Display On**
+3. Drag the new window to your player-facing screen
 
-### Reveal Map Toggle
-A danger-styled toggle that reveals the entire map to players. Use with caution - this bypasses fog of war completely.
+Players see the current map with fog applied, visible tokens only, and no names, stats, or controls. While the display is open, a **Blackout** button appears next to **Display On** — click it to black out the player screen while you reposition tokens or set up a reveal.
 
-### Line of Sight Controls (UVTT maps only)
-When using UVTT maps with wall data:
+## Step 6: Play
 
-- **LOS Toggle** - Switch between Fog and Token modes:
-  - **Fog** - Map is hidden outside PC vision areas
-  - **Token** - Map visible, but enemy tokens hidden outside vision
+Now run the encounter:
 
-- **Debug** button - Visualize line of sight calculations
-- **Ambient Light** - Set base lighting level:
-  - **Bright** - Full daylight
-  - **Dim** - Twilight or torchlight
-  - **Dark** - Complete darkness (darkvision only)
+- **Move tokens** by dragging them. The Player Display updates immediately, and fog recalculates as PC tokens move — drag a PC down a corridor and watch the visible area follow.
+- **Reveal hidden enemies** by right-clicking a token and choosing **Show to Players** (or select it and press **H**).
+- **Look up monster stats** in your main window: the module dashboard's monster list opens a stat block panel when you click a monster. Double-clicking a monster token in the DM Map window selects that monster in the dashboard for you.
 
-### Print
-- **Print** - Print the current map as PDF
+## Step 7: Keep Session Notes
 
-## Step 4: Working with Tokens
+Every module comes with a **Play Notes** document. In your main window:
 
-### Moving Tokens
+1. On the module dashboard, find **Play Notes** in the Documents panel
+2. Click it to open the editor
 
-1. Click and hold a token
-2. Drag to the new position
-3. Release to place
+Type initiative order, HP, rulings, and player decisions as you go — the editor auto-saves ("Saving..." then "Saved"). Notes persist between sessions and are included when you export the campaign.
 
-Tokens snap to grid squares by default.
-
-### Token Visibility
-
-Tokens have visibility states that affect what players see:
-- **Visible** - Players see the token
-- **Hidden** - Only DM sees (for surprise encounters)
-
-Right-click a token to open a context menu with visibility controls and other options.
-
-### Interacting with Monster Tokens
-
-Click a monster in the sidebar or on the map to open the Monster Stats Panel:
-- Full stat block
-- Actions and abilities
-- Quick reference during combat
-
-The panel slides in from the right without blocking the map.
-
-## Step 5: Controlling Fog of War
-
-Fog of war automatically calculates what players can see based on:
-- PC token positions
-- Vision radius (based on darkvision)
-- Light sources (torches, lanterns)
-- Wall obstructions (UVTT maps only)
-
-### How Vision Works
-
-1. **PC tokens reveal fog** - Only PCs with "visible to players" reveal areas
-2. **NPCs don't reveal** - NPC tokens don't create vision
-3. **Light sources extend vision** - Placed light sources affect visibility
-
-### Lighting Controls
-
-The ambient light dropdown affects base visibility:
-- **Bright** - Everything visible within range
-- **Dim** - Disadvantage on Perception, colors muted
-- **Dark** - Only darkvision and light sources work
-
-Toggle light sources on/off by right-clicking them on the map or using the player display controls.
-
-## Step 6: Using the Player Display
-
-The Player Display shows a separate view for your players (on a TV, projector, or shared screen).
-
-### Opening Player Display
-
-1. Click **Player Display** in the header
-2. A new window opens (drag to your player-facing screen)
-3. The button changes to "Display Open"
-
-### What Players See
-
-- Current map with fog of war applied
-- Visible tokens only
-- No monster names or stats
-- Revealed areas based on PC vision
-
-### Blackout Mode
-
-Click the **Blackout** button (eye icon) to:
-- Hide everything from players
-- Show a black screen
-- Useful for dramatic reveals or bathroom breaks
-
-Click again to restore the view.
-
-### Player Display
-
-The player display window automatically shows the current map with fog of war applied. When you switch maps or move tokens, the player view updates automatically.
-
-## Step 7: Taking Session Notes
-
-The collapsible notes panel at the bottom is perfect for:
-- Initiative order
-- HP tracking
-- Important events
-- NPC dialogue
-- Player decisions
-
-### Using Notes
-
-1. Click **Session Notes** bar to expand
-2. Type your notes
-3. Notes auto-save as you type
-4. Status shows "Saving..." then "Saved"
-
-Notes persist between sessions - they're saved to your campaign folder.
-
-## Step 8: Ending the Session
+## Step 8: End the Session
 
 When you're done:
 
-1. Click **End Session** in the header
-2. You return to the module dashboard
-3. Session notes are saved
-4. Token positions are preserved
+1. Click **Display On** to close the Player Display
+2. Close the DM Map window
 
-Your module is ready for the next session right where you left off.
-
-## Pro Tips
-
-### Combat Efficiency
-- Open monster stats before combat starts
-- Use session notes for initiative tracking
-- Pre-position tokens for surprise encounters
-
-### Fog of War
-- Place light sources at choke points
-- Use darkness to create tension
-- Toggle lights for dramatic effect
-
-### Player Display
-- Use Blackout for reveals
-- Move PCs to reveal new areas
-
----
-
-## Quick Reference
-
-| Action | How To |
-|--------|--------|
-| Enter Play Mode | Module dashboard → Play button |
-| Exit Play Mode | End Session button |
-| Switch maps | Click map in sidebar |
-| Move token | Drag and drop |
-| View monster stats | Click monster in sidebar |
-| Toggle fog mode | LOS toggle (Fog/Token) |
-| Set ambient light | Light dropdown |
-| Open player display | Player Display button |
-| Blackout display | Eye icon (when display open) |
-| Take notes | Session Notes panel |
+Token positions are saved automatically, so the next time you click **Play**, the map is exactly where you left it.
 
 ---
 

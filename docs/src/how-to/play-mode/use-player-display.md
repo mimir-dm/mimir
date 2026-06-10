@@ -6,8 +6,8 @@ Show players a fog-of-war view on a second screen.
 
 ## Opening the Display
 
-1. Enter Play Mode
-2. Click **Player Display** in the header
+1. Click **Play** on a module to open the DM Map window
+2. Click **Display** in the window's top toolbar (it changes to **Display On**)
 3. A new window opens
 4. Drag the window to your player-facing screen
 
@@ -24,8 +24,8 @@ The player display shows:
 ## Blackout Mode
 
 Hide everything from players:
-1. Click the **Blackout** button (eye icon)
-2. Player screen goes black
+1. Click the **Blackout** button (crossed-out-eye icon, tooltip "Toggle Blackout") next to **Display On** — it appears while the display is open
+2. Player screen blacks out and shows "Display Paused"
 3. Click again to restore
 
 Use for:
@@ -36,13 +36,13 @@ Use for:
 
 ## Switching Maps
 
-1. Click a different map in the sidebar
+1. Pick a different map from the **Map** dropdown at the top left of the DM Map window
 2. Player display updates automatically
 3. Use Blackout during transitions for drama
 
 ## Closing the Display
 
-- Click **Player Display** button again, or
+- Click the **Display On** button again, or
 - Close the window directly
 
 ## Tips
@@ -50,7 +50,6 @@ Use for:
 - Use fullscreen (F11) on the player screen
 - Keep notes on your screen, map on theirs
 - Use Blackout liberally for reveals
-- Disable sync when planning ahead secretly
 
 ## See Also
 
