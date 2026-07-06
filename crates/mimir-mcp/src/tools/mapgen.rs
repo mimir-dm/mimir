@@ -27,7 +27,7 @@ pub fn generate_map_tool() -> Tool {
             vec![],
             create_properties(vec![
                 ("config_yaml", "string", "YAML configuration for map generation. Mutually exclusive with preset."),
-                ("preset", "string", "Biome preset name (forest, grassland, cave). Mutually exclusive with config_yaml."),
+                ("preset", "string", "Biome preset name. Call list_map_presets for the current set (includes forest, grassland, cave, desert, lake, arctic, swamp, and island variants). Mutually exclusive with config_yaml."),
                 ("output_path", "string", "Absolute path for the output .dungeondraft_map file (required)"),
                 ("seed", "integer", "Random seed override for reproducible generation"),
             ]),

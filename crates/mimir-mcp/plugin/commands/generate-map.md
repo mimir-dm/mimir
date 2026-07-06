@@ -2,7 +2,7 @@
 description: Generate a procedural Dungeondraft map from a biome preset or custom YAML config
 arguments:
   - name: preset_or_description
-    description: "Biome preset name (forest, grassland, cave, desert, lake, ice_lake, arctic, island_tropical, island_forest, island_arctic) or a description of the desired map"
+    description: "Biome preset name (forest, grassland, cave, desert, lake, ice_lake, arctic, swamp, forest_river, island_tropical, island_forest, island_arctic) or a description of the desired map"
     required: false
 allow_override: false
 ---
@@ -12,9 +12,11 @@ allow_override: false
 ## Step 1: Determine Map Type
 
 If the user provided a preset name, use it directly. Available presets:
-- **Terrain**: forest, grassland, cave, desert, arctic
-- **Water**: lake, ice_lake
+- **Terrain**: forest, grassland, cave, desert, arctic, swamp
+- **Water**: lake, ice_lake, forest_river
 - **Islands**: island_tropical, island_forest, island_arctic
+
+`list_map_presets` returns the authoritative set at runtime — call it if unsure.
 
 If they provided a description or no arguments, help them choose:
 1. Call `list_map_presets` to show available presets

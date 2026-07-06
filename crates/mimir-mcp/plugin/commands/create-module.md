@@ -12,7 +12,7 @@ allow_override: false
 
 # Create a New Module
 
-First verify there's an active campaign using `get_campaign_details`. If none is active, list campaigns and ask the user to select one.
+First verify there's an active campaign using `get_active_campaign` (it never errors and reports whether one is set). If none is active, list campaigns with `list_campaigns` and ask the user to select one, then `set_active_campaign`.
 
 Create a new module using `create_module` with the provided name and description.
 
