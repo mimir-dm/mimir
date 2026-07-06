@@ -43,6 +43,7 @@ impl MimirHandler {
         vec![
             // Campaign tools
             tools::campaign::list_campaigns_tool(),
+            tools::campaign::get_active_campaign_tool(),
             tools::campaign::set_active_campaign_tool(),
             tools::campaign::get_campaign_details_tool(),
             tools::campaign::get_campaign_sources_tool(),
@@ -111,6 +112,9 @@ impl MimirHandler {
         match name {
             // Campaign tools
             "list_campaigns" => tools::campaign::list_campaigns(&self.context, args).await,
+            "get_active_campaign" => {
+                tools::campaign::get_active_campaign(&self.context, args).await
+            }
             "set_active_campaign" => {
                 tools::campaign::set_active_campaign(&self.context, args).await
             }
@@ -273,6 +277,7 @@ mod tests {
     const EXPECTED_TOOLS: &[&str] = &[
         // Campaign
         "list_campaigns",
+        "get_active_campaign",
         "set_active_campaign",
         "get_campaign_details",
         "get_campaign_sources",
@@ -490,6 +495,44 @@ mod tests {
         // List — empty again
         let res = call_ok(&handler, "list_campaigns", serde_json::json!({})).await;
         assert_eq!(res["campaigns"].as_array().unwrap().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn get_active_campaign_reports_and_self_heals() {
+        let handler = MimirHandler::with_context(test_ctx());
+
+        // Nothing selected — must not error, reports active=false with guidance.
+        let res = call_ok(&handler, "get_active_campaign", serde_json::json!({})).await;
+        assert_eq!(res["active"], false);
+        assert!(res["campaign"].is_null());
+        assert!(res["hint"].as_str().unwrap().contains("list_campaigns"));
+
+        // Creating a campaign activates it — get_active_campaign reflects that.
+        let created = call_ok(
+            &handler,
+            "create_campaign",
+            serde_json::json!({"name": "Active One"}),
+        )
+        .await;
+        let campaign_id = created["campaign"]["id"].as_str().unwrap().to_string();
+
+        let res = call_ok(&handler, "get_active_campaign", serde_json::json!({})).await;
+        assert_eq!(res["active"], true);
+        assert_eq!(res["campaign"]["id"], campaign_id);
+        assert_eq!(res["campaign"]["name"], "Active One");
+
+        // After the active campaign is deleted, get_active_campaign reports
+        // active=false rather than erroring. (The self-heal branch also covers the
+        // case where another process removes the row out from under a live selection.)
+        call_ok(
+            &handler,
+            "delete_campaign",
+            serde_json::json!({"campaign_id": campaign_id}),
+        )
+        .await;
+        let res = call_ok(&handler, "get_active_campaign", serde_json::json!({})).await;
+        assert_eq!(res["active"], false);
+        assert!(res["campaign"].is_null());
     }
 
     // -- Module CRUD ----------------------------------------------------------

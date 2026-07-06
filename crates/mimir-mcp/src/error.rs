@@ -22,7 +22,10 @@ pub enum McpError {
     InvalidArguments(String),
 
     /// No active campaign set
-    #[error("No active campaign. Use set_active_campaign first.")]
+    #[error(
+        "No active campaign is selected. Call list_campaigns to see options and \
+         set_active_campaign to choose one, or create_campaign to start a new one."
+    )]
     NoActiveCampaign,
 
     /// Resource not found

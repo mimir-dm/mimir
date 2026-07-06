@@ -18,7 +18,9 @@ pub fn generate_map_tool() -> Tool {
     Tool {
         name: "generate_map".to_string(),
         description: Some(
-            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. Returns the output file path."
+            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. \
+             The file is written to the machine running this server (not the client); output_path is an \
+             absolute path on that host. Returns the output file path. No active campaign required."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(

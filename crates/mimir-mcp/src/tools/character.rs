@@ -23,7 +23,10 @@ use crate::McpError;
 pub fn list_characters_tool() -> Tool {
     Tool {
         name: "list_characters".to_string(),
-        description: Some("List characters in the active campaign".to_string()),
+        description: Some(
+            "List characters (PCs and NPCs) in the active campaign. Requires an active campaign."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
             vec![],
             create_properties(vec![
@@ -67,7 +70,7 @@ pub fn get_character_tool() -> Tool {
 pub fn create_character_tool() -> Tool {
     Tool {
         name: "create_character".to_string(),
-        description: Some("Create a new character (NPC or PC). When race, class, and background are provided, proficiencies are automatically populated from catalog data.".to_string()),
+        description: Some("Create a new character (NPC or PC) in the active campaign. Requires an active campaign. When race, class, and background are provided, proficiencies are automatically populated from catalog data.".to_string()),
         input_schema: ToolInputSchema::new(
             vec!["name".to_string(), "character_type".to_string()],
             create_properties(vec![

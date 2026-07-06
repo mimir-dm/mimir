@@ -21,7 +21,9 @@ pub fn create_map_tool() -> Tool {
     Tool {
         name: "create_map".to_string(),
         description: Some(
-            "Upload a UVTT file to create a new map. The file_path must point to a .uvtt file on disk."
+            "Upload a UVTT file to create a new map in the active campaign. Requires an active \
+             campaign. file_path is an absolute path to a .uvtt file on the machine running this \
+             server (not the client) — confirm the path with the user if unsure."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
@@ -48,7 +50,7 @@ pub fn list_maps_tool() -> Tool {
     Tool {
         name: "list_maps".to_string(),
         description: Some(
-            "List maps in the active campaign. Optionally filter by module. Omit module_id to list campaign-level maps."
+            "List maps in the active campaign. Requires an active campaign. Optionally filter by module. Omit module_id to list campaign-level maps."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(

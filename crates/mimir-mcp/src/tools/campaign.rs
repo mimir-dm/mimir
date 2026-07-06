@@ -24,7 +24,31 @@ use crate::McpError;
 pub fn list_campaigns_tool() -> Tool {
     Tool {
         name: "list_campaigns".to_string(),
-        description: Some("List all available campaigns".to_string()),
+        description: Some(
+            "List every campaign in this Mimir database. Start here to discover campaigns, then \
+             pass a returned id to set_active_campaign. Returns each campaign's id, name, \
+             description, and created_at."
+                .to_string(),
+        ),
+        input_schema: ToolInputSchema::new(vec![], None, None),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn get_active_campaign_tool() -> Tool {
+    Tool {
+        name: "get_active_campaign".to_string(),
+        description: Some(
+            "Report which campaign is currently active — the one most tools operate on. Never \
+             errors: when nothing is selected it returns active=false with guidance. Call this \
+             first to orient yourself before using campaign-scoped tools."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(vec![], None, None),
         title: None,
         annotations: None,
@@ -39,7 +63,10 @@ pub fn set_active_campaign_tool() -> Tool {
     Tool {
         name: "set_active_campaign".to_string(),
         description: Some(
-            "Set the active campaign. Most other tools require an active campaign.".to_string(),
+            "Select the campaign that subsequent tools operate on. The selection is held \
+             server-side for the rest of the session. Most module, character, document, map, and \
+             homebrew tools require an active campaign."
+                .to_string(),
         ),
         input_schema: ToolInputSchema::new(
             vec!["campaign_id".to_string()],
@@ -109,7 +136,12 @@ pub fn get_campaign_sources_tool() -> Tool {
 pub fn create_campaign_tool() -> Tool {
     Tool {
         name: "create_campaign".to_string(),
-        description: Some("Create a new campaign".to_string()),
+        description: Some(
+            "Create a new campaign. The new campaign is automatically set active, so you can \
+             immediately create modules and characters in it without a separate \
+             set_active_campaign call."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
             vec!["name".to_string()],
             create_properties(vec![
@@ -192,6 +224,45 @@ pub async fn list_campaigns(ctx: &Arc<McpContext>, _args: Value) -> Result<Value
         .collect();
 
     McpResponse::list("campaigns", campaign_data)
+}
+
+pub async fn get_active_campaign(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError> {
+    let Some(campaign_id) = ctx.get_active_campaign_id() else {
+        return McpResponse::ok(json!({
+            "active": false,
+            "campaign": null,
+            "hint": "No campaign is active. Call list_campaigns to see options and \
+                     set_active_campaign to choose one, or create_campaign to start a new one."
+        }));
+    };
+
+    let mut db = ctx.connect()?;
+    let mut service = CampaignService::new(&mut db);
+
+    match service
+        .get(&campaign_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?
+    {
+        Some(campaign) => McpResponse::ok(json!({
+            "active": true,
+            "campaign": {
+                "id": campaign.id,
+                "name": campaign.name,
+                "description": campaign.description
+            }
+        })),
+        None => {
+            // The selection points at a campaign that no longer exists — self-heal
+            // so later calls don't keep failing against a phantom id.
+            ctx.set_active_campaign_id(None);
+            McpResponse::ok(json!({
+                "active": false,
+                "campaign": null,
+                "hint": "The previously active campaign no longer exists and has been cleared. \
+                         Call list_campaigns and set_active_campaign, or create_campaign."
+            }))
+        }
+    }
 }
 
 pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
@@ -401,12 +472,15 @@ pub fn export_campaign_tool() -> Tool {
     Tool {
         name: "export_campaign".to_string(),
         description: Some(
-            "Export the active campaign as a shareable archive file (.mimir-campaign.tar.gz)".to_string(),
+            "Export the active campaign as a shareable archive file (.mimir-campaign.tar.gz). \
+             Requires an active campaign. The archive is written to the machine running this \
+             server (not the client)."
+                .to_string(),
         ),
         input_schema: ToolInputSchema::new(
             vec!["output_path".to_string()],
             create_properties(vec![
-                ("output_path", "string", "Directory path where the archive will be saved"),
+                ("output_path", "string", "Absolute directory path (on the server host) where the archive will be saved"),
             ]),
             None,
         ),
@@ -423,12 +497,15 @@ pub fn import_campaign_tool() -> Tool {
     Tool {
         name: "import_campaign".to_string(),
         description: Some(
-            "Import a campaign from an archive file (.mimir-campaign.tar.gz)".to_string(),
+            "Import a campaign from an archive file (.mimir-campaign.tar.gz). The imported \
+             campaign is automatically set active. The archive is read from the machine running \
+             this server (not the client)."
+                .to_string(),
         ),
         input_schema: ToolInputSchema::new(
             vec!["archive_path".to_string()],
             create_properties(vec![
-                ("archive_path", "string", "Path to the archive file to import"),
+                ("archive_path", "string", "Absolute path (on the server host) to the archive file to import"),
                 ("new_name", "string", "Optional new name for the imported campaign"),
             ]),
             None,

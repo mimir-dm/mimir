@@ -45,9 +45,25 @@ async fn main() -> anyhow::Result<()> {
             website_url: Some("https://github.com/colliery-io/mimir".to_string()),
         },
         instructions: Some(
-            "Mimir MCP Server for D&D 5e campaign management. \
-             Use list_campaigns to see available campaigns, then set_active_campaign \
-             to select one before using other tools."
+            "Mimir manages D&D 5e campaigns. You assist a Dungeon Master (the user): you \
+             execute mechanical tasks, they make every creative and narrative decision.\n\n\
+             DATA MODEL: A Campaign contains Modules (adventure chapters). The campaign and its \
+             modules hold Documents (markdown notes), Characters (PCs and NPCs), and Maps. A \
+             shared, read-only 5e catalog (monsters, items, spells, races, classes, backgrounds, \
+             feats, conditions) is queried with search_catalog. Campaign-specific homebrew lives \
+             behind the homebrew tools. ids returned by list_* and create_* tools are the handles \
+             you pass to later calls.\n\n\
+             SESSION STATE: Most tools act on the \"active campaign\" — a selection held \
+             server-side for the session. Begin by calling get_active_campaign to orient yourself. \
+             If none is active, call list_campaigns and set_active_campaign (or create_campaign, \
+             which activates the new campaign automatically). Tools whose description says \
+             \"Requires an active campaign\" will fail until one is selected.\n\n\
+             WORKFLOW: Monsters, items, and spells are referenced by exact name + source book. \
+             Always search_catalog first to get the exact name before adding one to a module or \
+             character, or before cloning it into homebrew. When a campaign is active, catalog \
+             searches are automatically filtered to its enabled source books.\n\n\
+             DM AUTHORITY: Never invent NPCs, encounters, loot, backstory, or lore on your own. \
+             Present options and let the user choose; then execute their decision."
                 .to_string(),
         ),
         meta: None,

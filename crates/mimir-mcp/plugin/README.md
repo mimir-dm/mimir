@@ -47,6 +47,34 @@ claude mcp add mimir \
   -- mimir-mcp
 ```
 
+### Claude Desktop Installation
+
+Claude Desktop is a first-class target for Mimir. Add the server to your
+`claude_desktop_config.json` (Settings → Developer → Edit Config):
+
+```json
+{
+  "mcpServers": {
+    "mimir": {
+      "command": "/absolute/path/to/mimir-mcp",
+      "env": {
+        "MIMIR_DATABASE_PATH": "/Users/you/Library/Application Support/com.mimir.app/data/mimir.db"
+      }
+    }
+  }
+}
+```
+
+Use an **absolute path** for both `command` and `MIMIR_DATABASE_PATH` — Claude
+Desktop does not expand `~` or `$HOME`. Restart Claude Desktop after editing, then
+confirm the `mimir` tools appear under the tools (🔌) menu. A good first message is
+"Which Mimir campaign is active?", which calls `get_active_campaign` and orients
+the assistant.
+
+Note: tools that take a file path (`create_map`, `export_campaign`,
+`import_campaign`, `generate_map`) read and write on the machine running the
+server, using absolute paths on that host.
+
 ## Available Commands
 
 - `/mimir-campaigns` - List all available campaigns
@@ -56,14 +84,16 @@ claude mcp add mimir \
 
 ## Getting Started
 
-1. **List campaigns**: Use `list_campaigns` to see available campaigns
-2. **Set active campaign**: Use `set_active_campaign` with the campaign ID
-3. **Start authoring**: Create modules, add NPCs, populate encounters
+1. **Check state**: Use `get_active_campaign` to see if a campaign is already active
+2. **List campaigns**: Use `list_campaigns` to see available campaigns
+3. **Set active campaign**: Use `set_active_campaign` with the campaign ID (or `create_campaign`, which activates the new one)
+4. **Start authoring**: Create modules, add NPCs, populate encounters
 
 ## Tool Categories
 
 ### Campaign Management
 - `list_campaigns` - List all available campaigns
+- `get_active_campaign` - Report which campaign is currently active (never errors; call first to orient)
 - `set_active_campaign` - Set the active campaign for subsequent operations
 - `get_campaign_details` - Get full campaign info including modules and characters
 - `get_campaign_sources` - Get enabled source books for the campaign
