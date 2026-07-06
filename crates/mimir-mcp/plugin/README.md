@@ -107,11 +107,11 @@ server, using absolute paths on that host.
 ### Module Management
 - `create_module` - Create a new module (adventure chapter)
 - `list_modules` - List all modules in the active campaign
-- `get_module_details` - Get module with documents, monsters, and items
+- `get_module_details` - Get module with its documents and monsters
 - `update_module` - Update module name or description
 - `delete_module` - Delete a module and all its contents
 - `add_monster_to_module` - Add a monster from the catalog to a module
-- `add_item_to_module` - Add an item from the catalog as module loot
+- `add_item_to_module` - NOT YET IMPLEMENTED (always errors); use `add_item_to_character` for loot instead
 
 ### Document Management
 - `list_documents` - List documents in a module, or campaign-level documents (omit `module_id`)
@@ -144,7 +144,7 @@ server, using absolute paths on that host.
 
 ### Map Generation
 - `generate_map` - Generate a Dungeondraft map from YAML config or biome preset
-- `list_map_presets` - List available biome presets (forest, grassland, cave)
+- `list_map_presets` - List available biome presets (forest, grassland, cave, desert, lake, ice_lake, arctic, swamp, forest_river, and island variants)
 - `validate_map_config` - Validate a YAML map config without generating
 
 ### Catalog Search
@@ -164,14 +164,14 @@ server, using absolute paths on that host.
 
 ```
 1. set_active_campaign(campaign_id)
-2. create_module(name="The Haunted Manor", module_type="horror")
+2. create_module(name="The Haunted Manor", module_type="adventure")
 3. edit_document(document_id, search="# Module Overview", replace="...")
 ```
 
 ### Populating an Encounter
 
 ```
-1. search_catalog(category="monster", name="goblin", cr="1/4")
+1. search_catalog(category="monster", name="goblin", cr_min=0.25, cr_max=0.25)
 2. add_monster_to_module(module_id, monster_name="Goblin", count=6)
 3. add_monster_to_module(module_id, monster_name="Bugbear", count=1, notes="Leader")
 ```
@@ -181,7 +181,7 @@ server, using absolute paths on that host.
 ```
 1. create_character(name="Sildar Hallwinter", character_type="npc", race_name="Human")
 2. edit_character(character_id, npc_role="Quest Giver", npc_location="Phandalin")
-3. edit_character(character_id, ability_scores=[14,12,13,10,11,8], currency=[50,0,0,0,0])
+3. edit_character(character_id, strength=14, dexterity=12, constitution=13, intelligence=10, wisdom=11, charisma=8, gp=50)
 4. add_item_to_character(character_id, item_name="Longsword", equipped=true)
 ```
 
@@ -192,7 +192,7 @@ server, using absolute paths on that host.
 2. search_catalog(category="class", name="Ranger") — find exact class name
 3. search_catalog(category="background", name="Outlander") — find exact background name
 4. create_character(name="Thalion", character_type="pc", race_name="Elf", class_name="Ranger")
-5. edit_character(character_id, ability_scores=[10,16,14,12,14,8], currency=[0,15,0,0,0])
+5. edit_character(character_id, strength=10, dexterity=16, constitution=14, intelligence=12, wisdom=14, charisma=8, gp=15)
 6. add_item_to_character(character_id, item_name="Longbow", equipped=true)
 7. add_item_to_character(character_id, item_name="Studded Leather Armor", equipped=true)
 ```
@@ -215,9 +215,9 @@ server, using absolute paths on that host.
 
 ```
 1. create_map(module_id, name="Goblin Cave", file_path="/path/to/cave.uvtt")
-2. search_catalog(category="monster", name="Goblin")
-3. add_token_to_map(map_id, monster_name="Goblin", x=5.0, y=3.0, label="Guard 1")
-4. add_token_to_map(map_id, monster_name="Goblin", x=7.0, y=3.0, label="Guard 2")
+2. add_monster_to_module(module_id, monster_name="Goblin", count=2)  # returns a module_monster id
+3. add_token_to_map(map_id, module_monster_id="<id from step 2>", grid_x=5, grid_y=3, label="Guard 1")
+4. add_token_to_map(map_id, module_monster_id="<id from step 2>", grid_x=7, grid_y=3, label="Guard 2")
 ```
 
 ### Generating a Map

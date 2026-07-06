@@ -134,10 +134,11 @@ Campaign-level documents are not tied to any module — use them for world lore,
 ### Upload and Populate a Map
 
 1. Upload a UVTT map file with `create_map` (module_id, name, file_path)
-2. Place monsters with `add_token_to_map` (map_id, monster_name, x, y, label)
-3. Place NPCs with `add_token_to_map` (map_id, npc_id, x, y, label)
-4. Review with `get_map` to see all token placements
-5. Remove misplaced tokens with `remove_token`
+2. Add the monster to the module first with `add_monster_to_module` to get a `module_monster_id`
+3. Place it with `add_token_to_map` (map_id, module_monster_id, grid_x, grid_y, label) — coordinates are integer grid cells and default to (0,0)
+4. Place NPCs the same way with `add_token_to_map` (map_id, module_npc_id, grid_x, grid_y, label)
+5. Review with `get_map` to see all token placements
+6. Remove misplaced tokens with `remove_token`
 
 ### Manage Character Inventory
 
@@ -156,7 +157,7 @@ Set a spell's prepared state with the `prepared` flag when calling `add_characte
 
 ### Review Module Structure
 
-Use `get_module_details` to see the full structure before editing — it returns documents, monsters, and items in one call.
+Use `get_module_details` to see the full structure before editing — it returns the module's documents and monsters in one call. (Module-level item/loot tracking is not implemented, so no items are returned.)
 
 ### Create Homebrew Content
 

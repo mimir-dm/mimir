@@ -39,13 +39,16 @@ edit_character(
 
 ## Step 4: Set Ability Scores and Currency
 
-Ability scores are `[STR, DEX, CON, INT, WIS, CHA]`. Currency is `[CP, SP, EP, GP, PP]`.
+Set each score and coin with its own named integer parameter — `edit_character`
+has no `ability_scores`/`currency` array (an array is silently ignored). Provide
+only the fields you want to change.
 
 ```
 edit_character(
   character_id: "character-id",
-  ability_scores: [8, 14, 13, 12, 10, 16],
-  currency: [0, 0, 0, 15, 0]
+  strength: 8, dexterity: 14, constitution: 13,
+  intelligence: 12, wisdom: 10, charisma: 16,
+  gp: 15
 )
 ```
 

@@ -197,7 +197,7 @@ Accepts the same fields as `create_homebrew` plus `id` (required). Only fields y
 
 ### generate_map
 - `config_yaml` — YAML configuration string (mutually exclusive with `preset`)
-- `preset` — Biome preset name: `"forest"`, `"grassland"`, `"cave"` (mutually exclusive with `config_yaml`)
+- `preset` — Biome preset name; call `list_map_presets` for the current set (`"forest"`, `"grassland"`, `"cave"`, `"desert"`, `"lake"`, `"ice_lake"`, `"arctic"`, `"swamp"`, `"forest_river"`, `"island_tropical"`, `"island_forest"`, `"island_arctic"`). Mutually exclusive with `config_yaml`
 - `output_path` (required) — Absolute path for the output `.dungeondraft_map` file
 - `seed` — Random seed override (integer) for reproducible generation
 
