@@ -24,7 +24,10 @@ Analyze treasure and magic item distribution across the campaign to ensure appro
 list_modules()
 # For each module:
 get_module_details(module_id)
-# Extract: module_items (loot), monsters (for hoard context)
+# Extract: monsters (for hoard context) and documents.
+# NOTE: modules do not track items directly (no loot field is returned).
+# Intended treasure lives in the module's dm_notes/description documents —
+# read those with read_document to find it.
 
 # Check campaign-level documents for treasure references
 list_documents()  # omit module_id for campaign-level docs
@@ -134,7 +137,7 @@ Calculate:
 
 1. Analyze full campaign loot
 2. Present summary findings
-3. For loot deserts, offer to search the catalog and add items via `add_item_to_module`
+3. For loot deserts, offer to search the catalog and record the treasure in the module's `dm_notes` document (module-level item tracking is not implemented), or hand items to an NPC/PC with `add_item_to_character`
 4. For balance issues, suggest specific swaps
 
 ## Reference Data

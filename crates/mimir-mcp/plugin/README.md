@@ -47,6 +47,34 @@ claude mcp add mimir \
   -- mimir-mcp
 ```
 
+### Claude Desktop Installation
+
+Claude Desktop is a first-class target for Mimir. Add the server to your
+`claude_desktop_config.json` (Settings → Developer → Edit Config):
+
+```json
+{
+  "mcpServers": {
+    "mimir": {
+      "command": "/absolute/path/to/mimir-mcp",
+      "env": {
+        "MIMIR_DATABASE_PATH": "/Users/you/Library/Application Support/com.mimir.app/data/mimir.db"
+      }
+    }
+  }
+}
+```
+
+Use an **absolute path** for both `command` and `MIMIR_DATABASE_PATH` — Claude
+Desktop does not expand `~` or `$HOME`. Restart Claude Desktop after editing, then
+confirm the `mimir` tools appear under the tools (🔌) menu. A good first message is
+"Which Mimir campaign is active?", which calls `get_active_campaign` and orients
+the assistant.
+
+Note: tools that take a file path (`create_map`, `export_campaign`,
+`import_campaign`, `generate_map`) read and write on the machine running the
+server, using absolute paths on that host.
+
 ## Available Commands
 
 - `/mimir-campaigns` - List all available campaigns
@@ -56,14 +84,16 @@ claude mcp add mimir \
 
 ## Getting Started
 
-1. **List campaigns**: Use `list_campaigns` to see available campaigns
-2. **Set active campaign**: Use `set_active_campaign` with the campaign ID
-3. **Start authoring**: Create modules, add NPCs, populate encounters
+1. **Check state**: Use `get_active_campaign` to see if a campaign is already active
+2. **List campaigns**: Use `list_campaigns` to see available campaigns
+3. **Set active campaign**: Use `set_active_campaign` with the campaign ID (or `create_campaign`, which activates the new one)
+4. **Start authoring**: Create modules, add NPCs, populate encounters
 
 ## Tool Categories
 
 ### Campaign Management
 - `list_campaigns` - List all available campaigns
+- `get_active_campaign` - Report which campaign is currently active (never errors; call first to orient)
 - `set_active_campaign` - Set the active campaign for subsequent operations
 - `get_campaign_details` - Get full campaign info including modules and characters
 - `get_campaign_sources` - Get enabled source books for the campaign
@@ -77,11 +107,11 @@ claude mcp add mimir \
 ### Module Management
 - `create_module` - Create a new module (adventure chapter)
 - `list_modules` - List all modules in the active campaign
-- `get_module_details` - Get module with documents, monsters, and items
+- `get_module_details` - Get module with its documents and monsters
 - `update_module` - Update module name or description
 - `delete_module` - Delete a module and all its contents
 - `add_monster_to_module` - Add a monster from the catalog to a module
-- `add_item_to_module` - Add an item from the catalog as module loot
+- `add_item_to_module` - NOT YET IMPLEMENTED (always errors); use `add_item_to_character` for loot instead
 
 ### Document Management
 - `list_documents` - List documents in a module, or campaign-level documents (omit `module_id`)
@@ -114,7 +144,7 @@ claude mcp add mimir \
 
 ### Map Generation
 - `generate_map` - Generate a Dungeondraft map from YAML config or biome preset
-- `list_map_presets` - List available biome presets (forest, grassland, cave)
+- `list_map_presets` - List available biome presets (forest, grassland, cave, desert, lake, ice_lake, arctic, swamp, forest_river, and island variants)
 - `validate_map_config` - Validate a YAML map config without generating
 
 ### Catalog Search
@@ -134,14 +164,14 @@ claude mcp add mimir \
 
 ```
 1. set_active_campaign(campaign_id)
-2. create_module(name="The Haunted Manor", module_type="horror")
+2. create_module(name="The Haunted Manor", module_type="adventure")
 3. edit_document(document_id, search="# Module Overview", replace="...")
 ```
 
 ### Populating an Encounter
 
 ```
-1. search_catalog(category="monster", name="goblin", cr="1/4")
+1. search_catalog(category="monster", name="goblin", cr_min=0.25, cr_max=0.25)
 2. add_monster_to_module(module_id, monster_name="Goblin", count=6)
 3. add_monster_to_module(module_id, monster_name="Bugbear", count=1, notes="Leader")
 ```
@@ -151,7 +181,7 @@ claude mcp add mimir \
 ```
 1. create_character(name="Sildar Hallwinter", character_type="npc", race_name="Human")
 2. edit_character(character_id, npc_role="Quest Giver", npc_location="Phandalin")
-3. edit_character(character_id, ability_scores=[14,12,13,10,11,8], currency=[50,0,0,0,0])
+3. edit_character(character_id, strength=14, dexterity=12, constitution=13, intelligence=10, wisdom=11, charisma=8, gp=50)
 4. add_item_to_character(character_id, item_name="Longsword", equipped=true)
 ```
 
@@ -162,7 +192,7 @@ claude mcp add mimir \
 2. search_catalog(category="class", name="Ranger") — find exact class name
 3. search_catalog(category="background", name="Outlander") — find exact background name
 4. create_character(name="Thalion", character_type="pc", race_name="Elf", class_name="Ranger")
-5. edit_character(character_id, ability_scores=[10,16,14,12,14,8], currency=[0,15,0,0,0])
+5. edit_character(character_id, strength=10, dexterity=16, constitution=14, intelligence=12, wisdom=14, charisma=8, gp=15)
 6. add_item_to_character(character_id, item_name="Longbow", equipped=true)
 7. add_item_to_character(character_id, item_name="Studded Leather Armor", equipped=true)
 ```
@@ -185,9 +215,9 @@ claude mcp add mimir \
 
 ```
 1. create_map(module_id, name="Goblin Cave", file_path="/path/to/cave.uvtt")
-2. search_catalog(category="monster", name="Goblin")
-3. add_token_to_map(map_id, monster_name="Goblin", x=5.0, y=3.0, label="Guard 1")
-4. add_token_to_map(map_id, monster_name="Goblin", x=7.0, y=3.0, label="Guard 2")
+2. add_monster_to_module(module_id, monster_name="Goblin", count=2)  # returns a module_monster id
+3. add_token_to_map(map_id, module_monster_id="<id from step 2>", grid_x=5, grid_y=3, label="Guard 1")
+4. add_token_to_map(map_id, module_monster_id="<id from step 2>", grid_x=7, grid_y=3, label="Guard 2")
 ```
 
 ### Generating a Map

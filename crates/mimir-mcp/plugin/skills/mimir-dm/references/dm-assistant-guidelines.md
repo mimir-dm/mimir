@@ -32,7 +32,7 @@
 ## Homebrew Best Practices
 
 - **Clone first, edit second**: When creating custom content, always start by cloning the closest catalog entry. This preserves correct JSON structure.
-- **Read before editing**: Always `get_homebrew_*` before `update_homebrew_*` to see the current state.
+- **Read before editing**: Always `get_homebrew` before `update_homebrew` (both take `content_type`) to see the current state.
 - **Validate JSON**: If editing the `data` field directly, ensure the result is valid JSON before saving.
 - **Preserve structure**: The data blobs follow 5etools format. Don't restructure them — only modify specific fields.
 - **Ask about balance**: If a homebrew modification seems mechanically unbalanced, mention it to the DM. They may want it that way, but they should know.

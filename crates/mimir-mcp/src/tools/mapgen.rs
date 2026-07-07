@@ -18,14 +18,16 @@ pub fn generate_map_tool() -> Tool {
     Tool {
         name: "generate_map".to_string(),
         description: Some(
-            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. Returns the output file path."
+            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. \
+             The file is written to the machine running this server (not the client); output_path is an \
+             absolute path on that host. Returns the output file path. No active campaign required."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
             vec![],
             create_properties(vec![
                 ("config_yaml", "string", "YAML configuration for map generation. Mutually exclusive with preset."),
-                ("preset", "string", "Biome preset name (forest, grassland, cave). Mutually exclusive with config_yaml."),
+                ("preset", "string", "Biome preset name. Call list_map_presets for the current set (includes forest, grassland, cave, desert, lake, arctic, swamp, and island variants). Mutually exclusive with config_yaml."),
                 ("output_path", "string", "Absolute path for the output .dungeondraft_map file (required)"),
                 ("seed", "integer", "Random seed override for reproducible generation"),
             ]),

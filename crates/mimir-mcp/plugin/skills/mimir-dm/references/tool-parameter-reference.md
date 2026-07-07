@@ -52,21 +52,30 @@ Some tools return composite data and use `ok()` which passes through the JSON di
 { "map": { ... }, "tokens": [...] }
 ```
 
-## Array Formats
+## Ability Scores & Currency (edit_character)
+
+The MCP `edit_character` tool takes each score and coin as its **own named
+integer parameter** — there is **no `ability_scores` or `currency` array**.
+Passing an array is silently ignored (the call still returns success but sets
+nothing), so always use the named parameters below.
 
 ### Ability Scores
-`ability_scores: [STR, DEX, CON, INT, WIS, CHA]`
+`strength`, `dexterity`, `constitution`, `intelligence`, `wisdom`, `charisma`
 
-Example: `[16, 12, 14, 10, 13, 11]`
+Example: `edit_character(character_id: "...", strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 13, charisma: 11)`
+
+Provide only the scores you want to change; the rest keep their current values.
+Ability scores cannot be set in `create_character` — create the character first,
+then set scores with `edit_character`.
 
 ### Currency
-`currency: [CP, SP, EP, GP, PP]`
+`cp`, `sp`, `ep`, `gp`, `pp` (copper, silver, electrum, gold, platinum)
 
-Example: `[0, 0, 0, 50, 0]` (50 gold)
+Example: `edit_character(character_id: "...", gp: 50)` (set 50 gold, other coins unchanged)
 
-### Ability Increases (Level Up — MCP tool)
+### Ability Increases (Level Up)
 
-The MCP `level_up_character` tool uses **individual parameters**, not an array:
+The MCP `level_up_character` tool likewise uses **individual parameters**, not an array:
 - `asi_ability1` — First ability to increase (e.g., "Constitution")
 - `asi_increase1` — Amount for first ability (1 or 2)
 - `asi_ability2` — Second ability to increase (optional)
@@ -74,7 +83,7 @@ The MCP `level_up_character` tool uses **individual parameters**, not an array:
 
 Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi_ability2: "Charisma", asi_increase2: 1`
 
-> **Note**: The Tauri frontend command uses a `[STR, DEX, CON, INT, WIS, CHA]` array format instead. The MCP tool uses the named parameters above.
+> **Note**: The Mimir desktop app's internal (Tauri) commands use `[STR, DEX, CON, INT, WIS, CHA]` and `[CP, SP, EP, GP, PP]` array formats. Those are **not** the MCP interface — through MCP, always use the named parameters above.
 
 ## Enum Values
 
@@ -188,7 +197,7 @@ Accepts the same fields as `create_homebrew` plus `id` (required). Only fields y
 
 ### generate_map
 - `config_yaml` — YAML configuration string (mutually exclusive with `preset`)
-- `preset` — Biome preset name: `"forest"`, `"grassland"`, `"cave"` (mutually exclusive with `config_yaml`)
+- `preset` — Biome preset name; call `list_map_presets` for the current set (`"forest"`, `"grassland"`, `"cave"`, `"desert"`, `"lake"`, `"ice_lake"`, `"arctic"`, `"swamp"`, `"forest_river"`, `"island_tropical"`, `"island_forest"`, `"island_arctic"`). Mutually exclusive with `config_yaml`
 - `output_path` (required) — Absolute path for the output `.dungeondraft_map` file
 - `seed` — Random seed override (integer) for reproducible generation
 
@@ -211,10 +220,12 @@ Returns `{ valid: bool, errors: [{ field, message }] }` or `{ valid: false, pars
 - `description` — New description
 
 ### export_campaign
+- `output_path` (required) — Directory (on the server host) where the archive is written
 - Returns the archive file path
 
 ### import_campaign
-- `file_path` (required) — Path to the archive file
+- `archive_path` (required) — Path to the archive file to import
+- `new_name` — Optional new name for the imported campaign
 
 ### preview_archive
-- `file_path` (required) — Path to the archive file to inspect before importing
+- `archive_path` (required) — Path to the archive file to inspect before importing

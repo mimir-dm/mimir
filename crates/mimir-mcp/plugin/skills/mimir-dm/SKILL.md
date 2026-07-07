@@ -24,12 +24,13 @@ description: >-
 
 ## Getting Started
 
-**Always do these two steps before using any module, character, or document tools:**
+**Orient yourself, then make sure a campaign is active before using any module, character, or document tools:**
 
-1. **List** campaigns with `list_campaigns` (or **create** one with `create_campaign`)
-2. **Set** the active campaign with `set_active_campaign`
+1. **Check** the current selection with `get_active_campaign` (never errors; tells you if one is already active)
+2. **List** campaigns with `list_campaigns` (or **create** one with `create_campaign`, which auto-activates it)
+3. **Set** the active campaign with `set_active_campaign`
 
-All subsequent operations require an active campaign.
+All subsequent operations require an active campaign. `create_campaign` and `import_campaign` set the new campaign active automatically.
 
 ## Important Patterns
 
@@ -71,7 +72,8 @@ For the full guidelines on what requires approval vs what you can do autonomousl
 ### Campaign Management
 
 - `list_campaigns` — List all campaigns
-- `create_campaign` — Create a new campaign (name, description)
+- `get_active_campaign` — Report which campaign is active (never errors; call first to orient)
+- `create_campaign` — Create a new campaign (name, description); auto-activates it
 - `get_campaign_details` — View active campaign details
 - `update_campaign` — Update campaign name or description
 - `set_active_campaign` — Set the working campaign
@@ -96,15 +98,15 @@ Campaign-level documents are not tied to any module — use them for world lore,
 3. Add narrative documents with `create_document` (module_id, backstory, read_aloud, dm_notes, description, custom)
 4. Search the catalog with `search_catalog(category: "monster")` to find exact names
 5. Add monsters with `add_monster_to_module` (include count and notes)
-6. Search items with `search_catalog(category: "item")` and add loot with `add_item_to_module`
+6. Search items with `search_catalog(category: "item")`; note module-level loot tracking is not yet implemented, so record intended treasure in a `dm_notes` document or hand it to an NPC/PC with `add_item_to_character`
 7. Search spells with `search_catalog(category: "spell")` if the module involves spellcasting NPCs or traps
 
 ### Create and Equip an NPC
 
 1. Create the character with `create_character` (name, character_type: "npc", race_name)
 2. Set role and location with `edit_character` (npc_role, npc_location)
-3. Set ability scores with `edit_character` (ability_scores: [STR,DEX,CON,INT,WIS,CHA])
-4. Set currency with `edit_character` (currency: [CP,SP,EP,GP,PP])
+3. Set ability scores with `edit_character` using the named integer params `strength`, `dexterity`, `constitution`, `intelligence`, `wisdom`, `charisma` (there is no `ability_scores` array — an array is silently ignored)
+4. Set currency with `edit_character` using the named integer params `cp`, `sp`, `ep`, `gp`, `pp` (no `currency` array)
 5. Equip with `add_item_to_character` (item_name, equipped: true, attuned: true if applicable)
 6. Verify with `get_character`
 
@@ -112,7 +114,7 @@ Campaign-level documents are not tied to any module — use them for world lore,
 
 1. Search `search_catalog` with `category: "race"`, `"class"`, `"background"` to find exact names
 2. Create with `create_character` (name, character_type: "pc", race_name, class_name)
-3. Set ability scores and currency with `edit_character`
+3. Set ability scores and currency with `edit_character` using named params (`strength`…`charisma`, `cp`…`pp`) — ability scores cannot be set at creation
 4. Set race/background with `edit_character` (race_name, race_source, background_name, background_source)
 5. Add equipment with `add_item_to_character`
 
@@ -127,15 +129,16 @@ Campaign-level documents are not tied to any module — use them for world lore,
 1. Search monsters by name, CR range, or type with `search_catalog(category: "monster")`
 2. Add each monster to the module with `add_monster_to_module` (specify count)
 3. Search spells with `search_catalog(category: "spell")` if encounter involves spellcasters
-4. Add treasure with `add_item_to_module`
+4. Record treasure in a `dm_notes` document, or grant it to a character with `add_item_to_character` (module-level loot tracking is not yet implemented)
 
 ### Upload and Populate a Map
 
 1. Upload a UVTT map file with `create_map` (module_id, name, file_path)
-2. Place monsters with `add_token_to_map` (map_id, monster_name, x, y, label)
-3. Place NPCs with `add_token_to_map` (map_id, npc_id, x, y, label)
-4. Review with `get_map` to see all token placements
-5. Remove misplaced tokens with `remove_token`
+2. Add the monster to the module first with `add_monster_to_module` to get a `module_monster_id`
+3. Place it with `add_token_to_map` (map_id, module_monster_id, grid_x, grid_y, label) — coordinates are integer grid cells and default to (0,0)
+4. Place NPCs the same way with `add_token_to_map` (map_id, module_npc_id, grid_x, grid_y, label)
+5. Review with `get_map` to see all token placements
+6. Remove misplaced tokens with `remove_token`
 
 ### Manage Character Inventory
 
@@ -147,15 +150,14 @@ Campaign-level documents are not tied to any module — use them for world lore,
 ### Manage Character Spells
 
 - `list_character_spells` — list all known spells, optionally filtered by class or prepared status
-- `add_character_spell` — add a catalog or homebrew spell to a character's known spells
+- `add_character_spell` — add a catalog or homebrew spell to a character's known spells (set `prepared: true` to add it already prepared)
 - `remove_character_spell` — remove a spell by name, optionally scoped to a specific class
-- `toggle_spell_prepared` — flip a spell's prepared/unprepared state (via Tauri command)
 
-Use `spell_source: "HB"` when adding homebrew spells. Verify the homebrew spell exists in the campaign with `list_homebrew(content_type: "spell")` before adding it to a character.
+Set a spell's prepared state with the `prepared` flag when calling `add_character_spell`. Use `spell_source: "HB"` when adding homebrew spells, and verify the homebrew spell exists in the campaign with `list_homebrew(content_type: "spell")` before adding it to a character.
 
 ### Review Module Structure
 
-Use `get_module_details` to see the full structure before editing — it returns documents, monsters, and items in one call.
+Use `get_module_details` to see the full structure before editing — it returns the module's documents and monsters in one call. (Module-level item/loot tracking is not implemented, so no items are returned.)
 
 ### Create Homebrew Content
 
@@ -206,7 +208,7 @@ When a campaign is active, catalog searches are automatically filtered to only i
 - Assign NPCs roles and locations for organization
 - Documents support markdown formatting for rich content
 - Use `list_characters` with location or faction filters to find NPCs by area
-- For array format details (ability_scores, currency, etc.), see references/tool-parameter-reference.md
+- For exact parameter names (ability scores, currency, etc.), see references/tool-parameter-reference.md
 - When deleting homebrew content, check if any modules or characters reference it first
 - Homebrew monsters appear with source "HB" in module monster lists
 - Homebrew spells added to characters appear with source "HB" on the character sheet and in spell card PDF exports

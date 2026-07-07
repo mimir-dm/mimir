@@ -49,7 +49,16 @@ add_monster_to_module(module_id: "module-id", monster_name: "Shadow", count: 4)
 
 ## Step 6: Add Treasure
 
+Module-level loot tracking is not implemented (`add_item_to_module` currently
+returns an error). Record intended treasure in a DM-notes document, or hand it
+to a character with `add_item_to_character`.
+
 ```
 search_catalog(category: "item", rarity: "uncommon", item_type: "wondrous item")
-add_item_to_module(module_id: "module-id", item_name: "Cloak of Protection")
+create_document(
+  module_id: "module-id",
+  title: "Treasure",
+  document_type: "dm_notes",
+  content: "- Cloak of Protection (uncommon, wondrous item)"
+)
 ```

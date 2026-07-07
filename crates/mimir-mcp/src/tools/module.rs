@@ -22,7 +22,11 @@ use crate::McpError;
 pub fn create_module_tool() -> Tool {
     Tool {
         name: "create_module".to_string(),
-        description: Some("Create a new module in the active campaign".to_string()),
+        description: Some(
+            "Create a new module (an adventure chapter) in the active campaign. Requires an \
+             active campaign."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
             vec!["name".to_string()],
             create_properties(vec![
@@ -48,7 +52,9 @@ pub fn create_module_tool() -> Tool {
 pub fn list_modules_tool() -> Tool {
     Tool {
         name: "list_modules".to_string(),
-        description: Some("List all modules in the active campaign".to_string()),
+        description: Some(
+            "List all modules in the active campaign. Requires an active campaign.".to_string(),
+        ),
         input_schema: ToolInputSchema::new(vec![], None, None),
         title: None,
         annotations: None,
@@ -112,7 +118,11 @@ pub fn add_monster_to_module_tool() -> Tool {
 pub fn add_item_to_module_tool() -> Tool {
     Tool {
         name: "add_item_to_module".to_string(),
-        description: Some("Add an item from the catalog to a module as loot".to_string()),
+        description: Some(
+            "NOT YET IMPLEMENTED — currently returns an error. Module-level item/loot tracking \
+             does not exist yet. To give a character loot, use add_item_to_character instead."
+                .to_string(),
+        ),
         input_schema: ToolInputSchema::new(
             vec!["module_id".to_string(), "item_name".to_string()],
             create_properties(vec![

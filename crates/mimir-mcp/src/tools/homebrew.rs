@@ -50,7 +50,9 @@ pub fn list_homebrew_tool() -> Tool {
     Tool {
         name: "list_homebrew".to_string(),
         description: Some(
-            "List all homebrew content of a given type in the active campaign".to_string(),
+            "List all homebrew content of a given type in the active campaign. Requires an \
+             active campaign."
+                .to_string(),
         ),
         input_schema: ToolInputSchema::new(
             vec!["content_type".to_string()],
@@ -99,7 +101,7 @@ pub fn create_homebrew_tool() -> Tool {
     Tool {
         name: "create_homebrew".to_string(),
         description: Some(
-            "Create a new homebrew item, monster, or spell in the active campaign. To clone from a catalog entry, provide cloned_from_name and cloned_from_source — the catalog entry's full data will be used as the base, and any fields in data will override specific properties. When cloning, data is optional. IMPORTANT: Use search_catalog first to find the exact name and source before cloning."
+            "Create a new homebrew item, monster, or spell in the active campaign. Requires an active campaign. To clone from a catalog entry, provide cloned_from_name and cloned_from_source — the catalog entry's full data will be used as the base, and any fields in data will override specific properties. When cloning, data is optional. IMPORTANT: Use search_catalog first to find the exact name and source before cloning."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
