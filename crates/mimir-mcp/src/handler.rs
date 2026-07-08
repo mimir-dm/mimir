@@ -60,6 +60,7 @@ impl MimirHandler {
             tools::module::update_module_tool(),
             tools::module::delete_module_tool(),
             tools::module::add_monster_to_module_tool(),
+            tools::module::update_module_monster_tool(),
             tools::module::remove_monster_from_module_tool(),
             tools::module::add_item_to_module_tool(),
             // Document tools
@@ -139,6 +140,9 @@ impl MimirHandler {
             "delete_module" => tools::module::delete_module(&self.context, args).await,
             "add_monster_to_module" => {
                 tools::module::add_monster_to_module(&self.context, args).await
+            }
+            "update_module_monster" => {
+                tools::module::update_module_monster(&self.context, args).await
             }
             "remove_monster_from_module" => {
                 tools::module::remove_monster_from_module(&self.context, args).await
@@ -294,6 +298,7 @@ mod tests {
         "update_module",
         "delete_module",
         "add_monster_to_module",
+        "update_module_monster",
         "remove_monster_from_module",
         "add_item_to_module",
         // Document
@@ -930,6 +935,242 @@ mod tests {
         assert!(matches!(err, McpError::InvalidArguments(_)));
     }
 
+    // -- Module Monsters (catalog + homebrew paths) ----------------------------
+
+    /// Helper: create a module in the active campaign, return its id.
+    async fn setup_module(handler: &MimirHandler) -> String {
+        let res = call_ok(
+            handler,
+            "create_module",
+            json!({"name": "Test Module"}),
+        )
+        .await;
+        res["module"]["id"].as_str().unwrap().to_string()
+    }
+
+    #[tokio::test]
+    async fn add_and_remove_catalog_monster() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let module_id = setup_module(&handler).await;
+
+        // Add via monster_name (catalog path)
+        let res = call_ok(
+            &handler,
+            "add_monster_to_module",
+            json!({
+                "module_id": module_id,
+                "monster_name": "Guard",
+                "monster_source": "MM",
+                "count": 3,
+                "notes": "Gate guards"
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "added");
+        assert_eq!(res["module_monster"]["monster_name"], "Guard");
+        assert_eq!(res["module_monster"]["quantity"], 3);
+        assert!(res["module_monster"]["homebrew_monster_id"].is_null());
+        let mm_id = res["module_monster"]["id"].as_str().unwrap().to_string();
+
+        // Appears in module details
+        let res = call_ok(
+            &handler,
+            "get_module_details",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        let monsters = res["monsters"].as_array().unwrap();
+        assert_eq!(monsters.len(), 1);
+        assert_eq!(monsters[0]["monster_name"], "Guard");
+
+        // Remove
+        let res = call_ok(
+            &handler,
+            "remove_monster_from_module",
+            json!({"module_monster_id": mm_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "removed");
+
+        // Gone from module details
+        let res = call_ok(
+            &handler,
+            "get_module_details",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn add_and_remove_homebrew_monster() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let module_id = setup_module(&handler).await;
+
+        // Create a homebrew monster to reference
+        let res = call_ok(
+            &handler,
+            "create_homebrew",
+            json!({
+                "content_type": "monster",
+                "name": "Frost Architect",
+                "data": r#"{"name":"Frost Architect","hp":{"average":150}}"#,
+                "cr": "15",
+                "creature_type": "construct",
+                "size": "H"
+            }),
+        )
+        .await;
+        let hb_id = res["monster"]["id"].as_str().unwrap().to_string();
+
+        // Add via homebrew_monster_id (homebrew path) — this is the call that
+        // hung the live server on 2026-07-07; guard against regression.
+        let res = tokio::time::timeout(
+            std::time::Duration::from_secs(10),
+            handler.execute_tool(
+                "add_monster_to_module",
+                json!({
+                    "module_id": module_id,
+                    "homebrew_monster_id": hb_id,
+                    "count": 1,
+                    "display_name": "The Architect"
+                }),
+            ),
+        )
+        .await
+        .expect("add_monster_to_module(homebrew) timed out — handler hang")
+        .expect("add_monster_to_module(homebrew) failed");
+
+        assert_eq!(res["status"], "added");
+        assert_eq!(res["module_monster"]["homebrew_monster_id"], hb_id.as_str());
+        assert!(res["module_monster"]["monster_name"].is_null());
+        let mm_id = res["module_monster"]["id"].as_str().unwrap().to_string();
+
+        // Appears in module details flagged as homebrew
+        let res = call_ok(
+            &handler,
+            "get_module_details",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        let monsters = res["monsters"].as_array().unwrap();
+        assert_eq!(monsters.len(), 1);
+        assert_eq!(monsters[0]["homebrew_monster_id"], hb_id.as_str());
+
+        // Remove
+        let res = call_ok(
+            &handler,
+            "remove_monster_from_module",
+            json!({"module_monster_id": mm_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "removed");
+    }
+
+    #[tokio::test]
+    async fn identical_add_increments_quantity_instead_of_duplicating() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let module_id = setup_module(&handler).await;
+
+        // First add creates the entry
+        let res = call_ok(
+            &handler,
+            "add_monster_to_module",
+            json!({"module_id": module_id, "monster_name": "Guard", "monster_source": "MM", "count": 2}),
+        )
+        .await;
+        let first_id = res["module_monster"]["id"].as_str().unwrap().to_string();
+        assert_eq!(res["module_monster"]["quantity"], 2);
+
+        // Retry / repeat add increments the same row — no duplicate
+        let res = call_ok(
+            &handler,
+            "add_monster_to_module",
+            json!({"module_id": module_id, "monster_name": "Guard", "monster_source": "MM", "count": 2}),
+        )
+        .await;
+        assert_eq!(res["module_monster"]["id"], first_id.as_str());
+        assert_eq!(res["module_monster"]["quantity"], 4);
+
+        let res = call_ok(
+            &handler,
+            "get_module_details",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        assert_eq!(res["monsters"].as_array().unwrap().len(), 1, "must not duplicate");
+
+        // update_module_monster sets an exact quantity
+        let res = call_ok(
+            &handler,
+            "update_module_monster",
+            json!({"module_monster_id": first_id, "quantity": 3, "notes": "gate detail"}),
+        )
+        .await;
+        assert_eq!(res["status"], "updated");
+        assert_eq!(res["module_monster"]["quantity"], 3);
+        assert_eq!(res["module_monster"]["notes"], "gate detail");
+
+        // Unknown id errors cleanly
+        let err = call_err(
+            &handler,
+            "update_module_monster",
+            json!({"module_monster_id": "no-such-id", "quantity": 1}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    #[tokio::test]
+    async fn add_monster_argument_validation() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let module_id = setup_module(&handler).await;
+
+        // Both paths specified — rejected
+        let err = call_err(
+            &handler,
+            "add_monster_to_module",
+            json!({
+                "module_id": module_id,
+                "monster_name": "Guard",
+                "homebrew_monster_id": "some-id"
+            }),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Neither path specified — rejected
+        let err = call_err(
+            &handler,
+            "add_monster_to_module",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Nonexistent homebrew id — rejected, not hung
+        let err = call_err(
+            &handler,
+            "add_monster_to_module",
+            json!({"module_id": module_id, "homebrew_monster_id": "no-such-id"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Nonexistent module — rejected
+        let err = call_err(
+            &handler,
+            "add_monster_to_module",
+            json!({"module_id": "no-such-module", "monster_name": "Guard"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
     // -- Homebrew Monster CRUD ------------------------------------------------
 
     #[tokio::test]
@@ -1183,6 +1424,379 @@ mod tests {
                 );
             }
         }
+    }
+
+    // -- Character inventory ----------------------------------------------------
+
+    /// Helper: create a character in the active campaign, return its id.
+    async fn setup_character(handler: &MimirHandler) -> String {
+        let res = call_ok(
+            handler,
+            "create_character",
+            json!({"name": "Hero", "character_type": "pc"}),
+        )
+        .await;
+        res["character"]["id"].as_str().unwrap().to_string()
+    }
+
+    #[tokio::test]
+    async fn character_inventory_lifecycle() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let char_id = setup_character(&handler).await;
+
+        // Add an item
+        let res = call_ok(
+            &handler,
+            "add_item_to_character",
+            json!({
+                "character_id": char_id,
+                "item_name": "Longsword",
+                "item_source": "PHB",
+                "quantity": 1,
+                "equipped": true
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "added");
+        assert_eq!(res["inventory_item"]["item_name"], "Longsword");
+        assert_eq!(res["inventory_item"]["equipped"], true);
+        let inv_id = res["inventory_item"]["id"].as_str().unwrap().to_string();
+
+        // Full inventory has one item
+        let res = call_ok(
+            &handler,
+            "get_character_inventory",
+            json!({"character_id": char_id}),
+        )
+        .await;
+        assert_eq!(res["count"], 1);
+
+        // Equipped filter also finds it
+        let res = call_ok(
+            &handler,
+            "get_character_inventory",
+            json!({"character_id": char_id, "filter": "equipped"}),
+        )
+        .await;
+        assert_eq!(res["count"], 1);
+
+        // Update quantity
+        let res = call_ok(
+            &handler,
+            "update_character_inventory",
+            json!({"inventory_id": inv_id, "quantity": 3}),
+        )
+        .await;
+        assert_eq!(res["status"], "updated");
+        assert_eq!(res["inventory_item"]["quantity"], 3);
+
+        // Remove
+        let res = call_ok(
+            &handler,
+            "remove_item_from_character",
+            json!({"inventory_id": inv_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "removed");
+
+        // Inventory empty again
+        let res = call_ok(
+            &handler,
+            "get_character_inventory",
+            json!({"character_id": char_id}),
+        )
+        .await;
+        assert_eq!(res["count"], 0);
+    }
+
+    // -- Character spells ---------------------------------------------------------
+
+    #[tokio::test]
+    async fn character_spells_lifecycle() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let char_id = setup_character(&handler).await;
+
+        // Add a spell
+        let res = call_ok(
+            &handler,
+            "add_character_spell",
+            json!({
+                "character_id": char_id,
+                "spell_name": "Fireball",
+                "spell_source": "PHB",
+                "source_class": "Wizard",
+                "prepared": true
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "success");
+        assert_eq!(res["data"]["spell"]["spell_name"], "Fireball");
+
+        // Duplicate add is rejected
+        let err = call_err(
+            &handler,
+            "add_character_spell",
+            json!({
+                "character_id": char_id,
+                "spell_name": "Fireball",
+                "spell_source": "PHB",
+                "source_class": "Wizard"
+            }),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Listed
+        let res = call_ok(
+            &handler,
+            "list_character_spells",
+            json!({"character_id": char_id}),
+        )
+        .await;
+        assert!(
+            serde_json::to_string(&res).unwrap().contains("Fireball"),
+            "spell list should contain Fireball: {}",
+            res
+        );
+
+        // Remove — case-insensitive, matching the desktop UI behavior
+        let res = call_ok(
+            &handler,
+            "remove_character_spell",
+            json!({"character_id": char_id, "spell_name": "fireball"}),
+        )
+        .await;
+        assert_eq!(res["status"], "success");
+
+        // Removing again fails
+        let err = call_err(
+            &handler,
+            "remove_character_spell",
+            json!({"character_id": char_id, "spell_name": "Fireball"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    #[tokio::test]
+    async fn level_up_character_adds_class_level() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let char_id = setup_character(&handler).await;
+
+        // Classes are stored by name+source (like monsters), so this works
+        // even without catalog data loaded.
+        let res = call_ok(
+            &handler,
+            "level_up_character",
+            json!({"character_id": char_id, "class_name": "Fighter"}),
+        )
+        .await;
+        assert_eq!(res["status"], "success");
+        assert_eq!(res["data"]["class"]["class_name"], "Fighter");
+        assert_eq!(res["data"]["new_total_level"], 1);
+    }
+
+    // -- Document reordering ------------------------------------------------------
+
+    #[tokio::test]
+    async fn reorder_documents_swaps_sort_order() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        let doc_a = call_ok(
+            &handler,
+            "create_document",
+            json!({"title": "A", "document_type": "dm_notes", "content": "a"}),
+        )
+        .await["document"]["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let doc_b = call_ok(
+            &handler,
+            "create_document",
+            json!({"title": "B", "document_type": "dm_notes", "content": "b"}),
+        )
+        .await["document"]["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+
+        let res = call_ok(
+            &handler,
+            "reorder_document",
+            json!({"document_id": doc_a, "swap_with_id": doc_b}),
+        )
+        .await;
+        // Campaign creation seeds template documents, so the response holds
+        // more than just our two — find ours by id.
+        let docs = res["documents"].as_array().unwrap();
+        let order_of = |id: &str| {
+            docs.iter()
+                .find(|d| d["id"] == id)
+                .unwrap()["sort_order"]
+                .as_i64()
+                .unwrap()
+        };
+        assert!(order_of(&doc_b) < order_of(&doc_a), "B should now sort before A");
+    }
+
+    // -- Campaign sources ---------------------------------------------------------
+
+    #[tokio::test]
+    async fn get_campaign_sources_returns_source_list() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        let res = call_ok(&handler, "get_campaign_sources", json!({})).await;
+        assert!(res["sources"].is_array());
+    }
+
+    // -- Module items (not implemented) --------------------------------------------
+
+    #[tokio::test]
+    async fn add_item_to_module_is_unimplemented_error() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let module_id = setup_module(&handler).await;
+
+        let _err = call_err(
+            &handler,
+            "add_item_to_module",
+            json!({"module_id": module_id, "item_name": "Longsword"}),
+        )
+        .await;
+    }
+
+    // -- Map generation -------------------------------------------------------------
+
+    #[tokio::test]
+    async fn mapgen_presets_validate_and_generate() {
+        let handler = MimirHandler::with_context(test_ctx());
+
+        // Presets exist
+        let res = call_ok(&handler, "list_map_presets", json!({})).await;
+        let presets = res["presets"].as_array().unwrap();
+        assert!(!presets.is_empty(), "expected built-in map presets");
+        let preset_name = presets[0]["name"].as_str().unwrap().to_string();
+
+        // Invalid YAML is reported, not an error
+        let res = call_ok(
+            &handler,
+            "validate_map_config",
+            json!({"config_yaml": ": not yaml : ["}),
+        )
+        .await;
+        assert_eq!(res["valid"], false);
+
+        // Generate from a preset into a temp file
+        let out = std::env::temp_dir().join(format!(
+            "mimir-mcp-test-map-{}.json",
+            std::process::id()
+        ));
+        let res = call_ok(
+            &handler,
+            "generate_map",
+            json!({"preset": preset_name, "output_path": out.to_str().unwrap(), "seed": 42}),
+        )
+        .await;
+        assert_eq!(res["success"], true);
+        assert!(out.exists(), "generated map file should exist");
+        let _ = std::fs::remove_file(&out);
+
+        // Unknown preset is rejected
+        let err = call_err(
+            &handler,
+            "generate_map",
+            json!({"preset": "definitely-not-a-preset", "output_path": "/dev/null"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    // -- Maps and tokens (error paths — happy path needs a real UVTT fixture) -------
+
+    #[tokio::test]
+    async fn map_tools_reject_bad_input() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        // Empty list on fresh campaign
+        let res = call_ok(&handler, "list_maps", json!({})).await;
+        assert_eq!(res["maps"].as_array().map(|a| a.len()).unwrap_or(0), 0);
+
+        // Missing file
+        let err = call_err(
+            &handler,
+            "create_map",
+            json!({"name": "Cave", "file_path": "/nonexistent/map.uvtt"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Unknown ids error rather than hang
+        let _err = call_err(&handler, "get_map", json!({"map_id": "nope"})).await;
+        let _err = call_err(&handler, "remove_token", json!({"token_id": "nope"})).await;
+    }
+
+    // -- Export / preview / import roundtrip -----------------------------------------
+
+    #[tokio::test]
+    async fn campaign_archive_roundtrip() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        // Give the campaign some content
+        let module_id = setup_module(&handler).await;
+        call_ok(
+            &handler,
+            "create_document",
+            json!({"module_id": module_id, "title": "Notes", "document_type": "dm_notes", "content": "hi"}),
+        )
+        .await;
+
+        let out_dir = std::env::temp_dir().join(format!("mimir-mcp-test-export-{}", std::process::id()));
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        // Export
+        let res = call_ok(
+            &handler,
+            "export_campaign",
+            json!({"output_path": out_dir.to_str().unwrap()}),
+        )
+        .await;
+        assert_eq!(res["status"], "success");
+        let archive_path = res["data"]["archive_path"].as_str().unwrap().to_string();
+        assert!(std::path::Path::new(&archive_path).exists());
+
+        // Preview
+        let res = call_ok(
+            &handler,
+            "preview_archive",
+            json!({"archive_path": archive_path}),
+        )
+        .await;
+        assert_eq!(res["campaign_name"], "Test Campaign");
+        assert_eq!(res["counts"]["modules"], 1);
+
+        // Import as a copy
+        let res = call_ok(
+            &handler,
+            "import_campaign",
+            json!({"archive_path": archive_path, "new_name": "Imported Copy"}),
+        )
+        .await;
+        assert_eq!(res["status"], "success");
+        assert_eq!(res["data"]["campaign_name"], "Imported Copy");
+
+        // Two campaigns now exist
+        let res = call_ok(&handler, "list_campaigns", json!({})).await;
+        assert_eq!(res["campaigns"].as_array().unwrap().len(), 2);
+
+        let _ = std::fs::remove_dir_all(&out_dir);
     }
 
     #[tokio::test]

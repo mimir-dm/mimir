@@ -3,12 +3,12 @@
 //! MCP tools for module management.
 
 use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::NewModuleMonster;
-use mimir_core::services::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
+use mimir_core::services::{
+    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
+};
 use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
-use uuid::Uuid;
 
 use super::create_properties;
 use crate::context::McpContext;
@@ -90,7 +90,7 @@ pub fn add_monster_to_module_tool() -> Tool {
     Tool {
         name: "add_monster_to_module".to_string(),
         description: Some(
-            "Add a monster to a module. Use monster_name for catalog monsters or homebrew_monster_id for homebrew monsters. Exactly one path must be provided."
+            "Add a monster to a module. Use monster_name for catalog monsters or homebrew_monster_id for homebrew monsters. Exactly one path must be provided. If the module already has an entry for the same monster, its quantity is incremented instead of creating a duplicate; use update_module_monster to set an exact quantity."
                 .to_string(),
         ),
         input_schema: ToolInputSchema::new(
@@ -103,6 +103,32 @@ pub fn add_monster_to_module_tool() -> Tool {
                 ("count", "integer", "Number of this monster (default: 1)"),
                 ("display_name", "string", "Optional display name override"),
                 ("notes", "string", "Optional notes about this monster"),
+            ]),
+            None,
+        ),
+        title: None,
+        annotations: None,
+        icons: vec![],
+        execution: None,
+        output_schema: None,
+        meta: None,
+    }
+}
+
+pub fn update_module_monster_tool() -> Tool {
+    Tool {
+        name: "update_module_monster".to_string(),
+        description: Some(
+            "Update a module monster entry's quantity, display name, or notes. Use the id returned by add_monster_to_module or get_module_details."
+                .to_string(),
+        ),
+        input_schema: ToolInputSchema::new(
+            vec!["module_monster_id".to_string()],
+            create_properties(vec![
+                ("module_monster_id", "string", "The ID of the module monster entry"),
+                ("quantity", "integer", "New quantity (sets the exact count)"),
+                ("display_name", "string", "New display name override"),
+                ("notes", "string", "New notes"),
             ]),
             None,
         ),
@@ -299,7 +325,8 @@ pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Va
         .collect();
 
     // Get monsters for this module
-    let monsters = dal::list_module_monsters(&mut db, module_id)
+    let monsters = ModuleService::new(&mut db)
+        .list_monsters(module_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     let monster_data: Vec<Value> = monsters
@@ -361,60 +388,83 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
 
     let mut db = ctx.connect()?;
 
-    // Verify module exists
-    let mut service = ModuleService::new(&mut db);
-    if service.get(module_id).map_err(|e| McpError::Internal(e.to_string()))?.is_none() {
-        return Err(McpError::InvalidArguments(format!(
-            "Module '{}' not found",
-            module_id
-        )));
-    }
-
-    let id = Uuid::new_v4().to_string();
-
-    let new_monster = if let Some(hb_id) = homebrew_monster_id {
-        // Validate homebrew monster exists
-        dal::get_campaign_homebrew_monster(&mut db, hb_id)
-            .map_err(|_| McpError::InvalidArguments(format!("Homebrew monster '{}' not found", hb_id)))?;
-
-        let mut m = NewModuleMonster::from_homebrew(&id, module_id, hb_id)
-            .with_quantity(count);
-        if let Some(n) = notes {
-            m = m.with_notes(n);
+    let monster = if let Some(hb_id) = homebrew_monster_id {
+        MonsterRef::Homebrew {
+            id: hb_id.to_string(),
         }
-        if let Some(dn) = display_name {
-            m = m.with_display_name(dn);
-        }
-        m
     } else {
-        let name = monster_name.unwrap();
         let monster_source = args
             .get("monster_source")
             .and_then(|v| v.as_str())
             .unwrap_or("MM");
-
-        let mut m = NewModuleMonster::new(&id, module_id, name, monster_source)
-            .with_quantity(count);
-        if let Some(n) = notes {
-            m = m.with_notes(n);
+        MonsterRef::Catalog {
+            name: monster_name.unwrap().to_string(),
+            source: monster_source.to_string(),
         }
-        if let Some(dn) = display_name {
-            m = m.with_display_name(dn);
-        }
-        m
     };
 
-    dal::insert_module_monster(&mut db, &new_monster)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let mut input = AddMonsterInput::new(module_id, monster).with_quantity(count);
+    if let Some(n) = notes {
+        input = input.with_notes(n);
+    }
+    if let Some(dn) = display_name {
+        input = input.with_display_name(dn);
+    }
+
+    let monster = ModuleService::new(&mut db)
+        .add_monster(input)
+        .map_err(|e| match e {
+            mimir_core::services::ServiceError::NotFound { entity_type, id } => {
+                McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
+            }
+            other => McpError::Internal(other.to_string()),
+        })?;
 
     McpResponse::added("module_monster", json!({
-        "id": id,
-        "monster_name": new_monster.monster_name,
-        "monster_source": new_monster.monster_source,
-        "homebrew_monster_id": new_monster.homebrew_monster_id,
-        "quantity": count,
-        "display_name": display_name,
-        "notes": notes
+        "id": monster.id,
+        "monster_name": monster.monster_name,
+        "monster_source": monster.monster_source,
+        "homebrew_monster_id": monster.homebrew_monster_id,
+        "quantity": monster.quantity,
+        "display_name": monster.display_name,
+        "notes": monster.notes
+    }))
+}
+
+pub async fn update_module_monster(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+    let module_monster_id = args
+        .get("module_monster_id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::InvalidArguments("module_monster_id is required".to_string()))?;
+
+    let quantity = args.get("quantity").and_then(|v| v.as_i64()).map(|q| q as i32);
+    let display_name = args.get("display_name").and_then(|v| v.as_str());
+    let notes = args.get("notes").and_then(|v| v.as_str());
+
+    if quantity.is_none() && display_name.is_none() && notes.is_none() {
+        return Err(McpError::InvalidArguments(
+            "Provide at least one of quantity, display_name, or notes".to_string(),
+        ));
+    }
+
+    let mut db = ctx.connect()?;
+    let monster = ModuleService::new(&mut db)
+        .update_monster(module_monster_id, display_name, notes, quantity)
+        .map_err(|e| match e {
+            mimir_core::services::ServiceError::NotFound { entity_type, id } => {
+                McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
+            }
+            other => McpError::Internal(other.to_string()),
+        })?;
+
+    McpResponse::updated("module_monster", json!({
+        "id": monster.id,
+        "monster_name": monster.monster_name,
+        "monster_source": monster.monster_source,
+        "homebrew_monster_id": monster.homebrew_monster_id,
+        "quantity": monster.quantity,
+        "display_name": monster.display_name,
+        "notes": monster.notes
     }))
 }
 
@@ -426,22 +476,16 @@ pub async fn remove_monster_from_module(ctx: &Arc<McpContext>, args: Value) -> R
 
     let mut db = ctx.connect()?;
 
-    // Verify it exists before deleting
-    let monster = dal::get_module_monster_optional(&mut db, module_monster_id)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    ModuleService::new(&mut db)
+        .remove_monster(module_monster_id)
+        .map_err(|e| match e {
+            mimir_core::services::ServiceError::NotFound { .. } => McpError::InvalidArguments(
+                format!("Module monster '{}' not found", module_monster_id),
+            ),
+            other => McpError::Internal(other.to_string()),
+        })?;
 
-    match monster {
-        Some(_) => {
-            dal::delete_module_monster(&mut db, module_monster_id)
-                .map_err(|e| McpError::Internal(e.to_string()))?;
-
-            McpResponse::removed(module_monster_id)
-        }
-        None => Err(McpError::InvalidArguments(format!(
-            "Module monster '{}' not found",
-            module_monster_id
-        ))),
-    }
+    McpResponse::removed(module_monster_id)
 }
 
 pub async fn add_item_to_module(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
