@@ -14,7 +14,6 @@ use std::sync::Arc;
 use tracing::{error, info};
 
 use crate::context::McpContext;
-use crate::tools;
 use crate::McpError;
 
 /// Mimir MCP Server Handler.
@@ -114,92 +113,13 @@ mod tests {
     use crate::context::McpContext;
     use serde_json::json;
 
-    /// Expected tool names — every MCP tool the server should publish.
-    const EXPECTED_TOOLS: &[&str] = &[
-        // Campaign
-        "list_campaigns",
-        "get_active_campaign",
-        "set_active_campaign",
-        "get_campaign_details",
-        "get_campaign_sources",
-        "create_campaign",
-        "update_campaign",
-        "delete_campaign",
-        "export_campaign",
-        "import_campaign",
-        "preview_archive",
-        // Module
-        "create_module",
-        "list_modules",
-        "get_module_details",
-        "update_module",
-        "delete_module",
-        "add_monster_to_module",
-        "update_module_monster",
-        "remove_monster_from_module",
-        "add_item_to_module",
-        // Document
-        "list_documents",
-        "read_document",
-        "create_document",
-        "edit_document",
-        "delete_document",
-        "reorder_document",
-        // Character
-        "list_characters",
-        "get_character",
-        "create_character",
-        "edit_character",
-        "add_item_to_character",
-        "delete_character",
-        "level_up_character",
-        "remove_item_from_character",
-        "update_character_inventory",
-        "get_character_inventory",
-        "add_character_spell",
-        "remove_character_spell",
-        "list_character_spells",
-        // Map
-        "create_map",
-        "list_maps",
-        "get_map",
-        "update_map",
-        "delete_map",
-        "add_token_to_map",
-        "list_tokens_on_map",
-        "remove_token",
-        // Homebrew (items, monsters, spells)
-        "list_homebrew",
-        "get_homebrew",
-        "create_homebrew",
-        "update_homebrew",
-        "delete_homebrew",
-        // Map generation
-        "generate_map",
-        "list_map_presets",
-        "validate_map_config",
-        // Catalog
-        "search_catalog",
-    ];
-
     fn test_ctx() -> Arc<McpContext> {
         Arc::new(McpContext::for_testing())
     }
 
-    #[test]
-    fn all_expected_tools_are_published() {
-        let tools = MimirHandler::get_tools();
-        let published: Vec<&str> = tools.iter().map(|t| t.name.as_str()).collect();
-
-        for expected in EXPECTED_TOOLS {
-            assert!(
-                published.contains(expected),
-                "Tool '{}' is missing from get_tools(). Published: {:?}",
-                expected,
-                published
-            );
-        }
-    }
+    // The registry is the single source of truth for the tool list, so the
+    // old bookkeeping tests (expected-name list, count match, route match)
+    // are structurally impossible to violate. Only real invariants remain.
 
     #[test]
     fn no_duplicate_tool_names() {
@@ -212,41 +132,6 @@ mod tests {
                 "Duplicate tool name: '{}'",
                 window[0]
             );
-        }
-    }
-
-    #[test]
-    fn published_tools_match_expected_count() {
-        let tools = MimirHandler::get_tools();
-        assert_eq!(
-            tools.len(),
-            EXPECTED_TOOLS.len(),
-            "Tool count mismatch. Published {} tools but expected {}. \
-             Published: {:?}",
-            tools.len(),
-            EXPECTED_TOOLS.len(),
-            tools.iter().map(|t| t.name.as_str()).collect::<Vec<_>>()
-        );
-    }
-
-    #[tokio::test]
-    async fn every_published_tool_has_a_route() {
-        let ctx = test_ctx();
-        let handler = MimirHandler::with_context(ctx);
-        let tools = MimirHandler::get_tools();
-
-        for tool in &tools {
-            let result = handler
-                .execute_tool(&tool.name, serde_json::json!({}))
-                .await;
-            // We expect errors (missing args, no campaign, etc.) but NOT ToolNotFound
-            if let Err(ref e) = result {
-                assert!(
-                    !matches!(e, McpError::ToolNotFound(_)),
-                    "Tool '{}' is published but has no route in execute_tool",
-                    tool.name
-                );
-            }
         }
     }
 

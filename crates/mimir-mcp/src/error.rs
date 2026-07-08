@@ -49,6 +49,26 @@ impl From<serde_json::Error> for McpError {
     }
 }
 
+impl McpError {
+    /// Map a service error treating not-found and validation failures as
+    /// caller errors (`InvalidArguments`).
+    ///
+    /// Families whose published contract classifies not-found as its own
+    /// variant (homebrew) use the `From` impl below instead; module and
+    /// character tools publish bad ids as invalid arguments.
+    pub fn caller_fault(e: mimir_core::services::ServiceError) -> Self {
+        match e {
+            mimir_core::services::ServiceError::NotFound { entity_type, id } => {
+                McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
+            }
+            mimir_core::services::ServiceError::Validation(msg) => {
+                McpError::InvalidArguments(msg)
+            }
+            other => McpError::Internal(other.to_string()),
+        }
+    }
+}
+
 impl From<mimir_core::services::ServiceError> for McpError {
     fn from(e: mimir_core::services::ServiceError) -> Self {
         match e {

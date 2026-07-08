@@ -4,14 +4,14 @@ level: task
 title: "Cleanup: dissolve bookkeeping tests + ServiceError From impl"
 short_code: "MIMIR-T-0652"
 created_at: 2026-07-08T11:12:14.949077+00:00
-updated_at: 2026-07-08T11:12:14.949077+00:00
+updated_at: 2026-07-08T11:38:19.333242+00:00
 parent: MIMIR-I-0069
-blocked_by: ["MIMIR-T-0649", "MIMIR-T-0650", "MIMIR-T-0651"]
+blocked_by: [MIMIR-T-0649, MIMIR-T-0650, MIMIR-T-0651]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -28,6 +28,8 @@ initiative_id: MIMIR-I-0069
 
 Finish the deepening: remove the scaffolding the registry makes structurally
 unnecessary, and centralize error mapping — closing MIMIR-I-0073 as absorbed.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

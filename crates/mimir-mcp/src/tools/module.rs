@@ -6,8 +6,7 @@
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::services::{
-    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, ServiceError,
-    UpdateModuleInput,
+    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
 };
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -180,18 +179,6 @@ tool_args! {
 // =============================================================================
 // Handlers
 // =============================================================================
-
-/// Map a service error to the MCP vocabulary: not-found and validation are
-/// caller errors; everything else is internal.
-fn service_err(e: ServiceError) -> McpError {
-    match e {
-        ServiceError::NotFound { entity_type, id } => {
-            McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
-        }
-        ServiceError::Validation(msg) => McpError::InvalidArguments(msg),
-        other => McpError::Internal(other.to_string()),
-    }
-}
 
 pub async fn create_module(
     ctx: &Arc<McpContext>,
@@ -393,7 +380,7 @@ pub async fn add_monster_to_module(
 
     let monster = ModuleService::new(&mut db)
         .add_monster(input)
-        .map_err(service_err)?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::added("module_monster", json!({
         "id": monster.id,
@@ -424,7 +411,7 @@ pub async fn update_module_monster(
             args.notes.as_deref(),
             args.quantity.map(|q| q as i32),
         )
-        .map_err(service_err)?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::updated("module_monster", json!({
         "id": monster.id,
@@ -445,13 +432,7 @@ pub async fn remove_monster_from_module(
 
     ModuleService::new(&mut db)
         .remove_monster(&args.module_monster_id)
-        .map_err(|e| match e {
-            ServiceError::NotFound { .. } => McpError::InvalidArguments(format!(
-                "Module monster '{}' not found",
-                args.module_monster_id
-            )),
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::removed(&args.module_monster_id)
 }

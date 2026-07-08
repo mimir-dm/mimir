@@ -45,4 +45,12 @@ the legacy dispatch path is empty.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-08: COMPLETE on `feat/mcp-tool-registry`. All 17 remaining tools
+  migrated; legacy dispatch deleted — handler is a pure registry consumer.
+  Deviation from plan: kept content_type/category as validated String (same
+  error text) instead of serde enums, preserving wire-identical messages.
+  More drift documented: search_catalog advertised cr_min/cr_max/class_name
+  never read by any parser; generate_map parser required output_path that the
+  schema never declared required (kept schema-compatible with handler check).
+  Homebrew update's accidental explicit-null-clears-field behavior dropped
+  (undocumented/untested). Full workspace suite green. Net −259 lines.

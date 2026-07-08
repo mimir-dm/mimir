@@ -6,7 +6,7 @@
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::services::{
-    AddInventoryInput, CharacterService, CreateCharacterInput, ServiceError, UpdateCharacterInput,
+    AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
 };
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -915,10 +915,7 @@ pub async fn add_character_spell(
             &args.source_class,
             args.prepared.unwrap_or(false),
         )
-        .map_err(|e| match e {
-            ServiceError::Validation(msg) => McpError::InvalidArguments(msg),
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::success(json!({
         "action": "spell_added",
@@ -945,10 +942,7 @@ pub async fn remove_character_spell(
             &args.spell_name,
             args.source_class.as_deref(),
         )
-        .map_err(|e| match e {
-            ServiceError::Validation(msg) => McpError::InvalidArguments(msg),
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::success(json!({
         "action": "spell_removed",
