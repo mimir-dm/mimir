@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-07-08T03:16:32Z | 552 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-07-08T11:50:00Z | 553 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -620,6 +620,7 @@
 │   │   │   ├── handler.rs
 │   │   │   ├── lib.rs
 │   │   │   ├── main.rs
+│   │   │   ├── registry.rs
 │   │   │   ├── response.rs
 │   │   │   └── tools/
 │   │   │       ├── campaign.rs
@@ -8744,82 +8745,112 @@
 #### crates/mimir-mcp/src/error.rs
 
 - pub `McpError` enum L7-38 — `Initialization | Database | ToolNotFound | InvalidArguments | NoActiveCampaign |...` — Errors that can occur in the MCP server.
+- pub `caller_fault` function L59-69 — `(e: mimir_core::services::ServiceError) -> Self` — Map a service error treating not-found and validation failures as
 -  `McpError` type L40-44 — `= McpError` — MCP Error Types
 -  `from` function L41-43 — `(e: diesel::result::Error) -> Self` — MCP Error Types
 -  `McpError` type L46-50 — `= McpError` — MCP Error Types
 -  `from` function L47-49 — `(e: serde_json::Error) -> Self` — MCP Error Types
--  `McpError` type L52-69 — `= McpError` — MCP Error Types
--  `from` function L53-68 — `(e: mimir_core::services::ServiceError) -> Self` — MCP Error Types
+-  `McpError` type L52-70 — `= McpError` — MCP Error Types
+-  `McpError` type L72-89 — `= McpError` — MCP Error Types
+-  `from` function L73-88 — `(e: mimir_core::services::ServiceError) -> Self` — MCP Error Types
 
 #### crates/mimir-mcp/src/handler.rs
 
-- pub `MimirHandler` struct L23-25 — `{ context: Arc<McpContext> }` — Mimir MCP Server Handler.
-- pub `new` function L29-34 — `() -> Result<Self, McpError>` — Create a new handler with initialized context.
-- pub `with_context` function L37-39 — `(context: Arc<McpContext>) -> Self` — Create a handler with an existing context.
--  `MimirHandler` type L27-219 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_tools` function L42-109 — `() -> Vec<Tool>` — Get the list of available tools.
--  `execute_tool` function L112-218 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
--  `MimirHandler` type L222-272 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_list_tools_request` function L223-234 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_call_tool_request` function L236-271 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tests` module L275-1832 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `EXPECTED_TOOLS` variable L281-346 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
--  `test_ctx` function L348-350 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_expected_tools_are_published` function L353-365 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `no_duplicate_tool_names` function L368-379 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `published_tools_match_expected_count` function L382-393 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `every_published_tool_has_a_route` function L396-414 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_tools_have_descriptions` function L417-426 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `call_ok` function L433-438 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
--  `call_err` function L441-446 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
--  `campaign_crud_lifecycle` function L451-503 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_active_campaign_reports_and_self_heals` function L506-541 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_campaign` function L546-561 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
--  `module_crud_lifecycle` function L564-616 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `document_crud_lifecycle` function L621-704 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_level_document` function L709-739 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_crud_lifecycle` function L744-799 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_filter_by_type` function L802-841 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `catalog_searches_return_empty_on_fresh_db` function L846-879 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tool_not_found_for_unknown_name` function L884-888 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_required_tools_fail_without_active_campaign` function L891-910 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `create_character_requires_name` function L913-928 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `delete_campaign_requires_id` function L931-936 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_module` function L941-949 — `(handler: &MimirHandler) -> String` — Helper: create a module in the active campaign, return its id.
--  `add_and_remove_catalog_monster` function L952-1004 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_and_remove_homebrew_monster` function L1007-1070 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `identical_add_increments_quantity_instead_of_duplicating` function L1073-1125 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_monster_argument_validation` function L1128-1172 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_monster_crud_lifecycle` function L1177-1241 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_spell_crud_lifecycle` function L1246-1302 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_item_crud_lifecycle` function L1307-1363 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_not_found_errors` function L1368-1384 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_name_and_data` function L1387-1410 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_get_update_delete_require_id` function L1413-1427 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_character` function L1432-1440 — `(handler: &MimirHandler) -> String` — Helper: create a character in the active campaign, return its id.
--  `character_inventory_lifecycle` function L1443-1511 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_spells_lifecycle` function L1516-1581 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `level_up_character_adds_class_level` function L1584-1600 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `reorder_documents_swaps_sort_order` function L1605-1645 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_campaign_sources_returns_source_list` function L1650-1656 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_item_to_module_is_unimplemented_error` function L1661-1672 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `mapgen_presets_validate_and_generate` function L1677-1718 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `map_tools_reject_bad_input` function L1723-1743 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_archive_roundtrip` function L1748-1800 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_list_requires_active_campaign` function L1803-1815 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_active_campaign` function L1818-1831 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+- pub `MimirHandler` struct L22-24 — `{ context: Arc<McpContext> }` — Mimir MCP Server Handler.
+- pub `new` function L28-33 — `() -> Result<Self, McpError>` — Create a new handler with initialized context.
+- pub `with_context` function L36-38 — `(context: Arc<McpContext>) -> Self` — Create a handler with an existing context.
+-  `MimirHandler` type L26-55 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_tools` function L41-46 — `() -> Vec<Tool>` — Get the list of available tools from the registry.
+-  `execute_tool` function L49-54 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call through the registry.
+-  `MimirHandler` type L58-108 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_list_tools_request` function L59-70 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_call_tool_request` function L72-107 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tests` module L111-1554 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `test_ctx` function L116-118 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `no_duplicate_tool_names` function L125-136 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_tools_have_descriptions` function L139-148 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `call_ok` function L155-160 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
+-  `call_err` function L163-168 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
+-  `campaign_crud_lifecycle` function L173-225 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_active_campaign_reports_and_self_heals` function L228-263 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_campaign` function L268-283 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
+-  `module_crud_lifecycle` function L286-338 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `document_crud_lifecycle` function L343-426 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_level_document` function L431-461 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_crud_lifecycle` function L466-521 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_filter_by_type` function L524-563 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `catalog_searches_return_empty_on_fresh_db` function L568-601 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tool_not_found_for_unknown_name` function L606-610 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_required_tools_fail_without_active_campaign` function L613-632 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `create_character_requires_name` function L635-650 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `delete_campaign_requires_id` function L653-658 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_module` function L663-671 — `(handler: &MimirHandler) -> String` — Helper: create a module in the active campaign, return its id.
+-  `add_and_remove_catalog_monster` function L674-726 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_and_remove_homebrew_monster` function L729-792 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `identical_add_increments_quantity_instead_of_duplicating` function L795-847 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_monster_argument_validation` function L850-894 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_monster_crud_lifecycle` function L899-963 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_spell_crud_lifecycle` function L968-1024 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_item_crud_lifecycle` function L1029-1085 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_not_found_errors` function L1090-1106 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_name_and_data` function L1109-1132 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_get_update_delete_require_id` function L1135-1149 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_character` function L1154-1162 — `(handler: &MimirHandler) -> String` — Helper: create a character in the active campaign, return its id.
+-  `character_inventory_lifecycle` function L1165-1233 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_spells_lifecycle` function L1238-1303 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `level_up_character_adds_class_level` function L1306-1322 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `reorder_documents_swaps_sort_order` function L1327-1367 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_campaign_sources_returns_source_list` function L1372-1378 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_item_to_module_is_unimplemented_error` function L1383-1394 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `mapgen_presets_validate_and_generate` function L1399-1440 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `map_tools_reject_bad_input` function L1445-1465 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_archive_roundtrip` function L1470-1522 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_list_requires_active_campaign` function L1525-1537 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_active_campaign` function L1540-1553 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 
 #### crates/mimir-mcp/src/lib.rs
 
 - pub `context` module L6 — `-` — Model Context Protocol server for D&D 5e campaign management.
 - pub `error` module L7 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
 - pub `handler` module L8 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
-- pub `response` module L9 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
-- pub `tools` module L10 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
+- pub `registry` module L9 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
+- pub `response` module L10 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
+- pub `tools` module L11 — `-` — Enables Claude Code and other MCP clients to interact with Mimir campaigns.
 
 #### crates/mimir-mcp/src/main.rs
 
 -  `main` function L17-95 — `() -> anyhow::Result<()>` — Runs the MCP server over stdio for Claude Code integration.
+
+#### crates/mimir-mcp/src/registry.rs
+
+- pub `JsonArgType` interface L25-30 — `-` — Maps a Rust argument field type to its JSON-schema type string and
+- pub `build_input_schema` function L59-76 — `( required: Vec<String>, fields: Vec<(&'static str, &'static str, String)>, ) ->...` — Build a `ToolInputSchema` from collected field metadata.
+- pub `HandlerFuture` type L136-137 — `= Pin<Box<dyn Future<Output = Result<Value, McpError>> + Send + 'a>>` — Future type returned by tool handlers.
+- pub `ToolHandler` type L140 — `= for<'a> fn(&'a Arc<McpContext>, Value) -> HandlerFuture<'a>` — A registered tool handler: decodes raw args and runs the tool.
+- pub `RegisteredTool` struct L145-154 — `{ name: &'static str, description: &'static str, input_schema: fn() -> ToolInput...` — One tool: name, description, schema source, and handler — all from a
+- pub `to_tool` function L158-170 — `(&self) -> Tool` — Render as an MCP `Tool` for `list_tools`.
+- pub `all_tools` function L201-215 — `() -> &'static [RegisteredTool]` — All registered tools across migrated families.
+- pub `find` function L218-220 — `(name: &str) -> Option<&'static RegisteredTool>` — Look up a registered tool by name.
+-  `JSON_TYPE` variable L27 — `: &'static str` — JSON schema `type` value for this field.
+-  `REQUIRED` variable L29 — `: bool` — Whether the field appears in the schema's `required` list.
+-  `String` type L32-34 — `impl JsonArgType for String` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L33 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L36 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L39 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L42 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L45 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L48 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `REQUIRED` variable L49 — `: bool` — and falls back to the legacy match for families not yet moved.
+-  `JSON_TYPE` variable L52 — `: &'static str` — and falls back to the legacy match for families not yet moved.
+-  `tool_args` macro L95-133 — `-` — Declare a tool's argument struct once; get `Deserialize` and a
+-  `RegisteredTool` type L156-171 — `= RegisteredTool` — and falls back to the legacy match for families not yet moved.
+-  `tool` macro L178-198 — `-` — Register one tool: name, description, arg struct, and handler path.
+-  `TOOLS` variable L202 — `: OnceLock<Vec<RegisteredTool>>` — and falls back to the legacy match for families not yet moved.
+-  `tests` module L223-287 — `-` — and falls back to the legacy match for families not yet moved.
+-  `schema_marks_non_option_fields_required` function L240-250 — `()` — and falls back to the legacy match for families not yet moved.
+-  `schema_types_and_descriptions_come_from_fields` function L253-261 — `()` — and falls back to the legacy match for families not yet moved.
+-  `empty_args_omit_properties` function L264-268 — `()` — and falls back to the legacy match for families not yet moved.
+-  `deserialization_enforces_the_same_contract` function L271-286 — `()` — and falls back to the legacy match for families not yet moved.
 
 #### crates/mimir-mcp/src/response.rs
 
@@ -8850,167 +8881,118 @@
 
 #### crates/mimir-mcp/src/tools/campaign.rs
 
-- pub `list_campaigns_tool` function L24-41 — `() -> Tool` — MCP tools for campaign management.
-- pub `get_active_campaign_tool` function L43-60 — `() -> Tool` — MCP tools for campaign management.
-- pub `set_active_campaign_tool` function L62-87 — `() -> Tool` — MCP tools for campaign management.
-- pub `get_campaign_details_tool` function L89-112 — `() -> Tool` — MCP tools for campaign management.
-- pub `get_campaign_sources_tool` function L114-134 — `() -> Tool` — MCP tools for campaign management.
-- pub `create_campaign_tool` function L136-160 — `() -> Tool` — MCP tools for campaign management.
-- pub `update_campaign_tool` function L162-182 — `() -> Tool` — MCP tools for campaign management.
-- pub `delete_campaign_tool` function L184-202 — `() -> Tool` — MCP tools for campaign management.
-- pub `list_campaigns` function L208-227 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `get_active_campaign` function L229-266 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `set_active_campaign` function L268-293 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `get_campaign_details` function L295-364 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `get_campaign_sources` function L366-383 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `create_campaign` function L385-413 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `update_campaign` function L415-444 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `delete_campaign` function L446-465 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `export_campaign_tool` function L471-494 — `() -> Tool` — MCP tools for campaign management.
-- pub `import_campaign_tool` function L496-520 — `() -> Tool` — MCP tools for campaign management.
-- pub `preview_archive_tool` function L522-542 — `() -> Tool` — MCP tools for campaign management.
-- pub `export_campaign` function L548-574 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `import_campaign` function L576-609 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
-- pub `preview_archive` function L611-643 — `(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for campaign management.
+- pub `registered_tools` function L26-95 — `() -> Vec<RegisteredTool>` — All campaign-family tools.
+- pub `list_campaigns` function L177-199 — `( ctx: &Arc<McpContext>, _args: ListCampaignsArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
+- pub `get_active_campaign` function L201-241 — `( ctx: &Arc<McpContext>, _args: GetActiveCampaignArgs, ) -> Result<Value, McpErr...` — each in `registered_tools()`.
+- pub `set_active_campaign` function L243-268 — `( ctx: &Arc<McpContext>, args: SetActiveCampaignArgs, ) -> Result<Value, McpErro...` — each in `registered_tools()`.
+- pub `get_campaign_details` function L270-340 — `( ctx: &Arc<McpContext>, args: CampaignIdOptionalArgs, ) -> Result<Value, McpErr...` — each in `registered_tools()`.
+- pub `get_campaign_sources` function L342-360 — `( ctx: &Arc<McpContext>, args: CampaignIdOptionalArgs, ) -> Result<Value, McpErr...` — each in `registered_tools()`.
+- pub `create_campaign` function L362-386 — `( ctx: &Arc<McpContext>, args: CreateCampaignArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
+- pub `update_campaign` function L388-417 — `( ctx: &Arc<McpContext>, args: UpdateCampaignArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
+- pub `delete_campaign` function L419-438 — `( ctx: &Arc<McpContext>, args: DeleteCampaignArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
+- pub `export_campaign` function L440-464 — `( ctx: &Arc<McpContext>, args: ExportCampaignArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
+- pub `import_campaign` function L466-493 — `( ctx: &Arc<McpContext>, args: ImportCampaignArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
+- pub `preview_archive` function L495-525 — `( _ctx: &Arc<McpContext>, args: PreviewArchiveArgs, ) -> Result<Value, McpError>` — each in `registered_tools()`.
 
 #### crates/mimir-mcp/src/tools/catalog.rs
 
-- pub `search_catalog_tool` function L39-74 — `() -> Tool` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
-- pub `search_catalog` function L80-129 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `VALID_CATEGORIES` variable L24-33 — `: &[&str]` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_monsters` function L135-218 — `( ctx: &Arc<McpContext>, args: &Value, db: &mut diesel::SqliteConnection, limit:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_items` function L220-257 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_spells` function L259-296 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_races` function L298-319 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_classes` function L321-342 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_backgrounds` function L344-365 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_feats` function L367-388 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
--  `search_conditions` function L390-411 — `( args: &Value, db: &mut diesel::SqliteConnection, limit: i64, campaign_sources:...` — Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
+- pub `registered_tools` function L26-33 — `() -> Vec<RegisteredTool>` — All catalog-family tools.
+- pub `search_catalog` function L83-123 — `( ctx: &Arc<McpContext>, args: SearchCatalogArgs, ) -> Result<Value, McpError>` — registration.
+-  `VALID_CATEGORIES` variable L39-48 — `: &[&str]` — registration.
+-  `search_monsters` function L129-205 — `( ctx: &Arc<McpContext>, args: &SearchCatalogArgs, db: &mut diesel::SqliteConnec...` — registration.
+-  `search_items` function L207-244 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
+-  `search_spells` function L246-283 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
+-  `search_races` function L285-306 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
+-  `search_classes` function L308-329 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
+-  `search_backgrounds` function L331-352 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
+-  `search_feats` function L354-375 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
+-  `search_conditions` function L377-398 — `( args: &SearchCatalogArgs, db: &mut diesel::SqliteConnection, limit: i64, campa...` — registration.
 
 #### crates/mimir-mcp/src/tools/character.rs
 
-- pub `list_characters_tool` function L22-46 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `get_character_tool` function L48-67 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `create_character_tool` function L69-97 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `edit_character_tool` function L99-142 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `delete_character_tool` function L144-160 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `add_item_to_character_tool` function L162-184 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `remove_item_from_character_tool` function L186-204 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `update_character_inventory_tool` function L206-227 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `get_character_inventory_tool` function L229-248 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `level_up_character_tool` function L250-284 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `add_character_spell_tool` function L286-316 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `remove_character_spell_tool` function L318-338 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `list_character_spells_tool` function L340-360 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `list_characters` function L366-416 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `get_character` function L418-506 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `create_character` function L508-587 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `edit_character` function L589-734 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `delete_character` function L736-750 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `add_item_to_character` function L752-819 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `remove_item_from_character` function L821-835 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `update_character_inventory` function L837-862 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `get_character_inventory` function L864-906 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `level_up_character` function L908-1010 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `add_character_spell` function L1012-1053 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `remove_character_spell` function L1055-1082 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `list_character_spells` function L1084-1128 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `registered_tools` function L24-105 — `() -> Vec<RegisteredTool>` — All character-family tools.
+- pub `list_characters` function L335-384 — `( ctx: &Arc<McpContext>, args: ListCharactersArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `get_character` function L386-473 — `( ctx: &Arc<McpContext>, args: CharacterIdArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `create_character` function L475-529 — `( ctx: &Arc<McpContext>, args: CreateCharacterArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `edit_character` function L531-661 — `( ctx: &Arc<McpContext>, args: EditCharacterArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `delete_character` function L663-675 — `( ctx: &Arc<McpContext>, args: CharacterIdArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `add_item_to_character` function L677-728 — `( ctx: &Arc<McpContext>, args: AddItemArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `remove_item_from_character` function L730-742 — `( ctx: &Arc<McpContext>, args: RemoveItemArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `update_character_inventory` function L744-768 — `( ctx: &Arc<McpContext>, args: UpdateInventoryArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `get_character_inventory` function L770-811 — `( ctx: &Arc<McpContext>, args: GetInventoryArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `level_up_character` function L813-902 — `( ctx: &Arc<McpContext>, args: LevelUpArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `add_character_spell` function L904-931 — `( ctx: &Arc<McpContext>, args: AddSpellArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `remove_character_spell` function L933-952 — `( ctx: &Arc<McpContext>, args: RemoveSpellArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `list_character_spells` function L954-998 — `( ctx: &Arc<McpContext>, args: ListSpellsArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
 
 #### crates/mimir-mcp/src/tools/document.rs
 
-- pub `list_documents_tool` function L19-40 — `() -> Tool` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `read_document_tool` function L42-58 — `() -> Tool` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `create_document_tool` function L60-91 — `() -> Tool` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `edit_document_tool` function L93-117 — `() -> Tool` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `reorder_document_tool` function L119-144 — `() -> Tool` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `delete_document_tool` function L146-164 — `() -> Tool` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `list_documents` function L170-205 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `read_document` function L207-230 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `create_document` function L232-275 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `edit_document` function L277-325 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `reorder_document` function L327-360 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for managing documents (campaign-level and module-level narrative content).
-- pub `delete_document` function L362-376 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for managing documents (campaign-level and module-level narrative content).
+- pub `registered_tools` function L21-60 — `() -> Vec<RegisteredTool>` — All document-family tools.
+- pub `list_documents` function L124-162 — `( ctx: &Arc<McpContext>, args: ListDocumentsArgs, ) -> Result<Value, McpError>` — and one entry each in `registered_tools()`.
+- pub `read_document` function L164-187 — `( ctx: &Arc<McpContext>, args: ReadDocumentArgs, ) -> Result<Value, McpError>` — and one entry each in `registered_tools()`.
+- pub `create_document` function L189-221 — `( ctx: &Arc<McpContext>, args: CreateDocumentArgs, ) -> Result<Value, McpError>` — and one entry each in `registered_tools()`.
+- pub `edit_document` function L223-262 — `( ctx: &Arc<McpContext>, args: EditDocumentArgs, ) -> Result<Value, McpError>` — and one entry each in `registered_tools()`.
+- pub `reorder_document` function L264-290 — `( ctx: &Arc<McpContext>, args: ReorderDocumentArgs, ) -> Result<Value, McpError>` — and one entry each in `registered_tools()`.
+- pub `delete_document` function L292-304 — `( ctx: &Arc<McpContext>, args: DeleteDocumentArgs, ) -> Result<Value, McpError>` — and one entry each in `registered_tools()`.
 
 #### crates/mimir-mcp/src/tools/homebrew.rs
 
-- pub `list_homebrew_tool` function L49-73 — `() -> Tool` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `get_homebrew_tool` function L75-98 — `() -> Tool` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `create_homebrew_tool` function L100-136 — `() -> Tool` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `update_homebrew_tool` function L138-177 — `() -> Tool` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `delete_homebrew_tool` function L179-202 — `() -> Tool` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `list_homebrew` function L258-282 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `get_homebrew` function L284-309 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `create_homebrew` function L311-397 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `update_homebrew` function L399-487 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — Uses a `content_type` parameter to dispatch to the appropriate service.
-- pub `delete_homebrew` function L489-507 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — Uses a `content_type` parameter to dispatch to the appropriate service.
--  `VALID_CONTENT_TYPES` variable L23 — `: &[&str]` — Uses a `content_type` parameter to dispatch to the appropriate service.
--  `parse_content_type` function L25-43 — `(args: &Value) -> Result<&str, McpError>` — Uses a `content_type` parameter to dispatch to the appropriate service.
--  `item_to_json` function L208-221 — `(item: &mimir_core::models::campaign::CampaignHomebrewItem) -> Value` — Uses a `content_type` parameter to dispatch to the appropriate service.
--  `monster_to_json` function L223-237 — `(monster: &mimir_core::models::campaign::CampaignHomebrewMonster) -> Value` — Uses a `content_type` parameter to dispatch to the appropriate service.
--  `spell_to_json` function L239-252 — `(spell: &mimir_core::models::campaign::CampaignHomebrewSpell) -> Value` — Uses a `content_type` parameter to dispatch to the appropriate service.
+- pub `registered_tools` function L25-58 — `() -> Vec<RegisteredTool>` — All homebrew-family tools.
+- pub `list_homebrew` function L206-233 — `( ctx: &Arc<McpContext>, args: ListHomebrewArgs, ) -> Result<Value, McpError>` — entry each in `registered_tools()`.
+- pub `get_homebrew` function L235-259 — `( ctx: &Arc<McpContext>, args: HomebrewIdArgs, ) -> Result<Value, McpError>` — entry each in `registered_tools()`.
+- pub `create_homebrew` function L261-325 — `( ctx: &Arc<McpContext>, args: CreateHomebrewArgs, ) -> Result<Value, McpError>` — entry each in `registered_tools()`.
+- pub `update_homebrew` function L327-370 — `( ctx: &Arc<McpContext>, args: UpdateHomebrewArgs, ) -> Result<Value, McpError>` — entry each in `registered_tools()`.
+- pub `delete_homebrew` function L372-389 — `( ctx: &Arc<McpContext>, args: HomebrewIdArgs, ) -> Result<Value, McpError>` — entry each in `registered_tools()`.
+-  `VALID_CONTENT_TYPES` variable L64 — `: &[&str]` — entry each in `registered_tools()`.
+-  `validate_content_type` function L66-74 — `(ct: &str) -> Result<(), McpError>` — entry each in `registered_tools()`.
+-  `item_to_json` function L156-169 — `(item: &mimir_core::models::campaign::CampaignHomebrewItem) -> Value` — entry each in `registered_tools()`.
+-  `monster_to_json` function L171-185 — `(monster: &mimir_core::models::campaign::CampaignHomebrewMonster) -> Value` — entry each in `registered_tools()`.
+-  `spell_to_json` function L187-200 — `(spell: &mimir_core::models::campaign::CampaignHomebrewSpell) -> Value` — entry each in `registered_tools()`.
 
 #### crates/mimir-mcp/src/tools/map.rs
 
-- pub `create_map_tool` function L20-47 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `list_maps_tool` function L49-70 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `get_map_tool` function L72-88 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `update_map_tool` function L90-112 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `delete_map_tool` function L114-130 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `add_token_to_map_tool` function L132-160 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `list_tokens_on_map_tool` function L162-181 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `remove_token_tool` function L183-199 — `() -> Tool` — MCP tools for map and token placement management.
-- pub `create_map` function L225-290 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `list_maps` function L292-328 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `get_map` function L330-382 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `update_map` function L384-426 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `delete_map` function L428-443 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `add_token_to_map` function L445-501 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `list_tokens_on_map` function L503-544 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
-- pub `remove_token` function L546-560 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for map and token placement management.
--  `app_data_dir` function L206-211 — `(ctx: &Arc<McpContext>) -> std::path::PathBuf` — Get the app_data_dir from context (parent of assets_dir).
--  `parse_lighting_mode` function L213-223 — `(s: &str) -> Result<LightingMode, McpError>` — MCP tools for map and token placement management.
+- pub `registered_tools` function L24-75 — `() -> Vec<RegisteredTool>` — All map-family tools.
+- pub `create_map` function L193-246 — `(ctx: &Arc<McpContext>, args: CreateMapArgs) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `list_maps` function L248-282 — `(ctx: &Arc<McpContext>, args: ListMapsArgs) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `get_map` function L284-333 — `(ctx: &Arc<McpContext>, args: GetMapArgs) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `update_map` function L335-372 — `(ctx: &Arc<McpContext>, args: UpdateMapArgs) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `delete_map` function L374-384 — `(ctx: &Arc<McpContext>, args: DeleteMapArgs) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `add_token_to_map` function L386-431 — `( ctx: &Arc<McpContext>, args: AddTokenArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `list_tokens_on_map` function L433-470 — `( ctx: &Arc<McpContext>, args: ListTokensArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+- pub `remove_token` function L472-484 — `( ctx: &Arc<McpContext>, args: RemoveTokenArgs, ) -> Result<Value, McpError>` — `registered_tools()`.
+-  `app_data_dir` function L174-179 — `(ctx: &Arc<McpContext>) -> std::path::PathBuf` — Get the app_data_dir from context (parent of assets_dir).
+-  `parse_lighting_mode` function L181-191 — `(s: &str) -> Result<LightingMode, McpError>` — `registered_tools()`.
 
 #### crates/mimir-mcp/src/tools/mapgen.rs
 
-- pub `generate_map_tool` function L17-43 — `() -> Tool` — MCP tools for procedural Dungeondraft map generation.
-- pub `list_map_presets_tool` function L45-59 — `() -> Tool` — MCP tools for procedural Dungeondraft map generation.
-- pub `validate_map_config_tool` function L61-82 — `() -> Tool` — MCP tools for procedural Dungeondraft map generation.
-- pub `generate_map` function L88-163 — `(args: Value) -> Result<Value, McpError>` — MCP tools for procedural Dungeondraft map generation.
-- pub `list_map_presets` function L165-178 — `(_args: Value) -> Result<Value, McpError>` — MCP tools for procedural Dungeondraft map generation.
-- pub `validate_map_config` function L180-207 — `(args: Value) -> Result<Value, McpError>` — MCP tools for procedural Dungeondraft map generation.
+- pub `registered_tools` function L20-41 — `() -> Vec<RegisteredTool>` — All mapgen-family tools.
+- pub `generate_map` function L75-149 — `( _ctx: &Arc<McpContext>, args: GenerateMapArgs, ) -> Result<Value, McpError>` — registry-based and needs no database context.
+- pub `list_map_presets` function L151-167 — `( _ctx: &Arc<McpContext>, _args: ListMapPresetsArgs, ) -> Result<Value, McpError...` — registry-based and needs no database context.
+- pub `validate_map_config_tool_handler` function L169-194 — `( _ctx: &Arc<McpContext>, args: ValidateMapConfigArgs, ) -> Result<Value, McpErr...` — registry-based and needs no database context.
 
 #### crates/mimir-mcp/src/tools/mod.rs
 
-- pub `campaign` module L8 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `catalog` module L9 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `character` module L10 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `document` module L11 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `homebrew` module L12 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `map` module L13 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `mapgen` module L14 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `module` module L15 — `-` — Each module provides tool definitions and handlers for a category of operations.
-- pub `create_properties` function L21-39 — `( props: Vec<(&str, &str, &str)>, ) -> Option<HashMap<String, serde_json::Map<St...` — Create a properties map for tool input schema.
+- pub `campaign` module L6 — `-` — Each module provides typed argument structs, handlers, and a
+- pub `catalog` module L7 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `character` module L8 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `document` module L9 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `homebrew` module L10 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `map` module L11 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `mapgen` module L12 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `module` module L13 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
 
 #### crates/mimir-mcp/src/tools/module.rs
 
-- pub `create_module_tool` function L22-50 — `() -> Tool` — MCP tools for module management.
-- pub `list_modules_tool` function L52-66 — `() -> Tool` — MCP tools for module management.
-- pub `get_module_details_tool` function L68-87 — `() -> Tool` — MCP tools for module management.
-- pub `add_monster_to_module_tool` function L89-116 — `() -> Tool` — MCP tools for module management.
-- pub `update_module_monster_tool` function L118-142 — `() -> Tool` — MCP tools for module management.
-- pub `add_item_to_module_tool` function L144-169 — `() -> Tool` — MCP tools for module management.
-- pub `update_module_tool` function L171-191 — `() -> Tool` — MCP tools for module management.
-- pub `remove_monster_from_module_tool` function L193-211 — `() -> Tool` — MCP tools for module management.
-- pub `delete_module_tool` function L213-231 — `() -> Tool` — MCP tools for module management.
-- pub `create_module` function L237-268 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `list_modules` function L270-295 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `get_module_details` function L297-358 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `add_monster_to_module` function L360-432 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `update_module_monster` function L434-469 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `remove_monster_from_module` function L471-489 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `add_item_to_module` function L491-506 — `(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `update_module` function L508-536 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `delete_module` function L538-552 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `registered_tools` function L24-81 — `() -> Vec<RegisteredTool>` — All module-family tools.
+- pub `create_module` function L183-211 — `( ctx: &Arc<McpContext>, args: CreateModuleArgs, ) -> Result<Value, McpError>` — and one entry in `registered_tools()`.
+- pub `list_modules` function L213-241 — `( ctx: &Arc<McpContext>, _args: ListModulesArgs, ) -> Result<Value, McpError>` — and one entry in `registered_tools()`.
+- pub `get_module_details` function L243-303 — `( ctx: &Arc<McpContext>, args: GetModuleDetailsArgs, ) -> Result<Value, McpError...` — and one entry in `registered_tools()`.
+- pub `update_module` function L305-330 — `( ctx: &Arc<McpContext>, args: UpdateModuleArgs, ) -> Result<Value, McpError>` — and one entry in `registered_tools()`.
+- pub `delete_module` function L332-344 — `( ctx: &Arc<McpContext>, args: DeleteModuleArgs, ) -> Result<Value, McpError>` — and one entry in `registered_tools()`.
+- pub `add_monster_to_module` function L346-394 — `( ctx: &Arc<McpContext>, args: AddMonsterArgs, ) -> Result<Value, McpError>` — and one entry in `registered_tools()`.
+- pub `update_module_monster` function L396-425 — `( ctx: &Arc<McpContext>, args: UpdateModuleMonsterArgs, ) -> Result<Value, McpEr...` — and one entry in `registered_tools()`.
+- pub `remove_monster_from_module` function L427-438 — `( ctx: &Arc<McpContext>, args: RemoveMonsterArgs, ) -> Result<Value, McpError>` — and one entry in `registered_tools()`.
+- pub `add_item_to_module` function L440-448 — `( _ctx: &Arc<McpContext>, _args: AddItemToModuleArgs, ) -> Result<Value, McpErro...` — and one entry in `registered_tools()`.
 
 ### crates/mimir-mcp/tests
 

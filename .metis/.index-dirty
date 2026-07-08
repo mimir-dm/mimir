@@ -1,13 +1,3 @@
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/registry.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/lib.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/module.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/handler.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/campaign.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/document.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/character.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/map.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/mapgen.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/homebrew.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/catalog.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/error.rs
-/Users/dstorey/Desktop/mimir/crates/mimir-mcp/src/tools/mod.rs
+/Users/dstorey/Desktop/mimir/crates/mimir-core/src/services/map_state.rs
+/Users/dstorey/Desktop/mimir/crates/mimir-core/src/services/mod.rs
+/Users/dstorey/Desktop/mimir/crates/mimir/src/commands/map/fog.rs

@@ -1,20 +1,15 @@
 //! Fog of War Commands
 //!
-//! Commands for managing fog of war state and revealed areas.
+//! Thin Tauri wrappers over `MapStateService` — all fog logic lives in
+//! mimir-core.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{FogRevealedArea, FogState, NewFogRevealedArea, UpdateMap};
-use mimir_core::utils::now_rfc3339;
+use mimir_core::models::campaign::{FogRevealedArea, FogState};
+use mimir_core::services::MapStateService;
 use serde::Deserialize;
 use tauri::State;
-use uuid::Uuid;
 
-use crate::commands::ApiResponse;
+use crate::commands::{to_api_response, ApiResponse};
 use crate::state::AppState;
-
-// =============================================================================
-// Fog of War Commands
-// =============================================================================
 
 /// Get the fog state for a map (enabled + revealed areas).
 #[tauri::command]
@@ -24,23 +19,7 @@ pub fn get_fog_state(state: State<'_, AppState>, map_id: String) -> ApiResponse<
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get map to check fog_enabled
-    let map = match dal::get_map(&mut db, &map_id) {
-        Ok(m) => m,
-        Err(e) => return ApiResponse::err(format!("Map not found: {}", e)),
-    };
-
-    // Get revealed areas
-    let revealed_areas = match dal::list_fog_revealed_areas(&mut db, &map_id) {
-        Ok(areas) => areas,
-        Err(e) => return ApiResponse::err(e.to_string()),
-    };
-
-    ApiResponse::ok(FogState::new(
-        map_id,
-        map.is_fog_enabled(),
-        revealed_areas,
-    ))
+    to_api_response(MapStateService::new(&mut db).fog_state(&map_id))
 }
 
 /// Toggle fog of war on/off for a map.
@@ -51,21 +30,7 @@ pub fn toggle_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<boo
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get current fog state
-    let map = match dal::get_map(&mut db, &map_id) {
-        Ok(m) => m,
-        Err(e) => return ApiResponse::err(format!("Map not found: {}", e)),
-    };
-
-    let now = now_rfc3339();
-    let new_enabled = !map.is_fog_enabled();
-    let update = UpdateMap::set_fog_enabled(new_enabled, &now);
-
-    if let Err(e) = dal::update_map(&mut db, &map_id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    ApiResponse::ok(new_enabled)
+    to_api_response(MapStateService::new(&mut db).toggle_fog(&map_id))
 }
 
 /// Enable fog of war for a map.
@@ -76,13 +41,7 @@ pub fn enable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateMap::enable_fog(&now);
-
-    match dal::update_map(&mut db, &map_id, &update) {
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).enable_fog(&map_id))
 }
 
 /// Disable fog of war for a map.
@@ -93,13 +52,7 @@ pub fn disable_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<()
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateMap::disable_fog(&now);
-
-    match dal::update_map(&mut db, &map_id, &update) {
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).disable_fog(&map_id))
 }
 
 /// Request for revealing a rectangular area.
@@ -123,24 +76,13 @@ pub fn reveal_rect(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let area = NewFogRevealedArea::rect(
-        &id,
+    to_api_response(MapStateService::new(&mut db).reveal_rect(
         &request.map_id,
         request.x,
         request.y,
         request.width,
         request.height,
-    );
-
-    if let Err(e) = dal::insert_fog_revealed_area(&mut db, &area) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_fog_revealed_area(&mut db, &id) {
-        Ok(area) => ApiResponse::ok(area),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    ))
 }
 
 /// Request for revealing a circular area.
@@ -163,23 +105,12 @@ pub fn reveal_circle(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let area = NewFogRevealedArea::circle(
-        &id,
+    to_api_response(MapStateService::new(&mut db).reveal_circle(
         &request.map_id,
         request.center_x,
         request.center_y,
         request.radius,
-    );
-
-    if let Err(e) = dal::insert_fog_revealed_area(&mut db, &area) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_fog_revealed_area(&mut db, &id) {
-        Ok(area) => ApiResponse::ok(area),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    ))
 }
 
 /// Request for revealing the entire map.
@@ -201,24 +132,11 @@ pub fn reveal_all(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let area = NewFogRevealedArea::rect(
-        &id,
+    to_api_response(MapStateService::new(&mut db).reveal_all(
         &request.map_id,
-        0.0,
-        0.0,
         request.width,
         request.height,
-    );
-
-    if let Err(e) = dal::insert_fog_revealed_area(&mut db, &area) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_fog_revealed_area(&mut db, &id) {
-        Ok(area) => ApiResponse::ok(area),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    ))
 }
 
 /// Delete a revealed area.
@@ -229,10 +147,7 @@ pub fn delete_revealed_area(state: State<'_, AppState>, id: String) -> ApiRespon
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_fog_revealed_area(&mut db, &id) {
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).delete_revealed_area(&id))
 }
 
 /// Reset fog by clearing all revealed areas for a map.
@@ -243,8 +158,5 @@ pub fn reset_fog(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32>
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_all_fog_revealed_areas(&mut db, &map_id) {
-        Ok(count) => ApiResponse::ok(count as i32),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).reset_fog(&map_id))
 }
