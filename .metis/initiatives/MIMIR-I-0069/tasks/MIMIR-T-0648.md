@@ -50,4 +50,15 @@ migration.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-08: COMPLETE on branch `feat/mcp-tool-registry`. Design decisions:
+  declarative `tool_args!` macro (no proc-macro, no schemars dep) — struct +
+  schema from one field list; doc comments become schema descriptions;
+  requiredness/JSON type inferred from Rust types via `JsonArgType` trait
+  (`Option<T>` = optional). `tool!` macro emits per-tool glue fn (deserialize →
+  typed handler); registry is a `OnceLock<Vec<RegisteredTool>>` with
+  registry-first hybrid dispatch in `execute_tool`. All 9 module tools migrated;
+  `service_err` helper centralizes ServiceError mapping for the family. All
+  acceptance criteria met: 50 lib tests + stdio e2e pass unchanged; unknown
+  names still yield ToolNotFound via legacy fallthrough. Registry unit tests
+  cover required/optional inference, descriptions, empty-args schema shape, and
+  parser/schema contract equivalence.

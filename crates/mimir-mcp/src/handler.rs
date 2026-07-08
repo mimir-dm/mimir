@@ -52,25 +52,6 @@ impl MimirHandler {
     /// Tool definitions for families still on the legacy dispatch path.
     fn legacy_tools() -> Vec<Tool> {
         vec![
-            // Campaign tools
-            tools::campaign::list_campaigns_tool(),
-            tools::campaign::get_active_campaign_tool(),
-            tools::campaign::set_active_campaign_tool(),
-            tools::campaign::get_campaign_details_tool(),
-            tools::campaign::get_campaign_sources_tool(),
-            tools::campaign::create_campaign_tool(),
-            tools::campaign::update_campaign_tool(),
-            tools::campaign::delete_campaign_tool(),
-            tools::campaign::export_campaign_tool(),
-            tools::campaign::import_campaign_tool(),
-            tools::campaign::preview_archive_tool(),
-            // Document tools
-            tools::document::list_documents_tool(),
-            tools::document::read_document_tool(),
-            tools::document::create_document_tool(),
-            tools::document::edit_document_tool(),
-            tools::document::delete_document_tool(),
-            tools::document::reorder_document_tool(),
             // Character tools
             tools::character::list_characters_tool(),
             tools::character::get_character_tool(),
@@ -116,35 +97,6 @@ impl MimirHandler {
             return (tool.handler)(&self.context, args).await;
         }
         match name {
-            // Campaign tools
-            "list_campaigns" => tools::campaign::list_campaigns(&self.context, args).await,
-            "get_active_campaign" => {
-                tools::campaign::get_active_campaign(&self.context, args).await
-            }
-            "set_active_campaign" => {
-                tools::campaign::set_active_campaign(&self.context, args).await
-            }
-            "get_campaign_details" => {
-                tools::campaign::get_campaign_details(&self.context, args).await
-            }
-            "get_campaign_sources" => {
-                tools::campaign::get_campaign_sources(&self.context, args).await
-            }
-            "export_campaign" => tools::campaign::export_campaign(&self.context, args).await,
-            "import_campaign" => tools::campaign::import_campaign(&self.context, args).await,
-            "preview_archive" => tools::campaign::preview_archive(&self.context, args).await,
-            "create_campaign" => tools::campaign::create_campaign(&self.context, args).await,
-            "update_campaign" => tools::campaign::update_campaign(&self.context, args).await,
-            "delete_campaign" => tools::campaign::delete_campaign(&self.context, args).await,
-
-            // Document tools
-            "list_documents" => tools::document::list_documents(&self.context, args).await,
-            "read_document" => tools::document::read_document(&self.context, args).await,
-            "create_document" => tools::document::create_document(&self.context, args).await,
-            "edit_document" => tools::document::edit_document(&self.context, args).await,
-            "delete_document" => tools::document::delete_document(&self.context, args).await,
-            "reorder_document" => tools::document::reorder_document(&self.context, args).await,
-
             // Character tools
             "list_characters" => tools::character::list_characters(&self.context, args).await,
             "get_character" => tools::character::get_character(&self.context, args).await,

@@ -199,7 +199,9 @@ pub fn all_tools() -> &'static [RegisteredTool] {
     static TOOLS: OnceLock<Vec<RegisteredTool>> = OnceLock::new();
     TOOLS.get_or_init(|| {
         let mut tools = Vec::new();
+        tools.extend(crate::tools::campaign::registered_tools());
         tools.extend(crate::tools::module::registered_tools());
+        tools.extend(crate::tools::document::registered_tools());
         tools
     })
 }
@@ -211,8 +213,6 @@ pub fn find(name: &str) -> Option<&'static RegisteredTool> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tool_args;
-
     tool_args! {
         pub struct DemoArgs {
             /// A required id
