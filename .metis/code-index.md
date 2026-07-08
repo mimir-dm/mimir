@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-07-08T01:58:54Z | 551 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-07-08T03:16:32Z | 552 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -567,6 +567,7 @@
 │   │   │   │   ├── map.rs
 │   │   │   │   ├── mod.rs
 │   │   │   │   ├── module.rs
+│   │   │   │   ├── source.rs
 │   │   │   │   └── token.rs
 │   │   │   ├── templates/
 │   │   │   │   └── mod.rs
@@ -2602,54 +2603,54 @@
 
 #### crates/mimir/src/commands/campaign.rs
 
-- pub `list_campaigns` function L22-35 — `( state: State<'_, AppState>, include_archived: Option<bool>, ) -> ApiResponse<V...` — List all campaigns.
-- pub `list_archived_campaigns` function L39-51 — `(state: State<'_, AppState>) -> ApiResponse<Vec<Campaign>>` — List only archived campaigns.
-- pub `get_campaign` function L55-67 — `(state: State<'_, AppState>, id: String) -> ApiResponse<Campaign>` — Get a campaign by ID.
-- pub `CreateCampaignRequest` struct L71-74 — `{ name: String, description: Option<String> }` — Request for creating a new campaign.
-- pub `create_campaign` function L78-94 — `( state: State<'_, AppState>, request: CreateCampaignRequest, ) -> ApiResponse<C...` — Create a new campaign.
-- pub `UpdateCampaignRequest` struct L98-101 — `{ name: Option<String>, description: Option<Option<String>> }` — Request for updating a campaign.
-- pub `update_campaign` function L105-122 — `( state: State<'_, AppState>, id: String, request: UpdateCampaignRequest, ) -> A...` — Update a campaign.
-- pub `archive_campaign` function L126-145 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign>` — Archive a campaign (soft delete).
-- pub `unarchive_campaign` function L149-168 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign>` — Unarchive a campaign.
-- pub `DeleteCampaignRequest` struct L172-176 — `{ campaign_id: String, delete_files: bool }` — Request for deleting a campaign.
-- pub `delete_campaign` function L180-192 — `( state: State<'_, AppState>, request: DeleteCampaignRequest, ) -> ApiResponse<(...` — Delete a campaign permanently.
-- pub `list_campaign_sources` function L200-211 — `( state: State<'_, AppState>, campaign_id: String, ) -> ApiResponse<Vec<String>>` — List all source codes enabled for a campaign.
-- pub `add_campaign_source` function L215-235 — `( state: State<'_, AppState>, campaign_id: String, source_code: String, ) -> Api...` — Add a source to a campaign's allowed sources.
-- pub `remove_campaign_source` function L239-254 — `( state: State<'_, AppState>, campaign_id: String, source_code: String, ) -> Api...` — Remove a source from a campaign's allowed sources.
-- pub `set_campaign_sources` function L258-285 — `( state: State<'_, AppState>, campaign_id: String, source_codes: Vec<String>, ) ...` — Set all sources for a campaign (replaces existing).
+- pub `list_campaigns` function L19-32 — `( state: State<'_, AppState>, include_archived: Option<bool>, ) -> ApiResponse<V...` — List all campaigns.
+- pub `list_archived_campaigns` function L36-48 — `(state: State<'_, AppState>) -> ApiResponse<Vec<Campaign>>` — List only archived campaigns.
+- pub `get_campaign` function L52-64 — `(state: State<'_, AppState>, id: String) -> ApiResponse<Campaign>` — Get a campaign by ID.
+- pub `CreateCampaignRequest` struct L68-71 — `{ name: String, description: Option<String> }` — Request for creating a new campaign.
+- pub `create_campaign` function L75-91 — `( state: State<'_, AppState>, request: CreateCampaignRequest, ) -> ApiResponse<C...` — Create a new campaign.
+- pub `UpdateCampaignRequest` struct L95-98 — `{ name: Option<String>, description: Option<Option<String>> }` — Request for updating a campaign.
+- pub `update_campaign` function L102-119 — `( state: State<'_, AppState>, id: String, request: UpdateCampaignRequest, ) -> A...` — Update a campaign.
+- pub `archive_campaign` function L123-142 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign>` — Archive a campaign (soft delete).
+- pub `unarchive_campaign` function L146-165 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign>` — Unarchive a campaign.
+- pub `DeleteCampaignRequest` struct L169-173 — `{ campaign_id: String, delete_files: bool }` — Request for deleting a campaign.
+- pub `delete_campaign` function L177-189 — `( state: State<'_, AppState>, request: DeleteCampaignRequest, ) -> ApiResponse<(...` — Delete a campaign permanently.
+- pub `list_campaign_sources` function L197-207 — `( state: State<'_, AppState>, campaign_id: String, ) -> ApiResponse<Vec<String>>` — List all source codes enabled for a campaign.
+- pub `add_campaign_source` function L211-222 — `( state: State<'_, AppState>, campaign_id: String, source_code: String, ) -> Api...` — Add a source to a campaign's allowed sources.
+- pub `remove_campaign_source` function L226-237 — `( state: State<'_, AppState>, campaign_id: String, source_code: String, ) -> Api...` — Remove a source from a campaign's allowed sources.
+- pub `set_campaign_sources` function L241-252 — `( state: State<'_, AppState>, campaign_id: String, source_codes: Vec<String>, ) ...` — Set all sources for a campaign (replaces existing, atomically).
 
 #### crates/mimir/src/commands/character.rs
 
-- pub `list_characters` function L24-43 — `( state: State<'_, AppState>, campaign_id: String, ) -> ApiResponse<Vec<Characte...` — List all characters for a campaign (with classes and proficiencies).
-- pub `list_pcs` function L47-63 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only player characters for a campaign (with classes and proficiencies).
-- pub `list_npcs` function L67-83 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only NPCs for a campaign (with classes and proficiencies).
-- pub `list_unassigned_pcs` function L87-102 — `(state: State<'_, AppState>) -> ApiResponse<Vec<CharacterResponse>>` — List unassigned player characters (no campaign).
-- pub `get_character` function L110-121 — `(state: State<'_, AppState>, id: String) -> ApiResponse<CharacterResponse>` — Get a character by ID (with classes and proficiencies).
-- pub `CreatePcRequest` struct L125-137 — `{ campaign_id: Option<String>, name: String, player_name: String, race_name: Opt...` — Request for creating a new PC.
-- pub `create_pc` function L141-185 — `(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<CharacterR...` — Create a new player character.
-- pub `CreateNpcRequest` struct L189-197 — `{ campaign_id: Option<String>, name: String, race_name: Option<String>, race_sou...` — Request for creating a new NPC.
-- pub `create_npc` function L201-236 — `(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<Character...` — Create a new NPC.
-- pub `UpdateCharacterRequest` struct L240-256 — `{ name: Option<String>, player_name: Option<Option<String>>, race_name: Option<O...` — Request for updating a character.
-- pub `update_character` function L260-296 — `( state: State<'_, AppState>, id: String, request: UpdateCharacterRequest, ) -> ...` — Update a character.
-- pub `delete_character` function L300-308 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a character permanently.
-- pub `assign_character_to_campaign` function L312-326 — `( state: State<'_, AppState>, character_id: String, campaign_id: String, ) -> Ap...` — Assign a character to a campaign.
-- pub `level_up_character` function L336-348 — `( state: State<'_, AppState>, character_id: String, request: LevelUpRequest, ) -...` — Level up a character.
-- pub `get_character_inventory` function L356-367 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get a character's inventory.
-- pub `get_equipped_items` function L371-382 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get equipped items for a character.
-- pub `get_attuned_items` function L386-397 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get attuned items for a character.
-- pub `AddInventoryRequest` struct L401-408 — `{ item_name: String, item_source: String, quantity: Option<i32>, equipped: Optio...` — Request for adding an item to inventory.
-- pub `add_inventory_item` function L412-439 — `( state: State<'_, AppState>, character_id: String, request: AddInventoryRequest...` — Add an item to a character's inventory.
-- pub `remove_inventory_item` function L443-451 — `(state: State<'_, AppState>, inventory_id: String) -> ApiResponse<()>` — Remove an item from a character's inventory.
-- pub `UpdateInventoryRequest` struct L455-459 — `{ quantity: Option<i32>, equipped: Option<bool>, attuned: Option<bool> }` — Request for updating an inventory item.
-- pub `update_inventory_item` function L463-480 — `( state: State<'_, AppState>, inventory_id: String, request: UpdateInventoryRequ...` — Update an inventory item (quantity, equipped, attuned).
-- pub `list_character_sources` function L494-507 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<String>...` — List allowed source codes for a character.
-- pub `add_character_source` function L511-532 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Add a source to a character's allowed sources.
-- pub `remove_character_source` function L536-550 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Remove a source from a character's allowed sources.
-- pub `set_character_sources` function L554-579 — `( state: State<'_, AppState>, character_id: String, source_codes: Vec<String>, )...` — Set the complete list of allowed sources for a character (replaces existing).
-- pub `list_character_spells` function L587-600 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — List all spells a character knows.
-- pub `add_character_spell` function L604-644 — `( state: State<'_, AppState>, character_id: String, spell_name: String, spell_so...` — Add a spell to a character's known spells.
-- pub `remove_character_spell` function L648-692 — `( state: State<'_, AppState>, character_id: String, spell_name: String, source_c...` — Remove a spell from a character's known spells.
-- pub `toggle_spell_prepared` function L696-722 — `( state: State<'_, AppState>, spell_id: String, ) -> ApiResponse<CharacterSpell>` — Toggle a spell's prepared status.
+- pub `list_characters` function L22-41 — `( state: State<'_, AppState>, campaign_id: String, ) -> ApiResponse<Vec<Characte...` — List all characters for a campaign (with classes and proficiencies).
+- pub `list_pcs` function L45-61 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only player characters for a campaign (with classes and proficiencies).
+- pub `list_npcs` function L65-81 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterRe...` — List only NPCs for a campaign (with classes and proficiencies).
+- pub `list_unassigned_pcs` function L85-100 — `(state: State<'_, AppState>) -> ApiResponse<Vec<CharacterResponse>>` — List unassigned player characters (no campaign).
+- pub `get_character` function L108-119 — `(state: State<'_, AppState>, id: String) -> ApiResponse<CharacterResponse>` — Get a character by ID (with classes and proficiencies).
+- pub `CreatePcRequest` struct L123-135 — `{ campaign_id: Option<String>, name: String, player_name: String, race_name: Opt...` — Request for creating a new PC.
+- pub `create_pc` function L139-183 — `(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<CharacterR...` — Create a new player character.
+- pub `CreateNpcRequest` struct L187-195 — `{ campaign_id: Option<String>, name: String, race_name: Option<String>, race_sou...` — Request for creating a new NPC.
+- pub `create_npc` function L199-234 — `(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<Character...` — Create a new NPC.
+- pub `UpdateCharacterRequest` struct L238-254 — `{ name: Option<String>, player_name: Option<Option<String>>, race_name: Option<O...` — Request for updating a character.
+- pub `update_character` function L258-294 — `( state: State<'_, AppState>, id: String, request: UpdateCharacterRequest, ) -> ...` — Update a character.
+- pub `delete_character` function L298-306 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a character permanently.
+- pub `assign_character_to_campaign` function L310-324 — `( state: State<'_, AppState>, character_id: String, campaign_id: String, ) -> Ap...` — Assign a character to a campaign.
+- pub `level_up_character` function L334-346 — `( state: State<'_, AppState>, character_id: String, request: LevelUpRequest, ) -...` — Level up a character.
+- pub `get_character_inventory` function L354-365 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get a character's inventory.
+- pub `get_equipped_items` function L369-380 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get equipped items for a character.
+- pub `get_attuned_items` function L384-395 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — Get attuned items for a character.
+- pub `AddInventoryRequest` struct L399-406 — `{ item_name: String, item_source: String, quantity: Option<i32>, equipped: Optio...` — Request for adding an item to inventory.
+- pub `add_inventory_item` function L410-437 — `( state: State<'_, AppState>, character_id: String, request: AddInventoryRequest...` — Add an item to a character's inventory.
+- pub `remove_inventory_item` function L441-449 — `(state: State<'_, AppState>, inventory_id: String) -> ApiResponse<()>` — Remove an item from a character's inventory.
+- pub `UpdateInventoryRequest` struct L453-457 — `{ quantity: Option<i32>, equipped: Option<bool>, attuned: Option<bool> }` — Request for updating an inventory item.
+- pub `update_inventory_item` function L461-478 — `( state: State<'_, AppState>, inventory_id: String, request: UpdateInventoryRequ...` — Update an inventory item (quantity, equipped, attuned).
+- pub `list_character_sources` function L489-499 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<String>...` — List allowed source codes for a character.
+- pub `add_character_source` function L503-514 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Add a source to a character's allowed sources.
+- pub `remove_character_source` function L518-529 — `( state: State<'_, AppState>, character_id: String, source_code: String, ) -> Ap...` — Remove a source from a character's allowed sources.
+- pub `set_character_sources` function L533-544 — `( state: State<'_, AppState>, character_id: String, source_codes: Vec<String>, )...` — Set the complete list of allowed sources for a character (replaces existing, atomically).
+- pub `list_character_spells` function L552-562 — `( state: State<'_, AppState>, character_id: String, ) -> ApiResponse<Vec<Charact...` — List all spells a character knows.
+- pub `add_character_spell` function L566-586 — `( state: State<'_, AppState>, character_id: String, spell_name: String, spell_so...` — Add a spell to a character's known spells.
+- pub `remove_character_spell` function L590-606 — `( state: State<'_, AppState>, character_id: String, spell_name: String, source_c...` — Remove a spell from a character's known spells.
+- pub `toggle_spell_prepared` function L610-620 — `( state: State<'_, AppState>, spell_id: String, ) -> ApiResponse<CharacterSpell>` — Toggle a spell's prepared status.
 
 #### crates/mimir/src/commands/dev.rs
 
@@ -2743,34 +2744,34 @@
 
 #### crates/mimir/src/commands/module.rs
 
-- pub `list_modules` function L23-31 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<Module>>` — List all modules for a campaign.
-- pub `get_module` function L35-47 — `(state: State<'_, AppState>, id: String) -> ApiResponse<Module>` — Get a module by ID.
-- pub `CreateModuleRequest` struct L51-56 — `{ campaign_id: String, name: String, description: Option<String>, module_type: O...` — Request for creating a new module.
-- pub `create_module` function L60-80 — `( state: State<'_, AppState>, request: CreateModuleRequest, ) -> ApiResponse<Mod...` — Create a new module.
-- pub `UpdateModuleRequest` struct L84-87 — `{ name: Option<String>, description: Option<Option<String>> }` — Request for updating a module.
-- pub `update_module` function L91-108 — `( state: State<'_, AppState>, id: String, request: UpdateModuleRequest, ) -> Api...` — Update a module.
-- pub `delete_module` function L112-120 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a module permanently.
-- pub `get_module_by_number` function L124-143 — `( state: State<'_, AppState>, campaign_id: String, module_number: i32, ) -> ApiR...` — Get a module by campaign ID and module number.
-- pub `reorder_module` function L147-159 — `( state: State<'_, AppState>, module_id: String, new_position: i32, ) -> ApiResp...` — Reorder a module by moving it to a new position (1-indexed).
-- pub `MonsterWithData` struct L167-171 — `{ monster: ModuleMonster, monster_data: Option<serde_json::Value> }` — Monster with optional catalog data for display.
-- pub `list_module_monsters_with_data` function L175-234 — `( state: State<'_, AppState>, module_id: String, ) -> ApiResponse<Vec<MonsterWit...` — List all monsters for a module with catalog data.
-- pub `AddModuleMonsterRequest` struct L239-250 — `{ module_id: String, monster_name: Option<String>, monster_source: Option<String...` — Request for adding a module monster.
-- pub `add_module_monster` function L258-349 — `( state: State<'_, AppState>, request: AddModuleMonsterRequest, ) -> ApiResponse...` — Add a monster to a module (or increment quantity if it already exists).
-- pub `UpdateModuleMonsterRequest` struct L353-357 — `{ display_name: Option<String>, notes: Option<String>, quantity: Option<i32> }` — Request for updating a module monster.
-- pub `update_module_monster` function L361-392 — `( state: State<'_, AppState>, monster_id: String, request: UpdateModuleMonsterRe...` — Update a module monster.
-- pub `remove_module_monster` function L396-410 — `( state: State<'_, AppState>, monster_id: String, ) -> ApiResponse<()>` — Remove a monster from a module.
-- pub `list_module_npcs` function L418-428 — `(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<ModuleNpc>>` — List all NPCs for a module.
-- pub `list_tokens` function L436-446 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List all tokens for a map with resolved names.
-- pub `list_token_summaries` function L450-452 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List token summaries (alias for list_tokens for frontend compatibility).
-- pub `CreateTokenRequest` struct L457-466 — `{ map_id: String, module_monster_id: Option<String>, module_npc_id: Option<Strin...` — Request for creating a token placement.
-- pub `create_token` function L470-494 — `( state: State<'_, AppState>, request: CreateTokenRequest, ) -> ApiResponse<Toke...` — Create a new token placement.
-- pub `UpdateTokenRequest` struct L498-504 — `{ grid_x: Option<i32>, grid_y: Option<i32>, label: Option<Option<String>>, facti...` — Request for updating a token placement.
-- pub `update_token` function L508-531 — `( state: State<'_, AppState>, id: String, request: UpdateTokenRequest, ) -> ApiR...` — Update a token placement.
-- pub `update_token_position` function L535-550 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Update only the position of a token (optimized for drag operations).
-- pub `update_token_vision` function L554-577 — `( state: State<'_, AppState>, id: String, vision_bright_ft: Option<i32>, vision_...` — Update a token's vision settings (D&D 5e vision rules).
-- pub `toggle_token_visibility` function L581-594 — `( state: State<'_, AppState>, id: String, ) -> ApiResponse<TokenResponse>` — Toggle a token's visibility (hidden from players).
-- pub `delete_token` function L598-608 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a token placement.
-- pub `serve_token_image` function L620-734 — `( state: State<'_, AppState>, token_id: String, ) -> ApiResponse<Option<String>>` — Serve a token's image as a base64 data URL.
+- pub `list_modules` function L21-29 — `(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<Module>>` — List all modules for a campaign.
+- pub `get_module` function L33-45 — `(state: State<'_, AppState>, id: String) -> ApiResponse<Module>` — Get a module by ID.
+- pub `CreateModuleRequest` struct L49-54 — `{ campaign_id: String, name: String, description: Option<String>, module_type: O...` — Request for creating a new module.
+- pub `create_module` function L58-78 — `( state: State<'_, AppState>, request: CreateModuleRequest, ) -> ApiResponse<Mod...` — Create a new module.
+- pub `UpdateModuleRequest` struct L82-85 — `{ name: Option<String>, description: Option<Option<String>> }` — Request for updating a module.
+- pub `update_module` function L89-106 — `( state: State<'_, AppState>, id: String, request: UpdateModuleRequest, ) -> Api...` — Update a module.
+- pub `delete_module` function L110-118 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a module permanently.
+- pub `get_module_by_number` function L122-141 — `( state: State<'_, AppState>, campaign_id: String, module_number: i32, ) -> ApiR...` — Get a module by campaign ID and module number.
+- pub `reorder_module` function L145-157 — `( state: State<'_, AppState>, module_id: String, new_position: i32, ) -> ApiResp...` — Reorder a module by moving it to a new position (1-indexed).
+- pub `MonsterWithData` struct L165-169 — `{ monster: ModuleMonster, monster_data: Option<serde_json::Value> }` — Monster with optional catalog data for display.
+- pub `list_module_monsters_with_data` function L173-232 — `( state: State<'_, AppState>, module_id: String, ) -> ApiResponse<Vec<MonsterWit...` — List all monsters for a module with catalog data.
+- pub `AddModuleMonsterRequest` struct L237-248 — `{ module_id: String, monster_name: Option<String>, monster_source: Option<String...` — Request for adding a module monster.
+- pub `add_module_monster` function L256-295 — `( state: State<'_, AppState>, request: AddModuleMonsterRequest, ) -> ApiResponse...` — Add a monster to a module (or increment quantity if it already exists).
+- pub `UpdateModuleMonsterRequest` struct L299-303 — `{ display_name: Option<String>, notes: Option<String>, quantity: Option<i32> }` — Request for updating a module monster.
+- pub `update_module_monster` function L307-323 — `( state: State<'_, AppState>, monster_id: String, request: UpdateModuleMonsterRe...` — Update a module monster.
+- pub `remove_module_monster` function L327-337 — `( state: State<'_, AppState>, monster_id: String, ) -> ApiResponse<()>` — Remove a monster from a module.
+- pub `list_module_npcs` function L345-355 — `(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<ModuleNpc>>` — List all NPCs for a module.
+- pub `list_tokens` function L363-373 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List all tokens for a map with resolved names.
+- pub `list_token_summaries` function L377-379 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>>` — List token summaries (alias for list_tokens for frontend compatibility).
+- pub `CreateTokenRequest` struct L384-393 — `{ map_id: String, module_monster_id: Option<String>, module_npc_id: Option<Strin...` — Request for creating a token placement.
+- pub `create_token` function L397-421 — `( state: State<'_, AppState>, request: CreateTokenRequest, ) -> ApiResponse<Toke...` — Create a new token placement.
+- pub `UpdateTokenRequest` struct L425-431 — `{ grid_x: Option<i32>, grid_y: Option<i32>, label: Option<Option<String>>, facti...` — Request for updating a token placement.
+- pub `update_token` function L435-458 — `( state: State<'_, AppState>, id: String, request: UpdateTokenRequest, ) -> ApiR...` — Update a token placement.
+- pub `update_token_position` function L462-477 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Update only the position of a token (optimized for drag operations).
+- pub `update_token_vision` function L481-504 — `( state: State<'_, AppState>, id: String, vision_bright_ft: Option<i32>, vision_...` — Update a token's vision settings (D&D 5e vision rules).
+- pub `toggle_token_visibility` function L508-521 — `( state: State<'_, AppState>, id: String, ) -> ApiResponse<TokenResponse>` — Toggle a token's visibility (hidden from players).
+- pub `delete_token` function L525-535 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a token placement.
+- pub `serve_token_image` function L547-661 — `( state: State<'_, AppState>, token_id: String, ) -> ApiResponse<Option<String>>` — Serve a token's image as a base64 data URL.
 
 #### crates/mimir/src/commands/player_display.rs
 
@@ -6856,114 +6857,118 @@
 
 #### crates/mimir-core/src/services/character.rs
 
-- pub `CreateCharacterInput` struct L23-48 — `{ campaign_id: Option<String>, name: String, is_npc: bool, player_name: Option<S...` — Input for creating a new character.
-- pub `new_pc` function L52-71 — `( campaign_id: Option<impl Into<String>>, name: impl Into<String>, player_name: ...` — Create input for a new player character.
-- pub `new_npc` function L74-89 — `(campaign_id: Option<impl Into<String>>, name: impl Into<String>) -> Self` — Create input for a new NPC.
-- pub `with_race` function L92-96 — `(mut self, name: impl Into<String>, source: impl Into<String>) -> Self` — Set the race.
-- pub `with_background` function L99-103 — `(mut self, name: impl Into<String>, source: impl Into<String>) -> Self` — Set the background.
-- pub `with_ability_scores` function L106-109 — `(mut self, scores: [i32; 6]) -> Self` — Set ability scores [STR, DEX, CON, INT, WIS, CHA].
-- pub `with_class` function L112-116 — `(mut self, name: impl Into<String>, source: impl Into<String>) -> Self` — Set starting class.
-- pub `with_skills` function L119-122 — `(mut self, skills: Vec<String>) -> Self` — Set selected skill proficiencies.
-- pub `UpdateCharacterInput` struct L127-143 — `{ name: Option<String>, player_name: Option<Option<String>>, race_name: Option<O...` — Input for updating a character.
-- pub `set_name` function L147-152 — `(name: impl Into<String>) -> Self` — Update character name.
-- pub `set_race` function L155-161 — `(name: Option<String>, source: Option<String>) -> Self` — Update race.
-- pub `set_background` function L164-170 — `(name: Option<String>, source: Option<String>) -> Self` — Update background.
-- pub `set_ability_scores` function L173-178 — `(scores: [i32; 6]) -> Self` — Update ability scores [STR, DEX, CON, INT, WIS, CHA].
-- pub `set_currency` function L181-186 — `(currency: [i32; 5]) -> Self` — Update currency [CP, SP, EP, GP, PP].
-- pub `set_roleplay` function L189-202 — `( traits: Option<String>, ideals: Option<String>, bonds: Option<String>, flaws: ...` — Update roleplay elements.
-- pub `set_npc_info` function L205-216 — `( role: Option<String>, location: Option<String>, faction: Option<String>, ) -> ...` — Update NPC info.
-- pub `AddInventoryInput` struct L221-234 — `{ item_name: String, item_source: String, quantity: Option<i32>, equipped: bool,...` — Input for adding an item to inventory.
-- pub `new` function L238-247 — `(name: impl Into<String>, source: impl Into<String>) -> Self` — Create input for adding an item.
-- pub `with_quantity` function L250-253 — `(mut self, quantity: i32) -> Self` — Set quantity.
-- pub `equipped` function L256-259 — `(mut self) -> Self` — Mark as equipped.
-- pub `attuned` function L262-265 — `(mut self) -> Self` — Mark as attuned.
-- pub `with_notes` function L268-271 — `(mut self, notes: impl Into<String>) -> Self` — Add notes.
-- pub `LevelUpRequest` struct L280-295 — `{ class_name: String, class_source: String, hit_points_method: HpGainMethod, sub...` — Request for leveling up a character.
-- pub `SpellChanges` struct L299-308 — `{ new_spells: Vec<SpellReference>, new_cantrips: Vec<SpellReference>, swap_out: ...` — Spell changes during level up.
-- pub `SpellReference` struct L312-317 — `{ name: String, source: String }` — Reference to a spell from the catalog.
-- pub `FeatureChoices` struct L321-334 — `{ fighting_style: Option<FeatureReference>, metamagic: Option<Vec<FeatureReferen...` — Class feature choices during level up.
-- pub `FeatureReference` struct L338-343 — `{ name: String, source: String }` — Reference to a class feature option from the catalog.
-- pub `ManeuverChoices` struct L347-354 — `{ new_maneuvers: Vec<FeatureReference>, swap_out: Option<FeatureReference>, swap...` — Maneuver choices with optional swap for Battle Master.
-- pub `InvocationChoices` struct L358-365 — `{ new_invocations: Vec<FeatureReference>, swap_out: Option<FeatureReference>, sw...` — Invocation choices with optional swap for Warlock.
-- pub `HpGainMethod` enum L370-377 — `Average | Roll | Manual` — Method for gaining HP on level up.
-- pub `AsiOrFeat` enum L382-401 — `AbilityScoreImprovement | Feat` — Ability Score Improvement or Feat selection.
-- pub `SubclassChoice` struct L405-410 — `{ name: String, source: String }` — Subclass choice for level up.
-- pub `LevelUpResult` struct L414-425 — `{ character: Character, class: CharacterClass, hp_gained: i32, new_total_level: ...` — Response from level up operation.
-- pub `CharacterService` struct L794-796 — `{ conn: &'a mut SqliteConnection }` — Service for character management.
-- pub `new` function L800-802 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new character service.
-- pub `create` function L805-886 — `(&mut self, input: CreateCharacterInput) -> ServiceResult<Character>` — Create a new character.
-- pub `list_for_campaign` function L889-891 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Character>>` — List all characters for a campaign.
-- pub `list_pcs` function L894-896 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Character>>` — List only player characters for a campaign.
-- pub `list_npcs` function L899-901 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Character>>` — List only NPCs for a campaign.
-- pub `list_npcs_by_location` function L904-911 — `( &mut self, campaign_id: &str, location: &str, ) -> ServiceResult<Vec<Character...` — List NPCs by location.
-- pub `list_npcs_by_faction` function L914-920 — `( &mut self, campaign_id: &str, faction: &str, ) -> ServiceResult<Vec<Character>...` — List NPCs by faction.
-- pub `get` function L923-925 — `(&mut self, id: &str) -> ServiceResult<Option<Character>>` — Get a character by ID.
-- pub `get_enriched` function L930-936 — `(&mut self, id: &str) -> ServiceResult<Option<CharacterResponse>>` — Get an enriched character by ID (includes classes and proficiencies).
-- pub `enrich` function L942-951 — `(&mut self, character: Character) -> ServiceResult<CharacterResponse>` — Enrich a character with classes and proficiencies.
-- pub `enrich_many` function L957-966 — `( &mut self, characters: Vec<Character>, ) -> ServiceResult<Vec<CharacterRespons...` — Enrich multiple characters with classes and proficiencies.
-- pub `update` function L969-1021 — `(&mut self, id: &str, input: UpdateCharacterInput) -> ServiceResult<Character>` — Update a character.
-- pub `delete` function L1024-1030 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a character and all related data.
-- pub `exists` function L1033-1035 — `(&mut self, id: &str) -> ServiceResult<bool>` — Check if a character exists.
-- pub `count_for_campaign` function L1038-1040 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count all characters for a campaign.
-- pub `count_pcs` function L1043-1045 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count PCs for a campaign.
-- pub `count_npcs` function L1048-1050 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count NPCs for a campaign.
-- pub `level_up` function L1058-1509 — `( &mut self, character_id: &str, request: LevelUpRequest, ) -> ServiceResult<Lev...` — Level up a character.
-- pub `add_to_inventory` function L1514-1545 — `( &mut self, character_id: &str, input: AddInventoryInput, ) -> ServiceResult<Ch...` — Add an item to a character's inventory.
-- pub `remove_from_inventory` function L1548-1554 — `(&mut self, inventory_id: &str) -> ServiceResult<()>` — Remove an item from a character's inventory.
-- pub `get_inventory` function L1557-1559 — `(&mut self, character_id: &str) -> ServiceResult<Vec<CharacterInventory>>` — Get a character's inventory.
-- pub `get_equipped_items` function L1562-1567 — `( &mut self, character_id: &str, ) -> ServiceResult<Vec<CharacterInventory>>` — Get equipped items for a character.
-- pub `get_attuned_items` function L1570-1575 — `( &mut self, character_id: &str, ) -> ServiceResult<Vec<CharacterInventory>>` — Get attuned items for a character.
-- pub `update_inventory_item` function L1578-1598 — `( &mut self, inventory_id: &str, quantity: Option<i32>, equipped: Option<bool>, ...` — Update an inventory item (quantity, equipped, attuned, notes).
-- pub `count_attuned_items` function L1601-1603 — `(&mut self, character_id: &str) -> ServiceResult<i64>` — Count attuned items for a character (D&D 5e max is 3).
--  `CreateCharacterInput` type L50-123 — `= CreateCharacterInput` — Business logic for character management (PCs and NPCs).
--  `UpdateCharacterInput` type L145-217 — `= UpdateCharacterInput` — Business logic for character management (PCs and NPCs).
--  `AddInventoryInput` type L236-272 — `= AddInventoryInput` — Business logic for character management (PCs and NPCs).
--  `get_multiclass_prerequisites` function L434-456 — `(class_name: &str) -> Option<Vec<(&'static str, i32, bool)>>` — Multiclass prerequisites for D&D 5e classes.
--  `check_multiclass_prerequisites` function L459-502 — `( character: &Character, class_name: &str, ) -> Result<(), ServiceError>` — Check if a character meets multiclass prerequisites for a class.
--  `get_ability_score` function L505-515 — `(character: &Character, ability: &str) -> i32` — Get an ability score by name.
--  `set_ability_score` function L518-537 — `(character: &Character, ability: &str, new_value: i32) -> [i32; 6]` — Set an ability score by name, returning the new scores array.
--  `calculate_hp_gain` function L540-548 — `(method: &HpGainMethod, hit_die: i32, con_mod: i32) -> i32` — Calculate HP gain for a level up.
--  `get_class_hit_die` function L551-570 — `(conn: &mut SqliteConnection, class_name: &str, class_source: &str) -> i32` — Get hit die value for a class from catalog, returns d8 as default.
--  `ProficiencyEntry` struct L577-580 — `{ prof_type: ProficiencyType, name: String }` — A proficiency to be inserted during character creation.
--  `extract_keyed_proficiencies` function L586-617 — `( items: &[serde_json::Value], prof_type: ProficiencyType, ) -> Vec<ProficiencyE...` — Extract deterministic (non-choice) proficiencies from a keyed JSON object.
--  `capitalize_proficiency` function L620-629 — `(s: &str) -> String` — Capitalize a proficiency name for display.
--  `extract_class_proficiencies` function L632-686 — `( class_data: &serde_json::Value, selected_skills: &[String], ) -> Vec<Proficien...` — Extract proficiencies from class catalog data.
--  `extract_background_proficiencies` function L689-708 — `(bg_data: &serde_json::Value) -> Vec<ProficiencyEntry>` — Extract proficiencies from background catalog data.
--  `extract_race_proficiencies` function L711-740 — `(race_data: &serde_json::Value) -> Vec<ProficiencyEntry>` — Extract proficiencies from race catalog data.
--  `extract_multiclass_proficiencies` function L743-761 — `(class_data: &serde_json::Value) -> Vec<ProficiencyEntry>` — Extract multiclass proficiencies from class catalog data.
--  `insert_proficiencies` function L764-789 — `( conn: &mut SqliteConnection, character_id: &str, entries: &[ProficiencyEntry],...` — Insert proficiency entries for a character, skipping duplicates.
--  `tests` module L1607-2151 — `-` — Business logic for character management (PCs and NPCs).
--  `create_test_campaign` function L1613-1618 — `(conn: &mut SqliteConnection) -> String` — Business logic for character management (PCs and NPCs).
--  `test_create_pc` function L1621-1633 — `()` — Business logic for character management (PCs and NPCs).
--  `test_create_npc` function L1636-1648 — `()` — Business logic for character management (PCs and NPCs).
--  `test_create_with_race_and_background` function L1651-1666 — `()` — Business logic for character management (PCs and NPCs).
--  `test_create_with_ability_scores` function L1669-1685 — `()` — Business logic for character management (PCs and NPCs).
--  `test_list_for_campaign` function L1688-1711 — `()` — Business logic for character management (PCs and NPCs).
--  `test_get_character` function L1714-1730 — `()` — Business logic for character management (PCs and NPCs).
--  `test_get_character_not_found` function L1733-1740 — `()` — Business logic for character management (PCs and NPCs).
--  `test_update_character_name` function L1743-1758 — `()` — Business logic for character management (PCs and NPCs).
--  `test_update_character_race` function L1761-1778 — `()` — Business logic for character management (PCs and NPCs).
--  `test_update_character_not_found` function L1781-1790 — `()` — Business logic for character management (PCs and NPCs).
--  `test_delete_character` function L1793-1807 — `()` — Business logic for character management (PCs and NPCs).
--  `test_delete_character_not_found` function L1810-1817 — `()` — Business logic for character management (PCs and NPCs).
--  `test_count_characters` function L1820-1854 — `()` — Business logic for character management (PCs and NPCs).
--  `test_add_to_inventory` function L1857-1876 — `()` — Business logic for character management (PCs and NPCs).
--  `test_add_to_inventory_with_options` function L1879-1899 — `()` — Business logic for character management (PCs and NPCs).
--  `test_get_inventory` function L1902-1922 — `()` — Business logic for character management (PCs and NPCs).
--  `test_remove_from_inventory` function L1925-1946 — `()` — Business logic for character management (PCs and NPCs).
--  `test_update_inventory_item` function L1949-1972 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_keyed_proficiencies_boolean_keys` function L1977-1984 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_keyed_proficiencies_ignores_choice_keys` function L1987-1991 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_keyed_proficiencies_ignores_any_prefix_keys` function L1994-1998 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_keyed_proficiencies_string_values` function L2001-2011 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_keyed_proficiencies_strips_source_suffix` function L2014-2020 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_class_proficiencies_saves` function L2023-2039 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_class_proficiencies_with_skills` function L2042-2056 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_background_proficiencies` function L2059-2086 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_race_proficiencies` function L2089-2109 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_multiclass_proficiencies` function L2112-2135 — `()` — Business logic for character management (PCs and NPCs).
--  `test_extract_multiclass_proficiencies_no_multiclass` function L2138-2142 — `()` — Business logic for character management (PCs and NPCs).
--  `test_capitalize_proficiency` function L2145-2150 — `()` — Business logic for character management (PCs and NPCs).
+- pub `CreateCharacterInput` struct L24-49 — `{ campaign_id: Option<String>, name: String, is_npc: bool, player_name: Option<S...` — Input for creating a new character.
+- pub `new_pc` function L53-72 — `( campaign_id: Option<impl Into<String>>, name: impl Into<String>, player_name: ...` — Create input for a new player character.
+- pub `new_npc` function L75-90 — `(campaign_id: Option<impl Into<String>>, name: impl Into<String>) -> Self` — Create input for a new NPC.
+- pub `with_race` function L93-97 — `(mut self, name: impl Into<String>, source: impl Into<String>) -> Self` — Set the race.
+- pub `with_background` function L100-104 — `(mut self, name: impl Into<String>, source: impl Into<String>) -> Self` — Set the background.
+- pub `with_ability_scores` function L107-110 — `(mut self, scores: [i32; 6]) -> Self` — Set ability scores [STR, DEX, CON, INT, WIS, CHA].
+- pub `with_class` function L113-117 — `(mut self, name: impl Into<String>, source: impl Into<String>) -> Self` — Set starting class.
+- pub `with_skills` function L120-123 — `(mut self, skills: Vec<String>) -> Self` — Set selected skill proficiencies.
+- pub `UpdateCharacterInput` struct L128-144 — `{ name: Option<String>, player_name: Option<Option<String>>, race_name: Option<O...` — Input for updating a character.
+- pub `set_name` function L148-153 — `(name: impl Into<String>) -> Self` — Update character name.
+- pub `set_race` function L156-162 — `(name: Option<String>, source: Option<String>) -> Self` — Update race.
+- pub `set_background` function L165-171 — `(name: Option<String>, source: Option<String>) -> Self` — Update background.
+- pub `set_ability_scores` function L174-179 — `(scores: [i32; 6]) -> Self` — Update ability scores [STR, DEX, CON, INT, WIS, CHA].
+- pub `set_currency` function L182-187 — `(currency: [i32; 5]) -> Self` — Update currency [CP, SP, EP, GP, PP].
+- pub `set_roleplay` function L190-203 — `( traits: Option<String>, ideals: Option<String>, bonds: Option<String>, flaws: ...` — Update roleplay elements.
+- pub `set_npc_info` function L206-217 — `( role: Option<String>, location: Option<String>, faction: Option<String>, ) -> ...` — Update NPC info.
+- pub `AddInventoryInput` struct L222-235 — `{ item_name: String, item_source: String, quantity: Option<i32>, equipped: bool,...` — Input for adding an item to inventory.
+- pub `new` function L239-248 — `(name: impl Into<String>, source: impl Into<String>) -> Self` — Create input for adding an item.
+- pub `with_quantity` function L251-254 — `(mut self, quantity: i32) -> Self` — Set quantity.
+- pub `equipped` function L257-260 — `(mut self) -> Self` — Mark as equipped.
+- pub `attuned` function L263-266 — `(mut self) -> Self` — Mark as attuned.
+- pub `with_notes` function L269-272 — `(mut self, notes: impl Into<String>) -> Self` — Add notes.
+- pub `LevelUpRequest` struct L281-296 — `{ class_name: String, class_source: String, hit_points_method: HpGainMethod, sub...` — Request for leveling up a character.
+- pub `SpellChanges` struct L300-309 — `{ new_spells: Vec<SpellReference>, new_cantrips: Vec<SpellReference>, swap_out: ...` — Spell changes during level up.
+- pub `SpellReference` struct L313-318 — `{ name: String, source: String }` — Reference to a spell from the catalog.
+- pub `FeatureChoices` struct L322-335 — `{ fighting_style: Option<FeatureReference>, metamagic: Option<Vec<FeatureReferen...` — Class feature choices during level up.
+- pub `FeatureReference` struct L339-344 — `{ name: String, source: String }` — Reference to a class feature option from the catalog.
+- pub `ManeuverChoices` struct L348-355 — `{ new_maneuvers: Vec<FeatureReference>, swap_out: Option<FeatureReference>, swap...` — Maneuver choices with optional swap for Battle Master.
+- pub `InvocationChoices` struct L359-366 — `{ new_invocations: Vec<FeatureReference>, swap_out: Option<FeatureReference>, sw...` — Invocation choices with optional swap for Warlock.
+- pub `HpGainMethod` enum L371-378 — `Average | Roll | Manual` — Method for gaining HP on level up.
+- pub `AsiOrFeat` enum L383-402 — `AbilityScoreImprovement | Feat` — Ability Score Improvement or Feat selection.
+- pub `SubclassChoice` struct L406-411 — `{ name: String, source: String }` — Subclass choice for level up.
+- pub `LevelUpResult` struct L415-426 — `{ character: Character, class: CharacterClass, hp_gained: i32, new_total_level: ...` — Response from level up operation.
+- pub `CharacterService` struct L795-797 — `{ conn: &'a mut SqliteConnection }` — Service for character management.
+- pub `new` function L801-803 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new character service.
+- pub `create` function L806-887 — `(&mut self, input: CreateCharacterInput) -> ServiceResult<Character>` — Create a new character.
+- pub `list_for_campaign` function L890-892 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Character>>` — List all characters for a campaign.
+- pub `list_pcs` function L895-897 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Character>>` — List only player characters for a campaign.
+- pub `list_npcs` function L900-902 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Character>>` — List only NPCs for a campaign.
+- pub `list_npcs_by_location` function L905-912 — `( &mut self, campaign_id: &str, location: &str, ) -> ServiceResult<Vec<Character...` — List NPCs by location.
+- pub `list_npcs_by_faction` function L915-921 — `( &mut self, campaign_id: &str, faction: &str, ) -> ServiceResult<Vec<Character>...` — List NPCs by faction.
+- pub `get` function L924-926 — `(&mut self, id: &str) -> ServiceResult<Option<Character>>` — Get a character by ID.
+- pub `get_enriched` function L931-937 — `(&mut self, id: &str) -> ServiceResult<Option<CharacterResponse>>` — Get an enriched character by ID (includes classes and proficiencies).
+- pub `enrich` function L943-952 — `(&mut self, character: Character) -> ServiceResult<CharacterResponse>` — Enrich a character with classes and proficiencies.
+- pub `enrich_many` function L958-967 — `( &mut self, characters: Vec<Character>, ) -> ServiceResult<Vec<CharacterRespons...` — Enrich multiple characters with classes and proficiencies.
+- pub `update` function L970-1022 — `(&mut self, id: &str, input: UpdateCharacterInput) -> ServiceResult<Character>` — Update a character.
+- pub `delete` function L1025-1031 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a character and all related data.
+- pub `exists` function L1034-1036 — `(&mut self, id: &str) -> ServiceResult<bool>` — Check if a character exists.
+- pub `count_for_campaign` function L1039-1041 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count all characters for a campaign.
+- pub `count_pcs` function L1044-1046 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count PCs for a campaign.
+- pub `count_npcs` function L1049-1051 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count NPCs for a campaign.
+- pub `level_up` function L1059-1510 — `( &mut self, character_id: &str, request: LevelUpRequest, ) -> ServiceResult<Lev...` — Level up a character.
+- pub `add_to_inventory` function L1515-1546 — `( &mut self, character_id: &str, input: AddInventoryInput, ) -> ServiceResult<Ch...` — Add an item to a character's inventory.
+- pub `remove_from_inventory` function L1549-1555 — `(&mut self, inventory_id: &str) -> ServiceResult<()>` — Remove an item from a character's inventory.
+- pub `get_inventory` function L1558-1560 — `(&mut self, character_id: &str) -> ServiceResult<Vec<CharacterInventory>>` — Get a character's inventory.
+- pub `get_equipped_items` function L1563-1568 — `( &mut self, character_id: &str, ) -> ServiceResult<Vec<CharacterInventory>>` — Get equipped items for a character.
+- pub `get_attuned_items` function L1571-1576 — `( &mut self, character_id: &str, ) -> ServiceResult<Vec<CharacterInventory>>` — Get attuned items for a character.
+- pub `list_spells` function L1579-1581 — `(&mut self, character_id: &str) -> ServiceResult<Vec<CharacterSpell>>` — List all spells a character knows.
+- pub `add_spell` function L1587-1620 — `( &mut self, character_id: &str, spell_name: &str, spell_source: &str, source_cl...` — Add a spell to a character's known spells.
+- pub `remove_spell` function L1626-1657 — `( &mut self, character_id: &str, spell_name: &str, source_class: Option<&str>, )...` — Remove a spell from a character's known spells.
+- pub `toggle_spell_prepared` function L1660-1672 — `(&mut self, spell_id: &str) -> ServiceResult<CharacterSpell>` — Toggle a spell's prepared status.
+- pub `update_inventory_item` function L1675-1695 — `( &mut self, inventory_id: &str, quantity: Option<i32>, equipped: Option<bool>, ...` — Update an inventory item (quantity, equipped, attuned, notes).
+- pub `count_attuned_items` function L1698-1700 — `(&mut self, character_id: &str) -> ServiceResult<i64>` — Count attuned items for a character (D&D 5e max is 3).
+-  `CreateCharacterInput` type L51-124 — `= CreateCharacterInput` — Business logic for character management (PCs and NPCs).
+-  `UpdateCharacterInput` type L146-218 — `= UpdateCharacterInput` — Business logic for character management (PCs and NPCs).
+-  `AddInventoryInput` type L237-273 — `= AddInventoryInput` — Business logic for character management (PCs and NPCs).
+-  `get_multiclass_prerequisites` function L435-457 — `(class_name: &str) -> Option<Vec<(&'static str, i32, bool)>>` — Multiclass prerequisites for D&D 5e classes.
+-  `check_multiclass_prerequisites` function L460-503 — `( character: &Character, class_name: &str, ) -> Result<(), ServiceError>` — Check if a character meets multiclass prerequisites for a class.
+-  `get_ability_score` function L506-516 — `(character: &Character, ability: &str) -> i32` — Get an ability score by name.
+-  `set_ability_score` function L519-538 — `(character: &Character, ability: &str, new_value: i32) -> [i32; 6]` — Set an ability score by name, returning the new scores array.
+-  `calculate_hp_gain` function L541-549 — `(method: &HpGainMethod, hit_die: i32, con_mod: i32) -> i32` — Calculate HP gain for a level up.
+-  `get_class_hit_die` function L552-571 — `(conn: &mut SqliteConnection, class_name: &str, class_source: &str) -> i32` — Get hit die value for a class from catalog, returns d8 as default.
+-  `ProficiencyEntry` struct L578-581 — `{ prof_type: ProficiencyType, name: String }` — A proficiency to be inserted during character creation.
+-  `extract_keyed_proficiencies` function L587-618 — `( items: &[serde_json::Value], prof_type: ProficiencyType, ) -> Vec<ProficiencyE...` — Extract deterministic (non-choice) proficiencies from a keyed JSON object.
+-  `capitalize_proficiency` function L621-630 — `(s: &str) -> String` — Capitalize a proficiency name for display.
+-  `extract_class_proficiencies` function L633-687 — `( class_data: &serde_json::Value, selected_skills: &[String], ) -> Vec<Proficien...` — Extract proficiencies from class catalog data.
+-  `extract_background_proficiencies` function L690-709 — `(bg_data: &serde_json::Value) -> Vec<ProficiencyEntry>` — Extract proficiencies from background catalog data.
+-  `extract_race_proficiencies` function L712-741 — `(race_data: &serde_json::Value) -> Vec<ProficiencyEntry>` — Extract proficiencies from race catalog data.
+-  `extract_multiclass_proficiencies` function L744-762 — `(class_data: &serde_json::Value) -> Vec<ProficiencyEntry>` — Extract multiclass proficiencies from class catalog data.
+-  `insert_proficiencies` function L765-790 — `( conn: &mut SqliteConnection, character_id: &str, entries: &[ProficiencyEntry],...` — Insert proficiency entries for a character, skipping duplicates.
+-  `tests` module L1704-2248 — `-` — Business logic for character management (PCs and NPCs).
+-  `create_test_campaign` function L1710-1715 — `(conn: &mut SqliteConnection) -> String` — Business logic for character management (PCs and NPCs).
+-  `test_create_pc` function L1718-1730 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_create_npc` function L1733-1745 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_create_with_race_and_background` function L1748-1763 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_create_with_ability_scores` function L1766-1782 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_list_for_campaign` function L1785-1808 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_get_character` function L1811-1827 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_get_character_not_found` function L1830-1837 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_update_character_name` function L1840-1855 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_update_character_race` function L1858-1875 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_update_character_not_found` function L1878-1887 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_delete_character` function L1890-1904 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_delete_character_not_found` function L1907-1914 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_count_characters` function L1917-1951 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_add_to_inventory` function L1954-1973 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_add_to_inventory_with_options` function L1976-1996 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_get_inventory` function L1999-2019 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_remove_from_inventory` function L2022-2043 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_update_inventory_item` function L2046-2069 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_keyed_proficiencies_boolean_keys` function L2074-2081 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_keyed_proficiencies_ignores_choice_keys` function L2084-2088 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_keyed_proficiencies_ignores_any_prefix_keys` function L2091-2095 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_keyed_proficiencies_string_values` function L2098-2108 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_keyed_proficiencies_strips_source_suffix` function L2111-2117 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_class_proficiencies_saves` function L2120-2136 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_class_proficiencies_with_skills` function L2139-2153 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_background_proficiencies` function L2156-2183 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_race_proficiencies` function L2186-2206 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_multiclass_proficiencies` function L2209-2232 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_extract_multiclass_proficiencies_no_multiclass` function L2235-2239 — `()` — Business logic for character management (PCs and NPCs).
+-  `test_capitalize_proficiency` function L2242-2247 — `()` — Business logic for character management (PCs and NPCs).
 
 #### crates/mimir-core/src/services/document.rs
 
@@ -7165,11 +7170,11 @@
 #### crates/mimir-core/src/services/mod.rs
 
 - pub `catalog` module L9 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
-- pub `DEFAULT_QUERY_LIMIT` variable L47 — `: i64` — Default query limit to prevent memory issues on large result sets.
-- pub `ServiceError` enum L53-74 — `NotFound | Validation | Database | Io` — Service layer error type.
-- pub `ServiceResult` type L77 — `= Result<T, ServiceError>` — Result type for service operations.
-- pub `not_found` function L81-86 — `(entity_type: impl Into<String>, id: impl Into<String>) -> Self` — Create a NotFound error.
-- pub `validation` function L89-91 — `(message: impl Into<String>) -> Self` — Create a Validation error.
+- pub `DEFAULT_QUERY_LIMIT` variable L51 — `: i64` — Default query limit to prevent memory issues on large result sets.
+- pub `ServiceError` enum L57-78 — `NotFound | Validation | Database | Io` — Service layer error type.
+- pub `ServiceResult` type L81 — `= Result<T, ServiceError>` — Result type for service operations.
+- pub `not_found` function L85-90 — `(entity_type: impl Into<String>, id: impl Into<String>) -> Self` — Create a NotFound error.
+- pub `validation` function L93-95 — `(message: impl Into<String>) -> Self` — Create a Validation error.
 -  `archive` module L6 — `-` — Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
 -  `asset` module L7 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `campaign` module L8 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
@@ -7178,65 +7183,94 @@
 -  `homebrew` module L12 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `map` module L13 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `module` module L14 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `token` module L15 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `ServiceError` type L79-92 — `= ServiceError` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `tests` module L95-123 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_not_found_error` function L99-102 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_validation_error` function L105-108 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_database_error_conversion` function L111-115 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_io_error_conversion` function L118-122 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `source` module L15 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `token` module L16 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `ServiceError` type L83-96 — `= ServiceError` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `tests` module L99-127 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_not_found_error` function L103-106 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_validation_error` function L109-112 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_database_error_conversion` function L115-119 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_io_error_conversion` function L122-126 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
 
 #### crates/mimir-core/src/services/module.rs
 
-- pub `ModuleType` enum L16-30 — `General | Mystery | Dungeon | Heist | Horror | Political` — Module types that determine which template is used for the overview document.
-- pub `template_key` function L34-43 — `(&self) -> &'static str` — Get the template key for this module type.
-- pub `display_name` function L46-55 — `(&self) -> &'static str` — Get the display name for this module type.
-- pub `CreateModuleInput` struct L79-88 — `{ campaign_id: String, name: String, description: Option<String>, module_type: M...` — Input for creating a new module.
-- pub `new` function L92-99 — `(campaign_id: impl Into<String>, name: impl Into<String>) -> Self` — Create a new module input.
-- pub `with_description` function L102-105 — `(mut self, description: impl Into<String>) -> Self` — Set the description.
-- pub `with_type` function L108-111 — `(mut self, module_type: ModuleType) -> Self` — Set the module type.
-- pub `UpdateModuleInput` struct L116-121 — `{ name: Option<String>, description: Option<Option<String>> }` — Input for updating a module.
-- pub `set_name` function L125-130 — `(name: impl Into<String>) -> Self` — Create an update to change the name.
-- pub `set_description` function L133-138 — `(description: Option<String>) -> Self` — Create an update to change the description.
-- pub `ModuleService` struct L144-146 — `{ conn: &'a mut SqliteConnection }` — Service for module management.
-- pub `new` function L150-152 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new module service.
-- pub `create` function L159-211 — `(&mut self, input: CreateModuleInput) -> ServiceResult<Module>` — Create a new module with type-specific overview and play notes documents.
-- pub `list_for_campaign` function L214-216 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Module>>` — List all modules for a campaign, ordered by module number.
-- pub `get` function L221-223 — `(&mut self, id: &str) -> ServiceResult<Option<Module>>` — Get a module by ID.
-- pub `get_by_number` function L226-232 — `( &mut self, campaign_id: &str, module_number: i32, ) -> ServiceResult<Option<Mo...` — Get a module by campaign ID and module number.
-- pub `update` function L237-257 — `(&mut self, id: &str, input: UpdateModuleInput) -> ServiceResult<Module>` — Update a module.
-- pub `delete` function L262-269 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a module permanently.
-- pub `count_for_campaign` function L272-274 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count modules for a campaign.
-- pub `reorder` function L279-300 — `( &mut self, module_id: &str, new_position: i32, ) -> ServiceResult<Vec<Module>>` — Reorder a module by moving it to a new position (1-indexed).
-- pub `exists` function L303-305 — `(&mut self, id: &str) -> ServiceResult<bool>` — Check if a module exists.
--  `ModuleType` type L32-56 — `= ModuleType` — Business logic for module management including type-based document creation.
--  `ModuleType` type L58-62 — `= ModuleType` — Business logic for module management including type-based document creation.
--  `fmt` function L59-61 — `(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result` — Business logic for module management including type-based document creation.
--  `ModuleType` type L64-75 — `= ModuleType` — Business logic for module management including type-based document creation.
--  `from` function L65-74 — `(s: Option<&str>) -> Self` — Business logic for module management including type-based document creation.
--  `CreateModuleInput` type L90-112 — `= CreateModuleInput` — Business logic for module management including type-based document creation.
--  `UpdateModuleInput` type L123-139 — `= UpdateModuleInput` — Business logic for module management including type-based document creation.
--  `tests` module L309-652 — `-` — Business logic for module management including type-based document creation.
--  `create_test_campaign` function L315-320 — `(conn: &mut SqliteConnection) -> String` — Business logic for module management including type-based document creation.
--  `test_create_module` function L323-336 — `()` — Business logic for module management including type-based document creation.
--  `test_create_module_with_description` function L339-353 — `()` — Business logic for module management including type-based document creation.
--  `test_create_module_creates_2_documents` function L356-378 — `()` — Business logic for module management including type-based document creation.
--  `test_create_module_with_type` function L381-401 — `()` — Business logic for module management including type-based document creation.
--  `test_create_modules_auto_increment_number` function L404-421 — `()` — Business logic for module management including type-based document creation.
--  `test_list_modules_for_campaign` function L424-441 — `()` — Business logic for module management including type-based document creation.
--  `test_get_module` function L444-460 — `()` — Business logic for module management including type-based document creation.
--  `test_get_module_not_found` function L463-470 — `()` — Business logic for module management including type-based document creation.
--  `test_get_module_by_number` function L473-488 — `()` — Business logic for module management including type-based document creation.
--  `test_update_module_name` function L491-506 — `()` — Business logic for module management including type-based document creation.
--  `test_update_module_not_found` function L509-518 — `()` — Business logic for module management including type-based document creation.
--  `test_delete_module` function L521-535 — `()` — Business logic for module management including type-based document creation.
--  `test_delete_module_not_found` function L538-545 — `()` — Business logic for module management including type-based document creation.
--  `test_count_modules` function L548-572 — `()` — Business logic for module management including type-based document creation.
--  `test_reorder_module` function L575-594 — `()` — Business logic for module management including type-based document creation.
--  `test_reorder_module_not_found` function L597-603 — `()` — Business logic for module management including type-based document creation.
--  `test_module_type_display` function L606-613 — `()` — Business logic for module management including type-based document creation.
--  `test_module_type_from_str` function L616-625 — `()` — Business logic for module management including type-based document creation.
--  `test_all_module_types_have_templates` function L628-651 — `()` — Business logic for module management including type-based document creation.
+- pub `ModuleType` enum L19-33 — `General | Mystery | Dungeon | Heist | Horror | Political` — Module types that determine which template is used for the overview document.
+- pub `template_key` function L37-46 — `(&self) -> &'static str` — Get the template key for this module type.
+- pub `display_name` function L49-58 — `(&self) -> &'static str` — Get the display name for this module type.
+- pub `CreateModuleInput` struct L82-91 — `{ campaign_id: String, name: String, description: Option<String>, module_type: M...` — Input for creating a new module.
+- pub `new` function L95-102 — `(campaign_id: impl Into<String>, name: impl Into<String>) -> Self` — Create a new module input.
+- pub `with_description` function L105-108 — `(mut self, description: impl Into<String>) -> Self` — Set the description.
+- pub `with_type` function L111-114 — `(mut self, module_type: ModuleType) -> Self` — Set the module type.
+- pub `UpdateModuleInput` struct L119-124 — `{ name: Option<String>, description: Option<Option<String>> }` — Input for updating a module.
+- pub `set_name` function L128-133 — `(name: impl Into<String>) -> Self` — Create an update to change the name.
+- pub `set_description` function L136-141 — `(description: Option<String>) -> Self` — Create an update to change the description.
+- pub `MonsterRef` enum L147-160 — `Catalog | Homebrew` — Reference to a monster being added to a module: either a catalog entry
+- pub `AddMonsterInput` struct L164-175 — `{ module_id: String, monster: MonsterRef, quantity: i32, display_name: Option<St...` — Input for adding a monster to a module.
+- pub `new` function L179-187 — `(module_id: impl Into<String>, monster: MonsterRef) -> Self` — Create an input with quantity 1 and no overrides.
+- pub `with_quantity` function L190-193 — `(mut self, quantity: i32) -> Self` — Set the quantity.
+- pub `with_display_name` function L196-199 — `(mut self, name: impl Into<String>) -> Self` — Set a display name override.
+- pub `with_notes` function L202-205 — `(mut self, notes: impl Into<String>) -> Self` — Set DM notes.
+- pub `ModuleService` struct L211-213 — `{ conn: &'a mut SqliteConnection }` — Service for module management.
+- pub `new` function L217-219 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new module service.
+- pub `create` function L226-278 — `(&mut self, input: CreateModuleInput) -> ServiceResult<Module>` — Create a new module with type-specific overview and play notes documents.
+- pub `list_for_campaign` function L281-283 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<Module>>` — List all modules for a campaign, ordered by module number.
+- pub `get` function L288-290 — `(&mut self, id: &str) -> ServiceResult<Option<Module>>` — Get a module by ID.
+- pub `get_by_number` function L293-299 — `( &mut self, campaign_id: &str, module_number: i32, ) -> ServiceResult<Option<Mo...` — Get a module by campaign ID and module number.
+- pub `update` function L304-324 — `(&mut self, id: &str, input: UpdateModuleInput) -> ServiceResult<Module>` — Update a module.
+- pub `delete` function L329-336 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a module permanently.
+- pub `count_for_campaign` function L339-341 — `(&mut self, campaign_id: &str) -> ServiceResult<i64>` — Count modules for a campaign.
+- pub `reorder` function L346-367 — `( &mut self, module_id: &str, new_position: i32, ) -> ServiceResult<Vec<Module>>` — Reorder a module by moving it to a new position (1-indexed).
+- pub `add_monster` function L375-431 — `(&mut self, input: AddMonsterInput) -> ServiceResult<ModuleMonster>` — Add a monster to a module.
+- pub `update_monster` function L436-458 — `( &mut self, monster_id: &str, display_name: Option<&str>, notes: Option<&str>, ...` — Update a module monster's display name, notes, or quantity.
+- pub `remove_monster` function L461-470 — `(&mut self, monster_id: &str) -> ServiceResult<()>` — Remove a monster entry from a module.
+- pub `list_monsters` function L473-475 — `(&mut self, module_id: &str) -> ServiceResult<Vec<ModuleMonster>>` — List all monster entries for a module.
+- pub `exists` function L478-480 — `(&mut self, id: &str) -> ServiceResult<bool>` — Check if a module exists.
+-  `ModuleType` type L35-59 — `= ModuleType` — Business logic for module management including type-based document creation.
+-  `ModuleType` type L61-65 — `= ModuleType` — Business logic for module management including type-based document creation.
+-  `fmt` function L62-64 — `(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result` — Business logic for module management including type-based document creation.
+-  `ModuleType` type L67-78 — `= ModuleType` — Business logic for module management including type-based document creation.
+-  `from` function L68-77 — `(s: Option<&str>) -> Self` — Business logic for module management including type-based document creation.
+-  `CreateModuleInput` type L93-115 — `= CreateModuleInput` — Business logic for module management including type-based document creation.
+-  `UpdateModuleInput` type L126-142 — `= UpdateModuleInput` — Business logic for module management including type-based document creation.
+-  `AddMonsterInput` type L177-206 — `= AddMonsterInput` — Business logic for module management including type-based document creation.
+-  `tests` module L484-827 — `-` — Business logic for module management including type-based document creation.
+-  `create_test_campaign` function L490-495 — `(conn: &mut SqliteConnection) -> String` — Business logic for module management including type-based document creation.
+-  `test_create_module` function L498-511 — `()` — Business logic for module management including type-based document creation.
+-  `test_create_module_with_description` function L514-528 — `()` — Business logic for module management including type-based document creation.
+-  `test_create_module_creates_2_documents` function L531-553 — `()` — Business logic for module management including type-based document creation.
+-  `test_create_module_with_type` function L556-576 — `()` — Business logic for module management including type-based document creation.
+-  `test_create_modules_auto_increment_number` function L579-596 — `()` — Business logic for module management including type-based document creation.
+-  `test_list_modules_for_campaign` function L599-616 — `()` — Business logic for module management including type-based document creation.
+-  `test_get_module` function L619-635 — `()` — Business logic for module management including type-based document creation.
+-  `test_get_module_not_found` function L638-645 — `()` — Business logic for module management including type-based document creation.
+-  `test_get_module_by_number` function L648-663 — `()` — Business logic for module management including type-based document creation.
+-  `test_update_module_name` function L666-681 — `()` — Business logic for module management including type-based document creation.
+-  `test_update_module_not_found` function L684-693 — `()` — Business logic for module management including type-based document creation.
+-  `test_delete_module` function L696-710 — `()` — Business logic for module management including type-based document creation.
+-  `test_delete_module_not_found` function L713-720 — `()` — Business logic for module management including type-based document creation.
+-  `test_count_modules` function L723-747 — `()` — Business logic for module management including type-based document creation.
+-  `test_reorder_module` function L750-769 — `()` — Business logic for module management including type-based document creation.
+-  `test_reorder_module_not_found` function L772-778 — `()` — Business logic for module management including type-based document creation.
+-  `test_module_type_display` function L781-788 — `()` — Business logic for module management including type-based document creation.
+-  `test_module_type_from_str` function L791-800 — `()` — Business logic for module management including type-based document creation.
+-  `test_all_module_types_have_templates` function L803-826 — `()` — Business logic for module management including type-based document creation.
+
+#### crates/mimir-core/src/services/source.rs
+
+- pub `SourceService` struct L17-19 — `{ conn: &'a mut SqliteConnection }` — Service for campaign and character source management.
+- pub `new` function L23-25 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new source service.
+- pub `list_campaign_sources` function L30-32 — `(&mut self, campaign_id: &str) -> ServiceResult<Vec<String>>` — List source codes enabled for a campaign.
+- pub `add_campaign_source` function L35-44 — `( &mut self, campaign_id: &str, source_code: &str, ) -> ServiceResult<CampaignSo...` — Add a source to a campaign's allowed sources.
+- pub `remove_campaign_source` function L47-54 — `( &mut self, campaign_id: &str, source_code: &str, ) -> ServiceResult<()>` — Remove a source from a campaign's allowed sources.
+- pub `set_campaign_sources` function L57-72 — `( &mut self, campaign_id: &str, source_codes: &[String], ) -> ServiceResult<Vec<...` — Replace a campaign's source list atomically.
+- pub `list_character_sources` function L77-79 — `(&mut self, character_id: &str) -> ServiceResult<Vec<String>>` — List source codes allowed for a character.
+- pub `add_character_source` function L82-91 — `( &mut self, character_id: &str, source_code: &str, ) -> ServiceResult<Character...` — Add a source to a character's allowed sources.
+- pub `remove_character_source` function L94-101 — `( &mut self, character_id: &str, source_code: &str, ) -> ServiceResult<()>` — Remove a source from a character's allowed sources.
+- pub `set_character_sources` function L104-119 — `( &mut self, character_id: &str, source_codes: &[String], ) -> ServiceResult<Vec...` — Replace a character's source list atomically.
+-  `tests` module L123-177 — `-` — transaction so a failure can never leave sources partially wiped.
+-  `setup_campaign` function L130-146 — `(conn: &mut SqliteConnection) -> String` — transaction so a failure can never leave sources partially wiped.
+-  `set_campaign_sources_replaces_atomically` function L149-162 — `()` — transaction so a failure can never leave sources partially wiped.
+-  `add_and_remove_campaign_source` function L165-176 — `()` — transaction so a failure can never leave sources partially wiped.
 
 #### crates/mimir-core/src/services/token.rs
 
@@ -8722,57 +8756,58 @@
 - pub `MimirHandler` struct L23-25 — `{ context: Arc<McpContext> }` — Mimir MCP Server Handler.
 - pub `new` function L29-34 — `() -> Result<Self, McpError>` — Create a new handler with initialized context.
 - pub `with_context` function L37-39 — `(context: Arc<McpContext>) -> Self` — Create a handler with an existing context.
--  `MimirHandler` type L27-215 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_tools` function L42-108 — `() -> Vec<Tool>` — Get the list of available tools.
--  `execute_tool` function L111-214 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
--  `MimirHandler` type L218-268 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_list_tools_request` function L219-230 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `handle_call_tool_request` function L232-267 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tests` module L271-1772 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `EXPECTED_TOOLS` variable L277-341 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
--  `test_ctx` function L343-345 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_expected_tools_are_published` function L348-360 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `no_duplicate_tool_names` function L363-374 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `published_tools_match_expected_count` function L377-388 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `every_published_tool_has_a_route` function L391-409 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `all_tools_have_descriptions` function L412-421 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `call_ok` function L428-433 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
--  `call_err` function L436-441 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
--  `campaign_crud_lifecycle` function L446-498 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_active_campaign_reports_and_self_heals` function L501-536 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_campaign` function L541-556 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
--  `module_crud_lifecycle` function L559-611 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `document_crud_lifecycle` function L616-699 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_level_document` function L704-734 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_crud_lifecycle` function L739-794 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_filter_by_type` function L797-836 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `catalog_searches_return_empty_on_fresh_db` function L841-874 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tool_not_found_for_unknown_name` function L879-883 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_required_tools_fail_without_active_campaign` function L886-905 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `create_character_requires_name` function L908-923 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `delete_campaign_requires_id` function L926-931 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_module` function L936-944 — `(handler: &MimirHandler) -> String` — Helper: create a module in the active campaign, return its id.
--  `add_and_remove_catalog_monster` function L947-999 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_and_remove_homebrew_monster` function L1002-1065 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_monster_argument_validation` function L1068-1112 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_monster_crud_lifecycle` function L1117-1181 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_spell_crud_lifecycle` function L1186-1242 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_item_crud_lifecycle` function L1247-1303 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_not_found_errors` function L1308-1324 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_name_and_data` function L1327-1350 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_get_update_delete_require_id` function L1353-1367 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_character` function L1372-1380 — `(handler: &MimirHandler) -> String` — Helper: create a character in the active campaign, return its id.
--  `character_inventory_lifecycle` function L1383-1451 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_spells_lifecycle` function L1456-1521 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `level_up_character_adds_class_level` function L1524-1540 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `reorder_documents_swaps_sort_order` function L1545-1585 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_campaign_sources_returns_source_list` function L1590-1596 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_item_to_module_is_unimplemented_error` function L1601-1612 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `mapgen_presets_validate_and_generate` function L1617-1658 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `map_tools_reject_bad_input` function L1663-1683 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_archive_roundtrip` function L1688-1740 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_list_requires_active_campaign` function L1743-1755 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_active_campaign` function L1758-1771 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `MimirHandler` type L27-219 — `= MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_tools` function L42-109 — `() -> Vec<Tool>` — Get the list of available tools.
+-  `execute_tool` function L112-218 — `(&self, name: &str, args: Value) -> Result<Value, McpError>` — Route a tool call to the appropriate handler.
+-  `MimirHandler` type L222-272 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_list_tools_request` function L223-234 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `handle_call_tool_request` function L236-271 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tests` module L275-1832 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `EXPECTED_TOOLS` variable L281-346 — `: &[&str]` — Expected tool names — every MCP tool the server should publish.
+-  `test_ctx` function L348-350 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_expected_tools_are_published` function L353-365 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `no_duplicate_tool_names` function L368-379 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `published_tools_match_expected_count` function L382-393 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `every_published_tool_has_a_route` function L396-414 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `all_tools_have_descriptions` function L417-426 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `call_ok` function L433-438 — `(handler: &MimirHandler, name: &str, args: Value) -> Value` — Helper: call a tool by name and assert success, returning the result JSON.
+-  `call_err` function L441-446 — `(handler: &MimirHandler, name: &str, args: Value) -> McpError` — Helper: call a tool by name and assert it returns an error.
+-  `campaign_crud_lifecycle` function L451-503 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_active_campaign_reports_and_self_heals` function L506-541 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_campaign` function L546-561 — `(handler: &MimirHandler) -> String` — Helper: create a campaign and set it active, return the campaign id.
+-  `module_crud_lifecycle` function L564-616 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `document_crud_lifecycle` function L621-704 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_level_document` function L709-739 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_crud_lifecycle` function L744-799 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_filter_by_type` function L802-841 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `catalog_searches_return_empty_on_fresh_db` function L846-879 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tool_not_found_for_unknown_name` function L884-888 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_required_tools_fail_without_active_campaign` function L891-910 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `create_character_requires_name` function L913-928 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `delete_campaign_requires_id` function L931-936 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_module` function L941-949 — `(handler: &MimirHandler) -> String` — Helper: create a module in the active campaign, return its id.
+-  `add_and_remove_catalog_monster` function L952-1004 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_and_remove_homebrew_monster` function L1007-1070 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `identical_add_increments_quantity_instead_of_duplicating` function L1073-1125 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_monster_argument_validation` function L1128-1172 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_monster_crud_lifecycle` function L1177-1241 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_spell_crud_lifecycle` function L1246-1302 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_item_crud_lifecycle` function L1307-1363 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_not_found_errors` function L1368-1384 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_name_and_data` function L1387-1410 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_get_update_delete_require_id` function L1413-1427 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_character` function L1432-1440 — `(handler: &MimirHandler) -> String` — Helper: create a character in the active campaign, return its id.
+-  `character_inventory_lifecycle` function L1443-1511 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_spells_lifecycle` function L1516-1581 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `level_up_character_adds_class_level` function L1584-1600 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `reorder_documents_swaps_sort_order` function L1605-1645 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_campaign_sources_returns_source_list` function L1650-1656 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_item_to_module_is_unimplemented_error` function L1661-1672 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `mapgen_presets_validate_and_generate` function L1677-1718 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `map_tools_reject_bad_input` function L1723-1743 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_archive_roundtrip` function L1748-1800 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_list_requires_active_campaign` function L1803-1815 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_active_campaign` function L1818-1831 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 
 #### crates/mimir-mcp/src/lib.rs
 
@@ -8854,32 +8889,32 @@
 
 #### crates/mimir-mcp/src/tools/character.rs
 
-- pub `list_characters_tool` function L23-47 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `get_character_tool` function L49-68 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `create_character_tool` function L70-98 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `edit_character_tool` function L100-143 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `delete_character_tool` function L145-161 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `add_item_to_character_tool` function L163-185 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `remove_item_from_character_tool` function L187-205 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `update_character_inventory_tool` function L207-228 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `get_character_inventory_tool` function L230-249 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `level_up_character_tool` function L251-285 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `add_character_spell_tool` function L287-317 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `remove_character_spell_tool` function L319-339 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `list_character_spells_tool` function L341-361 — `() -> Tool` — MCP tools for character (NPC and PC) management.
-- pub `list_characters` function L367-417 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `get_character` function L419-507 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `create_character` function L509-588 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `edit_character` function L590-735 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `delete_character` function L737-751 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `add_item_to_character` function L753-820 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `remove_item_from_character` function L822-836 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `update_character_inventory` function L838-863 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `get_character_inventory` function L865-907 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `level_up_character` function L909-1011 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `add_character_spell` function L1013-1062 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `remove_character_spell` function L1064-1111 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
-- pub `list_character_spells` function L1113-1157 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `list_characters_tool` function L22-46 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `get_character_tool` function L48-67 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `create_character_tool` function L69-97 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `edit_character_tool` function L99-142 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `delete_character_tool` function L144-160 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `add_item_to_character_tool` function L162-184 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `remove_item_from_character_tool` function L186-204 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `update_character_inventory_tool` function L206-227 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `get_character_inventory_tool` function L229-248 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `level_up_character_tool` function L250-284 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `add_character_spell_tool` function L286-316 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `remove_character_spell_tool` function L318-338 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `list_character_spells_tool` function L340-360 — `() -> Tool` — MCP tools for character (NPC and PC) management.
+- pub `list_characters` function L366-416 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `get_character` function L418-506 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `create_character` function L508-587 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `edit_character` function L589-734 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `delete_character` function L736-750 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `add_item_to_character` function L752-819 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `remove_item_from_character` function L821-835 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `update_character_inventory` function L837-862 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `get_character_inventory` function L864-906 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `level_up_character` function L908-1010 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `add_character_spell` function L1012-1053 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `remove_character_spell` function L1055-1082 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
+- pub `list_character_spells` function L1084-1128 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for character (NPC and PC) management.
 
 #### crates/mimir-mcp/src/tools/document.rs
 
@@ -8962,18 +8997,20 @@
 - pub `list_modules_tool` function L52-66 — `() -> Tool` — MCP tools for module management.
 - pub `get_module_details_tool` function L68-87 — `() -> Tool` — MCP tools for module management.
 - pub `add_monster_to_module_tool` function L89-116 — `() -> Tool` — MCP tools for module management.
-- pub `add_item_to_module_tool` function L118-143 — `() -> Tool` — MCP tools for module management.
-- pub `update_module_tool` function L145-165 — `() -> Tool` — MCP tools for module management.
-- pub `remove_monster_from_module_tool` function L167-185 — `() -> Tool` — MCP tools for module management.
-- pub `delete_module_tool` function L187-205 — `() -> Tool` — MCP tools for module management.
-- pub `create_module` function L211-242 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `list_modules` function L244-269 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `get_module_details` function L271-331 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `add_monster_to_module` function L333-419 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `remove_monster_from_module` function L421-445 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `add_item_to_module` function L447-462 — `(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `update_module` function L464-492 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
-- pub `delete_module` function L494-508 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `update_module_monster_tool` function L118-142 — `() -> Tool` — MCP tools for module management.
+- pub `add_item_to_module_tool` function L144-169 — `() -> Tool` — MCP tools for module management.
+- pub `update_module_tool` function L171-191 — `() -> Tool` — MCP tools for module management.
+- pub `remove_monster_from_module_tool` function L193-211 — `() -> Tool` — MCP tools for module management.
+- pub `delete_module_tool` function L213-231 — `() -> Tool` — MCP tools for module management.
+- pub `create_module` function L237-268 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `list_modules` function L270-295 — `(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `get_module_details` function L297-358 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `add_monster_to_module` function L360-432 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `update_module_monster` function L434-469 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `remove_monster_from_module` function L471-489 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `add_item_to_module` function L491-506 — `(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `update_module` function L508-536 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
+- pub `delete_module` function L538-552 — `(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError>` — MCP tools for module management.
 
 ### crates/mimir-mcp/tests
 

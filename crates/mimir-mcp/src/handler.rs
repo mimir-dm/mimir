@@ -38,8 +38,19 @@ impl MimirHandler {
         Self { context }
     }
 
-    /// Get the list of available tools.
+    /// Get the list of available tools: registry-based families first, then
+    /// families not yet migrated to the registry.
     pub(crate) fn get_tools() -> Vec<Tool> {
+        let mut all: Vec<Tool> = crate::registry::all_tools()
+            .iter()
+            .map(|t| t.to_tool())
+            .collect();
+        all.extend(Self::legacy_tools());
+        all
+    }
+
+    /// Tool definitions for families still on the legacy dispatch path.
+    fn legacy_tools() -> Vec<Tool> {
         vec![
             // Campaign tools
             tools::campaign::list_campaigns_tool(),
@@ -53,16 +64,6 @@ impl MimirHandler {
             tools::campaign::export_campaign_tool(),
             tools::campaign::import_campaign_tool(),
             tools::campaign::preview_archive_tool(),
-            // Module tools
-            tools::module::create_module_tool(),
-            tools::module::list_modules_tool(),
-            tools::module::get_module_details_tool(),
-            tools::module::update_module_tool(),
-            tools::module::delete_module_tool(),
-            tools::module::add_monster_to_module_tool(),
-            tools::module::update_module_monster_tool(),
-            tools::module::remove_monster_from_module_tool(),
-            tools::module::add_item_to_module_tool(),
             // Document tools
             tools::document::list_documents_tool(),
             tools::document::read_document_tool(),
@@ -108,8 +109,12 @@ impl MimirHandler {
         ]
     }
 
-    /// Route a tool call to the appropriate handler.
+    /// Route a tool call: registry-based families first, then the legacy
+    /// match for families not yet migrated.
     async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
+        if let Some(tool) = crate::registry::find(name) {
+            return (tool.handler)(&self.context, args).await;
+        }
         match name {
             // Campaign tools
             "list_campaigns" => tools::campaign::list_campaigns(&self.context, args).await,
@@ -131,23 +136,6 @@ impl MimirHandler {
             "create_campaign" => tools::campaign::create_campaign(&self.context, args).await,
             "update_campaign" => tools::campaign::update_campaign(&self.context, args).await,
             "delete_campaign" => tools::campaign::delete_campaign(&self.context, args).await,
-
-            // Module tools
-            "create_module" => tools::module::create_module(&self.context, args).await,
-            "list_modules" => tools::module::list_modules(&self.context, args).await,
-            "get_module_details" => tools::module::get_module_details(&self.context, args).await,
-            "update_module" => tools::module::update_module(&self.context, args).await,
-            "delete_module" => tools::module::delete_module(&self.context, args).await,
-            "add_monster_to_module" => {
-                tools::module::add_monster_to_module(&self.context, args).await
-            }
-            "update_module_monster" => {
-                tools::module::update_module_monster(&self.context, args).await
-            }
-            "remove_monster_from_module" => {
-                tools::module::remove_monster_from_module(&self.context, args).await
-            }
-            "add_item_to_module" => tools::module::add_item_to_module(&self.context, args).await,
 
             // Document tools
             "list_documents" => tools::document::list_documents(&self.context, args).await,
