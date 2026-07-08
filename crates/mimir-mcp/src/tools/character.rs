@@ -3,7 +3,6 @@
 //! MCP tools for character (NPC and PC) management.
 
 use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::NewCharacterSpell;
 use mimir_core::services::{
     AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
 };
@@ -1031,32 +1030,24 @@ pub async fn add_character_spell(ctx: &Arc<McpContext>, args: Value) -> Result<V
 
     let mut db = ctx.connect()?;
 
-    // Check for duplicate
-    let existing = dal::find_character_spell_by_name(&mut db, character_id, spell_name, source_class)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
-    if existing.is_some() {
-        return Err(McpError::InvalidArguments(format!(
-            "Character already knows {} (from {})",
-            spell_name, source_class
-        )));
-    }
-
-    let id = uuid::Uuid::new_v4().to_string();
-    let new_spell = NewCharacterSpell::new(&id, character_id, spell_name, spell_source, source_class);
-    let new_spell = if prepared { new_spell.prepared() } else { new_spell };
-
-    dal::insert_character_spell(&mut db, &new_spell)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let spell = CharacterService::new(&mut db)
+        .add_spell(character_id, spell_name, spell_source, source_class, prepared)
+        .map_err(|e| match e {
+            mimir_core::services::ServiceError::Validation(msg) => {
+                McpError::InvalidArguments(msg)
+            }
+            other => McpError::Internal(other.to_string()),
+        })?;
 
     McpResponse::success(json!({
         "action": "spell_added",
         "character_id": character_id,
         "spell": {
-            "id": id,
-            "spell_name": spell_name,
-            "spell_source": spell_source,
-            "source_class": source_class,
-            "prepared": prepared
+            "id": spell.id,
+            "spell_name": spell.spell_name,
+            "spell_source": spell.spell_source,
+            "source_class": spell.source_class,
+            "prepared": spell.is_prepared()
         }
     }))
 }
@@ -1074,34 +1065,14 @@ pub async fn remove_character_spell(ctx: &Arc<McpContext>, args: Value) -> Resul
 
     let mut db = ctx.connect()?;
 
-    if let Some(class) = source_class {
-        // Remove specific class instance
-        let spell = dal::find_character_spell_by_name(&mut db, character_id, spell_name, class)
-            .map_err(|e| McpError::Internal(e.to_string()))?
-            .ok_or_else(|| {
-                McpError::InvalidArguments(format!(
-                    "Spell {} not found for class {}",
-                    spell_name, class
-                ))
-            })?;
-        dal::delete_character_spell(&mut db, &spell.id)
-            .map_err(|e| McpError::Internal(e.to_string()))?;
-    } else {
-        // Remove all instances of this spell
-        let spells = dal::list_character_spells(&mut db, character_id)
-            .map_err(|e| McpError::Internal(e.to_string()))?;
-        let matching: Vec<_> = spells.iter().filter(|s| s.spell_name == spell_name).collect();
-        if matching.is_empty() {
-            return Err(McpError::InvalidArguments(format!(
-                "Spell {} not found on character",
-                spell_name
-            )));
-        }
-        for spell in matching {
-            dal::delete_character_spell(&mut db, &spell.id)
-                .map_err(|e| McpError::Internal(e.to_string()))?;
-        }
-    }
+    CharacterService::new(&mut db)
+        .remove_spell(character_id, spell_name, source_class)
+        .map_err(|e| match e {
+            mimir_core::services::ServiceError::Validation(msg) => {
+                McpError::InvalidArguments(msg)
+            }
+            other => McpError::Internal(other.to_string()),
+        })?;
 
     McpResponse::success(json!({
         "action": "spell_removed",

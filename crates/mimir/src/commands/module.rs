@@ -4,16 +4,14 @@
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::dal::catalog::get_monster_by_name;
-use mimir_core::models::campaign::{Module, ModuleMonster, ModuleNpc, NewModuleMonster, UpdateModuleMonster};
+use mimir_core::models::campaign::{Module, ModuleMonster, ModuleNpc};
 use mimir_core::models::catalog::Monster;
 use mimir_core::services::{
-    CreateModuleInput, CreateTokenInput, ModuleService, ModuleType, TokenResponse, TokenService,
-    UpdateModuleInput, UpdateTokenInput,
+    AddMonsterInput, CreateModuleInput, CreateTokenInput, ModuleService, ModuleType, MonsterRef,
+    TokenResponse, TokenService, UpdateModuleInput, UpdateTokenInput,
 };
-use mimir_core::utils::now_rfc3339;
 use serde::{Deserialize, Serialize};
 use tauri::State;
-use uuid::Uuid;
 
 use crate::state::AppState;
 use super::{to_api_response, ApiResponse};
@@ -264,88 +262,36 @@ pub fn add_module_monster(
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Validate: must provide either catalog (name+source) or homebrew ID, not both
+    // Translate the flat request into a monster reference (transport-level check)
     let is_catalog = request.monster_name.is_some() && request.monster_source.is_some();
     let is_homebrew = request.homebrew_monster_id.is_some();
 
     if is_catalog && is_homebrew {
         return ApiResponse::err("Cannot specify both monster_name/monster_source and homebrew_monster_id");
     }
-    if !is_catalog && !is_homebrew {
-        return ApiResponse::err("Must specify either monster_name+monster_source (catalog) or homebrew_monster_id (homebrew)");
-    }
-
-    // Check for existing duplicate in the module
-    let existing = dal::list_module_monsters(&mut db, &request.module_id)
-        .ok()
-        .and_then(|monsters| {
-            monsters.into_iter().find(|m| {
-                if is_homebrew {
-                    m.homebrew_monster_id.as_deref() == request.homebrew_monster_id.as_deref()
-                } else {
-                    m.monster_name.as_deref() == request.monster_name.as_deref()
-                        && m.monster_source.as_deref() == request.monster_source.as_deref()
-                }
-            })
-        });
-
-    if let Some(existing_monster) = existing {
-        // Increment quantity
-        let new_qty = existing_monster.quantity + request.quantity.unwrap_or(1);
-        let now = now_rfc3339();
-        let update = UpdateModuleMonster {
-            display_name: None,
-            notes: None,
-            quantity: Some(new_qty),
-            updated_at: Some(&now),
-        };
-        if let Err(e) = dal::update_module_monster(&mut db, &existing_monster.id, &update) {
-            return ApiResponse::err(e.to_string());
+    let monster = if is_homebrew {
+        MonsterRef::Homebrew {
+            id: request.homebrew_monster_id.unwrap(),
         }
-        match dal::get_module_monster(&mut db, &existing_monster.id) {
-            Ok(m) => ApiResponse::ok(m),
-            Err(e) => ApiResponse::err(e.to_string()),
+    } else if is_catalog {
+        MonsterRef::Catalog {
+            name: request.monster_name.unwrap(),
+            source: request.monster_source.unwrap(),
         }
     } else {
-        let id = Uuid::new_v4().to_string();
-        let display_name_ref = request.display_name.as_deref();
-        let notes_ref = request.notes.as_deref();
+        return ApiResponse::err("Must specify either monster_name+monster_source (catalog) or homebrew_monster_id (homebrew)");
+    };
 
-        let new_monster = if is_homebrew {
-            let hb_id = request.homebrew_monster_id.as_deref().unwrap();
-
-            // Validate homebrew monster exists
-            if dal::get_campaign_homebrew_monster(&mut db, hb_id).is_err() {
-                return ApiResponse::err(format!("Homebrew monster '{}' not found", hb_id));
-            }
-
-            let mut m = NewModuleMonster::from_homebrew(&id, &request.module_id, hb_id);
-            m.display_name = display_name_ref;
-            m.notes = notes_ref;
-            m.quantity = request.quantity.unwrap_or(1);
-            m
-        } else {
-            NewModuleMonster {
-                id: &id,
-                module_id: &request.module_id,
-                monster_name: request.monster_name.as_deref(),
-                monster_source: request.monster_source.as_deref(),
-                homebrew_monster_id: None,
-                display_name: display_name_ref,
-                notes: notes_ref,
-                quantity: request.quantity.unwrap_or(1),
-            }
-        };
-
-        if let Err(e) = dal::insert_module_monster(&mut db, &new_monster) {
-            return ApiResponse::err(e.to_string());
-        }
-
-        match dal::get_module_monster(&mut db, &id) {
-            Ok(m) => ApiResponse::ok(m),
-            Err(e) => ApiResponse::err(e.to_string()),
-        }
+    let mut input = AddMonsterInput::new(request.module_id, monster)
+        .with_quantity(request.quantity.unwrap_or(1));
+    if let Some(dn) = request.display_name {
+        input = input.with_display_name(dn);
     }
+    if let Some(n) = request.notes {
+        input = input.with_notes(n);
+    }
+
+    to_api_response(ModuleService::new(&mut db).add_monster(input))
 }
 
 /// Request for updating a module monster.
@@ -368,27 +314,12 @@ pub fn update_module_monster(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-
-    // Convert Option<String> to Option<Option<&str>> for the update struct
-    let display_name_ref = request.display_name.as_ref().map(|s| Some(s.as_str()));
-    let notes_ref = request.notes.as_ref().map(|s| Some(s.as_str()));
-
-    let update = UpdateModuleMonster {
-        display_name: display_name_ref,
-        notes: notes_ref,
-        quantity: request.quantity,
-        updated_at: Some(&now),
-    };
-
-    if let Err(e) = dal::update_module_monster(&mut db, &monster_id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_module_monster(&mut db, &monster_id) {
-        Ok(monster) => ApiResponse::ok(monster),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(ModuleService::new(&mut db).update_monster(
+        &monster_id,
+        request.display_name.as_deref(),
+        request.notes.as_deref(),
+        request.quantity,
+    ))
 }
 
 /// Remove a monster from a module.
@@ -402,11 +333,7 @@ pub fn remove_module_monster(
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_module_monster(&mut db, &monster_id) {
-        Ok(0) => ApiResponse::err(format!("Module monster '{}' not found", monster_id)),
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(ModuleService::new(&mut db).remove_monster(&monster_id))
 }
 
 // =============================================================================

@@ -6,7 +6,10 @@ use diesel::SqliteConnection;
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
-use crate::models::campaign::{Module, NewDocument, NewModule, UpdateModule as DalUpdateModule};
+use crate::models::campaign::{
+    Module, ModuleMonster, NewDocument, NewModule, NewModuleMonster,
+    UpdateModule as DalUpdateModule, UpdateModuleMonster,
+};
 use crate::services::{ServiceError, ServiceResult};
 use crate::templates;
 use crate::utils::now_rfc3339;
@@ -135,6 +138,70 @@ impl UpdateModuleInput {
             name: None,
             description: Some(description),
         }
+    }
+}
+
+/// Reference to a monster being added to a module: either a catalog entry
+/// (exact name + source book) or a campaign homebrew monster (by id).
+#[derive(Debug, Clone)]
+pub enum MonsterRef {
+    /// Catalog monster referenced by exact name and source book code (e.g. "MM").
+    Catalog {
+        /// Exact catalog monster name.
+        name: String,
+        /// Source book code.
+        source: String,
+    },
+    /// Campaign homebrew monster referenced by id.
+    Homebrew {
+        /// Homebrew monster id.
+        id: String,
+    },
+}
+
+/// Input for adding a monster to a module.
+#[derive(Debug, Clone)]
+pub struct AddMonsterInput {
+    /// Module to add the monster to.
+    pub module_id: String,
+    /// Which monster to add.
+    pub monster: MonsterRef,
+    /// Number of this monster.
+    pub quantity: i32,
+    /// Optional display name override.
+    pub display_name: Option<String>,
+    /// Optional DM notes.
+    pub notes: Option<String>,
+}
+
+impl AddMonsterInput {
+    /// Create an input with quantity 1 and no overrides.
+    pub fn new(module_id: impl Into<String>, monster: MonsterRef) -> Self {
+        Self {
+            module_id: module_id.into(),
+            monster,
+            quantity: 1,
+            display_name: None,
+            notes: None,
+        }
+    }
+
+    /// Set the quantity.
+    pub fn with_quantity(mut self, quantity: i32) -> Self {
+        self.quantity = quantity;
+        self
+    }
+
+    /// Set a display name override.
+    pub fn with_display_name(mut self, name: impl Into<String>) -> Self {
+        self.display_name = Some(name.into());
+        self
+    }
+
+    /// Set DM notes.
+    pub fn with_notes(mut self, notes: impl Into<String>) -> Self {
+        self.notes = Some(notes.into());
+        self
     }
 }
 
@@ -297,6 +364,114 @@ impl<'a> ModuleService<'a> {
             })?;
 
         dal::list_modules(self.conn, &module.campaign_id).map_err(ServiceError::from)
+    }
+
+    /// Add a monster to a module.
+    ///
+    /// If the module already contains an entry for the same monster reference,
+    /// the existing entry's quantity is incremented instead of inserting a
+    /// duplicate row. This is the single implementation shared by the desktop
+    /// UI and the MCP server, so client retries never create duplicates.
+    pub fn add_monster(&mut self, input: AddMonsterInput) -> ServiceResult<ModuleMonster> {
+        if !self.exists(&input.module_id)? {
+            return Err(ServiceError::NotFound {
+                entity_type: "Module".to_string(),
+                id: input.module_id.clone(),
+            });
+        }
+
+        if let MonsterRef::Homebrew { id } = &input.monster {
+            dal::get_campaign_homebrew_monster(self.conn, id).map_err(|_| {
+                ServiceError::NotFound {
+                    entity_type: "HomebrewMonster".to_string(),
+                    id: id.clone(),
+                }
+            })?;
+        }
+
+        let existing = dal::list_module_monsters(self.conn, &input.module_id)?
+            .into_iter()
+            .find(|m| match &input.monster {
+                MonsterRef::Homebrew { id } => {
+                    m.homebrew_monster_id.as_deref() == Some(id.as_str())
+                }
+                MonsterRef::Catalog { name, source } => {
+                    m.monster_name.as_deref() == Some(name.as_str())
+                        && m.monster_source.as_deref() == Some(source.as_str())
+                }
+            });
+
+        if let Some(existing) = existing {
+            let now = now_rfc3339();
+            let update = UpdateModuleMonster {
+                display_name: None,
+                notes: None,
+                quantity: Some(existing.quantity + input.quantity),
+                updated_at: Some(&now),
+            };
+            dal::update_module_monster(self.conn, &existing.id, &update)?;
+            Ok(dal::get_module_monster(self.conn, &existing.id)?)
+        } else {
+            let id = Uuid::new_v4().to_string();
+            let mut new_monster = match &input.monster {
+                MonsterRef::Homebrew { id: hb_id } => {
+                    NewModuleMonster::from_homebrew(&id, &input.module_id, hb_id)
+                }
+                MonsterRef::Catalog { name, source } => {
+                    NewModuleMonster::new(&id, &input.module_id, name, source)
+                }
+            };
+            new_monster.quantity = input.quantity;
+            new_monster.display_name = input.display_name.as_deref();
+            new_monster.notes = input.notes.as_deref();
+
+            dal::insert_module_monster(self.conn, &new_monster)?;
+            Ok(dal::get_module_monster(self.conn, &id)?)
+        }
+    }
+
+    /// Update a module monster's display name, notes, or quantity.
+    ///
+    /// `None` fields are left unchanged.
+    pub fn update_monster(
+        &mut self,
+        monster_id: &str,
+        display_name: Option<&str>,
+        notes: Option<&str>,
+        quantity: Option<i32>,
+    ) -> ServiceResult<ModuleMonster> {
+        let now = now_rfc3339();
+        let update = UpdateModuleMonster {
+            display_name: display_name.map(Some),
+            notes: notes.map(Some),
+            quantity,
+            updated_at: Some(&now),
+        };
+        let rows = dal::update_module_monster(self.conn, monster_id, &update)?;
+        if rows == 0 {
+            return Err(ServiceError::NotFound {
+                entity_type: "ModuleMonster".to_string(),
+                id: monster_id.to_string(),
+            });
+        }
+        Ok(dal::get_module_monster(self.conn, monster_id)?)
+    }
+
+    /// Remove a monster entry from a module.
+    pub fn remove_monster(&mut self, monster_id: &str) -> ServiceResult<()> {
+        let rows = dal::delete_module_monster(self.conn, monster_id)?;
+        if rows == 0 {
+            return Err(ServiceError::NotFound {
+                entity_type: "ModuleMonster".to_string(),
+                id: monster_id.to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    /// List all monster entries for a module.
+    pub fn list_monsters(&mut self, module_id: &str) -> ServiceResult<Vec<ModuleMonster>> {
+        Ok(dal::list_module_monsters(self.conn, module_id)?)
     }
 
     /// Check if a module exists.

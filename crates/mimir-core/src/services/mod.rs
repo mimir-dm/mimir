@@ -12,6 +12,7 @@ mod document;
 mod homebrew;
 mod map;
 mod module;
+mod source;
 mod token;
 
 use thiserror::Error;
@@ -33,7 +34,10 @@ pub use homebrew::{
     HomebrewService, UpdateHomebrewItemInput, UpdateHomebrewMonsterInput, UpdateHomebrewSpellInput,
 };
 pub use map::{CreateMapInput, MapService, UpdateMapInput};
-pub use module::{CreateModuleInput, ModuleService, ModuleType, UpdateModuleInput};
+pub use module::{
+    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
+};
+pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
 pub use catalog::{
     ActionService, BackgroundService, CatalogEntityService, CatalogTableService,

@@ -3,9 +3,7 @@
 //! Tauri commands for character management (PCs and NPCs).
 
 use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{
-    CharacterInventory, CharacterResponse, CharacterSpell, NewCharacterSpell, UpdateCharacterSpell,
-};
+use mimir_core::models::campaign::{CharacterInventory, CharacterResponse, CharacterSpell};
 use mimir_core::services::{
     AddInventoryInput, CharacterService, CreateCharacterInput, LevelUpRequest, LevelUpResult,
     UpdateCharacterInput,
@@ -483,11 +481,8 @@ pub fn update_inventory_item(
 // Character Source Commands
 // =============================================================================
 
-use mimir_core::dal::campaign::{
-    delete_all_character_sources, delete_character_source_by_code, insert_character_source,
-    list_character_source_codes,
-};
-use mimir_core::models::campaign::{CharacterSource, NewCharacterSource};
+use mimir_core::models::campaign::CharacterSource;
+use mimir_core::services::SourceService;
 
 /// List allowed source codes for a character.
 #[tauri::command]
@@ -500,10 +495,7 @@ pub fn list_character_sources(
         Err(e) => return ApiResponse::err(e),
     };
 
-    match list_character_source_codes(&mut db, &character_id) {
-        Ok(codes) => ApiResponse::ok(codes),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(SourceService::new(&mut db).list_character_sources(&character_id))
 }
 
 /// Add a source to a character's allowed sources.
@@ -518,17 +510,7 @@ pub fn add_character_source(
         Err(e) => return ApiResponse::<CharacterSource>::err(e),
     };
 
-    let id = uuid::Uuid::new_v4().to_string();
-    let source = NewCharacterSource::new(&id, &character_id, &source_code);
-
-    match insert_character_source(&mut db, &source) {
-        Ok(_) => ApiResponse::ok(CharacterSource {
-            id,
-            character_id,
-            source_code,
-        }),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(SourceService::new(&mut db).add_character_source(&character_id, &source_code))
 }
 
 /// Remove a source from a character's allowed sources.
@@ -543,13 +525,10 @@ pub fn remove_character_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    match delete_character_source_by_code(&mut db, &character_id, &source_code) {
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(SourceService::new(&mut db).remove_character_source(&character_id, &source_code))
 }
 
-/// Set the complete list of allowed sources for a character (replaces existing).
+/// Set the complete list of allowed sources for a character (replaces existing, atomically).
 #[tauri::command]
 pub fn set_character_sources(
     state: State<'_, AppState>,
@@ -561,21 +540,7 @@ pub fn set_character_sources(
         Err(e) => return ApiResponse::<Vec<String>>::err(e),
     };
 
-    // Delete all existing sources
-    if let Err(e) = delete_all_character_sources(&mut db, &character_id) {
-        return ApiResponse::err(format!("Failed to clear sources: {}", e));
-    }
-
-    // Insert all new sources
-    for source_code in &source_codes {
-        let id = uuid::Uuid::new_v4().to_string();
-        let source = NewCharacterSource::new(&id, &character_id, source_code);
-        if let Err(e) = insert_character_source(&mut db, &source) {
-            return ApiResponse::err(format!("Failed to add source {}: {}", source_code, e));
-        }
-    }
-
-    ApiResponse::ok(source_codes)
+    to_api_response(SourceService::new(&mut db).set_character_sources(&character_id, &source_codes))
 }
 
 // =============================================================================
@@ -593,10 +558,7 @@ pub fn list_character_spells(
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::list_character_spells(&mut db, &character_id) {
-        Ok(spells) => ApiResponse::ok(spells),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(CharacterService::new(&mut db).list_spells(&character_id))
 }
 
 /// Add a spell to a character's known spells.
@@ -614,33 +576,13 @@ pub fn add_character_spell(
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Check if character already knows this spell from the same class
-    if let Ok(Some(_)) =
-        dal::find_character_spell_by_name(&mut db, &character_id, &spell_name, &source_class)
-    {
-        return ApiResponse::err(format!(
-            "Character already knows {} from {}",
-            spell_name, source_class
-        ));
-    }
-
-    let id = uuid::Uuid::new_v4().to_string();
-    let mut spell = NewCharacterSpell::new(&id, &character_id, &spell_name, &spell_source, &source_class);
-    if prepared.unwrap_or(false) {
-        spell = spell.prepared();
-    }
-
-    match dal::insert_character_spell(&mut db, &spell) {
-        Ok(_) => ApiResponse::ok(CharacterSpell {
-            id,
-            character_id,
-            spell_name,
-            spell_source,
-            source_class,
-            prepared: if prepared.unwrap_or(false) { 1 } else { 0 },
-        }),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(CharacterService::new(&mut db).add_spell(
+        &character_id,
+        &spell_name,
+        &spell_source,
+        &source_class,
+        prepared.unwrap_or(false),
+    ))
 }
 
 /// Remove a spell from a character's known spells.
@@ -656,39 +598,11 @@ pub fn remove_character_spell(
         Err(e) => return ApiResponse::err(e),
     };
 
-    if let Some(class) = source_class {
-        // Remove specific class's version
-        match dal::find_character_spell_by_name(&mut db, &character_id, &spell_name, &class) {
-            Ok(Some(spell)) => match dal::delete_character_spell(&mut db, &spell.id) {
-                Ok(_) => ApiResponse::ok(()),
-                Err(e) => ApiResponse::err(e.to_string()),
-            },
-            Ok(None) => ApiResponse::err(format!(
-                "Character doesn't know {} from {}",
-                spell_name, class
-            )),
-            Err(e) => ApiResponse::err(e.to_string()),
-        }
-    } else {
-        // Remove all instances of this spell (any class)
-        let spells = match dal::list_character_spells(&mut db, &character_id) {
-            Ok(s) => s,
-            Err(e) => return ApiResponse::err(e.to_string()),
-        };
-        let matching: Vec<_> = spells
-            .iter()
-            .filter(|s| s.spell_name.to_lowercase() == spell_name.to_lowercase())
-            .collect();
-        if matching.is_empty() {
-            return ApiResponse::err(format!("Character doesn't know {}", spell_name));
-        }
-        for spell in matching {
-            if let Err(e) = dal::delete_character_spell(&mut db, &spell.id) {
-                return ApiResponse::err(e.to_string());
-            }
-        }
-        ApiResponse::ok(())
-    }
+    to_api_response(CharacterService::new(&mut db).remove_spell(
+        &character_id,
+        &spell_name,
+        source_class.as_deref(),
+    ))
 }
 
 /// Toggle a spell's prepared status.
@@ -702,21 +616,5 @@ pub fn toggle_spell_prepared(
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get current state
-    let spell = match dal::get_character_spell_optional(&mut db, &spell_id) {
-        Ok(Some(s)) => s,
-        Ok(None) => return ApiResponse::err(format!("Spell entry not found: {}", spell_id)),
-        Err(e) => return ApiResponse::err(e.to_string()),
-    };
-
-    let new_prepared = !spell.is_prepared();
-    let update = UpdateCharacterSpell::set_prepared(new_prepared);
-
-    match dal::update_character_spell(&mut db, &spell_id, &update) {
-        Ok(_) => ApiResponse::ok(CharacterSpell {
-            prepared: if new_prepared { 1 } else { 0 },
-            ..spell
-        }),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(CharacterService::new(&mut db).toggle_spell_prepared(&spell_id))
 }
