@@ -4,14 +4,14 @@ level: task
 title: "Migrate character tool family (typed args)"
 short_code: "MIMIR-T-0650"
 created_at: 2026-07-08T11:12:12.881025+00:00
-updated_at: 2026-07-08T11:12:12.881025+00:00
+updated_at: 2026-07-08T11:27:33.768139+00:00
 parent: MIMIR-I-0069
-blocked_by: ["MIMIR-T-0648"]
+blocked_by: [MIMIR-T-0648]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -29,6 +29,8 @@ initiative_id: MIMIR-I-0069
 Migrate the character family — the biggest win: 13 tools in 1,129 lines of
 `tools/character.rs`, most of it hand-rolled `args.get(...)` parsing. This is
 where typed argument structs pay the most.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

@@ -45,4 +45,9 @@ document family (6 tools) onto the registry established in [[MIMIR-T-0648]].
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-08: COMPLETE on `feat/mcp-tool-registry`. All 17 tools migrated to
+  typed arg structs (`CampaignIdOptionalArgs` shared by details/sources —
+  optional campaign_id defaulting to active). Session-state mutations
+  (set_active/create/import auto-activate, delete clears, get self-heals) stay
+  in handlers. Legacy entries and match arms deleted. 50 lib tests + stdio e2e
+  pass unchanged. Net −223 lines.

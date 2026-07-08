@@ -52,20 +52,6 @@ impl MimirHandler {
     /// Tool definitions for families still on the legacy dispatch path.
     fn legacy_tools() -> Vec<Tool> {
         vec![
-            // Character tools
-            tools::character::list_characters_tool(),
-            tools::character::get_character_tool(),
-            tools::character::create_character_tool(),
-            tools::character::edit_character_tool(),
-            tools::character::add_item_to_character_tool(),
-            tools::character::delete_character_tool(),
-            tools::character::level_up_character_tool(),
-            tools::character::remove_item_from_character_tool(),
-            tools::character::update_character_inventory_tool(),
-            tools::character::get_character_inventory_tool(),
-            tools::character::add_character_spell_tool(),
-            tools::character::remove_character_spell_tool(),
-            tools::character::list_character_spells_tool(),
             // Map tools
             tools::map::create_map_tool(),
             tools::map::list_maps_tool(),
@@ -97,37 +83,6 @@ impl MimirHandler {
             return (tool.handler)(&self.context, args).await;
         }
         match name {
-            // Character tools
-            "list_characters" => tools::character::list_characters(&self.context, args).await,
-            "get_character" => tools::character::get_character(&self.context, args).await,
-            "create_character" => tools::character::create_character(&self.context, args).await,
-            "edit_character" => tools::character::edit_character(&self.context, args).await,
-            "add_item_to_character" => {
-                tools::character::add_item_to_character(&self.context, args).await
-            }
-            "delete_character" => tools::character::delete_character(&self.context, args).await,
-            "level_up_character" => {
-                tools::character::level_up_character(&self.context, args).await
-            }
-            "remove_item_from_character" => {
-                tools::character::remove_item_from_character(&self.context, args).await
-            }
-            "update_character_inventory" => {
-                tools::character::update_character_inventory(&self.context, args).await
-            }
-            "get_character_inventory" => {
-                tools::character::get_character_inventory(&self.context, args).await
-            }
-            "add_character_spell" => {
-                tools::character::add_character_spell(&self.context, args).await
-            }
-            "remove_character_spell" => {
-                tools::character::remove_character_spell(&self.context, args).await
-            }
-            "list_character_spells" => {
-                tools::character::list_character_spells(&self.context, args).await
-            }
-
             // Map tools
             "create_map" => tools::map::create_map(&self.context, args).await,
             "list_maps" => tools::map::list_maps(&self.context, args).await,

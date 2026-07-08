@@ -48,6 +48,9 @@ impl<T: JsonArgType> JsonArgType for Option<T> {
     const JSON_TYPE: &'static str = T::JSON_TYPE;
     const REQUIRED: bool = false;
 }
+impl<T> JsonArgType for Vec<T> {
+    const JSON_TYPE: &'static str = "array";
+}
 
 /// Build a `ToolInputSchema` from collected field metadata.
 ///
@@ -202,6 +205,7 @@ pub fn all_tools() -> &'static [RegisteredTool] {
         tools.extend(crate::tools::campaign::registered_tools());
         tools.extend(crate::tools::module::registered_tools());
         tools.extend(crate::tools::document::registered_tools());
+        tools.extend(crate::tools::character::registered_tools());
         tools
     })
 }
