@@ -38,77 +38,19 @@ impl MimirHandler {
         Self { context }
     }
 
-    /// Get the list of available tools: registry-based families first, then
-    /// families not yet migrated to the registry.
+    /// Get the list of available tools from the registry.
     pub(crate) fn get_tools() -> Vec<Tool> {
-        let mut all: Vec<Tool> = crate::registry::all_tools()
+        crate::registry::all_tools()
             .iter()
             .map(|t| t.to_tool())
-            .collect();
-        all.extend(Self::legacy_tools());
-        all
+            .collect()
     }
 
-    /// Tool definitions for families still on the legacy dispatch path.
-    fn legacy_tools() -> Vec<Tool> {
-        vec![
-            // Map tools
-            tools::map::create_map_tool(),
-            tools::map::list_maps_tool(),
-            tools::map::get_map_tool(),
-            tools::map::update_map_tool(),
-            tools::map::delete_map_tool(),
-            tools::map::add_token_to_map_tool(),
-            tools::map::list_tokens_on_map_tool(),
-            tools::map::remove_token_tool(),
-            // Homebrew tools (items, monsters, spells — unified by content_type)
-            tools::homebrew::list_homebrew_tool(),
-            tools::homebrew::get_homebrew_tool(),
-            tools::homebrew::create_homebrew_tool(),
-            tools::homebrew::update_homebrew_tool(),
-            tools::homebrew::delete_homebrew_tool(),
-            // Map generation tools
-            tools::mapgen::generate_map_tool(),
-            tools::mapgen::list_map_presets_tool(),
-            tools::mapgen::validate_map_config_tool(),
-            // Catalog search (all categories unified by category param)
-            tools::catalog::search_catalog_tool(),
-        ]
-    }
-
-    /// Route a tool call: registry-based families first, then the legacy
-    /// match for families not yet migrated.
+    /// Route a tool call through the registry.
     async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
-        if let Some(tool) = crate::registry::find(name) {
-            return (tool.handler)(&self.context, args).await;
-        }
-        match name {
-            // Map tools
-            "create_map" => tools::map::create_map(&self.context, args).await,
-            "list_maps" => tools::map::list_maps(&self.context, args).await,
-            "get_map" => tools::map::get_map(&self.context, args).await,
-            "update_map" => tools::map::update_map(&self.context, args).await,
-            "delete_map" => tools::map::delete_map(&self.context, args).await,
-            "add_token_to_map" => tools::map::add_token_to_map(&self.context, args).await,
-            "list_tokens_on_map" => tools::map::list_tokens_on_map(&self.context, args).await,
-            "remove_token" => tools::map::remove_token(&self.context, args).await,
-
-            // Homebrew tools (items, monsters, spells — dispatched by content_type)
-            "list_homebrew" => tools::homebrew::list_homebrew(&self.context, args).await,
-            "get_homebrew" => tools::homebrew::get_homebrew(&self.context, args).await,
-            "create_homebrew" => tools::homebrew::create_homebrew(&self.context, args).await,
-            "update_homebrew" => tools::homebrew::update_homebrew(&self.context, args).await,
-            "delete_homebrew" => tools::homebrew::delete_homebrew(&self.context, args).await,
-
-            // Map generation tools (no campaign context needed)
-            "generate_map" => tools::mapgen::generate_map(args).await,
-            "list_map_presets" => tools::mapgen::list_map_presets(args).await,
-            "validate_map_config" => tools::mapgen::validate_map_config(args).await,
-
-            // Catalog search (dispatched by category param)
-            "search_catalog" => tools::catalog::search_catalog(&self.context, args).await,
-
-            _ => Err(McpError::ToolNotFound(name.to_string())),
+        match crate::registry::find(name) {
+            Some(tool) => (tool.handler)(&self.context, args).await,
+            None => Err(McpError::ToolNotFound(name.to_string())),
         }
     }
 }

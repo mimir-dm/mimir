@@ -46,4 +46,13 @@ where typed argument structs pay the most.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-08: COMPLETE on `feat/mcp-tool-registry`. All 13 tools on the
+  registry with typed structs; hand-rolled Value parsing eliminated. **Drift
+  found and resolved** (the class this initiative kills): (1) list_characters
+  schema advertised a module_id filter the parser never read; (2)
+  create_character schema advertised level, unread; (3) edit_character schema
+  advertised module_id, unread — all three kept as accepted-but-unused fields
+  for wire compat; (4) add_item_to_character parser accepted item_source that
+  the schema never published — now published. level_up conditionals preserved
+  exactly; homebrew auto-source stays as handler pre-logic. Full suite + stdio
+  e2e pass unchanged.

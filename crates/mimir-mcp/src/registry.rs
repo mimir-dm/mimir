@@ -206,6 +206,10 @@ pub fn all_tools() -> &'static [RegisteredTool] {
         tools.extend(crate::tools::module::registered_tools());
         tools.extend(crate::tools::document::registered_tools());
         tools.extend(crate::tools::character::registered_tools());
+        tools.extend(crate::tools::map::registered_tools());
+        tools.extend(crate::tools::homebrew::registered_tools());
+        tools.extend(crate::tools::mapgen::registered_tools());
+        tools.extend(crate::tools::catalog::registered_tools());
         tools
     })
 }

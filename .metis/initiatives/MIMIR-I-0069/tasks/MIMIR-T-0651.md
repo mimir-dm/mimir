@@ -4,14 +4,14 @@ level: task
 title: "Migrate map, homebrew, mapgen, catalog families"
 short_code: "MIMIR-T-0651"
 created_at: 2026-07-08T11:12:14.109303+00:00
-updated_at: 2026-07-08T11:12:14.109303+00:00
+updated_at: 2026-07-08T11:31:21.507987+00:00
 parent: MIMIR-I-0069
-blocked_by: ["MIMIR-T-0648"]
+blocked_by: [MIMIR-T-0648]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -29,6 +29,8 @@ initiative_id: MIMIR-I-0069
 Migrate the remaining families: map (8 tools), homebrew (5, content_type-dispatched),
 mapgen (3, no McpContext needed), catalog (1, category-dispatched). After this task
 the legacy dispatch path is empty.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
