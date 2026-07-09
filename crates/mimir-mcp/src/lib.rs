@@ -6,6 +6,7 @@
 pub mod context;
 pub mod error;
 pub mod handler;
+pub mod registry;
 pub mod response;
 pub mod tools;
 

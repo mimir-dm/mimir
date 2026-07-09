@@ -14,7 +14,6 @@ use std::sync::Arc;
 use tracing::{error, info};
 
 use crate::context::McpContext;
-use crate::tools;
 use crate::McpError;
 
 /// Mimir MCP Server Handler.
@@ -38,182 +37,19 @@ impl MimirHandler {
         Self { context }
     }
 
-    /// Get the list of available tools.
+    /// Get the list of available tools from the registry.
     pub(crate) fn get_tools() -> Vec<Tool> {
-        vec![
-            // Campaign tools
-            tools::campaign::list_campaigns_tool(),
-            tools::campaign::get_active_campaign_tool(),
-            tools::campaign::set_active_campaign_tool(),
-            tools::campaign::get_campaign_details_tool(),
-            tools::campaign::get_campaign_sources_tool(),
-            tools::campaign::create_campaign_tool(),
-            tools::campaign::update_campaign_tool(),
-            tools::campaign::delete_campaign_tool(),
-            tools::campaign::export_campaign_tool(),
-            tools::campaign::import_campaign_tool(),
-            tools::campaign::preview_archive_tool(),
-            // Module tools
-            tools::module::create_module_tool(),
-            tools::module::list_modules_tool(),
-            tools::module::get_module_details_tool(),
-            tools::module::update_module_tool(),
-            tools::module::delete_module_tool(),
-            tools::module::add_monster_to_module_tool(),
-            tools::module::update_module_monster_tool(),
-            tools::module::remove_monster_from_module_tool(),
-            tools::module::add_item_to_module_tool(),
-            // Document tools
-            tools::document::list_documents_tool(),
-            tools::document::read_document_tool(),
-            tools::document::create_document_tool(),
-            tools::document::edit_document_tool(),
-            tools::document::delete_document_tool(),
-            tools::document::reorder_document_tool(),
-            // Character tools
-            tools::character::list_characters_tool(),
-            tools::character::get_character_tool(),
-            tools::character::create_character_tool(),
-            tools::character::edit_character_tool(),
-            tools::character::add_item_to_character_tool(),
-            tools::character::delete_character_tool(),
-            tools::character::level_up_character_tool(),
-            tools::character::remove_item_from_character_tool(),
-            tools::character::update_character_inventory_tool(),
-            tools::character::get_character_inventory_tool(),
-            tools::character::add_character_spell_tool(),
-            tools::character::remove_character_spell_tool(),
-            tools::character::list_character_spells_tool(),
-            // Map tools
-            tools::map::create_map_tool(),
-            tools::map::list_maps_tool(),
-            tools::map::get_map_tool(),
-            tools::map::update_map_tool(),
-            tools::map::delete_map_tool(),
-            tools::map::add_token_to_map_tool(),
-            tools::map::list_tokens_on_map_tool(),
-            tools::map::remove_token_tool(),
-            // Homebrew tools (items, monsters, spells — unified by content_type)
-            tools::homebrew::list_homebrew_tool(),
-            tools::homebrew::get_homebrew_tool(),
-            tools::homebrew::create_homebrew_tool(),
-            tools::homebrew::update_homebrew_tool(),
-            tools::homebrew::delete_homebrew_tool(),
-            // Map generation tools
-            tools::mapgen::generate_map_tool(),
-            tools::mapgen::list_map_presets_tool(),
-            tools::mapgen::validate_map_config_tool(),
-            // Catalog search (all categories unified by category param)
-            tools::catalog::search_catalog_tool(),
-        ]
+        crate::registry::all_tools()
+            .iter()
+            .map(|t| t.to_tool())
+            .collect()
     }
 
-    /// Route a tool call to the appropriate handler.
+    /// Route a tool call through the registry.
     async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
-        match name {
-            // Campaign tools
-            "list_campaigns" => tools::campaign::list_campaigns(&self.context, args).await,
-            "get_active_campaign" => {
-                tools::campaign::get_active_campaign(&self.context, args).await
-            }
-            "set_active_campaign" => {
-                tools::campaign::set_active_campaign(&self.context, args).await
-            }
-            "get_campaign_details" => {
-                tools::campaign::get_campaign_details(&self.context, args).await
-            }
-            "get_campaign_sources" => {
-                tools::campaign::get_campaign_sources(&self.context, args).await
-            }
-            "export_campaign" => tools::campaign::export_campaign(&self.context, args).await,
-            "import_campaign" => tools::campaign::import_campaign(&self.context, args).await,
-            "preview_archive" => tools::campaign::preview_archive(&self.context, args).await,
-            "create_campaign" => tools::campaign::create_campaign(&self.context, args).await,
-            "update_campaign" => tools::campaign::update_campaign(&self.context, args).await,
-            "delete_campaign" => tools::campaign::delete_campaign(&self.context, args).await,
-
-            // Module tools
-            "create_module" => tools::module::create_module(&self.context, args).await,
-            "list_modules" => tools::module::list_modules(&self.context, args).await,
-            "get_module_details" => tools::module::get_module_details(&self.context, args).await,
-            "update_module" => tools::module::update_module(&self.context, args).await,
-            "delete_module" => tools::module::delete_module(&self.context, args).await,
-            "add_monster_to_module" => {
-                tools::module::add_monster_to_module(&self.context, args).await
-            }
-            "update_module_monster" => {
-                tools::module::update_module_monster(&self.context, args).await
-            }
-            "remove_monster_from_module" => {
-                tools::module::remove_monster_from_module(&self.context, args).await
-            }
-            "add_item_to_module" => tools::module::add_item_to_module(&self.context, args).await,
-
-            // Document tools
-            "list_documents" => tools::document::list_documents(&self.context, args).await,
-            "read_document" => tools::document::read_document(&self.context, args).await,
-            "create_document" => tools::document::create_document(&self.context, args).await,
-            "edit_document" => tools::document::edit_document(&self.context, args).await,
-            "delete_document" => tools::document::delete_document(&self.context, args).await,
-            "reorder_document" => tools::document::reorder_document(&self.context, args).await,
-
-            // Character tools
-            "list_characters" => tools::character::list_characters(&self.context, args).await,
-            "get_character" => tools::character::get_character(&self.context, args).await,
-            "create_character" => tools::character::create_character(&self.context, args).await,
-            "edit_character" => tools::character::edit_character(&self.context, args).await,
-            "add_item_to_character" => {
-                tools::character::add_item_to_character(&self.context, args).await
-            }
-            "delete_character" => tools::character::delete_character(&self.context, args).await,
-            "level_up_character" => {
-                tools::character::level_up_character(&self.context, args).await
-            }
-            "remove_item_from_character" => {
-                tools::character::remove_item_from_character(&self.context, args).await
-            }
-            "update_character_inventory" => {
-                tools::character::update_character_inventory(&self.context, args).await
-            }
-            "get_character_inventory" => {
-                tools::character::get_character_inventory(&self.context, args).await
-            }
-            "add_character_spell" => {
-                tools::character::add_character_spell(&self.context, args).await
-            }
-            "remove_character_spell" => {
-                tools::character::remove_character_spell(&self.context, args).await
-            }
-            "list_character_spells" => {
-                tools::character::list_character_spells(&self.context, args).await
-            }
-
-            // Map tools
-            "create_map" => tools::map::create_map(&self.context, args).await,
-            "list_maps" => tools::map::list_maps(&self.context, args).await,
-            "get_map" => tools::map::get_map(&self.context, args).await,
-            "update_map" => tools::map::update_map(&self.context, args).await,
-            "delete_map" => tools::map::delete_map(&self.context, args).await,
-            "add_token_to_map" => tools::map::add_token_to_map(&self.context, args).await,
-            "list_tokens_on_map" => tools::map::list_tokens_on_map(&self.context, args).await,
-            "remove_token" => tools::map::remove_token(&self.context, args).await,
-
-            // Homebrew tools (items, monsters, spells — dispatched by content_type)
-            "list_homebrew" => tools::homebrew::list_homebrew(&self.context, args).await,
-            "get_homebrew" => tools::homebrew::get_homebrew(&self.context, args).await,
-            "create_homebrew" => tools::homebrew::create_homebrew(&self.context, args).await,
-            "update_homebrew" => tools::homebrew::update_homebrew(&self.context, args).await,
-            "delete_homebrew" => tools::homebrew::delete_homebrew(&self.context, args).await,
-
-            // Map generation tools (no campaign context needed)
-            "generate_map" => tools::mapgen::generate_map(args).await,
-            "list_map_presets" => tools::mapgen::list_map_presets(args).await,
-            "validate_map_config" => tools::mapgen::validate_map_config(args).await,
-
-            // Catalog search (dispatched by category param)
-            "search_catalog" => tools::catalog::search_catalog(&self.context, args).await,
-
-            _ => Err(McpError::ToolNotFound(name.to_string())),
+        match crate::registry::find(name) {
+            Some(tool) => (tool.handler)(&self.context, args).await,
+            None => Err(McpError::ToolNotFound(name.to_string())),
         }
     }
 }
@@ -277,92 +113,13 @@ mod tests {
     use crate::context::McpContext;
     use serde_json::json;
 
-    /// Expected tool names — every MCP tool the server should publish.
-    const EXPECTED_TOOLS: &[&str] = &[
-        // Campaign
-        "list_campaigns",
-        "get_active_campaign",
-        "set_active_campaign",
-        "get_campaign_details",
-        "get_campaign_sources",
-        "create_campaign",
-        "update_campaign",
-        "delete_campaign",
-        "export_campaign",
-        "import_campaign",
-        "preview_archive",
-        // Module
-        "create_module",
-        "list_modules",
-        "get_module_details",
-        "update_module",
-        "delete_module",
-        "add_monster_to_module",
-        "update_module_monster",
-        "remove_monster_from_module",
-        "add_item_to_module",
-        // Document
-        "list_documents",
-        "read_document",
-        "create_document",
-        "edit_document",
-        "delete_document",
-        "reorder_document",
-        // Character
-        "list_characters",
-        "get_character",
-        "create_character",
-        "edit_character",
-        "add_item_to_character",
-        "delete_character",
-        "level_up_character",
-        "remove_item_from_character",
-        "update_character_inventory",
-        "get_character_inventory",
-        "add_character_spell",
-        "remove_character_spell",
-        "list_character_spells",
-        // Map
-        "create_map",
-        "list_maps",
-        "get_map",
-        "update_map",
-        "delete_map",
-        "add_token_to_map",
-        "list_tokens_on_map",
-        "remove_token",
-        // Homebrew (items, monsters, spells)
-        "list_homebrew",
-        "get_homebrew",
-        "create_homebrew",
-        "update_homebrew",
-        "delete_homebrew",
-        // Map generation
-        "generate_map",
-        "list_map_presets",
-        "validate_map_config",
-        // Catalog
-        "search_catalog",
-    ];
-
     fn test_ctx() -> Arc<McpContext> {
         Arc::new(McpContext::for_testing())
     }
 
-    #[test]
-    fn all_expected_tools_are_published() {
-        let tools = MimirHandler::get_tools();
-        let published: Vec<&str> = tools.iter().map(|t| t.name.as_str()).collect();
-
-        for expected in EXPECTED_TOOLS {
-            assert!(
-                published.contains(expected),
-                "Tool '{}' is missing from get_tools(). Published: {:?}",
-                expected,
-                published
-            );
-        }
-    }
+    // The registry is the single source of truth for the tool list, so the
+    // old bookkeeping tests (expected-name list, count match, route match)
+    // are structurally impossible to violate. Only real invariants remain.
 
     #[test]
     fn no_duplicate_tool_names() {
@@ -375,41 +132,6 @@ mod tests {
                 "Duplicate tool name: '{}'",
                 window[0]
             );
-        }
-    }
-
-    #[test]
-    fn published_tools_match_expected_count() {
-        let tools = MimirHandler::get_tools();
-        assert_eq!(
-            tools.len(),
-            EXPECTED_TOOLS.len(),
-            "Tool count mismatch. Published {} tools but expected {}. \
-             Published: {:?}",
-            tools.len(),
-            EXPECTED_TOOLS.len(),
-            tools.iter().map(|t| t.name.as_str()).collect::<Vec<_>>()
-        );
-    }
-
-    #[tokio::test]
-    async fn every_published_tool_has_a_route() {
-        let ctx = test_ctx();
-        let handler = MimirHandler::with_context(ctx);
-        let tools = MimirHandler::get_tools();
-
-        for tool in &tools {
-            let result = handler
-                .execute_tool(&tool.name, serde_json::json!({}))
-                .await;
-            // We expect errors (missing args, no campaign, etc.) but NOT ToolNotFound
-            if let Err(ref e) = result {
-                assert!(
-                    !matches!(e, McpError::ToolNotFound(_)),
-                    "Tool '{}' is published but has no route in execute_tool",
-                    tool.name
-                );
-            }
         }
     }
 

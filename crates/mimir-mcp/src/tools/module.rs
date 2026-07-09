@@ -1,257 +1,200 @@
 //! Module Tools
 //!
-//! MCP tools for module management.
+//! MCP tools for module management. This family is registry-based: each tool
+//! is a typed argument struct (schema + parser from one source), a handler,
+//! and one entry in `registered_tools()`.
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::services::{
     AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
 };
-use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
 
-use super::create_properties;
 use crate::context::McpContext;
+use crate::registry::RegisteredTool;
 use crate::response::McpResponse;
-use crate::McpError;
+use crate::{tool, tool_args, McpError};
 
 // =============================================================================
-// Tool Definitions
+// Registration
 // =============================================================================
 
-pub fn create_module_tool() -> Tool {
-    Tool {
-        name: "create_module".to_string(),
-        description: Some(
-            "Create a new module (an adventure chapter) in the active campaign. Requires an \
-             active campaign."
-                .to_string(),
+/// All module-family tools.
+pub fn registered_tools() -> Vec<RegisteredTool> {
+    vec![
+        tool!(
+            "create_module",
+            "Create a new module (an adventure chapter) in the active campaign. Requires an active campaign.",
+            CreateModuleArgs,
+            create_module
         ),
-        input_schema: ToolInputSchema::new(
-            vec!["name".to_string()],
-            create_properties(vec![
-                ("name", "string", "Name of the module"),
-                ("description", "string", "Description of the module"),
-                (
-                    "module_type",
-                    "string",
-                    "Type of module: adventure, location, organization (default: adventure)",
-                ),
-            ]),
-            None,
+        tool!(
+            "list_modules",
+            "List all modules in the active campaign. Requires an active campaign.",
+            ListModulesArgs,
+            list_modules
         ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+        tool!(
+            "get_module_details",
+            "Get detailed information about a module including documents, monsters, and items",
+            GetModuleDetailsArgs,
+            get_module_details
+        ),
+        tool!(
+            "update_module",
+            "Update a module's name or description",
+            UpdateModuleArgs,
+            update_module
+        ),
+        tool!(
+            "delete_module",
+            "Delete a module and all its contents",
+            DeleteModuleArgs,
+            delete_module
+        ),
+        tool!(
+            "add_monster_to_module",
+            "Add a monster to a module. Use monster_name for catalog monsters or homebrew_monster_id for homebrew monsters. Exactly one path must be provided. If the module already has an entry for the same monster, its quantity is incremented instead of creating a duplicate; use update_module_monster to set an exact quantity.",
+            AddMonsterArgs,
+            add_monster_to_module
+        ),
+        tool!(
+            "update_module_monster",
+            "Update a module monster entry's quantity, display name, or notes. Use the id returned by add_monster_to_module or get_module_details.",
+            UpdateModuleMonsterArgs,
+            update_module_monster
+        ),
+        tool!(
+            "remove_monster_from_module",
+            "Remove a monster from a module",
+            RemoveMonsterArgs,
+            remove_monster_from_module
+        ),
+        tool!(
+            "add_item_to_module",
+            "NOT YET IMPLEMENTED — currently returns an error. Module-level item/loot tracking does not exist yet. To give a character loot, use add_item_to_character instead.",
+            AddItemToModuleArgs,
+            add_item_to_module
+        ),
+    ]
+}
+
+// =============================================================================
+// Arguments
+// =============================================================================
+
+tool_args! {
+    pub struct CreateModuleArgs {
+        /// Name of the module
+        pub name: String,
+        /// Description of the module
+        pub description: Option<String>,
+        /// Type of module: adventure, location, organization (default: adventure)
+        pub module_type: Option<String>,
     }
 }
 
-pub fn list_modules_tool() -> Tool {
-    Tool {
-        name: "list_modules".to_string(),
-        description: Some(
-            "List all modules in the active campaign. Requires an active campaign.".to_string(),
-        ),
-        input_schema: ToolInputSchema::new(vec![], None, None),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct ListModulesArgs {}
+}
+
+tool_args! {
+    pub struct GetModuleDetailsArgs {
+        /// The ID of the module
+        pub module_id: String,
     }
 }
 
-pub fn get_module_details_tool() -> Tool {
-    Tool {
-        name: "get_module_details".to_string(),
-        description: Some(
-            "Get detailed information about a module including documents, monsters, and items"
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string()],
-            create_properties(vec![("module_id", "string", "The ID of the module")]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct UpdateModuleArgs {
+        /// The ID of the module
+        pub module_id: String,
+        /// New module name
+        pub name: Option<String>,
+        /// New module description
+        pub description: Option<String>,
     }
 }
 
-pub fn add_monster_to_module_tool() -> Tool {
-    Tool {
-        name: "add_monster_to_module".to_string(),
-        description: Some(
-            "Add a monster to a module. Use monster_name for catalog monsters or homebrew_monster_id for homebrew monsters. Exactly one path must be provided. If the module already has an entry for the same monster, its quantity is incremented instead of creating a duplicate; use update_module_monster to set an exact quantity."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string()],
-            create_properties(vec![
-                ("module_id", "string", "The ID of the module"),
-                ("monster_name", "string", "Name of the monster from the catalog (use with monster_source)"),
-                ("monster_source", "string", "Source book code for catalog monster (e.g. MM, VGM). Defaults to MM if monster_name is provided."),
-                ("homebrew_monster_id", "string", "ID of a homebrew monster from the active campaign (alternative to monster_name)"),
-                ("count", "integer", "Number of this monster (default: 1)"),
-                ("display_name", "string", "Optional display name override"),
-                ("notes", "string", "Optional notes about this monster"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct DeleteModuleArgs {
+        /// The ID of the module to delete
+        pub module_id: String,
     }
 }
 
-pub fn update_module_monster_tool() -> Tool {
-    Tool {
-        name: "update_module_monster".to_string(),
-        description: Some(
-            "Update a module monster entry's quantity, display name, or notes. Use the id returned by add_monster_to_module or get_module_details."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["module_monster_id".to_string()],
-            create_properties(vec![
-                ("module_monster_id", "string", "The ID of the module monster entry"),
-                ("quantity", "integer", "New quantity (sets the exact count)"),
-                ("display_name", "string", "New display name override"),
-                ("notes", "string", "New notes"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct AddMonsterArgs {
+        /// The ID of the module
+        pub module_id: String,
+        /// Name of the monster from the catalog (use with monster_source)
+        pub monster_name: Option<String>,
+        /// Source book code for catalog monster (e.g. MM, VGM). Defaults to MM if monster_name is provided.
+        pub monster_source: Option<String>,
+        /// ID of a homebrew monster from the active campaign (alternative to monster_name)
+        pub homebrew_monster_id: Option<String>,
+        /// Number of this monster (default: 1)
+        pub count: Option<i64>,
+        /// Optional display name override
+        pub display_name: Option<String>,
+        /// Optional notes about this monster
+        pub notes: Option<String>,
     }
 }
 
-pub fn add_item_to_module_tool() -> Tool {
-    Tool {
-        name: "add_item_to_module".to_string(),
-        description: Some(
-            "NOT YET IMPLEMENTED — currently returns an error. Module-level item/loot tracking \
-             does not exist yet. To give a character loot, use add_item_to_character instead."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string(), "item_name".to_string()],
-            create_properties(vec![
-                ("module_id", "string", "The ID of the module"),
-                ("item_name", "string", "Name of the item from the catalog"),
-                ("quantity", "integer", "Quantity of this item (default: 1)"),
-                ("notes", "string", "Optional notes about this item"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct UpdateModuleMonsterArgs {
+        /// The ID of the module monster entry
+        pub module_monster_id: String,
+        /// New quantity (sets the exact count)
+        pub quantity: Option<i64>,
+        /// New display name override
+        pub display_name: Option<String>,
+        /// New notes
+        pub notes: Option<String>,
     }
 }
 
-pub fn update_module_tool() -> Tool {
-    Tool {
-        name: "update_module".to_string(),
-        description: Some("Update a module's name or description".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string()],
-            create_properties(vec![
-                ("module_id", "string", "The ID of the module"),
-                ("name", "string", "New module name"),
-                ("description", "string", "New module description"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct RemoveMonsterArgs {
+        /// The ID of the module monster entry to remove
+        pub module_monster_id: String,
     }
 }
 
-pub fn remove_monster_from_module_tool() -> Tool {
-    Tool {
-        name: "remove_monster_from_module".to_string(),
-        description: Some("Remove a monster from a module".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["module_monster_id".to_string()],
-            create_properties(vec![
-                ("module_monster_id", "string", "The ID of the module monster entry to remove"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
-    }
-}
-
-pub fn delete_module_tool() -> Tool {
-    Tool {
-        name: "delete_module".to_string(),
-        description: Some("Delete a module and all its contents".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["module_id".to_string()],
-            create_properties(vec![
-                ("module_id", "string", "The ID of the module to delete"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct AddItemToModuleArgs {
+        /// The ID of the module
+        pub module_id: String,
+        /// Name of the item from the catalog
+        pub item_name: String,
+        /// Quantity of this item (default: 1)
+        pub quantity: Option<i64>,
+        /// Optional notes about this item
+        pub notes: Option<String>,
     }
 }
 
 // =============================================================================
-// Tool Implementations
+// Handlers
 // =============================================================================
 
-pub async fn create_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn create_module(
+    ctx: &Arc<McpContext>,
+    args: CreateModuleArgs,
+) -> Result<Value, McpError> {
     let campaign_id = ctx
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let name = args
-        .get("name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
-
-    let description = args.get("description").and_then(|v| v.as_str());
-    let module_type = ModuleType::from(args.get("module_type").and_then(|v| v.as_str()));
+    let module_type = ModuleType::from(args.module_type.as_deref());
 
     let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);
 
-    let mut input = CreateModuleInput::new(&campaign_id, name).with_type(module_type);
-    if let Some(desc) = description {
+    let mut input = CreateModuleInput::new(&campaign_id, &args.name).with_type(module_type);
+    if let Some(desc) = args.description {
         input = input.with_description(desc);
     }
 
@@ -267,7 +210,10 @@ pub async fn create_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
     }))
 }
 
-pub async fn list_modules(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError> {
+pub async fn list_modules(
+    ctx: &Arc<McpContext>,
+    _args: ListModulesArgs,
+) -> Result<Value, McpError> {
     let campaign_id = ctx
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
@@ -294,12 +240,11 @@ pub async fn list_modules(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, 
     McpResponse::list("modules", module_data)
 }
 
-pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
-
+pub async fn get_module_details(
+    ctx: &Arc<McpContext>,
+    args: GetModuleDetailsArgs,
+) -> Result<Value, McpError> {
+    let module_id = &args.module_id;
     let mut db = ctx.connect()?;
 
     // Get module
@@ -357,68 +302,85 @@ pub async fn get_module_details(ctx: &Arc<McpContext>, args: Value) -> Result<Va
     }))
 }
 
-pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
+pub async fn update_module(
+    ctx: &Arc<McpContext>,
+    args: UpdateModuleArgs,
+) -> Result<Value, McpError> {
+    let mut input = UpdateModuleInput::default();
+    if let Some(name) = args.name {
+        input.name = Some(name);
+    }
+    if let Some(desc) = args.description {
+        input.description = Some(Some(desc));
+    }
 
-    let monster_name = args.get("monster_name").and_then(|v| v.as_str());
-    let homebrew_monster_id = args.get("homebrew_monster_id").and_then(|v| v.as_str());
+    let mut db = ctx.connect()?;
+    let mut service = ModuleService::new(&mut db);
 
-    let count = args
-        .get("count")
-        .and_then(|v| v.as_i64())
-        .unwrap_or(1) as i32;
+    let module = service
+        .update(&args.module_id, input)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    let notes = args.get("notes").and_then(|v| v.as_str());
-    let display_name = args.get("display_name").and_then(|v| v.as_str());
+    McpResponse::updated("module", json!({
+        "id": module.id,
+        "name": module.name,
+        "description": module.description,
+        "module_number": module.module_number
+    }))
+}
 
-    // Validate mutual exclusivity
-    if monster_name.is_some() && homebrew_monster_id.is_some() {
+pub async fn delete_module(
+    ctx: &Arc<McpContext>,
+    args: DeleteModuleArgs,
+) -> Result<Value, McpError> {
+    let mut db = ctx.connect()?;
+    let mut service = ModuleService::new(&mut db);
+
+    service
+        .delete(&args.module_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+
+    McpResponse::deleted(&args.module_id)
+}
+
+pub async fn add_monster_to_module(
+    ctx: &Arc<McpContext>,
+    args: AddMonsterArgs,
+) -> Result<Value, McpError> {
+    // Validate mutual exclusivity (transport-level check)
+    if args.monster_name.is_some() && args.homebrew_monster_id.is_some() {
         return Err(McpError::InvalidArguments(
             "Cannot specify both monster_name and homebrew_monster_id".to_string(),
         ));
     }
-    if monster_name.is_none() && homebrew_monster_id.is_none() {
+    let monster = if let Some(hb_id) = args.homebrew_monster_id {
+        MonsterRef::Homebrew { id: hb_id }
+    } else if let Some(name) = args.monster_name {
+        MonsterRef::Catalog {
+            name,
+            source: args.monster_source.unwrap_or_else(|| "MM".to_string()),
+        }
+    } else {
         return Err(McpError::InvalidArguments(
-            "Must specify either monster_name (catalog) or homebrew_monster_id (homebrew)".to_string(),
+            "Must specify either monster_name (catalog) or homebrew_monster_id (homebrew)"
+                .to_string(),
         ));
-    }
+    };
 
     let mut db = ctx.connect()?;
 
-    let monster = if let Some(hb_id) = homebrew_monster_id {
-        MonsterRef::Homebrew {
-            id: hb_id.to_string(),
-        }
-    } else {
-        let monster_source = args
-            .get("monster_source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("MM");
-        MonsterRef::Catalog {
-            name: monster_name.unwrap().to_string(),
-            source: monster_source.to_string(),
-        }
-    };
-
-    let mut input = AddMonsterInput::new(module_id, monster).with_quantity(count);
-    if let Some(n) = notes {
+    let mut input = AddMonsterInput::new(&args.module_id, monster)
+        .with_quantity(args.count.unwrap_or(1) as i32);
+    if let Some(n) = args.notes {
         input = input.with_notes(n);
     }
-    if let Some(dn) = display_name {
+    if let Some(dn) = args.display_name {
         input = input.with_display_name(dn);
     }
 
     let monster = ModuleService::new(&mut db)
         .add_monster(input)
-        .map_err(|e| match e {
-            mimir_core::services::ServiceError::NotFound { entity_type, id } => {
-                McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
-            }
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::added("module_monster", json!({
         "id": monster.id,
@@ -431,17 +393,11 @@ pub async fn add_monster_to_module(ctx: &Arc<McpContext>, args: Value) -> Result
     }))
 }
 
-pub async fn update_module_monster(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_monster_id = args
-        .get("module_monster_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_monster_id is required".to_string()))?;
-
-    let quantity = args.get("quantity").and_then(|v| v.as_i64()).map(|q| q as i32);
-    let display_name = args.get("display_name").and_then(|v| v.as_str());
-    let notes = args.get("notes").and_then(|v| v.as_str());
-
-    if quantity.is_none() && display_name.is_none() && notes.is_none() {
+pub async fn update_module_monster(
+    ctx: &Arc<McpContext>,
+    args: UpdateModuleMonsterArgs,
+) -> Result<Value, McpError> {
+    if args.quantity.is_none() && args.display_name.is_none() && args.notes.is_none() {
         return Err(McpError::InvalidArguments(
             "Provide at least one of quantity, display_name, or notes".to_string(),
         ));
@@ -449,13 +405,13 @@ pub async fn update_module_monster(ctx: &Arc<McpContext>, args: Value) -> Result
 
     let mut db = ctx.connect()?;
     let monster = ModuleService::new(&mut db)
-        .update_monster(module_monster_id, display_name, notes, quantity)
-        .map_err(|e| match e {
-            mimir_core::services::ServiceError::NotFound { entity_type, id } => {
-                McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
-            }
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .update_monster(
+            &args.module_monster_id,
+            args.display_name.as_deref(),
+            args.notes.as_deref(),
+            args.quantity.map(|q| q as i32),
+        )
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::updated("module_monster", json!({
         "id": monster.id,
@@ -468,85 +424,25 @@ pub async fn update_module_monster(ctx: &Arc<McpContext>, args: Value) -> Result
     }))
 }
 
-pub async fn remove_monster_from_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_monster_id = args
-        .get("module_monster_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_monster_id is required".to_string()))?;
-
+pub async fn remove_monster_from_module(
+    ctx: &Arc<McpContext>,
+    args: RemoveMonsterArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
 
     ModuleService::new(&mut db)
-        .remove_monster(module_monster_id)
-        .map_err(|e| match e {
-            mimir_core::services::ServiceError::NotFound { .. } => McpError::InvalidArguments(
-                format!("Module monster '{}' not found", module_monster_id),
-            ),
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .remove_monster(&args.module_monster_id)
+        .map_err(McpError::caller_fault)?;
 
-    McpResponse::removed(module_monster_id)
+    McpResponse::removed(&args.module_monster_id)
 }
 
-pub async fn add_item_to_module(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let _module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
-
-    let _item_name = args
-        .get("item_name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("item_name is required".to_string()))?;
-
+pub async fn add_item_to_module(
+    _ctx: &Arc<McpContext>,
+    _args: AddItemToModuleArgs,
+) -> Result<Value, McpError> {
     // Module items table doesn't exist yet - this feature is not implemented
     Err(McpError::Internal(
         "Module item tracking is not yet implemented. Items can be added to character inventories instead.".to_string()
     ))
-}
-
-pub async fn update_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
-
-    let mut input = UpdateModuleInput::default();
-
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
-        input.name = Some(name.to_string());
-    }
-    if let Some(desc) = args.get("description").and_then(|v| v.as_str()) {
-        input.description = Some(Some(desc.to_string()));
-    }
-
-    let mut db = ctx.connect()?;
-    let mut service = ModuleService::new(&mut db);
-
-    let module = service
-        .update(module_id, input)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
-
-    McpResponse::updated("module", json!({
-        "id": module.id,
-        "name": module.name,
-        "description": module.description,
-        "module_number": module.module_number
-    }))
-}
-
-pub async fn delete_module(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let module_id = args
-        .get("module_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("module_id is required".to_string()))?;
-
-    let mut db = ctx.connect()?;
-    let mut service = ModuleService::new(&mut db);
-
-    service
-        .delete(module_id)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
-
-    McpResponse::deleted(module_id)
 }

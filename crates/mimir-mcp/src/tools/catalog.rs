@@ -1,6 +1,8 @@
 //! Catalog Tools
 //!
-//! Single `search_catalog` tool for searching the D&D 5e catalog across all categories.
+//! Single `search_catalog` tool for searching the D&D 5e catalog across all
+//! categories. Registry-based: one typed argument struct, one handler, one
+//! registration.
 
 use mimir_core::dal::campaign as campaign_dal;
 use mimir_core::dal::catalog as catalog_dal;
@@ -8,17 +10,30 @@ use mimir_core::models::catalog::{
     BackgroundFilter, ClassFilter, ConditionFilter, FeatFilter, ItemFilter, MonsterFilter,
     RaceFilter, SpellFilter,
 };
-use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
 
-use super::create_properties;
 use crate::context::McpContext;
+use crate::registry::RegisteredTool;
 use crate::response::McpResponse;
-use crate::McpError;
+use crate::{tool, tool_args, McpError};
 
 // =============================================================================
-// Constants
+// Registration
+// =============================================================================
+
+/// All catalog-family tools.
+pub fn registered_tools() -> Vec<RegisteredTool> {
+    vec![tool!(
+        "search_catalog",
+        "Search the D&D 5e catalog by category. Supports monsters, items, spells, races, classes, backgrounds, feats, and conditions. Category-specific filters are available for monsters (cr_min, cr_max, monster_type), items (rarity, item_type), and spells (level, school, class_name). Monster searches also include homebrew monsters from the active campaign by default.",
+        SearchCatalogArgs,
+        search_catalog
+    )]
+}
+
+// =============================================================================
+// Arguments
 // =============================================================================
 
 const VALID_CATEGORIES: &[&str] = &[
@@ -32,73 +47,52 @@ const VALID_CATEGORIES: &[&str] = &[
     "condition",
 ];
 
-// =============================================================================
-// Tool Definition
-// =============================================================================
-
-pub fn search_catalog_tool() -> Tool {
-    Tool {
-        name: "search_catalog".to_string(),
-        description: Some(
-            "Search the D&D 5e catalog by category. Supports monsters, items, spells, races, classes, backgrounds, feats, and conditions. Category-specific filters are available for monsters (cr_min, cr_max, monster_type), items (rarity, item_type), and spells (level, school, class_name). Monster searches also include homebrew monsters from the active campaign by default."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["category".to_string()],
-            create_properties(vec![
-                ("category", "string", "Category to search: monster, item, spell, race, class, background, feat, condition"),
-                ("name", "string", "Search by name (partial match)"),
-                ("limit", "integer", "Maximum results to return (default: 20)"),
-                // Monster-specific
-                ("cr_min", "number", "Minimum challenge rating (monsters only)"),
-                ("cr_max", "number", "Maximum challenge rating (monsters only)"),
-                ("monster_type", "string", "Filter by creature type (monsters only, e.g. undead, dragon)"),
-                ("include_homebrew", "boolean", "Include homebrew monsters from active campaign (monsters only, default: true)"),
-                // Item-specific
-                ("rarity", "string", "Filter by rarity (items only): common, uncommon, rare, very rare, legendary, artifact"),
-                ("item_type", "string", "Filter by item type (items only, e.g. weapon, armor, wondrous item)"),
-                // Spell-specific
-                ("level", "integer", "Filter by spell level (spells only, 0 for cantrips)"),
-                ("school", "string", "Filter by school of magic (spells only, e.g. evocation, necromancy)"),
-                ("class_name", "string", "Filter by class spell list (spells only)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct SearchCatalogArgs {
+        /// Category to search: monster, item, spell, race, class, background, feat, condition
+        pub category: String,
+        /// Search by name (partial match)
+        pub name: Option<String>,
+        /// Maximum results to return (default: 20)
+        pub limit: Option<i64>,
+        /// Minimum challenge rating (monsters only)
+        pub cr_min: Option<f64>,
+        /// Maximum challenge rating (monsters only)
+        pub cr_max: Option<f64>,
+        /// Filter by creature type (monsters only, e.g. undead, dragon)
+        pub monster_type: Option<String>,
+        /// Include homebrew monsters from active campaign (monsters only, default: true)
+        pub include_homebrew: Option<bool>,
+        /// Filter by rarity (items only): common, uncommon, rare, very rare, legendary, artifact
+        pub rarity: Option<String>,
+        /// Filter by item type (items only, e.g. weapon, armor, wondrous item)
+        pub item_type: Option<String>,
+        /// Filter by spell level (spells only, 0 for cantrips)
+        pub level: Option<i64>,
+        /// Filter by school of magic (spells only, e.g. evocation, necromancy)
+        pub school: Option<String>,
+        /// Filter by class spell list (spells only)
+        pub class_name: Option<String>,
     }
 }
 
 // =============================================================================
-// Tool Implementation
+// Handler
 // =============================================================================
 
-pub async fn search_catalog(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let category = args
-        .get("category")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            McpError::InvalidArguments(
-                "category is required (monster, item, spell, race, class, background, feat, condition)".to_string(),
-            )
-        })?;
-
-    if !VALID_CATEGORIES.contains(&category) {
+pub async fn search_catalog(
+    ctx: &Arc<McpContext>,
+    args: SearchCatalogArgs,
+) -> Result<Value, McpError> {
+    if !VALID_CATEGORIES.contains(&args.category.as_str()) {
         return Err(McpError::InvalidArguments(format!(
             "Invalid category '{}'. Must be one of: {}",
-            category,
+            args.category,
             VALID_CATEGORIES.join(", ")
         )));
     }
 
-    let limit = args
-        .get("limit")
-        .and_then(|v| v.as_i64())
-        .unwrap_or(20) as i64;
+    let limit = args.limit.unwrap_or(20);
 
     let mut db = ctx.connect()?;
 
@@ -115,7 +109,7 @@ pub async fn search_catalog(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
         None
     };
 
-    match category {
+    match args.category.as_str() {
         "monster" => search_monsters(ctx, &args, &mut db, limit, campaign_sources).await,
         "item" => search_items(&args, &mut db, limit, campaign_sources),
         "spell" => search_spells(&args, &mut db, limit, campaign_sources),
@@ -134,31 +128,24 @@ pub async fn search_catalog(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
 
 async fn search_monsters(
     ctx: &Arc<McpContext>,
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = MonsterFilter::new();
 
-    let name_query = args.get("name").and_then(|v| v.as_str());
-    if let Some(name) = name_query {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
-
-    let type_query = args.get("monster_type").and_then(|v| v.as_str());
-    if let Some(monster_type) = type_query {
+    if let Some(monster_type) = args.monster_type.as_deref() {
         filter = filter.with_creature_type(monster_type);
     }
-
     if let Some(sources) = campaign_sources {
         filter = filter.with_sources(sources);
     }
 
-    let include_homebrew = args
-        .get("include_homebrew")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true);
+    let include_homebrew = args.include_homebrew.unwrap_or(true);
 
     let monsters = catalog_dal::search_monsters_paginated(db, &filter, limit, 0)
         .map_err(|e| McpError::Internal(e.to_string()))?;
@@ -181,8 +168,8 @@ async fn search_monsters(
         if let Some(campaign_id) = ctx.get_active_campaign_id() {
             use mimir_core::services::HomebrewService;
             if let Ok(hb_monsters) = HomebrewService::new(db).list_monsters(&campaign_id) {
-                let name_lower = name_query.map(|n| n.to_lowercase());
-                let type_lower = type_query.map(|t| t.to_lowercase());
+                let name_lower = args.name.as_deref().map(|n| n.to_lowercase());
+                let type_lower = args.monster_type.as_deref().map(|t| t.to_lowercase());
 
                 for hb in &hb_monsters {
                     if let Some(ref query) = name_lower {
@@ -218,20 +205,20 @@ async fn search_monsters(
 }
 
 fn search_items(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = ItemFilter::new();
 
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
-    if let Some(rarity) = args.get("rarity").and_then(|v| v.as_str()) {
+    if let Some(rarity) = args.rarity.as_deref() {
         filter = filter.with_rarity(rarity);
     }
-    if let Some(item_type) = args.get("item_type").and_then(|v| v.as_str()) {
+    if let Some(item_type) = args.item_type.as_deref() {
         filter = filter.with_type(item_type);
     }
     if let Some(sources) = campaign_sources {
@@ -257,20 +244,20 @@ fn search_items(
 }
 
 fn search_spells(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = SpellFilter::new();
 
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
-    if let Some(level) = args.get("level").and_then(|v| v.as_i64()) {
+    if let Some(level) = args.level {
         filter = filter.with_level(level as i32);
     }
-    if let Some(school) = args.get("school").and_then(|v| v.as_str()) {
+    if let Some(school) = args.school.as_deref() {
         filter = filter.with_school(school);
     }
     if let Some(sources) = campaign_sources {
@@ -296,13 +283,13 @@ fn search_spells(
 }
 
 fn search_races(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = RaceFilter::new();
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
     if let Some(sources) = campaign_sources {
@@ -319,13 +306,13 @@ fn search_races(
 }
 
 fn search_classes(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = ClassFilter::new();
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
     if let Some(sources) = campaign_sources {
@@ -342,13 +329,13 @@ fn search_classes(
 }
 
 fn search_backgrounds(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = BackgroundFilter::new();
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
     if let Some(sources) = campaign_sources {
@@ -365,13 +352,13 @@ fn search_backgrounds(
 }
 
 fn search_feats(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = FeatFilter::new();
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
     if let Some(sources) = campaign_sources {
@@ -388,13 +375,13 @@ fn search_feats(
 }
 
 fn search_conditions(
-    args: &Value,
+    args: &SearchCatalogArgs,
     db: &mut diesel::SqliteConnection,
     limit: i64,
     campaign_sources: Option<Vec<String>>,
 ) -> Result<Value, McpError> {
     let mut filter = ConditionFilter::new();
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+    if let Some(name) = args.name.as_deref() {
         filter = filter.with_name_contains(name);
     }
     if let Some(sources) = campaign_sources {

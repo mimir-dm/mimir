@@ -1,390 +1,358 @@
 //! Character Tools
 //!
-//! MCP tools for character (NPC and PC) management.
+//! MCP tools for character (NPC and PC) management. This family is
+//! registry-based: typed argument structs, handlers, and one entry each in
+//! `registered_tools()`.
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::services::{
     AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
 };
-use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::sync::Arc;
 
-use super::create_properties;
 use crate::context::McpContext;
+use crate::registry::RegisteredTool;
 use crate::response::McpResponse;
-use crate::McpError;
+use crate::{tool, tool_args, McpError};
 
 // =============================================================================
-// Tool Definitions
+// Registration
 // =============================================================================
 
-pub fn list_characters_tool() -> Tool {
-    Tool {
-        name: "list_characters".to_string(),
-        description: Some(
-            "List characters (PCs and NPCs) in the active campaign. Requires an active campaign."
-                .to_string(),
+/// All character-family tools.
+pub fn registered_tools() -> Vec<RegisteredTool> {
+    vec![
+        tool!(
+            "list_characters",
+            "List characters (PCs and NPCs) in the active campaign. Requires an active campaign.",
+            ListCharactersArgs,
+            list_characters
         ),
-        input_schema: ToolInputSchema::new(
-            vec![],
-            create_properties(vec![
-                ("character_type", "string", "Filter by type: pc or npc"),
-                ("module_id", "string", "Filter by module assignment (NPCs only)"),
-                ("location", "string", "Filter NPCs by location"),
-                ("faction", "string", "Filter NPCs by faction"),
-            ]),
-            None,
+        tool!(
+            "get_character",
+            "Get detailed information about a character including classes and inventory",
+            CharacterIdArgs,
+            get_character
         ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+        tool!(
+            "create_character",
+            "Create a new character (NPC or PC) in the active campaign. Requires an active campaign. When race, class, and background are provided, proficiencies are automatically populated from catalog data.",
+            CreateCharacterArgs,
+            create_character
+        ),
+        tool!(
+            "edit_character",
+            "Update character fields including ability scores, currency, race, background, and roleplay traits",
+            EditCharacterArgs,
+            edit_character
+        ),
+        tool!(
+            "delete_character",
+            "Delete a character and all associated data",
+            CharacterIdArgs,
+            delete_character
+        ),
+        tool!(
+            "add_item_to_character",
+            "Add an item from the catalog to a character's inventory",
+            AddItemArgs,
+            add_item_to_character
+        ),
+        tool!(
+            "remove_item_from_character",
+            "Remove an item from a character's inventory",
+            RemoveItemArgs,
+            remove_item_from_character
+        ),
+        tool!(
+            "update_character_inventory",
+            "Update an inventory item's quantity, equipped, or attuned state",
+            UpdateInventoryArgs,
+            update_character_inventory
+        ),
+        tool!(
+            "get_character_inventory",
+            "Get a character's inventory, optionally filtered by equipped or attuned",
+            GetInventoryArgs,
+            get_character_inventory
+        ),
+        tool!(
+            "level_up_character",
+            "Level up a character. Handles HP, multiclass validation, ASI/feats, spells, and feature choices.",
+            LevelUpArgs,
+            level_up_character
+        ),
+        tool!(
+            "add_character_spell",
+            "Add a spell to a character's known spells. Supports both catalog and homebrew spells.",
+            AddSpellArgs,
+            add_character_spell
+        ),
+        tool!(
+            "remove_character_spell",
+            "Remove a spell from a character's known spells",
+            RemoveSpellArgs,
+            remove_character_spell
+        ),
+        tool!(
+            "list_character_spells",
+            "List all spells known by a character, optionally filtered by class",
+            ListSpellsArgs,
+            list_character_spells
+        ),
+    ]
+}
+
+// =============================================================================
+// Arguments
+// =============================================================================
+
+tool_args! {
+    pub struct ListCharactersArgs {
+        /// Filter by type: pc or npc
+        pub character_type: Option<String>,
+        /// Filter by module assignment (NPCs only)
+        pub module_id: Option<String>,
+        /// Filter NPCs by location
+        pub location: Option<String>,
+        /// Filter NPCs by faction
+        pub faction: Option<String>,
     }
 }
 
-pub fn get_character_tool() -> Tool {
-    Tool {
-        name: "get_character".to_string(),
-        description: Some(
-            "Get detailed information about a character including classes and inventory"
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string()],
-            create_properties(vec![("character_id", "string", "The ID of the character")]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct CharacterIdArgs {
+        /// The ID of the character
+        pub character_id: String,
     }
 }
 
-pub fn create_character_tool() -> Tool {
-    Tool {
-        name: "create_character".to_string(),
-        description: Some("Create a new character (NPC or PC) in the active campaign. Requires an active campaign. When race, class, and background are provided, proficiencies are automatically populated from catalog data.".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["name".to_string(), "character_type".to_string()],
-            create_properties(vec![
-                ("name", "string", "Name of the character"),
-                ("character_type", "string", "Type: pc or npc"),
-                ("player_name", "string", "Player name (PCs only, defaults to 'Player')"),
-                ("race_name", "string", "Race name (e.g., 'Elf'). Populates race proficiencies."),
-                ("race_source", "string", "Race source book (default: PHB)"),
-                ("class_name", "string", "Starting class (e.g., 'Fighter'). Populates saving throws, armor, weapon, and tool proficiencies."),
-                ("class_source", "string", "Class source book (default: PHB)"),
-                ("background_name", "string", "Background name (e.g., 'Acolyte'). Populates skill, tool, and language proficiencies."),
-                ("background_source", "string", "Background source book (default: PHB)"),
-                ("selected_skills", "array", "Skill proficiencies chosen from the class skill list (e.g., ['Perception', 'Stealth'])"),
-                ("level", "integer", "Starting level (default: 1)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct CreateCharacterArgs {
+        /// Name of the character
+        pub name: String,
+        /// Type: pc or npc
+        pub character_type: String,
+        /// Player name (PCs only, defaults to 'Player')
+        pub player_name: Option<String>,
+        /// Race name (e.g., 'Elf'). Populates race proficiencies.
+        pub race_name: Option<String>,
+        /// Race source book (default: PHB)
+        pub race_source: Option<String>,
+        /// Starting class (e.g., 'Fighter'). Populates saving throws, armor, weapon, and tool proficiencies.
+        pub class_name: Option<String>,
+        /// Class source book (default: PHB)
+        pub class_source: Option<String>,
+        /// Background name (e.g., 'Acolyte'). Populates skill, tool, and language proficiencies.
+        pub background_name: Option<String>,
+        /// Background source book (default: PHB)
+        pub background_source: Option<String>,
+        /// Skill proficiencies chosen from the class skill list (e.g., ['Perception', 'Stealth'])
+        pub selected_skills: Option<Vec<String>>,
+        /// Starting level (default: 1)
+        pub level: Option<i64>,
     }
 }
 
-pub fn edit_character_tool() -> Tool {
-    Tool {
-        name: "edit_character".to_string(),
-        description: Some("Update character fields including ability scores, currency, race, background, and roleplay traits".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string()],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("name", "string", "New name"),
-                ("player_name", "string", "Player name (PCs only)"),
-                ("race_name", "string", "Race name"),
-                ("race_source", "string", "Race source book (default: PHB)"),
-                ("background_name", "string", "Background name"),
-                ("background_source", "string", "Background source book (default: PHB)"),
-                ("strength", "integer", "Strength score"),
-                ("dexterity", "integer", "Dexterity score"),
-                ("constitution", "integer", "Constitution score"),
-                ("intelligence", "integer", "Intelligence score"),
-                ("wisdom", "integer", "Wisdom score"),
-                ("charisma", "integer", "Charisma score"),
-                ("cp", "integer", "Copper pieces"),
-                ("sp", "integer", "Silver pieces"),
-                ("ep", "integer", "Electrum pieces"),
-                ("gp", "integer", "Gold pieces"),
-                ("pp", "integer", "Platinum pieces"),
-                ("module_id", "string", "Assign to module (NPCs only)"),
-                ("npc_role", "string", "NPC's role in the module"),
-                ("npc_location", "string", "NPC's location"),
-                ("faction", "string", "Faction affiliation"),
-                ("traits", "string", "Personality traits"),
-                ("ideals", "string", "Ideals"),
-                ("bonds", "string", "Bonds"),
-                ("flaws", "string", "Flaws"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct EditCharacterArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// New name
+        pub name: Option<String>,
+        /// Player name (PCs only)
+        pub player_name: Option<String>,
+        /// Race name
+        pub race_name: Option<String>,
+        /// Race source book (default: PHB)
+        pub race_source: Option<String>,
+        /// Background name
+        pub background_name: Option<String>,
+        /// Background source book (default: PHB)
+        pub background_source: Option<String>,
+        /// Strength score
+        pub strength: Option<i64>,
+        /// Dexterity score
+        pub dexterity: Option<i64>,
+        /// Constitution score
+        pub constitution: Option<i64>,
+        /// Intelligence score
+        pub intelligence: Option<i64>,
+        /// Wisdom score
+        pub wisdom: Option<i64>,
+        /// Charisma score
+        pub charisma: Option<i64>,
+        /// Copper pieces
+        pub cp: Option<i64>,
+        /// Silver pieces
+        pub sp: Option<i64>,
+        /// Electrum pieces
+        pub ep: Option<i64>,
+        /// Gold pieces
+        pub gp: Option<i64>,
+        /// Platinum pieces
+        pub pp: Option<i64>,
+        /// Assign to module (NPCs only)
+        pub module_id: Option<String>,
+        /// NPC's role in the module
+        pub npc_role: Option<String>,
+        /// NPC's location
+        pub npc_location: Option<String>,
+        /// Faction affiliation
+        pub faction: Option<String>,
+        /// Personality traits
+        pub traits: Option<String>,
+        /// Ideals
+        pub ideals: Option<String>,
+        /// Bonds
+        pub bonds: Option<String>,
+        /// Flaws
+        pub flaws: Option<String>,
     }
 }
 
-pub fn delete_character_tool() -> Tool {
-    Tool {
-        name: "delete_character".to_string(),
-        description: Some("Delete a character and all associated data".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string()],
-            create_properties(vec![("character_id", "string", "The ID of the character to delete")]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct AddItemArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Name of the item from the catalog
+        pub item_name: String,
+        /// Source book abbreviation (default: PHB, or HB if the name matches campaign homebrew)
+        pub item_source: Option<String>,
+        /// Quantity of the item (default: 1)
+        pub quantity: Option<i64>,
+        /// Whether the item is equipped (default: false)
+        pub equipped: Option<bool>,
+        /// Whether the item is attuned (default: false)
+        pub attuned: Option<bool>,
     }
 }
 
-pub fn add_item_to_character_tool() -> Tool {
-    Tool {
-        name: "add_item_to_character".to_string(),
-        description: Some("Add an item from the catalog to a character's inventory".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string(), "item_name".to_string()],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("item_name", "string", "Name of the item from the catalog"),
-                ("quantity", "integer", "Quantity of the item (default: 1)"),
-                ("equipped", "boolean", "Whether the item is equipped (default: false)"),
-                ("attuned", "boolean", "Whether the item is attuned (default: false)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct RemoveItemArgs {
+        /// The ID of the inventory entry to remove
+        pub inventory_id: String,
     }
 }
 
-pub fn remove_item_from_character_tool() -> Tool {
-    Tool {
-        name: "remove_item_from_character".to_string(),
-        description: Some("Remove an item from a character's inventory".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["inventory_id".to_string()],
-            create_properties(vec![
-                ("inventory_id", "string", "The ID of the inventory entry to remove"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct UpdateInventoryArgs {
+        /// The ID of the inventory entry
+        pub inventory_id: String,
+        /// New quantity
+        pub quantity: Option<i64>,
+        /// Whether equipped
+        pub equipped: Option<bool>,
+        /// Whether attuned (max 3 attuned items per D&D 5e rules)
+        pub attuned: Option<bool>,
     }
 }
 
-pub fn update_character_inventory_tool() -> Tool {
-    Tool {
-        name: "update_character_inventory".to_string(),
-        description: Some("Update an inventory item's quantity, equipped, or attuned state".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["inventory_id".to_string()],
-            create_properties(vec![
-                ("inventory_id", "string", "The ID of the inventory entry"),
-                ("quantity", "integer", "New quantity"),
-                ("equipped", "boolean", "Whether equipped"),
-                ("attuned", "boolean", "Whether attuned (max 3 attuned items per D&D 5e rules)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct GetInventoryArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Filter: all, equipped, or attuned (default: all)
+        pub filter: Option<String>,
     }
 }
 
-pub fn get_character_inventory_tool() -> Tool {
-    Tool {
-        name: "get_character_inventory".to_string(),
-        description: Some("Get a character's inventory, optionally filtered by equipped or attuned".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string()],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("filter", "string", "Filter: all, equipped, or attuned (default: all)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct LevelUpArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Class to level up in (e.g. Fighter, Wizard)
+        pub class_name: String,
+        /// Class source book (default: PHB)
+        pub class_source: Option<String>,
+        /// HP gain method: average, roll, or manual
+        pub hp_method: Option<String>,
+        /// Roll result or manual HP value (required for roll/manual)
+        pub hp_value: Option<i64>,
+        /// Subclass name if choosing this level
+        pub subclass_name: Option<String>,
+        /// Subclass source book (default: PHB)
+        pub subclass_source: Option<String>,
+        /// ASI or feat: 'asi' or 'feat'
+        pub asi_type: Option<String>,
+        /// First ability to increase (for ASI)
+        pub asi_ability1: Option<String>,
+        /// Amount for first ability: 1 or 2 (for ASI)
+        pub asi_increase1: Option<i64>,
+        /// Second ability to increase (for ASI, optional)
+        pub asi_ability2: Option<String>,
+        /// Amount for second ability (for ASI)
+        pub asi_increase2: Option<i64>,
+        /// Feat name (if choosing feat)
+        pub feat_name: Option<String>,
+        /// Feat source (default: PHB)
+        pub feat_source: Option<String>,
     }
 }
 
-pub fn level_up_character_tool() -> Tool {
-    Tool {
-        name: "level_up_character".to_string(),
-        description: Some(
-            "Level up a character. Handles HP, multiclass validation, ASI/feats, spells, and feature choices."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string(), "class_name".to_string()],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("class_name", "string", "Class to level up in (e.g. Fighter, Wizard)"),
-                ("class_source", "string", "Class source book (default: PHB)"),
-                ("hp_method", "string", "HP gain method: average, roll, or manual"),
-                ("hp_value", "integer", "Roll result or manual HP value (required for roll/manual)"),
-                ("subclass_name", "string", "Subclass name if choosing this level"),
-                ("subclass_source", "string", "Subclass source book (default: PHB)"),
-                ("asi_type", "string", "ASI or feat: 'asi' or 'feat'"),
-                ("asi_ability1", "string", "First ability to increase (for ASI)"),
-                ("asi_increase1", "integer", "Amount for first ability: 1 or 2 (for ASI)"),
-                ("asi_ability2", "string", "Second ability to increase (for ASI, optional)"),
-                ("asi_increase2", "integer", "Amount for second ability (for ASI)"),
-                ("feat_name", "string", "Feat name (if choosing feat)"),
-                ("feat_source", "string", "Feat source (default: PHB)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct AddSpellArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Name of the spell (e.g. Fireball)
+        pub spell_name: String,
+        /// Source book abbreviation (e.g. PHB, XGE) or HB for homebrew
+        pub spell_source: String,
+        /// Class that grants this spell (e.g. Wizard, Cleric)
+        pub source_class: String,
+        /// Whether the spell starts prepared (default: false)
+        pub prepared: Option<bool>,
     }
 }
 
-pub fn add_character_spell_tool() -> Tool {
-    Tool {
-        name: "add_character_spell".to_string(),
-        description: Some(
-            "Add a spell to a character's known spells. Supports both catalog and homebrew spells."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec![
-                "character_id".to_string(),
-                "spell_name".to_string(),
-                "spell_source".to_string(),
-                "source_class".to_string(),
-            ],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("spell_name", "string", "Name of the spell (e.g. Fireball)"),
-                ("spell_source", "string", "Source book abbreviation (e.g. PHB, XGE) or HB for homebrew"),
-                ("source_class", "string", "Class that grants this spell (e.g. Wizard, Cleric)"),
-                ("prepared", "boolean", "Whether the spell starts prepared (default: false)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct RemoveSpellArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Name of the spell to remove
+        pub spell_name: String,
+        /// Class that granted the spell (optional — if omitted, removes all instances)
+        pub source_class: Option<String>,
     }
 }
 
-pub fn remove_character_spell_tool() -> Tool {
-    Tool {
-        name: "remove_character_spell".to_string(),
-        description: Some("Remove a spell from a character's known spells".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string(), "spell_name".to_string()],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("spell_name", "string", "Name of the spell to remove"),
-                ("source_class", "string", "Class that granted the spell (optional — if omitted, removes all instances)"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
-    }
-}
-
-pub fn list_character_spells_tool() -> Tool {
-    Tool {
-        name: "list_character_spells".to_string(),
-        description: Some("List all spells known by a character, optionally filtered by class".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["character_id".to_string()],
-            create_properties(vec![
-                ("character_id", "string", "The ID of the character"),
-                ("source_class", "string", "Filter by granting class (e.g. Wizard)"),
-                ("prepared_only", "boolean", "Only return prepared spells"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct ListSpellsArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Filter by granting class (e.g. Wizard)
+        pub source_class: Option<String>,
+        /// Only return prepared spells
+        pub prepared_only: Option<bool>,
     }
 }
 
 // =============================================================================
-// Tool Implementations
+// Handlers
 // =============================================================================
 
-pub async fn list_characters(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn list_characters(
+    ctx: &Arc<McpContext>,
+    args: ListCharactersArgs,
+) -> Result<Value, McpError> {
     let campaign_id = ctx
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let character_type = args.get("character_type").and_then(|v| v.as_str());
-    let location = args.get("location").and_then(|v| v.as_str());
-    let faction = args.get("faction").and_then(|v| v.as_str());
-
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
-    let characters = if let Some(loc) = location {
+    let characters = if let Some(loc) = args.location.as_deref() {
         service
             .list_npcs_by_location(&campaign_id, loc)
             .map_err(|e| McpError::Internal(e.to_string()))?
-    } else if let Some(fac) = faction {
+    } else if let Some(fac) = args.faction.as_deref() {
         service
             .list_npcs_by_faction(&campaign_id, fac)
             .map_err(|e| McpError::Internal(e.to_string()))?
     } else {
-        match character_type {
+        match args.character_type.as_deref() {
             Some("pc") => service
                 .list_pcs(&campaign_id)
                 .map_err(|e| McpError::Internal(e.to_string()))?,
@@ -415,12 +383,11 @@ pub async fn list_characters(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     McpResponse::list("characters", char_data)
 }
 
-pub async fn get_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
-
+pub async fn get_character(
+    ctx: &Arc<McpContext>,
+    args: CharacterIdArgs,
+) -> Result<Value, McpError> {
+    let character_id = &args.character_id;
     let mut db = ctx.connect()?;
 
     // Get character and inventory using service
@@ -505,72 +472,47 @@ pub async fn get_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, 
     }))
 }
 
-pub async fn create_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn create_character(
+    ctx: &Arc<McpContext>,
+    args: CreateCharacterArgs,
+) -> Result<Value, McpError> {
     let campaign_id = ctx
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
-
-    let name = args
-        .get("name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
-
-    let character_type = args
-        .get("character_type")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_type is required".to_string()))?;
-
-    let race_name = args.get("race_name").and_then(|v| v.as_str());
 
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     // Create character based on type
-    let mut input = if character_type == "npc" {
-        CreateCharacterInput::new_npc(Some(&campaign_id), name)
+    let mut input = if args.character_type == "npc" {
+        CreateCharacterInput::new_npc(Some(&campaign_id), &args.name)
     } else {
-        let player_name = args
-            .get("player_name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("Player");
-        CreateCharacterInput::new_pc(Some(&campaign_id), name, player_name)
+        let player_name = args.player_name.as_deref().unwrap_or("Player");
+        CreateCharacterInput::new_pc(Some(&campaign_id), &args.name, player_name)
     };
 
     // Set race if provided
-    if let Some(race) = race_name {
-        let race_source = args
-            .get("race_source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("PHB");
+    if let Some(race) = args.race_name.as_deref() {
+        let race_source = args.race_source.as_deref().unwrap_or("PHB");
         input = input.with_race(race, race_source);
     }
 
     // Set class if provided (enables proficiency auto-population)
-    if let Some(class_name) = args.get("class_name").and_then(|v| v.as_str()) {
-        let class_source = args
-            .get("class_source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("PHB");
+    if let Some(class_name) = args.class_name.as_deref() {
+        let class_source = args.class_source.as_deref().unwrap_or("PHB");
         input = input.with_class(class_name, class_source);
     }
 
     // Set background if provided (enables proficiency auto-population)
-    if let Some(bg_name) = args.get("background_name").and_then(|v| v.as_str()) {
-        let bg_source = args
-            .get("background_source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("PHB");
+    if let Some(bg_name) = args.background_name.as_deref() {
+        let bg_source = args.background_source.as_deref().unwrap_or("PHB");
         input = input.with_background(bg_name, bg_source);
     }
 
     // Set selected skills if provided
-    if let Some(skills) = args.get("selected_skills").and_then(|v| v.as_array()) {
-        let skill_names: Vec<String> = skills
-            .iter()
-            .filter_map(|v| v.as_str().map(String::from))
-            .collect();
-        if !skill_names.is_empty() {
-            input = input.with_skills(skill_names);
+    if let Some(skills) = args.selected_skills {
+        if !skills.is_empty() {
+            input = input.with_skills(skills);
         }
     }
 
@@ -586,11 +528,11 @@ pub async fn create_character(ctx: &Arc<McpContext>, args: Value) -> Result<Valu
     }))
 }
 
-pub async fn edit_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
+pub async fn edit_character(
+    ctx: &Arc<McpContext>,
+    args: EditCharacterArgs,
+) -> Result<Value, McpError> {
+    let character_id = &args.character_id;
 
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
@@ -598,112 +540,97 @@ pub async fn edit_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
     // Build update from provided fields
     let mut update = UpdateCharacterInput::default();
 
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
-        update.name = Some(name.to_string());
+    if let Some(name) = args.name {
+        update.name = Some(name);
     }
-    if let Some(pn) = args.get("player_name").and_then(|v| v.as_str()) {
-        update.player_name = Some(Some(pn.to_string()));
+    if let Some(pn) = args.player_name {
+        update.player_name = Some(Some(pn));
     }
 
     // Race/background
-    if let Some(rn) = args.get("race_name").and_then(|v| v.as_str()) {
-        update.race_name = Some(Some(rn.to_string()));
-        let rs = args.get("race_source").and_then(|v| v.as_str()).unwrap_or("PHB");
+    if let Some(rn) = args.race_name {
+        update.race_name = Some(Some(rn));
+        let rs = args.race_source.as_deref().unwrap_or("PHB");
         update.race_source = Some(Some(rs.to_string()));
     }
-    if let Some(bn) = args.get("background_name").and_then(|v| v.as_str()) {
-        update.background_name = Some(Some(bn.to_string()));
-        let bs = args.get("background_source").and_then(|v| v.as_str()).unwrap_or("PHB");
+    if let Some(bn) = args.background_name {
+        update.background_name = Some(Some(bn));
+        let bs = args.background_source.as_deref().unwrap_or("PHB");
         update.background_source = Some(Some(bs.to_string()));
     }
 
-    // Ability scores — set as array if any are provided
-    let str_val = args.get("strength").and_then(|v| v.as_i64());
-    let dex_val = args.get("dexterity").and_then(|v| v.as_i64());
-    let con_val = args.get("constitution").and_then(|v| v.as_i64());
-    let int_val = args.get("intelligence").and_then(|v| v.as_i64());
-    let wis_val = args.get("wisdom").and_then(|v| v.as_i64());
-    let cha_val = args.get("charisma").and_then(|v| v.as_i64());
-
-    if str_val.is_some() || dex_val.is_some() || con_val.is_some()
-        || int_val.is_some() || wis_val.is_some() || cha_val.is_some()
+    // Ability scores — set as array if any are provided; unspecified ones keep
+    // the character's current value (requires a read)
+    if args.strength.is_some()
+        || args.dexterity.is_some()
+        || args.constitution.is_some()
+        || args.intelligence.is_some()
+        || args.wisdom.is_some()
+        || args.charisma.is_some()
     {
-        // Need to read current values for any not provided
         let current = service
             .get(character_id)
             .map_err(|e| McpError::Internal(e.to_string()))?
-            .ok_or_else(|| McpError::InvalidArguments(format!("Character '{}' not found", character_id)))?;
+            .ok_or_else(|| {
+                McpError::InvalidArguments(format!("Character '{}' not found", character_id))
+            })?;
 
         update.ability_scores = Some([
-            str_val.unwrap_or(current.strength as i64) as i32,
-            dex_val.unwrap_or(current.dexterity as i64) as i32,
-            con_val.unwrap_or(current.constitution as i64) as i32,
-            int_val.unwrap_or(current.intelligence as i64) as i32,
-            wis_val.unwrap_or(current.wisdom as i64) as i32,
-            cha_val.unwrap_or(current.charisma as i64) as i32,
+            args.strength.unwrap_or(current.strength as i64) as i32,
+            args.dexterity.unwrap_or(current.dexterity as i64) as i32,
+            args.constitution.unwrap_or(current.constitution as i64) as i32,
+            args.intelligence.unwrap_or(current.intelligence as i64) as i32,
+            args.wisdom.unwrap_or(current.wisdom as i64) as i32,
+            args.charisma.unwrap_or(current.charisma as i64) as i32,
         ]);
     }
 
-    // Currency — set as array if any are provided
-    let cp = args.get("cp").and_then(|v| v.as_i64());
-    let sp = args.get("sp").and_then(|v| v.as_i64());
-    let ep = args.get("ep").and_then(|v| v.as_i64());
-    let gp = args.get("gp").and_then(|v| v.as_i64());
-    let pp = args.get("pp").and_then(|v| v.as_i64());
-
-    if cp.is_some() || sp.is_some() || ep.is_some() || gp.is_some() || pp.is_some() {
-        let current = if update.ability_scores.is_none() {
-            // Only fetch if we didn't already
-            Some(service
-                .get(character_id)
-                .map_err(|e| McpError::Internal(e.to_string()))?
-                .ok_or_else(|| McpError::InvalidArguments(format!("Character '{}' not found", character_id)))?)
-        } else {
-            None
-        };
-        // If we already fetched for ability scores, we need current for currency defaults
-        // Re-fetch is fine since it's just a read
-        let cur = if let Some(c) = current {
-            c
-        } else {
-            service
-                .get(character_id)
-                .map_err(|e| McpError::Internal(e.to_string()))?
-                .ok_or_else(|| McpError::InvalidArguments(format!("Character '{}' not found", character_id)))?
-        };
+    // Currency — same pattern
+    if args.cp.is_some()
+        || args.sp.is_some()
+        || args.ep.is_some()
+        || args.gp.is_some()
+        || args.pp.is_some()
+    {
+        let cur = service
+            .get(character_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?
+            .ok_or_else(|| {
+                McpError::InvalidArguments(format!("Character '{}' not found", character_id))
+            })?;
 
         update.currency = Some([
-            cp.unwrap_or(cur.cp as i64) as i32,
-            sp.unwrap_or(cur.sp as i64) as i32,
-            ep.unwrap_or(cur.ep as i64) as i32,
-            gp.unwrap_or(cur.gp as i64) as i32,
-            pp.unwrap_or(cur.pp as i64) as i32,
+            args.cp.unwrap_or(cur.cp as i64) as i32,
+            args.sp.unwrap_or(cur.sp as i64) as i32,
+            args.ep.unwrap_or(cur.ep as i64) as i32,
+            args.gp.unwrap_or(cur.gp as i64) as i32,
+            args.pp.unwrap_or(cur.pp as i64) as i32,
         ]);
     }
 
     // NPC-specific fields
-    if let Some(role) = args.get("npc_role").and_then(|v| v.as_str()) {
-        update.role = Some(Some(role.to_string()));
+    if let Some(role) = args.npc_role {
+        update.role = Some(Some(role));
     }
-    if let Some(location) = args.get("npc_location").and_then(|v| v.as_str()) {
-        update.location = Some(Some(location.to_string()));
+    if let Some(location) = args.npc_location {
+        update.location = Some(Some(location));
     }
-    if let Some(faction) = args.get("faction").and_then(|v| v.as_str()) {
-        update.faction = Some(Some(faction.to_string()));
+    if let Some(faction) = args.faction {
+        update.faction = Some(Some(faction));
     }
 
     // Roleplay fields
-    if let Some(traits) = args.get("traits").and_then(|v| v.as_str()) {
-        update.traits = Some(Some(traits.to_string()));
+    if let Some(traits) = args.traits {
+        update.traits = Some(Some(traits));
     }
-    if let Some(ideals) = args.get("ideals").and_then(|v| v.as_str()) {
-        update.ideals = Some(Some(ideals.to_string()));
+    if let Some(ideals) = args.ideals {
+        update.ideals = Some(Some(ideals));
     }
-    if let Some(bonds) = args.get("bonds").and_then(|v| v.as_str()) {
-        update.bonds = Some(Some(bonds.to_string()));
+    if let Some(bonds) = args.bonds {
+        update.bonds = Some(Some(bonds));
     }
-    if let Some(flaws) = args.get("flaws").and_then(|v| v.as_str()) {
-        update.flaws = Some(Some(flaws.to_string()));
+    if let Some(flaws) = args.flaws {
+        update.flaws = Some(Some(flaws));
     }
 
     let character = service
@@ -733,79 +660,61 @@ pub async fn edit_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value,
     }))
 }
 
-pub async fn delete_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
-
+pub async fn delete_character(
+    ctx: &Arc<McpContext>,
+    args: CharacterIdArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     service
-        .delete(character_id)
+        .delete(&args.character_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::deleted(character_id)
+    McpResponse::deleted(&args.character_id)
 }
 
-pub async fn add_item_to_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
-
-    let item_name = args
-        .get("item_name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("item_name is required".to_string()))?;
-
-    let item_source = args
-        .get("item_source")
-        .and_then(|v| v.as_str())
-        .unwrap_or("PHB");
-
+pub async fn add_item_to_character(
+    ctx: &Arc<McpContext>,
+    args: AddItemArgs,
+) -> Result<Value, McpError> {
     // If no explicit source was provided, check if this item exists as homebrew
-    // in the active campaign — if so, use "HB" source instead of "PHB"
-    let item_source = if args.get("item_source").is_none() {
-        if let Some(campaign_id) = ctx.get_active_campaign_id() {
-            let mut db = ctx.connect()?;
-            match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(
-                &mut db,
-                &campaign_id,
-                item_name,
-            ) {
-                Ok(Some(_)) => "HB",
-                _ => item_source,
+    // in the active campaign — if so, use "HB" source instead of "PHB".
+    // (MCP-only convenience; the service seam takes an explicit source.)
+    let item_source = match args.item_source.as_deref() {
+        Some(source) => source.to_string(),
+        None => {
+            let mut detected = "PHB".to_string();
+            if let Some(campaign_id) = ctx.get_active_campaign_id() {
+                let mut db = ctx.connect()?;
+                if let Ok(Some(_)) = mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(
+                    &mut db,
+                    &campaign_id,
+                    &args.item_name,
+                ) {
+                    detected = "HB".to_string();
+                }
             }
-        } else {
-            item_source
+            detected
         }
-    } else {
-        item_source
     };
-
-    let quantity = args.get("quantity").and_then(|v| v.as_i64()).map(|q| q as i32);
-    let equipped = args.get("equipped").and_then(|v| v.as_bool()).unwrap_or(false);
-    let attuned = args.get("attuned").and_then(|v| v.as_bool()).unwrap_or(false);
 
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
-    let mut input = AddInventoryInput::new(item_name, item_source);
-
-    if let Some(qty) = quantity {
-        input = input.with_quantity(qty);
+    let mut input = AddInventoryInput::new(&args.item_name, &item_source);
+    if let Some(qty) = args.quantity {
+        input = input.with_quantity(qty as i32);
     }
-    if equipped {
+    if args.equipped.unwrap_or(false) {
         input = input.equipped();
     }
-    if attuned {
+    if args.attuned.unwrap_or(false) {
         input = input.attuned();
     }
 
     let inventory_item = service
-        .add_to_inventory(character_id, input)
+        .add_to_inventory(&args.character_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     McpResponse::added("inventory_item", json!({
@@ -818,37 +727,34 @@ pub async fn add_item_to_character(ctx: &Arc<McpContext>, args: Value) -> Result
     }))
 }
 
-pub async fn remove_item_from_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let inventory_id = args
-        .get("inventory_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("inventory_id is required".to_string()))?;
-
+pub async fn remove_item_from_character(
+    ctx: &Arc<McpContext>,
+    args: RemoveItemArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     service
-        .remove_from_inventory(inventory_id)
+        .remove_from_inventory(&args.inventory_id)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::removed(inventory_id)
+    McpResponse::removed(&args.inventory_id)
 }
 
-pub async fn update_character_inventory(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let inventory_id = args
-        .get("inventory_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("inventory_id is required".to_string()))?;
-
-    let quantity = args.get("quantity").and_then(|v| v.as_i64()).map(|q| q as i32);
-    let equipped = args.get("equipped").and_then(|v| v.as_bool());
-    let attuned = args.get("attuned").and_then(|v| v.as_bool());
-
+pub async fn update_character_inventory(
+    ctx: &Arc<McpContext>,
+    args: UpdateInventoryArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
 
     let item = service
-        .update_inventory_item(inventory_id, quantity, equipped, attuned)
+        .update_inventory_item(
+            &args.inventory_id,
+            args.quantity.map(|q| q as i32),
+            args.equipped,
+            args.attuned,
+        )
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     McpResponse::updated("inventory_item", json!({
@@ -861,13 +767,12 @@ pub async fn update_character_inventory(ctx: &Arc<McpContext>, args: Value) -> R
     }))
 }
 
-pub async fn get_character_inventory(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
-
-    let filter = args.get("filter").and_then(|v| v.as_str()).unwrap_or("all");
+pub async fn get_character_inventory(
+    ctx: &Arc<McpContext>,
+    args: GetInventoryArgs,
+) -> Result<Value, McpError> {
+    let character_id = &args.character_id;
+    let filter = args.filter.as_deref().unwrap_or("all");
 
     let mut db = ctx.connect()?;
     let mut service = CharacterService::new(&mut db);
@@ -905,80 +810,67 @@ pub async fn get_character_inventory(ctx: &Arc<McpContext>, args: Value) -> Resu
     }))
 }
 
-pub async fn level_up_character(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    use mimir_core::services::{
-        AsiOrFeat, HpGainMethod, LevelUpRequest, SubclassChoice,
-    };
+pub async fn level_up_character(
+    ctx: &Arc<McpContext>,
+    args: LevelUpArgs,
+) -> Result<Value, McpError> {
+    use mimir_core::services::{AsiOrFeat, HpGainMethod, LevelUpRequest, SubclassChoice};
 
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id is required".to_string()))?;
-
-    let class_name = args
-        .get("class_name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("class_name is required".to_string()))?;
-
-    let class_source = args
-        .get("class_source")
-        .and_then(|v| v.as_str())
-        .unwrap_or("PHB");
+    let character_id = &args.character_id;
+    let class_source = args.class_source.as_deref().unwrap_or("PHB");
 
     // HP method
-    let hp_method = match args.get("hp_method").and_then(|v| v.as_str()) {
+    let hp_method = match args.hp_method.as_deref() {
         Some("roll") => {
-            let val = args.get("hp_value").and_then(|v| v.as_i64())
-                .ok_or_else(|| McpError::InvalidArguments("hp_value required for roll method".to_string()))? as i32;
+            let val = args.hp_value.ok_or_else(|| {
+                McpError::InvalidArguments("hp_value required for roll method".to_string())
+            })? as i32;
             HpGainMethod::Roll(val)
         }
         Some("manual") => {
-            let val = args.get("hp_value").and_then(|v| v.as_i64())
-                .ok_or_else(|| McpError::InvalidArguments("hp_value required for manual method".to_string()))? as i32;
+            let val = args.hp_value.ok_or_else(|| {
+                McpError::InvalidArguments("hp_value required for manual method".to_string())
+            })? as i32;
             HpGainMethod::Manual(val)
         }
         _ => HpGainMethod::Average,
     };
 
     // Subclass
-    let subclass = args.get("subclass_name").and_then(|v| v.as_str()).map(|name| {
-        let source = args.get("subclass_source").and_then(|v| v.as_str()).unwrap_or("PHB");
-        SubclassChoice {
-            name: name.to_string(),
-            source: source.to_string(),
-        }
+    let subclass = args.subclass_name.map(|name| SubclassChoice {
+        name,
+        source: args
+            .subclass_source
+            .unwrap_or_else(|| "PHB".to_string()),
     });
 
     // ASI or Feat
-    let asi_or_feat = match args.get("asi_type").and_then(|v| v.as_str()) {
+    let asi_or_feat = match args.asi_type.as_deref() {
         Some("asi") => {
-            let ability1 = args.get("asi_ability1").and_then(|v| v.as_str())
-                .ok_or_else(|| McpError::InvalidArguments("asi_ability1 required for ASI".to_string()))?;
-            let increase1 = args.get("asi_increase1").and_then(|v| v.as_i64()).unwrap_or(1) as i32;
-            let ability2 = args.get("asi_ability2").and_then(|v| v.as_str()).map(|s| s.to_string());
-            let increase2 = args.get("asi_increase2").and_then(|v| v.as_i64()).map(|v| v as i32);
-
+            let ability1 = args.asi_ability1.ok_or_else(|| {
+                McpError::InvalidArguments("asi_ability1 required for ASI".to_string())
+            })?;
             Some(AsiOrFeat::AbilityScoreImprovement {
-                ability1: ability1.to_string(),
-                increase1,
-                ability2,
-                increase2,
+                ability1,
+                increase1: args.asi_increase1.unwrap_or(1) as i32,
+                ability2: args.asi_ability2,
+                increase2: args.asi_increase2.map(|v| v as i32),
             })
         }
         Some("feat") => {
-            let name = args.get("feat_name").and_then(|v| v.as_str())
-                .ok_or_else(|| McpError::InvalidArguments("feat_name required for feat choice".to_string()))?;
-            let source = args.get("feat_source").and_then(|v| v.as_str()).unwrap_or("PHB");
+            let name = args.feat_name.ok_or_else(|| {
+                McpError::InvalidArguments("feat_name required for feat choice".to_string())
+            })?;
             Some(AsiOrFeat::Feat {
-                name: name.to_string(),
-                source: source.to_string(),
+                name,
+                source: args.feat_source.unwrap_or_else(|| "PHB".to_string()),
             })
         }
         _ => None,
     };
 
     let request = LevelUpRequest {
-        class_name: class_name.to_string(),
+        class_name: args.class_name.clone(),
         class_source: class_source.to_string(),
         hit_points_method: hp_method,
         subclass,
@@ -1009,39 +901,25 @@ pub async fn level_up_character(ctx: &Arc<McpContext>, args: Value) -> Result<Va
     }))
 }
 
-pub async fn add_character_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id required".to_string()))?;
-    let spell_name = args
-        .get("spell_name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("spell_name required".to_string()))?;
-    let spell_source = args
-        .get("spell_source")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("spell_source required".to_string()))?;
-    let source_class = args
-        .get("source_class")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("source_class required".to_string()))?;
-    let prepared = args.get("prepared").and_then(|v| v.as_bool()).unwrap_or(false);
-
+pub async fn add_character_spell(
+    ctx: &Arc<McpContext>,
+    args: AddSpellArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
 
     let spell = CharacterService::new(&mut db)
-        .add_spell(character_id, spell_name, spell_source, source_class, prepared)
-        .map_err(|e| match e {
-            mimir_core::services::ServiceError::Validation(msg) => {
-                McpError::InvalidArguments(msg)
-            }
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .add_spell(
+            &args.character_id,
+            &args.spell_name,
+            &args.spell_source,
+            &args.source_class,
+            args.prepared.unwrap_or(false),
+        )
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::success(json!({
         "action": "spell_added",
-        "character_id": character_id,
+        "character_id": args.character_id,
         "spell": {
             "id": spell.id,
             "spell_name": spell.spell_name,
@@ -1052,42 +930,34 @@ pub async fn add_character_spell(ctx: &Arc<McpContext>, args: Value) -> Result<V
     }))
 }
 
-pub async fn remove_character_spell(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id required".to_string()))?;
-    let spell_name = args
-        .get("spell_name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("spell_name required".to_string()))?;
-    let source_class = args.get("source_class").and_then(|v| v.as_str());
-
+pub async fn remove_character_spell(
+    ctx: &Arc<McpContext>,
+    args: RemoveSpellArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
 
     CharacterService::new(&mut db)
-        .remove_spell(character_id, spell_name, source_class)
-        .map_err(|e| match e {
-            mimir_core::services::ServiceError::Validation(msg) => {
-                McpError::InvalidArguments(msg)
-            }
-            other => McpError::Internal(other.to_string()),
-        })?;
+        .remove_spell(
+            &args.character_id,
+            &args.spell_name,
+            args.source_class.as_deref(),
+        )
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::success(json!({
         "action": "spell_removed",
-        "character_id": character_id,
-        "spell_name": spell_name
+        "character_id": args.character_id,
+        "spell_name": args.spell_name
     }))
 }
 
-pub async fn list_character_spells(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let character_id = args
-        .get("character_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("character_id required".to_string()))?;
-    let source_class = args.get("source_class").and_then(|v| v.as_str());
-    let prepared_only = args.get("prepared_only").and_then(|v| v.as_bool()).unwrap_or(false);
+pub async fn list_character_spells(
+    ctx: &Arc<McpContext>,
+    args: ListSpellsArgs,
+) -> Result<Value, McpError> {
+    let character_id = &args.character_id;
+    let source_class = args.source_class.as_deref();
+    let prepared_only = args.prepared_only.unwrap_or(false);
 
     let mut db = ctx.connect()?;
 

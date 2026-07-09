@@ -1,211 +1,183 @@
 //! Campaign Tools
 //!
-//! MCP tools for campaign management.
+//! MCP tools for campaign management, including archive export/import. This
+//! family is registry-based: typed argument structs, handlers, and one entry
+//! each in `registered_tools()`.
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::services::{
     ArchiveService, CampaignService, CharacterService, CreateCampaignInput, ModuleService,
     UpdateCampaignInput,
 };
-use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
 use std::path::Path;
 use std::sync::Arc;
 
-use super::create_properties;
 use crate::context::McpContext;
+use crate::registry::RegisteredTool;
 use crate::response::McpResponse;
-use crate::McpError;
+use crate::{tool, tool_args, McpError};
 
 // =============================================================================
-// Tool Definitions
+// Registration
 // =============================================================================
 
-pub fn list_campaigns_tool() -> Tool {
-    Tool {
-        name: "list_campaigns".to_string(),
-        description: Some(
-            "List every campaign in this Mimir database. Start here to discover campaigns, then \
-             pass a returned id to set_active_campaign. Returns each campaign's id, name, \
-             description, and created_at."
-                .to_string(),
+/// All campaign-family tools.
+pub fn registered_tools() -> Vec<RegisteredTool> {
+    vec![
+        tool!(
+            "list_campaigns",
+            "List every campaign in this Mimir database. Start here to discover campaigns, then pass a returned id to set_active_campaign. Returns each campaign's id, name, description, and created_at.",
+            ListCampaignsArgs,
+            list_campaigns
         ),
-        input_schema: ToolInputSchema::new(vec![], None, None),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+        tool!(
+            "get_active_campaign",
+            "Report which campaign is currently active — the one most tools operate on. Never errors: when nothing is selected it returns active=false with guidance. Call this first to orient yourself before using campaign-scoped tools.",
+            GetActiveCampaignArgs,
+            get_active_campaign
+        ),
+        tool!(
+            "set_active_campaign",
+            "Select the campaign that subsequent tools operate on. The selection is held server-side for the rest of the session. Most module, character, document, map, and homebrew tools require an active campaign.",
+            SetActiveCampaignArgs,
+            set_active_campaign
+        ),
+        tool!(
+            "get_campaign_details",
+            "Get detailed information about a campaign including modules and characters",
+            CampaignIdOptionalArgs,
+            get_campaign_details
+        ),
+        tool!(
+            "get_campaign_sources",
+            "Get the list of enabled source books for a campaign",
+            CampaignIdOptionalArgs,
+            get_campaign_sources
+        ),
+        tool!(
+            "create_campaign",
+            "Create a new campaign. The new campaign is automatically set active, so you can immediately create modules and characters in it without a separate set_active_campaign call.",
+            CreateCampaignArgs,
+            create_campaign
+        ),
+        tool!(
+            "update_campaign",
+            "Update campaign name or description",
+            UpdateCampaignArgs,
+            update_campaign
+        ),
+        tool!(
+            "delete_campaign",
+            "Delete a campaign and all its data",
+            DeleteCampaignArgs,
+            delete_campaign
+        ),
+        tool!(
+            "export_campaign",
+            "Export the active campaign as a shareable archive file (.mimir-campaign.tar.gz). Requires an active campaign. The archive is written to the machine running this server (not the client).",
+            ExportCampaignArgs,
+            export_campaign
+        ),
+        tool!(
+            "import_campaign",
+            "Import a campaign from an archive file (.mimir-campaign.tar.gz). The imported campaign is automatically set active. The archive is read from the machine running this server (not the client).",
+            ImportCampaignArgs,
+            import_campaign
+        ),
+        tool!(
+            "preview_archive",
+            "Preview the contents of a campaign archive without importing it",
+            PreviewArchiveArgs,
+            preview_archive
+        ),
+    ]
+}
+
+// =============================================================================
+// Arguments
+// =============================================================================
+
+tool_args! {
+    pub struct ListCampaignsArgs {}
+}
+
+tool_args! {
+    pub struct GetActiveCampaignArgs {}
+}
+
+tool_args! {
+    pub struct SetActiveCampaignArgs {
+        /// The ID of the campaign to set as active
+        pub campaign_id: String,
     }
 }
 
-pub fn get_active_campaign_tool() -> Tool {
-    Tool {
-        name: "get_active_campaign".to_string(),
-        description: Some(
-            "Report which campaign is currently active — the one most tools operate on. Never \
-             errors: when nothing is selected it returns active=false with guidance. Call this \
-             first to orient yourself before using campaign-scoped tools."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(vec![], None, None),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct CampaignIdOptionalArgs {
+        /// Campaign ID (optional, defaults to active campaign)
+        pub campaign_id: Option<String>,
     }
 }
 
-pub fn set_active_campaign_tool() -> Tool {
-    Tool {
-        name: "set_active_campaign".to_string(),
-        description: Some(
-            "Select the campaign that subsequent tools operate on. The selection is held \
-             server-side for the rest of the session. Most module, character, document, map, and \
-             homebrew tools require an active campaign."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["campaign_id".to_string()],
-            create_properties(vec![(
-                "campaign_id",
-                "string",
-                "The ID of the campaign to set as active",
-            )]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct CreateCampaignArgs {
+        /// Name of the campaign
+        pub name: String,
+        /// Description of the campaign
+        pub description: Option<String>,
     }
 }
 
-pub fn get_campaign_details_tool() -> Tool {
-    Tool {
-        name: "get_campaign_details".to_string(),
-        description: Some(
-            "Get detailed information about a campaign including modules and characters"
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec![],
-            create_properties(vec![(
-                "campaign_id",
-                "string",
-                "Campaign ID (optional, defaults to active campaign)",
-            )]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct UpdateCampaignArgs {
+        /// Campaign ID (optional, defaults to active campaign)
+        pub campaign_id: Option<String>,
+        /// New campaign name
+        pub name: Option<String>,
+        /// New campaign description
+        pub description: Option<String>,
     }
 }
 
-pub fn get_campaign_sources_tool() -> Tool {
-    Tool {
-        name: "get_campaign_sources".to_string(),
-        description: Some("Get the list of enabled source books for a campaign".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec![],
-            create_properties(vec![(
-                "campaign_id",
-                "string",
-                "Campaign ID (optional, defaults to active campaign)",
-            )]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct DeleteCampaignArgs {
+        /// The ID of the campaign to delete
+        pub campaign_id: String,
     }
 }
 
-pub fn create_campaign_tool() -> Tool {
-    Tool {
-        name: "create_campaign".to_string(),
-        description: Some(
-            "Create a new campaign. The new campaign is automatically set active, so you can \
-             immediately create modules and characters in it without a separate \
-             set_active_campaign call."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["name".to_string()],
-            create_properties(vec![
-                ("name", "string", "Name of the campaign"),
-                ("description", "string", "Description of the campaign"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct ExportCampaignArgs {
+        /// Absolute directory path (on the server host) where the archive will be saved
+        pub output_path: String,
     }
 }
 
-pub fn update_campaign_tool() -> Tool {
-    Tool {
-        name: "update_campaign".to_string(),
-        description: Some("Update campaign name or description".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec![],
-            create_properties(vec![
-                ("campaign_id", "string", "Campaign ID (optional, defaults to active campaign)"),
-                ("name", "string", "New campaign name"),
-                ("description", "string", "New campaign description"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct ImportCampaignArgs {
+        /// Absolute path (on the server host) to the archive file to import
+        pub archive_path: String,
+        /// Optional new name for the imported campaign
+        pub new_name: Option<String>,
     }
 }
 
-pub fn delete_campaign_tool() -> Tool {
-    Tool {
-        name: "delete_campaign".to_string(),
-        description: Some("Delete a campaign and all its data".to_string()),
-        input_schema: ToolInputSchema::new(
-            vec!["campaign_id".to_string()],
-            create_properties(vec![
-                ("campaign_id", "string", "The ID of the campaign to delete"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct PreviewArchiveArgs {
+        /// Path to the archive file to preview
+        pub archive_path: String,
     }
 }
 
 // =============================================================================
-// Tool Implementations
+// Handlers
 // =============================================================================
 
-pub async fn list_campaigns(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError> {
+pub async fn list_campaigns(
+    ctx: &Arc<McpContext>,
+    _args: ListCampaignsArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
@@ -226,7 +198,10 @@ pub async fn list_campaigns(ctx: &Arc<McpContext>, _args: Value) -> Result<Value
     McpResponse::list("campaigns", campaign_data)
 }
 
-pub async fn get_active_campaign(ctx: &Arc<McpContext>, _args: Value) -> Result<Value, McpError> {
+pub async fn get_active_campaign(
+    ctx: &Arc<McpContext>,
+    _args: GetActiveCampaignArgs,
+) -> Result<Value, McpError> {
     let Some(campaign_id) = ctx.get_active_campaign_id() else {
         return McpResponse::ok(json!({
             "active": false,
@@ -265,11 +240,11 @@ pub async fn get_active_campaign(ctx: &Arc<McpContext>, _args: Value) -> Result<
     }
 }
 
-pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let campaign_id = args
-        .get("campaign_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("campaign_id is required".to_string()))?;
+pub async fn set_active_campaign(
+    ctx: &Arc<McpContext>,
+    args: SetActiveCampaignArgs,
+) -> Result<Value, McpError> {
+    let campaign_id = &args.campaign_id;
 
     // Verify campaign exists
     let mut db = ctx.connect()?;
@@ -280,7 +255,7 @@ pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<V
         .map_err(|e| McpError::Internal(e.to_string()))?
         .ok_or_else(|| McpError::InvalidArguments(format!("Campaign '{}' not found", campaign_id)))?;
 
-    ctx.set_active_campaign_id(Some(campaign_id.to_string()));
+    ctx.set_active_campaign_id(Some(campaign_id.clone()));
 
     McpResponse::success(json!({
         "active_campaign_id": campaign_id,
@@ -292,11 +267,12 @@ pub async fn set_active_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<V
     }))
 }
 
-pub async fn get_campaign_details(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn get_campaign_details(
+    ctx: &Arc<McpContext>,
+    args: CampaignIdOptionalArgs,
+) -> Result<Value, McpError> {
     let campaign_id = args
-        .get("campaign_id")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
+        .campaign_id
         .or_else(|| ctx.get_active_campaign_id())
         .ok_or(McpError::NoActiveCampaign)?;
 
@@ -363,11 +339,12 @@ pub async fn get_campaign_details(ctx: &Arc<McpContext>, args: Value) -> Result<
     }))
 }
 
-pub async fn get_campaign_sources(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn get_campaign_sources(
+    ctx: &Arc<McpContext>,
+    args: CampaignIdOptionalArgs,
+) -> Result<Value, McpError> {
     let campaign_id = args
-        .get("campaign_id")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
+        .campaign_id
         .or_else(|| ctx.get_active_campaign_id())
         .ok_or(McpError::NoActiveCampaign)?;
 
@@ -382,19 +359,15 @@ pub async fn get_campaign_sources(ctx: &Arc<McpContext>, args: Value) -> Result<
     }))
 }
 
-pub async fn create_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let name = args
-        .get("name")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("name is required".to_string()))?;
-
-    let description = args.get("description").and_then(|v| v.as_str());
-
+pub async fn create_campaign(
+    ctx: &Arc<McpContext>,
+    args: CreateCampaignArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
-    let mut input = CreateCampaignInput::new(name);
-    if let Some(desc) = description {
+    let mut input = CreateCampaignInput::new(&args.name);
+    if let Some(desc) = args.description {
         input = input.with_description(desc);
     }
 
@@ -412,21 +385,21 @@ pub async fn create_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     }))
 }
 
-pub async fn update_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn update_campaign(
+    ctx: &Arc<McpContext>,
+    args: UpdateCampaignArgs,
+) -> Result<Value, McpError> {
     let campaign_id = args
-        .get("campaign_id")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
+        .campaign_id
         .or_else(|| ctx.get_active_campaign_id())
         .ok_or(McpError::NoActiveCampaign)?;
 
     let mut input = UpdateCampaignInput::default();
-
-    if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
-        input.name = Some(name.to_string());
+    if let Some(name) = args.name {
+        input.name = Some(name);
     }
-    if let Some(desc) = args.get("description").and_then(|v| v.as_str()) {
-        input.description = Some(Some(desc.to_string()));
+    if let Some(desc) = args.description {
+        input.description = Some(Some(desc));
     }
 
     let mut db = ctx.connect()?;
@@ -443,11 +416,11 @@ pub async fn update_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     }))
 }
 
-pub async fn delete_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let campaign_id = args
-        .get("campaign_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("campaign_id is required".to_string()))?;
+pub async fn delete_campaign(
+    ctx: &Arc<McpContext>,
+    args: DeleteCampaignArgs,
+) -> Result<Value, McpError> {
+    let campaign_id = &args.campaign_id;
 
     let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
@@ -457,105 +430,22 @@ pub async fn delete_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
     // Clear active campaign if it was the deleted one
-    if ctx.get_active_campaign_id().as_deref() == Some(campaign_id) {
+    if ctx.get_active_campaign_id().as_deref() == Some(campaign_id.as_str()) {
         ctx.set_active_campaign_id(None);
     }
 
     McpResponse::deleted(campaign_id)
 }
 
-// =============================================================================
-// Export/Import Tool Definitions
-// =============================================================================
-
-pub fn export_campaign_tool() -> Tool {
-    Tool {
-        name: "export_campaign".to_string(),
-        description: Some(
-            "Export the active campaign as a shareable archive file (.mimir-campaign.tar.gz). \
-             Requires an active campaign. The archive is written to the machine running this \
-             server (not the client)."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["output_path".to_string()],
-            create_properties(vec![
-                ("output_path", "string", "Absolute directory path (on the server host) where the archive will be saved"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
-    }
-}
-
-pub fn import_campaign_tool() -> Tool {
-    Tool {
-        name: "import_campaign".to_string(),
-        description: Some(
-            "Import a campaign from an archive file (.mimir-campaign.tar.gz). The imported \
-             campaign is automatically set active. The archive is read from the machine running \
-             this server (not the client)."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["archive_path".to_string()],
-            create_properties(vec![
-                ("archive_path", "string", "Absolute path (on the server host) to the archive file to import"),
-                ("new_name", "string", "Optional new name for the imported campaign"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
-    }
-}
-
-pub fn preview_archive_tool() -> Tool {
-    Tool {
-        name: "preview_archive".to_string(),
-        description: Some(
-            "Preview the contents of a campaign archive without importing it".to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["archive_path".to_string()],
-            create_properties(vec![
-                ("archive_path", "string", "Path to the archive file to preview"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
-    }
-}
-
-// =============================================================================
-// Export/Import Tool Implementations
-// =============================================================================
-
-pub async fn export_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
+pub async fn export_campaign(
+    ctx: &Arc<McpContext>,
+    args: ExportCampaignArgs,
+) -> Result<Value, McpError> {
     let campaign_id = ctx.get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let output_path = args
-        .get("output_path")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("output_path is required".to_string()))?;
-
     let mut db = ctx.connect()?;
-    let output_dir = Path::new(output_path);
+    let output_dir = Path::new(&args.output_path);
     let assets_dir = &ctx.assets_dir;
 
     let archive_path = ArchiveService::new(&mut db)
@@ -573,22 +463,16 @@ pub async fn export_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     }))
 }
 
-pub async fn import_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let archive_path = args
-        .get("archive_path")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("archive_path is required".to_string()))?;
-
-    let new_name = args
-        .get("new_name")
-        .and_then(|v| v.as_str());
-
+pub async fn import_campaign(
+    ctx: &Arc<McpContext>,
+    args: ImportCampaignArgs,
+) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
-    let archive = Path::new(archive_path);
+    let archive = Path::new(&args.archive_path);
     let assets_dir = &ctx.assets_dir;
 
     let result = ArchiveService::new(&mut db)
-        .import_campaign(archive, assets_dir, new_name)
+        .import_campaign(archive, assets_dir, args.new_name.as_deref())
         .map_err(|e| McpError::Internal(format!("Import failed: {}", e)))?;
 
     // Set the imported campaign as active
@@ -608,13 +492,11 @@ pub async fn import_campaign(ctx: &Arc<McpContext>, args: Value) -> Result<Value
     }))
 }
 
-pub async fn preview_archive(_ctx: &Arc<McpContext>, args: Value) -> Result<Value, McpError> {
-    let archive_path = args
-        .get("archive_path")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("archive_path is required".to_string()))?;
-
-    let archive = Path::new(archive_path);
+pub async fn preview_archive(
+    _ctx: &Arc<McpContext>,
+    args: PreviewArchiveArgs,
+) -> Result<Value, McpError> {
+    let archive = Path::new(&args.archive_path);
 
     let preview = ArchiveService::preview_archive(archive)
         .map_err(|e| McpError::Internal(format!("Preview failed: {}", e)))?;

@@ -1,100 +1,89 @@
 //! Map Generation Tools
 //!
-//! MCP tools for procedural Dungeondraft map generation.
+//! MCP tools for procedural Dungeondraft map generation. This family is
+//! registry-based and needs no database context.
 
 use mimir_mapgen::biomes;
 use mimir_mapgen::pipeline::{generate, validate_config, MapConfig};
-use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
 use serde_json::{json, Value};
+use std::sync::Arc;
 
-use super::create_properties;
-use crate::McpError;
+use crate::context::McpContext;
+use crate::registry::RegisteredTool;
+use crate::{tool, tool_args, McpError};
 
 // =============================================================================
-// Tool Definitions
+// Registration
 // =============================================================================
 
-pub fn generate_map_tool() -> Tool {
-    Tool {
-        name: "generate_map".to_string(),
-        description: Some(
-            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. \
-             The file is written to the machine running this server (not the client); output_path is an \
-             absolute path on that host. Returns the output file path. No active campaign required."
-                .to_string(),
+/// All mapgen-family tools.
+pub fn registered_tools() -> Vec<RegisteredTool> {
+    vec![
+        tool!(
+            "generate_map",
+            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. The file is written to the machine running this server (not the client); output_path is an absolute path on that host. Returns the output file path. No active campaign required.",
+            GenerateMapArgs,
+            generate_map
         ),
-        input_schema: ToolInputSchema::new(
-            vec![],
-            create_properties(vec![
-                ("config_yaml", "string", "YAML configuration for map generation. Mutually exclusive with preset."),
-                ("preset", "string", "Biome preset name. Call list_map_presets for the current set (includes forest, grassland, cave, desert, lake, arctic, swamp, and island variants). Mutually exclusive with config_yaml."),
-                ("output_path", "string", "Absolute path for the output .dungeondraft_map file (required)"),
-                ("seed", "integer", "Random seed override for reproducible generation"),
-            ]),
-            None,
+        tool!(
+            "list_map_presets",
+            "List available biome presets for procedural map generation",
+            ListMapPresetsArgs,
+            list_map_presets
         ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+        tool!(
+            "validate_map_config",
+            "Validate a YAML map generation config without generating. Returns validation errors if any.",
+            ValidateMapConfigArgs,
+            validate_map_config_tool_handler
+        ),
+    ]
+}
+
+// =============================================================================
+// Arguments
+// =============================================================================
+
+tool_args! {
+    pub struct GenerateMapArgs {
+        /// YAML configuration for map generation. Mutually exclusive with preset.
+        pub config_yaml: Option<String>,
+        /// Biome preset name. Call list_map_presets for the current set (includes forest, grassland, cave, desert, lake, arctic, swamp, and island variants). Mutually exclusive with config_yaml.
+        pub preset: Option<String>,
+        /// Absolute path for the output .dungeondraft_map file (required)
+        pub output_path: Option<String>,
+        /// Random seed override for reproducible generation
+        pub seed: Option<i64>,
     }
 }
 
-pub fn list_map_presets_tool() -> Tool {
-    Tool {
-        name: "list_map_presets".to_string(),
-        description: Some(
-            "List available biome presets for procedural map generation".to_string(),
-        ),
-        input_schema: ToolInputSchema::new(vec![], None, None),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
-    }
+tool_args! {
+    pub struct ListMapPresetsArgs {}
 }
 
-pub fn validate_map_config_tool() -> Tool {
-    Tool {
-        name: "validate_map_config".to_string(),
-        description: Some(
-            "Validate a YAML map generation config without generating. Returns validation errors if any."
-                .to_string(),
-        ),
-        input_schema: ToolInputSchema::new(
-            vec!["config_yaml".to_string()],
-            create_properties(vec![
-                ("config_yaml", "string", "YAML configuration to validate"),
-            ]),
-            None,
-        ),
-        title: None,
-        annotations: None,
-        icons: vec![],
-        execution: None,
-        output_schema: None,
-        meta: None,
+tool_args! {
+    pub struct ValidateMapConfigArgs {
+        /// YAML configuration to validate
+        pub config_yaml: String,
     }
 }
 
 // =============================================================================
-// Tool Implementations
+// Handlers
 // =============================================================================
 
-pub async fn generate_map(args: Value) -> Result<Value, McpError> {
-    let config_yaml = args.get("config_yaml").and_then(|v| v.as_str());
-    let preset_name = args.get("preset").and_then(|v| v.as_str());
+pub async fn generate_map(
+    _ctx: &Arc<McpContext>,
+    args: GenerateMapArgs,
+) -> Result<Value, McpError> {
+    // output_path is enforced here rather than in the schema's required list
+    // to preserve the published contract (schema declares no required fields).
     let output_path = args
-        .get("output_path")
-        .and_then(|v| v.as_str())
+        .output_path
+        .as_deref()
         .ok_or_else(|| McpError::InvalidArguments("output_path is required".to_string()))?;
-    let seed = args.get("seed").and_then(|v| v.as_u64());
 
-    let config = match (config_yaml, preset_name) {
+    let config = match (args.config_yaml.as_deref(), args.preset.as_deref()) {
         (Some(_), Some(_)) => {
             return Err(McpError::InvalidArguments(
                 "Provide either config_yaml or preset, not both".to_string(),
@@ -105,11 +94,8 @@ pub async fn generate_map(args: Value) -> Result<Value, McpError> {
                 "Provide either config_yaml or preset".to_string(),
             ));
         }
-        (Some(yaml), None) => {
-            serde_yaml::from_str::<MapConfig>(yaml).map_err(|e| {
-                McpError::InvalidArguments(format!("Invalid YAML config: {e}"))
-            })?
-        }
+        (Some(yaml), None) => serde_yaml::from_str::<MapConfig>(yaml)
+            .map_err(|e| McpError::InvalidArguments(format!("Invalid YAML config: {e}")))?,
         (None, Some(name)) => {
             biomes::get_preset(name)
                 .ok_or_else(|| {
@@ -139,16 +125,16 @@ pub async fn generate_map(args: Value) -> Result<Value, McpError> {
     }
 
     // Generate
-    let result = generate(&config, seed);
+    let result = generate(&config, args.seed.map(|s| s as u64));
 
     // Write output
-    let map_json = result.map.to_json().map_err(|e| {
-        McpError::Internal(format!("Failed to serialize map: {e}"))
-    })?;
+    let map_json = result
+        .map
+        .to_json()
+        .map_err(|e| McpError::Internal(format!("Failed to serialize map: {e}")))?;
 
-    std::fs::write(output_path, &map_json).map_err(|e| {
-        McpError::Internal(format!("Failed to write output file: {e}"))
-    })?;
+    std::fs::write(output_path, &map_json)
+        .map_err(|e| McpError::Internal(format!("Failed to write output file: {e}")))?;
 
     Ok(json!({
         "success": true,
@@ -162,7 +148,10 @@ pub async fn generate_map(args: Value) -> Result<Value, McpError> {
     }))
 }
 
-pub async fn list_map_presets(_args: Value) -> Result<Value, McpError> {
+pub async fn list_map_presets(
+    _ctx: &Arc<McpContext>,
+    _args: ListMapPresetsArgs,
+) -> Result<Value, McpError> {
     let presets: Vec<Value> = biomes::list_presets()
         .iter()
         .map(|p| {
@@ -177,13 +166,11 @@ pub async fn list_map_presets(_args: Value) -> Result<Value, McpError> {
     Ok(json!({ "presets": presets }))
 }
 
-pub async fn validate_map_config(args: Value) -> Result<Value, McpError> {
-    let config_yaml = args
-        .get("config_yaml")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::InvalidArguments("config_yaml is required".to_string()))?;
-
-    let config: MapConfig = match serde_yaml::from_str(config_yaml) {
+pub async fn validate_map_config_tool_handler(
+    _ctx: &Arc<McpContext>,
+    args: ValidateMapConfigArgs,
+) -> Result<Value, McpError> {
+    let config: MapConfig = match serde_yaml::from_str(&args.config_yaml) {
         Ok(c) => c,
         Err(e) => {
             return Ok(json!({
