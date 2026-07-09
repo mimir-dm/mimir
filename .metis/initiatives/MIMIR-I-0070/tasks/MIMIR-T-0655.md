@@ -4,14 +4,14 @@ level: task
 title: "Traps + POIs into MapStateService"
 short_code: "MIMIR-T-0655"
 created_at: 2026-07-08T11:59:13.999115+00:00
-updated_at: 2026-07-08T11:59:13.999115+00:00
+updated_at: 2026-07-09T02:53:14.808789+00:00
 parent: MIMIR-I-0070
-blocked_by: ["MIMIR-T-0653"]
+blocked_by: [MIMIR-T-0653]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -30,6 +30,8 @@ Hoist traps (`traps.rs`, 259 lines) and POIs (`pois.rs`, 211 lines) into
 `MapStateService`. The two subsystems have identical shapes (CRUD + move +
 visibility toggle, plus the trap trigger/reset lifecycle) — one mechanical task
 once the pilot pattern exists.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 

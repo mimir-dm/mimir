@@ -50,4 +50,14 @@ presets.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-09: COMPLETE on `feat/map-state-service`. All nine light ops in
+  MapStateService; `CreateLightInput` takes grid coordinates — pixel→grid
+  conversion and LightSourceResponse transform stay command-side (they need the
+  map's UVTT grid size via app_dir; genuine presentation). Finding: torch/
+  lantern presets were ALREADY mimir-core model constructors
+  (NewLightSource::torch/lantern) — the service now owns their use and tests
+  pin 20/40ft and 30/60ft. Drift note (not fixed, recorded): the
+  CreateLightSourceRequest command arg `light_type` is accepted but never read
+  — same class as the MCP drift finds; left as-is for wire compat. light.rs
+  313 → ~250 lines, zero business logic. Five new service tests; workspace
+  suite 1,504 green.
