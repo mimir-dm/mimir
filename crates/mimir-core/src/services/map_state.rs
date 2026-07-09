@@ -11,9 +11,50 @@ use diesel::SqliteConnection;
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
-use crate::models::campaign::{FogRevealedArea, FogState, UpdateMap, NewFogRevealedArea};
+use crate::models::campaign::{
+    FogRevealedArea, FogState, LightSource, NewFogRevealedArea, NewLightSource, UpdateLightSource,
+    UpdateMap,
+};
 use crate::services::{ServiceError, ServiceResult};
 use crate::utils::now_rfc3339;
+
+/// Input for creating a light source. Coordinates are grid units — any
+/// pixel-to-grid conversion is a presentation concern of the caller.
+#[derive(Debug, Clone)]
+pub struct CreateLightInput {
+    /// Map to place the light on.
+    pub map_id: String,
+    /// Grid X coordinate.
+    pub grid_x: i32,
+    /// Grid Y coordinate.
+    pub grid_y: i32,
+    /// Bright light radius in feet.
+    pub bright_radius_ft: i32,
+    /// Dim light radius in feet.
+    pub dim_radius_ft: i32,
+    /// Display name.
+    pub name: String,
+    /// Optional color (hex).
+    pub color: Option<String>,
+    /// Whether the light starts lit.
+    pub is_active: bool,
+}
+
+/// Input for updating a light source. Outer `None` = leave unchanged;
+/// `Some(None)` on the double-option fields clears the value.
+#[derive(Debug, Clone, Default)]
+pub struct UpdateLightInput {
+    /// New name (Some(None) clears).
+    pub name: Option<Option<String>>,
+    /// New bright radius in feet.
+    pub bright_radius_ft: Option<i32>,
+    /// New dim radius in feet.
+    pub dim_radius_ft: Option<i32>,
+    /// New color (Some(None) clears).
+    pub color: Option<Option<String>>,
+    /// New active state.
+    pub is_active: Option<bool>,
+}
 
 /// Service for map table-state: fog, lights, traps, POIs.
 pub struct MapStateService<'a> {
@@ -125,6 +166,122 @@ impl<'a> MapStateService<'a> {
     /// of areas removed.
     pub fn reset_fog(&mut self, map_id: &str) -> ServiceResult<i32> {
         let count = dal::delete_all_fog_revealed_areas(self.conn, map_id)?;
+        Ok(count as i32)
+    }
+
+    // -- Light sources ----------------------------------------------------------
+
+    /// List all light sources for a map.
+    pub fn list_lights(&mut self, map_id: &str) -> ServiceResult<Vec<LightSource>> {
+        Ok(dal::list_light_sources(self.conn, map_id)?)
+    }
+
+    /// Get a light source by id.
+    fn get_light(&mut self, id: &str) -> ServiceResult<LightSource> {
+        dal::get_light_source(self.conn, id).map_err(|_| ServiceError::NotFound {
+            entity_type: "LightSource".to_string(),
+            id: id.to_string(),
+        })
+    }
+
+    /// Create a light source.
+    pub fn create_light(&mut self, input: CreateLightInput) -> ServiceResult<LightSource> {
+        let id = Uuid::new_v4().to_string();
+
+        let mut light = NewLightSource::new(
+            &id,
+            &input.map_id,
+            input.grid_x,
+            input.grid_y,
+            input.bright_radius_ft,
+            input.dim_radius_ft,
+        )
+        .with_name(&input.name);
+
+        if let Some(ref color) = input.color {
+            light = light.with_color(color);
+        }
+        if !input.is_active {
+            light = light.inactive();
+        }
+
+        dal::insert_light_source(self.conn, &light)?;
+        self.get_light(&id)
+    }
+
+    /// Create a torch (20ft bright, 40ft dim).
+    pub fn create_torch(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource> {
+        let id = Uuid::new_v4().to_string();
+        let light = NewLightSource::torch(&id, map_id, x, y);
+        dal::insert_light_source(self.conn, &light)?;
+        self.get_light(&id)
+    }
+
+    /// Create a lantern (30ft bright, 60ft dim).
+    pub fn create_lantern(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource> {
+        let id = Uuid::new_v4().to_string();
+        let light = NewLightSource::lantern(&id, map_id, x, y);
+        dal::insert_light_source(self.conn, &light)?;
+        self.get_light(&id)
+    }
+
+    /// Toggle a light on/off, returning the updated light.
+    pub fn toggle_light(&mut self, id: &str) -> ServiceResult<LightSource> {
+        let light = self.get_light(id)?;
+
+        let now = now_rfc3339();
+        let update = if light.is_active() {
+            UpdateLightSource::turn_off(&now)
+        } else {
+            UpdateLightSource::turn_on(&now)
+        };
+        dal::update_light_source(self.conn, id, &update)?;
+
+        self.get_light(id)
+    }
+
+    /// Update a light source's properties.
+    pub fn update_light(
+        &mut self,
+        id: &str,
+        input: UpdateLightInput,
+    ) -> ServiceResult<LightSource> {
+        let now = now_rfc3339();
+
+        let name: Option<Option<&str>> = input.name.as_ref().map(|inner| inner.as_deref());
+        let color: Option<Option<&str>> = input.color.as_ref().map(|inner| inner.as_deref());
+
+        let update = UpdateLightSource {
+            grid_x: None,
+            grid_y: None,
+            name,
+            bright_radius: input.bright_radius_ft,
+            dim_radius: input.dim_radius_ft,
+            color,
+            active: input.is_active.map(|a| if a { 1 } else { 0 }),
+            updated_at: Some(&now),
+        };
+        dal::update_light_source(self.conn, id, &update)?;
+
+        self.get_light(id)
+    }
+
+    /// Move a light source to a new grid position.
+    pub fn move_light(&mut self, id: &str, x: i32, y: i32) -> ServiceResult<LightSource> {
+        let now = now_rfc3339();
+        dal::update_light_source(self.conn, id, &UpdateLightSource::set_position(x, y, &now))?;
+        self.get_light(id)
+    }
+
+    /// Delete a light source.
+    pub fn delete_light(&mut self, id: &str) -> ServiceResult<()> {
+        dal::delete_light_source(self.conn, id)?;
+        Ok(())
+    }
+
+    /// Delete all light sources on a map. Returns the number removed.
+    pub fn delete_all_lights(&mut self, map_id: &str) -> ServiceResult<i32> {
+        let count = dal::delete_all_light_sources(self.conn, map_id)?;
         Ok(count as i32)
     }
 }
@@ -245,6 +402,112 @@ mod tests {
         let areas = svc.fog_state(&map_id).unwrap().revealed_areas;
         assert_eq!(areas.len(), 1);
         assert_eq!(areas[0].id, keep.id);
+    }
+
+    #[test]
+    fn torch_and_lantern_presets_are_pinned() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        let torch = svc.create_torch(&map_id, 3, 4).unwrap();
+        assert_eq!(torch.bright_radius, 20);
+        assert_eq!(torch.dim_radius, 40);
+        assert_eq!((torch.grid_x, torch.grid_y), (3, 4));
+        assert!(torch.is_active());
+
+        let lantern = svc.create_lantern(&map_id, 5, 6).unwrap();
+        assert_eq!(lantern.bright_radius, 30);
+        assert_eq!(lantern.dim_radius, 60);
+    }
+
+    #[test]
+    fn light_toggle_round_trip() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        let light = svc
+            .create_light(CreateLightInput {
+                map_id: map_id.clone(),
+                grid_x: 1,
+                grid_y: 1,
+                bright_radius_ft: 15,
+                dim_radius_ft: 30,
+                name: "Candle".to_string(),
+                color: Some("#FFAA00".to_string()),
+                is_active: true,
+            })
+            .unwrap();
+        assert!(light.is_active());
+
+        let off = svc.toggle_light(&light.id).unwrap();
+        assert!(!off.is_active());
+        let on = svc.toggle_light(&light.id).unwrap();
+        assert!(on.is_active());
+    }
+
+    #[test]
+    fn light_update_and_move() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        let light = svc
+            .create_light(CreateLightInput {
+                map_id: map_id.clone(),
+                grid_x: 0,
+                grid_y: 0,
+                bright_radius_ft: 10,
+                dim_radius_ft: 20,
+                name: "Brazier".to_string(),
+                color: None,
+                is_active: false,
+            })
+            .unwrap();
+        assert!(!light.is_active());
+
+        let updated = svc
+            .update_light(
+                &light.id,
+                UpdateLightInput {
+                    bright_radius_ft: Some(25),
+                    is_active: Some(true),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(updated.bright_radius, 25);
+        assert_eq!(updated.dim_radius, 20, "unspecified field unchanged");
+        assert!(updated.is_active());
+
+        let moved = svc.move_light(&light.id, 7, 9).unwrap();
+        assert_eq!((moved.grid_x, moved.grid_y), (7, 9));
+    }
+
+    #[test]
+    fn delete_all_lights_reports_count() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        svc.create_torch(&map_id, 0, 0).unwrap();
+        svc.create_lantern(&map_id, 1, 1).unwrap();
+        assert_eq!(svc.list_lights(&map_id).unwrap().len(), 2);
+
+        assert_eq!(svc.delete_all_lights(&map_id).unwrap(), 2);
+        assert!(svc.list_lights(&map_id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn toggle_missing_light_is_not_found() {
+        let mut conn = test_connection();
+        let mut svc = MapStateService::new(&mut conn);
+
+        assert!(matches!(
+            svc.toggle_light("no-such-light"),
+            Err(ServiceError::NotFound { .. })
+        ));
     }
 
     #[test]

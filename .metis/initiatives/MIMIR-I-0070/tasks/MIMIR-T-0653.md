@@ -49,4 +49,14 @@ other three tasks.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-08: COMPLETE on `feat/map-state-service` (stacked on
+  feat/mcp-tool-registry — PR #8 should merge first). MapStateService created
+  with all 9 fog ops; fog.rs is pure wrappers (251 → ~160 lines). Six service
+  unit tests (toggle round-trip, circle→bounding-box, persistence, reset count,
+  single delete, missing-map NotFound). Full workspace suite: 1,499 tests green.
+  Deviations noted: (1) FogState turned out to already be a mimir-core model,
+  so the service returns it directly — cleaner than the planned command-side
+  assembly, wire-identical; (2) not-found error TEXT for get_fog_state/
+  toggle_fog changed to ServiceError rendering (error shape unchanged, no Vue
+  test edits needed); (3) enable/disable stay permissive on missing map ids
+  (0-row update, no error) matching original behavior.

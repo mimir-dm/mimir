@@ -1,22 +1,26 @@
 //! Light Source Commands
 //!
-//! Commands for managing light sources on maps.
+//! Thin Tauri wrappers over `MapStateService`. The pixel↔grid coordinate
+//! conversion and `LightSourceResponse` transform are presentation concerns
+//! (they need the map's UVTT grid size) and stay here.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{NewLightSource, UpdateLightSource};
-use mimir_core::services::MapService;
-use mimir_core::utils::now_rfc3339;
+use mimir_core::services::{CreateLightInput, MapService, MapStateService, UpdateLightInput};
 use serde::Deserialize;
 use tauri::State;
-use uuid::Uuid;
 
 use super::{get_map_grid_size_for_lights, transform_light_source, LightSourceResponse};
 use crate::commands::ApiResponse;
 use crate::state::AppState;
 
-// =============================================================================
-// Light Source Commands
-// =============================================================================
+/// Look up the grid size for a map (presentation: pixels per grid unit).
+fn grid_size_px(
+    db: &mut diesel::SqliteConnection,
+    app_dir: &std::path::Path,
+    map_id: &str,
+) -> i32 {
+    let mut service = MapService::new(db, app_dir);
+    get_map_grid_size_for_lights(&mut service, map_id)
+}
 
 /// List all light sources for a map.
 #[tauri::command]
@@ -26,18 +30,15 @@ pub fn list_light_sources(state: State<'_, AppState>, map_id: String) -> ApiResp
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get grid size for coordinate conversion
-    let mut service = MapService::new(&mut db, &state.paths.app_dir);
-    let grid_size_px = get_map_grid_size_for_lights(&mut service, &map_id);
+    let px = grid_size_px(&mut db, &state.paths.app_dir, &map_id);
 
-    match dal::list_light_sources(&mut db, &map_id) {
-        Ok(lights) => {
-            let responses: Vec<LightSourceResponse> = lights
+    match MapStateService::new(&mut db).list_lights(&map_id) {
+        Ok(lights) => ApiResponse::ok(
+            lights
                 .into_iter()
-                .map(|l| transform_light_source(l, grid_size_px))
-                .collect();
-            ApiResponse::ok(responses)
-        }
+                .map(|l| transform_light_source(l, px))
+                .collect(),
+        ),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -56,18 +57,6 @@ pub struct CreateLightSourceRequest {
     pub is_active: bool,
 }
 
-/// Helper to get a light source and return it as a response with proper coordinates.
-fn get_light_response(
-    db: &mut diesel::SqliteConnection,
-    app_dir: &std::path::Path,
-    light_id: &str,
-) -> Result<LightSourceResponse, String> {
-    let ls = dal::get_light_source(db, light_id).map_err(|e| e.to_string())?;
-    let mut service = MapService::new(db, app_dir);
-    let grid_size_px = get_map_grid_size_for_lights(&mut service, &ls.map_id);
-    Ok(transform_light_source(ls, grid_size_px))
-}
-
 /// Create a new light source.
 #[tauri::command]
 pub fn create_light_source(
@@ -79,43 +68,25 @@ pub fn create_light_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get grid size to convert pixel coordinates to grid coordinates
-    let mut service = MapService::new(&mut db, &state.paths.app_dir);
-    let grid_size_px = get_map_grid_size_for_lights(&mut service, &request.map_id);
+    // Convert pixel coordinates to grid coordinates (presentation concern)
+    let px = grid_size_px(&mut db, &state.paths.app_dir, &request.map_id);
+    let grid_x = (request.x / px as f64) as i32;
+    let grid_y = (request.y / px as f64) as i32;
 
-    // Convert pixel coordinates to grid coordinates
-    let grid_x = (request.x / grid_size_px as f64) as i32;
-    let grid_y = (request.y / grid_size_px as f64) as i32;
-
-    let id = Uuid::new_v4().to_string();
-    let name_owned = request.name.clone();
-    let color_owned = request.color.clone();
-
-    let mut light = NewLightSource::new(
-        &id,
-        &request.map_id,
+    let input = CreateLightInput {
+        map_id: request.map_id,
         grid_x,
         grid_y,
-        request.bright_radius_ft,
-        request.dim_radius_ft,
-    )
-    .with_name(&name_owned);
+        bright_radius_ft: request.bright_radius_ft,
+        dim_radius_ft: request.dim_radius_ft,
+        name: request.name,
+        color: request.color,
+        is_active: request.is_active,
+    };
 
-    if let Some(ref color) = color_owned {
-        light = light.with_color(color);
-    }
-
-    if !request.is_active {
-        light = light.inactive();
-    }
-
-    if let Err(e) = dal::insert_light_source(&mut db, &light) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match get_light_response(&mut db, &state.paths.app_dir, &id) {
-        Ok(response) => ApiResponse::ok(response),
-        Err(e) => ApiResponse::err(e),
+    match MapStateService::new(&mut db).create_light(input) {
+        Ok(light) => ApiResponse::ok(transform_light_source(light, px)),
+        Err(e) => ApiResponse::err(e.to_string()),
     }
 }
 
@@ -127,26 +98,12 @@ pub fn toggle_light_source(state: State<'_, AppState>, id: String) -> ApiRespons
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get current state
-    let light = match dal::get_light_source(&mut db, &id) {
-        Ok(l) => l,
-        Err(e) => return ApiResponse::err(format!("Light source not found: {}", e)),
-    };
-
-    let now = now_rfc3339();
-    let update = if light.is_active() {
-        UpdateLightSource::turn_off(&now)
-    } else {
-        UpdateLightSource::turn_on(&now)
-    };
-
-    if let Err(e) = dal::update_light_source(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match get_light_response(&mut db, &state.paths.app_dir, &id) {
-        Ok(response) => ApiResponse::ok(response),
-        Err(e) => ApiResponse::err(e),
+    match MapStateService::new(&mut db).toggle_light(&id) {
+        Ok(light) => {
+            let px = grid_size_px(&mut db, &state.paths.app_dir, &light.map_id);
+            ApiResponse::ok(transform_light_source(light, px))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
     }
 }
 
@@ -158,8 +115,8 @@ pub fn delete_light_source(state: State<'_, AppState>, id: String) -> ApiRespons
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_light_source(&mut db, &id) {
-        Ok(_) => ApiResponse::ok(()),
+    match MapStateService::new(&mut db).delete_light(&id) {
+        Ok(()) => ApiResponse::ok(()),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -172,8 +129,8 @@ pub fn delete_all_light_sources(state: State<'_, AppState>, map_id: String) -> A
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_all_light_sources(&mut db, &map_id) {
-        Ok(count) => ApiResponse::ok(count as i32),
+    match MapStateService::new(&mut db).delete_all_lights(&map_id) {
+        Ok(count) => ApiResponse::ok(count),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -191,16 +148,12 @@ pub fn create_torch(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let light = NewLightSource::torch(&id, &map_id, x, y);
-
-    if let Err(e) = dal::insert_light_source(&mut db, &light) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match get_light_response(&mut db, &state.paths.app_dir, &id) {
-        Ok(response) => ApiResponse::ok(response),
-        Err(e) => ApiResponse::err(e),
+    match MapStateService::new(&mut db).create_torch(&map_id, x, y) {
+        Ok(light) => {
+            let px = grid_size_px(&mut db, &state.paths.app_dir, &light.map_id);
+            ApiResponse::ok(transform_light_source(light, px))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
     }
 }
 
@@ -217,16 +170,12 @@ pub fn create_lantern(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let light = NewLightSource::lantern(&id, &map_id, x, y);
-
-    if let Err(e) = dal::insert_light_source(&mut db, &light) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match get_light_response(&mut db, &state.paths.app_dir, &id) {
-        Ok(response) => ApiResponse::ok(response),
-        Err(e) => ApiResponse::err(e),
+    match MapStateService::new(&mut db).create_lantern(&map_id, x, y) {
+        Ok(light) => {
+            let px = grid_size_px(&mut db, &state.paths.app_dir, &light.map_id);
+            ApiResponse::ok(transform_light_source(light, px))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
     }
 }
 
@@ -252,36 +201,20 @@ pub fn update_light_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-
-    // Build update struct based on what fields are provided
-    let name: Option<Option<&str>> = match &request.name {
-        Some(inner) => Some(inner.as_deref()),
-        None => None,
-    };
-    let color: Option<Option<&str>> = match &request.color {
-        Some(inner) => Some(inner.as_deref()),
-        None => None,
+    let input = UpdateLightInput {
+        name: request.name,
+        bright_radius_ft: request.bright_radius_ft,
+        dim_radius_ft: request.dim_radius_ft,
+        color: request.color,
+        is_active: request.is_active,
     };
 
-    let update = UpdateLightSource {
-        grid_x: None,
-        grid_y: None,
-        name,
-        bright_radius: request.bright_radius_ft,
-        dim_radius: request.dim_radius_ft,
-        color,
-        active: request.is_active.map(|a| if a { 1 } else { 0 }),
-        updated_at: Some(&now),
-    };
-
-    if let Err(e) = dal::update_light_source(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match get_light_response(&mut db, &state.paths.app_dir, &id) {
-        Ok(response) => ApiResponse::ok(response),
-        Err(e) => ApiResponse::err(e),
+    match MapStateService::new(&mut db).update_light(&id, input) {
+        Ok(light) => {
+            let px = grid_size_px(&mut db, &state.paths.app_dir, &light.map_id);
+            ApiResponse::ok(transform_light_source(light, px))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
     }
 }
 
@@ -298,15 +231,11 @@ pub fn move_light_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateLightSource::set_position(x, y, &now);
-
-    if let Err(e) = dal::update_light_source(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match get_light_response(&mut db, &state.paths.app_dir, &id) {
-        Ok(response) => ApiResponse::ok(response),
-        Err(e) => ApiResponse::err(e),
+    match MapStateService::new(&mut db).move_light(&id, x, y) {
+        Ok(light) => {
+            let px = grid_size_px(&mut db, &state.paths.app_dir, &light.map_id);
+            ApiResponse::ok(transform_light_source(light, px))
+        }
+        Err(e) => ApiResponse::err(e.to_string()),
     }
 }

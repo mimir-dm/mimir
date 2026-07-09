@@ -4,14 +4,14 @@ level: task
 title: "Light sources into MapStateService (presets included)"
 short_code: "MIMIR-T-0654"
 created_at: 2026-07-08T11:59:13.055907+00:00
-updated_at: 2026-07-08T11:59:13.055907+00:00
+updated_at: 2026-07-09T01:30:55.785509+00:00
 parent: MIMIR-I-0070
-blocked_by: ["MIMIR-T-0653"]
+blocked_by: [MIMIR-T-0653]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -29,6 +29,8 @@ initiative_id: MIMIR-I-0070
 Hoist the light-source subsystem from `crates/mimir/src/commands/map/light.rs`
 (313 lines, 10 commands) into `MapStateService`, including the torch/lantern
 presets.
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
