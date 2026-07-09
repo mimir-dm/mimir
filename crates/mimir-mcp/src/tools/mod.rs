@@ -9,5 +9,6 @@ pub mod character;
 pub mod document;
 pub mod homebrew;
 pub mod map;
+pub mod map_state;
 pub mod mapgen;
 pub mod module;

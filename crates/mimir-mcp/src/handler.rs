@@ -893,6 +893,257 @@ mod tests {
         assert!(matches!(err, McpError::InvalidArguments(_)));
     }
 
+    // -- Map authoring (traps / POIs / lights) ----------------------------------
+
+    /// Helper: insert campaign + asset + map rows directly (create_map needs a
+    /// real UVTT file on disk; authoring tests only need the rows).
+    fn setup_map_fixture(ctx: &Arc<McpContext>) -> String {
+        use mimir_core::dal::campaign as dal;
+        use mimir_core::models::campaign::{NewCampaign, NewCampaignAsset, NewMap};
+
+        let mut db = ctx.connect().expect("test db");
+
+        let campaign_id = uuid::Uuid::new_v4().to_string();
+        dal::insert_campaign(&mut db, &NewCampaign::new(&campaign_id, "Map Fixture"))
+            .expect("campaign");
+
+        let asset_id = uuid::Uuid::new_v4().to_string();
+        dal::insert_campaign_asset(
+            &mut db,
+            &NewCampaignAsset {
+                id: &asset_id,
+                campaign_id: Some(&campaign_id),
+                module_id: None,
+                filename: "fixture.uvtt",
+                description: None,
+                mime_type: "application/json",
+                blob_path: "assets/fixture.uvtt",
+                file_size: None,
+            },
+        )
+        .expect("asset");
+
+        let map_id = uuid::Uuid::new_v4().to_string();
+        dal::insert_map(
+            &mut db,
+            &NewMap {
+                id: &map_id,
+                campaign_id: &campaign_id,
+                module_id: None,
+                name: "Fixture Map",
+                description: None,
+                sort_order: 0,
+                uvtt_asset_id: &asset_id,
+                lighting_mode: "bright",
+                fog_enabled: 0,
+            },
+        )
+        .expect("map");
+
+        map_id
+    }
+
+    #[tokio::test]
+    async fn trap_authoring_lifecycle() {
+        let ctx = test_ctx();
+        let handler = MimirHandler::with_context(ctx.clone());
+        let map_id = setup_map_fixture(&ctx);
+
+        // Place
+        let res = call_ok(
+            &handler,
+            "add_trap_to_map",
+            json!({
+                "map_id": map_id,
+                "name": "Pit Trap",
+                "grid_x": 4,
+                "grid_y": 5,
+                "description": "Concealed pit",
+                "dc": 15
+            }),
+        )
+        .await;
+        assert_eq!(res["status"], "added");
+        assert_eq!(res["trap"]["name"], "Pit Trap");
+        let trap_id = res["trap"]["id"].as_str().unwrap().to_string();
+
+        // List
+        let res = call_ok(&handler, "list_map_traps", json!({"map_id": map_id})).await;
+        assert_eq!(res["traps"].as_array().unwrap().len(), 1);
+
+        // Update fields + move in one call
+        let res = call_ok(
+            &handler,
+            "update_map_trap",
+            json!({"trap_id": trap_id, "dc": 13, "grid_x": 8, "grid_y": 2}),
+        )
+        .await;
+        assert_eq!(res["trap"]["dc"], 13);
+        assert_eq!(res["trap"]["grid_x"], 8);
+        assert_eq!(res["trap"]["grid_y"], 2);
+
+        // Move-only requires both coordinates
+        let err = call_err(
+            &handler,
+            "update_map_trap",
+            json!({"trap_id": trap_id, "grid_x": 1}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Remove
+        let res = call_ok(
+            &handler,
+            "remove_map_trap",
+            json!({"trap_id": trap_id}),
+        )
+        .await;
+        assert_eq!(res["status"], "removed");
+        let err = call_err(
+            &handler,
+            "remove_map_trap",
+            json!({"trap_id": trap_id}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+    }
+
+    #[tokio::test]
+    async fn poi_authoring_lifecycle() {
+        let ctx = test_ctx();
+        let handler = MimirHandler::with_context(ctx.clone());
+        let map_id = setup_map_fixture(&ctx);
+
+        let res = call_ok(
+            &handler,
+            "add_poi_to_map",
+            json!({
+                "map_id": map_id,
+                "name": "Hidden Shrine",
+                "grid_x": 12,
+                "grid_y": 3,
+                "icon": "shrine",
+                "color": "#88CCFF"
+            }),
+        )
+        .await;
+        let poi_id = res["poi"]["id"].as_str().unwrap().to_string();
+
+        let res = call_ok(
+            &handler,
+            "update_map_poi",
+            json!({"poi_id": poi_id, "name": "Shrine of Echoes"}),
+        )
+        .await;
+        assert_eq!(res["poi"]["name"], "Shrine of Echoes");
+        assert_eq!(res["poi"]["icon"], "shrine");
+
+        let res = call_ok(&handler, "list_map_pois", json!({"map_id": map_id})).await;
+        assert_eq!(res["pois"].as_array().unwrap().len(), 1);
+
+        let res = call_ok(&handler, "remove_map_poi", json!({"poi_id": poi_id})).await;
+        assert_eq!(res["status"], "removed");
+    }
+
+    #[tokio::test]
+    async fn light_authoring_lifecycle_with_presets() {
+        let ctx = test_ctx();
+        let handler = MimirHandler::with_context(ctx.clone());
+        let map_id = setup_map_fixture(&ctx);
+
+        // Preset placement
+        let res = call_ok(
+            &handler,
+            "add_light_to_map",
+            json!({"map_id": map_id, "preset": "torch", "grid_x": 3, "grid_y": 4}),
+        )
+        .await;
+        assert_eq!(res["light"]["bright_radius_ft"], 20);
+        assert_eq!(res["light"]["dim_radius_ft"], 40);
+
+        // Custom placement
+        let res = call_ok(
+            &handler,
+            "add_light_to_map",
+            json!({
+                "map_id": map_id,
+                "grid_x": 1,
+                "grid_y": 1,
+                "name": "Brazier",
+                "bright_radius_ft": 15,
+                "dim_radius_ft": 30,
+                "color": "#FFAA00"
+            }),
+        )
+        .await;
+        let light_id = res["light"]["id"].as_str().unwrap().to_string();
+
+        // Custom placement without radii fails
+        let err = call_err(
+            &handler,
+            "add_light_to_map",
+            json!({"map_id": map_id, "grid_x": 0, "grid_y": 0, "name": "Nope"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Unknown preset fails
+        let err = call_err(
+            &handler,
+            "add_light_to_map",
+            json!({"map_id": map_id, "preset": "sun", "grid_x": 0, "grid_y": 0}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+
+        // Update + move
+        let res = call_ok(
+            &handler,
+            "update_map_light",
+            json!({"light_id": light_id, "bright_radius_ft": 25, "grid_x": 7, "grid_y": 9}),
+        )
+        .await;
+        assert_eq!(res["light"]["bright_radius_ft"], 25);
+        assert_eq!(res["light"]["grid_x"], 7);
+
+        let res = call_ok(&handler, "list_map_lights", json!({"map_id": map_id})).await;
+        assert_eq!(res["lights"].as_array().unwrap().len(), 2);
+
+        let res = call_ok(&handler, "remove_map_light", json!({"light_id": light_id})).await;
+        assert_eq!(res["status"], "removed");
+    }
+
+    #[tokio::test]
+    async fn play_state_operations_are_not_exposed() {
+        let handler = MimirHandler::with_context(test_ctx());
+
+        // The prep-not-play boundary (memory: feedback_agent_prep_not_play):
+        // live viewable-layer operations must not exist as MCP tools.
+        for forbidden in [
+            "trigger_map_trap",
+            "reset_map_trap",
+            "toggle_map_trap_visibility",
+            "toggle_map_poi_visibility",
+            "toggle_light_source",
+            "toggle_map_light",
+            "get_fog_state",
+            "toggle_fog",
+            "enable_fog",
+            "disable_fog",
+            "reveal_rect",
+            "reveal_circle",
+            "reveal_all",
+            "reset_fog",
+        ] {
+            let err = call_err(&handler, forbidden, json!({})).await;
+            assert!(
+                matches!(err, McpError::ToolNotFound(_)),
+                "play-state operation '{}' must not be exposed via MCP",
+                forbidden
+            );
+        }
+    }
+
     // -- Homebrew Monster CRUD ------------------------------------------------
 
     #[tokio::test]
