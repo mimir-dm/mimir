@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-07-08T11:50:00Z | 553 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-07-08T17:28:17Z | 554 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -565,6 +565,7 @@
 │   │   │   │   ├── document.rs
 │   │   │   │   ├── homebrew.rs
 │   │   │   │   ├── map.rs
+│   │   │   │   ├── map_state.rs
 │   │   │   │   ├── mod.rs
 │   │   │   │   ├── module.rs
 │   │   │   │   ├── source.rs
@@ -3133,18 +3134,18 @@
 
 #### crates/mimir/src/commands/map/fog.rs
 
-- pub `get_fog_state` function L21-44 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<FogState>` — Get the fog state for a map (enabled + revealed areas).
-- pub `toggle_fog` function L48-69 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<bool>` — Toggle fog of war on/off for a map.
-- pub `enable_fog` function L73-86 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>` — Enable fog of war for a map.
-- pub `disable_fog` function L90-103 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>` — Disable fog of war for a map.
-- pub `RevealRectRequest` struct L107-113 — `{ map_id: String, x: f64, y: f64, width: f64, height: f64 }` — Request for revealing a rectangular area.
-- pub `reveal_rect` function L117-144 — `( state: State<'_, AppState>, request: RevealRectRequest, ) -> ApiResponse<FogRe...` — Reveal a rectangular area on the map.
-- pub `RevealCircleRequest` struct L148-153 — `{ map_id: String, center_x: f64, center_y: f64, radius: f64 }` — Request for revealing a circular area.
-- pub `reveal_circle` function L157-183 — `( state: State<'_, AppState>, request: RevealCircleRequest, ) -> ApiResponse<Fog...` — Reveal a circular area on the map (stored as bounding box).
-- pub `RevealAllRequest` struct L187-191 — `{ map_id: String, width: f64, height: f64 }` — Request for revealing the entire map.
-- pub `reveal_all` function L195-222 — `( state: State<'_, AppState>, request: RevealAllRequest, ) -> ApiResponse<FogRev...` — Reveal the entire map.
-- pub `delete_revealed_area` function L226-236 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a revealed area.
-- pub `reset_fog` function L240-250 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32>` — Reset fog by clearing all revealed areas for a map.
+- pub `get_fog_state` function L16-23 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<FogState>` — Get the fog state for a map (enabled + revealed areas).
+- pub `toggle_fog` function L27-34 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<bool>` — Toggle fog of war on/off for a map.
+- pub `enable_fog` function L38-45 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>` — Enable fog of war for a map.
+- pub `disable_fog` function L49-56 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<()>` — Disable fog of war for a map.
+- pub `RevealRectRequest` struct L60-66 — `{ map_id: String, x: f64, y: f64, width: f64, height: f64 }` — Request for revealing a rectangular area.
+- pub `reveal_rect` function L70-86 — `( state: State<'_, AppState>, request: RevealRectRequest, ) -> ApiResponse<FogRe...` — Reveal a rectangular area on the map.
+- pub `RevealCircleRequest` struct L90-95 — `{ map_id: String, center_x: f64, center_y: f64, radius: f64 }` — Request for revealing a circular area.
+- pub `reveal_circle` function L99-114 — `( state: State<'_, AppState>, request: RevealCircleRequest, ) -> ApiResponse<Fog...` — Reveal a circular area on the map (stored as bounding box).
+- pub `RevealAllRequest` struct L118-122 — `{ map_id: String, width: f64, height: f64 }` — Request for revealing the entire map.
+- pub `reveal_all` function L126-140 — `( state: State<'_, AppState>, request: RevealAllRequest, ) -> ApiResponse<FogRev...` — Reveal the entire map.
+- pub `delete_revealed_area` function L144-151 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a revealed area.
+- pub `reset_fog` function L155-162 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32>` — Reset fog by clearing all revealed areas for a map.
 
 #### crates/mimir/src/commands/map/light.rs
 
@@ -7168,14 +7169,36 @@
 -  `test_auto_increment_sort_order` function L1006-1023 — `()` — with metadata in the database.
 -  `test_get_uvtt_asset` function L1026-1038 — `()` — with metadata in the database.
 
+#### crates/mimir-core/src/services/map_state.rs
+
+- pub `MapStateService` struct L19-21 — `{ conn: &'a mut SqliteConnection }` — Service for map table-state: fog, lights, traps, POIs.
+- pub `new` function L25-27 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new map state service.
+- pub `fog_state` function L32-45 — `(&mut self, map_id: &str) -> ServiceResult<FogState>` — Get the fog state for a map: enabled flag plus all revealed areas.
+- pub `enable_fog` function L48-52 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Enable fog of war for a map.
+- pub `disable_fog` function L55-59 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Disable fog of war for a map.
+- pub `toggle_fog` function L62-77 — `(&mut self, map_id: &str) -> ServiceResult<bool>` — Toggle fog of war for a map, returning the new enabled state.
+- pub `reveal_rect` function L80-92 — `( &mut self, map_id: &str, x: f64, y: f64, width: f64, height: f64, ) -> Service...` — Reveal a rectangular area on the map.
+- pub `reveal_circle` function L95-106 — `( &mut self, map_id: &str, center_x: f64, center_y: f64, radius: f64, ) -> Servi...` — Reveal a circular area on the map (stored as its bounding box).
+- pub `reveal_all` function L109-116 — `( &mut self, map_id: &str, width: f64, height: f64, ) -> ServiceResult<FogReveal...` — Reveal the entire map (one rect covering the full dimensions).
+- pub `delete_revealed_area` function L119-122 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a single revealed area.
+- pub `reset_fog` function L126-129 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Reset fog by clearing all revealed areas for a map.
+-  `tests` module L133-264 — `-` — never touches asset files.
+-  `setup_map` function L140-173 — `(conn: &mut SqliteConnection) -> String` — Create campaign + asset + map; returns the map id.
+-  `toggle_fog_round_trip` function L176-186 — `()` — never touches asset files.
+-  `enable_and_disable_fog` function L189-198 — `()` — never touches asset files.
+-  `reveal_shapes_persist_and_circle_becomes_bounding_box` function L201-219 — `()` — never touches asset files.
+-  `reset_fog_clears_all_areas_and_reports_count` function L222-232 — `()` — never touches asset files.
+-  `delete_single_revealed_area` function L235-248 — `()` — never touches asset files.
+-  `fog_state_for_missing_map_is_not_found` function L251-263 — `()` — never touches asset files.
+
 #### crates/mimir-core/src/services/mod.rs
 
 - pub `catalog` module L9 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
-- pub `DEFAULT_QUERY_LIMIT` variable L51 — `: i64` — Default query limit to prevent memory issues on large result sets.
-- pub `ServiceError` enum L57-78 — `NotFound | Validation | Database | Io` — Service layer error type.
-- pub `ServiceResult` type L81 — `= Result<T, ServiceError>` — Result type for service operations.
-- pub `not_found` function L85-90 — `(entity_type: impl Into<String>, id: impl Into<String>) -> Self` — Create a NotFound error.
-- pub `validation` function L93-95 — `(message: impl Into<String>) -> Self` — Create a Validation error.
+- pub `DEFAULT_QUERY_LIMIT` variable L53 — `: i64` — Default query limit to prevent memory issues on large result sets.
+- pub `ServiceError` enum L59-80 — `NotFound | Validation | Database | Io` — Service layer error type.
+- pub `ServiceResult` type L83 — `= Result<T, ServiceError>` — Result type for service operations.
+- pub `not_found` function L87-92 — `(entity_type: impl Into<String>, id: impl Into<String>) -> Self` — Create a NotFound error.
+- pub `validation` function L95-97 — `(message: impl Into<String>) -> Self` — Create a Validation error.
 -  `archive` module L6 — `-` — Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
 -  `asset` module L7 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `campaign` module L8 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
@@ -7183,15 +7206,16 @@
 -  `document` module L11 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `homebrew` module L12 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `map` module L13 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `module` module L14 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `source` module L15 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `token` module L16 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `ServiceError` type L83-96 — `= ServiceError` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `tests` module L99-127 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_not_found_error` function L103-106 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_validation_error` function L109-112 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_database_error_conversion` function L115-119 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_io_error_conversion` function L122-126 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `map_state` module L14 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `module` module L15 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `source` module L16 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `token` module L17 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `ServiceError` type L85-98 — `= ServiceError` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `tests` module L101-129 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_not_found_error` function L105-108 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_validation_error` function L111-114 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_database_error_conversion` function L117-121 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_io_error_conversion` function L124-128 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
 
 #### crates/mimir-core/src/services/module.rs
 
