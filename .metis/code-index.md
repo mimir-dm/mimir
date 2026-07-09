@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-07-09T01:41:05Z | 554 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-07-09T03:22:28Z | 555 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -630,6 +630,7 @@
 │   │   │       ├── document.rs
 │   │   │       ├── homebrew.rs
 │   │   │       ├── map.rs
+│   │   │       ├── map_state.rs
 │   │   │       ├── mapgen.rs
 │   │   │       ├── mod.rs
 │   │   │       └── module.rs
@@ -3181,29 +3182,29 @@
 
 #### crates/mimir/src/commands/map/pois.rs
 
-- pub `list_map_pois` function L21-31 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<MapPoi>>` — List all POIs for a map.
-- pub `get_map_poi` function L35-45 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi>` — Get a map POI by ID.
-- pub `CreateMapPoiRequest` struct L50-59 — `{ map_id: String, name: String, grid_x: i32, grid_y: i32, description: Option<St...` — Request for creating a new map POI.
-- pub `create_map_poi` function L63-96 — `( state: State<'_, AppState>, request: CreateMapPoiRequest, ) -> ApiResponse<Map...` — Create a new map POI.
-- pub `UpdateMapPoiRequest` struct L101-106 — `{ name: Option<String>, description: Option<String>, icon: Option<String>, color...` — Request for updating a map POI.
-- pub `update_map_poi` function L110-143 — `( state: State<'_, AppState>, id: String, request: UpdateMapPoiRequest, ) -> Api...` — Update a map POI.
-- pub `move_map_poi` function L147-169 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Move a map POI to a new position.
-- pub `toggle_map_poi_visibility` function L173-196 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi>` — Toggle POI visibility for players.
-- pub `delete_map_poi` function L200-210 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a map POI.
+- pub `list_map_pois` function L16-23 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<MapPoi>>` — List all POIs for a map.
+- pub `get_map_poi` function L27-34 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi>` — Get a map POI by ID.
+- pub `CreateMapPoiRequest` struct L39-48 — `{ map_id: String, name: String, grid_x: i32, grid_y: i32, description: Option<St...` — Request for creating a new map POI.
+- pub `create_map_poi` function L52-73 — `( state: State<'_, AppState>, request: CreateMapPoiRequest, ) -> ApiResponse<Map...` — Create a new map POI.
+- pub `UpdateMapPoiRequest` struct L78-83 — `{ name: Option<String>, description: Option<String>, icon: Option<String>, color...` — Request for updating a map POI.
+- pub `update_map_poi` function L87-105 — `( state: State<'_, AppState>, id: String, request: UpdateMapPoiRequest, ) -> Api...` — Update a map POI.
+- pub `move_map_poi` function L109-121 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Move a map POI to a new position.
+- pub `toggle_map_poi_visibility` function L125-132 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi>` — Toggle POI visibility for players.
+- pub `delete_map_poi` function L136-143 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a map POI.
 
 #### crates/mimir/src/commands/map/traps.rs
 
-- pub `list_map_traps` function L21-31 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<MapTrap>>` — List all traps for a map.
-- pub `get_map_trap` function L35-45 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Get a map trap by ID.
-- pub `CreateMapTrapRequest` struct L50-60 — `{ map_id: String, name: String, grid_x: i32, grid_y: i32, description: Option<St...` — Request for creating a new map trap.
-- pub `create_map_trap` function L64-100 — `( state: State<'_, AppState>, request: CreateMapTrapRequest, ) -> ApiResponse<Ma...` — Create a new map trap.
-- pub `UpdateMapTrapRequest` struct L105-111 — `{ name: Option<String>, description: Option<String>, trigger_description: Option...` — Request for updating a map trap.
-- pub `update_map_trap` function L115-149 — `( state: State<'_, AppState>, id: String, request: UpdateMapTrapRequest, ) -> Ap...` — Update a map trap.
-- pub `move_map_trap` function L153-175 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Move a map trap to a new position.
-- pub `toggle_map_trap_visibility` function L179-202 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Toggle trap visibility for players.
-- pub `trigger_map_trap` function L206-223 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Trigger a trap.
-- pub `reset_map_trap` function L227-244 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Reset (re-arm) a triggered trap.
-- pub `delete_map_trap` function L248-258 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a map trap.
+- pub `list_map_traps` function L16-23 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<MapTrap>>` — List all traps for a map.
+- pub `get_map_trap` function L27-34 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Get a map trap by ID.
+- pub `CreateMapTrapRequest` struct L39-49 — `{ map_id: String, name: String, grid_x: i32, grid_y: i32, description: Option<St...` — Request for creating a new map trap.
+- pub `create_map_trap` function L53-75 — `( state: State<'_, AppState>, request: CreateMapTrapRequest, ) -> ApiResponse<Ma...` — Create a new map trap.
+- pub `UpdateMapTrapRequest` struct L80-86 — `{ name: Option<String>, description: Option<String>, trigger_description: Option...` — Request for updating a map trap.
+- pub `update_map_trap` function L90-109 — `( state: State<'_, AppState>, id: String, request: UpdateMapTrapRequest, ) -> Ap...` — Update a map trap.
+- pub `move_map_trap` function L113-125 — `( state: State<'_, AppState>, id: String, grid_x: i32, grid_y: i32, ) -> ApiResp...` — Move a map trap to a new position.
+- pub `toggle_map_trap_visibility` function L129-136 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Toggle trap visibility for players.
+- pub `trigger_map_trap` function L140-147 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Trigger a trap.
+- pub `reset_map_trap` function L151-158 — `(state: State<'_, AppState>, id: String) -> ApiResponse<MapTrap>` — Reset (re-arm) a triggered trap.
+- pub `delete_map_trap` function L162-169 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a map trap.
 
 #### crates/mimir/src/commands/map/uvtt.rs
 
@@ -7173,49 +7174,76 @@
 
 - pub `CreateLightInput` struct L24-41 — `{ map_id: String, grid_x: i32, grid_y: i32, bright_radius_ft: i32, dim_radius_ft...` — Input for creating a light source.
 - pub `UpdateLightInput` struct L46-57 — `{ name: Option<Option<String>>, bright_radius_ft: Option<i32>, dim_radius_ft: Op...` — Input for updating a light source.
-- pub `MapStateService` struct L60-62 — `{ conn: &'a mut SqliteConnection }` — Service for map table-state: fog, lights, traps, POIs.
-- pub `new` function L66-68 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new map state service.
-- pub `fog_state` function L73-86 — `(&mut self, map_id: &str) -> ServiceResult<FogState>` — Get the fog state for a map: enabled flag plus all revealed areas.
-- pub `enable_fog` function L89-93 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Enable fog of war for a map.
-- pub `disable_fog` function L96-100 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Disable fog of war for a map.
-- pub `toggle_fog` function L103-118 — `(&mut self, map_id: &str) -> ServiceResult<bool>` — Toggle fog of war for a map, returning the new enabled state.
-- pub `reveal_rect` function L121-133 — `( &mut self, map_id: &str, x: f64, y: f64, width: f64, height: f64, ) -> Service...` — Reveal a rectangular area on the map.
-- pub `reveal_circle` function L136-147 — `( &mut self, map_id: &str, center_x: f64, center_y: f64, radius: f64, ) -> Servi...` — Reveal a circular area on the map (stored as its bounding box).
-- pub `reveal_all` function L150-157 — `( &mut self, map_id: &str, width: f64, height: f64, ) -> ServiceResult<FogReveal...` — Reveal the entire map (one rect covering the full dimensions).
-- pub `delete_revealed_area` function L160-163 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a single revealed area.
-- pub `reset_fog` function L167-170 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Reset fog by clearing all revealed areas for a map.
-- pub `list_lights` function L175-177 — `(&mut self, map_id: &str) -> ServiceResult<Vec<LightSource>>` — List all light sources for a map.
-- pub `create_light` function L188-210 — `(&mut self, input: CreateLightInput) -> ServiceResult<LightSource>` — Create a light source.
-- pub `create_torch` function L213-218 — `(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Create a torch (20ft bright, 40ft dim).
-- pub `create_lantern` function L221-226 — `(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Create a lantern (30ft bright, 60ft dim).
-- pub `toggle_light` function L229-241 — `(&mut self, id: &str) -> ServiceResult<LightSource>` — Toggle a light on/off, returning the updated light.
-- pub `update_light` function L244-267 — `( &mut self, id: &str, input: UpdateLightInput, ) -> ServiceResult<LightSource>` — Update a light source's properties.
-- pub `move_light` function L270-274 — `(&mut self, id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Move a light source to a new grid position.
-- pub `delete_light` function L277-280 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a light source.
-- pub `delete_all_lights` function L283-286 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Delete all light sources on a map.
--  `get_light` function L180-185 — `(&mut self, id: &str) -> ServiceResult<LightSource>` — Get a light source by id.
--  `tests` module L290-527 — `-` — never touches asset files.
--  `setup_map` function L297-330 — `(conn: &mut SqliteConnection) -> String` — Create campaign + asset + map; returns the map id.
--  `toggle_fog_round_trip` function L333-343 — `()` — never touches asset files.
--  `enable_and_disable_fog` function L346-355 — `()` — never touches asset files.
--  `reveal_shapes_persist_and_circle_becomes_bounding_box` function L358-376 — `()` — never touches asset files.
--  `reset_fog_clears_all_areas_and_reports_count` function L379-389 — `()` — never touches asset files.
--  `delete_single_revealed_area` function L392-405 — `()` — never touches asset files.
--  `torch_and_lantern_presets_are_pinned` function L408-422 — `()` — never touches asset files.
--  `light_toggle_round_trip` function L425-448 — `()` — never touches asset files.
--  `light_update_and_move` function L451-486 — `()` — never touches asset files.
--  `delete_all_lights_reports_count` function L489-500 — `()` — never touches asset files.
--  `toggle_missing_light_is_not_found` function L503-511 — `()` — never touches asset files.
--  `fog_state_for_missing_map_is_not_found` function L514-526 — `()` — never touches asset files.
+- pub `CreateTrapInput` struct L61-80 — `{ map_id: String, name: String, grid_x: i32, grid_y: i32, description: Option<St...` — Input for creating a map trap.
+- pub `UpdateTrapInput` struct L84-95 — `{ name: Option<String>, description: Option<String>, trigger_description: Option...` — Input for updating a map trap.
+- pub `CreatePoiInput` struct L99-116 — `{ map_id: String, name: String, grid_x: i32, grid_y: i32, description: Option<St...` — Input for creating a map POI.
+- pub `UpdatePoiInput` struct L120-129 — `{ name: Option<String>, description: Option<String>, icon: Option<String>, color...` — Input for updating a map POI.
+- pub `MapStateService` struct L132-134 — `{ conn: &'a mut SqliteConnection }` — Service for map table-state: fog, lights, traps, POIs.
+- pub `new` function L138-140 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new map state service.
+- pub `fog_state` function L145-158 — `(&mut self, map_id: &str) -> ServiceResult<FogState>` — Get the fog state for a map: enabled flag plus all revealed areas.
+- pub `enable_fog` function L161-165 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Enable fog of war for a map.
+- pub `disable_fog` function L168-172 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Disable fog of war for a map.
+- pub `toggle_fog` function L175-190 — `(&mut self, map_id: &str) -> ServiceResult<bool>` — Toggle fog of war for a map, returning the new enabled state.
+- pub `reveal_rect` function L193-205 — `( &mut self, map_id: &str, x: f64, y: f64, width: f64, height: f64, ) -> Service...` — Reveal a rectangular area on the map.
+- pub `reveal_circle` function L208-219 — `( &mut self, map_id: &str, center_x: f64, center_y: f64, radius: f64, ) -> Servi...` — Reveal a circular area on the map (stored as its bounding box).
+- pub `reveal_all` function L222-229 — `( &mut self, map_id: &str, width: f64, height: f64, ) -> ServiceResult<FogReveal...` — Reveal the entire map (one rect covering the full dimensions).
+- pub `delete_revealed_area` function L232-235 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a single revealed area.
+- pub `reset_fog` function L239-242 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Reset fog by clearing all revealed areas for a map.
+- pub `list_lights` function L247-249 — `(&mut self, map_id: &str) -> ServiceResult<Vec<LightSource>>` — List all light sources for a map.
+- pub `get_light` function L252-257 — `(&mut self, id: &str) -> ServiceResult<LightSource>` — Get a light source by id.
+- pub `create_light` function L260-282 — `(&mut self, input: CreateLightInput) -> ServiceResult<LightSource>` — Create a light source.
+- pub `create_torch` function L285-290 — `(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Create a torch (20ft bright, 40ft dim).
+- pub `create_lantern` function L293-298 — `(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Create a lantern (30ft bright, 60ft dim).
+- pub `toggle_light` function L301-313 — `(&mut self, id: &str) -> ServiceResult<LightSource>` — Toggle a light on/off, returning the updated light.
+- pub `update_light` function L316-339 — `( &mut self, id: &str, input: UpdateLightInput, ) -> ServiceResult<LightSource>` — Update a light source's properties.
+- pub `move_light` function L342-346 — `(&mut self, id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Move a light source to a new grid position.
+- pub `delete_light` function L349-352 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a light source.
+- pub `delete_all_lights` function L355-358 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Delete all light sources on a map.
+- pub `list_traps` function L363-365 — `(&mut self, map_id: &str) -> ServiceResult<Vec<MapTrap>>` — List all traps for a map.
+- pub `list_visible_traps` function L368-370 — `(&mut self, map_id: &str) -> ServiceResult<Vec<MapTrap>>` — List traps visible to players.
+- pub `list_armed_traps` function L373-375 — `(&mut self, map_id: &str) -> ServiceResult<Vec<MapTrap>>` — List armed (untriggered) traps.
+- pub `get_trap` function L378-383 — `(&mut self, id: &str) -> ServiceResult<MapTrap>` — Get a trap by id.
+- pub `create_trap` function L386-409 — `(&mut self, input: CreateTrapInput) -> ServiceResult<MapTrap>` — Create a trap.
+- pub `update_trap` function L412-428 — `(&mut self, id: &str, input: UpdateTrapInput) -> ServiceResult<MapTrap>` — Update a trap's authoring fields.
+- pub `move_trap` function L431-439 — `(&mut self, id: &str, grid_x: i32, grid_y: i32) -> ServiceResult<MapTrap>` — Move a trap to a new grid position.
+- pub `toggle_trap_visibility` function L442-451 — `(&mut self, id: &str) -> ServiceResult<MapTrap>` — Toggle a trap's player visibility.
+- pub `trigger_trap` function L454-458 — `(&mut self, id: &str) -> ServiceResult<MapTrap>` — Trigger a trap.
+- pub `reset_trap` function L461-465 — `(&mut self, id: &str) -> ServiceResult<MapTrap>` — Reset (re-arm) a triggered trap.
+- pub `delete_trap` function L468-471 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a trap.
+- pub `list_pois` function L476-478 — `(&mut self, map_id: &str) -> ServiceResult<Vec<MapPoi>>` — List all POIs for a map.
+- pub `list_visible_pois` function L481-483 — `(&mut self, map_id: &str) -> ServiceResult<Vec<MapPoi>>` — List POIs visible to players.
+- pub `get_poi` function L486-491 — `(&mut self, id: &str) -> ServiceResult<MapPoi>` — Get a POI by id.
+- pub `create_poi` function L494-513 — `(&mut self, input: CreatePoiInput) -> ServiceResult<MapPoi>` — Create a POI.
+- pub `update_poi` function L516-528 — `(&mut self, id: &str, input: UpdatePoiInput) -> ServiceResult<MapPoi>` — Update a POI's authoring fields.
+- pub `move_poi` function L531-539 — `(&mut self, id: &str, grid_x: i32, grid_y: i32) -> ServiceResult<MapPoi>` — Move a POI to a new grid position.
+- pub `toggle_poi_visibility` function L542-551 — `(&mut self, id: &str) -> ServiceResult<MapPoi>` — Toggle a POI's player visibility.
+- pub `delete_poi` function L554-557 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a POI.
+-  `tests` module L561-936 — `-` — never touches asset files.
+-  `setup_map` function L568-601 — `(conn: &mut SqliteConnection) -> String` — Create campaign + asset + map; returns the map id.
+-  `toggle_fog_round_trip` function L604-614 — `()` — never touches asset files.
+-  `enable_and_disable_fog` function L617-626 — `()` — never touches asset files.
+-  `reveal_shapes_persist_and_circle_becomes_bounding_box` function L629-647 — `()` — never touches asset files.
+-  `reset_fog_clears_all_areas_and_reports_count` function L650-660 — `()` — never touches asset files.
+-  `delete_single_revealed_area` function L663-676 — `()` — never touches asset files.
+-  `torch_and_lantern_presets_are_pinned` function L679-693 — `()` — never touches asset files.
+-  `light_toggle_round_trip` function L696-719 — `()` — never touches asset files.
+-  `light_update_and_move` function L722-757 — `()` — never touches asset files.
+-  `delete_all_lights_reports_count` function L760-771 — `()` — never touches asset files.
+-  `trap_lifecycle_create_trigger_reset` function L774-806 — `()` — never touches asset files.
+-  `trap_visibility_toggle_and_update` function L809-851 — `()` — never touches asset files.
+-  `poi_crud_and_visibility` function L854-894 — `()` — never touches asset files.
+-  `missing_trap_and_poi_are_not_found` function L897-909 — `()` — never touches asset files.
+-  `toggle_missing_light_is_not_found` function L912-920 — `()` — never touches asset files.
+-  `fog_state_for_missing_map_is_not_found` function L923-935 — `()` — never touches asset files.
 
 #### crates/mimir-core/src/services/mod.rs
 
 - pub `catalog` module L9 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
-- pub `DEFAULT_QUERY_LIMIT` variable L53 — `: i64` — Default query limit to prevent memory issues on large result sets.
-- pub `ServiceError` enum L59-80 — `NotFound | Validation | Database | Io` — Service layer error type.
-- pub `ServiceResult` type L83 — `= Result<T, ServiceError>` — Result type for service operations.
-- pub `not_found` function L87-92 — `(entity_type: impl Into<String>, id: impl Into<String>) -> Self` — Create a NotFound error.
-- pub `validation` function L95-97 — `(message: impl Into<String>) -> Self` — Create a Validation error.
+- pub `DEFAULT_QUERY_LIMIT` variable L56 — `: i64` — Default query limit to prevent memory issues on large result sets.
+- pub `ServiceError` enum L62-83 — `NotFound | Validation | Database | Io` — Service layer error type.
+- pub `ServiceResult` type L86 — `= Result<T, ServiceError>` — Result type for service operations.
+- pub `not_found` function L90-95 — `(entity_type: impl Into<String>, id: impl Into<String>) -> Self` — Create a NotFound error.
+- pub `validation` function L98-100 — `(message: impl Into<String>) -> Self` — Create a Validation error.
 -  `archive` module L6 — `-` — Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
 -  `asset` module L7 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `campaign` module L8 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
@@ -7227,12 +7255,12 @@
 -  `module` module L15 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `source` module L16 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
 -  `token` module L17 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `ServiceError` type L85-98 — `= ServiceError` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `tests` module L101-129 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_not_found_error` function L105-108 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_validation_error` function L111-114 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_database_error_conversion` function L117-121 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
--  `test_io_error_conversion` function L124-128 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `ServiceError` type L88-101 — `= ServiceError` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `tests` module L104-132 — `-` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_not_found_error` function L108-111 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_validation_error` function L114-117 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_database_error_conversion` function L120-124 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
+-  `test_io_error_conversion` function L127-131 — `()` — Services encapsulate validation, transactions, and orchestration of database operations.
 
 #### crates/mimir-core/src/services/module.rs
 
@@ -8806,7 +8834,7 @@
 -  `MimirHandler` type L58-108 — `impl ServerHandler for MimirHandler` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `handle_list_tools_request` function L59-70 — `( &self, _params: Option<PaginatedRequestParams>, _runtime: Arc<dyn McpServer>, ...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `handle_call_tool_request` function L72-107 — `( &self, params: CallToolRequestParams, _runtime: Arc<dyn McpServer>, ) -> Resul...` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `tests` module L111-1554 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `tests` module L111-1805 — `-` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `test_ctx` function L116-118 — `() -> Arc<McpContext>` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `no_duplicate_tool_names` function L125-136 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `all_tools_have_descriptions` function L139-148 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
@@ -8830,24 +8858,29 @@
 -  `add_and_remove_homebrew_monster` function L729-792 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `identical_add_increments_quantity_instead_of_duplicating` function L795-847 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 -  `add_monster_argument_validation` function L850-894 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_monster_crud_lifecycle` function L899-963 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_spell_crud_lifecycle` function L968-1024 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_item_crud_lifecycle` function L1029-1085 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_not_found_errors` function L1090-1106 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_name_and_data` function L1109-1132 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_get_update_delete_require_id` function L1135-1149 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `setup_character` function L1154-1162 — `(handler: &MimirHandler) -> String` — Helper: create a character in the active campaign, return its id.
--  `character_inventory_lifecycle` function L1165-1233 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `character_spells_lifecycle` function L1238-1303 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `level_up_character_adds_class_level` function L1306-1322 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `reorder_documents_swaps_sort_order` function L1327-1367 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `get_campaign_sources_returns_source_list` function L1372-1378 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `add_item_to_module_is_unimplemented_error` function L1383-1394 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `mapgen_presets_validate_and_generate` function L1399-1440 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `map_tools_reject_bad_input` function L1445-1465 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `campaign_archive_roundtrip` function L1470-1522 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_list_requires_active_campaign` function L1525-1537 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
--  `homebrew_create_requires_active_campaign` function L1540-1553 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_map_fixture` function L900-944 — `(ctx: &Arc<McpContext>) -> String` — Helper: insert campaign + asset + map rows directly (create_map needs a
+-  `trap_authoring_lifecycle` function L947-1009 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `poi_authoring_lifecycle` function L1012-1046 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `light_authoring_lifecycle_with_presets` function L1049-1114 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `play_state_operations_are_not_exposed` function L1117-1145 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_monster_crud_lifecycle` function L1150-1214 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_spell_crud_lifecycle` function L1219-1275 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_item_crud_lifecycle` function L1280-1336 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_not_found_errors` function L1341-1357 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_name_and_data` function L1360-1383 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_get_update_delete_require_id` function L1386-1400 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `setup_character` function L1405-1413 — `(handler: &MimirHandler) -> String` — Helper: create a character in the active campaign, return its id.
+-  `character_inventory_lifecycle` function L1416-1484 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `character_spells_lifecycle` function L1489-1554 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `level_up_character_adds_class_level` function L1557-1573 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `reorder_documents_swaps_sort_order` function L1578-1618 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `get_campaign_sources_returns_source_list` function L1623-1629 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `add_item_to_module_is_unimplemented_error` function L1634-1645 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `mapgen_presets_validate_and_generate` function L1650-1691 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `map_tools_reject_bad_input` function L1696-1716 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `campaign_archive_roundtrip` function L1721-1773 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_list_requires_active_campaign` function L1776-1788 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
+-  `homebrew_create_requires_active_campaign` function L1791-1804 — `()` — Implements the ServerHandler trait to route tool calls to appropriate handlers.
 
 #### crates/mimir-mcp/src/lib.rs
 
@@ -8860,7 +8893,7 @@
 
 #### crates/mimir-mcp/src/main.rs
 
--  `main` function L17-95 — `() -> anyhow::Result<()>` — Runs the MCP server over stdio for Claude Code integration.
+-  `main` function L17-100 — `() -> anyhow::Result<()>` — Runs the MCP server over stdio for Claude Code integration.
 
 #### crates/mimir-mcp/src/registry.rs
 
@@ -8870,8 +8903,8 @@
 - pub `ToolHandler` type L140 — `= for<'a> fn(&'a Arc<McpContext>, Value) -> HandlerFuture<'a>` — A registered tool handler: decodes raw args and runs the tool.
 - pub `RegisteredTool` struct L145-154 — `{ name: &'static str, description: &'static str, input_schema: fn() -> ToolInput...` — One tool: name, description, schema source, and handler — all from a
 - pub `to_tool` function L158-170 — `(&self) -> Tool` — Render as an MCP `Tool` for `list_tools`.
-- pub `all_tools` function L201-215 — `() -> &'static [RegisteredTool]` — All registered tools across migrated families.
-- pub `find` function L218-220 — `(name: &str) -> Option<&'static RegisteredTool>` — Look up a registered tool by name.
+- pub `all_tools` function L201-216 — `() -> &'static [RegisteredTool]` — All registered tools across migrated families.
+- pub `find` function L219-221 — `(name: &str) -> Option<&'static RegisteredTool>` — Look up a registered tool by name.
 -  `JSON_TYPE` variable L27 — `: &'static str` — JSON schema `type` value for this field.
 -  `REQUIRED` variable L29 — `: bool` — Whether the field appears in the schema's `required` list.
 -  `String` type L32-34 — `impl JsonArgType for String` — and falls back to the legacy match for families not yet moved.
@@ -8887,11 +8920,11 @@
 -  `RegisteredTool` type L156-171 — `= RegisteredTool` — and falls back to the legacy match for families not yet moved.
 -  `tool` macro L178-198 — `-` — Register one tool: name, description, arg struct, and handler path.
 -  `TOOLS` variable L202 — `: OnceLock<Vec<RegisteredTool>>` — and falls back to the legacy match for families not yet moved.
--  `tests` module L223-287 — `-` — and falls back to the legacy match for families not yet moved.
--  `schema_marks_non_option_fields_required` function L240-250 — `()` — and falls back to the legacy match for families not yet moved.
--  `schema_types_and_descriptions_come_from_fields` function L253-261 — `()` — and falls back to the legacy match for families not yet moved.
--  `empty_args_omit_properties` function L264-268 — `()` — and falls back to the legacy match for families not yet moved.
--  `deserialization_enforces_the_same_contract` function L271-286 — `()` — and falls back to the legacy match for families not yet moved.
+-  `tests` module L224-288 — `-` — and falls back to the legacy match for families not yet moved.
+-  `schema_marks_non_option_fields_required` function L241-251 — `()` — and falls back to the legacy match for families not yet moved.
+-  `schema_types_and_descriptions_come_from_fields` function L254-262 — `()` — and falls back to the legacy match for families not yet moved.
+-  `empty_args_omit_properties` function L265-269 — `()` — and falls back to the legacy match for families not yet moved.
+-  `deserialization_enforces_the_same_contract` function L272-287 — `()` — and falls back to the legacy match for families not yet moved.
 
 #### crates/mimir-mcp/src/response.rs
 
@@ -9004,6 +9037,26 @@
 -  `app_data_dir` function L174-179 — `(ctx: &Arc<McpContext>) -> std::path::PathBuf` — Get the app_data_dir from context (parent of assets_dir).
 -  `parse_lighting_mode` function L181-191 — `(s: &str) -> Result<LightingMode, McpError>` — `registered_tools()`.
 
+#### crates/mimir-mcp/src/tools/map_state.rs
+
+- pub `registered_tools` function L28-106 — `() -> Vec<RegisteredTool>` — All map-authoring tools (traps, POIs, lights — placement only).
+- pub `add_trap_to_map` function L322-344 — `( ctx: &Arc<McpContext>, args: AddTrapArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `list_map_traps` function L346-355 — `( ctx: &Arc<McpContext>, args: MapIdArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `update_map_trap` function L357-399 — `( ctx: &Arc<McpContext>, args: UpdateTrapArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `remove_map_trap` function L401-413 — `( ctx: &Arc<McpContext>, args: TrapIdArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `add_poi_to_map` function L419-440 — `( ctx: &Arc<McpContext>, args: AddPoiArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `list_map_pois` function L442-451 — `( ctx: &Arc<McpContext>, args: MapIdArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `update_map_poi` function L453-493 — `( ctx: &Arc<McpContext>, args: UpdatePoiArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `remove_map_poi` function L495-506 — `( ctx: &Arc<McpContext>, args: PoiIdArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `add_light_to_map` function L512-562 — `( ctx: &Arc<McpContext>, args: AddLightArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `list_map_lights` function L564-573 — `( ctx: &Arc<McpContext>, args: MapIdArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `update_map_light` function L575-619 — `( ctx: &Arc<McpContext>, args: UpdateLightArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+- pub `remove_map_light` function L621-635 — `( ctx: &Arc<McpContext>, args: LightIdArgs, ) -> Result<Value, McpError>` — here and remain DM-only in the desktop UI.
+-  `trap_to_json` function L264-276 — `(t: &MapTrap) -> Value` — here and remain DM-only in the desktop UI.
+-  `poi_to_json` function L278-289 — `(p: &MapPoi) -> Value` — here and remain DM-only in the desktop UI.
+-  `light_to_json` function L291-302 — `(l: &LightSource) -> Value` — here and remain DM-only in the desktop UI.
+-  `move_coords` function L305-316 — `( grid_x: Option<i64>, grid_y: Option<i64>, ) -> Result<Option<(i32, i32)>, McpE...` — Both-or-neither validation for move coordinates.
+
 #### crates/mimir-mcp/src/tools/mapgen.rs
 
 - pub `registered_tools` function L20-41 — `() -> Vec<RegisteredTool>` — All mapgen-family tools.
@@ -9019,8 +9072,9 @@
 - pub `document` module L9 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
 - pub `homebrew` module L10 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
 - pub `map` module L11 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
-- pub `mapgen` module L12 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
-- pub `module` module L13 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `map_state` module L12 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `mapgen` module L13 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
+- pub `module` module L14 — `-` — `registered_tools()` entry point consumed by `crate::registry`.
 
 #### crates/mimir-mcp/src/tools/module.rs
 

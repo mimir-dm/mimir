@@ -44,4 +44,13 @@ once the pilot pattern exists.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-09: COMPLETE on `feat/map-state-service`. All trap ops (incl.
+  visible/armed list variants) and POI ops in MapStateService with typed input
+  structs (CreateTrapInput/UpdateTrapInput/CreatePoiInput/UpdatePoiInput).
+  Trigger/reset lifecycle and both read-then-flip visibility toggles behind the
+  seam with first-ever unit tests (4 new: lifecycle + armed-list, trap
+  visibility/update/move/delete, POI CRUD + visibility, missing-id NotFound).
+  traps.rs 259→~180, pois.rs 211→~150 — pure wrappers. Wire unchanged.
+  Workspace suite 1,508 green. All four map/ command files now hold zero
+  business logic; the audit's 1,034-line finding is fully resolved. T-0656
+  (MCP authoring tools) is unblocked.

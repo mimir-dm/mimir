@@ -249,7 +249,7 @@ impl<'a> MapStateService<'a> {
     }
 
     /// Get a light source by id.
-    fn get_light(&mut self, id: &str) -> ServiceResult<LightSource> {
+    pub fn get_light(&mut self, id: &str) -> ServiceResult<LightSource> {
         dal::get_light_source(self.conn, id).map_err(|_| ServiceError::NotFound {
             entity_type: "LightSource".to_string(),
             id: id.to_string(),

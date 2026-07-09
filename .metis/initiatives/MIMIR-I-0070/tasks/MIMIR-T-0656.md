@@ -1,17 +1,17 @@
 ---
-id: mcp-placement-tools-for-traps-and
+id: mcp-placement-tools-for-traps-pois
 level: task
 title: "MCP placement tools for traps, POIs, and lights (authoring-only surface)"
 short_code: "MIMIR-T-0656"
 created_at: 2026-07-08T11:59:15.197870+00:00
-updated_at: 2026-07-08T11:59:15.197870+00:00
+updated_at: 2026-07-09T03:09:22.925157+00:00
 parent: MIMIR-I-0070
-blocked_by: ["MIMIR-T-0655"]
+blocked_by: [MIMIR-T-0655]
 archived: false
 
 tags:
   - "#task"
-  - "#phase/todo"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -31,6 +31,8 @@ registry — closing the world-building capability gap while enforcing the
 refined design ruling: **agents may place and edit any token/object; they never
 edit the viewable layer during live play** (Dylan, 2026-07-08; memory:
 feedback_agent_prep_not_play).
+
+## Acceptance Criteria
 
 ## Acceptance Criteria **[REQUIRED]**
 
