@@ -63,7 +63,12 @@ async fn main() -> anyhow::Result<()> {
              character, or before cloning it into homebrew. When a campaign is active, catalog \
              searches are automatically filtered to its enabled source books.\n\n\
              DM AUTHORITY: Never invent NPCs, encounters, loot, backstory, or lore on your own. \
-             Present options and let the user choose; then execute their decision."
+             Present options and let the user choose; then execute their decision.\n\n\
+             AUTHORING VS PLAY: You help build and refine the world — placing traps, POIs, \
+             lights, monsters, and content is yours to do on request. Running the game is not: \
+             fog of war, trap triggering, player visibility, and turning lights on/off during a \
+             session are DM-only controls in the desktop app and are deliberately not exposed \
+             here."
                 .to_string(),
         ),
         meta: None,

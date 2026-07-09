@@ -4,14 +4,14 @@ level: initiative
 title: "Unified ServiceError mapping at both frontend seams"
 short_code: "MIMIR-I-0073"
 created_at: 2026-07-08T11:08:02.290226+00:00
-updated_at: 2026-07-08T11:08:02.290226+00:00
+updated_at: 2026-07-08T11:46:32.154970+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/completed"
 
 
 exit_criteria_met: false
@@ -65,3 +65,9 @@ backward-compatible.
 
 If executed standalone: one PR — From impl, delete per-handler matches, optional
 ApiResponse kind. Otherwise: close when MIMIR-I-0069 step 4 lands.
+
+**RESOLUTION (2026-07-08): CLOSED AS ABSORBED by MIMIR-I-0069 / MIMIR-T-0652**
+(commit 2823592 on `feat/mcp-tool-registry`). `McpError::caller_fault` +
+retained `From<ServiceError>` impl centralize the MCP-side mapping; every
+per-handler match block is gone. The optional ApiResponse error-kind idea for
+the Tauri seam was NOT pursued — recorded here in case a future need arises.

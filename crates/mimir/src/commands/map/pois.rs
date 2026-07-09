@@ -1,20 +1,15 @@
 //! Map POI (Point of Interest) Commands
 //!
-//! Commands for managing points of interest placed on maps.
+//! Thin Tauri wrappers over `MapStateService` — all POI logic lives in
+//! mimir-core.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{MapPoi, NewMapPoi, UpdateMapPoi};
-use mimir_core::utils::now_rfc3339;
+use mimir_core::models::campaign::MapPoi;
+use mimir_core::services::{CreatePoiInput, MapStateService, UpdatePoiInput};
 use serde::Deserialize;
 use tauri::State;
-use uuid::Uuid;
 
-use crate::commands::ApiResponse;
+use crate::commands::{to_api_response, ApiResponse};
 use crate::state::AppState;
-
-// =============================================================================
-// Map POI Commands
-// =============================================================================
 
 /// List all POIs for a map.
 #[tauri::command]
@@ -24,10 +19,7 @@ pub fn list_map_pois(state: State<'_, AppState>, map_id: String) -> ApiResponse<
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::list_map_pois(&mut db, &map_id) {
-        Ok(pois) => ApiResponse::ok(pois),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).list_pois(&map_id))
 }
 
 /// Get a map POI by ID.
@@ -38,10 +30,7 @@ pub fn get_map_poi(state: State<'_, AppState>, id: String) -> ApiResponse<MapPoi
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::get_map_poi(&mut db, &id) {
-        Ok(poi) => ApiResponse::ok(poi),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).get_poi(&id))
 }
 
 /// Request for creating a new map POI.
@@ -69,30 +58,18 @@ pub fn create_map_poi(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let mut poi = NewMapPoi::new(&id, &request.map_id, &request.name, request.grid_x, request.grid_y);
+    let input = CreatePoiInput {
+        map_id: request.map_id,
+        name: request.name,
+        grid_x: request.grid_x,
+        grid_y: request.grid_y,
+        description: request.description,
+        icon: request.icon,
+        color: request.color,
+        visible: request.visible == Some(true),
+    };
 
-    if let Some(desc) = &request.description {
-        poi = poi.with_description(desc);
-    }
-    if let Some(icon) = &request.icon {
-        poi = poi.with_icon(icon);
-    }
-    if let Some(color) = &request.color {
-        poi = poi.with_color(color);
-    }
-    if request.visible == Some(true) {
-        poi = poi.visible();
-    }
-
-    if let Err(e) = dal::insert_map_poi(&mut db, &poi) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_poi(&mut db, &id) {
-        Ok(poi) => ApiResponse::ok(poi),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).create_poi(input))
 }
 
 /// Request for updating a map POI.
@@ -117,29 +94,14 @@ pub fn update_map_poi(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let name_str = request.name;
-    let desc_str = request.description;
-    let icon_str = request.icon;
-    let color_str = request.color;
-
-    let update = UpdateMapPoi {
-        name: name_str.as_deref(),
-        description: desc_str.as_ref().map(|s| Some(s.as_str())),
-        icon: icon_str.as_deref(),
-        color: color_str.as_ref().map(|s| Some(s.as_str())),
-        updated_at: Some(&now),
-        ..Default::default()
+    let input = UpdatePoiInput {
+        name: request.name,
+        description: request.description,
+        icon: request.icon,
+        color: request.color,
     };
 
-    if let Err(e) = dal::update_map_poi(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_poi(&mut db, &id) {
-        Ok(poi) => ApiResponse::ok(poi),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).update_poi(&id, input))
 }
 
 /// Move a map POI to a new position.
@@ -155,17 +117,7 @@ pub fn move_map_poi(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateMapPoi::set_position(grid_x, grid_y, &now);
-
-    if let Err(e) = dal::update_map_poi(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_poi(&mut db, &id) {
-        Ok(poi) => ApiResponse::ok(poi),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).move_poi(&id, grid_x, grid_y))
 }
 
 /// Toggle POI visibility for players.
@@ -176,23 +128,7 @@ pub fn toggle_map_poi_visibility(state: State<'_, AppState>, id: String) -> ApiR
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get current state
-    let poi = match dal::get_map_poi(&mut db, &id) {
-        Ok(p) => p,
-        Err(e) => return ApiResponse::err(e.to_string()),
-    };
-
-    let now = now_rfc3339();
-    let update = UpdateMapPoi::set_visible(!poi.is_visible(), &now);
-
-    if let Err(e) = dal::update_map_poi(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_poi(&mut db, &id) {
-        Ok(poi) => ApiResponse::ok(poi),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).toggle_poi_visibility(&id))
 }
 
 /// Delete a map POI.
@@ -203,8 +139,5 @@ pub fn delete_map_poi(state: State<'_, AppState>, id: String) -> ApiResponse<()>
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_map_poi(&mut db, &id) {
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).delete_poi(&id))
 }

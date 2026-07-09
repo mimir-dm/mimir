@@ -11,6 +11,7 @@ mod character;
 mod document;
 mod homebrew;
 mod map;
+mod map_state;
 mod module;
 mod source;
 mod token;
@@ -36,6 +37,10 @@ pub use homebrew::{
 pub use map::{CreateMapInput, MapService, UpdateMapInput};
 pub use module::{
     AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
+};
+pub use map_state::{
+    CreateLightInput, CreatePoiInput, CreateTrapInput, MapStateService, UpdateLightInput,
+    UpdatePoiInput, UpdateTrapInput,
 };
 pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};

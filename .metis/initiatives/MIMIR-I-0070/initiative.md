@@ -4,14 +4,14 @@ level: initiative
 title: "MapStateService: fog, lights, traps, POIs behind one seam"
 short_code: "MIMIR-I-0070"
 created_at: 2026-07-08T11:07:58.553348+00:00
-updated_at: 2026-07-08T11:07:58.553348+00:00
+updated_at: 2026-07-08T15:01:21.492174+00:00
 parent: 
 blocked_by: []
 archived: false
 
 tags:
   - "#initiative"
-  - "#phase/discovery"
+  - "#phase/active"
 
 
 exit_criteria_met: false
@@ -73,8 +73,22 @@ constants/constructors.
 
 ## Implementation Plan **[REQUIRED]**
 
-1. Service skeleton + fog (smallest surface), rewire fog.rs commands, tests
-2. Lights (incl. presets), traps, POIs in that order
-3. Optional fast-follow: MCP tools for fog/lights (one registration each if MIMIR-I-0069 has landed)
+1. Service skeleton + fog (smallest surface, carries design decisions), rewire fog.rs, tests
+2. Lights (presets move into service), rewire light.rs
+3. Traps + POIs (identical shapes, one mechanical task), rewire
+4. MCP placement tools for traps, POIs, and lights via the registry
 
-Related: cheaper after MIMIR-I-0069; independent of MIMIR-I-0071/0072.
+**Design ruling (Dylan, 2026-07-08, refined): agents build worlds, people run
+them.** The MCP interface may place and edit ANY token/object (traps, POIs,
+lights — full authoring power). What it must never do is edit the viewable
+layer during live play: fog reveal/toggle, trap trigger/reset,
+player-visibility toggles, flipping lights on/off mid-session. Those remain
+Tauri-UI-only. Fog is excluded from MCP entirely (pure viewable-layer state).
+Recorded in memory (feedback_agent_prep_not_play). This supersedes the "MCP
+tools for fog" idea in the original goals.
+
+Design decisions: single `MapStateService::new(conn)` in mimir-core (no
+app_data_dir — table-state touches no assets); presentation types (FogState,
+LightSourceResponse) stay command-side; service returns models.
+
+Related: registry from MIMIR-I-0069 makes task 4 one registration per tool.

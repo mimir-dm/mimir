@@ -41,4 +41,13 @@ unnecessary, and centralize error mapping — closing MIMIR-I-0073 as absorbed.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+- 2026-07-08: COMPLETE on `feat/mcp-tool-registry` (commit 2823592).
+  EXPECTED_TOOLS + count/route/published tests deleted; no_duplicate_tool_names
+  and all_tools_have_descriptions kept as real invariants. Error mapping
+  centralized: new `McpError::caller_fault` in error.rs for the
+  InvalidArguments-classifying families (module, character); pre-existing
+  `From<ServiceError>` impl retained for homebrew's NotFound-variant contract —
+  full unification deliberately NOT done because the two families publish
+  different not-found classifications, both pinned by tests. All per-handler
+  match blocks deleted. create_properties removed. Net −134 lines.
+  MIMIR-I-0073 closed as absorbed. Full suite + stdio e2e green.
