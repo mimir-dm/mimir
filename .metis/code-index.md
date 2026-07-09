@@ -1,6 +1,6 @@
 # Code Index
 
-> Generated: 2026-07-08T17:28:17Z | 554 files | JavaScript, Python, Rust, TypeScript
+> Generated: 2026-07-09T01:41:05Z | 554 files | JavaScript, Python, Rust, TypeScript
 
 ## Project Structure
 
@@ -3149,18 +3149,18 @@
 
 #### crates/mimir/src/commands/map/light.rs
 
-- pub `list_light_sources` function L23-43 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<LightSourceRespo...` — List all light sources for a map.
-- pub `CreateLightSourceRequest` struct L47-57 — `{ map_id: String, name: String, light_type: String, x: f64, y: f64, bright_radiu...` — Request for creating a light source.
-- pub `create_light_source` function L73-120 — `( state: State<'_, AppState>, request: CreateLightSourceRequest, ) -> ApiRespons...` — Create a new light source.
-- pub `toggle_light_source` function L124-151 — `(state: State<'_, AppState>, id: String) -> ApiResponse<LightSourceResponse>` — Toggle a light source on/off.
-- pub `delete_light_source` function L155-165 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a light source.
-- pub `delete_all_light_sources` function L169-179 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32>` — Delete all light sources on a map.
-- pub `create_torch` function L183-205 — `( state: State<'_, AppState>, map_id: String, x: i32, y: i32, ) -> ApiResponse<L...` — Create a torch light source (20ft bright, 40ft dim).
-- pub `create_lantern` function L209-231 — `( state: State<'_, AppState>, map_id: String, x: i32, y: i32, ) -> ApiResponse<L...` — Create a lantern light source (30ft bright, 60ft dim).
-- pub `UpdateLightSourceRequest` struct L235-241 — `{ name: Option<Option<String>>, bright_radius_ft: Option<i32>, dim_radius_ft: Op...` — Request for updating a light source.
-- pub `update_light_source` function L245-286 — `( state: State<'_, AppState>, id: String, request: UpdateLightSourceRequest, ) -...` — Update a light source.
-- pub `move_light_source` function L290-312 — `( state: State<'_, AppState>, id: String, x: i32, y: i32, ) -> ApiResponse<Light...` — Move a light source to a new position.
--  `get_light_response` function L60-69 — `( db: &mut diesel::SqliteConnection, app_dir: &std::path::Path, light_id: &str, ...` — Helper to get a light source and return it as a response with proper coordinates.
+- pub `list_light_sources` function L27-44 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<LightSourceRespo...` — List all light sources for a map.
+- pub `CreateLightSourceRequest` struct L48-58 — `{ map_id: String, name: String, light_type: String, x: f64, y: f64, bright_radiu...` — Request for creating a light source.
+- pub `create_light_source` function L62-91 — `( state: State<'_, AppState>, request: CreateLightSourceRequest, ) -> ApiRespons...` — Create a new light source.
+- pub `toggle_light_source` function L95-108 — `(state: State<'_, AppState>, id: String) -> ApiResponse<LightSourceResponse>` — Toggle a light source on/off.
+- pub `delete_light_source` function L112-122 — `(state: State<'_, AppState>, id: String) -> ApiResponse<()>` — Delete a light source.
+- pub `delete_all_light_sources` function L126-136 — `(state: State<'_, AppState>, map_id: String) -> ApiResponse<i32>` — Delete all light sources on a map.
+- pub `create_torch` function L140-158 — `( state: State<'_, AppState>, map_id: String, x: i32, y: i32, ) -> ApiResponse<L...` — Create a torch light source (20ft bright, 40ft dim).
+- pub `create_lantern` function L162-180 — `( state: State<'_, AppState>, map_id: String, x: i32, y: i32, ) -> ApiResponse<L...` — Create a lantern light source (30ft bright, 60ft dim).
+- pub `UpdateLightSourceRequest` struct L184-190 — `{ name: Option<Option<String>>, bright_radius_ft: Option<i32>, dim_radius_ft: Op...` — Request for updating a light source.
+- pub `update_light_source` function L194-219 — `( state: State<'_, AppState>, id: String, request: UpdateLightSourceRequest, ) -...` — Update a light source.
+- pub `move_light_source` function L223-241 — `( state: State<'_, AppState>, id: String, x: i32, y: i32, ) -> ApiResponse<Light...` — Move a light source to a new position.
+-  `grid_size_px` function L16-23 — `( db: &mut diesel::SqliteConnection, app_dir: &std::path::Path, map_id: &str, ) ...` — Look up the grid size for a map (presentation: pixels per grid unit).
 
 #### crates/mimir/src/commands/map/mod.rs
 
@@ -7171,25 +7171,42 @@
 
 #### crates/mimir-core/src/services/map_state.rs
 
-- pub `MapStateService` struct L19-21 — `{ conn: &'a mut SqliteConnection }` — Service for map table-state: fog, lights, traps, POIs.
-- pub `new` function L25-27 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new map state service.
-- pub `fog_state` function L32-45 — `(&mut self, map_id: &str) -> ServiceResult<FogState>` — Get the fog state for a map: enabled flag plus all revealed areas.
-- pub `enable_fog` function L48-52 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Enable fog of war for a map.
-- pub `disable_fog` function L55-59 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Disable fog of war for a map.
-- pub `toggle_fog` function L62-77 — `(&mut self, map_id: &str) -> ServiceResult<bool>` — Toggle fog of war for a map, returning the new enabled state.
-- pub `reveal_rect` function L80-92 — `( &mut self, map_id: &str, x: f64, y: f64, width: f64, height: f64, ) -> Service...` — Reveal a rectangular area on the map.
-- pub `reveal_circle` function L95-106 — `( &mut self, map_id: &str, center_x: f64, center_y: f64, radius: f64, ) -> Servi...` — Reveal a circular area on the map (stored as its bounding box).
-- pub `reveal_all` function L109-116 — `( &mut self, map_id: &str, width: f64, height: f64, ) -> ServiceResult<FogReveal...` — Reveal the entire map (one rect covering the full dimensions).
-- pub `delete_revealed_area` function L119-122 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a single revealed area.
-- pub `reset_fog` function L126-129 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Reset fog by clearing all revealed areas for a map.
--  `tests` module L133-264 — `-` — never touches asset files.
--  `setup_map` function L140-173 — `(conn: &mut SqliteConnection) -> String` — Create campaign + asset + map; returns the map id.
--  `toggle_fog_round_trip` function L176-186 — `()` — never touches asset files.
--  `enable_and_disable_fog` function L189-198 — `()` — never touches asset files.
--  `reveal_shapes_persist_and_circle_becomes_bounding_box` function L201-219 — `()` — never touches asset files.
--  `reset_fog_clears_all_areas_and_reports_count` function L222-232 — `()` — never touches asset files.
--  `delete_single_revealed_area` function L235-248 — `()` — never touches asset files.
--  `fog_state_for_missing_map_is_not_found` function L251-263 — `()` — never touches asset files.
+- pub `CreateLightInput` struct L24-41 — `{ map_id: String, grid_x: i32, grid_y: i32, bright_radius_ft: i32, dim_radius_ft...` — Input for creating a light source.
+- pub `UpdateLightInput` struct L46-57 — `{ name: Option<Option<String>>, bright_radius_ft: Option<i32>, dim_radius_ft: Op...` — Input for updating a light source.
+- pub `MapStateService` struct L60-62 — `{ conn: &'a mut SqliteConnection }` — Service for map table-state: fog, lights, traps, POIs.
+- pub `new` function L66-68 — `(conn: &'a mut SqliteConnection) -> Self` — Create a new map state service.
+- pub `fog_state` function L73-86 — `(&mut self, map_id: &str) -> ServiceResult<FogState>` — Get the fog state for a map: enabled flag plus all revealed areas.
+- pub `enable_fog` function L89-93 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Enable fog of war for a map.
+- pub `disable_fog` function L96-100 — `(&mut self, map_id: &str) -> ServiceResult<()>` — Disable fog of war for a map.
+- pub `toggle_fog` function L103-118 — `(&mut self, map_id: &str) -> ServiceResult<bool>` — Toggle fog of war for a map, returning the new enabled state.
+- pub `reveal_rect` function L121-133 — `( &mut self, map_id: &str, x: f64, y: f64, width: f64, height: f64, ) -> Service...` — Reveal a rectangular area on the map.
+- pub `reveal_circle` function L136-147 — `( &mut self, map_id: &str, center_x: f64, center_y: f64, radius: f64, ) -> Servi...` — Reveal a circular area on the map (stored as its bounding box).
+- pub `reveal_all` function L150-157 — `( &mut self, map_id: &str, width: f64, height: f64, ) -> ServiceResult<FogReveal...` — Reveal the entire map (one rect covering the full dimensions).
+- pub `delete_revealed_area` function L160-163 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a single revealed area.
+- pub `reset_fog` function L167-170 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Reset fog by clearing all revealed areas for a map.
+- pub `list_lights` function L175-177 — `(&mut self, map_id: &str) -> ServiceResult<Vec<LightSource>>` — List all light sources for a map.
+- pub `create_light` function L188-210 — `(&mut self, input: CreateLightInput) -> ServiceResult<LightSource>` — Create a light source.
+- pub `create_torch` function L213-218 — `(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Create a torch (20ft bright, 40ft dim).
+- pub `create_lantern` function L221-226 — `(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Create a lantern (30ft bright, 60ft dim).
+- pub `toggle_light` function L229-241 — `(&mut self, id: &str) -> ServiceResult<LightSource>` — Toggle a light on/off, returning the updated light.
+- pub `update_light` function L244-267 — `( &mut self, id: &str, input: UpdateLightInput, ) -> ServiceResult<LightSource>` — Update a light source's properties.
+- pub `move_light` function L270-274 — `(&mut self, id: &str, x: i32, y: i32) -> ServiceResult<LightSource>` — Move a light source to a new grid position.
+- pub `delete_light` function L277-280 — `(&mut self, id: &str) -> ServiceResult<()>` — Delete a light source.
+- pub `delete_all_lights` function L283-286 — `(&mut self, map_id: &str) -> ServiceResult<i32>` — Delete all light sources on a map.
+-  `get_light` function L180-185 — `(&mut self, id: &str) -> ServiceResult<LightSource>` — Get a light source by id.
+-  `tests` module L290-527 — `-` — never touches asset files.
+-  `setup_map` function L297-330 — `(conn: &mut SqliteConnection) -> String` — Create campaign + asset + map; returns the map id.
+-  `toggle_fog_round_trip` function L333-343 — `()` — never touches asset files.
+-  `enable_and_disable_fog` function L346-355 — `()` — never touches asset files.
+-  `reveal_shapes_persist_and_circle_becomes_bounding_box` function L358-376 — `()` — never touches asset files.
+-  `reset_fog_clears_all_areas_and_reports_count` function L379-389 — `()` — never touches asset files.
+-  `delete_single_revealed_area` function L392-405 — `()` — never touches asset files.
+-  `torch_and_lantern_presets_are_pinned` function L408-422 — `()` — never touches asset files.
+-  `light_toggle_round_trip` function L425-448 — `()` — never touches asset files.
+-  `light_update_and_move` function L451-486 — `()` — never touches asset files.
+-  `delete_all_lights_reports_count` function L489-500 — `()` — never touches asset files.
+-  `toggle_missing_light_is_not_found` function L503-511 — `()` — never touches asset files.
+-  `fog_state_for_missing_map_is_not_found` function L514-526 — `()` — never touches asset files.
 
 #### crates/mimir-core/src/services/mod.rs
 

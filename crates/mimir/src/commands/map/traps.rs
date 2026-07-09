@@ -1,20 +1,15 @@
 //! Map Trap Commands
 //!
-//! Commands for managing traps placed on maps.
+//! Thin Tauri wrappers over `MapStateService` — all trap logic lives in
+//! mimir-core.
 
-use mimir_core::dal::campaign as dal;
-use mimir_core::models::campaign::{MapTrap, NewMapTrap, UpdateMapTrap};
-use mimir_core::utils::now_rfc3339;
+use mimir_core::models::campaign::MapTrap;
+use mimir_core::services::{CreateTrapInput, MapStateService, UpdateTrapInput};
 use serde::Deserialize;
 use tauri::State;
-use uuid::Uuid;
 
-use crate::commands::ApiResponse;
+use crate::commands::{to_api_response, ApiResponse};
 use crate::state::AppState;
-
-// =============================================================================
-// Map Trap Commands
-// =============================================================================
 
 /// List all traps for a map.
 #[tauri::command]
@@ -24,10 +19,7 @@ pub fn list_map_traps(state: State<'_, AppState>, map_id: String) -> ApiResponse
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::list_map_traps(&mut db, &map_id) {
-        Ok(traps) => ApiResponse::ok(traps),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).list_traps(&map_id))
 }
 
 /// Get a map trap by ID.
@@ -38,10 +30,7 @@ pub fn get_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<MapTr
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).get_trap(&id))
 }
 
 /// Request for creating a new map trap.
@@ -70,33 +59,19 @@ pub fn create_map_trap(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let id = Uuid::new_v4().to_string();
-    let mut trap = NewMapTrap::new(&id, &request.map_id, &request.name, request.grid_x, request.grid_y);
+    let input = CreateTrapInput {
+        map_id: request.map_id,
+        name: request.name,
+        grid_x: request.grid_x,
+        grid_y: request.grid_y,
+        description: request.description,
+        trigger_description: request.trigger_description,
+        effect_description: request.effect_description,
+        dc: request.dc,
+        visible: request.visible == Some(true),
+    };
 
-    if let Some(desc) = &request.description {
-        trap = trap.with_description(desc);
-    }
-    if let Some(trigger) = &request.trigger_description {
-        trap = trap.with_trigger(trigger);
-    }
-    if let Some(effect) = &request.effect_description {
-        trap = trap.with_effect(effect);
-    }
-    if let Some(dc) = request.dc {
-        trap = trap.with_dc(dc);
-    }
-    if request.visible == Some(true) {
-        trap = trap.visible();
-    }
-
-    if let Err(e) = dal::insert_map_trap(&mut db, &trap) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).create_trap(input))
 }
 
 /// Request for updating a map trap.
@@ -122,30 +97,15 @@ pub fn update_map_trap(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let name_str = request.name;
-    let desc_str = request.description;
-    let trigger_str = request.trigger_description;
-    let effect_str = request.effect_description;
-
-    let update = UpdateMapTrap {
-        name: name_str.as_deref(),
-        description: desc_str.as_ref().map(|s| Some(s.as_str())),
-        trigger_description: trigger_str.as_ref().map(|s| Some(s.as_str())),
-        effect_description: effect_str.as_ref().map(|s| Some(s.as_str())),
-        dc: request.dc.map(Some),
-        updated_at: Some(&now),
-        ..Default::default()
+    let input = UpdateTrapInput {
+        name: request.name,
+        description: request.description,
+        trigger_description: request.trigger_description,
+        effect_description: request.effect_description,
+        dc: request.dc,
     };
 
-    if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).update_trap(&id, input))
 }
 
 /// Move a map trap to a new position.
@@ -161,17 +121,7 @@ pub fn move_map_trap(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateMapTrap::set_position(grid_x, grid_y, &now);
-
-    if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).move_trap(&id, grid_x, grid_y))
 }
 
 /// Toggle trap visibility for players.
@@ -182,23 +132,7 @@ pub fn toggle_map_trap_visibility(state: State<'_, AppState>, id: String) -> Api
         Err(e) => return ApiResponse::err(e),
     };
 
-    // Get current state
-    let trap = match dal::get_map_trap(&mut db, &id) {
-        Ok(t) => t,
-        Err(e) => return ApiResponse::err(e.to_string()),
-    };
-
-    let now = now_rfc3339();
-    let update = UpdateMapTrap::set_visible(!trap.is_visible(), &now);
-
-    if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).toggle_trap_visibility(&id))
 }
 
 /// Trigger a trap.
@@ -209,17 +143,7 @@ pub fn trigger_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<M
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateMapTrap::trigger(&now);
-
-    if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).trigger_trap(&id))
 }
 
 /// Reset (re-arm) a triggered trap.
@@ -230,17 +154,7 @@ pub fn reset_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<Map
         Err(e) => return ApiResponse::err(e),
     };
 
-    let now = now_rfc3339();
-    let update = UpdateMapTrap::reset(&now);
-
-    if let Err(e) = dal::update_map_trap(&mut db, &id, &update) {
-        return ApiResponse::err(e.to_string());
-    }
-
-    match dal::get_map_trap(&mut db, &id) {
-        Ok(trap) => ApiResponse::ok(trap),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).reset_trap(&id))
 }
 
 /// Delete a map trap.
@@ -251,8 +165,5 @@ pub fn delete_map_trap(state: State<'_, AppState>, id: String) -> ApiResponse<()
         Err(e) => return ApiResponse::err(e),
     };
 
-    match dal::delete_map_trap(&mut db, &id) {
-        Ok(_) => ApiResponse::ok(()),
-        Err(e) => ApiResponse::err(e.to_string()),
-    }
+    to_api_response(MapStateService::new(&mut db).delete_trap(&id))
 }

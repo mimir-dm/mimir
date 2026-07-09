@@ -12,8 +12,8 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    FogRevealedArea, FogState, LightSource, NewFogRevealedArea, NewLightSource, UpdateLightSource,
-    UpdateMap,
+    FogRevealedArea, FogState, LightSource, MapPoi, MapTrap, NewFogRevealedArea, NewLightSource,
+    NewMapPoi, NewMapTrap, UpdateLightSource, UpdateMap, UpdateMapPoi, UpdateMapTrap,
 };
 use crate::services::{ServiceError, ServiceResult};
 use crate::utils::now_rfc3339;
@@ -54,6 +54,78 @@ pub struct UpdateLightInput {
     pub color: Option<Option<String>>,
     /// New active state.
     pub is_active: Option<bool>,
+}
+
+/// Input for creating a map trap.
+#[derive(Debug, Clone)]
+pub struct CreateTrapInput {
+    /// Map to place the trap on.
+    pub map_id: String,
+    /// Trap name.
+    pub name: String,
+    /// Grid X coordinate.
+    pub grid_x: i32,
+    /// Grid Y coordinate.
+    pub grid_y: i32,
+    /// What the trap is.
+    pub description: Option<String>,
+    /// What sets it off.
+    pub trigger_description: Option<String>,
+    /// What happens when it fires.
+    pub effect_description: Option<String>,
+    /// Save/detection DC.
+    pub dc: Option<i32>,
+    /// Whether players can see it (default hidden).
+    pub visible: bool,
+}
+
+/// Input for updating a map trap. `None` = leave unchanged.
+#[derive(Debug, Clone, Default)]
+pub struct UpdateTrapInput {
+    /// New name.
+    pub name: Option<String>,
+    /// New description.
+    pub description: Option<String>,
+    /// New trigger description.
+    pub trigger_description: Option<String>,
+    /// New effect description.
+    pub effect_description: Option<String>,
+    /// New DC.
+    pub dc: Option<i32>,
+}
+
+/// Input for creating a map POI.
+#[derive(Debug, Clone)]
+pub struct CreatePoiInput {
+    /// Map to place the POI on.
+    pub map_id: String,
+    /// POI name.
+    pub name: String,
+    /// Grid X coordinate.
+    pub grid_x: i32,
+    /// Grid Y coordinate.
+    pub grid_y: i32,
+    /// Description.
+    pub description: Option<String>,
+    /// Icon identifier.
+    pub icon: Option<String>,
+    /// Color (hex).
+    pub color: Option<String>,
+    /// Whether players can see it (default hidden).
+    pub visible: bool,
+}
+
+/// Input for updating a map POI. `None` = leave unchanged.
+#[derive(Debug, Clone, Default)]
+pub struct UpdatePoiInput {
+    /// New name.
+    pub name: Option<String>,
+    /// New description.
+    pub description: Option<String>,
+    /// New icon.
+    pub icon: Option<String>,
+    /// New color.
+    pub color: Option<String>,
 }
 
 /// Service for map table-state: fog, lights, traps, POIs.
@@ -284,6 +356,205 @@ impl<'a> MapStateService<'a> {
         let count = dal::delete_all_light_sources(self.conn, map_id)?;
         Ok(count as i32)
     }
+
+    // -- Traps ------------------------------------------------------------------
+
+    /// List all traps for a map.
+    pub fn list_traps(&mut self, map_id: &str) -> ServiceResult<Vec<MapTrap>> {
+        Ok(dal::list_map_traps(self.conn, map_id)?)
+    }
+
+    /// List traps visible to players.
+    pub fn list_visible_traps(&mut self, map_id: &str) -> ServiceResult<Vec<MapTrap>> {
+        Ok(dal::list_visible_map_traps(self.conn, map_id)?)
+    }
+
+    /// List armed (untriggered) traps.
+    pub fn list_armed_traps(&mut self, map_id: &str) -> ServiceResult<Vec<MapTrap>> {
+        Ok(dal::list_armed_map_traps(self.conn, map_id)?)
+    }
+
+    /// Get a trap by id.
+    pub fn get_trap(&mut self, id: &str) -> ServiceResult<MapTrap> {
+        dal::get_map_trap(self.conn, id).map_err(|_| ServiceError::NotFound {
+            entity_type: "MapTrap".to_string(),
+            id: id.to_string(),
+        })
+    }
+
+    /// Create a trap.
+    pub fn create_trap(&mut self, input: CreateTrapInput) -> ServiceResult<MapTrap> {
+        let id = Uuid::new_v4().to_string();
+        let mut trap =
+            NewMapTrap::new(&id, &input.map_id, &input.name, input.grid_x, input.grid_y);
+
+        if let Some(ref desc) = input.description {
+            trap = trap.with_description(desc);
+        }
+        if let Some(ref trigger) = input.trigger_description {
+            trap = trap.with_trigger(trigger);
+        }
+        if let Some(ref effect) = input.effect_description {
+            trap = trap.with_effect(effect);
+        }
+        if let Some(dc) = input.dc {
+            trap = trap.with_dc(dc);
+        }
+        if input.visible {
+            trap = trap.visible();
+        }
+
+        dal::insert_map_trap(self.conn, &trap)?;
+        self.get_trap(&id)
+    }
+
+    /// Update a trap's authoring fields.
+    pub fn update_trap(&mut self, id: &str, input: UpdateTrapInput) -> ServiceResult<MapTrap> {
+        let now = now_rfc3339();
+        let update = UpdateMapTrap {
+            name: input.name.as_deref(),
+            description: input.description.as_ref().map(|s| Some(s.as_str())),
+            trigger_description: input
+                .trigger_description
+                .as_ref()
+                .map(|s| Some(s.as_str())),
+            effect_description: input.effect_description.as_ref().map(|s| Some(s.as_str())),
+            dc: input.dc.map(Some),
+            updated_at: Some(&now),
+            ..Default::default()
+        };
+        dal::update_map_trap(self.conn, id, &update)?;
+        self.get_trap(id)
+    }
+
+    /// Move a trap to a new grid position.
+    pub fn move_trap(&mut self, id: &str, grid_x: i32, grid_y: i32) -> ServiceResult<MapTrap> {
+        let now = now_rfc3339();
+        dal::update_map_trap(
+            self.conn,
+            id,
+            &UpdateMapTrap::set_position(grid_x, grid_y, &now),
+        )?;
+        self.get_trap(id)
+    }
+
+    /// Toggle a trap's player visibility.
+    pub fn toggle_trap_visibility(&mut self, id: &str) -> ServiceResult<MapTrap> {
+        let trap = self.get_trap(id)?;
+        let now = now_rfc3339();
+        dal::update_map_trap(
+            self.conn,
+            id,
+            &UpdateMapTrap::set_visible(!trap.is_visible(), &now),
+        )?;
+        self.get_trap(id)
+    }
+
+    /// Trigger a trap.
+    pub fn trigger_trap(&mut self, id: &str) -> ServiceResult<MapTrap> {
+        let now = now_rfc3339();
+        dal::update_map_trap(self.conn, id, &UpdateMapTrap::trigger(&now))?;
+        self.get_trap(id)
+    }
+
+    /// Reset (re-arm) a triggered trap.
+    pub fn reset_trap(&mut self, id: &str) -> ServiceResult<MapTrap> {
+        let now = now_rfc3339();
+        dal::update_map_trap(self.conn, id, &UpdateMapTrap::reset(&now))?;
+        self.get_trap(id)
+    }
+
+    /// Delete a trap.
+    pub fn delete_trap(&mut self, id: &str) -> ServiceResult<()> {
+        dal::delete_map_trap(self.conn, id)?;
+        Ok(())
+    }
+
+    // -- Points of interest --------------------------------------------------------
+
+    /// List all POIs for a map.
+    pub fn list_pois(&mut self, map_id: &str) -> ServiceResult<Vec<MapPoi>> {
+        Ok(dal::list_map_pois(self.conn, map_id)?)
+    }
+
+    /// List POIs visible to players.
+    pub fn list_visible_pois(&mut self, map_id: &str) -> ServiceResult<Vec<MapPoi>> {
+        Ok(dal::list_visible_map_pois(self.conn, map_id)?)
+    }
+
+    /// Get a POI by id.
+    pub fn get_poi(&mut self, id: &str) -> ServiceResult<MapPoi> {
+        dal::get_map_poi(self.conn, id).map_err(|_| ServiceError::NotFound {
+            entity_type: "MapPoi".to_string(),
+            id: id.to_string(),
+        })
+    }
+
+    /// Create a POI.
+    pub fn create_poi(&mut self, input: CreatePoiInput) -> ServiceResult<MapPoi> {
+        let id = Uuid::new_v4().to_string();
+        let mut poi = NewMapPoi::new(&id, &input.map_id, &input.name, input.grid_x, input.grid_y);
+
+        if let Some(ref desc) = input.description {
+            poi = poi.with_description(desc);
+        }
+        if let Some(ref icon) = input.icon {
+            poi = poi.with_icon(icon);
+        }
+        if let Some(ref color) = input.color {
+            poi = poi.with_color(color);
+        }
+        if input.visible {
+            poi = poi.visible();
+        }
+
+        dal::insert_map_poi(self.conn, &poi)?;
+        self.get_poi(&id)
+    }
+
+    /// Update a POI's authoring fields.
+    pub fn update_poi(&mut self, id: &str, input: UpdatePoiInput) -> ServiceResult<MapPoi> {
+        let now = now_rfc3339();
+        let update = UpdateMapPoi {
+            name: input.name.as_deref(),
+            description: input.description.as_ref().map(|s| Some(s.as_str())),
+            icon: input.icon.as_deref(),
+            color: input.color.as_ref().map(|s| Some(s.as_str())),
+            updated_at: Some(&now),
+            ..Default::default()
+        };
+        dal::update_map_poi(self.conn, id, &update)?;
+        self.get_poi(id)
+    }
+
+    /// Move a POI to a new grid position.
+    pub fn move_poi(&mut self, id: &str, grid_x: i32, grid_y: i32) -> ServiceResult<MapPoi> {
+        let now = now_rfc3339();
+        dal::update_map_poi(
+            self.conn,
+            id,
+            &UpdateMapPoi::set_position(grid_x, grid_y, &now),
+        )?;
+        self.get_poi(id)
+    }
+
+    /// Toggle a POI's player visibility.
+    pub fn toggle_poi_visibility(&mut self, id: &str) -> ServiceResult<MapPoi> {
+        let poi = self.get_poi(id)?;
+        let now = now_rfc3339();
+        dal::update_map_poi(
+            self.conn,
+            id,
+            &UpdateMapPoi::set_visible(!poi.is_visible(), &now),
+        )?;
+        self.get_poi(id)
+    }
+
+    /// Delete a POI.
+    pub fn delete_poi(&mut self, id: &str) -> ServiceResult<()> {
+        dal::delete_map_poi(self.conn, id)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -497,6 +768,144 @@ mod tests {
 
         assert_eq!(svc.delete_all_lights(&map_id).unwrap(), 2);
         assert!(svc.list_lights(&map_id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn trap_lifecycle_create_trigger_reset() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        let trap = svc
+            .create_trap(CreateTrapInput {
+                map_id: map_id.clone(),
+                name: "Pit Trap".to_string(),
+                grid_x: 4,
+                grid_y: 5,
+                description: Some("A concealed pit".to_string()),
+                trigger_description: Some("Stepping on the cover".to_string()),
+                effect_description: Some("2d6 falling damage".to_string()),
+                dc: Some(15),
+                visible: false,
+            })
+            .unwrap();
+        assert!(!trap.is_visible());
+        assert!(!trap.is_triggered());
+        assert_eq!(trap.dc, Some(15));
+
+        let fired = svc.trigger_trap(&trap.id).unwrap();
+        assert!(fired.is_triggered());
+
+        let rearmed = svc.reset_trap(&trap.id).unwrap();
+        assert!(!rearmed.is_triggered());
+
+        // Armed list reflects state
+        assert_eq!(svc.list_armed_traps(&map_id).unwrap().len(), 1);
+        svc.trigger_trap(&trap.id).unwrap();
+        assert!(svc.list_armed_traps(&map_id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn trap_visibility_toggle_and_update() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        let trap = svc
+            .create_trap(CreateTrapInput {
+                map_id: map_id.clone(),
+                name: "Dart Trap".to_string(),
+                grid_x: 0,
+                grid_y: 0,
+                description: None,
+                trigger_description: None,
+                effect_description: None,
+                dc: None,
+                visible: false,
+            })
+            .unwrap();
+
+        assert!(svc.list_visible_traps(&map_id).unwrap().is_empty());
+        let shown = svc.toggle_trap_visibility(&trap.id).unwrap();
+        assert!(shown.is_visible());
+        assert_eq!(svc.list_visible_traps(&map_id).unwrap().len(), 1);
+
+        let updated = svc
+            .update_trap(
+                &trap.id,
+                UpdateTrapInput {
+                    name: Some("Poison Dart Trap".to_string()),
+                    dc: Some(13),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(updated.name, "Poison Dart Trap");
+        assert_eq!(updated.dc, Some(13));
+
+        let moved = svc.move_trap(&trap.id, 8, 2).unwrap();
+        assert_eq!((moved.grid_x, moved.grid_y), (8, 2));
+
+        svc.delete_trap(&trap.id).unwrap();
+        assert!(svc.list_traps(&map_id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn poi_crud_and_visibility() {
+        let mut conn = test_connection();
+        let map_id = setup_map(&mut conn);
+        let mut svc = MapStateService::new(&mut conn);
+
+        let poi = svc
+            .create_poi(CreatePoiInput {
+                map_id: map_id.clone(),
+                name: "Hidden Shrine".to_string(),
+                grid_x: 12,
+                grid_y: 3,
+                description: Some("An old shrine to a forgotten god".to_string()),
+                icon: Some("shrine".to_string()),
+                color: Some("#88CCFF".to_string()),
+                visible: false,
+            })
+            .unwrap();
+        assert!(!poi.is_visible());
+
+        let updated = svc
+            .update_poi(
+                &poi.id,
+                UpdatePoiInput {
+                    name: Some("Shrine of Echoes".to_string()),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(updated.name, "Shrine of Echoes");
+        assert_eq!(updated.icon, "shrine", "unspecified field unchanged");
+
+        let moved = svc.move_poi(&poi.id, 1, 1).unwrap();
+        assert_eq!((moved.grid_x, moved.grid_y), (1, 1));
+
+        assert!(svc.list_visible_pois(&map_id).unwrap().is_empty());
+        svc.toggle_poi_visibility(&poi.id).unwrap();
+        assert_eq!(svc.list_visible_pois(&map_id).unwrap().len(), 1);
+
+        svc.delete_poi(&poi.id).unwrap();
+        assert!(svc.list_pois(&map_id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn missing_trap_and_poi_are_not_found() {
+        let mut conn = test_connection();
+        let mut svc = MapStateService::new(&mut conn);
+
+        assert!(matches!(
+            svc.get_trap("nope"),
+            Err(ServiceError::NotFound { .. })
+        ));
+        assert!(matches!(
+            svc.get_poi("nope"),
+            Err(ServiceError::NotFound { .. })
+        ));
     }
 
     #[test]

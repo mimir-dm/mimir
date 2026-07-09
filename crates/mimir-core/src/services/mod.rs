@@ -38,7 +38,10 @@ pub use map::{CreateMapInput, MapService, UpdateMapInput};
 pub use module::{
     AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
 };
-pub use map_state::{CreateLightInput, MapStateService, UpdateLightInput};
+pub use map_state::{
+    CreateLightInput, CreatePoiInput, CreateTrapInput, MapStateService, UpdateLightInput,
+    UpdatePoiInput, UpdateTrapInput,
+};
 pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
 pub use catalog::{
