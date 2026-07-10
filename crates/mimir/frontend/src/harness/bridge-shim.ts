@@ -32,8 +32,28 @@ function installBridgeShim(): void {
       if (cmd === 'plugin:event|listen' || cmd === 'plugin:event|unlisten') {
         return null
       }
+      // Native save dialog: pretend the user accepted the suggested name;
+      // the actual write is turned into a browser download (see save_pdf).
+      if (cmd === 'plugin:dialog|save') {
+        const options = (args as { options?: { defaultPath?: string } })?.options ?? {}
+        return options.defaultPath ?? 'download.pdf'
+      }
       console.warn(`[bridge-shim] unsupported plugin command in browser harness: ${cmd}`)
       return Promise.reject(new Error(`${cmd} is not available in the browser harness`))
+    }
+
+    // In the desktop app save_pdf writes to the dialog-chosen path; in a
+    // browser the equivalent UX is a download.
+    if (cmd === 'save_pdf') {
+      const { pdfBase64, path } = args as { pdfBase64: string; path: string }
+      const bytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0))
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = String(path).split('/').pop() || 'document.pdf'
+      anchor.click()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      return { success: true, data: path }
     }
     const response = await fetch(`${BRIDGE_URL}/invoke/${cmd}`, {
       method: 'POST',
