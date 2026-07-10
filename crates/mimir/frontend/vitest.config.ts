@@ -7,7 +7,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/test/setup.ts']
+    setupFiles: ['./src/test/setup.ts'],
+    // Playwright specs (UI harness) run via `npx playwright test`, not vitest
+    exclude: ['**/node_modules/**', 'playwright/**']
   },
   resolve: {
     alias: {

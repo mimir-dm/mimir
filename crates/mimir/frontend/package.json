@@ -11,7 +11,9 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "screenshots": "playwright test playwright/capture.spec.ts playwright/capture-detail.spec.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.0",
@@ -31,6 +33,7 @@
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^20.11.28",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vitest/coverage-v8": "^3.2.4",

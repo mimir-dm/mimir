@@ -474,7 +474,7 @@ onMounted(() => {
 }
 
 .document-item.selected {
-  background: var(--color-primary-900, #1e3a5f);
+  background: var(--color-primary-100, #e0f2fe);
 }
 
 .document-icon-svg {

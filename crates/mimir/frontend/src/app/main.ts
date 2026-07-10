@@ -1,3 +1,6 @@
+// Must be first: installs the dev-only browser IPC shim before anything
+// touches @tauri-apps/api (no-op in production builds and in the real app).
+import '../harness/bridge-shim'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'

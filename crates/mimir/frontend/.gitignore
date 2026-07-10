@@ -23,3 +23,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+# Playwright UI harness artifacts
+playwright/screenshots
+playwright/screenshots-before
+playwright/results

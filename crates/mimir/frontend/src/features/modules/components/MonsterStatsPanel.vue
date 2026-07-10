@@ -87,7 +87,7 @@
           <summary>Traits</summary>
           <div class="action-list">
             <div v-for="(trait, idx) in monster.monster_data.trait" :key="'trait-' + idx" class="action-item">
-              <strong>{{ trait.name }}.</strong>
+              <strong>{{ trait.name }}.</strong>{{ ' ' }}
               <span v-html="formatActionEntries(trait.entries)"></span>
             </div>
           </div>
@@ -98,7 +98,7 @@
           <summary>Actions</summary>
           <div class="action-list">
             <div v-for="(action, idx) in monster.monster_data.action" :key="'action-' + idx" class="action-item">
-              <strong>{{ action.name }}.</strong>
+              <strong>{{ action.name }}.</strong>{{ ' ' }}
               <span v-html="formatActionEntries(action.entries)"></span>
             </div>
           </div>
@@ -109,7 +109,7 @@
           <summary>Bonus Actions</summary>
           <div class="action-list">
             <div v-for="(bonus, idx) in monster.monster_data.bonus" :key="'bonus-' + idx" class="action-item">
-              <strong>{{ bonus.name }}.</strong>
+              <strong>{{ bonus.name }}.</strong>{{ ' ' }}
               <span v-html="formatActionEntries(bonus.entries)"></span>
             </div>
           </div>
@@ -120,7 +120,7 @@
           <summary>Reactions</summary>
           <div class="action-list">
             <div v-for="(reaction, idx) in monster.monster_data.reaction" :key="'reaction-' + idx" class="action-item">
-              <strong>{{ reaction.name }}.</strong>
+              <strong>{{ reaction.name }}.</strong>{{ ' ' }}
               <span v-html="formatActionEntries(reaction.entries)"></span>
             </div>
           </div>
@@ -132,7 +132,7 @@
           <p class="legendary-intro">3 actions per round, at end of other creature's turn.</p>
           <div class="action-list">
             <div v-for="(legendary, idx) in monster.monster_data.legendary" :key="'legendary-' + idx" class="action-item">
-              <strong>{{ legendary.name }}.</strong>
+              <strong>{{ legendary.name }}.</strong>{{ ' ' }}
               <span v-html="formatActionEntries(legendary.entries)"></span>
             </div>
           </div>

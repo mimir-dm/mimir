@@ -15,7 +15,7 @@
             <button @click="goBack" class="btn-back">Back</button>
             <h1 class="character-name">{{ character.name }}</h1>
             <div class="character-subtitle">
-              Level {{ totalLevel }} {{ character.race_name || '' }} {{ classString }}
+              Level {{ totalLevel }} {{ character.race_name || '' }} {{ classDisplay }}
             </div>
             <div v-if="character.background_name" class="character-background">
               {{ character.background_name }}
@@ -264,6 +264,18 @@ const activeTab = ref<'character' | 'equipment' | 'spells' | 'details'>('charact
 // Computed properties
 const totalLevel = computed(() => (character.value ? getTotalLevel(character.value) : 0))
 const classString = computed(() => (character.value ? formatClassString(character.value) : ''))
+
+// Subtitle already leads with "Level N" — for single-class characters the
+// per-class level is redundant ("Level 4 ... Druid (Land) 4"), so drop it.
+const classDisplay = computed(() => {
+  const c = character.value
+  if (!c?.classes?.length) return classString.value
+  if (c.classes.length === 1) {
+    const cls = c.classes[0]
+    return cls.subclass_name ? `${cls.class_name} (${cls.subclass_name})` : cls.class_name
+  }
+  return classString.value
+})
 
 // Speed - from race catalog data, default 30ft
 const speed = computed(() => {
