@@ -4,13 +4,13 @@
 //! This is a separate window from the main app that shows the battle map
 //! while the main window stays on the module dashboard.
 
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder};
 
 const DM_MAP_LABEL: &str = "dm-map";
 
 /// Check if the DM map window is currently open.
 #[tauri::command]
-pub fn is_dm_map_open(app: AppHandle) -> bool {
+pub fn is_dm_map_open<R: Runtime>(app: AppHandle<R>) -> bool {
     app.get_webview_window(DM_MAP_LABEL).is_some()
 }
 
@@ -19,8 +19,8 @@ pub fn is_dm_map_open(app: AppHandle) -> bool {
 /// The window loads with query parameters for moduleId and campaignId
 /// so it can fetch the module's maps.
 #[tauri::command]
-pub fn open_dm_map_window(
-    app: AppHandle,
+pub fn open_dm_map_window<R: Runtime>(
+    app: AppHandle<R>,
     module_id: String,
     campaign_id: String,
 ) -> Result<(), String> {
@@ -48,7 +48,7 @@ pub fn open_dm_map_window(
 
 /// Close the DM map window.
 #[tauri::command]
-pub fn close_dm_map_window(app: AppHandle) -> Result<(), String> {
+pub fn close_dm_map_window<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(DM_MAP_LABEL) {
         window
             .close()
@@ -60,7 +60,7 @@ pub fn close_dm_map_window(app: AppHandle) -> Result<(), String> {
 /// Toggle fullscreen mode on the DM map window.
 /// Returns the new fullscreen state.
 #[tauri::command]
-pub fn toggle_dm_map_fullscreen(app: AppHandle) -> Result<bool, String> {
+pub fn toggle_dm_map_fullscreen<R: Runtime>(app: AppHandle<R>) -> Result<bool, String> {
     let window = app
         .get_webview_window(DM_MAP_LABEL)
         .ok_or_else(|| "DM map window not open".to_string())?;

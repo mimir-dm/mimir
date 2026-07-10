@@ -15,6 +15,13 @@ crate-type = ["lib", "staticlib", "cdylib"]
 name = "mimir"
 path = "src/main.rs"
 
+# Dev-only invoke-over-HTTP bridge for the Playwright UI harness.
+# Never built by default; requires --features ui-harness.
+[[bin]]
+name = "ui-bridge"
+path = "src/bin/ui_bridge.rs"
+required-features = ["ui-harness"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -51,6 +58,13 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 
+# UI harness bridge (dev-only, behind the ui-harness feature)
+axum = { version = "0.8", optional = true }
+tower-http = { version = "0.6", features = ["cors"], optional = true }
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
+# Dev-only Playwright/UX harness: HTTP bridge into the real invoke pipeline.
+# OFF by default and excluded from release builds (only the ui-bridge bin uses it).
+ui-harness = ["tauri/test", "dep:axum", "dep:tower-http"]
