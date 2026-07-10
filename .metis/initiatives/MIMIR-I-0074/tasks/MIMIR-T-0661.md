@@ -41,4 +41,11 @@ screenshot of the campaign dashboard showing real Frost Architect data.
 
 ## Status Updates **[REQUIRED]**
 
-*To be added during implementation*
+### 2026-07-10 — Scaffold working end-to-end; first design-review pass done (commit 7b4c202)
+
+- Shim implemented **in-app** instead of via `addInitScript`: `src/harness/bridge-shim.ts` is imported first in `main.ts`, guarded by `import.meta.env.DEV && !('__TAURI_INTERNALS__' in window)` — tree-shaken from production builds, inert inside the real Tauri app, and it works for BOTH Playwright and live Chrome sessions. It installs `window.__TAURI_INTERNALS__` (invoke → `fetch` to the bridge, transformCallback, convertFileSrc passthrough, metadata).
+- Plugin commands stubbed as planned: `plugin:event|listen/unlisten` no-op; dialog/shell reject with a console warning (harness-unsupported flows).
+- `playwright.config.ts` + two capture specs (`capture.spec.ts` route walk, `capture-detail.spec.ts` interaction-driven: module detail, document viewer, sheet sub-tabs, homebrew statblock). 19 captures, all passing, real Frost Architect data. `npm run test:e2e` / `npm run screenshots`; screenshots gitignored; vitest excludes `playwright/`.
+- Remaining for AC-complete: `webServer` orchestration in the config (today the bridge + Vite are started manually) and an explicit "The Frost Architect visible" assertion in a smoke spec — both small; natural to fold into T-0660's session script.
+- Found during captures, fixed in the same commit: ASCII placeholder tab icons, a global `.campaign-dashboard { text-align: center }` leak, dark-on-dark selected document row, missing space after trait names in three stat panels, `beast , unaligned` comma bug, duplicated level in sheet subtitle, asterisk "has notes" marker.
+- Route note for capture specs: `/modules/:id` is a stub view ("coming soon") — module screens are reached through the dashboard Modules tab selection, not the direct route.
