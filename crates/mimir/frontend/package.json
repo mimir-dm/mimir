@@ -28,6 +28,7 @@
     "@tiptap/starter-kit": "^3.0.9",
     "@tiptap/vue-3": "^3.0.9",
     "marked": "^16.2.1",
+    "pdfjs-dist": "^6.1.200",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"

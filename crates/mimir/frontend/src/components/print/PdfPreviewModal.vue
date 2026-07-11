@@ -24,12 +24,8 @@
         <button @click="retry" class="btn btn-primary">Try Again</button>
       </div>
 
-      <div v-else-if="pdfUrl" class="pdf-container">
-        <iframe
-          :src="pdfUrl"
-          class="pdf-frame"
-          title="PDF Preview"
-        ></iframe>
+      <div v-else-if="pdfResult" class="pdf-container">
+        <PdfCanvasViewer :pdf-base64="pdfResult.pdf_base64" />
       </div>
 
       <EmptyState
@@ -44,14 +40,14 @@
       <button
         @click="handlePrint"
         class="btn btn-secondary"
-        :disabled="!pdfUrl || isLoading"
+        :disabled="!pdfResult || isLoading"
       >
         Print
       </button>
       <button
         @click="handleSave"
         class="btn btn-primary"
-        :disabled="!pdfUrl || isLoading"
+        :disabled="!pdfResult || isLoading"
       >
         Save PDF
       </button>
@@ -67,6 +63,7 @@ import { ref, watch, onUnmounted } from 'vue'
 import { PrintService, type PrintResult } from '../../services/PrintService'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
+import PdfCanvasViewer from './PdfCanvasViewer.vue'
 
 interface Props {
   visible: boolean
