@@ -5,7 +5,7 @@ import { defineConfig } from '@playwright/test'
  *
  * Expects the stack to already be running:
  *   1. ui-bridge against a scratch DB copy:
- *      MIMIR_BRIDGE_APP_DIR=<scratch> cargo run -p mimir --features ui-harness --bin ui-bridge
+ *      MIMIR_BRIDGE_APP_DIR=<scratch> cargo run -p mimir-ui-bridge
  *   2. Vite dev server: npm run dev
  *
  * The browser IPC shim lives in src/harness/bridge-shim.ts (imported by

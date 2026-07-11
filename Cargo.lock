@@ -3299,7 +3299,6 @@ dependencies = [
 name = "mimir"
 version = "0.7.3"
 dependencies = [
- "axum",
  "base64 0.22.1",
  "chrono",
  "diesel",
@@ -3315,7 +3314,6 @@ dependencies = [
  "tauri-plugin-shell",
  "thiserror 2.0.18",
  "tokio",
- "tower-http",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -3415,6 +3413,20 @@ dependencies = [
  "typst",
  "typst-pdf",
  "walkdir",
+]
+
+[[package]]
+name = "mimir-ui-bridge"
+version = "0.7.3"
+dependencies = [
+ "axum",
+ "mimir",
+ "mimir-core",
+ "mimir-print",
+ "serde_json",
+ "tauri",
+ "tokio",
+ "tower-http",
 ]
 
 [[package]]

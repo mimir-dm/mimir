@@ -13,15 +13,15 @@
 //! `generate_handler!` dispatch as the production app — zero per-command glue.
 //!
 //! Safety rails (see MIMIR-T-0659/0660):
-//! - only built with `--features ui-harness`; never part of release builds
+//! - lives in its own dev-only crate, outside the app crate, so the Tauri
+//!   bundler can never ship it
 //! - binds 127.0.0.1 only
 //! - requires `MIMIR_BRIDGE_APP_DIR` pointing at a scratch app dir and REFUSES
 //!   to start if the resolved database lives under the production app dir
 //!
 //! Usage:
 //! ```text
-//! MIMIR_BRIDGE_APP_DIR=/tmp/mimir-ui-session \
-//!   cargo run -p mimir --no-default-features --features ui-harness --bin ui-bridge
+//! MIMIR_BRIDGE_APP_DIR=/tmp/mimir-ui-session cargo run -p mimir-ui-bridge
 //! ```
 
 use std::path::PathBuf;
