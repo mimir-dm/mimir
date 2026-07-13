@@ -50,7 +50,10 @@ def unit(watch: bool = False, core: bool = False, ui: bool = False, all: bool = 
     if run_core:
         print("\nRunning Rust tests (unit + integration) for core crates...")
         result = subprocess.run(
-            ["cargo", "test", "--workspace", "--exclude", "mimir", "--", "--test-threads=1"],
+            # mimir-ui-bridge is excluded too: it depends on the mimir crate, whose
+            # tauri build script requires the MCP sidecar binary to exist — not
+            # available on core-test CI runners. The GUI build jobs cover both.
+            ["cargo", "test", "--workspace", "--exclude", "mimir", "--exclude", "mimir-ui-bridge", "--", "--test-threads=1"],
             cwd=PROJECT_ROOT,
             capture_output=False
         )
