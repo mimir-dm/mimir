@@ -1,3 +1,5 @@
+// Dev-only browser IPC shim for the UI harness (inert in the real app).
+import './harness/bridge-shim'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import BookReader from './features/sources/components/reader/ReaderView.vue'

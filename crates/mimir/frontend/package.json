@@ -13,7 +13,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
-    "screenshots": "playwright test playwright/capture.spec.ts playwright/capture-detail.spec.ts"
+    "screenshots": "SCREENSHOT_DIR=playwright/screenshots/runs/$(date +%Y%m%d-%H%M%S) playwright test playwright/capture.spec.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.0",

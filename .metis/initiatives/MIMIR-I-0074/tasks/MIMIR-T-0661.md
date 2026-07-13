@@ -32,14 +32,21 @@ screenshot of the campaign dashboard showing real Frost Architect data.
 
 ## Acceptance Criteria **[REQUIRED]**
 
-- [ ] `@playwright/test` dev-dependency + `playwright.config.ts` with webServer orchestration (bridge + Vite dev server, reuse-existing for local iteration)
-- [ ] Invoke shim installed via `addInitScript` BEFORE app load: window.__TAURI_INTERNALS__/invoke intercepted (check what @tauri-apps/api v2 core.invoke actually calls in a non-Tauri context — shim at the right layer) and forwarded to the bridge via fetch
-- [ ] Tauri plugins used by the frontend (dialog, shell) either shimmed to no-ops or the affected flows documented as harness-unsupported
-- [ ] Smoke spec: load `/`, wait for campaign list, assert "The Frost Architect" visible, screenshot to `crates/mimir/frontend/playwright/screenshots/`
-- [ ] Screenshots directory gitignored; `npm run test:e2e` and `npm run screenshots` scripts
-- [ ] Works headless (agent-runnable) and headed (human-watchable)
+- [x] `@playwright/test` dev-dependency + `playwright.config.ts` with webServer orchestration (bridge + Vite dev server, reuse-existing for local iteration)
+- [x] Invoke shim installed via `addInitScript` BEFORE app load: window.__TAURI_INTERNALS__/invoke intercepted (check what @tauri-apps/api v2 core.invoke actually calls in a non-Tauri context — shim at the right layer) and forwarded to the bridge via fetch
+- [x] Tauri plugins used by the frontend (dialog, shell) either shimmed to no-ops or the affected flows documented as harness-unsupported
+- [x] Smoke spec: load `/`, wait for campaign list, assert "The Frost Architect" visible, screenshot to `crates/mimir/frontend/playwright/screenshots/`
+- [x] Screenshots directory gitignored; `npm run test:e2e` and `npm run screenshots` scripts
+- [x] Works headless (agent-runnable) and headed (human-watchable)
 
 ## Status Updates **[REQUIRED]**
+
+### 2026-07-13 — Remaining ACs closed
+
+- `webServer` orchestration added to playwright.config.ts: ui-session.sh (bridge on scratch snapshot) + Vite, `reuseExistingServer: true` for local iteration. Verified from a cold start: one command boots the full stack, runs specs, tears down.
+- `smoke.spec.ts`: loads `/`, asserts "The Frost Architect" visible, screenshots. Passing.
+- Shim note: implemented in-app rather than via addInitScript (see 2026-07-10 entry) and now imported by ALL four window entrypoints (main, dm-map, sources, player-display), so the secondary windows are loadable in the harness as `/dm-map.html` / `/sources.html`.
+- Save-dialog stub upgraded along the way: `plugin:dialog|save` accepts the suggested filename and `save_pdf` becomes a browser download (commit 689497a).
 
 ### 2026-07-10 — Scaffold working end-to-end; first design-review pass done (commit 7b4c202)
 
