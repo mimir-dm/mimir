@@ -135,11 +135,6 @@
   padding: var(--spacing-lg);
 }
 
-/* Campaign Dashboard */
-.campaign-dashboard {
-  text-align: center;
-}
-
 /* Campaign Stats Card */
 .campaign-stats-card {
   background-color: var(--color-surface);

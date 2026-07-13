@@ -36,7 +36,12 @@
                 <span class="monster-name">{{ monster.display_name || monster.monster_name || monster.monster_data?.name || 'Homebrew Monster' }}</span>
                 <span v-if="monster.display_name && monster.monster_name" class="monster-original">({{ monster.monster_name }})</span>
                 <span v-if="monster.homebrew_monster_id" class="homebrew-badge">HB</span>
-                <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">*</span>
+                <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M8 13h8M8 17h5" />
+                  </svg>
+                </span>
               </div>
               <button
                 v-if="monster.id"
@@ -327,9 +332,9 @@ function getPoiIcon(iconName: string): string {
 }
 
 .monster-has-notes {
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
   color: var(--color-primary-500);
-  font-weight: bold;
 }
 
 .monster-edit-btn {

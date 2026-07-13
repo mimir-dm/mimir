@@ -53,7 +53,7 @@
     <!-- Traits -->
     <div v-if="data.trait?.length" class="action-section">
       <div v-for="(t, i) in data.trait" :key="'trait-' + i" class="action-item">
-        <strong>{{ t.name }}.</strong>
+        <strong>{{ t.name }}.</strong>{{ ' ' }}
         <span v-html="formatEntries(t.entries)"></span>
       </div>
     </div>
@@ -62,7 +62,7 @@
     <div v-if="data.action?.length" class="action-section">
       <h5>Actions</h5>
       <div v-for="(a, i) in data.action" :key="'action-' + i" class="action-item">
-        <strong>{{ a.name }}.</strong>
+        <strong>{{ a.name }}.</strong>{{ ' ' }}
         <span v-html="formatEntries(a.entries)"></span>
       </div>
     </div>
@@ -71,7 +71,7 @@
     <div v-if="data.bonus?.length" class="action-section">
       <h5>Bonus Actions</h5>
       <div v-for="(b, i) in data.bonus" :key="'bonus-' + i" class="action-item">
-        <strong>{{ b.name }}.</strong>
+        <strong>{{ b.name }}.</strong>{{ ' ' }}
         <span v-html="formatEntries(b.entries)"></span>
       </div>
     </div>
@@ -80,7 +80,7 @@
     <div v-if="data.reaction?.length" class="action-section">
       <h5>Reactions</h5>
       <div v-for="(r, i) in data.reaction" :key="'reaction-' + i" class="action-item">
-        <strong>{{ r.name }}.</strong>
+        <strong>{{ r.name }}.</strong>{{ ' ' }}
         <span v-html="formatEntries(r.entries)"></span>
       </div>
     </div>
@@ -89,7 +89,7 @@
     <div v-if="data.legendary?.length" class="action-section">
       <h5>Legendary Actions</h5>
       <div v-for="(l, i) in data.legendary" :key="'legendary-' + i" class="action-item">
-        <strong>{{ l.name }}.</strong>
+        <strong>{{ l.name }}.</strong>{{ ' ' }}
         <span v-html="formatEntries(l.entries)"></span>
       </div>
     </div>

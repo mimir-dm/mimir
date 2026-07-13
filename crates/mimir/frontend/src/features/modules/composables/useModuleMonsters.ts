@@ -271,15 +271,17 @@ export function formatCreatureType(monsterData: any): string {
     }
   }
 
+  let result = parts.join(' ')
+
   // Alignment
   if (monsterData.alignment) {
     const alignment = Array.isArray(monsterData.alignment)
       ? monsterData.alignment.map((a: string) => ALIGNMENT_MAP[a] || a).join(' ')
       : ALIGNMENT_MAP[monsterData.alignment] || monsterData.alignment
-    parts.push(`, ${alignment}`)
+    result += `, ${alignment}`
   }
 
-  return parts.join(' ')
+  return result
 }
 
 /**

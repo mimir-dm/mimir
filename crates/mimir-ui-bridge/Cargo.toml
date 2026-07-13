@@ -1,0 +1,23 @@
+[package]
+name = "mimir-ui-bridge"
+version = "0.7.3"
+edition = "2021"
+description = "Dev-only invoke-over-HTTP bridge for the Playwright UI harness. Never shipped: lives outside the app crate so the Tauri bundler cannot pick it up."
+authors = ["Dylan Storey"]
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "ui-bridge"
+path = "src/main.rs"
+
+[dependencies]
+mimir = { path = "../mimir" }
+mimir-core = { path = "../mimir-core" }
+mimir-print = { path = "../mimir-print" }
+
+tauri = { version = "2", features = ["test"] }
+axum = "0.8"
+tower-http = { version = "0.6", features = ["cors"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"

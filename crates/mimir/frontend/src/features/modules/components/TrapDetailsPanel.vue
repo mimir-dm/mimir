@@ -33,7 +33,7 @@
               <ul class="entry-list">
                 <li v-for="(item, itemIdx) in entry.items" :key="itemIdx">
                   <span v-if="typeof item === 'string'" v-html="processFormattingTags(item)"></span>
-                  <span v-else-if="item.name"><strong>{{ item.name }}.</strong>
+                  <span v-else-if="item.name"><strong>{{ item.name }}.</strong>{{ ' ' }}
                     <span v-html="formatItemEntries(item)"></span>
                   </span>
                 </li>

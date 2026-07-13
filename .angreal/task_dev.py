@@ -3,6 +3,7 @@
 Commands:
 - angreal dev reset: Reset the dev database (delete and let app recreate)
 - angreal dev launch: Launch the dev UI (Vite + Tauri)
+- angreal dev screenshots: Capture the UI-harness design-review screenshot set
 """
 import angreal
 import subprocess
@@ -98,3 +99,43 @@ def launch():
         print("Shutting down Vite dev server...")
         vite.terminate()
         vite.wait()
+
+
+@dev()
+@angreal.command(
+    name="screenshots",
+    about="Capture the UI design-review screenshot set (snapshot DB -> bridge -> Vite -> captures -> teardown)",
+    when_to_use=[
+        "reviewing UI/UX changes with real campaign data",
+        "producing before/after screenshot sets during design work",
+        "verifying every main screen still renders after a frontend change",
+    ],
+    when_not_to_use=[
+        "running frontend unit tests (use angreal test unit)",
+        "interactive UI development (use angreal dev launch)",
+        "capturing a single screen (run npx playwright test in crates/mimir/frontend directly)",
+    ],
+)
+def screenshots():
+    """Run the full Playwright capture set against a disposable snapshot of the production DB.
+
+    Playwright's webServer config orchestrates everything: scripts/ui-session.sh
+    snapshots the prod DB to a scratch dir and runs the ui-bridge against the
+    copy; the Vite dev server serves the frontend; captures land in a
+    timestamped directory under crates/mimir/frontend/playwright/screenshots/runs/;
+    the scratch DB copy is deleted on exit. The live campaign database is
+    never opened writable.
+    """
+    if not (FRONTEND_DIR / "node_modules").exists():
+        print("Installing frontend dependencies...")
+        subprocess.run(["npm", "ci"], cwd=FRONTEND_DIR, check=True)
+
+    result = subprocess.run(["npm", "run", "screenshots"], cwd=FRONTEND_DIR)
+    if result.returncode == 0:
+        runs_dir = FRONTEND_DIR / "playwright" / "screenshots" / "runs"
+        if runs_dir.exists():
+            latest = max(runs_dir.iterdir(), key=lambda p: p.name, default=None)
+            if latest:
+                count = sum(1 for _ in latest.glob("*.png"))
+                print(f"\n{count} captures -> {latest}")
+    return result.returncode

@@ -7,6 +7,7 @@
 
 pub mod commands;
 pub mod error;
+pub mod ipc;
 pub mod state;
 
 pub use error::{CommandError, CommandResult};

@@ -4,7 +4,7 @@
 //! These commands handle window creation, destruction, fullscreen, and IPC events.
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager, Runtime, WebviewUrl, WebviewWindowBuilder};
 
 /// Payload for map updates sent to the player display
 #[derive(Debug, Clone, Serialize)]
@@ -39,13 +39,13 @@ const PLAYER_DISPLAY_LABEL: &str = "player-display";
 
 /// Check if the player display window is currently open.
 #[tauri::command]
-pub fn is_player_display_open(app: AppHandle) -> bool {
+pub fn is_player_display_open<R: Runtime>(app: AppHandle<R>) -> bool {
     app.get_webview_window(PLAYER_DISPLAY_LABEL).is_some()
 }
 
 /// Open the player display window.
 #[tauri::command]
-pub fn open_player_display_window(app: AppHandle) -> Result<(), String> {
+pub fn open_player_display_window<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     // Check if window already exists
     if app.get_webview_window(PLAYER_DISPLAY_LABEL).is_some() {
         return Ok(());
@@ -65,7 +65,7 @@ pub fn open_player_display_window(app: AppHandle) -> Result<(), String> {
 
 /// Close the player display window.
 #[tauri::command]
-pub fn close_player_display_window(app: AppHandle) -> Result<(), String> {
+pub fn close_player_display_window<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(PLAYER_DISPLAY_LABEL) {
         window
             .close()
@@ -77,7 +77,7 @@ pub fn close_player_display_window(app: AppHandle) -> Result<(), String> {
 /// Toggle fullscreen mode on the player display window.
 /// Returns the new fullscreen state.
 #[tauri::command]
-pub fn toggle_player_display_fullscreen(app: AppHandle) -> Result<bool, String> {
+pub fn toggle_player_display_fullscreen<R: Runtime>(app: AppHandle<R>) -> Result<bool, String> {
     let window = app
         .get_webview_window(PLAYER_DISPLAY_LABEL)
         .ok_or_else(|| "Player display window not open".to_string())?;
@@ -95,8 +95,8 @@ pub fn toggle_player_display_fullscreen(app: AppHandle) -> Result<bool, String> 
 
 /// Send a map to the player display window.
 #[tauri::command]
-pub fn send_map_to_display(
-    app: AppHandle,
+pub fn send_map_to_display<R: Runtime>(
+    app: AppHandle<R>,
     map_id: String,
     grid_type: String,
     grid_size_px: Option<i32>,
@@ -130,7 +130,12 @@ pub fn send_map_to_display(
 
 /// Update the viewport on the player display window (pan/zoom).
 #[tauri::command]
-pub fn update_display_viewport(app: AppHandle, x: f64, y: f64, zoom: f64) -> Result<(), String> {
+pub fn update_display_viewport<R: Runtime>(
+    app: AppHandle<R>,
+    x: f64,
+    y: f64,
+    zoom: f64,
+) -> Result<(), String> {
     let window = app
         .get_webview_window(PLAYER_DISPLAY_LABEL)
         .ok_or_else(|| "Player display window not open".to_string())?;
@@ -146,7 +151,10 @@ pub fn update_display_viewport(app: AppHandle, x: f64, y: f64, zoom: f64) -> Res
 
 /// Toggle or set blackout mode on the player display.
 #[tauri::command]
-pub fn toggle_display_blackout(app: AppHandle, is_blackout: bool) -> Result<(), String> {
+pub fn toggle_display_blackout<R: Runtime>(
+    app: AppHandle<R>,
+    is_blackout: bool,
+) -> Result<(), String> {
     let window = app
         .get_webview_window(PLAYER_DISPLAY_LABEL)
         .ok_or_else(|| "Player display window not open".to_string())?;

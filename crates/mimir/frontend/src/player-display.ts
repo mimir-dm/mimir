@@ -1,3 +1,5 @@
+// Dev-only browser IPC shim for the UI harness (inert in the real app).
+import './harness/bridge-shim'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PlayerDisplayWindow from './components/PlayerDisplayWindow.vue'
