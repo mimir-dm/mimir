@@ -73,9 +73,9 @@ describe('mockInvoke helpers', () => {
 
   describe('mockCommandRaw', () => {
     it('returns raw value without ApiResponse wrapper', async () => {
-      mockCommandRaw('get_themes', [{ id: 'dark', name: 'Dark' }])
+      mockCommandRaw('some_raw_command', [{ id: 'dark', name: 'Dark' }])
 
-      const result = await invoke('get_themes')
+      const result = await invoke('some_raw_command')
 
       expect(result).toEqual([{ id: 'dark', name: 'Dark' }])
     })

@@ -31,17 +31,7 @@ const selectedTheme = computed({
   set: async (value) => await themeStore.setTheme(value)
 })
 
-const availableThemes = computed(() => {
-  // Default themes available without backend
-  const defaultThemes = [
-    { id: 'light', name: 'Light', description: 'Clean light theme with soft purples' },
-    { id: 'dark', name: 'Dark', description: 'Deep blues and navy tones' },
-    { id: 'hyper', name: 'Hyper', description: 'Vaporwave neon aesthetic' }
-  ]
-  
-  // Merge with backend themes if available
-  return themeStore.themes.length > 0 ? themeStore.themes : defaultThemes
-})
+const availableThemes = computed(() => themeStore.themes)
 
 const handleThemeChange = async () => {
   // Ensure the async setTheme completes

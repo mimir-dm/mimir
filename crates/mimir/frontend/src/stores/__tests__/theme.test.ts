@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useThemeStore } from '../theme'
+import { THEMES } from '../../constants/themes'
 import { invoke } from '@tauri-apps/api/core'
 import { emit, listen } from '@tauri-apps/api/event'
 
@@ -41,9 +42,10 @@ describe('useThemeStore', () => {
   })
 
   describe('initial state', () => {
-    it('has empty themes array', () => {
+    it('lists the built-in themes', () => {
       const store = useThemeStore()
-      expect(store.themes).toEqual([])
+      expect(store.themes).toEqual(THEMES)
+      expect(store.themes.map((t) => t.id)).toEqual(['light', 'dark', 'hyper'])
     })
 
     it('has light as default theme', () => {
@@ -52,38 +54,15 @@ describe('useThemeStore', () => {
     })
   })
 
-  describe('loadThemes', () => {
-    it('loads themes from backend', async () => {
-      const mockThemes = [
-        { id: 'light', name: 'Light', description: 'Light theme' },
-        { id: 'dark', name: 'Dark', description: 'Dark theme' }
-      ]
-      mockInvoke.mockResolvedValueOnce({ success: true, data: mockThemes })
-
+  describe('theme list', () => {
+    // No backend command lists themes (MIMIR-T-0668): the list is built in.
+    it('never asks the backend for themes', async () => {
       const store = useThemeStore()
-      await store.loadThemes()
+      store.applyTheme()
+      await store.setTheme('dark', false)
 
-      expect(mockInvoke).toHaveBeenCalledWith('get_themes')
-      expect(store.themes).toEqual(mockThemes)
-    })
-
-    it('handles error silently', async () => {
-      mockInvoke.mockRejectedValueOnce(new Error('Backend error'))
-
-      const store = useThemeStore()
-      await store.loadThemes()
-
-      // Should not throw, themes should remain empty
-      expect(store.themes).toEqual([])
-    })
-
-    it('handles unsuccessful response', async () => {
-      mockInvoke.mockResolvedValueOnce({ success: false, error: 'Failed' })
-
-      const store = useThemeStore()
-      await store.loadThemes()
-
-      expect(store.themes).toEqual([])
+      expect(mockInvoke).not.toHaveBeenCalled()
+      expect(store).not.toHaveProperty('loadThemes')
     })
   })
 
