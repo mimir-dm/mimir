@@ -1,25 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, onUnmounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { emit, listen } from '@tauri-apps/api/event'
-import type { Theme } from '../types/api'
+import { THEMES } from '../constants/themes'
 import type { UnlistenFn } from '@tauri-apps/api/event'
 
 export const useThemeStore = defineStore('theme', () => {
-  const themes = ref<Theme[]>([])
+  // Built-in list; there is no backend command for themes.
+  const themes = THEMES
   const currentTheme = ref<string>('light')
   let unlistenThemeChange: UnlistenFn | null = null
-  
-  // Load available themes from backend
-  const loadThemes = async () => {
-    try {
-      const response = await invoke<{ success: boolean; data: Theme[] }>('get_themes')
-      if (response.success) {
-        themes.value = response.data
-      }
-    } catch (error) {
-    }
-  }
   
   // Get saved theme preference from localStorage
   const getSavedTheme = (): string => {
@@ -41,7 +30,7 @@ export const useThemeStore = defineStore('theme', () => {
   // Apply theme class to body element for teleported components (modals)
   const applyThemeToBody = (theme: string) => {
     // Remove existing theme classes
-    document.body.classList.remove('theme-light', 'theme-dark', 'theme-hyper')
+    document.body.classList.remove(...THEMES.map((t) => `theme-${t.id}`))
     // Add new theme class
     document.body.classList.add(`theme-${theme}`)
   }
@@ -86,7 +75,6 @@ export const useThemeStore = defineStore('theme', () => {
   return {
     themes,
     currentTheme,
-    loadThemes,
     applyTheme,
     setTheme,
     initThemeSync,

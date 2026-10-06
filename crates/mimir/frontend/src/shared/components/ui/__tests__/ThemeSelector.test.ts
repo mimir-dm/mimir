@@ -2,12 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import ThemeSelector from '../ThemeSelector.vue'
+import { THEMES } from '../../../../constants/themes'
 
 // Mock the theme store
 const mockSetTheme = vi.fn()
 const mockThemeStore = {
   currentTheme: 'light',
-  themes: [],
+  themes: [...THEMES] as { id: string; name: string; description: string }[],
   setTheme: mockSetTheme
 }
 
@@ -20,7 +21,7 @@ describe('ThemeSelector', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     mockThemeStore.currentTheme = 'light'
-    mockThemeStore.themes = []
+    mockThemeStore.themes = [...THEMES]
   })
 
   describe('rendering', () => {
@@ -36,7 +37,7 @@ describe('ThemeSelector', () => {
       expect(wrapper.find('select').exists()).toBe(true)
     })
 
-    it('renders default themes when store has no themes', () => {
+    it('renders the built-in themes', () => {
       const wrapper = mount(ThemeSelector)
 
       const options = wrapper.findAll('option')
@@ -46,7 +47,7 @@ describe('ThemeSelector', () => {
       expect(options[2].text()).toBe('Hyper')
     })
 
-    it('renders themes from store when available', () => {
+    it('renders exactly the store\'s theme list', () => {
       mockThemeStore.themes = [
         { id: 'custom1', name: 'Custom Theme 1', description: 'Custom' },
         { id: 'custom2', name: 'Custom Theme 2', description: 'Custom' }

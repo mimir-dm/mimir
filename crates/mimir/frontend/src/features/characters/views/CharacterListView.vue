@@ -45,7 +45,14 @@
                   <div class="action-buttons">
                     <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Edit</button>
                     <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Print</button>
-                    <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Level Up</button>
+                    <button
+                      @click="levelUpCharacter(character)"
+                      class="btn btn-outline btn-secondary btn-xs"
+                      :disabled="!canLevelUp(character)"
+                      :title="canLevelUp(character) ? undefined : `Level ${MAX_CHARACTER_LEVEL} is the maximum`"
+                    >
+                      Level Up
+                    </button>
                     <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs">Delete</button>
                   </div>
                   <select class="campaign-select" @change="assignToCampaign(character.id, $event)">
@@ -74,7 +81,14 @@
                 <div class="action-buttons">
                   <button @click="editCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Edit</button>
                   <button @click="printCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Print</button>
-                  <button @click="levelUpCharacter(character)" class="btn btn-outline btn-secondary btn-xs">Level Up</button>
+                  <button
+                    @click="levelUpCharacter(character)"
+                    class="btn btn-outline btn-secondary btn-xs"
+                    :disabled="!canLevelUp(character)"
+                    :title="canLevelUp(character) ? undefined : `Level ${MAX_CHARACTER_LEVEL} is the maximum`"
+                  >
+                    Level Up
+                  </button>
                   <button @click="deleteCharacter(character)" class="btn btn-outline btn-danger btn-xs">Delete</button>
                 </div>
               </template>
@@ -155,7 +169,7 @@ import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { useCharacterStore } from '@/stores/characters'
 import { useCampaignStore } from '@/stores/campaigns'
-import type { Character } from '@/types/character'
+import { canLevelUp, MAX_CHARACTER_LEVEL, type Character } from '@/types/character'
 
 const router = useRouter()
 const characterStore = useCharacterStore()
@@ -286,6 +300,7 @@ const selectedCharacterForLevelUp = ref<Character | null>(null)
 const selectedCharacterData = ref<Character | null>(null)
 
 const levelUpCharacter = async (character: Character) => {
+  if (!canLevelUp(character)) return
   // Level-up uses the character data directly (dialog shows unavailable message)
   selectedCharacterForLevelUp.value = character
   selectedCharacterData.value = character

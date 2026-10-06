@@ -169,6 +169,18 @@ export function totalLevel(character: Character): number {
 }
 
 /**
+ * Highest total character level. The backend refuses a level-up past it.
+ */
+export const MAX_CHARACTER_LEVEL = 20
+
+/**
+ * Whether the character can gain another level (total level below the cap).
+ */
+export function canLevelUp(character: Character): boolean {
+  return totalLevel(character) < MAX_CHARACTER_LEVEL
+}
+
+/**
  * Format class string (e.g., "Fighter 5 / Rogue 3").
  */
 export function classString(character: Character): string {
