@@ -1507,6 +1507,132 @@ mod tests {
     // -- Character inventory ----------------------------------------------------
 
     /// Helper: create a character in the active campaign, return its id.
+    /// Seed the catalog with PHB feats for the feat tool tests.
+    fn seed_catalog_feats(ctx: &Arc<McpContext>) {
+        use mimir_core::dal::catalog::{insert_feat, insert_source};
+        use mimir_core::models::catalog::{NewCatalogSource, NewFeat};
+
+        let mut db = ctx.connect().expect("test db");
+        insert_source(
+            &mut db,
+            &NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z"),
+        )
+        .expect("source");
+        insert_feat(
+            &mut db,
+            &NewFeat::new("Alert", "PHB", r#"{"name":"Alert"}"#),
+        )
+        .expect("Alert");
+        insert_feat(
+            &mut db,
+            &NewFeat::new(
+                "Elemental Adept",
+                "PHB",
+                r#"{"name":"Elemental Adept","repeatable":true}"#,
+            ),
+        )
+        .expect("Elemental Adept");
+    }
+
+    #[tokio::test]
+    async fn character_feat_lifecycle() {
+        let ctx = test_ctx();
+        let handler = MimirHandler::with_context(ctx.clone());
+        seed_catalog_feats(&ctx);
+        setup_campaign(&handler).await;
+        let char_id = setup_character(&handler).await;
+
+        // Empty to start.
+        let res = call_ok(
+            &handler,
+            "list_character_feats",
+            json!({"character_id": char_id}),
+        )
+        .await;
+        assert_eq!(res["data"]["feats"].as_array().unwrap().len(), 0);
+
+        // Add with defaults: source PHB, source_type asi; stored with catalog spelling.
+        let res = call_ok(
+            &handler,
+            "add_character_feat",
+            json!({"character_id": char_id, "feat_name": "alert"}),
+        )
+        .await;
+        assert_eq!(res["status"], "success");
+        assert_eq!(res["data"]["action"], "feat_added");
+        assert_eq!(res["data"]["feat"]["feat_name"], "Alert");
+        assert_eq!(res["data"]["feat"]["feat_source"], "PHB");
+        assert_eq!(res["data"]["feat"]["source_type"], "asi");
+
+        // Explicit source_type.
+        let res = call_ok(
+            &handler,
+            "add_character_feat",
+            json!({
+                "character_id": char_id,
+                "feat_name": "Elemental Adept",
+                "feat_source": "PHB",
+                "source_type": "bonus"
+            }),
+        )
+        .await;
+        assert_eq!(res["data"]["feat"]["source_type"], "bonus");
+
+        let res = call_ok(
+            &handler,
+            "list_character_feats",
+            json!({"character_id": char_id}),
+        )
+        .await;
+        let names: Vec<&str> = res["data"]["feats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| f["feat_name"].as_str().unwrap())
+            .collect();
+        assert_eq!(names, vec!["Alert", "Elemental Adept"]);
+
+        // Duplicate, catalog miss, bad source_type, missing character: all caller faults.
+        for bad in [
+            json!({"character_id": char_id, "feat_name": "Alert"}),
+            json!({"character_id": char_id, "feat_name": "Not A Feat"}),
+            json!({"character_id": char_id, "feat_name": "Alert", "feat_source": "XGE"}),
+            json!({"character_id": char_id, "feat_name": "Alert", "source_type": "level"}),
+            json!({"character_id": "no-such-character", "feat_name": "Alert"}),
+        ] {
+            let err = call_err(&handler, "add_character_feat", bad.clone()).await;
+            assert!(
+                matches!(err, McpError::InvalidArguments(_)),
+                "expected InvalidArguments for {bad}, got {err:?}"
+            );
+        }
+
+        // Remove (case-insensitive), then removing again is a caller fault.
+        let res = call_ok(
+            &handler,
+            "remove_character_feat",
+            json!({"character_id": char_id, "feat_name": "ALERT"}),
+        )
+        .await;
+        assert_eq!(res["data"]["action"], "feat_removed");
+        assert_eq!(res["data"]["removed"], 1);
+        let err = call_err(
+            &handler,
+            "remove_character_feat",
+            json!({"character_id": char_id, "feat_name": "Alert"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)), "got {err:?}");
+
+        let res = call_ok(
+            &handler,
+            "list_character_feats",
+            json!({"character_id": char_id}),
+        )
+        .await;
+        assert_eq!(res["data"]["feats"].as_array().unwrap().len(), 1);
+    }
+
     async fn setup_character(handler: &MimirHandler) -> String {
         let res = call_ok(
             handler,

@@ -123,6 +123,7 @@ Campaign-level documents are not tied to any module — use them for world lore,
 1. **Read** the character with `get_character` to check current level and class
 2. **Level up** with `level_up_character` (character_id, class_name, hp_method: "average"|"roll"|"manual")
 3. Optionally include subclass_name, asi_type ("asi"|"feat"), asi_ability1/asi_increase1, feat_name
+4. If the player chooses the feat later, do not level up again. Record the feat with `add_character_feat` (see Manage Character Feats)
 
 ### Populate an Encounter
 
@@ -154,6 +155,14 @@ Campaign-level documents are not tied to any module — use them for world lore,
 - `remove_character_spell` — remove a spell by name, optionally scoped to a specific class
 
 Set a spell's prepared state with the `prepared` flag when calling `add_character_spell`. Use `spell_source: "HB"` when adding homebrew spells, and verify the homebrew spell exists in the campaign with `list_homebrew(content_type: "spell")` before adding it to a character.
+
+### Manage Character Feats
+
+- `list_character_feats` — list the feats of a character, with the source book and how the character got each feat
+- `add_character_feat` — record a feat outside level-up, for example an ASI choice that the player made later
+- `remove_character_feat` — remove a feat by name
+
+The feat must be in the catalog. Find its exact name and source with `search_catalog(category: "feat")`. The default source is PHB and the default `source_type` is `asi`. A character can have a feat only one time, unless the catalog marks the feat as repeatable.
 
 ### Review Module Structure
 

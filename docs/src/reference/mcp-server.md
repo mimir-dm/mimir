@@ -66,11 +66,11 @@ Most tools operate on an active campaign. Until a campaign is selected with `set
 | `list_documents` | List campaign-level or module-level documents |
 | `read_document` | Read full content of a document |
 | `create_document` | Create document (backstory, read_aloud, dm_notes, description, custom) |
-| `edit_document` | Edit document using search and replace |
+| `edit_document` | Rename a document, edit its content with search and replace, or both |
 | `delete_document` | Delete a document |
 | `reorder_document` | Reorder documents by swapping sort positions |
 
-### Character Management (13 tools)
+### Character Management (16 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -87,6 +87,9 @@ Most tools operate on an active campaign. Until a campaign is selected with `set
 | `add_character_spell` | Add spell to character's known spells |
 | `remove_character_spell` | Remove spell from character |
 | `list_character_spells` | List character's known spells (filterable by class/prepared) |
+| `add_character_feat` | Record a catalog feat for a character outside level-up |
+| `list_character_feats` | List character's feats with source and how each was gained |
+| `remove_character_feat` | Remove a feat from a character by name |
 
 ### Map Management (8 tools)
 

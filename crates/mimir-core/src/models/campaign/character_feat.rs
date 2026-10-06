@@ -67,6 +67,17 @@ impl FeatSourceType {
             FeatSourceType::Bonus => "bonus",
         }
     }
+
+    /// Parse the stored string form ("asi", "race", "class", "bonus").
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "asi" => Some(FeatSourceType::Asi),
+            "race" => Some(FeatSourceType::Race),
+            "class" => Some(FeatSourceType::Class),
+            "bonus" => Some(FeatSourceType::Bonus),
+            _ => None,
+        }
+    }
 }
 
 /// Data for inserting a new character feat.
