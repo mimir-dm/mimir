@@ -8,10 +8,11 @@ use crate::models::campaign::{Character, CharacterResponse, NewCharacter, Update
 use crate::services::{ServiceError, ServiceResult};
 use crate::utils::now_rfc3339;
 
-use super::{
+use super::proficiencies::{
     extract_background_proficiencies, extract_class_proficiencies, extract_race_proficiencies,
-    insert_proficiencies, CharacterService,
+    insert_proficiencies,
 };
+use super::CharacterService;
 
 /// Input for creating a new character.
 #[derive(Debug, Clone)]
