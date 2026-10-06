@@ -2,7 +2,7 @@
   <div class="campaign-selector">
     <div class="selector-dropdown" :class="{ 'is-open': isOpen }" @click="toggleDropdown">
       <div class="selector-current">
-        <span v-if="selectedCampaign" class="campaign-name">
+        <span v-if="selectedCampaign" class="campaign-name" :title="selectedCampaign.name">
           {{ selectedCampaign.name }}
         </span>
         <span v-else class="no-selection">
@@ -247,9 +247,14 @@ watch(() => router.currentRoute.value, (route) => {
   box-shadow: 0 0 0 3px var(--color-primary-900);
 }
 
+/* One line; very long names end in an ellipsis (full name in the tooltip). */
 .campaign-name {
   font-weight: 500;
   color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 32ch;
 }
 
 .no-selection {
@@ -258,6 +263,7 @@ watch(() => router.currentRoute.value, (route) => {
 }
 
 .dropdown-icon {
+  flex-shrink: 0;
   color: var(--color-text-secondary);
   transition: transform var(--transition-fast);
 }

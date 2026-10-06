@@ -91,21 +91,27 @@ const skullIcon = computed(() => {
   box-shadow: var(--shadow-sm);
 }
 
+/*
+ * Three columns: the nav stays centered while there is room, and the side
+ * columns never shrink below their content, so at narrow widths the nav
+ * moves aside instead of overlapping the campaign selector (MIMIR-T-0672).
+ */
 .header-content {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 30px;
   height: 72px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  position: relative;
+  column-gap: var(--spacing-md);
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  justify-self: start;
 }
 
 .skull-icon-link {
@@ -137,15 +143,11 @@ const skullIcon = computed(() => {
   transform: scale(1.35);
 }
 
-.header-center {
-  flex: 1;
-  /* Empty spacer to push left and right elements to sides */
-}
-
 .header-right {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  justify-self: end;
 }
 
 .settings-icon {
@@ -190,9 +192,6 @@ const skullIcon = computed(() => {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .nav-link {
