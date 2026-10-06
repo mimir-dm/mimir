@@ -10,8 +10,8 @@ use uuid::Uuid;
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
     Character, Module, NewCampaignAsset, NewCampaignHomebrewItem, NewCampaignHomebrewMonster,
-    NewCharacter, NewCharacterClass, NewCharacterInventory, NewLightSource, NewMap, NewMapPoi,
-    NewMapTrap, NewModuleMonster, NewModuleNpc, NewTokenPlacement,
+    NewCharacter, NewCharacterClass, NewCharacterInventory, NewCharacterSpell, NewLightSource,
+    NewMap, NewMapPoi, NewMapTrap, NewModuleMonster, NewModuleNpc, NewTokenPlacement,
 };
 use crate::services::{
     CampaignService, CreateCampaignInput, CreateModuleInput, ModuleService, ModuleType,
@@ -240,6 +240,27 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     }
     characters.push(dal::get_character(conn, &elara_id)?);
 
+    // Spells (all in the SRD catalog fixture, so they resolve in the UI harness)
+    seed_character_spells(
+        conn,
+        &elara_id,
+        "Wizard",
+        &[
+            ("Fire Bolt", true),
+            ("Mage Hand", true),
+            ("Prestidigitation", true),
+            ("Magic Missile", true),
+            ("Shield", true),
+            ("Mage Armor", true),
+            ("Detect Magic", false),
+            ("Thunderwave", false),
+            ("Misty Step", true),
+            ("Scorching Ray", true),
+            ("Fireball", true),
+            ("Counterspell", false),
+        ],
+    )?;
+
     // Finn Lightfoot - Halfling Rogue
     let finn_id = Uuid::new_v4().to_string();
     let finn = NewCharacter::new_pc(&finn_id, Some(campaign_id), "Finn Lightfoot", "Charlie")
@@ -319,6 +340,27 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         dal::insert_character_inventory(conn, &item)?;
     }
     characters.push(dal::get_character(conn, &helena_id)?);
+
+    seed_character_spells(
+        conn,
+        &helena_id,
+        "Cleric",
+        &[
+            ("Sacred Flame", true),
+            ("Guidance", true),
+            ("Light", true),
+            ("Bless", true),
+            ("Cure Wounds", true),
+            ("Healing Word", true),
+            ("Spiritual Weapon", true),
+            ("Lesser Restoration", true),
+            ("Hold Person", false),
+            ("Spirit Guardians", true),
+            ("Revivify", true),
+            ("Dispel Magic", false),
+            ("Banishment", false),
+        ],
+    )?;
 
     // =========================================================================
     // NPCs - Fully seeded with personality and inventory
@@ -519,6 +561,24 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
 // =============================================================================
 // Homebrew Item Seeding
 // =============================================================================
+
+/// Add PHB spells to a character's known spells.
+fn seed_character_spells(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    source_class: &str,
+    spells: &[(&str, bool)],
+) -> ServiceResult<()> {
+    for (name, prepared) in spells {
+        let id = Uuid::new_v4().to_string();
+        let mut spell = NewCharacterSpell::new(&id, character_id, name, "PHB", source_class);
+        if *prepared {
+            spell = spell.prepared();
+        }
+        dal::insert_character_spell(conn, &spell)?;
+    }
+    Ok(())
+}
 
 fn seed_homebrew_items(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<usize> {
     let mut count = 0;

@@ -52,6 +52,13 @@ base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 tempfile.workspace = true
 
+[features]
+# SRD catalog loader and the UI fixture campaign (seed::srd, seed::seed_ui_fixture).
+# Dev-only: used by integration tests and mimir-ui-bridge, never by the app.
+fixtures = []
+
 [dev-dependencies]
+# Enables the `fixtures` feature for this crate's own tests.
+mimir-core = { path = ".", features = ["fixtures"] }
 tempfile = { workspace = true }
 ts-rs = { workspace = true }

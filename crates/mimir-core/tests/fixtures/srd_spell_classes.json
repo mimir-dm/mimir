@@ -1,0 +1,780 @@
+[
+  {
+    "spell": "Banishment",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Bless",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Chain Lightning",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Cone of Cold",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Counterspell",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Cure Wounds",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      },
+      {
+        "name": "Ranger",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Detect Magic",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      },
+      {
+        "name": "Ranger",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Dimension Door",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Disintegrate",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Dispel Magic",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Eldritch Blast",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Finger of Death",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Fire Bolt",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Fireball",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Greater Invisibility",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Greater Restoration",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Guidance",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Heal",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Healing Word",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Hold Person",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Lesser Restoration",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      },
+      {
+        "name": "Ranger",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Light",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Lightning Bolt",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Mage Armor",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Mage Hand",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Magic Missile",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Minor Illusion",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Misty Step",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Polymorph",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Power Word Kill",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Power Word Stun",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Prestidigitation",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Warlock",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Raise Dead",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Revivify",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      },
+      {
+        "name": "Paladin",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Sacred Flame",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Scorching Ray",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Shield",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Spirit Guardians",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Spiritual Weapon",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Cleric",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Teleport",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Thunderwave",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Bard",
+        "source": "PHB"
+      },
+      {
+        "name": "Druid",
+        "source": "PHB"
+      },
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Wall of Force",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  },
+  {
+    "spell": "Wish",
+    "spellSource": "PHB",
+    "classes": [
+      {
+        "name": "Sorcerer",
+        "source": "PHB"
+      },
+      {
+        "name": "Wizard",
+        "source": "PHB"
+      }
+    ]
+  }
+]
