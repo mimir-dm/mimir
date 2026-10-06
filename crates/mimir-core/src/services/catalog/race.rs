@@ -100,7 +100,9 @@ mod tests {
         let mut service = RaceService::new(&mut conn);
 
         // Search all
-        let results = service.search(&RaceFilter::default()).expect("Search failed");
+        let results = service
+            .search(&RaceFilter::default())
+            .expect("Search failed");
         assert_eq!(results.len(), 5);
 
         // Search by name

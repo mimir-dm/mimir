@@ -59,15 +59,16 @@ impl<'a> SourceService<'a> {
         campaign_id: &str,
         source_codes: &[String],
     ) -> ServiceResult<Vec<String>> {
-        self.conn.transaction::<_, diesel::result::Error, _>(|conn| {
-            dal::delete_all_campaign_sources(conn, campaign_id)?;
-            for code in source_codes {
-                let id = Uuid::new_v4().to_string();
-                let source = NewCampaignSource::new(&id, campaign_id, code);
-                dal::insert_campaign_source(conn, &source)?;
-            }
-            Ok(())
-        })?;
+        self.conn
+            .transaction::<_, diesel::result::Error, _>(|conn| {
+                dal::delete_all_campaign_sources(conn, campaign_id)?;
+                for code in source_codes {
+                    let id = Uuid::new_v4().to_string();
+                    let source = NewCampaignSource::new(&id, campaign_id, code);
+                    dal::insert_campaign_source(conn, &source)?;
+                }
+                Ok(())
+            })?;
         self.list_campaign_sources(campaign_id)
     }
 
@@ -106,15 +107,16 @@ impl<'a> SourceService<'a> {
         character_id: &str,
         source_codes: &[String],
     ) -> ServiceResult<Vec<String>> {
-        self.conn.transaction::<_, diesel::result::Error, _>(|conn| {
-            dal::delete_all_character_sources(conn, character_id)?;
-            for code in source_codes {
-                let id = Uuid::new_v4().to_string();
-                let source = NewCharacterSource::new(&id, character_id, code);
-                dal::insert_character_source(conn, &source)?;
-            }
-            Ok(())
-        })?;
+        self.conn
+            .transaction::<_, diesel::result::Error, _>(|conn| {
+                dal::delete_all_character_sources(conn, character_id)?;
+                for code in source_codes {
+                    let id = Uuid::new_v4().to_string();
+                    let source = NewCharacterSource::new(&id, character_id, code);
+                    dal::insert_character_source(conn, &source)?;
+                }
+                Ok(())
+            })?;
         self.list_character_sources(character_id)
     }
 }
@@ -122,8 +124,8 @@ impl<'a> SourceService<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::insert_campaign;
+    use crate::db::test_connection;
     use crate::models::campaign::NewCampaign;
     use diesel::RunQueryDsl;
 
@@ -169,9 +171,15 @@ mod tests {
 
         let source = service.add_campaign_source(&campaign_id, "PHB").unwrap();
         assert_eq!(source.source_code, "PHB");
-        assert_eq!(service.list_campaign_sources(&campaign_id).unwrap().len(), 1);
+        assert_eq!(
+            service.list_campaign_sources(&campaign_id).unwrap().len(),
+            1
+        );
 
         service.remove_campaign_source(&campaign_id, "PHB").unwrap();
-        assert!(service.list_campaign_sources(&campaign_id).unwrap().is_empty());
+        assert!(service
+            .list_campaign_sources(&campaign_id)
+            .unwrap()
+            .is_empty());
     }
 }

@@ -113,10 +113,7 @@ pub fn reorder_module(
 
         // Step 1: Move target module to sentinel (-1)
         diesel::update(modules::table.find(module_id))
-            .set((
-                modules::module_number.eq(-1),
-                modules::updated_at.eq(&now),
-            ))
+            .set((modules::module_number.eq(-1), modules::updated_at.eq(&now)))
             .execute(conn)?;
 
         // Step 2: Shift affected modules one at a time to avoid UNIQUE conflicts
@@ -175,8 +172,8 @@ pub fn next_module_number(conn: &mut SqliteConnection, campaign_id: &str) -> Que
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::insert_campaign;
+    use crate::db::test_connection;
     use crate::models::campaign::NewCampaign;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -318,14 +315,20 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        assert_eq!(count_modules(&mut conn, "camp-1").expect("Failed to count"), 0);
+        assert_eq!(
+            count_modules(&mut conn, "camp-1").expect("Failed to count"),
+            0
+        );
 
         let module1 = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         let module2 = NewModule::new("mod-2", "camp-1", "Chapter 2", 2);
         insert_module(&mut conn, &module1).expect("Failed to insert");
         insert_module(&mut conn, &module2).expect("Failed to insert");
 
-        assert_eq!(count_modules(&mut conn, "camp-1").expect("Failed to count"), 2);
+        assert_eq!(
+            count_modules(&mut conn, "camp-1").expect("Failed to count"),
+            2
+        );
     }
 
     #[test]

@@ -137,7 +137,7 @@ pub fn search(
          FROM catalog_fts
          WHERE catalog_fts MATCH ?
          ORDER BY rank
-         LIMIT ?"
+         LIMIT ?",
     )
     .bind::<Text, _>(query)
     .bind::<Integer, _>(limit)
@@ -164,7 +164,7 @@ pub fn search_by_entity_type(
          FROM catalog_fts
          WHERE catalog_fts MATCH ? AND entity_type = ?
          ORDER BY rank
-         LIMIT ?"
+         LIMIT ?",
     )
     .bind::<Text, _>(query)
     .bind::<Text, _>(entity_type)
@@ -191,7 +191,7 @@ pub fn search_by_content_type(
          FROM catalog_fts
          WHERE catalog_fts MATCH ? AND content_type = ?
          ORDER BY rank
-         LIMIT ?"
+         LIMIT ?",
     )
     .bind::<Text, _>(query)
     .bind::<Text, _>(content_type.as_str())
@@ -220,7 +220,7 @@ pub fn search_filtered(
          FROM catalog_fts
          WHERE catalog_fts MATCH ? AND entity_type = ? AND content_type = ?
          ORDER BY rank
-         LIMIT ?"
+         LIMIT ?",
     )
     .bind::<Text, _>(query)
     .bind::<Text, _>(entity_type)
@@ -305,18 +305,32 @@ mod tests {
     fn test_search_by_entity_type() {
         let mut conn = setup_test_db();
 
-        index_entity(&mut conn, "monster", 1, ContentType::Rules, "Goblin", "A small goblinoid")
-            .expect("Failed to index monster");
-        index_entity(&mut conn, "spell", 1, ContentType::Rules, "Fireball", "A ball of fire explodes")
-            .expect("Failed to index spell");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Rules,
+            "Goblin",
+            "A small goblinoid",
+        )
+        .expect("Failed to index monster");
+        index_entity(
+            &mut conn,
+            "spell",
+            1,
+            ContentType::Rules,
+            "Fireball",
+            "A ball of fire explodes",
+        )
+        .expect("Failed to index spell");
 
-        let monster_results =
-            search_by_entity_type(&mut conn, "fire OR goblin", "monster", 10).expect("Failed to search");
+        let monster_results = search_by_entity_type(&mut conn, "fire OR goblin", "monster", 10)
+            .expect("Failed to search");
         assert_eq!(monster_results.len(), 1);
         assert_eq!(monster_results[0].entity_type, "monster");
 
-        let spell_results =
-            search_by_entity_type(&mut conn, "fire OR goblin", "spell", 10).expect("Failed to search");
+        let spell_results = search_by_entity_type(&mut conn, "fire OR goblin", "spell", 10)
+            .expect("Failed to search");
         assert_eq!(spell_results.len(), 1);
         assert_eq!(spell_results[0].entity_type, "spell");
     }
@@ -325,18 +339,32 @@ mod tests {
     fn test_search_by_content_type() {
         let mut conn = setup_test_db();
 
-        index_entity(&mut conn, "monster", 1, ContentType::Rules, "Dragon", "Breath weapon attack")
-            .expect("Failed to index rules");
-        index_entity(&mut conn, "monster", 1, ContentType::Fluff, "Dragon", "Ancient and wise creatures")
-            .expect("Failed to index fluff");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Rules,
+            "Dragon",
+            "Breath weapon attack",
+        )
+        .expect("Failed to index rules");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Fluff,
+            "Dragon",
+            "Ancient and wise creatures",
+        )
+        .expect("Failed to index fluff");
 
-        let rules_results =
-            search_by_content_type(&mut conn, "dragon", ContentType::Rules, 10).expect("Failed to search");
+        let rules_results = search_by_content_type(&mut conn, "dragon", ContentType::Rules, 10)
+            .expect("Failed to search");
         assert_eq!(rules_results.len(), 1);
         assert_eq!(rules_results[0].content_type, "rules");
 
-        let fluff_results =
-            search_by_content_type(&mut conn, "dragon", ContentType::Fluff, 10).expect("Failed to search");
+        let fluff_results = search_by_content_type(&mut conn, "dragon", ContentType::Fluff, 10)
+            .expect("Failed to search");
         assert_eq!(fluff_results.len(), 1);
         assert_eq!(fluff_results[0].content_type, "fluff");
     }
@@ -345,10 +373,24 @@ mod tests {
     fn test_remove_entity() {
         let mut conn = setup_test_db();
 
-        index_entity(&mut conn, "monster", 1, ContentType::Rules, "Goblin", "Small goblinoid")
-            .expect("Failed to index");
-        index_entity(&mut conn, "monster", 1, ContentType::Fluff, "Goblin", "Goblins are greedy")
-            .expect("Failed to index fluff");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Rules,
+            "Goblin",
+            "Small goblinoid",
+        )
+        .expect("Failed to index");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Fluff,
+            "Goblin",
+            "Goblins are greedy",
+        )
+        .expect("Failed to index fluff");
 
         assert_eq!(count_indexed(&mut conn).expect("Failed to count"), 2);
 
@@ -361,12 +403,26 @@ mod tests {
     fn test_clear_entity_type() {
         let mut conn = setup_test_db();
 
-        index_entity(&mut conn, "monster", 1, ContentType::Rules, "Goblin", "text")
-            .expect("Failed to index");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Rules,
+            "Goblin",
+            "text",
+        )
+        .expect("Failed to index");
         index_entity(&mut conn, "monster", 2, ContentType::Rules, "Orc", "text")
             .expect("Failed to index");
-        index_entity(&mut conn, "spell", 1, ContentType::Rules, "Fireball", "text")
-            .expect("Failed to index");
+        index_entity(
+            &mut conn,
+            "spell",
+            1,
+            ContentType::Rules,
+            "Fireball",
+            "text",
+        )
+        .expect("Failed to index");
 
         clear_entity_type_from_index(&mut conn, "monster").expect("Failed to clear");
 
@@ -427,12 +483,26 @@ mod tests {
     fn test_count_functions() {
         let mut conn = setup_test_db();
 
-        index_entity(&mut conn, "monster", 1, ContentType::Rules, "Goblin", "text")
-            .expect("Failed to index");
+        index_entity(
+            &mut conn,
+            "monster",
+            1,
+            ContentType::Rules,
+            "Goblin",
+            "text",
+        )
+        .expect("Failed to index");
         index_entity(&mut conn, "monster", 2, ContentType::Rules, "Orc", "text")
             .expect("Failed to index");
-        index_entity(&mut conn, "spell", 1, ContentType::Rules, "Fireball", "text")
-            .expect("Failed to index");
+        index_entity(
+            &mut conn,
+            "spell",
+            1,
+            ContentType::Rules,
+            "Fireball",
+            "text",
+        )
+        .expect("Failed to index");
 
         assert_eq!(count_indexed(&mut conn).expect("Failed to count"), 3);
         assert_eq!(

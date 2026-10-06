@@ -342,7 +342,8 @@ mod tests {
         let mut service = AssetService::new(&mut conn, temp_dir.path());
 
         let data = b"test file content".to_vec();
-        let input = UploadAssetInput::for_campaign(&campaign_id, "test.png", "image/png", data.clone());
+        let input =
+            UploadAssetInput::for_campaign(&campaign_id, "test.png", "image/png", data.clone());
 
         let asset = service.upload(input).expect("Failed to upload");
 
@@ -362,7 +363,8 @@ mod tests {
         let mut service = AssetService::new(&mut conn, temp_dir.path());
 
         let data = b"content to read".to_vec();
-        let input = UploadAssetInput::for_campaign(&campaign_id, "test.png", "image/png", data.clone());
+        let input =
+            UploadAssetInput::for_campaign(&campaign_id, "test.png", "image/png", data.clone());
 
         let asset = service.upload(input).expect("Failed to upload");
         let read_data = service.read_file(&asset).expect("Failed to read file");
@@ -377,7 +379,8 @@ mod tests {
 
         let mut service = AssetService::new(&mut conn, temp_dir.path());
 
-        let input = UploadAssetInput::for_campaign(&campaign_id, "test.png", "image/png", vec![1, 2, 3]);
+        let input =
+            UploadAssetInput::for_campaign(&campaign_id, "test.png", "image/png", vec![1, 2, 3]);
         let uploaded = service.upload(input).expect("Failed to upload");
 
         let retrieved = service
@@ -406,7 +409,12 @@ mod tests {
 
         let mut service = AssetService::new(&mut conn, temp_dir.path());
 
-        let input = UploadAssetInput::for_campaign(&campaign_id, "delete_me.png", "image/png", vec![1, 2, 3]);
+        let input = UploadAssetInput::for_campaign(
+            &campaign_id,
+            "delete_me.png",
+            "image/png",
+            vec![1, 2, 3],
+        );
         let asset = service.upload(input).expect("Failed to upload");
         let file_path = service.get_file_path(&asset);
 
@@ -475,7 +483,9 @@ mod tests {
         let mut service = AssetService::new(&mut conn, temp_dir.path());
 
         assert_eq!(
-            service.count_for_campaign(&campaign_id).expect("Failed to count"),
+            service
+                .count_for_campaign(&campaign_id)
+                .expect("Failed to count"),
             0
         );
 
@@ -485,11 +495,15 @@ mod tests {
         service.upload(input2).expect("Failed to upload");
 
         assert_eq!(
-            service.count_for_campaign(&campaign_id).expect("Failed to count"),
+            service
+                .count_for_campaign(&campaign_id)
+                .expect("Failed to count"),
             1
         );
         assert_eq!(
-            service.count_for_module(&module_id).expect("Failed to count"),
+            service
+                .count_for_module(&module_id)
+                .expect("Failed to count"),
             1
         );
     }

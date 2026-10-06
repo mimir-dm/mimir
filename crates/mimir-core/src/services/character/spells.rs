@@ -66,10 +66,12 @@ impl<'a> CharacterService<'a> {
         if let Some(class) = source_class {
             let spell =
                 dal::find_character_spell_by_name(self.conn, character_id, spell_name, class)?
-                    .ok_or_else(|| ServiceError::Validation(format!(
-                        "Character doesn't know {} from {}",
-                        spell_name, class
-                    )))?;
+                    .ok_or_else(|| {
+                        ServiceError::Validation(format!(
+                            "Character doesn't know {} from {}",
+                            spell_name, class
+                        ))
+                    })?;
             dal::delete_character_spell(self.conn, &spell.id)?;
         } else {
             let spells = dal::list_character_spells(self.conn, character_id)?;

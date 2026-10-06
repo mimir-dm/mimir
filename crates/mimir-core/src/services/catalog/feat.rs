@@ -85,7 +85,11 @@ mod tests {
         let feats = vec![
             NewFeat::new("Alert", "PHB", r#"{"name":"Alert"}"#),
             NewFeat::new("Sharpshooter", "PHB", r#"{"name":"Sharpshooter"}"#),
-            NewFeat::new("Great Weapon Master", "PHB", r#"{"name":"Great Weapon Master"}"#),
+            NewFeat::new(
+                "Great Weapon Master",
+                "PHB",
+                r#"{"name":"Great Weapon Master"}"#,
+            ),
             NewFeat::new("Fey Touched", "TCE", r#"{"name":"Fey Touched"}"#),
         ];
         insert_feats(conn, &feats).expect("Failed to insert test feats");
@@ -98,7 +102,9 @@ mod tests {
 
         let mut service = FeatService::new(&mut conn);
 
-        let results = service.search(&FeatFilter::default()).expect("Search failed");
+        let results = service
+            .search(&FeatFilter::default())
+            .expect("Search failed");
         assert_eq!(results.len(), 4);
 
         let filter = FeatFilter::new().with_name_contains("sharp");

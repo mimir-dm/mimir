@@ -125,10 +125,7 @@ pub fn update_homebrew_item(
 
 /// Delete a homebrew item.
 #[tauri::command]
-pub fn delete_homebrew_item(
-    state: State<'_, AppState>,
-    id: String,
-) -> ApiResponse<bool> {
+pub fn delete_homebrew_item(state: State<'_, AppState>, id: String) -> ApiResponse<bool> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),

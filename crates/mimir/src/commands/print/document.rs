@@ -18,7 +18,9 @@ use tracing::{error, info};
 use crate::state::AppState;
 
 use super::helpers::{compute_ac, compute_hit_die_string, compute_hp_max, enrich_inventory_item};
-use super::{ApiResponse, CampaignExportOptions, ModuleExportOptions, PrintResult, PrintTemplateInfo};
+use super::{
+    ApiResponse, CampaignExportOptions, ModuleExportOptions, PrintResult, PrintTemplateInfo,
+};
 
 /// Look up monster data from catalog or homebrew, returning parsed JSON.
 fn lookup_monster_data(
@@ -59,13 +61,18 @@ fn lookup_homebrew_monster_by_id(
     match dal::get_campaign_homebrew_monster(db, homebrew_monster_id) {
         Ok(hb_monster) => parse_homebrew_monster_data(hb_monster),
         Err(e) => {
-            error!("Failed to look up homebrew monster {}: {}", homebrew_monster_id, e);
+            error!(
+                "Failed to look up homebrew monster {}: {}",
+                homebrew_monster_id, e
+            );
             None
         }
     }
 }
 
-fn parse_homebrew_monster_data(hb_monster: mimir_core::models::campaign::CampaignHomebrewMonster) -> Option<Value> {
+fn parse_homebrew_monster_data(
+    hb_monster: mimir_core::models::campaign::CampaignHomebrewMonster,
+) -> Option<Value> {
     match serde_json::from_str::<Value>(&hb_monster.data) {
         Ok(mut data) => {
             if let Some(obj) = data.as_object_mut() {
@@ -87,17 +94,18 @@ fn lookup_catalog_monster(
     monster_source: &str,
 ) -> Option<Value> {
     match catalog_dal::get_monster_by_name(db, monster_name, monster_source) {
-        Ok(Some(catalog_monster)) => {
-            match catalog_monster.parse_data() {
-                Ok(data) => Some(data),
-                Err(e) => {
-                    error!("Failed to parse monster data for {}: {}", monster_name, e);
-                    None
-                }
+        Ok(Some(catalog_monster)) => match catalog_monster.parse_data() {
+            Ok(data) => Some(data),
+            Err(e) => {
+                error!("Failed to parse monster data for {}: {}", monster_name, e);
+                None
             }
-        }
+        },
         Ok(None) => {
-            error!("Catalog monster not found: {} ({})", monster_name, monster_source);
+            error!(
+                "Catalog monster not found: {} ({})",
+                monster_name, monster_source
+            );
             None
         }
         Err(e) => {
@@ -118,7 +126,10 @@ fn resolve_module_monster_data(
     } else if let (Some(ref name), Some(ref source)) = (&mm.monster_name, &mm.monster_source) {
         lookup_monster_data(db, name, source, campaign_id)
     } else {
-        error!("Module monster {} has no catalog or homebrew reference", mm.id);
+        error!(
+            "Module monster {} has no catalog or homebrew reference",
+            mm.id
+        );
         None
     }
 }
@@ -132,30 +143,46 @@ fn resolve_monster_size(
     if let Some(ref hb_id) = mm.homebrew_monster_id {
         // Homebrew monster — get size from homebrew data
         match dal::get_campaign_homebrew_monster(db, hb_id) {
-            Ok(hb) => {
-                serde_json::from_str::<Value>(&hb.data).ok()
-                    .and_then(|d| d.get("size").and_then(|s| s.as_str()).map(|s| match s {
-                        "T" => "Tiny", "S" => "Small", "M" => "Medium",
-                        "L" => "Large", "H" => "Huge", "G" => "Gargantuan",
-                        other => other,
-                    }.to_string()))
-                    .unwrap_or_else(|| "Medium".to_string())
-            }
+            Ok(hb) => serde_json::from_str::<Value>(&hb.data)
+                .ok()
+                .and_then(|d| {
+                    d.get("size").and_then(|s| s.as_str()).map(|s| {
+                        match s {
+                            "T" => "Tiny",
+                            "S" => "Small",
+                            "M" => "Medium",
+                            "L" => "Large",
+                            "H" => "Huge",
+                            "G" => "Gargantuan",
+                            other => other,
+                        }
+                        .to_string()
+                    })
+                })
+                .unwrap_or_else(|| "Medium".to_string()),
             _ => "Medium".to_string(),
         }
     } else if let (Some(ref name), Some(ref source)) = (&mm.monster_name, &mm.monster_source) {
         if source == "HB" {
             // Legacy: homebrew by name
             match dal::get_campaign_homebrew_monster_by_name(db, campaign_id, name) {
-                Ok(Some(hb)) => {
-                    serde_json::from_str::<Value>(&hb.data).ok()
-                        .and_then(|d| d.get("size").and_then(|s| s.as_str()).map(|s| match s {
-                            "T" => "Tiny", "S" => "Small", "M" => "Medium",
-                            "L" => "Large", "H" => "Huge", "G" => "Gargantuan",
-                            other => other,
-                        }.to_string()))
-                        .unwrap_or_else(|| "Medium".to_string())
-                }
+                Ok(Some(hb)) => serde_json::from_str::<Value>(&hb.data)
+                    .ok()
+                    .and_then(|d| {
+                        d.get("size").and_then(|s| s.as_str()).map(|s| {
+                            match s {
+                                "T" => "Tiny",
+                                "S" => "Small",
+                                "M" => "Medium",
+                                "L" => "Large",
+                                "H" => "Huge",
+                                "G" => "Gargantuan",
+                                other => other,
+                            }
+                            .to_string()
+                        })
+                    })
+                    .unwrap_or_else(|| "Medium".to_string()),
                 _ => "Medium".to_string(),
             }
         } else {
@@ -309,7 +336,10 @@ pub fn export_campaign_documents(
     // Log received options
     info!("=== Campaign Export Options ===");
     info!("  include_campaign_docs: {:?}", opts.include_campaign_docs);
-    info!("  include_module_content: {:?}", opts.include_module_content);
+    info!(
+        "  include_module_content: {:?}",
+        opts.include_module_content
+    );
     info!("  include_npcs: {:?}", opts.include_npcs);
     info!(
         "  include_module_map_previews: {:?}",
@@ -439,15 +469,10 @@ pub fn export_campaign_documents(
             if !module_monsters.is_empty() {
                 let mut monster_data: Vec<Value> = Vec::new();
                 for mm in &module_monsters {
-                    if let Some(mut data) = resolve_module_monster_data(
-                        &mut db, mm, &campaign_id,
-                    ) {
+                    if let Some(mut data) = resolve_module_monster_data(&mut db, mm, &campaign_id) {
                         if let Some(ref display_name) = mm.display_name {
                             if let Some(obj) = data.as_object_mut() {
-                                obj.insert(
-                                    "name".to_string(),
-                                    Value::String(display_name.clone()),
-                                );
+                                obj.insert("name".to_string(), Value::String(display_name.clone()));
                             }
                         }
                         for _ in 0..mm.quantity {
@@ -840,10 +865,7 @@ pub fn export_campaign_documents(
                                 has_content = true;
                             }
                             Err(e) => {
-                                error!(
-                                    "Failed to decode map image for tiled {}: {}",
-                                    map.name, e
-                                );
+                                error!("Failed to decode map image for tiled {}: {}", map.name, e);
                             }
                         }
                     }
@@ -969,7 +991,8 @@ pub fn export_campaign_documents(
                 let image_bytes = load_monster_token_image(&mm, &app_state.paths.assets_dir);
 
                 // Use display name if set, otherwise monster name
-                let display_name = mm.display_name
+                let display_name = mm
+                    .display_name
                     .or(mm.monster_name.clone())
                     .unwrap_or_else(|| "Unknown Monster".to_string());
 
@@ -1122,9 +1145,7 @@ pub fn export_module_documents(
 
         let mut monster_data: Vec<Value> = Vec::new();
         for mm in &module_monsters {
-            if let Some(mut data) = resolve_module_monster_data(
-                &mut db, mm, &module.campaign_id,
-            ) {
+            if let Some(mut data) = resolve_module_monster_data(&mut db, mm, &module.campaign_id) {
                 // Apply display name override if set
                 if let Some(ref display_name) = mm.display_name {
                     if let Some(obj) = data.as_object_mut() {
@@ -1417,7 +1438,8 @@ pub fn export_module_documents(
             // Try to load token image (catalog monsters only)
             let image_bytes = load_monster_token_image(&mm, &app_state.paths.assets_dir);
 
-            let display_name = mm.display_name
+            let display_name = mm
+                .display_name
                 .or(mm.monster_name.clone())
                 .unwrap_or_else(|| "Unknown Monster".to_string());
             let mut token = CutoutToken::new(display_name, size, "monster".to_string())

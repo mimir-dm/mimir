@@ -191,8 +191,7 @@ mod tests {
 
     #[test]
     fn test_skill_with_expertise() {
-        let prof = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth")
-            .with_expertise();
+        let prof = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth").with_expertise();
         assert_eq!(prof.expertise, 1);
     }
 

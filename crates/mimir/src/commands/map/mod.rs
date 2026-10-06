@@ -4,19 +4,19 @@
 //! Split into sub-modules by functionality.
 
 pub mod crud;
-pub mod uvtt;
-pub mod light;
 pub mod fog;
-pub mod traps;
+pub mod light;
 pub mod pois;
+pub mod traps;
+pub mod uvtt;
 
 // Re-export all public items for backwards compatibility
 pub use crud::*;
-pub use uvtt::*;
-pub use light::*;
 pub use fog::*;
-pub use traps::*;
+pub use light::*;
 pub use pois::*;
+pub use traps::*;
+pub use uvtt::*;
 
 use mimir_core::models::campaign::{LightSource, Map};
 use mimir_core::services::MapService;
@@ -55,7 +55,11 @@ pub struct MapResponse {
 }
 
 /// Enrich a Map with UVTT data to create a MapResponse.
-pub(crate) fn enrich_map_with_uvtt(map: &Map, service: &mut MapService, _app_dir: &Path) -> MapResponse {
+pub(crate) fn enrich_map_with_uvtt(
+    map: &Map,
+    service: &mut MapService,
+    _app_dir: &Path,
+) -> MapResponse {
     // Default values if resolution metadata is unavailable
     let mut width_px = 0;
     let mut height_px = 0;
@@ -94,8 +98,14 @@ pub(crate) fn enrich_map_with_uvtt(map: &Map, service: &mut MapService, _app_dir
 }
 
 /// Enrich multiple maps with UVTT data.
-pub(crate) fn enrich_maps_with_uvtt(maps: Vec<Map>, service: &mut MapService, app_dir: &Path) -> Vec<MapResponse> {
-    maps.iter().map(|map| enrich_map_with_uvtt(map, service, app_dir)).collect()
+pub(crate) fn enrich_maps_with_uvtt(
+    maps: Vec<Map>,
+    service: &mut MapService,
+    app_dir: &Path,
+) -> Vec<MapResponse> {
+    maps.iter()
+        .map(|map| enrich_map_with_uvtt(map, service, app_dir))
+        .collect()
 }
 
 /// Light source response format for frontend.

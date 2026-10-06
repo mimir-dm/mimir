@@ -93,12 +93,13 @@ pub fn count_books(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -133,8 +134,14 @@ mod tests {
         let retrieved = get_book_by_source(&mut conn, "PHB")
             .expect("Failed to get")
             .expect("Book not found");
-        assert_eq!(retrieved.contents, Some("[{\"name\":\"Chapter 1\"}]".to_string()));
-        assert_eq!(retrieved.cover_path, Some("assets://covers/phb.webp".to_string()));
+        assert_eq!(
+            retrieved.contents,
+            Some("[{\"name\":\"Chapter 1\"}]".to_string())
+        );
+        assert_eq!(
+            retrieved.cover_path,
+            Some("assets://covers/phb.webp".to_string())
+        );
     }
 
     #[test]
@@ -143,7 +150,12 @@ mod tests {
         setup_test_data(&mut conn);
 
         // Add another source
-        let dmg_source = NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z");
+        let dmg_source = NewCatalogSource::new(
+            "DMG",
+            "Dungeon Master's Guide",
+            true,
+            "2024-01-20T12:00:00Z",
+        );
         insert_source(&mut conn, &dmg_source).expect("Failed to add DMG source");
 
         let book1 = NewBook::new("PHB", "Player's Handbook", "[]");

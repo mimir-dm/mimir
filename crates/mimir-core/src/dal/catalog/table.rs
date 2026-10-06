@@ -16,8 +16,10 @@ pub fn insert_catalog_table(
         .values(table)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple catalog tables in a batch.
@@ -87,7 +89,10 @@ pub fn count_catalog_tables(conn: &mut SqliteConnection) -> QueryResult<i64> {
 }
 
 /// Count catalog tables from a specific source.
-pub fn count_catalog_tables_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+pub fn count_catalog_tables_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<i64> {
     catalog_tables::table
         .filter(catalog_tables::source.eq(source))
         .count()
@@ -95,7 +100,10 @@ pub fn count_catalog_tables_by_source(conn: &mut SqliteConnection, source: &str)
 }
 
 /// Get a catalog table by its ID, returning None if not found.
-pub fn get_catalog_table_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<CatalogTable>> {
+pub fn get_catalog_table_optional(
+    conn: &mut SqliteConnection,
+    id: i32,
+) -> QueryResult<Option<CatalogTable>> {
     catalog_tables::table
         .filter(catalog_tables::id.eq(id))
         .first(conn)
@@ -166,12 +174,13 @@ pub fn search_catalog_tables_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -180,7 +189,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let table = NewCatalogTable::new("Wild Magic Surge", "PHB", r#"{"name":"Wild Magic Surge"}"#);
+        let table =
+            NewCatalogTable::new("Wild Magic Surge", "PHB", r#"{"name":"Wild Magic Surge"}"#);
         let id = insert_catalog_table(&mut conn, &table).expect("Failed to insert");
 
         let retrieved = get_catalog_table(&mut conn, id).expect("Failed to get");

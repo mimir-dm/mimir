@@ -118,12 +118,7 @@ pub fn load_json_file(path: &Path) -> Result<serde_json::Value> {
 /// * `dir` - Subdirectory name (e.g., "bestiary", "spells")
 /// * `prefix` - File prefix (e.g., "bestiary", "spells")
 /// * `source` - Source code (e.g., "PHB")
-pub fn get_matching_files(
-    repo_path: &Path,
-    dir: &str,
-    prefix: &str,
-    source: &str,
-) -> Vec<PathBuf> {
+pub fn get_matching_files(repo_path: &Path, dir: &str, prefix: &str, source: &str) -> Vec<PathBuf> {
     let mut files = Vec::new();
     let data_dir = repo_path.join("data").join(dir);
 

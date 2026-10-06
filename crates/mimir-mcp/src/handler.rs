@@ -127,11 +127,7 @@ mod tests {
         let mut names: Vec<&str> = tools.iter().map(|t| t.name.as_str()).collect();
         names.sort();
         for window in names.windows(2) {
-            assert_ne!(
-                window[0], window[1],
-                "Duplicate tool name: '{}'",
-                window[0]
-            );
+            assert_ne!(window[0], window[1], "Duplicate tool name: '{}'", window[0]);
         }
     }
 
@@ -719,11 +715,7 @@ mod tests {
         let handler = MimirHandler::with_context(test_ctx());
 
         // These tools require an active campaign
-        let tools_needing_campaign = [
-            "list_modules",
-            "list_characters",
-            "list_documents",
-        ];
+        let tools_needing_campaign = ["list_modules", "list_characters", "list_documents"];
 
         for tool in tools_needing_campaign {
             let err = call_err(&handler, tool, serde_json::json!({})).await;
@@ -766,12 +758,7 @@ mod tests {
 
     /// Helper: create a module in the active campaign, return its id.
     async fn setup_module(handler: &MimirHandler) -> String {
-        let res = call_ok(
-            handler,
-            "create_module",
-            json!({"name": "Test Module"}),
-        )
-        .await;
+        let res = call_ok(handler, "create_module", json!({"name": "Test Module"})).await;
         res["module"]["id"].as_str().unwrap().to_string()
     }
 
@@ -928,7 +915,11 @@ mod tests {
             json!({"module_id": module_id}),
         )
         .await;
-        assert_eq!(res["monsters"].as_array().unwrap().len(), 1, "must not duplicate");
+        assert_eq!(
+            res["monsters"].as_array().unwrap().len(),
+            1,
+            "must not duplicate"
+        );
 
         // update_module_monster sets an exact quantity
         let res = call_ok(
@@ -1097,19 +1088,9 @@ mod tests {
         assert!(matches!(err, McpError::InvalidArguments(_)));
 
         // Remove
-        let res = call_ok(
-            &handler,
-            "remove_map_trap",
-            json!({"trap_id": trap_id}),
-        )
-        .await;
+        let res = call_ok(&handler, "remove_map_trap", json!({"trap_id": trap_id})).await;
         assert_eq!(res["status"], "removed");
-        let err = call_err(
-            &handler,
-            "remove_map_trap",
-            json!({"trap_id": trap_id}),
-        )
-        .await;
+        let err = call_err(&handler, "remove_map_trap", json!({"trap_id": trap_id})).await;
         assert!(matches!(err, McpError::InvalidArguments(_)));
     }
 
@@ -1257,7 +1238,12 @@ mod tests {
         setup_campaign(&handler).await;
 
         // List — empty
-        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "monster"})).await;
+        let res = call_ok(
+            &handler,
+            "list_homebrew",
+            json!({"content_type": "monster"}),
+        )
+        .await;
         assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
 
         // Create
@@ -1280,7 +1266,12 @@ mod tests {
         assert_eq!(res["monster"]["cr"], "20");
 
         // List — has one
-        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "monster"})).await;
+        let res = call_ok(
+            &handler,
+            "list_homebrew",
+            json!({"content_type": "monster"}),
+        )
+        .await;
         assert_eq!(res["monsters"].as_array().unwrap().len(), 1);
 
         // Get
@@ -1314,7 +1305,12 @@ mod tests {
         assert_eq!(res["status"], "deleted");
 
         // List — empty again
-        let res = call_ok(&handler, "list_homebrew", json!({"content_type": "monster"})).await;
+        let res = call_ok(
+            &handler,
+            "list_homebrew",
+            json!({"content_type": "monster"}),
+        )
+        .await;
         assert_eq!(res["monsters"].as_array().unwrap().len(), 0);
     }
 
@@ -1450,13 +1446,32 @@ mod tests {
         let fake_id = "00000000-0000-0000-0000-000000000000";
 
         for ct in ["monster", "spell", "item"] {
-            let err = call_err(&handler, "get_homebrew", json!({"content_type": ct, "id": fake_id})).await;
-            assert!(!matches!(err, McpError::InvalidArguments(_)), "get_homebrew({}) should be a not-found error", ct);
+            let err = call_err(
+                &handler,
+                "get_homebrew",
+                json!({"content_type": ct, "id": fake_id}),
+            )
+            .await;
+            assert!(
+                !matches!(err, McpError::InvalidArguments(_)),
+                "get_homebrew({}) should be a not-found error",
+                ct
+            );
 
-            let err = call_err(&handler, "update_homebrew", json!({"content_type": ct, "id": fake_id, "name": "x"})).await;
+            let err = call_err(
+                &handler,
+                "update_homebrew",
+                json!({"content_type": ct, "id": fake_id, "name": "x"}),
+            )
+            .await;
             assert!(!matches!(err, McpError::InvalidArguments(_)));
 
-            let err = call_err(&handler, "delete_homebrew", json!({"content_type": ct, "id": fake_id})).await;
+            let err = call_err(
+                &handler,
+                "delete_homebrew",
+                json!({"content_type": ct, "id": fake_id}),
+            )
+            .await;
             assert!(!matches!(err, McpError::InvalidArguments(_)));
         }
     }
@@ -1839,13 +1854,14 @@ mod tests {
         // more than just our two — find ours by id.
         let docs = res["documents"].as_array().unwrap();
         let order_of = |id: &str| {
-            docs.iter()
-                .find(|d| d["id"] == id)
-                .unwrap()["sort_order"]
+            docs.iter().find(|d| d["id"] == id).unwrap()["sort_order"]
                 .as_i64()
                 .unwrap()
         };
-        assert!(order_of(&doc_b) < order_of(&doc_a), "B should now sort before A");
+        assert!(
+            order_of(&doc_b) < order_of(&doc_a),
+            "B should now sort before A"
+        );
     }
 
     // -- Campaign sources ---------------------------------------------------------
@@ -1897,10 +1913,8 @@ mod tests {
         assert_eq!(res["valid"], false);
 
         // Generate from a preset into a temp file
-        let out = std::env::temp_dir().join(format!(
-            "mimir-mcp-test-map-{}.json",
-            std::process::id()
-        ));
+        let out =
+            std::env::temp_dir().join(format!("mimir-mcp-test-map-{}.json", std::process::id()));
         let res = call_ok(
             &handler,
             "generate_map",
@@ -1962,7 +1976,8 @@ mod tests {
         )
         .await;
 
-        let out_dir = std::env::temp_dir().join(format!("mimir-mcp-test-export-{}", std::process::id()));
+        let out_dir =
+            std::env::temp_dir().join(format!("mimir-mcp-test-export-{}", std::process::id()));
         std::fs::create_dir_all(&out_dir).unwrap();
 
         // Export
@@ -2013,7 +2028,8 @@ mod tests {
             assert!(
                 matches!(err, McpError::NoActiveCampaign),
                 "list_homebrew(content_type={}) should fail with NoActiveCampaign, got: {:?}",
-                ct, err
+                ct,
+                err
             );
         }
     }

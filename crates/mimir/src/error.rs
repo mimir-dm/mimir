@@ -19,9 +19,10 @@ pub struct CommandError {
 impl From<ServiceError> for CommandError {
     fn from(err: ServiceError) -> Self {
         let (code, message) = match &err {
-            ServiceError::NotFound { entity_type, id } => {
-                ("NOT_FOUND".to_string(), format!("{} with id '{}' not found", entity_type, id))
-            }
+            ServiceError::NotFound { entity_type, id } => (
+                "NOT_FOUND".to_string(),
+                format!("{} with id '{}' not found", entity_type, id),
+            ),
             ServiceError::Validation(msg) => ("VALIDATION_ERROR".to_string(), msg.clone()),
             ServiceError::Database(e) => ("DATABASE_ERROR".to_string(), e.to_string()),
             ServiceError::Io(e) => ("IO_ERROR".to_string(), e.to_string()),

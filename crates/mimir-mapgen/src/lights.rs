@@ -108,13 +108,8 @@ pub fn generate_lights(
                 let min_distance = density * 256.0; // grid squares to pixels
                 let margin_px = margin * pixel_width.min(pixel_height);
 
-                let candidates = PoissonDisc::sample(
-                    pixel_width,
-                    pixel_height,
-                    min_distance,
-                    rng,
-                    30,
-                );
+                let candidates =
+                    PoissonDisc::sample(pixel_width, pixel_height, min_distance, rng, 30);
 
                 for (x, y) in candidates {
                     // Skip margin zone
@@ -312,10 +307,9 @@ mod tests {
 
         let noise = NoiseMap::generate(40, 40, &Default::default());
         let mut features = GeneratedFeatures::default();
-        features.paths.insert(
-            "test_road".to_string(),
-            vec![(0.0, 128.0), (2560.0, 128.0)],
-        );
+        features
+            .paths
+            .insert("test_road".to_string(), vec![(0.0, 128.0), (2560.0, 128.0)]);
         let alloc = NodeIdAllocator::new(1);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
@@ -331,15 +325,7 @@ mod tests {
             layer: 100,
         }];
 
-        let lights = generate_lights(
-            &configs,
-            &noise,
-            &features,
-            2560.0,
-            256.0,
-            &alloc,
-            &mut rng,
-        );
+        let lights = generate_lights(&configs, &noise, &features, 2560.0, 256.0, &alloc, &mut rng);
         assert!(!lights.is_empty(), "Along-path should produce lights");
         // 10 grid squares at 0.5 density = ~5 lights
         assert!(lights.len() >= 3 && lights.len() <= 15);
@@ -370,13 +356,7 @@ mod tests {
         }];
 
         let lights = generate_lights(
-            &configs,
-            &noise,
-            &features,
-            2560.0,
-            2560.0,
-            &alloc,
-            &mut rng,
+            &configs, &noise, &features, 2560.0, 2560.0, &alloc, &mut rng,
         );
         assert_eq!(lights.len(), 3, "Should produce one light per object");
     }
@@ -415,14 +395,11 @@ mod tests {
         ];
 
         let lights = generate_lights(
-            &configs,
-            &noise,
-            &features,
-            2560.0,
-            2560.0,
-            &alloc,
-            &mut rng,
+            &configs, &noise, &features, 2560.0, 2560.0, &alloc, &mut rng,
         );
-        assert!(lights.is_empty(), "Missing references should produce no lights");
+        assert!(
+            lights.is_empty(),
+            "Missing references should produce no lights"
+        );
     }
 }

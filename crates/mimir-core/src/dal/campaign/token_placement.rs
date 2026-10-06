@@ -117,9 +117,14 @@ pub fn count_token_placements(conn: &mut SqliteConnection, map_id: &str) -> Quer
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dal::campaign::{
+        insert_campaign, insert_campaign_asset, insert_map, insert_module, insert_module_monster,
+        insert_module_npc,
+    };
     use crate::db::test_connection;
-    use crate::dal::campaign::{insert_campaign, insert_module, insert_campaign_asset, insert_map, insert_module_monster, insert_module_npc};
-    use crate::models::campaign::{NewCampaign, NewModule, NewCampaignAsset, NewMap, NewModuleMonster, NewModuleNpc};
+    use crate::models::campaign::{
+        NewCampaign, NewCampaignAsset, NewMap, NewModule, NewModuleMonster, NewModuleNpc,
+    };
 
     fn setup_test_data(conn: &mut SqliteConnection) {
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
@@ -128,7 +133,13 @@ mod tests {
         let module = NewModule::new("mod-1", "camp-1", "Dungeon", 1);
         insert_module(conn, &module).expect("Failed to create module");
 
-        let asset = NewCampaignAsset::for_campaign("asset-1", "camp-1", "goblin-cave.uvtt", "application/octet-stream", "/blobs/goblin-cave.uvtt");
+        let asset = NewCampaignAsset::for_campaign(
+            "asset-1",
+            "camp-1",
+            "goblin-cave.uvtt",
+            "application/octet-stream",
+            "/blobs/goblin-cave.uvtt",
+        );
         insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
         let map = NewMap::for_campaign("map-1", "camp-1", "Goblin Cave", "asset-1");

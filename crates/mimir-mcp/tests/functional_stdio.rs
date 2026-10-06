@@ -96,12 +96,9 @@ impl McpClient {
                 .unwrap_or_else(|| {
                     panic!("timed out waiting for response to {} (id {})", method, id)
                 });
-            let msg = self
-                .responses
-                .recv_timeout(remaining)
-                .unwrap_or_else(|_| {
-                    panic!("timed out waiting for response to {} (id {})", method, id)
-                });
+            let msg = self.responses.recv_timeout(remaining).unwrap_or_else(|_| {
+                panic!("timed out waiting for response to {} (id {})", method, id)
+            });
             if msg.get("id").and_then(|v| v.as_i64()) == Some(id) {
                 return msg;
             }
@@ -112,10 +109,7 @@ impl McpClient {
     /// Call an MCP tool; assert transport-level success and no is_error flag;
     /// return the parsed inner JSON payload.
     fn call_tool(&mut self, name: &str, arguments: Value) -> Value {
-        let resp = self.request(
-            "tools/call",
-            json!({"name": name, "arguments": arguments}),
-        );
+        let resp = self.request("tools/call", json!({"name": name, "arguments": arguments}));
         assert!(
             resp.get("error").is_none(),
             "tool {} returned JSON-RPC error: {}",
@@ -133,16 +127,17 @@ impl McpClient {
         let text = result["content"][0]["text"]
             .as_str()
             .unwrap_or_else(|| panic!("tool {} returned no text content: {}", name, result));
-        serde_json::from_str(text)
-            .unwrap_or_else(|e| panic!("tool {} returned unparseable payload ({}): {}", name, e, text))
+        serde_json::from_str(text).unwrap_or_else(|e| {
+            panic!(
+                "tool {} returned unparseable payload ({}): {}",
+                name, e, text
+            )
+        })
     }
 
     /// Call a tool expecting a tool-level error (isError: true).
     fn call_tool_expect_error(&mut self, name: &str, arguments: Value) -> String {
-        let resp = self.request(
-            "tools/call",
-            json!({"name": name, "arguments": arguments}),
-        );
+        let resp = self.request("tools/call", json!({"name": name, "arguments": arguments}));
         let result = &resp["result"];
         assert_eq!(
             result.get("isError").and_then(|v| v.as_bool()),
@@ -151,7 +146,10 @@ impl McpClient {
             name,
             result
         );
-        result["content"][0]["text"].as_str().unwrap_or("").to_string()
+        result["content"][0]["text"]
+            .as_str()
+            .unwrap_or("")
+            .to_string()
     }
 
     fn initialize(&mut self) {
@@ -265,7 +263,10 @@ fn full_interface_exercise_over_stdio() {
     assert_eq!(res["status"], "updated");
 
     let res = client.call_tool("read_document", json!({"document_id": doc_id}));
-    assert!(res["document"]["content"].as_str().unwrap().contains("freezing"));
+    assert!(res["document"]["content"]
+        .as_str()
+        .unwrap()
+        .contains("freezing"));
 
     // -- Characters -------------------------------------------------------------
     let res = client.call_tool(

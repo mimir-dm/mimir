@@ -13,8 +13,8 @@ use mimir_core::services::{
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::state::AppState;
 use super::{to_api_response, ApiResponse};
+use crate::state::AppState;
 
 /// List all modules for a campaign.
 #[tauri::command]
@@ -66,8 +66,8 @@ pub fn create_module(
 
     let module_type = ModuleType::from(request.module_type.as_deref());
 
-    let mut input = CreateModuleInput::new(&request.campaign_id, &request.name)
-        .with_type(module_type);
+    let mut input =
+        CreateModuleInput::new(&request.campaign_id, &request.name).with_type(module_type);
 
     if let Some(desc) = request.description {
         input = input.with_description(desc);
@@ -194,24 +194,36 @@ pub fn list_module_monsters_with_data(
                 dal::get_campaign_homebrew_monster(&mut db, hb_id)
                     .ok()
                     .and_then(|hb| {
-                        serde_json::from_str::<serde_json::Value>(&hb.data).ok().map(|mut data| {
-                            if let Some(obj) = data.as_object_mut() {
-                                obj.insert("name".to_string(), serde_json::Value::String(hb.name));
-                                obj.insert("source".to_string(), serde_json::Value::String("Homebrew".to_string()));
-                                if let Some(cr) = hb.cr {
-                                    obj.insert("cr".to_string(), serde_json::Value::String(cr));
+                        serde_json::from_str::<serde_json::Value>(&hb.data)
+                            .ok()
+                            .map(|mut data| {
+                                if let Some(obj) = data.as_object_mut() {
+                                    obj.insert(
+                                        "name".to_string(),
+                                        serde_json::Value::String(hb.name),
+                                    );
+                                    obj.insert(
+                                        "source".to_string(),
+                                        serde_json::Value::String("Homebrew".to_string()),
+                                    );
+                                    if let Some(cr) = hb.cr {
+                                        obj.insert("cr".to_string(), serde_json::Value::String(cr));
+                                    }
+                                    if let Some(ct) = hb.creature_type {
+                                        obj.insert(
+                                            "type".to_string(),
+                                            serde_json::json!({"type": ct}),
+                                        );
+                                    }
+                                    if let Some(sz) = hb.size {
+                                        obj.insert("size".to_string(), serde_json::json!([sz]));
+                                    }
                                 }
-                                if let Some(ct) = hb.creature_type {
-                                    obj.insert("type".to_string(), serde_json::json!({"type": ct}));
-                                }
-                                if let Some(sz) = hb.size {
-                                    obj.insert("size".to_string(), serde_json::json!([sz]));
-                                }
-                            }
-                            data
-                        })
+                                data
+                            })
                     })
-            } else if let (Some(ref name), Some(ref source)) = (&m.monster_name, &m.monster_source) {
+            } else if let (Some(ref name), Some(ref source)) = (&m.monster_name, &m.monster_source)
+            {
                 // Catalog monster
                 get_monster_by_name(&mut db, name, source)
                     .ok()
@@ -267,7 +279,9 @@ pub fn add_module_monster(
     let is_homebrew = request.homebrew_monster_id.is_some();
 
     if is_catalog && is_homebrew {
-        return ApiResponse::err("Cannot specify both monster_name/monster_source and homebrew_monster_id");
+        return ApiResponse::err(
+            "Cannot specify both monster_name/monster_source and homebrew_monster_id",
+        );
     }
     let monster = if is_homebrew {
         MonsterRef::Homebrew {
@@ -324,10 +338,7 @@ pub fn update_module_monster(
 
 /// Remove a monster from a module.
 #[tauri::command]
-pub fn remove_module_monster(
-    state: State<'_, AppState>,
-    monster_id: String,
-) -> ApiResponse<()> {
+pub fn remove_module_monster(state: State<'_, AppState>, monster_id: String) -> ApiResponse<()> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -342,7 +353,10 @@ pub fn remove_module_monster(
 
 /// List all NPCs for a module.
 #[tauri::command]
-pub fn list_module_npcs(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<ModuleNpc>> {
+pub fn list_module_npcs(
+    state: State<'_, AppState>,
+    module_id: String,
+) -> ApiResponse<Vec<ModuleNpc>> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -374,7 +388,10 @@ pub fn list_tokens(state: State<'_, AppState>, map_id: String) -> ApiResponse<Ve
 
 /// List token summaries (alias for list_tokens for frontend compatibility).
 #[tauri::command]
-pub fn list_token_summaries(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<TokenResponse>> {
+pub fn list_token_summaries(
+    state: State<'_, AppState>,
+    map_id: String,
+) -> ApiResponse<Vec<TokenResponse>> {
     list_tokens(state, map_id)
 }
 
@@ -538,7 +555,6 @@ pub fn delete_token(state: State<'_, AppState>, id: String) -> ApiResponse<()> {
 // Token Image Commands
 // =============================================================================
 
-
 /// Serve a token's image as a base64 data URL.
 ///
 /// Uses convention-based paths: `bestiary/tokens/{source}/{name}.{ext}`
@@ -566,7 +582,10 @@ pub fn serve_token_image(
 
     // Only monster tokens have images from the catalog
     let Some(ref monster_id) = token.module_monster_id else {
-        tracing::debug!("Token {} has no module_monster_id, skipping image", token_id);
+        tracing::debug!(
+            "Token {} has no module_monster_id, skipping image",
+            token_id
+        );
         return ApiResponse::ok(None);
     };
 
@@ -581,13 +600,14 @@ pub fn serve_token_image(
     };
 
     // Homebrew monsters don't have catalog token images
-    let (monster_name, monster_source) = match (&module_monster.monster_name, &module_monster.monster_source) {
-        (Some(name), Some(source)) => (name.clone(), source.clone()),
-        _ => {
-            tracing::debug!("No token image for homebrew monster");
-            return ApiResponse::ok(None);
-        }
-    };
+    let (monster_name, monster_source) =
+        match (&module_monster.monster_name, &module_monster.monster_source) {
+            (Some(name), Some(source)) => (name.clone(), source.clone()),
+            _ => {
+                tracing::debug!("No token image for homebrew monster");
+                return ApiResponse::ok(None);
+            }
+        };
 
     tracing::debug!(
         "Looking for token image: monster_name={}, monster_source={}",
@@ -596,10 +616,19 @@ pub fn serve_token_image(
     );
 
     // Images are stored in assets/catalog/bestiary/tokens/{source}/{name}.{ext}
-    let img_base = state.paths.assets_dir.join("catalog").join("bestiary").join("tokens");
+    let img_base = state
+        .paths
+        .assets_dir
+        .join("catalog")
+        .join("bestiary")
+        .join("tokens");
     let source_dir = img_base.join(&monster_source);
 
-    tracing::debug!("Token image source dir: {:?}, exists: {}", source_dir, source_dir.exists());
+    tracing::debug!(
+        "Token image source dir: {:?}, exists: {}",
+        source_dir,
+        source_dir.exists()
+    );
 
     // Try different extensions in order of preference
     let extensions = ["webp", "png", "jpg", "jpeg"];

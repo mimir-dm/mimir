@@ -2,12 +2,12 @@
 //!
 //! Tauri commands for managing catalog sources (importing 5etools data, listing sources, etc.)
 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
+use flate2::read::GzDecoder;
 use mimir_core::dal::catalog::{self as catalog_dal};
 use mimir_core::import::CatalogImportService;
 use mimir_core::models::catalog::{BookContent, CatalogSource};
 use mimir_core::utils::now_rfc3339;
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use flate2::read::GzDecoder;
 use serde::Serialize;
 use std::fs::File;
 use std::io::BufReader;
@@ -153,10 +153,7 @@ pub fn set_source_enabled(
 /// This cascade deletes all entities (monsters, spells, items, etc.)
 /// from this source before removing the source record.
 #[tauri::command]
-pub fn delete_catalog_source(
-    state: State<'_, AppState>,
-    source_code: String,
-) -> ApiResponse<()> {
+pub fn delete_catalog_source(state: State<'_, AppState>, source_code: String) -> ApiResponse<()> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -224,13 +221,13 @@ pub fn import_catalog_images(
 ///
 /// Strips the top-level directory prefix and writes directly to dest.
 fn stream_images_from_tarball(archive_path: &Path, dest: &Path) -> Result<usize, String> {
-    let file = File::open(archive_path)
-        .map_err(|e| format!("Failed to open archive: {}", e))?;
+    let file = File::open(archive_path).map_err(|e| format!("Failed to open archive: {}", e))?;
 
     let decoder = GzDecoder::new(BufReader::new(file));
     let mut archive = Archive::new(decoder);
 
-    let entries = archive.entries()
+    let entries = archive
+        .entries()
         .map_err(|e| format!("Failed to read archive entries: {}", e))?;
 
     let mut count = 0;
@@ -260,18 +257,25 @@ fn stream_images_from_tarball(archive_path: &Path, dest: &Path) -> Result<usize,
                 let path_str = path.to_string_lossy();
                 if path_str.starts_with("5etools-img-") {
                     prefix_to_strip = Some(path_str.trim_end_matches('/').to_string());
-                    info!("Detected archive prefix: {}", prefix_to_strip.as_ref().unwrap());
+                    info!(
+                        "Detected archive prefix: {}",
+                        prefix_to_strip.as_ref().unwrap()
+                    );
                 }
             }
             continue;
         }
 
         // Only process image files
-        let ext = path.extension()
+        let ext = path
+            .extension()
             .and_then(|e| e.to_str())
             .map(|e| e.to_lowercase());
 
-        let is_image = matches!(ext.as_deref(), Some("webp" | "png" | "jpg" | "jpeg" | "gif" | "svg"));
+        let is_image = matches!(
+            ext.as_deref(),
+            Some("webp" | "png" | "jpg" | "jpeg" | "gif" | "svg")
+        );
         if !is_image {
             continue;
         }
@@ -384,10 +388,7 @@ pub fn list_library_books(state: State<'_, AppState>) -> ApiResponse<Vec<Library
 /// Returns the full book content (chapters, sections, entries) for rendering
 /// in the book reader view.
 #[tauri::command]
-pub fn get_book_content(
-    state: State<'_, AppState>,
-    book_id: String,
-) -> ApiResponse<BookContent> {
+pub fn get_book_content(state: State<'_, AppState>, book_id: String) -> ApiResponse<BookContent> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),

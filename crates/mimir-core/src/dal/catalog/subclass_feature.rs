@@ -2,13 +2,16 @@
 //!
 //! Database operations for subclass features.
 
-use crate::models::catalog::{SubclassFeature, SubclassFeatureFilter, NewSubclassFeature};
+use crate::models::catalog::{NewSubclassFeature, SubclassFeature, SubclassFeatureFilter};
 use crate::schema::subclass_features;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 
 /// Insert a new subclass feature, ignoring duplicates.
-pub fn insert_subclass_feature(conn: &mut SqliteConnection, feature: &NewSubclassFeature) -> QueryResult<i32> {
+pub fn insert_subclass_feature(
+    conn: &mut SqliteConnection,
+    feature: &NewSubclassFeature,
+) -> QueryResult<i32> {
     diesel::insert_or_ignore_into(subclass_features::table)
         .values(feature)
         .execute(conn)?;
@@ -26,7 +29,10 @@ pub fn insert_subclass_feature(conn: &mut SqliteConnection, feature: &NewSubclas
 }
 
 /// Insert multiple subclass features in a batch.
-pub fn insert_subclass_features(conn: &mut SqliteConnection, features: &[NewSubclassFeature]) -> QueryResult<usize> {
+pub fn insert_subclass_features(
+    conn: &mut SqliteConnection,
+    features: &[NewSubclassFeature],
+) -> QueryResult<usize> {
     diesel::insert_or_ignore_into(subclass_features::table)
         .values(features)
         .execute(conn)
@@ -34,7 +40,9 @@ pub fn insert_subclass_features(conn: &mut SqliteConnection, features: &[NewSubc
 
 /// Get a subclass feature by its ID.
 pub fn get_subclass_feature(conn: &mut SqliteConnection, id: i32) -> QueryResult<SubclassFeature> {
-    subclass_features::table.filter(subclass_features::id.eq(id)).first(conn)
+    subclass_features::table
+        .filter(subclass_features::id.eq(id))
+        .first(conn)
 }
 
 // Define the LOWER SQL function for case-insensitive matching
@@ -66,13 +74,20 @@ pub fn list_subclass_features_by_subclass(
     subclass_features::table
         .filter(subclass_features::subclass_name.eq(subclass_name))
         .filter(subclass_features::subclass_source.eq(subclass_source))
-        .order((subclass_features::level.asc(), subclass_features::name.asc()))
+        .order((
+            subclass_features::level.asc(),
+            subclass_features::name.asc(),
+        ))
         .load(conn)
 }
 
 /// Delete all subclass features from a specific source.
-pub fn delete_subclass_features_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
-    diesel::delete(subclass_features::table.filter(subclass_features::source.eq(source))).execute(conn)
+pub fn delete_subclass_features_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<usize> {
+    diesel::delete(subclass_features::table.filter(subclass_features::source.eq(source)))
+        .execute(conn)
 }
 
 /// Count all subclass features.
@@ -81,7 +96,10 @@ pub fn count_subclass_features(conn: &mut SqliteConnection) -> QueryResult<i64> 
 }
 
 /// Count subclass features from a specific source.
-pub fn count_subclass_features_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+pub fn count_subclass_features_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<i64> {
     subclass_features::table
         .filter(subclass_features::source.eq(source))
         .count()
@@ -138,6 +156,10 @@ pub fn search_subclass_features(
     }
 
     query
-        .order((subclass_features::subclass_name.asc(), subclass_features::level.asc(), subclass_features::name.asc()))
+        .order((
+            subclass_features::subclass_name.asc(),
+            subclass_features::level.asc(),
+            subclass_features::name.asc(),
+        ))
         .load(conn)
 }

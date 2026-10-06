@@ -9,9 +9,7 @@ use diesel::SqliteConnection;
 
 /// Insert a new map.
 pub fn insert_map(conn: &mut SqliteConnection, map: &NewMap) -> QueryResult<String> {
-    diesel::insert_into(maps::table)
-        .values(map)
-        .execute(conn)?;
+    diesel::insert_into(maps::table).values(map).execute(conn)?;
 
     Ok(map.id.to_string())
 }
@@ -125,9 +123,9 @@ pub fn get_next_module_sort_order(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dal::campaign::{insert_campaign, insert_campaign_asset, insert_module};
     use crate::db::test_connection;
-    use crate::dal::campaign::{insert_campaign, insert_module, insert_campaign_asset};
-    use crate::models::campaign::{NewCampaign, NewModule, NewCampaignAsset};
+    use crate::models::campaign::{NewCampaign, NewCampaignAsset, NewModule};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
@@ -136,10 +134,22 @@ mod tests {
         let module = NewModule::new("mod-1", "camp-1", "Chapter 1", 1);
         insert_module(conn, &module).expect("Failed to create module");
 
-        let asset1 = NewCampaignAsset::for_campaign("asset-1", "camp-1", "map1.uvtt", "application/octet-stream", "/blobs/map1.uvtt");
+        let asset1 = NewCampaignAsset::for_campaign(
+            "asset-1",
+            "camp-1",
+            "map1.uvtt",
+            "application/octet-stream",
+            "/blobs/map1.uvtt",
+        );
         insert_campaign_asset(conn, &asset1).expect("Failed to create asset 1");
 
-        let asset2 = NewCampaignAsset::for_campaign("asset-2", "camp-1", "map2.uvtt", "application/octet-stream", "/blobs/map2.uvtt");
+        let asset2 = NewCampaignAsset::for_campaign(
+            "asset-2",
+            "camp-1",
+            "map2.uvtt",
+            "application/octet-stream",
+            "/blobs/map2.uvtt",
+        );
         insert_campaign_asset(conn, &asset2).expect("Failed to create asset 2");
     }
 
@@ -197,10 +207,10 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let map1 = NewMap::for_module("map-1", "camp-1", "mod-1", "Floor 1", "asset-1")
-            .with_sort_order(1);
-        let map2 = NewMap::for_module("map-2", "camp-1", "mod-1", "Floor 2", "asset-2")
-            .with_sort_order(2);
+        let map1 =
+            NewMap::for_module("map-1", "camp-1", "mod-1", "Floor 1", "asset-1").with_sort_order(1);
+        let map2 =
+            NewMap::for_module("map-2", "camp-1", "mod-1", "Floor 2", "asset-2").with_sort_order(2);
         let world = NewMap::for_campaign("map-3", "camp-1", "World Map", "asset-1");
         insert_map(&mut conn, &map1).expect("Failed to insert");
         insert_map(&mut conn, &map2).expect("Failed to insert");
@@ -295,8 +305,7 @@ mod tests {
         let next = get_next_campaign_sort_order(&mut conn, "camp-1").expect("Failed to get");
         assert_eq!(next, 1);
 
-        let map = NewMap::for_campaign("map-1", "camp-1", "Map 1", "asset-1")
-            .with_sort_order(5);
+        let map = NewMap::for_campaign("map-1", "camp-1", "Map 1", "asset-1").with_sort_order(5);
         insert_map(&mut conn, &map).expect("Failed to insert");
 
         // Next map should get sort order 6

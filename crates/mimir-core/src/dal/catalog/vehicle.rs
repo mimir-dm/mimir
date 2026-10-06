@@ -13,15 +13,14 @@ pub fn insert_vehicle(conn: &mut SqliteConnection, vehicle: &NewVehicle) -> Quer
         .values(vehicle)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple vehicles in a batch.
-pub fn insert_vehicles(
-    conn: &mut SqliteConnection,
-    vehicles: &[NewVehicle],
-) -> QueryResult<usize> {
+pub fn insert_vehicles(conn: &mut SqliteConnection, vehicles: &[NewVehicle]) -> QueryResult<usize> {
     diesel::insert_into(vehicles::table)
         .values(vehicles)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_vehicles(
 
 /// Get a vehicle by its ID.
 pub fn get_vehicle(conn: &mut SqliteConnection, id: i32) -> QueryResult<Vehicle> {
-    vehicles::table
-        .filter(vehicles::id.eq(id))
-        .first(conn)
+    vehicles::table.filter(vehicles::id.eq(id)).first(conn)
 }
 
 /// Get a vehicle by name and source.
@@ -80,10 +77,7 @@ pub fn delete_vehicle(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize
 }
 
 /// Delete all vehicles from a specific source.
-pub fn delete_vehicles_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_vehicles_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(vehicles::table.filter(vehicles::source.eq(source))).execute(conn)
 }
 
@@ -186,8 +180,7 @@ mod tests {
     fn test_vehicle_crud() {
         let mut conn = setup_test_db_with_sources();
 
-        let vehicle = NewVehicle::new("Rowboat", "DMG", r#"{"name":"Rowboat"}"#)
-            .with_type("water");
+        let vehicle = NewVehicle::new("Rowboat", "DMG", r#"{"name":"Rowboat"}"#).with_type("water");
         let id = insert_vehicle(&mut conn, &vehicle).expect("Failed to insert");
 
         let retrieved = get_vehicle(&mut conn, id).expect("Failed to get");

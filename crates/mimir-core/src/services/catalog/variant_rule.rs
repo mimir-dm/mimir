@@ -46,7 +46,8 @@ impl<'a> CatalogEntityService for VariantRuleService<'a> {
         limit: i64,
         offset: i64,
     ) -> ServiceResult<Vec<Self::Entity>> {
-        dal::search_variant_rules_paginated(self.conn, filter, limit, offset).map_err(ServiceError::from)
+        dal::search_variant_rules_paginated(self.conn, filter, limit, offset)
+            .map_err(ServiceError::from)
     }
 
     fn get(&mut self, id: i32) -> ServiceResult<Option<Self::Entity>> {

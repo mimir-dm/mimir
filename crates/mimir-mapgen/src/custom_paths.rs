@@ -128,9 +128,14 @@ pub fn generate_custom_paths(
                     .map(|&(x, y)| Vector2::new(x, y))
                     .collect();
 
-                let path = MapPath::new(&config.texture, vectors, config.width * 256.0, &alloc.next())
-                    .with_layer(config.layer)
-                    .with_loop(config.loop_path);
+                let path = MapPath::new(
+                    &config.texture,
+                    vectors,
+                    config.width * 256.0,
+                    &alloc.next(),
+                )
+                .with_layer(config.layer)
+                .with_loop(config.loop_path);
                 paths.push(path);
             }
 
@@ -150,8 +155,13 @@ pub fn generate_custom_paths(
                         .map(|&(x, y)| Vector2::new(x, y))
                         .collect();
 
-                    let path = MapPath::new(&config.texture, vectors, config.width * 256.0, &alloc.next())
-                        .with_layer(config.layer);
+                    let path = MapPath::new(
+                        &config.texture,
+                        vectors,
+                        config.width * 256.0,
+                        &alloc.next(),
+                    )
+                    .with_layer(config.layer);
                     paths.push(path);
                 }
             }
@@ -176,8 +186,13 @@ pub fn generate_custom_paths(
                             .map(|&(x, y)| Vector2::new(x, y))
                             .collect();
 
-                        let path = MapPath::new(&config.texture, vectors, config.width * 256.0, &alloc.next())
-                            .with_layer(config.layer);
+                        let path = MapPath::new(
+                            &config.texture,
+                            vectors,
+                            config.width * 256.0,
+                            &alloc.next(),
+                        )
+                        .with_layer(config.layer);
                         paths.push(path);
                     }
                 }
@@ -215,10 +230,8 @@ pub fn generate_custom_paths(
 
                     for segment in segments {
                         if segment.len() >= 2 {
-                            let vectors: Vec<Vector2> = segment
-                                .iter()
-                                .map(|&(x, y)| Vector2::new(x, y))
-                                .collect();
+                            let vectors: Vec<Vector2> =
+                                segment.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
                             let path = MapPath::new(
                                 &config.texture,
@@ -386,18 +399,34 @@ mod tests {
 
     #[test]
     fn test_room_to_room() {
-        use rand::SeedableRng;
         use crate::pipeline::RoomGeometry;
+        use rand::SeedableRng;
 
         let mut features = GeneratedFeatures::default();
-        features.rooms.insert("hall".to_string(), RoomGeometry {
-            center: (1280.0, 1280.0),
-            boundary: vec![(1024.0, 1024.0), (1536.0, 1024.0), (1536.0, 1536.0), (1024.0, 1536.0)],
-        });
-        features.rooms.insert("treasury".to_string(), RoomGeometry {
-            center: (3840.0, 1280.0),
-            boundary: vec![(3584.0, 1024.0), (4096.0, 1024.0), (4096.0, 1536.0), (3584.0, 1536.0)],
-        });
+        features.rooms.insert(
+            "hall".to_string(),
+            RoomGeometry {
+                center: (1280.0, 1280.0),
+                boundary: vec![
+                    (1024.0, 1024.0),
+                    (1536.0, 1024.0),
+                    (1536.0, 1536.0),
+                    (1024.0, 1536.0),
+                ],
+            },
+        );
+        features.rooms.insert(
+            "treasury".to_string(),
+            RoomGeometry {
+                center: (3840.0, 1280.0),
+                boundary: vec![
+                    (3584.0, 1024.0),
+                    (4096.0, 1024.0),
+                    (4096.0, 1536.0),
+                    (3584.0, 1536.0),
+                ],
+            },
+        );
         let alloc = NodeIdAllocator::new(1);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
@@ -447,8 +476,11 @@ mod tests {
         assert_eq!(paths.len(), 1);
         // Offset path should be shifted perpendicular
         let first_y = paths[0].position.y + paths[0].edit_points.0[0].y;
-        assert!((first_y - (128.0 + 128.0)).abs() < 10.0 || (first_y - (128.0 - 128.0)).abs() < 10.0,
-            "Offset path should be shifted from parent, got y={}", first_y);
+        assert!(
+            (first_y - (128.0 + 128.0)).abs() < 10.0 || (first_y - (128.0 - 128.0)).abs() < 10.0,
+            "Offset path should be shifted from parent, got y={}",
+            first_y
+        );
     }
 
     #[test]
@@ -456,10 +488,9 @@ mod tests {
         use rand::SeedableRng;
         let mut features = GeneratedFeatures::default();
         // Long straight path: 20 grid squares
-        features.paths.insert(
-            "river".to_string(),
-            vec![(0.0, 128.0), (5120.0, 128.0)],
-        );
+        features
+            .paths
+            .insert("river".to_string(), vec![(0.0, 128.0), (5120.0, 128.0)]);
         let alloc = NodeIdAllocator::new(1);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
@@ -481,7 +512,11 @@ mod tests {
         }];
 
         let paths = generate_custom_paths(&configs, &features, &alloc, &mut rng);
-        assert!(paths.len() >= 2, "Should produce multiple segments, got {}", paths.len());
+        assert!(
+            paths.len() >= 2,
+            "Should produce multiple segments, got {}",
+            paths.len()
+        );
     }
 
     #[test]
@@ -531,13 +566,16 @@ mod tests {
         // 10 grid squares straight line
         let points = vec![(0.0, 0.0), (2560.0, 0.0)];
         let segments = break_into_segments(
-            &points,
-            768.0,  // ~3 grid squares per segment
-            128.0,  // ± half grid square variation
-            256.0,  // up to 1 grid square gap
+            &points, 768.0, // ~3 grid squares per segment
+            128.0, // ± half grid square variation
+            256.0, // up to 1 grid square gap
             &mut rng,
         );
-        assert!(segments.len() >= 2, "Should have multiple segments, got {}", segments.len());
+        assert!(
+            segments.len() >= 2,
+            "Should have multiple segments, got {}",
+            segments.len()
+        );
         for seg in &segments {
             assert!(seg.len() >= 2, "Each segment should have at least 2 points");
         }

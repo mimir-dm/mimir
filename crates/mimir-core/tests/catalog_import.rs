@@ -16,8 +16,8 @@ const FIVETOOLS_DATA_PATH: &str = "../../data/5etools-2014-src-v1.210.46";
 
 /// Set up an in-memory database with all migrations applied.
 fn setup_test_db() -> SqliteConnection {
-    let mut conn = SqliteConnection::establish(":memory:")
-        .expect("Failed to create in-memory database");
+    let mut conn =
+        SqliteConnection::establish(":memory:").expect("Failed to create in-memory database");
 
     // Run all migrations
     conn.run_pending_migrations(MIGRATIONS)
@@ -35,7 +35,10 @@ fn fivetools_data_exists() -> bool {
 #[test]
 fn test_import_phb_source() {
     if !fivetools_data_exists() {
-        eprintln!("Skipping integration test: 5etools data not found at {}", FIVETOOLS_DATA_PATH);
+        eprintln!(
+            "Skipping integration test: 5etools data not found at {}",
+            FIVETOOLS_DATA_PATH
+        );
         return;
     }
 
@@ -44,7 +47,9 @@ fn test_import_phb_source() {
 
     // Create import service and import PHB
     let mut service = CatalogImportService::new(&mut conn);
-    let result = service.import_from_directory(repo_path).expect("Import should succeed");
+    let result = service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // PHB should be in the imported sources
     assert!(
@@ -76,29 +81,29 @@ fn test_import_spells_from_phb() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    let result = service.import_from_directory(repo_path).expect("Import should succeed");
+    let result = service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Check spell count
     let spell_count = catalog::count_spells(&mut conn).expect("Should count spells");
     println!("Imported {} spells", spell_count);
 
-    assert!(
-        spell_count > 0,
-        "Should import spells from PHB"
-    );
+    assert!(spell_count > 0, "Should import spells from PHB");
 
     // Verify a known spell exists (Fireball is iconic)
-    let fireball = catalog::get_spell_by_name(&mut conn, "Fireball", "PHB")
-        .expect("Query should succeed");
+    let fireball =
+        catalog::get_spell_by_name(&mut conn, "Fireball", "PHB").expect("Query should succeed");
 
-    assert!(
-        fireball.is_some(),
-        "Fireball spell should exist from PHB"
-    );
+    assert!(fireball.is_some(), "Fireball spell should exist from PHB");
 
     if let Some(spell) = fireball {
         assert_eq!(spell.level, 3, "Fireball should be level 3");
-        assert_eq!(spell.school.as_deref(), Some("V"), "Fireball should be Evocation");
+        assert_eq!(
+            spell.school.as_deref(),
+            Some("V"),
+            "Fireball should be Evocation"
+        );
     }
 
     // Check total from import result
@@ -120,7 +125,9 @@ fn test_import_monsters_from_mm() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    let result = service.import_from_directory(repo_path).expect("Import should succeed");
+    let result = service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Check monster count
     let monster_count = catalog::count_monsters(&mut conn).expect("Should count monsters");
@@ -133,13 +140,21 @@ fn test_import_monsters_from_mm() {
     );
 
     // Verify known monsters exist
-    let goblin = catalog::get_monster_by_name(&mut conn, "Goblin", "MM")
-        .expect("Query should succeed");
+    let goblin =
+        catalog::get_monster_by_name(&mut conn, "Goblin", "MM").expect("Query should succeed");
     assert!(goblin.is_some(), "Goblin should exist from MM");
 
     if let Some(monster) = goblin {
-        assert_eq!(monster.cr.as_deref(), Some("1/4"), "Goblin should be CR 1/4");
-        assert_eq!(monster.creature_type.as_deref(), Some("humanoid"), "Goblin should be humanoid");
+        assert_eq!(
+            monster.cr.as_deref(),
+            Some("1/4"),
+            "Goblin should be CR 1/4"
+        );
+        assert_eq!(
+            monster.creature_type.as_deref(),
+            Some("humanoid"),
+            "Goblin should be humanoid"
+        );
         assert_eq!(monster.size.as_deref(), Some("S"), "Goblin should be Small");
     }
 
@@ -149,8 +164,16 @@ fn test_import_monsters_from_mm() {
     assert!(dragon.is_some(), "Adult Red Dragon should exist from MM");
 
     if let Some(monster) = dragon {
-        assert_eq!(monster.cr.as_deref(), Some("17"), "Adult Red Dragon should be CR 17");
-        assert_eq!(monster.creature_type.as_deref(), Some("dragon"), "Should be dragon type");
+        assert_eq!(
+            monster.cr.as_deref(),
+            Some("17"),
+            "Adult Red Dragon should be CR 17"
+        );
+        assert_eq!(
+            monster.creature_type.as_deref(),
+            Some("dragon"),
+            "Should be dragon type"
+        );
     }
 }
 
@@ -166,7 +189,9 @@ fn test_import_items_with_attunement() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    service.import_from_directory(repo_path).expect("Import should succeed");
+    service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Check item count
     let item_count = catalog::count_items(&mut conn).expect("Should count items");
@@ -176,7 +201,10 @@ fn test_import_items_with_attunement() {
     // Verify DMG is imported for magic items
     let sources = catalog::list_sources(&mut conn).expect("Should list sources");
     let dmg_source = sources.iter().find(|s| s.code == "DMG");
-    assert!(dmg_source.is_some(), "DMG should be imported for magic items");
+    assert!(
+        dmg_source.is_some(),
+        "DMG should be imported for magic items"
+    );
 }
 
 #[test]
@@ -191,18 +219,23 @@ fn test_import_classes_and_subclasses() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    service.import_from_directory(repo_path).expect("Import should succeed");
+    service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Check class count
     let class_count = catalog::count_classes(&mut conn).expect("Should count classes");
     println!("Imported {} classes", class_count);
 
     // Core classes should exist
-    assert!(class_count >= 12, "Should have at least 12 core classes (including Artificer)");
+    assert!(
+        class_count >= 12,
+        "Should have at least 12 core classes (including Artificer)"
+    );
 
     // Verify known class exists
-    let fighter = catalog::get_class_by_name(&mut conn, "Fighter", "PHB")
-        .expect("Query should succeed");
+    let fighter =
+        catalog::get_class_by_name(&mut conn, "Fighter", "PHB").expect("Query should succeed");
     assert!(fighter.is_some(), "Fighter class should exist from PHB");
 
     // Check subclasses
@@ -223,11 +256,13 @@ fn test_import_optional_features() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    let result = service.import_from_directory(repo_path).expect("Import should succeed");
+    let result = service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Check optional feature count
-    let optional_feature_count = catalog::count_optional_features(&mut conn)
-        .expect("Should count optional features");
+    let optional_feature_count =
+        catalog::count_optional_features(&mut conn).expect("Should count optional features");
     println!("Imported {} optional features", optional_feature_count);
 
     // Should have imported some optional features (invocations, metamagic, etc.)
@@ -237,10 +272,12 @@ fn test_import_optional_features() {
 
     // If there are optional features, verify we can list them
     if optional_feature_count > 0 {
-        let features = catalog::list_optional_features(&mut conn)
-            .expect("Should list optional features");
-        println!("First few optional features: {:?}",
-            features.iter().take(5).map(|f| &f.name).collect::<Vec<_>>());
+        let features =
+            catalog::list_optional_features(&mut conn).expect("Should list optional features");
+        println!(
+            "First few optional features: {:?}",
+            features.iter().take(5).map(|f| &f.name).collect::<Vec<_>>()
+        );
     }
 }
 
@@ -256,7 +293,9 @@ fn test_import_preserves_full_json_data() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    service.import_from_directory(repo_path).expect("Import should succeed");
+    service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Get a spell and verify the data column has the full JSON
     let fireball = catalog::get_spell_by_name(&mut conn, "Fireball", "PHB")
@@ -264,11 +303,15 @@ fn test_import_preserves_full_json_data() {
         .expect("Fireball should exist");
 
     // Parse the data column
-    let data: serde_json::Value = serde_json::from_str(&fireball.data)
-        .expect("Data column should be valid JSON");
+    let data: serde_json::Value =
+        serde_json::from_str(&fireball.data).expect("Data column should be valid JSON");
 
     // Verify the JSON contains expected fields
-    assert_eq!(data["name"].as_str(), Some("Fireball"), "JSON should have name");
+    assert_eq!(
+        data["name"].as_str(),
+        Some("Fireball"),
+        "JSON should have name"
+    );
     assert_eq!(data["level"].as_i64(), Some(3), "JSON should have level");
 
     // Check for entries (the spell description)
@@ -291,7 +334,9 @@ fn test_spell_class_relationships() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    service.import_from_directory(repo_path).expect("Import should succeed");
+    service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Get Fireball and check its class relationships
     let fireball = catalog::get_spell_by_name(&mut conn, "Fireball", "PHB")
@@ -301,13 +346,27 @@ fn test_spell_class_relationships() {
     let spell_classes = catalog::get_spell_classes(&mut conn, fireball.id.unwrap())
         .expect("Should get spell classes");
 
-    println!("Fireball is available to: {:?}",
-        spell_classes.iter().map(|sc| &sc.class_name).collect::<Vec<_>>());
+    println!(
+        "Fireball is available to: {:?}",
+        spell_classes
+            .iter()
+            .map(|sc| &sc.class_name)
+            .collect::<Vec<_>>()
+    );
 
     // Fireball should be available to Sorcerer and Wizard at minimum
-    let class_names: Vec<&str> = spell_classes.iter().map(|sc| sc.class_name.as_str()).collect();
-    assert!(class_names.contains(&"Sorcerer"), "Fireball should be a Sorcerer spell");
-    assert!(class_names.contains(&"Wizard"), "Fireball should be a Wizard spell");
+    let class_names: Vec<&str> = spell_classes
+        .iter()
+        .map(|sc| sc.class_name.as_str())
+        .collect();
+    assert!(
+        class_names.contains(&"Sorcerer"),
+        "Fireball should be a Sorcerer spell"
+    );
+    assert!(
+        class_names.contains(&"Wizard"),
+        "Fireball should be a Wizard spell"
+    );
 }
 
 #[test]
@@ -322,7 +381,9 @@ fn test_import_summary_accuracy() {
 
     // Import from directory
     let mut service = CatalogImportService::new(&mut conn);
-    let result = service.import_from_directory(repo_path).expect("Import should succeed");
+    let result = service
+        .import_from_directory(repo_path)
+        .expect("Import should succeed");
 
     // Verify counts match database
     for (entity_type, reported_count) in &result.entity_counts {
@@ -355,12 +416,18 @@ fn test_import_summary_accuracy() {
 
         if let Some(db_count) = db_count {
             // Allow for some variance due to filtering, but should be in same ballpark
-            println!("{}: reported={}, db={}", entity_type, reported_count, db_count);
+            println!(
+                "{}: reported={}, db={}",
+                entity_type, reported_count, db_count
+            );
         }
     }
 
     // Total entities should be > 0
-    assert!(result.total_entities > 0, "Should have imported some entities");
+    assert!(
+        result.total_entities > 0,
+        "Should have imported some entities"
+    );
 
     // No failures expected for standard 5etools data
     if !result.sources_failed.is_empty() {

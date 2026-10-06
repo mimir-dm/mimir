@@ -42,7 +42,10 @@ pub fn list_characters(
 
 /// List only player characters for a campaign (with classes and proficiencies).
 #[tauri::command]
-pub fn list_pcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterResponse>> {
+pub fn list_pcs(
+    state: State<'_, AppState>,
+    campaign_id: String,
+) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -62,7 +65,10 @@ pub fn list_pcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<
 
 /// List only NPCs for a campaign (with classes and proficiencies).
 #[tauri::command]
-pub fn list_npcs(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<CharacterResponse>> {
+pub fn list_npcs(
+    state: State<'_, AppState>,
+    campaign_id: String,
+) -> ApiResponse<Vec<CharacterResponse>> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -136,14 +142,20 @@ pub struct CreatePcRequest {
 
 /// Create a new player character.
 #[tauri::command]
-pub fn create_pc(state: State<'_, AppState>, request: CreatePcRequest) -> ApiResponse<CharacterResponse> {
+pub fn create_pc(
+    state: State<'_, AppState>,
+    request: CreatePcRequest,
+) -> ApiResponse<CharacterResponse> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
     };
 
-    let mut input =
-        CreateCharacterInput::new_pc(request.campaign_id.as_deref(), &request.name, &request.player_name);
+    let mut input = CreateCharacterInput::new_pc(
+        request.campaign_id.as_deref(),
+        &request.name,
+        &request.player_name,
+    );
 
     // Set race if both name and source provided
     if let (Some(name), Some(source)) = (&request.race_name, &request.race_source) {
@@ -196,7 +208,10 @@ pub struct CreateNpcRequest {
 
 /// Create a new NPC.
 #[tauri::command]
-pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiResponse<CharacterResponse> {
+pub fn create_npc(
+    state: State<'_, AppState>,
+    request: CreateNpcRequest,
+) -> ApiResponse<CharacterResponse> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -217,11 +232,8 @@ pub fn create_npc(state: State<'_, AppState>, request: CreateNpcRequest) -> ApiR
 
     // Update with NPC-specific fields if provided
     if request.role.is_some() || request.location.is_some() || request.faction.is_some() {
-        let update = UpdateCharacterInput::set_npc_info(
-            request.role,
-            request.location,
-            request.faction,
-        );
+        let update =
+            UpdateCharacterInput::set_npc_info(request.role, request.location, request.faction);
         match CharacterService::new(&mut db).update(&character.id, update) {
             Ok(updated) => {
                 return ApiResponse::ok(CharacterResponse::from_character(updated, vec![], vec![]))
@@ -525,7 +537,9 @@ pub fn remove_character_source(
         Err(e) => return ApiResponse::err(e),
     };
 
-    to_api_response(SourceService::new(&mut db).remove_character_source(&character_id, &source_code))
+    to_api_response(
+        SourceService::new(&mut db).remove_character_source(&character_id, &source_code),
+    )
 }
 
 /// Set the complete list of allowed sources for a character (replaces existing, atomically).

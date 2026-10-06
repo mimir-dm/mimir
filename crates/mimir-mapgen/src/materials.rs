@@ -151,10 +151,7 @@ pub fn generate_materials(
             }
         }
 
-        result
-            .entry(config.layer.clone())
-            .or_default()
-            .push(entry);
+        result.entry(config.layer.clone()).or_default().push(entry);
     }
 
     result
@@ -265,17 +262,24 @@ mod tests {
     fn test_room_region() {
         let noise = NoiseMap::generate(40, 40, &Default::default());
         let mut features = GeneratedFeatures::default();
-        features.rooms.insert("lava_room".to_string(), RoomGeometry {
-            center: (1280.0, 1280.0),
-            boundary: vec![
-                (1024.0, 1024.0), (1536.0, 1024.0),
-                (1536.0, 1536.0), (1024.0, 1536.0),
-            ],
-        });
+        features.rooms.insert(
+            "lava_room".to_string(),
+            RoomGeometry {
+                center: (1280.0, 1280.0),
+                boundary: vec![
+                    (1024.0, 1024.0),
+                    (1536.0, 1024.0),
+                    (1536.0, 1536.0),
+                    (1024.0, 1536.0),
+                ],
+            },
+        );
         let alloc = NodeIdAllocator::new(1);
 
         let configs = vec![MaterialScatterConfig {
-            region: MaterialRegion::Room { name: "lava_room".to_string() },
+            region: MaterialRegion::Room {
+                name: "lava_room".to_string(),
+            },
             texture: "res://textures/materials/lava_tile.png".to_string(),
             layer: "-400".to_string(),
             smooth: true,
@@ -292,10 +296,9 @@ mod tests {
     fn test_along_path_region() {
         let noise = NoiseMap::generate(40, 40, &Default::default());
         let mut features = GeneratedFeatures::default();
-        features.paths.insert(
-            "river".to_string(),
-            vec![(0.0, 1280.0), (2560.0, 1280.0)],
-        );
+        features
+            .paths
+            .insert("river".to_string(), vec![(0.0, 1280.0), (2560.0, 1280.0)]);
         let alloc = NodeIdAllocator::new(1);
 
         let configs = vec![MaterialScatterConfig {
@@ -322,7 +325,9 @@ mod tests {
         let alloc = NodeIdAllocator::new(1);
 
         let configs = vec![MaterialScatterConfig {
-            region: MaterialRegion::Room { name: "nope".to_string() },
+            region: MaterialRegion::Room {
+                name: "nope".to_string(),
+            },
             texture: "test.png".to_string(),
             layer: "-400".to_string(),
             smooth: true,
@@ -360,13 +365,19 @@ mod tests {
 
         let configs = vec![
             MaterialScatterConfig {
-                region: MaterialRegion::Noise { noise_lower: 0.0, noise_upper: 0.3 },
+                region: MaterialRegion::Noise {
+                    noise_lower: 0.0,
+                    noise_upper: 0.3,
+                },
                 texture: "ice.png".to_string(),
                 layer: "-400".to_string(),
                 smooth: true,
             },
             MaterialScatterConfig {
-                region: MaterialRegion::Noise { noise_lower: 0.7, noise_upper: 1.0 },
+                region: MaterialRegion::Noise {
+                    noise_lower: 0.7,
+                    noise_upper: 1.0,
+                },
                 texture: "lava.png".to_string(),
                 layer: "-400".to_string(),
                 smooth: true,

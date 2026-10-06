@@ -100,8 +100,8 @@ mod tests {
 
     #[test]
     fn test_prepared_spell() {
-        let spell = NewCharacterSpell::new("spell-1", "char-1", "Shield", "PHB", "Wizard")
-            .prepared();
+        let spell =
+            NewCharacterSpell::new("spell-1", "char-1", "Shield", "PHB", "Wizard").prepared();
         assert_eq!(spell.prepared, 1);
     }
 

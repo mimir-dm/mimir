@@ -30,7 +30,10 @@ pub fn clip_contours_against_corridors(
 
     for contour in contours {
         // Convert edit_points to absolute coordinates
-        let abs_points: Vec<(f64, f64)> = contour.edit_points.0.iter()
+        let abs_points: Vec<(f64, f64)> = contour
+            .edit_points
+            .0
+            .iter()
             .map(|p| (contour.position.x + p.x, contour.position.y + p.y))
             .collect();
 
@@ -43,9 +46,8 @@ pub fn clip_contours_against_corridors(
 
         for segment in segments {
             if segment.len() >= 2 {
-                let vectors: Vec<Vector2> = segment.iter()
-                    .map(|&(x, y)| Vector2::new(x, y))
-                    .collect();
+                let vectors: Vec<Vector2> =
+                    segment.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
                 let path = MapPath::new(&contour.texture, vectors, contour.width, &alloc.next())
                     .with_layer(contour.layer);
                 result.push(path);
@@ -127,11 +129,16 @@ mod tests {
     #[test]
     fn test_no_corridors_returns_unchanged() {
         let alloc = NodeIdAllocator::new(1);
-        let path = MapPath::new("cliff.png", vec![
-            Vector2::new(100.0, 100.0),
-            Vector2::new(500.0, 100.0),
-            Vector2::new(900.0, 100.0),
-        ], 20.0, &alloc.next());
+        let path = MapPath::new(
+            "cliff.png",
+            vec![
+                Vector2::new(100.0, 100.0),
+                Vector2::new(500.0, 100.0),
+                Vector2::new(900.0, 100.0),
+            ],
+            20.0,
+            &alloc.next(),
+        );
         let result = clip_contours_against_corridors(vec![path], &[], &alloc);
         assert_eq!(result.len(), 1);
     }
@@ -140,7 +147,9 @@ mod tests {
     fn test_corridor_clips_middle() {
         let alloc = NodeIdAllocator::new(1);
         // Contour runs horizontally from 0 to 1000
-        let points: Vec<Vector2> = (0..=10).map(|i| Vector2::new(i as f64 * 100.0, 500.0)).collect();
+        let points: Vec<Vector2> = (0..=10)
+            .map(|i| Vector2::new(i as f64 * 100.0, 500.0))
+            .collect();
         let path = MapPath::new("cliff.png", points, 20.0, &alloc.next());
 
         // Corridor runs vertically through the middle at x=500
@@ -151,17 +160,23 @@ mod tests {
 
         let result = clip_contours_against_corridors(vec![path], &[corridor], &alloc);
         // Should produce 2 segments: left of corridor and right of corridor
-        assert!(result.len() >= 2, "Expected 2+ segments, got {}", result.len());
+        assert!(
+            result.len() >= 2,
+            "Expected 2+ segments, got {}",
+            result.len()
+        );
     }
 
     #[test]
     fn test_corridor_fully_covers_contour() {
         let alloc = NodeIdAllocator::new(1);
         // Short contour at y=500
-        let path = MapPath::new("cliff.png", vec![
-            Vector2::new(480.0, 500.0),
-            Vector2::new(520.0, 500.0),
-        ], 20.0, &alloc.next());
+        let path = MapPath::new(
+            "cliff.png",
+            vec![Vector2::new(480.0, 500.0), Vector2::new(520.0, 500.0)],
+            20.0,
+            &alloc.next(),
+        );
 
         // Wide corridor at y=500
         let corridor = Corridor {

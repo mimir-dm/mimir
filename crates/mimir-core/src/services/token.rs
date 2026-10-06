@@ -72,7 +72,12 @@ impl CreateTokenInput {
     }
 
     /// Create input for a PC token (requires label).
-    pub fn for_pc(map_id: impl Into<String>, label: impl Into<String>, grid_x: i32, grid_y: i32) -> Self {
+    pub fn for_pc(
+        map_id: impl Into<String>,
+        label: impl Into<String>,
+        grid_x: i32,
+        grid_y: i32,
+    ) -> Self {
         Self {
             map_id: map_id.into(),
             module_monster_id: None,
@@ -283,7 +288,8 @@ impl<'a> TokenService<'a> {
     /// Update a token.
     pub fn update(&mut self, id: &str, input: UpdateTokenInput) -> ServiceResult<TokenResponse> {
         let label: Option<Option<&str>> = input.label.as_ref().map(|o| o.as_deref());
-        let faction_color: Option<Option<&str>> = input.faction_color.as_ref().map(|o| o.as_deref());
+        let faction_color: Option<Option<&str>> =
+            input.faction_color.as_ref().map(|o| o.as_deref());
 
         let update = UpdateTokenPlacement {
             grid_x: input.grid_x,
@@ -308,7 +314,12 @@ impl<'a> TokenService<'a> {
     }
 
     /// Update just the position (optimized for drag operations).
-    pub fn update_position(&mut self, id: &str, grid_x: i32, grid_y: i32) -> ServiceResult<TokenResponse> {
+    pub fn update_position(
+        &mut self,
+        id: &str,
+        grid_x: i32,
+        grid_y: i32,
+    ) -> ServiceResult<TokenResponse> {
         let update = UpdateTokenPlacement::set_position(grid_x, grid_y);
 
         let rows = dal::update_token_placement(self.conn, id, &update)?;
@@ -390,7 +401,11 @@ impl<'a> TokenService<'a> {
     }
 
     /// Enrich a TokenPlacement with resolved names and computed coordinates.
-    fn enrich(&mut self, placement: TokenPlacement, grid_size_px: i32) -> ServiceResult<TokenResponse> {
+    fn enrich(
+        &mut self,
+        placement: TokenPlacement,
+        grid_size_px: i32,
+    ) -> ServiceResult<TokenResponse> {
         let (token_type, name, size) = self.resolve_names(&placement);
 
         // Convert grid coordinates to pixel coordinates (center of grid cell)
@@ -400,7 +415,10 @@ impl<'a> TokenService<'a> {
         Ok(TokenResponse {
             id: placement.id,
             map_id: placement.map_id,
-            name: placement.label.or(name).unwrap_or_else(|| "Unknown".to_string()),
+            name: placement
+                .label
+                .or(name)
+                .unwrap_or_else(|| "Unknown".to_string()),
             token_type,
             size,
             grid_x: placement.grid_x,
@@ -428,40 +446,42 @@ impl<'a> TokenService<'a> {
                 .flatten();
             if let Some(m) = monster {
                 // Look up the monster in the catalog (or homebrew) to get its size
-                let size = if let (Some(ref name), Some(ref source)) = (&m.monster_name, &m.monster_source) {
+                let size = if let (Some(ref name), Some(ref source)) =
+                    (&m.monster_name, &m.monster_source)
+                {
                     crate::dal::catalog::get_monster_by_name(self.conn, name, source)
                         .ok()
                         .flatten()
                         .and_then(|catalog_monster| {
-                            catalog_monster.size.as_ref().map(|s| normalize_size_code(s))
+                            catalog_monster
+                                .size
+                                .as_ref()
+                                .map(|s| normalize_size_code(s))
                         })
                         .unwrap_or_else(|| "medium".to_string())
                 } else if let Some(ref hb_id) = m.homebrew_monster_id {
                     // Look up homebrew monster for size
                     crate::dal::campaign::get_campaign_homebrew_monster(self.conn, hb_id)
                         .ok()
-                        .and_then(|hb| {
-                            hb.size.as_ref().map(|s| normalize_size_code(s))
-                        })
+                        .and_then(|hb| hb.size.as_ref().map(|s| normalize_size_code(s)))
                         .unwrap_or_else(|| "medium".to_string())
                 } else {
                     "medium".to_string()
                 };
 
-                let display = m.display_name
+                let display = m
+                    .display_name
                     .or(m.monster_name)
                     .unwrap_or_else(|| "Unknown Monster".to_string());
 
-                (
-                    "monster".to_string(),
-                    Some(display),
-                    size,
-                )
+                ("monster".to_string(), Some(display), size)
             } else {
                 ("monster".to_string(), None, "medium".to_string())
             }
         } else if let Some(ref npc_id) = token.module_npc_id {
-            let npc = dal::get_module_npc_optional(self.conn, npc_id).ok().flatten();
+            let npc = dal::get_module_npc_optional(self.conn, npc_id)
+                .ok()
+                .flatten();
             (
                 "npc".to_string(),
                 npc.map(|n| n.name),
@@ -491,8 +511,8 @@ fn normalize_size_code(size: &str) -> String {
 mod tests {
     use super::*;
     use crate::dal::campaign::{
-        insert_campaign, insert_campaign_asset, insert_map, insert_module,
-        insert_module_monster, insert_module_npc,
+        insert_campaign, insert_campaign_asset, insert_map, insert_module, insert_module_monster,
+        insert_module_npc,
     };
     use crate::models::campaign::{
         NewCampaign, NewCampaignAsset, NewMap, NewModule, NewModuleMonster, NewModuleNpc,
@@ -585,7 +605,9 @@ mod tests {
 
         let mut service = TokenService::new(&mut conn, temp_dir.path());
         let input = CreateTokenInput::for_monster(&map_id, &monster_id, 1, 2);
-        let token = service.create(input).expect("Failed to create monster token");
+        let token = service
+            .create(input)
+            .expect("Failed to create monster token");
 
         assert_eq!(token.token_type, "monster");
         assert_eq!(token.monster_id, Some(monster_id));
@@ -634,7 +656,9 @@ mod tests {
 
         let mut service = TokenService::new(&mut conn, temp_dir.path());
         let input = CreateTokenInput::for_pc(&map_id, "Rogue", 0, 0).hidden();
-        let token = service.create(input).expect("Failed to create hidden token");
+        let token = service
+            .create(input)
+            .expect("Failed to create hidden token");
 
         assert!(!token.visible_to_players);
     }
@@ -745,7 +769,9 @@ mod tests {
         assert_eq!(all.len(), 2);
 
         // list_visible() filters hidden tokens
-        let visible_only = service.list_visible(&map_id).expect("Failed to list visible");
+        let visible_only = service
+            .list_visible(&map_id)
+            .expect("Failed to list visible");
         assert_eq!(visible_only.len(), 1);
         assert_eq!(visible_only[0].name, "Fighter");
     }
@@ -1097,7 +1123,10 @@ mod tests {
         let input = CreateTokenInput::for_monster(&map_id, "nonexistent-monster", 0, 0);
         let result = service.create(input);
 
-        assert!(result.is_err(), "Should fail with FK violation for nonexistent monster");
+        assert!(
+            result.is_err(),
+            "Should fail with FK violation for nonexistent monster"
+        );
     }
 
     #[test]
@@ -1110,7 +1139,10 @@ mod tests {
         let input = CreateTokenInput::for_npc(&map_id, "nonexistent-npc", 0, 0);
         let result = service.create(input);
 
-        assert!(result.is_err(), "Should fail with FK violation for nonexistent NPC");
+        assert!(
+            result.is_err(),
+            "Should fail with FK violation for nonexistent NPC"
+        );
     }
 
     // ── normalize_size_code ───────────────────────────────────────────────

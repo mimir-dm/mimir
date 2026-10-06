@@ -13,15 +13,14 @@ pub fn insert_disease(conn: &mut SqliteConnection, disease: &NewDisease) -> Quer
         .values(disease)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple diseases in a batch.
-pub fn insert_diseases(
-    conn: &mut SqliteConnection,
-    diseases: &[NewDisease],
-) -> QueryResult<usize> {
+pub fn insert_diseases(conn: &mut SqliteConnection, diseases: &[NewDisease]) -> QueryResult<usize> {
     diesel::insert_into(diseases::table)
         .values(diseases)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_diseases(
 
 /// Get a disease by its ID.
 pub fn get_disease(conn: &mut SqliteConnection, id: i32) -> QueryResult<Disease> {
-    diseases::table
-        .filter(diseases::id.eq(id))
-        .first(conn)
+    diseases::table.filter(diseases::id.eq(id)).first(conn)
 }
 
 /// Get a disease by name and source.
@@ -69,10 +66,7 @@ pub fn delete_disease(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize
 }
 
 /// Delete all diseases from a specific source.
-pub fn delete_diseases_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_diseases_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(diseases::table.filter(diseases::source.eq(source))).execute(conn)
 }
 

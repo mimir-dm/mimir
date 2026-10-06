@@ -13,8 +13,10 @@ pub fn insert_condition(conn: &mut SqliteConnection, condition: &NewCondition) -
         .values(condition)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple conditions in a batch.
@@ -29,13 +31,14 @@ pub fn insert_conditions(
 
 /// Get a condition by its ID.
 pub fn get_condition(conn: &mut SqliteConnection, id: i32) -> QueryResult<Condition> {
-    conditions::table
-        .filter(conditions::id.eq(id))
-        .first(conn)
+    conditions::table.filter(conditions::id.eq(id)).first(conn)
 }
 
 /// Get a condition by its ID, returning None if not found.
-pub fn get_condition_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Condition>> {
+pub fn get_condition_optional(
+    conn: &mut SqliteConnection,
+    id: i32,
+) -> QueryResult<Option<Condition>> {
     conditions::table
         .filter(conditions::id.eq(id))
         .first(conn)
@@ -111,7 +114,10 @@ pub fn list_condition_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<St
 }
 
 /// Search conditions with filters.
-pub fn search_conditions(conn: &mut SqliteConnection, filter: &ConditionFilter) -> QueryResult<Vec<Condition>> {
+pub fn search_conditions(
+    conn: &mut SqliteConnection,
+    filter: &ConditionFilter,
+) -> QueryResult<Vec<Condition>> {
     // If sources filter is explicitly empty, return no results
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);

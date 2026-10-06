@@ -49,7 +49,11 @@ pub fn resolve_token_path(app_data_dir: &Path, token_image_path: &str) -> PathBu
 ///
 /// Searches for PNG and WEBP formats.
 /// Returns the source path and extension if found.
-pub fn find_source_token(img_dir: &Path, source: &str, monster_name: &str) -> Option<(PathBuf, String)> {
+pub fn find_source_token(
+    img_dir: &Path,
+    source: &str,
+    monster_name: &str,
+) -> Option<(PathBuf, String)> {
     let base_path = img_dir.join("bestiary").join("tokens").join(source);
 
     // Try exact name match first
@@ -97,8 +101,12 @@ pub fn copy_token(
     }
 
     // Copy the file
-    fs::copy(&source_path, &dest_path)
-        .with_context(|| format!("Failed to copy token from {:?} to {:?}", source_path, dest_path))?;
+    fs::copy(&source_path, &dest_path).with_context(|| {
+        format!(
+            "Failed to copy token from {:?} to {:?}",
+            source_path, dest_path
+        )
+    })?;
 
     Ok(Some(rel_path))
 }
@@ -175,7 +183,10 @@ mod tests {
     fn test_resolve_token_path() {
         let app_data = Path::new("/home/user/.mimir");
         let resolved = resolve_token_path(app_data, "tokens/MM/goblin.png");
-        assert_eq!(resolved, PathBuf::from("/home/user/.mimir/tokens/MM/goblin.png"));
+        assert_eq!(
+            resolved,
+            PathBuf::from("/home/user/.mimir/tokens/MM/goblin.png")
+        );
     }
 
     #[test]
@@ -230,12 +241,7 @@ mod tests {
         fs::create_dir_all(&token_dir).unwrap();
         fs::write(token_dir.join("Goblin.png"), "fake png content").unwrap();
 
-        let result = copy_token(
-            temp_src.path(),
-            temp_dest.path(),
-            "MM",
-            "Goblin",
-        ).unwrap();
+        let result = copy_token(temp_src.path(), temp_dest.path(), "MM", "Goblin").unwrap();
 
         assert!(result.is_some());
         let rel_path = result.unwrap();
@@ -252,12 +258,7 @@ mod tests {
         let temp_src = TempDir::new().unwrap();
         let temp_dest = TempDir::new().unwrap();
 
-        let result = copy_token(
-            temp_src.path(),
-            temp_dest.path(),
-            "MM",
-            "NonExistent",
-        ).unwrap();
+        let result = copy_token(temp_src.path(), temp_dest.path(), "MM", "NonExistent").unwrap();
 
         assert!(result.is_none());
     }

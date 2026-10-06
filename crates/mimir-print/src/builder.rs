@@ -303,10 +303,7 @@ impl DocumentBuilder {
             // Check if section wants a different margin
             let section_margin = section.page_margin().unwrap_or(self.config.margin);
             if (section_margin - current_margin).abs() > 0.001 {
-                output.push_str(&format!(
-                    "#set page(margin: {}in)\n",
-                    section_margin
-                ));
+                output.push_str(&format!("#set page(margin: {}in)\n", section_margin));
                 current_margin = section_margin;
             }
 
@@ -456,10 +453,16 @@ impl DocumentBuilder {
                     Err(errors) => {
                         let error_msg = errors
                             .iter()
-                            .map(|d| format!("{}: {}",
-                                match d.severity { Severity::Error => "error", Severity::Warning => "warning" },
-                                d.message
-                            ))
+                            .map(|d| {
+                                format!(
+                                    "{}: {}",
+                                    match d.severity {
+                                        Severity::Error => "error",
+                                        Severity::Warning => "warning",
+                                    },
+                                    d.message
+                                )
+                            })
                             .collect::<Vec<_>>()
                             .join("\n");
                         Err(PrintError::PdfError(error_msg))
@@ -472,15 +475,24 @@ impl DocumentBuilder {
                 if let Err(e) = std::fs::write(&debug_path, &typst_content) {
                     tracing::warn!("Failed to write debug Typst file: {}", e);
                 } else {
-                    tracing::error!("Typst compilation failed. Debug file: {}", debug_path.display());
+                    tracing::error!(
+                        "Typst compilation failed. Debug file: {}",
+                        debug_path.display()
+                    );
                 }
 
                 let error_msg = errors
                     .iter()
-                    .map(|d| format!("{}: {}",
-                        match d.severity { Severity::Error => "error", Severity::Warning => "warning" },
-                        d.message
-                    ))
+                    .map(|d| {
+                        format!(
+                            "{}: {}",
+                            match d.severity {
+                                Severity::Error => "error",
+                                Severity::Warning => "warning",
+                            },
+                            d.message
+                        )
+                    })
                     .collect::<Vec<_>>()
                     .join("\n");
                 Err(PrintError::CompilationError(error_msg))
@@ -566,8 +578,8 @@ mod tests {
 
     #[test]
     fn test_build_typst_simple() {
-        let builder = DocumentBuilder::new("Test Document")
-            .append(TestSection::new("Hello, world!"));
+        let builder =
+            DocumentBuilder::new("Test Document").append(TestSection::new("Hello, world!"));
 
         let typst = builder.build_typst().unwrap();
 
@@ -663,8 +675,7 @@ mod tests {
 
     #[test]
     fn test_document_builder_title_page() {
-        let builder = DocumentBuilder::new("My Campaign")
-            .with_title_page(true);
+        let builder = DocumentBuilder::new("My Campaign").with_title_page(true);
 
         assert!(builder.config.include_title_page);
     }

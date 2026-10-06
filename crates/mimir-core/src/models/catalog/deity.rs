@@ -35,7 +35,12 @@ pub struct NewDeity<'a> {
 
 impl<'a> NewDeity<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, pantheon: None, data }
+        Self {
+            name,
+            source,
+            pantheon: None,
+            data,
+        }
     }
 
     pub fn with_pantheon(mut self, pantheon: &'a str) -> Self {
@@ -77,8 +82,8 @@ mod tests {
 
     #[test]
     fn test_new_deity() {
-        let deity = NewDeity::new("Tyr", "PHB", r#"{"name":"Tyr"}"#)
-            .with_pantheon("Forgotten Realms");
+        let deity =
+            NewDeity::new("Tyr", "PHB", r#"{"name":"Tyr"}"#).with_pantheon("Forgotten Realms");
         assert_eq!(deity.name, "Tyr");
         assert_eq!(deity.pantheon, Some("Forgotten Realms"));
     }

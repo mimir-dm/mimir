@@ -125,7 +125,9 @@ This is a test.
     #[test]
     fn test_with_title_overrides_frontmatter() {
         let md = "---\ntitle: Original\n---\n\n# Content";
-        let section = MarkdownSection::from_markdown(md).unwrap().with_title("Overridden");
+        let section = MarkdownSection::from_markdown(md)
+            .unwrap()
+            .with_title("Overridden");
         assert_eq!(section.toc_title(), Some("Overridden".to_string()));
     }
 

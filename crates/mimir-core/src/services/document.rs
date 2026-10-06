@@ -135,9 +135,15 @@ impl<'a> DocumentService<'a> {
         };
 
         let new_doc = if let Some(ref module_id) = input.module_id {
-            NewDocument::for_module(&doc_id, &input.campaign_id, module_id, &input.title, doc_type)
-                .with_content(content)
-                .with_sort_order(sort_order)
+            NewDocument::for_module(
+                &doc_id,
+                &input.campaign_id,
+                module_id,
+                &input.title,
+                doc_type,
+            )
+            .with_content(content)
+            .with_sort_order(sort_order)
         } else {
             NewDocument::for_campaign(&doc_id, &input.campaign_id, &input.title, doc_type)
                 .with_content(content)
@@ -264,11 +270,7 @@ impl<'a> DocumentService<'a> {
     /// Swap sort_order between two documents.
     ///
     /// Used to move a document up or down by swapping with its neighbor.
-    pub fn swap_order(
-        &mut self,
-        doc_id_a: &str,
-        doc_id_b: &str,
-    ) -> ServiceResult<Vec<Document>> {
+    pub fn swap_order(&mut self, doc_id_a: &str, doc_id_b: &str) -> ServiceResult<Vec<Document>> {
         let doc_a = dal::get_document_optional(self.conn, doc_id_a)?
             .ok_or_else(|| ServiceError::not_found("Document", doc_id_a))?;
         let doc_b = dal::get_document_optional(self.conn, doc_id_b)?
@@ -433,7 +435,9 @@ mod tests {
 
         let mut service = DocumentService::new(&mut conn);
 
-        let result = service.get("nonexistent").expect("Failed to query document");
+        let result = service
+            .get("nonexistent")
+            .expect("Failed to query document");
         assert!(result.is_none());
     }
 

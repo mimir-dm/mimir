@@ -118,8 +118,12 @@ mod tests {
     fn test_subclass_crud() {
         let mut conn = setup_test_db_with_sources();
 
-        let subclass =
-            NewSubclass::new("School of Evocation", "Wizard", "PHB", r#"{"name":"School of Evocation"}"#);
+        let subclass = NewSubclass::new(
+            "School of Evocation",
+            "Wizard",
+            "PHB",
+            r#"{"name":"School of Evocation"}"#,
+        );
         let id = insert_subclass(&mut conn, &subclass).expect("Failed to insert");
 
         let retrieved = get_subclass(&mut conn, id).expect("Failed to get");
@@ -146,10 +150,12 @@ mod tests {
         ];
         insert_subclasses(&mut conn, &subclasses).expect("Failed to insert");
 
-        let wizard_subclasses = list_subclasses_by_class(&mut conn, "Wizard").expect("Failed to list");
+        let wizard_subclasses =
+            list_subclasses_by_class(&mut conn, "Wizard").expect("Failed to list");
         assert_eq!(wizard_subclasses.len(), 2);
 
-        let fighter_subclasses = list_subclasses_by_class(&mut conn, "Fighter").expect("Failed to list");
+        let fighter_subclasses =
+            list_subclasses_by_class(&mut conn, "Fighter").expect("Failed to list");
         assert_eq!(fighter_subclasses.len(), 1);
     }
 }

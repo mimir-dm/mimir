@@ -124,8 +124,8 @@ mod tests {
 
     #[test]
     fn test_new_campaign_with_description() {
-        let campaign = NewCampaign::new("test-id", "Test Campaign")
-            .with_description("A test description");
+        let campaign =
+            NewCampaign::new("test-id", "Test Campaign").with_description("A test description");
         assert_eq!(campaign.description, Some("A test description"));
     }
 

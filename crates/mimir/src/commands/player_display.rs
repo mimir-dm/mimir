@@ -52,13 +52,17 @@ pub fn open_player_display_window<R: Runtime>(app: AppHandle<R>) -> Result<(), S
     }
 
     // Create the window
-    WebviewWindowBuilder::new(&app, PLAYER_DISPLAY_LABEL, WebviewUrl::App("/player-display".into()))
-        .title("Player Display")
-        .inner_size(1280.0, 720.0)
-        .resizable(true)
-        .visible(true)
-        .build()
-        .map_err(|e| format!("Failed to create player display window: {}", e))?;
+    WebviewWindowBuilder::new(
+        &app,
+        PLAYER_DISPLAY_LABEL,
+        WebviewUrl::App("/player-display".into()),
+    )
+    .title("Player Display")
+    .inner_size(1280.0, 720.0)
+    .resizable(true)
+    .visible(true)
+    .build()
+    .map_err(|e| format!("Failed to create player display window: {}", e))?;
 
     Ok(())
 }

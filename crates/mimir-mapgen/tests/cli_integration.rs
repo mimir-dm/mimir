@@ -59,12 +59,7 @@ fn test_generate_from_yaml_config() {
     );
 
     let output = mapgen_bin()
-        .args([
-            "generate",
-            config_path,
-            "-o",
-            output_path.to_str().unwrap(),
-        ])
+        .args(["generate", config_path, "-o", output_path.to_str().unwrap()])
         .output()
         .unwrap();
 
@@ -108,7 +103,10 @@ fn test_generate_deterministic_output() {
         serde_json::from_str(&std::fs::read_to_string(&out1).unwrap()).unwrap();
     let c2: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&out2).unwrap()).unwrap();
-    assert_eq!(c1["world"], c2["world"], "Same seed should produce identical world");
+    assert_eq!(
+        c1["world"], c2["world"],
+        "Same seed should produce identical world"
+    );
 }
 
 #[test]

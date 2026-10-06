@@ -43,7 +43,12 @@ pub struct NewFeat<'a> {
 impl<'a> NewFeat<'a> {
     /// Create a new feat entry.
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, data, fluff: None }
+        Self {
+            name,
+            source,
+            data,
+            fluff: None,
+        }
     }
 }
 

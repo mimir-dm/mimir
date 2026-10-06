@@ -94,7 +94,10 @@ async fn main() -> anyhow::Result<()> {
     let server = server_runtime::create_server(options);
 
     info!("Mimir MCP server ready");
-    server.start().await.map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    server
+        .start()
+        .await
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
     Ok(())
 }

@@ -142,11 +142,17 @@ impl CharacterSection {
     /// Calculate proficiency bonus from total level
     fn prof_bonus(&self) -> i32 {
         let level = self.total_level();
-        if level <= 4 { 2 }
-        else if level <= 8 { 3 }
-        else if level <= 12 { 4 }
-        else if level <= 16 { 5 }
-        else { 6 }
+        if level <= 4 {
+            2
+        } else if level <= 8 {
+            3
+        } else if level <= 12 {
+            4
+        } else if level <= 16 {
+            5
+        } else {
+            6
+        }
     }
 
     /// Format class string (e.g., "Fighter 5 / Rogue 3")
@@ -155,7 +161,8 @@ impl CharacterSection {
             return "No Class".to_string();
         }
 
-        self.character.classes
+        self.character
+            .classes
             .iter()
             .map(|c| {
                 if let Some(ref sub) = c.subclass_name {
@@ -192,7 +199,6 @@ impl CharacterSection {
             + (self.character.gp as f64)
             + (self.character.pp as f64 * 10.0)
     }
-
 }
 
 impl Renderable for CharacterSection {
@@ -446,23 +452,63 @@ impl Renderable for CharacterSection {
         // ===== LEFT COLUMN: Ability Score Blocks =====
         typst.push_str("  // Ability Scores with grouped skills\n  {\n");
 
-        typst.push_str(&ability_block("STR", "Strength", char.strength, &[("Athletics", "STR")]));
-        typst.push_str(&ability_block("DEX", "Dexterity", char.dexterity, &[
-            ("Acrobatics", "DEX"), ("Sleight of Hand", "DEX"), ("Stealth", "DEX"),
-        ]));
-        typst.push_str(&ability_block("CON", "Constitution", char.constitution, &[]));
-        typst.push_str(&ability_block("INT", "Intelligence", char.intelligence, &[
-            ("Arcana", "INT"), ("History", "INT"), ("Investigation", "INT"),
-            ("Nature", "INT"), ("Religion", "INT"),
-        ]));
-        typst.push_str(&ability_block("WIS", "Wisdom", char.wisdom, &[
-            ("Animal Handling", "WIS"), ("Insight", "WIS"), ("Medicine", "WIS"),
-            ("Perception", "WIS"), ("Survival", "WIS"),
-        ]));
-        typst.push_str(&ability_block("CHA", "Charisma", char.charisma, &[
-            ("Deception", "CHA"), ("Intimidation", "CHA"),
-            ("Performance", "CHA"), ("Persuasion", "CHA"),
-        ]));
+        typst.push_str(&ability_block(
+            "STR",
+            "Strength",
+            char.strength,
+            &[("Athletics", "STR")],
+        ));
+        typst.push_str(&ability_block(
+            "DEX",
+            "Dexterity",
+            char.dexterity,
+            &[
+                ("Acrobatics", "DEX"),
+                ("Sleight of Hand", "DEX"),
+                ("Stealth", "DEX"),
+            ],
+        ));
+        typst.push_str(&ability_block(
+            "CON",
+            "Constitution",
+            char.constitution,
+            &[],
+        ));
+        typst.push_str(&ability_block(
+            "INT",
+            "Intelligence",
+            char.intelligence,
+            &[
+                ("Arcana", "INT"),
+                ("History", "INT"),
+                ("Investigation", "INT"),
+                ("Nature", "INT"),
+                ("Religion", "INT"),
+            ],
+        ));
+        typst.push_str(&ability_block(
+            "WIS",
+            "Wisdom",
+            char.wisdom,
+            &[
+                ("Animal Handling", "WIS"),
+                ("Insight", "WIS"),
+                ("Medicine", "WIS"),
+                ("Perception", "WIS"),
+                ("Survival", "WIS"),
+            ],
+        ));
+        typst.push_str(&ability_block(
+            "CHA",
+            "Charisma",
+            char.charisma,
+            &[
+                ("Deception", "CHA"),
+                ("Intimidation", "CHA"),
+                ("Performance", "CHA"),
+                ("Persuasion", "CHA"),
+            ],
+        ));
 
         typst.push_str("  },\n\n");
 
@@ -565,7 +611,11 @@ impl Renderable for CharacterSection {
             ));
         }
         if !prof_content.is_empty() {
-            typst.push_str(&secondary_box("PROFICIENCIES & LANGUAGES", &prof_content, false));
+            typst.push_str(&secondary_box(
+                "PROFICIENCIES & LANGUAGES",
+                &prof_content,
+                false,
+            ));
             typst.push_str("    v(spacing.xs)\n\n");
         }
 
@@ -587,18 +637,29 @@ impl Renderable for CharacterSection {
         let has_slots = char.spell_slots.iter().any(|&s| s > 0);
         if has_slots {
             let mut spell_content = String::new();
-            spell_content.push_str("    #grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm,\n");
+            spell_content
+                .push_str("    #grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm,\n");
             if let Some(ref ability) = char.spellcasting_ability {
-                spell_content.push_str(&format!("      labeled-value(\"Ability\", [{}]),\n", ability));
+                spell_content.push_str(&format!(
+                    "      labeled-value(\"Ability\", [{}]),\n",
+                    ability
+                ));
             }
             if let Some(dc) = char.spell_save_dc {
-                spell_content.push_str(&format!("      labeled-value(\"Save DC\", str({})),\n", dc));
+                spell_content
+                    .push_str(&format!("      labeled-value(\"Save DC\", str({})),\n", dc));
             }
             if let Some(atk) = char.spell_attack_bonus {
                 let sign = if atk >= 0 { "+" } else { "" };
-                spell_content.push_str(&format!("      labeled-value(\"Attack\", [{}{}]),\n", sign, atk));
+                spell_content.push_str(&format!(
+                    "      labeled-value(\"Attack\", [{}{}]),\n",
+                    sign, atk
+                ));
             }
-            spell_content.push_str(&format!("      labeled-value(\"Hit Die\", [{}]),\n", escape_typst_string(&char.hit_die)));
+            spell_content.push_str(&format!(
+                "      labeled-value(\"Hit Die\", [{}]),\n",
+                escape_typst_string(&char.hit_die)
+            ));
             spell_content.push_str("    )\n    #v(spacing.sm)\n");
 
             // Slot grid: header row, total row, then checkbox rows for tracking
@@ -608,7 +669,12 @@ impl Renderable for CharacterSection {
 
             // Row 1: level headers
             for lvl in 1..=9 {
-                let suffix = match lvl { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+                let suffix = match lvl {
+                    1 => "st",
+                    2 => "nd",
+                    3 => "rd",
+                    _ => "th",
+                };
                 spell_content.push_str(&format!(
                     "      align(center, block(width: 100%, fill: luma(60), inset: spacing.xs)[#text(size: sizes.xs, weight: \"bold\", fill: white)[{}{}]]),\n",
                     lvl, suffix
@@ -618,7 +684,11 @@ impl Renderable for CharacterSection {
             // Row 2: total slots
             for i in 0..9 {
                 let count = char.spell_slots.get(i).copied().unwrap_or(0);
-                let display = if count > 0 { format!("{}", count) } else { "—".to_string() };
+                let display = if count > 0 {
+                    format!("{}", count)
+                } else {
+                    "—".to_string()
+                };
                 spell_content.push_str(&format!(
                     "      align(center, block(width: 100%, stroke: 0.5pt + colors.border-light, inset: spacing.xs)[#text(size: sizes.md, weight: \"bold\")[{}]]),\n",
                     display
@@ -702,7 +772,8 @@ impl Renderable for CharacterSection {
         typst.push_str("  // Left column\n  [\n");
 
         // NPC info
-        if char.is_npc && (char.role.is_some() || char.location.is_some() || char.faction.is_some()) {
+        if char.is_npc && (char.role.is_some() || char.location.is_some() || char.faction.is_some())
+        {
             let mut npc_content = String::new();
             if let Some(ref role) = char.role {
                 npc_content.push_str(&format!(
@@ -737,8 +808,15 @@ impl Renderable for CharacterSection {
 
         // Currency — tertiary (minimal)
         let mut currency_content = String::new();
-        currency_content.push_str("    #grid(columns: (1fr, 1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm,\n");
-        for (label, val) in [("PP", char.pp), ("GP", char.gp), ("EP", char.ep), ("SP", char.sp), ("CP", char.cp)] {
+        currency_content
+            .push_str("    #grid(columns: (1fr, 1fr, 1fr, 1fr, 1fr), column-gutter: spacing.sm,\n");
+        for (label, val) in [
+            ("PP", char.pp),
+            ("GP", char.gp),
+            ("EP", char.ep),
+            ("SP", char.sp),
+            ("CP", char.cp),
+        ] {
             currency_content.push_str(&format!(
                 "      align(center, box(stroke: 0.5pt + colors.border-light, width: 100%, radius: 2pt, inset: spacing.xs)[#align(center)[#text(size: sizes.md, weight: \"bold\")[{}] #linebreak() #text(size: sizes.xs, fill: colors.text-secondary, tracking: 0.5pt)[{}]]]),",
                 val, label
@@ -751,7 +829,8 @@ impl Renderable for CharacterSection {
         // Inventory — zebra-striped table
         let mut inv_content = String::new();
         if char.inventory.is_empty() {
-            inv_content.push_str("    #text(size: sizes.sm, fill: colors.text-secondary)[No items]\n");
+            inv_content
+                .push_str("    #text(size: sizes.sm, fill: colors.text-secondary)[No items]\n");
         } else {
             inv_content.push_str("    #grid(columns: (auto, 1fr, auto), column-gutter: spacing.md, row-gutter: spacing.xs,\n");
             inv_content.push_str("      text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[QTY], text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[ITEM], text(size: sizes.xs, weight: \"bold\", tracking: 0.5pt)[STATUS],\n");
@@ -762,7 +841,11 @@ impl Renderable for CharacterSection {
                     (true, false) => "E",
                     _ => "—",
                 };
-                let fill = if i % 2 == 0 { "fill: colors.background-alt, " } else { "" };
+                let fill = if i % 2 == 0 {
+                    "fill: colors.background-alt, "
+                } else {
+                    ""
+                };
                 inv_content.push_str(&format!(
                     "      block({}inset: spacing.xs)[#text(size: sizes.xs)[{}]], block({}inset: spacing.xs)[#text(size: sizes.xs)[{}]], block({}inset: spacing.xs)[#text(size: sizes.xs)[{}]],\n",
                     fill, item.quantity, fill, escape_typst_string(&item.name), fill, status
@@ -775,7 +858,9 @@ impl Renderable for CharacterSection {
         typst.push_str("  ]\n)\n\n");
 
         // --- Page 2 footer ---
-        typst.push_str("#v(1fr)\n#align(center)[#text(size: sizes.xs, fill: luma(180))[Generated by Mimir]]\n");
+        typst.push_str(
+            "#v(1fr)\n#align(center)[#text(size: sizes.xs, fill: luma(180))[Generated by Mimir]]\n",
+        );
 
         Ok(typst)
     }
@@ -860,9 +945,18 @@ mod tests {
             ],
             proficiencies: Proficiencies {
                 skills: vec![
-                    ProficiencyEntry { name: "Athletics".to_string(), expertise: false },
-                    ProficiencyEntry { name: "Perception".to_string(), expertise: false },
-                    ProficiencyEntry { name: "Survival".to_string(), expertise: false },
+                    ProficiencyEntry {
+                        name: "Athletics".to_string(),
+                        expertise: false,
+                    },
+                    ProficiencyEntry {
+                        name: "Perception".to_string(),
+                        expertise: false,
+                    },
+                    ProficiencyEntry {
+                        name: "Survival".to_string(),
+                        expertise: false,
+                    },
                 ],
                 saves: vec!["Strength".to_string(), "Constitution".to_string()],
                 languages: vec!["Common".to_string(), "Elvish".to_string()],
@@ -906,15 +1000,13 @@ mod tests {
             role: None,
             location: None,
             faction: None,
-            classes: vec![
-                ClassInfo {
-                    class_name: "Wizard".to_string(),
-                    class_source: "PHB".to_string(),
-                    level: 9,
-                    subclass_name: Some("Evocation".to_string()),
-                    is_starting: true,
-                },
-            ],
+            classes: vec![ClassInfo {
+                class_name: "Wizard".to_string(),
+                class_source: "PHB".to_string(),
+                level: 9,
+                subclass_name: Some("Evocation".to_string()),
+                is_starting: true,
+            }],
             inventory: vec![
                 InventoryItem {
                     name: "Staff of Power".to_string(),
@@ -941,12 +1033,25 @@ mod tests {
             ],
             proficiencies: Proficiencies {
                 skills: vec![
-                    ProficiencyEntry { name: "Arcana".to_string(), expertise: false },
-                    ProficiencyEntry { name: "History".to_string(), expertise: false },
-                    ProficiencyEntry { name: "Investigation".to_string(), expertise: false },
+                    ProficiencyEntry {
+                        name: "Arcana".to_string(),
+                        expertise: false,
+                    },
+                    ProficiencyEntry {
+                        name: "History".to_string(),
+                        expertise: false,
+                    },
+                    ProficiencyEntry {
+                        name: "Investigation".to_string(),
+                        expertise: false,
+                    },
                 ],
                 saves: vec!["Intelligence".to_string(), "Wisdom".to_string()],
-                languages: vec!["Common".to_string(), "Draconic".to_string(), "Elvish".to_string()],
+                languages: vec![
+                    "Common".to_string(),
+                    "Draconic".to_string(),
+                    "Elvish".to_string(),
+                ],
                 armor: vec![],
                 weapons: vec!["Daggers".to_string(), "Quarterstaffs".to_string()],
                 tools: vec![],

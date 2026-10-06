@@ -14,7 +14,9 @@ pub mod spell_cards;
 pub mod token_cutouts;
 pub mod trap_cards;
 
-pub use character::{CharacterData, CharacterSection, ClassInfo, InventoryItem, Proficiencies, ProficiencyEntry};
+pub use character::{
+    CharacterData, CharacterSection, ClassInfo, InventoryItem, Proficiencies, ProficiencyEntry,
+};
 pub use character_battle_card::CharacterBattleCardSection;
 pub use equipment_cards::{is_card_worthy, EquipmentCardsSection};
 pub use map::{MapPreview, TileData, TiledMapSection};

@@ -21,9 +21,7 @@ struct UvttImageExtractor {
 
 /// Load image bytes from a file, handling UVTT files by extracting their embedded image
 pub fn load_image_from_file(path: &Path) -> Result<Vec<u8>> {
-    let extension = path.extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("");
+    let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
     let is_uvtt = extension == "dd2vtt" || extension == "uvtt";
 
@@ -89,10 +87,10 @@ impl RenderToken {
     /// Get default color based on token type
     fn default_color(&self) -> Rgba<u8> {
         match self.token_type.to_lowercase().as_str() {
-            "monster" => Rgba([220, 53, 69, 255]),   // Red
-            "pc" => Rgba([40, 167, 69, 255]),        // Green
-            "npc" => Rgba([0, 123, 255, 255]),       // Blue
-            "trap" => Rgba([255, 193, 7, 255]),      // Yellow
+            "monster" => Rgba([220, 53, 69, 255]),  // Red
+            "pc" => Rgba([40, 167, 69, 255]),       // Green
+            "npc" => Rgba([0, 123, 255, 255]),      // Blue
+            "trap" => Rgba([255, 193, 7, 255]),     // Yellow
             "marker" => Rgba([108, 117, 125, 255]), // Gray
             _ => Rgba([128, 128, 128, 255]),
         }
@@ -179,10 +177,7 @@ fn parse_hex_color(hex: &str) -> Option<Rgba<u8>> {
 }
 
 /// Render a map with grid overlay
-pub fn render_map_with_grid(
-    map: &RenderMap,
-    base_path: &Path,
-) -> Result<RgbaImage> {
+pub fn render_map_with_grid(map: &RenderMap, base_path: &Path) -> Result<RgbaImage> {
     // Load the base image (handles both regular images and UVTT files)
     let image_path = base_path.join(&map.image_path);
     let image_bytes = load_image_from_file(&image_path)?;
@@ -219,12 +214,7 @@ fn draw_grid(img: &mut RgbaImage, map: &RenderMap) {
     let mut x = offset_x;
     while x < width {
         if x >= 0.0 {
-            draw_line_segment_mut(
-                img,
-                (x, 0.0),
-                (x, height),
-                grid_color,
-            );
+            draw_line_segment_mut(img, (x, 0.0), (x, height), grid_color);
         }
         x += grid_size;
     }
@@ -233,12 +223,7 @@ fn draw_grid(img: &mut RgbaImage, map: &RenderMap) {
     let mut y = offset_y;
     while y < height {
         if y >= 0.0 {
-            draw_line_segment_mut(
-                img,
-                (0.0, y),
-                (width, y),
-                grid_color,
-            );
+            draw_line_segment_mut(img, (0.0, y), (width, y), grid_color);
         }
         y += grid_size;
     }
@@ -296,12 +281,12 @@ pub fn render_map(
     // Encode to PNG
     let mut grid_bytes: Vec<u8> = Vec::new();
     let encoder = image::codecs::png::PngEncoder::new(&mut grid_bytes);
-    img_with_grid
-        .write_with_encoder(encoder)
-        .map_err(|e| PrintError::IoError(std::io::Error::new(
+    img_with_grid.write_with_encoder(encoder).map_err(|e| {
+        PrintError::IoError(std::io::Error::new(
             std::io::ErrorKind::Other,
             format!("Failed to encode map image: {}", e),
-        )))?;
+        ))
+    })?;
 
     // If tokens exist, render version with tokens
     let with_tokens = if !tokens.is_empty() && map.grid_size_px.is_some() {
@@ -310,12 +295,12 @@ pub fn render_map(
 
         let mut token_bytes: Vec<u8> = Vec::new();
         let encoder = image::codecs::png::PngEncoder::new(&mut token_bytes);
-        img_with_tokens
-            .write_with_encoder(encoder)
-            .map_err(|e| PrintError::IoError(std::io::Error::new(
+        img_with_tokens.write_with_encoder(encoder).map_err(|e| {
+            PrintError::IoError(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Failed to encode map image with tokens: {}", e),
-            )))?;
+            ))
+        })?;
 
         Some(token_bytes)
     } else {
@@ -505,10 +490,22 @@ mod tests {
         assert_eq!(token.grid_squares(), 1.0);
 
         // Test all size variants
-        assert_eq!(sample_token("T", 0.0, 0.0, "tiny", "monster").grid_squares(), 0.5);
-        assert_eq!(sample_token("L", 0.0, 0.0, "large", "monster").grid_squares(), 2.0);
-        assert_eq!(sample_token("H", 0.0, 0.0, "huge", "monster").grid_squares(), 3.0);
-        assert_eq!(sample_token("G", 0.0, 0.0, "gargantuan", "monster").grid_squares(), 4.0);
+        assert_eq!(
+            sample_token("T", 0.0, 0.0, "tiny", "monster").grid_squares(),
+            0.5
+        );
+        assert_eq!(
+            sample_token("L", 0.0, 0.0, "large", "monster").grid_squares(),
+            2.0
+        );
+        assert_eq!(
+            sample_token("H", 0.0, 0.0, "huge", "monster").grid_squares(),
+            3.0
+        );
+        assert_eq!(
+            sample_token("G", 0.0, 0.0, "gargantuan", "monster").grid_squares(),
+            4.0
+        );
     }
 
     #[test]
@@ -566,11 +563,7 @@ mod tests {
         let map = sample_map();
         let image_base64 = create_test_image_base64(540, 324);
 
-        let los_walls = vec![vec![
-            (1.0, 1.0),
-            (1.0, 3.0),
-            (4.0, 3.0),
-        ]];
+        let los_walls = vec![vec![(1.0, 1.0), (1.0, 3.0), (4.0, 3.0)]];
 
         let options = MapPrintOptions {
             show_los_walls: true,

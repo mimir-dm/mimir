@@ -568,12 +568,15 @@ pub async fn create_character(
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::created("character", json!({
-        "id": character.id,
-        "name": character.name,
-        "is_npc": character.is_npc(),
-        "race_name": character.race_name
-    }))
+    McpResponse::created(
+        "character",
+        json!({
+            "id": character.id,
+            "name": character.name,
+            "is_npc": character.is_npc(),
+            "race_name": character.race_name
+        }),
+    )
 }
 
 pub async fn edit_character(
@@ -685,27 +688,30 @@ pub async fn edit_character(
         .update(character_id, update)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::updated("character", json!({
-        "id": character.id,
-        "name": character.name,
-        "is_npc": character.is_npc(),
-        "race_name": character.race_name,
-        "background_name": character.background_name,
-        "strength": character.strength,
-        "dexterity": character.dexterity,
-        "constitution": character.constitution,
-        "intelligence": character.intelligence,
-        "wisdom": character.wisdom,
-        "charisma": character.charisma,
-        "cp": character.cp,
-        "sp": character.sp,
-        "ep": character.ep,
-        "gp": character.gp,
-        "pp": character.pp,
-        "role": character.role,
-        "location": character.location,
-        "faction": character.faction
-    }))
+    McpResponse::updated(
+        "character",
+        json!({
+            "id": character.id,
+            "name": character.name,
+            "is_npc": character.is_npc(),
+            "race_name": character.race_name,
+            "background_name": character.background_name,
+            "strength": character.strength,
+            "dexterity": character.dexterity,
+            "constitution": character.constitution,
+            "intelligence": character.intelligence,
+            "wisdom": character.wisdom,
+            "charisma": character.charisma,
+            "cp": character.cp,
+            "sp": character.sp,
+            "ep": character.ep,
+            "gp": character.gp,
+            "pp": character.pp,
+            "role": character.role,
+            "location": character.location,
+            "faction": character.faction
+        }),
+    )
 }
 
 pub async fn delete_character(
@@ -765,14 +771,17 @@ pub async fn add_item_to_character(
         .add_to_inventory(&args.character_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::added("inventory_item", json!({
-        "id": inventory_item.id,
-        "item_name": inventory_item.item_name,
-        "item_source": inventory_item.item_source,
-        "quantity": inventory_item.quantity,
-        "equipped": inventory_item.equipped != 0,
-        "attuned": inventory_item.attuned != 0
-    }))
+    McpResponse::added(
+        "inventory_item",
+        json!({
+            "id": inventory_item.id,
+            "item_name": inventory_item.item_name,
+            "item_source": inventory_item.item_source,
+            "quantity": inventory_item.quantity,
+            "equipped": inventory_item.equipped != 0,
+            "attuned": inventory_item.attuned != 0
+        }),
+    )
 }
 
 pub async fn remove_item_from_character(
@@ -805,14 +814,17 @@ pub async fn update_character_inventory(
         )
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::updated("inventory_item", json!({
-        "id": item.id,
-        "item_name": item.item_name,
-        "item_source": item.item_source,
-        "quantity": item.quantity,
-        "equipped": item.equipped != 0,
-        "attuned": item.attuned != 0
-    }))
+    McpResponse::updated(
+        "inventory_item",
+        json!({
+            "id": item.id,
+            "item_name": item.item_name,
+            "item_source": item.item_source,
+            "quantity": item.quantity,
+            "equipped": item.equipped != 0,
+            "attuned": item.attuned != 0
+        }),
+    )
 }
 
 pub async fn get_character_inventory(
@@ -887,9 +899,7 @@ pub async fn level_up_character(
     // Subclass
     let subclass = args.subclass_name.map(|name| SubclassChoice {
         name,
-        source: args
-            .subclass_source
-            .unwrap_or_else(|| "PHB".to_string()),
+        source: args.subclass_source.unwrap_or_else(|| "PHB".to_string()),
     });
 
     // ASI or Feat

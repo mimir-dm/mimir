@@ -132,8 +132,8 @@ pub fn find_character_class_by_name(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCharacter};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -164,10 +164,10 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let fighter = NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB")
-            .with_level(5);
-        let rogue = NewCharacterClass::multiclass("class-2", "char-1", "Rogue", "PHB")
-            .with_level(3);
+        let fighter =
+            NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB").with_level(5);
+        let rogue =
+            NewCharacterClass::multiclass("class-2", "char-1", "Rogue", "PHB").with_level(3);
         insert_character_class(&mut conn, &fighter).expect("Failed to insert");
         insert_character_class(&mut conn, &rogue).expect("Failed to insert");
 
@@ -217,8 +217,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let class = NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB")
-            .with_level(3);
+        let class =
+            NewCharacterClass::starting("class-1", "char-1", "Fighter", "PHB").with_level(3);
         insert_character_class(&mut conn, &class).expect("Failed to insert");
 
         let update = UpdateCharacterClass::set_subclass("Champion", "PHB");

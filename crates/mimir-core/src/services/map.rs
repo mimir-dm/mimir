@@ -243,7 +243,13 @@ impl<'a> MapService<'a> {
         let description = input.description.as_deref();
 
         let mut new_map = if let Some(ref module_id) = input.module_id {
-            NewMap::for_module(&map_id, &input.campaign_id, module_id, &input.name, &asset.id)
+            NewMap::for_module(
+                &map_id,
+                &input.campaign_id,
+                module_id,
+                &input.name,
+                &asset.id,
+            )
         } else {
             NewMap::for_campaign(&map_id, &input.campaign_id, &input.name, &asset.id)
         };
@@ -388,7 +394,9 @@ impl<'a> MapService<'a> {
         // Now delete the UVTT asset file and all extracted variants from disk
         if let Ok(Some(asset)) = dal::get_campaign_asset_optional(self.conn, &asset_id) {
             let file_path = self.app_data_dir.join(&asset.blob_path);
-            let jpg_path = self.app_data_dir.join(blob_path_to_extracted(&asset.blob_path));
+            let jpg_path = self
+                .app_data_dir
+                .join(blob_path_to_extracted(&asset.blob_path));
             let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
             let meta_path = self.app_data_dir.join(blob_path_to_meta(&asset.blob_path));
             let _ = std::fs::remove_file(&file_path);
@@ -441,17 +449,15 @@ impl<'a> MapService<'a> {
             .ok_or_else(|| ServiceError::not_found("Asset", &map.uvtt_asset_id))?;
 
         // Check for JPEG (current format)
-        let jpg_path = self.app_data_dir.join(
-            blob_path_to_extracted(&asset.blob_path),
-        );
+        let jpg_path = self
+            .app_data_dir
+            .join(blob_path_to_extracted(&asset.blob_path));
         if jpg_path.exists() {
             return Ok(Some(jpg_path));
         }
 
         // Check for legacy PNG
-        let png_path = self.app_data_dir.join(
-            blob_path_to_png(&asset.blob_path),
-        );
+        let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
         if png_path.exists() {
             return Ok(Some(png_path));
         }
@@ -472,11 +478,16 @@ impl<'a> MapService<'a> {
         use std::time::Instant;
         let t0 = Instant::now();
 
-        let jpg_path = self.app_data_dir.join(blob_path_to_extracted(uvtt_blob_path));
+        let jpg_path = self
+            .app_data_dir
+            .join(blob_path_to_extracted(uvtt_blob_path));
         let meta_path = self.app_data_dir.join(blob_path_to_meta(uvtt_blob_path));
 
         if jpg_path.exists() && meta_path.exists() {
-            tracing::info!("[extract] JPEG + meta already exist, skipping: {}", jpg_path.display());
+            tracing::info!(
+                "[extract] JPEG + meta already exist, skipping: {}",
+                jpg_path.display()
+            );
             return;
         }
 
@@ -487,15 +498,21 @@ impl<'a> MapService<'a> {
             tracing::error!("[extract] Failed to read UVTT file");
             return;
         };
-        tracing::info!("[extract] UVTT read: {:.1}MB in {:.1}s",
-            uvtt_bytes.len() as f64 / 1_048_576.0, t0.elapsed().as_secs_f64());
+        tracing::info!(
+            "[extract] UVTT read: {:.1}MB in {:.1}s",
+            uvtt_bytes.len() as f64 / 1_048_576.0,
+            t0.elapsed().as_secs_f64()
+        );
 
         let t1 = Instant::now();
         let Ok(uvtt_json) = serde_json::from_slice::<serde_json::Value>(&uvtt_bytes) else {
             tracing::error!("[extract] Failed to parse UVTT JSON");
             return;
         };
-        tracing::info!("[extract] JSON parsed in {:.1}s", t1.elapsed().as_secs_f64());
+        tracing::info!(
+            "[extract] JSON parsed in {:.1}s",
+            t1.elapsed().as_secs_f64()
+        );
 
         // Extract resolution metadata from UVTT
         let resolution = uvtt_json.get("resolution");
@@ -519,7 +536,10 @@ impl<'a> MapService<'a> {
             tracing::error!("[extract] No image field in UVTT JSON");
             return;
         };
-        tracing::info!("[extract] Base64 image field: {:.1}MB", image_b64.len() as f64 / 1_048_576.0);
+        tracing::info!(
+            "[extract] Base64 image field: {:.1}MB",
+            image_b64.len() as f64 / 1_048_576.0
+        );
 
         let t2 = Instant::now();
         use base64::Engine;
@@ -527,38 +547,46 @@ impl<'a> MapService<'a> {
             tracing::error!("[extract] Failed to decode base64");
             return;
         };
-        tracing::info!("[extract] Base64 decoded: {:.1}MB in {:.1}s",
-            png_bytes.len() as f64 / 1_048_576.0, t2.elapsed().as_secs_f64());
+        tracing::info!(
+            "[extract] Base64 decoded: {:.1}MB in {:.1}s",
+            png_bytes.len() as f64 / 1_048_576.0,
+            t2.elapsed().as_secs_f64()
+        );
 
         let t3 = Instant::now();
-        let mut reader = match image::ImageReader::new(std::io::Cursor::new(&png_bytes))
-            .with_guessed_format()
-        {
-            Ok(r) => r,
-            Err(e) => {
-                tracing::error!("[extract] Failed to guess image format: {}", e);
-                let _ = std::fs::write(
-                    self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
-                    &png_bytes,
-                );
-                return;
-            }
-        };
+        let mut reader =
+            match image::ImageReader::new(std::io::Cursor::new(&png_bytes)).with_guessed_format() {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::error!("[extract] Failed to guess image format: {}", e);
+                    let _ = std::fs::write(
+                        self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
+                        &png_bytes,
+                    );
+                    return;
+                }
+            };
 
         let mut limits = image::Limits::default();
         limits.max_alloc = Some(2 * 1024 * 1024 * 1024);
         reader.limits(limits);
 
         let Ok(mut img) = reader.decode() else {
-            tracing::error!("[extract] Failed to decode image (likely OOM), falling back to raw PNG");
+            tracing::error!(
+                "[extract] Failed to decode image (likely OOM), falling back to raw PNG"
+            );
             let _ = std::fs::write(
                 self.app_data_dir.join(blob_path_to_png(uvtt_blob_path)),
                 &png_bytes,
             );
             return;
         };
-        tracing::info!("[extract] Image decoded: {}x{} in {:.1}s",
-            img.width(), img.height(), t3.elapsed().as_secs_f64());
+        tracing::info!(
+            "[extract] Image decoded: {}x{} in {:.1}s",
+            img.width(),
+            img.height(),
+            t3.elapsed().as_secs_f64()
+        );
 
         // Resize if wider than 4096px to reduce GPU memory
         const MAX_WIDTH: u32 = 4096;
@@ -567,8 +595,12 @@ impl<'a> MapService<'a> {
             let scale = MAX_WIDTH as f64 / img.width() as f64;
             let new_height = (img.height() as f64 * scale).round() as u32;
             img = img.resize_exact(MAX_WIDTH, new_height, image::imageops::FilterType::Triangle);
-            tracing::info!("[extract] Resized to {}x{} in {:.1}s",
-                img.width(), img.height(), t_resize.elapsed().as_secs_f64());
+            tracing::info!(
+                "[extract] Resized to {}x{} in {:.1}s",
+                img.width(),
+                img.height(),
+                t_resize.elapsed().as_secs_f64()
+            );
         }
 
         let t5 = Instant::now();
@@ -579,8 +611,11 @@ impl<'a> MapService<'a> {
         let mut writer = std::io::BufWriter::new(file);
         let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut writer, 90);
         let _ = img.write_with_encoder(encoder);
-        tracing::info!("[extract] JPEG written in {:.1}s — total: {:.1}s",
-            t5.elapsed().as_secs_f64(), t0.elapsed().as_secs_f64());
+        tracing::info!(
+            "[extract] JPEG written in {:.1}s — total: {:.1}s",
+            t5.elapsed().as_secs_f64(),
+            t0.elapsed().as_secs_f64()
+        );
 
         // Compute scaled ppg and write resolution sidecar
         let scale_factor = if original_width > 0 {
@@ -595,7 +630,11 @@ impl<'a> MapService<'a> {
         };
         if let Ok(json) = serde_json::to_string(&meta) {
             let _ = std::fs::write(&meta_path, json);
-            tracing::info!("[extract] Meta sidecar written: ppg={:.1} (scale={:.3})", meta.pixels_per_grid, scale_factor);
+            tracing::info!(
+                "[extract] Meta sidecar written: ppg={:.1} (scale={:.3})",
+                meta.pixels_per_grid,
+                scale_factor
+            );
         }
     }
 
@@ -645,7 +684,9 @@ impl<'a> MapService<'a> {
         // Compute scale factor from extracted image
         let original_width = (raw_ppg * map_size_x).round() as u32;
         let scale_factor = if original_width > 0 {
-            let jpg_path = self.app_data_dir.join(blob_path_to_extracted(&asset.blob_path));
+            let jpg_path = self
+                .app_data_dir
+                .join(blob_path_to_extracted(&asset.blob_path));
             let png_path = self.app_data_dir.join(blob_path_to_png(&asset.blob_path));
             let img_path = if jpg_path.exists() {
                 Some(jpg_path)
@@ -719,7 +760,8 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "World Map", "world.uvtt", fake_uvtt_data());
+        let input =
+            CreateMapInput::for_campaign(&campaign_id, "World Map", "world.uvtt", fake_uvtt_data());
 
         let map = service.create(input).expect("Failed to create map");
 
@@ -738,8 +780,14 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_module(&campaign_id, &module_id, "Dungeon Floor 1", "dungeon.uvtt", fake_uvtt_data())
-            .with_lighting_mode(LightingMode::Dark);
+        let input = CreateMapInput::for_module(
+            &campaign_id,
+            &module_id,
+            "Dungeon Floor 1",
+            "dungeon.uvtt",
+            fake_uvtt_data(),
+        )
+        .with_lighting_mode(LightingMode::Dark);
 
         let map = service.create(input).expect("Failed to create map");
 
@@ -755,12 +803,20 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "Region Map", "region.uvtt", fake_uvtt_data())
-            .with_description("The northern region of the kingdom");
+        let input = CreateMapInput::for_campaign(
+            &campaign_id,
+            "Region Map",
+            "region.uvtt",
+            fake_uvtt_data(),
+        )
+        .with_description("The northern region of the kingdom");
 
         let map = service.create(input).expect("Failed to create map");
 
-        assert_eq!(map.description, Some("The northern region of the kingdom".to_string()));
+        assert_eq!(
+            map.description,
+            Some("The northern region of the kingdom".to_string())
+        );
     }
 
     #[test]
@@ -769,7 +825,8 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign("nonexistent", "Map", "map.uvtt", fake_uvtt_data());
+        let input =
+            CreateMapInput::for_campaign("nonexistent", "Map", "map.uvtt", fake_uvtt_data());
 
         let result = service.create(input);
         assert!(matches!(result, Err(ServiceError::NotFound { .. })));
@@ -782,7 +839,13 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_module(&campaign_id, "nonexistent", "Map", "map.uvtt", fake_uvtt_data());
+        let input = CreateMapInput::for_module(
+            &campaign_id,
+            "nonexistent",
+            "Map",
+            "map.uvtt",
+            fake_uvtt_data(),
+        );
 
         let result = service.create(input);
         assert!(matches!(result, Err(ServiceError::NotFound { .. })));
@@ -796,7 +859,8 @@ mod tests {
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
         let uvtt_data = fake_uvtt_data();
-        let input = CreateMapInput::for_campaign(&campaign_id, "Map", "test.uvtt", uvtt_data.clone());
+        let input =
+            CreateMapInput::for_campaign(&campaign_id, "Map", "test.uvtt", uvtt_data.clone());
 
         let map = service.create(input).expect("Failed to create map");
 
@@ -812,10 +876,14 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "Test Map", "test.uvtt", fake_uvtt_data());
+        let input =
+            CreateMapInput::for_campaign(&campaign_id, "Test Map", "test.uvtt", fake_uvtt_data());
         let created = service.create(input).expect("Failed to create map");
 
-        let retrieved = service.get(&created.id).expect("Failed to get").expect("Map not found");
+        let retrieved = service
+            .get(&created.id)
+            .expect("Failed to get")
+            .expect("Map not found");
         assert_eq!(retrieved.id, created.id);
         assert_eq!(retrieved.name, "Test Map");
     }
@@ -838,17 +906,28 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input1 = CreateMapInput::for_campaign(&campaign_id, "World Map", "world.uvtt", fake_uvtt_data());
-        let input2 = CreateMapInput::for_module(&campaign_id, &module_id, "Dungeon", "dungeon.uvtt", fake_uvtt_data());
+        let input1 =
+            CreateMapInput::for_campaign(&campaign_id, "World Map", "world.uvtt", fake_uvtt_data());
+        let input2 = CreateMapInput::for_module(
+            &campaign_id,
+            &module_id,
+            "Dungeon",
+            "dungeon.uvtt",
+            fake_uvtt_data(),
+        );
         service.create(input1).expect("Failed to create");
         service.create(input2).expect("Failed to create");
 
         // All campaign maps (includes module maps)
-        let all = service.list_for_campaign(&campaign_id).expect("Failed to list");
+        let all = service
+            .list_for_campaign(&campaign_id)
+            .expect("Failed to list");
         assert_eq!(all.len(), 2);
 
         // Campaign-level only
-        let campaign_level = service.list_campaign_level(&campaign_id).expect("Failed to list");
+        let campaign_level = service
+            .list_campaign_level(&campaign_id)
+            .expect("Failed to list");
         assert_eq!(campaign_level.len(), 1);
         assert_eq!(campaign_level[0].name, "World Map");
     }
@@ -861,9 +940,22 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input1 = CreateMapInput::for_module(&campaign_id, &module_id, "Floor 1", "f1.uvtt", fake_uvtt_data());
-        let input2 = CreateMapInput::for_module(&campaign_id, &module_id, "Floor 2", "f2.uvtt", fake_uvtt_data());
-        let input3 = CreateMapInput::for_campaign(&campaign_id, "World", "world.uvtt", fake_uvtt_data());
+        let input1 = CreateMapInput::for_module(
+            &campaign_id,
+            &module_id,
+            "Floor 1",
+            "f1.uvtt",
+            fake_uvtt_data(),
+        );
+        let input2 = CreateMapInput::for_module(
+            &campaign_id,
+            &module_id,
+            "Floor 2",
+            "f2.uvtt",
+            fake_uvtt_data(),
+        );
+        let input3 =
+            CreateMapInput::for_campaign(&campaign_id, "World", "world.uvtt", fake_uvtt_data());
         service.create(input1).expect("Failed to create");
         service.create(input2).expect("Failed to create");
         service.create(input3).expect("Failed to create");
@@ -879,7 +971,8 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "Old Name", "map.uvtt", fake_uvtt_data());
+        let input =
+            CreateMapInput::for_campaign(&campaign_id, "Old Name", "map.uvtt", fake_uvtt_data());
         let map = service.create(input).expect("Failed to create");
 
         let update = UpdateMapInput::set_name("New Name");
@@ -913,7 +1006,12 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "Region Map", "region.uvtt", fake_uvtt_data());
+        let input = CreateMapInput::for_campaign(
+            &campaign_id,
+            "Region Map",
+            "region.uvtt",
+            fake_uvtt_data(),
+        );
         let map = service.create(input).expect("Failed to create");
         assert!(map.module_id.is_none());
 
@@ -931,7 +1029,13 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_module(&campaign_id, &module_id, "Dungeon", "dungeon.uvtt", fake_uvtt_data());
+        let input = CreateMapInput::for_module(
+            &campaign_id,
+            &module_id,
+            "Dungeon",
+            "dungeon.uvtt",
+            fake_uvtt_data(),
+        );
         let map = service.create(input).expect("Failed to create");
         assert!(map.module_id.is_some());
 
@@ -959,7 +1063,12 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "Delete Me", "delete.uvtt", fake_uvtt_data());
+        let input = CreateMapInput::for_campaign(
+            &campaign_id,
+            "Delete Me",
+            "delete.uvtt",
+            fake_uvtt_data(),
+        );
         let map = service.create(input).expect("Failed to create");
         let asset_id = map.uvtt_asset_id.clone();
 
@@ -969,7 +1078,8 @@ mod tests {
 
         assert!(!service.exists(&map.id).expect("Failed to check"));
         // Asset should also be deleted
-        let asset = dal::get_campaign_asset_optional(&mut service.conn, &asset_id).expect("Failed to query");
+        let asset = dal::get_campaign_asset_optional(&mut service.conn, &asset_id)
+            .expect("Failed to query");
         assert!(asset.is_none());
     }
 
@@ -993,8 +1103,15 @@ mod tests {
 
         assert_eq!(service.count_for_campaign(&campaign_id).expect("Failed"), 0);
 
-        let input1 = CreateMapInput::for_campaign(&campaign_id, "World", "world.uvtt", fake_uvtt_data());
-        let input2 = CreateMapInput::for_module(&campaign_id, &module_id, "Dungeon", "dungeon.uvtt", fake_uvtt_data());
+        let input1 =
+            CreateMapInput::for_campaign(&campaign_id, "World", "world.uvtt", fake_uvtt_data());
+        let input2 = CreateMapInput::for_module(
+            &campaign_id,
+            &module_id,
+            "Dungeon",
+            "dungeon.uvtt",
+            fake_uvtt_data(),
+        );
         service.create(input1).expect("Failed to create");
         service.create(input2).expect("Failed to create");
 
@@ -1009,9 +1126,12 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input1 = CreateMapInput::for_campaign(&campaign_id, "Map 1", "m1.uvtt", fake_uvtt_data());
-        let input2 = CreateMapInput::for_campaign(&campaign_id, "Map 2", "m2.uvtt", fake_uvtt_data());
-        let input3 = CreateMapInput::for_campaign(&campaign_id, "Map 3", "m3.uvtt", fake_uvtt_data());
+        let input1 =
+            CreateMapInput::for_campaign(&campaign_id, "Map 1", "m1.uvtt", fake_uvtt_data());
+        let input2 =
+            CreateMapInput::for_campaign(&campaign_id, "Map 2", "m2.uvtt", fake_uvtt_data());
+        let input3 =
+            CreateMapInput::for_campaign(&campaign_id, "Map 3", "m3.uvtt", fake_uvtt_data());
 
         let map1 = service.create(input1).expect("Failed to create");
         let map2 = service.create(input2).expect("Failed to create");
@@ -1029,10 +1149,14 @@ mod tests {
 
         let mut service = MapService::new(&mut conn, temp_dir.path());
 
-        let input = CreateMapInput::for_campaign(&campaign_id, "Map", "test.uvtt", fake_uvtt_data());
+        let input =
+            CreateMapInput::for_campaign(&campaign_id, "Map", "test.uvtt", fake_uvtt_data());
         let map = service.create(input).expect("Failed to create");
 
-        let asset = service.get_uvtt_asset(&map).expect("Failed to get asset").expect("Asset not found");
+        let asset = service
+            .get_uvtt_asset(&map)
+            .expect("Failed to get asset")
+            .expect("Asset not found");
         assert_eq!(asset.id, map.uvtt_asset_id);
         assert_eq!(asset.filename, "test.uvtt");
     }

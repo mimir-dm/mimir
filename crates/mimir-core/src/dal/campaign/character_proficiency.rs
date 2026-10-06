@@ -34,7 +34,10 @@ pub fn get_character_proficiency_optional(
     conn: &mut SqliteConnection,
     id: &str,
 ) -> QueryResult<Option<CharacterProficiency>> {
-    character_proficiencies::table.find(id).first(conn).optional()
+    character_proficiencies::table
+        .find(id)
+        .first(conn)
+        .optional()
 }
 
 /// List all proficiencies for a character.
@@ -167,8 +170,8 @@ pub fn count_character_proficiencies(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCharacter};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -233,8 +236,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let stealth = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth")
-            .with_expertise();
+        let stealth =
+            NewCharacterProficiency::skill("prof-1", "char-1", "Stealth").with_expertise();
         let perception = NewCharacterProficiency::skill("prof-2", "char-1", "Perception");
         insert_character_proficiency(&mut conn, &stealth).expect("Failed to insert");
         insert_character_proficiency(&mut conn, &perception).expect("Failed to insert");
@@ -249,14 +252,18 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        assert!(!character_has_proficiency(&mut conn, "char-1", "skill", "Stealth")
-            .expect("Failed to check"));
+        assert!(
+            !character_has_proficiency(&mut conn, "char-1", "skill", "Stealth")
+                .expect("Failed to check")
+        );
 
         let prof = NewCharacterProficiency::skill("prof-1", "char-1", "Stealth");
         insert_character_proficiency(&mut conn, &prof).expect("Failed to insert");
 
-        assert!(character_has_proficiency(&mut conn, "char-1", "skill", "Stealth")
-            .expect("Failed to check"));
+        assert!(
+            character_has_proficiency(&mut conn, "char-1", "skill", "Stealth")
+                .expect("Failed to check")
+        );
     }
 
     #[test]

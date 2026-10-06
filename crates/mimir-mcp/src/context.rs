@@ -88,12 +88,15 @@ impl McpContext {
         let home = std::env::var("HOME").ok()?;
         #[cfg(target_os = "macos")]
         {
-            Some(format!("{}/Library/Application Support/com.mimir.app/data/mimir.db", home))
+            Some(format!(
+                "{}/Library/Application Support/com.mimir.app/data/mimir.db",
+                home
+            ))
         }
         #[cfg(target_os = "linux")]
         {
-            let data = std::env::var("XDG_DATA_HOME")
-                .unwrap_or_else(|_| format!("{}/.local/share", home));
+            let data =
+                std::env::var("XDG_DATA_HOME").unwrap_or_else(|_| format!("{}/.local/share", home));
             Some(format!("{}/com.mimir.app/data/mimir.db", data))
         }
         #[cfg(not(any(target_os = "macos", target_os = "linux")))]
@@ -122,9 +125,8 @@ impl McpContext {
     /// Each connection is configured with WAL mode and foreign keys enabled.
     /// Returns an error if the connection cannot be established.
     pub fn connect(&self) -> Result<SqliteConnection, McpError> {
-        create_connection(&self.db_url).map_err(|e| {
-            McpError::Internal(format!("Database connection error: {}", e))
-        })
+        create_connection(&self.db_url)
+            .map_err(|e| McpError::Internal(format!("Database connection error: {}", e)))
     }
 
     /// Create a context for testing with a temporary file-based database.

@@ -2,7 +2,9 @@
 //!
 //! Database operations for character inventory items.
 
-use crate::models::campaign::{CharacterInventory, NewCharacterInventory, UpdateCharacterInventory};
+use crate::models::campaign::{
+    CharacterInventory, NewCharacterInventory, UpdateCharacterInventory,
+};
 use crate::schema::character_inventory;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
@@ -128,8 +130,8 @@ pub fn count_character_inventory(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCharacter};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -160,8 +162,8 @@ mod tests {
         setup_test_data(&mut conn);
 
         let sword = NewCharacterInventory::new("inv-1", "char-1", "Longsword", "PHB");
-        let arrows = NewCharacterInventory::new("inv-2", "char-1", "Arrow", "PHB")
-            .with_quantity(20);
+        let arrows =
+            NewCharacterInventory::new("inv-2", "char-1", "Arrow", "PHB").with_quantity(20);
         insert_character_inventory(&mut conn, &sword).expect("Failed to insert");
         insert_character_inventory(&mut conn, &arrows).expect("Failed to insert");
 
@@ -174,10 +176,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let sword = NewCharacterInventory::new("inv-1", "char-1", "Longsword", "PHB")
-            .equipped();
-        let shield = NewCharacterInventory::new("inv-2", "char-1", "Shield", "PHB")
-            .equipped();
+        let sword = NewCharacterInventory::new("inv-1", "char-1", "Longsword", "PHB").equipped();
+        let shield = NewCharacterInventory::new("inv-2", "char-1", "Shield", "PHB").equipped();
         let potion = NewCharacterInventory::new("inv-3", "char-1", "Health Potion", "PHB");
         insert_character_inventory(&mut conn, &sword).expect("Failed to insert");
         insert_character_inventory(&mut conn, &shield).expect("Failed to insert");
@@ -198,8 +198,7 @@ mod tests {
         let ring = NewCharacterInventory::new("inv-2", "char-1", "Ring of Protection", "DMG")
             .equipped()
             .attuned();
-        let sword = NewCharacterInventory::new("inv-3", "char-1", "Longsword +1", "DMG")
-            .equipped();
+        let sword = NewCharacterInventory::new("inv-3", "char-1", "Longsword +1", "DMG").equipped();
         insert_character_inventory(&mut conn, &cloak).expect("Failed to insert");
         insert_character_inventory(&mut conn, &ring).expect("Failed to insert");
         insert_character_inventory(&mut conn, &sword).expect("Failed to insert");
@@ -216,8 +215,7 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let item = NewCharacterInventory::new("inv-1", "char-1", "Arrow", "PHB")
-            .with_quantity(20);
+        let item = NewCharacterInventory::new("inv-1", "char-1", "Arrow", "PHB").with_quantity(20);
         insert_character_inventory(&mut conn, &item).expect("Failed to insert");
 
         let update = UpdateCharacterInventory::set_quantity(15);

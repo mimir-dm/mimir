@@ -217,7 +217,16 @@ pub fn generate_road(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
 ) -> Option<RoadResult> {
-    generate_road_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[], &[])
+    generate_road_with_exclusions(
+        noise_map,
+        config,
+        pixel_width,
+        pixel_height,
+        alloc,
+        rng,
+        &[],
+        &[],
+    )
 }
 
 /// Generate a road, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
@@ -288,16 +297,13 @@ pub fn generate_road_with_exclusions(
         let right = offset_polyline(&smoothed, -ep.offset);
 
         let left_vectors: Vec<Vector2> = left.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
-        let right_vectors: Vec<Vector2> =
-            right.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
+        let right_vectors: Vec<Vector2> = right.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
         edge_paths.push(
-            MapPath::new(&ep.texture, left_vectors, ep.width, &alloc.next())
-                .with_layer(ep.layer),
+            MapPath::new(&ep.texture, left_vectors, ep.width, &alloc.next()).with_layer(ep.layer),
         );
         edge_paths.push(
-            MapPath::new(&ep.texture, right_vectors, ep.width, &alloc.next())
-                .with_layer(ep.layer),
+            MapPath::new(&ep.texture, right_vectors, ep.width, &alloc.next()).with_layer(ep.layer),
         );
     }
 
@@ -318,7 +324,17 @@ pub fn generate_river(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
 ) -> Option<RiverResult> {
-    generate_river_with_exclusions(noise_map, config, pixel_width, pixel_height, alloc, rng, &[], &[], &std::collections::HashMap::new())
+    generate_river_with_exclusions(
+        noise_map,
+        config,
+        pixel_width,
+        pixel_height,
+        alloc,
+        rng,
+        &[],
+        &[],
+        &std::collections::HashMap::new(),
+    )
 }
 
 /// Generate a river, avoiding exclusion zones (rooms) and optionally penalizing contour crossings.
@@ -344,16 +360,30 @@ pub fn generate_river_with_exclusions(
 
     let raw_waypoints = match config.style {
         PathStyle::Meandering => generate_meander(
-            start, target, pixel_width, pixel_height,
-            noise_map, config.width, config.step_distance,
-            rng, exclusion_zones,
+            start,
+            target,
+            pixel_width,
+            pixel_height,
+            noise_map,
+            config.width,
+            config.step_distance,
+            rng,
+            exclusion_zones,
         ),
         PathStyle::Straight => greedy_walk(
-            noise_map, start, target, pixel_width, pixel_height,
-            config.step_distance, effective_fov, config.noise_weight,
+            noise_map,
+            start,
+            target,
+            pixel_width,
+            pixel_height,
+            config.step_distance,
+            effective_fov,
+            config.noise_weight,
             false, // Rivers follow valleys (low noise)
-            rng, exclusion_zones,
-            contour_polylines, config.effort,
+            rng,
+            exclusion_zones,
+            contour_polylines,
+            config.effort,
         ),
     };
 
@@ -370,12 +400,14 @@ pub fn generate_river_with_exclusions(
     let right_bank_full = offset_polyline(&smoothed_full, -half_w);
 
     let mut left_bank = clip_polyline_to_rect(&left_bank_full, 0.0, 0.0, pixel_width, pixel_height);
-    let mut right_bank = clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
+    let mut right_bank =
+        clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
 
-    let left_vectors: Vec<Vector2> =
-        left_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
-    let right_vectors: Vec<Vector2> =
-        right_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
+    let left_vectors: Vec<Vector2> = left_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
+    let right_vectors: Vec<Vector2> = right_bank
+        .iter()
+        .map(|&(x, y)| Vector2::new(x, y))
+        .collect();
 
     let bank_paths = vec![
         MapPath::new(
@@ -493,8 +525,7 @@ fn generate_meander(
         let base_y = ext_start.1 + fwd.1 * ext_total * t;
 
         // Single gentle sine wave (1.5 periods over original distance) — no fade
-        let sine_offset = amplitude *
-            (2.0 * std::f64::consts::PI * t * 1.5 + phase).sin();
+        let sine_offset = amplitude * (2.0 * std::f64::consts::PI * t * 1.5 + phase).sin();
 
         // Subtle noise perturbation for irregularity (clamp sample coords to map)
         let sample_x = base_x.clamp(0.0, pixel_width) * noise_scale_x;
@@ -519,8 +550,7 @@ fn generate_meander(
                 for zone in exclusion_zones {
                     if zone.contains(px, py) {
                         let pt_perp = (px - start.0) * perp.0 + (py - start.1) * perp.1;
-                        let zone_center_perp =
-                            ((zone.x + zone.width / 2.0) - start.0) * perp.0
+                        let zone_center_perp = ((zone.x + zone.width / 2.0) - start.0) * perp.0
                             + ((zone.y + zone.height / 2.0) - start.1) * perp.1;
 
                         let corners = [
@@ -529,11 +559,15 @@ fn generate_meander(
                             (zone.x, zone.y + zone.height),
                             (zone.x + zone.width, zone.y + zone.height),
                         ];
-                        let projections: Vec<f64> = corners.iter()
+                        let projections: Vec<f64> = corners
+                            .iter()
                             .map(|&(cx, cy)| (cx - start.0) * perp.0 + (cy - start.1) * perp.1)
                             .collect();
                         let zone_min = projections.iter().cloned().fold(f64::INFINITY, f64::min);
-                        let zone_max = projections.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+                        let zone_max = projections
+                            .iter()
+                            .cloned()
+                            .fold(f64::NEG_INFINITY, f64::max);
 
                         let shift = if pt_perp >= zone_center_perp {
                             (zone_max - pt_perp) + pad
@@ -554,7 +588,9 @@ fn generate_meander(
             }
 
             let Some(shift) = best_shift else { break };
-            if shift.abs() < 1.0 { break; }
+            if shift.abs() < 1.0 {
+                break;
+            }
 
             let dx = perp.0 * shift;
             let dy = perp.1 * shift;
@@ -574,8 +610,10 @@ fn generate_meander(
 /// For paths that enter and exit the rectangle once.
 fn clip_polyline_to_rect(
     points: &[(f64, f64)],
-    x_min: f64, y_min: f64,
-    x_max: f64, y_max: f64,
+    x_min: f64,
+    y_min: f64,
+    x_max: f64,
+    y_max: f64,
 ) -> Vec<(f64, f64)> {
     fn inside(p: (f64, f64), x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> bool {
         p.0 >= x_min && p.0 <= x_max && p.1 >= y_min && p.1 <= y_max
@@ -590,11 +628,15 @@ fn clip_polyline_to_rect(
 
         match (a_in, b_in) {
             (true, true) => {
-                if result.is_empty() { result.push(a); }
+                if result.is_empty() {
+                    result.push(a);
+                }
                 result.push(b);
             }
             (true, false) => {
-                if result.is_empty() { result.push(a); }
+                if result.is_empty() {
+                    result.push(a);
+                }
                 if let Some((_, exit)) = clip_segment(a, b, x_min, y_min, x_max, y_max) {
                     result.push(exit);
                 }
@@ -622,28 +664,46 @@ fn clip_polyline_to_rect(
 /// Input polygon should NOT have a repeated closing vertex.
 fn clip_polygon_to_rect(
     polygon: &[(f64, f64)],
-    x_min: f64, y_min: f64,
-    x_max: f64, y_max: f64,
+    x_min: f64,
+    y_min: f64,
+    x_max: f64,
+    y_max: f64,
 ) -> Vec<(f64, f64)> {
     let mut output = polygon.to_vec();
 
     // Clip against each edge in turn
-    output = sh_clip_edge(&output, |p| p.0 >= x_min, |a, b| {
-        let t = (x_min - a.0) / (b.0 - a.0);
-        (x_min, a.1 + t * (b.1 - a.1))
-    });
-    output = sh_clip_edge(&output, |p| p.0 <= x_max, |a, b| {
-        let t = (x_max - a.0) / (b.0 - a.0);
-        (x_max, a.1 + t * (b.1 - a.1))
-    });
-    output = sh_clip_edge(&output, |p| p.1 >= y_min, |a, b| {
-        let t = (y_min - a.1) / (b.1 - a.1);
-        (a.0 + t * (b.0 - a.0), y_min)
-    });
-    output = sh_clip_edge(&output, |p| p.1 <= y_max, |a, b| {
-        let t = (y_max - a.1) / (b.1 - a.1);
-        (a.0 + t * (b.0 - a.0), y_max)
-    });
+    output = sh_clip_edge(
+        &output,
+        |p| p.0 >= x_min,
+        |a, b| {
+            let t = (x_min - a.0) / (b.0 - a.0);
+            (x_min, a.1 + t * (b.1 - a.1))
+        },
+    );
+    output = sh_clip_edge(
+        &output,
+        |p| p.0 <= x_max,
+        |a, b| {
+            let t = (x_max - a.0) / (b.0 - a.0);
+            (x_max, a.1 + t * (b.1 - a.1))
+        },
+    );
+    output = sh_clip_edge(
+        &output,
+        |p| p.1 >= y_min,
+        |a, b| {
+            let t = (y_min - a.1) / (b.1 - a.1);
+            (a.0 + t * (b.0 - a.0), y_min)
+        },
+    );
+    output = sh_clip_edge(
+        &output,
+        |p| p.1 <= y_max,
+        |a, b| {
+            let t = (y_max - a.1) / (b.1 - a.1);
+            (a.0 + t * (b.0 - a.0), y_max)
+        },
+    );
 
     output
 }
@@ -654,7 +714,9 @@ fn sh_clip_edge(
     inside: impl Fn((f64, f64)) -> bool,
     intersect: impl Fn((f64, f64), (f64, f64)) -> (f64, f64),
 ) -> Vec<(f64, f64)> {
-    if polygon.is_empty() { return vec![]; }
+    if polygon.is_empty() {
+        return vec![];
+    }
 
     let mut output = Vec::new();
     let n = polygon.len();
@@ -681,8 +743,12 @@ fn sh_clip_edge(
 
 /// Liang-Barsky segment clip: returns clipped (entry, exit) points, or None.
 fn clip_segment(
-    a: (f64, f64), b: (f64, f64),
-    x_min: f64, y_min: f64, x_max: f64, y_max: f64,
+    a: (f64, f64),
+    b: (f64, f64),
+    x_min: f64,
+    y_min: f64,
+    x_max: f64,
+    y_max: f64,
 ) -> Option<((f64, f64), (f64, f64))> {
     let dx = b.0 - a.0;
     let dy = b.1 - a.1;
@@ -694,7 +760,9 @@ fn clip_segment(
 
     for i in 0..4 {
         if p[i].abs() < 1e-10 {
-            if q[i] < 0.0 { return None; }
+            if q[i] < 0.0 {
+                return None;
+            }
         } else {
             let t = q[i] / p[i];
             if p[i] < 0.0 {
@@ -705,7 +773,9 @@ fn clip_segment(
         }
     }
 
-    if t_min > t_max { return None; }
+    if t_min > t_max {
+        return None;
+    }
 
     Some((
         (a.0 + dx * t_min, a.1 + dy * t_min),
@@ -794,15 +864,15 @@ fn greedy_walk(
             // over-counting when a step crosses multiple segments of
             // the same contour.
             let contour_penalty = if effort < 1.0 && !contour_polylines.is_empty() {
-                let lines_crossed = count_contour_lines_crossed(
-                    current, (nx, ny), contour_polylines,
-                );
+                let lines_crossed =
+                    count_contour_lines_crossed(current, (nx, ny), contour_polylines);
                 lines_crossed as f64 * 20.0 * (1.0 - effort)
             } else {
                 0.0
             };
 
-            let score = noise_score * noise_weight + progress * (1.0 - noise_weight) - contour_penalty;
+            let score =
+                noise_score * noise_weight + progress * (1.0 - noise_weight) - contour_penalty;
 
             if score > best_score {
                 best_score = score;
@@ -834,7 +904,8 @@ fn polygon_center(polygon: &[(f64, f64)]) -> (f64, f64) {
 
 /// Find the nearest point on a polygon to a target point.
 fn nearest_point_on_polygon(polygon: &[(f64, f64)], target: (f64, f64)) -> (f64, f64) {
-    polygon.iter()
+    polygon
+        .iter()
         .min_by(|a, b| {
             let da = (a.0 - target.0).powi(2) + (a.1 - target.1).powi(2);
             let db = (b.0 - target.0).powi(2) + (b.1 - target.1).powi(2);
@@ -853,9 +924,9 @@ fn count_contour_lines_crossed(
 ) -> usize {
     let mut count = 0;
     for polyline in contour_polylines {
-        let crosses = polyline.windows(2).any(|window| {
-            segments_intersect(p0, p1, window[0], window[1])
-        });
+        let crosses = polyline
+            .windows(2)
+            .any(|window| segments_intersect(p0, p1, window[0], window[1]));
         if crosses {
             count += 1;
         }
@@ -864,12 +935,7 @@ fn count_contour_lines_crossed(
 }
 
 /// Test if two line segments intersect.
-fn segments_intersect(
-    a1: (f64, f64),
-    a2: (f64, f64),
-    b1: (f64, f64),
-    b2: (f64, f64),
-) -> bool {
+fn segments_intersect(a1: (f64, f64), a2: (f64, f64), b1: (f64, f64), b2: (f64, f64)) -> bool {
     let d1 = cross_product_sign(b1, b2, a1);
     let d2 = cross_product_sign(b1, b2, a2);
     let d3 = cross_product_sign(a1, a2, b1);
@@ -964,8 +1030,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result =
-            generate_road(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
+        let result = generate_road(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
         assert!(result.is_some());
 
         let road = result.unwrap();
@@ -992,8 +1057,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result =
-            generate_road(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
+        let result = generate_road(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
         let road = result.unwrap();
         assert_eq!(road.edge_paths.len(), 2); // Left + right edge
     }
@@ -1006,8 +1070,7 @@ mod tests {
 
         let config = RiverConfig::default();
 
-        let result =
-            generate_river(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
+        let result = generate_river(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
         assert!(result.is_some());
 
         let river = result.unwrap();

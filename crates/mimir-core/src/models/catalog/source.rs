@@ -78,7 +78,8 @@ mod tests {
 
     #[test]
     fn test_new_catalog_source() {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         assert_eq!(source.code, "PHB");
         assert_eq!(source.name, "Player's Handbook");
         assert_eq!(source.enabled, 1);

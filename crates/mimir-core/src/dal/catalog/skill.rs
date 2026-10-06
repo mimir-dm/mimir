@@ -13,15 +13,14 @@ pub fn insert_skill(conn: &mut SqliteConnection, skill: &NewSkill) -> QueryResul
         .values(skill)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple skills in a batch.
-pub fn insert_skills(
-    conn: &mut SqliteConnection,
-    skills: &[NewSkill],
-) -> QueryResult<usize> {
+pub fn insert_skills(conn: &mut SqliteConnection, skills: &[NewSkill]) -> QueryResult<usize> {
     diesel::insert_into(skills::table)
         .values(skills)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_skills(
 
 /// Get a skill by its ID.
 pub fn get_skill(conn: &mut SqliteConnection, id: i32) -> QueryResult<Skill> {
-    skills::table
-        .filter(skills::id.eq(id))
-        .first(conn)
+    skills::table.filter(skills::id.eq(id)).first(conn)
 }
 
 /// Get a skill by name and source.
@@ -53,10 +50,7 @@ pub fn list_skills(conn: &mut SqliteConnection) -> QueryResult<Vec<Skill>> {
 }
 
 /// List skills from a specific source.
-pub fn list_skills_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<Vec<Skill>> {
+pub fn list_skills_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Skill>> {
     skills::table
         .filter(skills::source.eq(source))
         .order(skills::name.asc())
@@ -80,10 +74,7 @@ pub fn delete_skill(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize> 
 }
 
 /// Delete all skills from a specific source.
-pub fn delete_skills_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_skills_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(skills::table.filter(skills::source.eq(source))).execute(conn)
 }
 
@@ -95,12 +86,13 @@ pub fn count_skills(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -109,8 +101,7 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let skill = NewSkill::new("Stealth", "PHB", r#"{"name":"Stealth"}"#)
-            .with_ability("DEX");
+        let skill = NewSkill::new("Stealth", "PHB", r#"{"name":"Stealth"}"#).with_ability("DEX");
         let id = insert_skill(&mut conn, &skill).expect("Failed to insert");
 
         let retrieved = get_skill(&mut conn, id).expect("Failed to get");

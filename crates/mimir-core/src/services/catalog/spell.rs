@@ -52,8 +52,13 @@ impl<'a> SpellService<'a> {
     }
 
     /// List spells available to a specific class at a specific level.
-    pub fn list_by_class_and_level(&mut self, class_name: &str, level: i32) -> ServiceResult<Vec<Spell>> {
-        dal::list_spells_by_class_and_level(self.conn, class_name, level).map_err(ServiceError::from)
+    pub fn list_by_class_and_level(
+        &mut self,
+        class_name: &str,
+        level: i32,
+    ) -> ServiceResult<Vec<Spell>> {
+        dal::list_spells_by_class_and_level(self.conn, class_name, level)
+            .map_err(ServiceError::from)
     }
 }
 
@@ -111,8 +116,7 @@ mod tests {
             NewSpell::new("Fireball", "PHB", 3, r#"{"name":"Fireball"}"#)
                 .with_school("V")
                 .with_concentration(false),
-            NewSpell::new("Fire Bolt", "PHB", 0, r#"{"name":"Fire Bolt"}"#)
-                .with_school("V"),
+            NewSpell::new("Fire Bolt", "PHB", 0, r#"{"name":"Fire Bolt"}"#).with_school("V"),
             NewSpell::new("Detect Magic", "PHB", 1, r#"{"name":"Detect Magic"}"#)
                 .with_school("D")
                 .with_ritual(true)
@@ -133,7 +137,9 @@ mod tests {
         let mut service = SpellService::new(&mut conn);
 
         // Search all
-        let results = service.search(&SpellFilter::default()).expect("Search failed");
+        let results = service
+            .search(&SpellFilter::default())
+            .expect("Search failed");
         assert_eq!(results.len(), 5);
 
         // Search by school

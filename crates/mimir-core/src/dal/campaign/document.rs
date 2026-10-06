@@ -104,7 +104,10 @@ pub fn document_exists(conn: &mut SqliteConnection, id: &str) -> QueryResult<boo
 }
 
 /// Count documents for a campaign.
-pub fn count_campaign_documents(conn: &mut SqliteConnection, campaign_id: &str) -> QueryResult<i64> {
+pub fn count_campaign_documents(
+    conn: &mut SqliteConnection,
+    campaign_id: &str,
+) -> QueryResult<i64> {
     documents::table
         .filter(documents::campaign_id.eq(campaign_id))
         .count()
@@ -248,8 +251,8 @@ pub fn search_module_documents(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewModule};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -284,8 +287,13 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let doc =
-            NewDocument::for_module("doc-1", "camp-1", "mod-1", "Dungeon Description", "location");
+        let doc = NewDocument::for_module(
+            "doc-1",
+            "camp-1",
+            "mod-1",
+            "Dungeon Description",
+            "location",
+        );
         insert_document(&mut conn, &doc).expect("Failed to insert");
 
         let retrieved = get_document(&mut conn, "doc-1").expect("Failed to get");
@@ -470,8 +478,7 @@ mod tests {
         let next = next_campaign_document_sort_order(&mut conn, "camp-1").expect("Failed");
         assert_eq!(next, 1);
 
-        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "Doc A", "note")
-            .with_sort_order(1);
+        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "Doc A", "note").with_sort_order(1);
         insert_document(&mut conn, &doc1).expect("Failed to insert");
 
         let next = next_campaign_document_sort_order(&mut conn, "camp-1").expect("Failed");
@@ -483,12 +490,10 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "First", "note")
-            .with_sort_order(1);
-        let doc2 = NewDocument::for_campaign("doc-2", "camp-1", "Second", "note")
-            .with_sort_order(2);
-        let doc3 = NewDocument::for_campaign("doc-3", "camp-1", "Third", "note")
-            .with_sort_order(3);
+        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "First", "note").with_sort_order(1);
+        let doc2 =
+            NewDocument::for_campaign("doc-2", "camp-1", "Second", "note").with_sort_order(2);
+        let doc3 = NewDocument::for_campaign("doc-3", "camp-1", "Third", "note").with_sort_order(3);
         insert_document(&mut conn, &doc1).expect("Failed");
         insert_document(&mut conn, &doc2).expect("Failed");
         insert_document(&mut conn, &doc3).expect("Failed");
@@ -510,12 +515,10 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "First", "note")
-            .with_sort_order(1);
-        let doc2 = NewDocument::for_campaign("doc-2", "camp-1", "Second", "note")
-            .with_sort_order(2);
-        let doc3 = NewDocument::for_campaign("doc-3", "camp-1", "Third", "note")
-            .with_sort_order(3);
+        let doc1 = NewDocument::for_campaign("doc-1", "camp-1", "First", "note").with_sort_order(1);
+        let doc2 =
+            NewDocument::for_campaign("doc-2", "camp-1", "Second", "note").with_sort_order(2);
+        let doc3 = NewDocument::for_campaign("doc-3", "camp-1", "Third", "note").with_sort_order(3);
         insert_document(&mut conn, &doc1).expect("Failed");
         insert_document(&mut conn, &doc2).expect("Failed");
         insert_document(&mut conn, &doc3).expect("Failed");

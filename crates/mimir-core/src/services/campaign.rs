@@ -233,8 +233,7 @@ mod tests {
         let mut conn = setup_test_db();
         let mut service = CampaignService::new(&mut conn);
 
-        let input =
-            CreateCampaignInput::new("Test Campaign").with_description("A great adventure");
+        let input = CreateCampaignInput::new("Test Campaign").with_description("A great adventure");
         let campaign = service.create(input).expect("Failed to create campaign");
 
         assert_eq!(campaign.description, Some("A great adventure".to_string()));

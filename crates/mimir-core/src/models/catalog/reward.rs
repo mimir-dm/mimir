@@ -104,8 +104,12 @@ mod tests {
 
     #[test]
     fn test_new_reward() {
-        let reward = NewReward::new("Blessing of Health", "DMG", r#"{"name":"Blessing of Health"}"#)
-            .with_type("blessing");
+        let reward = NewReward::new(
+            "Blessing of Health",
+            "DMG",
+            r#"{"name":"Blessing of Health"}"#,
+        )
+        .with_type("blessing");
         assert_eq!(reward.name, "Blessing of Health");
         assert_eq!(reward.reward_type, Some("blessing"));
     }

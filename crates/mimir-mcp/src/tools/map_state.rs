@@ -302,10 +302,7 @@ fn light_to_json(l: &LightSource) -> Value {
 }
 
 /// Both-or-neither validation for move coordinates.
-fn move_coords(
-    grid_x: Option<i64>,
-    grid_y: Option<i64>,
-) -> Result<Option<(i32, i32)>, McpError> {
+fn move_coords(grid_x: Option<i64>, grid_y: Option<i64>) -> Result<Option<(i32, i32)>, McpError> {
     match (grid_x, grid_y) {
         (Some(x), Some(y)) => Ok(Some((x as i32, y as i32))),
         (None, None) => Ok(None),
@@ -319,10 +316,7 @@ fn move_coords(
 // Handlers — traps
 // =============================================================================
 
-pub async fn add_trap_to_map(
-    ctx: &Arc<McpContext>,
-    args: AddTrapArgs,
-) -> Result<Value, McpError> {
+pub async fn add_trap_to_map(ctx: &Arc<McpContext>, args: AddTrapArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
 
     let trap = MapStateService::new(&mut db)
@@ -343,10 +337,7 @@ pub async fn add_trap_to_map(
     McpResponse::added("trap", trap_to_json(&trap))
 }
 
-pub async fn list_map_traps(
-    ctx: &Arc<McpContext>,
-    args: MapIdArgs,
-) -> Result<Value, McpError> {
+pub async fn list_map_traps(ctx: &Arc<McpContext>, args: MapIdArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let traps = MapStateService::new(&mut db)
         .list_traps(&args.map_id)
@@ -392,22 +383,22 @@ pub async fn update_map_trap(
         svc.move_trap(&args.trap_id, x, y)
             .map_err(McpError::caller_fault)?
     } else {
-        svc.get_trap(&args.trap_id).map_err(McpError::caller_fault)?
+        svc.get_trap(&args.trap_id)
+            .map_err(McpError::caller_fault)?
     };
 
     McpResponse::updated("trap", trap_to_json(&trap))
 }
 
-pub async fn remove_map_trap(
-    ctx: &Arc<McpContext>,
-    args: TrapIdArgs,
-) -> Result<Value, McpError> {
+pub async fn remove_map_trap(ctx: &Arc<McpContext>, args: TrapIdArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut svc = MapStateService::new(&mut db);
 
     // Verify it exists so removals of unknown ids error clearly
-    svc.get_trap(&args.trap_id).map_err(McpError::caller_fault)?;
-    svc.delete_trap(&args.trap_id).map_err(McpError::caller_fault)?;
+    svc.get_trap(&args.trap_id)
+        .map_err(McpError::caller_fault)?;
+    svc.delete_trap(&args.trap_id)
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::removed(&args.trap_id)
 }
@@ -416,10 +407,7 @@ pub async fn remove_map_trap(
 // Handlers — POIs
 // =============================================================================
 
-pub async fn add_poi_to_map(
-    ctx: &Arc<McpContext>,
-    args: AddPoiArgs,
-) -> Result<Value, McpError> {
+pub async fn add_poi_to_map(ctx: &Arc<McpContext>, args: AddPoiArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
 
     let poi = MapStateService::new(&mut db)
@@ -439,10 +427,7 @@ pub async fn add_poi_to_map(
     McpResponse::added("poi", poi_to_json(&poi))
 }
 
-pub async fn list_map_pois(
-    ctx: &Arc<McpContext>,
-    args: MapIdArgs,
-) -> Result<Value, McpError> {
+pub async fn list_map_pois(ctx: &Arc<McpContext>, args: MapIdArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let pois = MapStateService::new(&mut db)
         .list_pois(&args.map_id)
@@ -450,10 +435,7 @@ pub async fn list_map_pois(
     McpResponse::list("pois", pois.iter().map(poi_to_json).collect())
 }
 
-pub async fn update_map_poi(
-    ctx: &Arc<McpContext>,
-    args: UpdatePoiArgs,
-) -> Result<Value, McpError> {
+pub async fn update_map_poi(ctx: &Arc<McpContext>, args: UpdatePoiArgs) -> Result<Value, McpError> {
     let coords = move_coords(args.grid_x, args.grid_y)?;
     let has_field_updates = args.name.is_some()
         || args.description.is_some()
@@ -492,15 +474,13 @@ pub async fn update_map_poi(
     McpResponse::updated("poi", poi_to_json(&poi))
 }
 
-pub async fn remove_map_poi(
-    ctx: &Arc<McpContext>,
-    args: PoiIdArgs,
-) -> Result<Value, McpError> {
+pub async fn remove_map_poi(ctx: &Arc<McpContext>, args: PoiIdArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut svc = MapStateService::new(&mut db);
 
     svc.get_poi(&args.poi_id).map_err(McpError::caller_fault)?;
-    svc.delete_poi(&args.poi_id).map_err(McpError::caller_fault)?;
+    svc.delete_poi(&args.poi_id)
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::removed(&args.poi_id)
 }
@@ -561,10 +541,7 @@ pub async fn add_light_to_map(
     McpResponse::added("light", light_to_json(&light))
 }
 
-pub async fn list_map_lights(
-    ctx: &Arc<McpContext>,
-    args: MapIdArgs,
-) -> Result<Value, McpError> {
+pub async fn list_map_lights(ctx: &Arc<McpContext>, args: MapIdArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let lights = MapStateService::new(&mut db)
         .list_lights(&args.map_id)
@@ -618,10 +595,7 @@ pub async fn update_map_light(
     McpResponse::updated("light", light_to_json(&light))
 }
 
-pub async fn remove_map_light(
-    ctx: &Arc<McpContext>,
-    args: LightIdArgs,
-) -> Result<Value, McpError> {
+pub async fn remove_map_light(ctx: &Arc<McpContext>, args: LightIdArgs) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let mut svc = MapStateService::new(&mut db);
 

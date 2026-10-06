@@ -6,7 +6,9 @@
 
 use serde_json::Value;
 
-use super::card_utils::{escape_typst, flatten_entries, split_text_natural, SMALL_CARD_DESC_BUDGET};
+use super::card_utils::{
+    escape_typst, flatten_entries, split_text_natural, SMALL_CARD_DESC_BUDGET,
+};
 use crate::builder::{RenderContext, Renderable};
 use crate::error::Result;
 
@@ -29,10 +31,7 @@ impl EquipmentCardsSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(items: Value) -> Self {
-        let item_vec = items
-            .as_array()
-            .map(|arr| arr.clone())
-            .unwrap_or_default();
+        let item_vec = items.as_array().map(|arr| arr.clone()).unwrap_or_default();
         Self::new(item_vec)
     }
 
@@ -121,15 +120,15 @@ impl EquipmentCardsSection {
             .get("rarity")
             .and_then(|v| v.as_str())
             .unwrap_or("none");
-        let source = item
-            .get("source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let source = item.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
         // Damage info
         let dmg1 = item.get("dmg1").and_then(|v| v.as_str());
         let dmg2 = item.get("dmg2").and_then(|v| v.as_str());
-        let dmg_type = item.get("dmg_type").or_else(|| item.get("dmgType")).and_then(|v| v.as_str());
+        let dmg_type = item
+            .get("dmg_type")
+            .or_else(|| item.get("dmgType"))
+            .and_then(|v| v.as_str());
 
         let damage_str = match (dmg1, dmg2, dmg_type) {
             (Some(d1), Some(d2), Some(dt)) => format!("{}/{} {}", d1, d2, format_damage_type(dt)),
@@ -240,7 +239,11 @@ impl EquipmentCardsSection {
         let f = Self::extract_fields(item);
         let split = split_text_natural(&f.desc_text, SMALL_CARD_DESC_BUDGET);
 
-        let fold_indicator = if split.is_foldable { " ▶ continued" } else { "" };
+        let fold_indicator = if split.is_foldable {
+            " ▶ continued"
+        } else {
+            ""
+        };
 
         let front = format!(
             r#"box(
@@ -394,14 +397,16 @@ impl Renderable for EquipmentCardsSection {
         let mut typst = String::new();
 
         // Equipment icons defined as simple Typst functions
-        typst.push_str(r#"// Equipment icons (black/white)
+        typst.push_str(
+            r#"// Equipment icons (black/white)
 #let sword-icon(size: 12pt) = text(size: size)[⚔]
 #let bow-icon(size: 12pt) = text(size: size)[🏹]
 #let shield-icon(size: 12pt) = text(size: size)[🛡]
 #let gem-icon(size: 12pt) = text(size: size)[💎]
 #let gear-icon(size: 12pt) = text(size: size)[⚙]
 
-"#);
+"#,
+        );
 
         // Set page margins for equipment cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");
@@ -745,7 +750,10 @@ mod tests {
         assert_eq!(EquipmentCardsSection::get_type_name("M"), "Melee Weapon");
         assert_eq!(EquipmentCardsSection::get_type_name("R"), "Ranged Weapon");
         assert_eq!(EquipmentCardsSection::get_type_name("A"), "Ammunition");
-        assert_eq!(EquipmentCardsSection::get_type_name("AF"), "Special Ammunition");
+        assert_eq!(
+            EquipmentCardsSection::get_type_name("AF"),
+            "Special Ammunition"
+        );
         assert_eq!(EquipmentCardsSection::get_type_name("S"), "Shield");
         assert_eq!(EquipmentCardsSection::get_type_name("LA"), "Light Armor");
         assert_eq!(EquipmentCardsSection::get_type_name("MA"), "Medium Armor");
@@ -764,9 +772,18 @@ mod tests {
         assert_eq!(EquipmentCardsSection::format_rarity("common"), "Common");
         assert_eq!(EquipmentCardsSection::format_rarity("uncommon"), "Uncommon");
         assert_eq!(EquipmentCardsSection::format_rarity("rare"), "Rare");
-        assert_eq!(EquipmentCardsSection::format_rarity("very rare"), "Very Rare");
-        assert_eq!(EquipmentCardsSection::format_rarity("veryrare"), "Very Rare");
-        assert_eq!(EquipmentCardsSection::format_rarity("legendary"), "Legendary");
+        assert_eq!(
+            EquipmentCardsSection::format_rarity("very rare"),
+            "Very Rare"
+        );
+        assert_eq!(
+            EquipmentCardsSection::format_rarity("veryrare"),
+            "Very Rare"
+        );
+        assert_eq!(
+            EquipmentCardsSection::format_rarity("legendary"),
+            "Legendary"
+        );
         assert_eq!(EquipmentCardsSection::format_rarity("artifact"), "Artifact");
         assert_eq!(EquipmentCardsSection::format_rarity("none"), "");
         assert_eq!(EquipmentCardsSection::format_rarity(""), "");
@@ -937,7 +954,10 @@ mod tests {
         assert!(typst.contains("columns: (2.5in,) * 3"));
         assert!(typst.contains("rows: (3.25in,) * 3"));
         // 1 item = 8 empty slots
-        assert_eq!(typst.matches("box(width: 2.5in, height: 3.25in)").count(), 8);
+        assert_eq!(
+            typst.matches("box(width: 2.5in, height: 3.25in)").count(),
+            8
+        );
     }
 
     #[test]

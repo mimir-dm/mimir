@@ -241,7 +241,9 @@ mod tests {
     #[test]
     fn test_flatten_preserves_tags() {
         // Tags are preserved for render-time transformation to cross-links
-        let entries = vec![json!("The {@creature goblin|MM} attacks with {@dice 1d6} damage.")];
+        let entries = vec![json!(
+            "The {@creature goblin|MM} attacks with {@dice 1d6} damage."
+        )];
         let result = flatten_entries(&entries);
         assert!(result.contains("{@creature goblin|MM}"));
         assert!(result.contains("{@dice 1d6}"));

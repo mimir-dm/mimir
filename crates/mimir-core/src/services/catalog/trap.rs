@@ -97,8 +97,12 @@ mod tests {
         let traps = vec![
             NewTrap::new("Pit Trap", "DMG", r#"{"name":"Pit Trap"}"#).with_tier("simple"),
             NewTrap::new("Poison Needle", "DMG", r#"{"name":"Poison Needle"}"#).with_tier("simple"),
-            NewTrap::new("Sphere of Annihilation", "DMG", r#"{"name":"Sphere of Annihilation"}"#)
-                .with_tier("complex"),
+            NewTrap::new(
+                "Sphere of Annihilation",
+                "DMG",
+                r#"{"name":"Sphere of Annihilation"}"#,
+            )
+            .with_tier("complex"),
         ];
         insert_traps(conn, &traps).expect("Failed to insert test traps");
     }
@@ -110,7 +114,9 @@ mod tests {
 
         let mut service = TrapService::new(&mut conn);
 
-        let results = service.search(&TrapFilter::default()).expect("Search failed");
+        let results = service
+            .search(&TrapFilter::default())
+            .expect("Search failed");
         assert_eq!(results.len(), 3);
     }
 

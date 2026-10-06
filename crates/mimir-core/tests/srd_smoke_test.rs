@@ -12,7 +12,12 @@ fn test_srd_db_has_all_classes() {
     let mut conn = common::setup_srd_db();
 
     let classes = catalog::list_classes(&mut conn).expect("Failed to list classes");
-    assert_eq!(classes.len(), 12, "Expected 12 SRD classes, got {}", classes.len());
+    assert_eq!(
+        classes.len(),
+        12,
+        "Expected 12 SRD classes, got {}",
+        classes.len()
+    );
 
     // Verify specific classes exist
     let fighter = catalog::get_class_by_name(&mut conn, "Fighter", "PHB")
@@ -23,7 +28,10 @@ fn test_srd_db_has_all_classes() {
 
     // Verify data blob contains expected fields
     let data: serde_json::Value = serde_json::from_str(&fighter.data).unwrap();
-    assert!(data.get("hd").is_some(), "Fighter data should contain hit dice");
+    assert!(
+        data.get("hd").is_some(),
+        "Fighter data should contain hit dice"
+    );
 }
 
 #[test]
@@ -40,9 +48,10 @@ fn test_srd_db_has_subclasses() {
         .expect("Thief should exist");
     assert_eq!(thief.class_name, "Rogue");
 
-    let evocation = catalog::get_subclass_by_name(&mut conn, "School of Evocation", "Wizard", "PHB")
-        .expect("Query failed")
-        .expect("School of Evocation should exist");
+    let evocation =
+        catalog::get_subclass_by_name(&mut conn, "School of Evocation", "Wizard", "PHB")
+            .expect("Query failed")
+            .expect("School of Evocation should exist");
     assert_eq!(evocation.class_name, "Wizard");
 
     let life = catalog::get_subclass_by_name(&mut conn, "Life Domain", "Cleric", "PHB")
@@ -75,7 +84,10 @@ fn test_srd_db_has_subclass_features_with_children() {
         .expect("Failed to list Thief features");
     let names: Vec<&str> = features.iter().map(|f| f.name.as_str()).collect();
 
-    assert!(names.contains(&"Fast Hands"), "Thief should have Fast Hands feature");
+    assert!(
+        names.contains(&"Fast Hands"),
+        "Thief should have Fast Hands feature"
+    );
     assert!(
         names.contains(&"Second-Story Work"),
         "Thief should have Second-Story Work feature"
@@ -126,7 +138,11 @@ fn test_srd_db_has_spells() {
     let mut conn = common::setup_srd_db();
 
     let spells = catalog::list_spells(&mut conn).expect("Failed to list spells");
-    assert!(spells.len() >= 20, "Expected at least 20 SRD spells, got {}", spells.len());
+    assert!(
+        spells.len() >= 20,
+        "Expected at least 20 SRD spells, got {}",
+        spells.len()
+    );
 
     // Check specific spells
     let fireball = catalog::get_spell_by_name(&mut conn, "Fireball", "PHB")
@@ -163,8 +179,7 @@ fn test_srd_db_has_monsters() {
     );
 
     // Goblin is sourced from MM in the SRD fixtures
-    let goblin = catalog::get_monster_by_name(&mut conn, "Goblin", "MM")
-        .expect("Query failed");
+    let goblin = catalog::get_monster_by_name(&mut conn, "Goblin", "MM").expect("Query failed");
     assert!(goblin.is_some(), "Goblin should exist in the DB");
 }
 

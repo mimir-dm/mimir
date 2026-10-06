@@ -243,8 +243,7 @@ impl<'a> ModuleService<'a> {
             // Get the type-specific template content
             let overview_content = templates::get_module_template(input.module_type.template_key())
                 .unwrap_or_else(|| {
-                    templates::get_module_template("general")
-                        .expect("General template must exist")
+                    templates::get_module_template("general").expect("General template must exist")
                 });
 
             // Create overview document from type-specific template
@@ -343,25 +342,20 @@ impl<'a> ModuleService<'a> {
     /// Reorder a module by moving it to a new position (1-indexed).
     ///
     /// Returns the updated list of modules in their new order.
-    pub fn reorder(
-        &mut self,
-        module_id: &str,
-        new_position: i32,
-    ) -> ServiceResult<Vec<Module>> {
+    pub fn reorder(&mut self, module_id: &str, new_position: i32) -> ServiceResult<Vec<Module>> {
         // Look up the module to get campaign_id
         let module = dal::get_module_optional(self.conn, module_id)?
             .ok_or_else(|| ServiceError::not_found("Module", module_id))?;
 
-        dal::reorder_module(self.conn, &module.campaign_id, module_id, new_position)
-            .map_err(|e| match e {
-                diesel::result::Error::RollbackTransaction => {
-                    ServiceError::Validation(format!(
-                        "Invalid position {}. Must be between 1 and the number of modules.",
-                        new_position
-                    ))
-                }
+        dal::reorder_module(self.conn, &module.campaign_id, module_id, new_position).map_err(
+            |e| match e {
+                diesel::result::Error::RollbackTransaction => ServiceError::Validation(format!(
+                    "Invalid position {}. Must be between 1 and the number of modules.",
+                    new_position
+                )),
                 other => ServiceError::from(other),
-            })?;
+            },
+        )?;
 
         dal::list_modules(self.conn, &module.campaign_id).map_err(ServiceError::from)
     }
@@ -543,8 +537,7 @@ mod tests {
         assert_eq!(doc_count, 2);
 
         // Verify document types
-        let docs =
-            list_module_documents(&mut conn, &module.id).expect("Failed to list documents");
+        let docs = list_module_documents(&mut conn, &module.id).expect("Failed to list documents");
         assert_eq!(docs.len(), 2);
 
         let doc_types: Vec<&str> = docs.iter().map(|d| d.doc_type.as_str()).collect();
@@ -559,13 +552,12 @@ mod tests {
 
         let mut service = ModuleService::new(&mut conn);
 
-        let input = CreateModuleInput::new(&campaign_id, "The Haunted Manor")
-            .with_type(ModuleType::Horror);
+        let input =
+            CreateModuleInput::new(&campaign_id, "The Haunted Manor").with_type(ModuleType::Horror);
         let module = service.create(input).expect("Failed to create module");
 
         // Verify the overview document has horror template content
-        let docs =
-            list_module_documents(&mut conn, &module.id).expect("Failed to list documents");
+        let docs = list_module_documents(&mut conn, &module.id).expect("Failed to list documents");
         let overview = docs
             .iter()
             .find(|d| d.doc_type == "module_overview")
@@ -704,7 +696,9 @@ mod tests {
 
         assert!(service.exists(&created.id).expect("Failed to check exists"));
 
-        service.delete(&created.id).expect("Failed to delete module");
+        service
+            .delete(&created.id)
+            .expect("Failed to delete module");
 
         assert!(!service.exists(&created.id).expect("Failed to check exists"));
     }
@@ -812,11 +806,7 @@ mod tests {
 
         for module_type in types {
             let template = templates::get_module_template(module_type.template_key());
-            assert!(
-                template.is_some(),
-                "Template missing for {:?}",
-                module_type
-            );
+            assert!(template.is_some(), "Template missing for {:?}", module_type);
             assert!(
                 !template.unwrap().is_empty(),
                 "Template empty for {:?}",

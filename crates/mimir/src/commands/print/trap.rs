@@ -50,10 +50,7 @@ pub fn export_trap_card(
     let catalog_trap = match catalog_dal::get_trap_by_name(&mut db, &trap_name, &trap_source) {
         Ok(Some(t)) => t,
         Ok(None) => {
-            return ApiResponse::err(format!(
-                "Trap not found: {} ({})",
-                trap_name, trap_source
-            ))
+            return ApiResponse::err(format!("Trap not found: {} ({})", trap_name, trap_source))
         }
         Err(e) => return ApiResponse::err(format!("Failed to look up trap: {}", e)),
     };

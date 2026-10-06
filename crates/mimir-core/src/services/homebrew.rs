@@ -11,9 +11,9 @@ use uuid::Uuid;
 use crate::dal::campaign as dal;
 use crate::dal::catalog as catalog_dal;
 use crate::models::campaign::{
-    CampaignHomebrewItem, CampaignHomebrewMonster, CampaignHomebrewSpell,
-    NewCampaignHomebrewItem, NewCampaignHomebrewMonster, NewCampaignHomebrewSpell,
-    UpdateCampaignHomebrewItem, UpdateCampaignHomebrewMonster, UpdateCampaignHomebrewSpell,
+    CampaignHomebrewItem, CampaignHomebrewMonster, CampaignHomebrewSpell, NewCampaignHomebrewItem,
+    NewCampaignHomebrewMonster, NewCampaignHomebrewSpell, UpdateCampaignHomebrewItem,
+    UpdateCampaignHomebrewMonster, UpdateCampaignHomebrewSpell,
 };
 use crate::services::{ServiceError, ServiceResult};
 use crate::utils::now_rfc3339;
@@ -148,12 +148,15 @@ impl<'a> HomebrewService<'a> {
                 catalog_dal::get_item_by_name(self.conn, name, source)
                     .map_err(ServiceError::from)?
                     .map(|item| item.data)
-                    .ok_or_else(|| ServiceError::not_found("CatalogItem", &format!("{name} ({source})")))
+                    .ok_or_else(|| {
+                        ServiceError::not_found("CatalogItem", &format!("{name} ({source})"))
+                    })
             },
         )?;
 
         let id = Uuid::new_v4().to_string();
-        let mut new_item = NewCampaignHomebrewItem::new(&id, &input.campaign_id, &input.name, &data);
+        let mut new_item =
+            NewCampaignHomebrewItem::new(&id, &input.campaign_id, &input.name, &data);
 
         if let Some(ref t) = input.item_type {
             new_item = new_item.with_item_type(t);
@@ -251,11 +254,18 @@ impl<'a> HomebrewService<'a> {
                 catalog_dal::get_monster_by_name(self.conn, name, source)
                     .map_err(ServiceError::from)?
                     .map(|m| m.data)
-                    .ok_or_else(|| ServiceError::not_found("CatalogMonster", &format!("{name} ({source})")))
+                    .ok_or_else(|| {
+                        ServiceError::not_found("CatalogMonster", &format!("{name} ({source})"))
+                    })
             },
         )?;
 
-        let data = enrich_monster_data(&base_data, input.cr.as_deref(), input.creature_type.as_deref(), input.size.as_deref())?;
+        let data = enrich_monster_data(
+            &base_data,
+            input.cr.as_deref(),
+            input.creature_type.as_deref(),
+            input.size.as_deref(),
+        )?;
         let id = Uuid::new_v4().to_string();
         let mut new_monster =
             NewCampaignHomebrewMonster::new(&id, &input.campaign_id, &input.name, &data);
@@ -333,10 +343,7 @@ impl<'a> HomebrewService<'a> {
     // ── Spells ─────────────────────────────────────────────────────
 
     /// List all homebrew spells for a campaign.
-    pub fn list_spells(
-        &mut self,
-        campaign_id: &str,
-    ) -> ServiceResult<Vec<CampaignHomebrewSpell>> {
+    pub fn list_spells(&mut self, campaign_id: &str) -> ServiceResult<Vec<CampaignHomebrewSpell>> {
         dal::list_campaign_homebrew_spells(self.conn, campaign_id).map_err(ServiceError::from)
     }
 
@@ -371,7 +378,9 @@ impl<'a> HomebrewService<'a> {
                 catalog_dal::get_spell_by_name(self.conn, name, source)
                     .map_err(ServiceError::from)?
                     .map(|s| s.data)
-                    .ok_or_else(|| ServiceError::not_found("CatalogSpell", &format!("{name} ({source})")))
+                    .ok_or_else(|| {
+                        ServiceError::not_found("CatalogSpell", &format!("{name} ({source})"))
+                    })
             },
         )?;
 
@@ -462,13 +471,16 @@ where
                     // Deep merge user overrides on top of catalog data
                     validate_json(&catalog_data)?;
                     validate_json(overrides)?;
-                    let mut base: Value = serde_json::from_str(&catalog_data)
-                        .map_err(|e| ServiceError::validation(format!("Invalid catalog JSON: {e}")))?;
-                    let user_val: Value = serde_json::from_str(overrides)
-                        .map_err(|e| ServiceError::validation(format!("Invalid override JSON: {e}")))?;
+                    let mut base: Value = serde_json::from_str(&catalog_data).map_err(|e| {
+                        ServiceError::validation(format!("Invalid catalog JSON: {e}"))
+                    })?;
+                    let user_val: Value = serde_json::from_str(overrides).map_err(|e| {
+                        ServiceError::validation(format!("Invalid override JSON: {e}"))
+                    })?;
                     deep_merge(&mut base, &user_val);
-                    serde_json::to_string(&base)
-                        .map_err(|e| ServiceError::validation(format!("Failed to serialize merged data: {e}")))
+                    serde_json::to_string(&base).map_err(|e| {
+                        ServiceError::validation(format!("Failed to serialize merged data: {e}"))
+                    })
                 }
                 _ => {
                     // No user overrides — use catalog data as-is
@@ -480,7 +492,9 @@ where
         _ => {
             // Not cloning — data is required
             let data = user_data.ok_or_else(|| {
-                ServiceError::validation("data is required when not cloning from catalog".to_string())
+                ServiceError::validation(
+                    "data is required when not cloning from catalog".to_string(),
+                )
             })?;
             validate_json(data)?;
             Ok(data.to_string())
@@ -533,10 +547,7 @@ fn enrich_monster_data(
     // Set type if missing (5etools format: {"type": "elemental"} or just "elemental")
     if !obj.contains_key("type") {
         if let Some(ct) = creature_type {
-            obj.insert(
-                "type".to_string(),
-                serde_json::json!({"type": ct}),
-            );
+            obj.insert("type".to_string(), serde_json::json!({"type": ct}));
         }
     }
 
@@ -864,8 +875,7 @@ mod tests {
         assert_eq!(monster.size, Some("G".to_string()));
 
         // Verify data enrichment
-        let data: serde_json::Map<String, Value> =
-            serde_json::from_str(&monster.data).unwrap();
+        let data: serde_json::Map<String, Value> = serde_json::from_str(&monster.data).unwrap();
         assert_eq!(data["cr"], Value::String("20".to_string()));
         assert_eq!(data["type"], serde_json::json!({"type": "elemental"}));
         assert_eq!(data["size"], serde_json::json!(["G"]));
@@ -881,7 +891,9 @@ mod tests {
             .create_monster(CreateHomebrewMonsterInput {
                 campaign_id,
                 name: "Dragon".to_string(),
-                data: Some(r#"{"name":"Dragon","cr":"15","type":"dragon","size":["H"]}"#.to_string()),
+                data: Some(
+                    r#"{"name":"Dragon","cr":"15","type":"dragon","size":["H"]}"#.to_string(),
+                ),
                 cr: Some("20".to_string()),
                 creature_type: Some("elemental".to_string()),
                 size: Some("G".to_string()),
@@ -890,8 +902,7 @@ mod tests {
             })
             .unwrap();
 
-        let data: serde_json::Map<String, Value> =
-            serde_json::from_str(&monster.data).unwrap();
+        let data: serde_json::Map<String, Value> = serde_json::from_str(&monster.data).unwrap();
         // Existing values should NOT be overwritten
         assert_eq!(data["cr"], Value::String("15".to_string()));
         assert_eq!(data["type"], Value::String("dragon".to_string()));
@@ -917,8 +928,7 @@ mod tests {
             })
             .unwrap();
 
-        let data: serde_json::Map<String, Value> =
-            serde_json::from_str(&monster.data).unwrap();
+        let data: serde_json::Map<String, Value> = serde_json::from_str(&monster.data).unwrap();
         assert_eq!(data["cr"], Value::String("1/4".to_string()));
         assert_eq!(data["type"], serde_json::json!({"type": "beast"}));
         assert_eq!(data["size"], serde_json::json!(["S"]));
@@ -1208,11 +1218,15 @@ mod tests {
             })
             .unwrap();
 
-        let found = service.get_item_by_name(&campaign_id, "Unique Item").unwrap();
+        let found = service
+            .get_item_by_name(&campaign_id, "Unique Item")
+            .unwrap();
         assert!(found.is_some());
         assert_eq!(found.unwrap().name, "Unique Item");
 
-        let not_found = service.get_item_by_name(&campaign_id, "Nonexistent").unwrap();
+        let not_found = service
+            .get_item_by_name(&campaign_id, "Nonexistent")
+            .unwrap();
         assert!(not_found.is_none());
     }
 
@@ -1235,10 +1249,14 @@ mod tests {
             })
             .unwrap();
 
-        let found = service.get_monster_by_name(&campaign_id, "Custom Dragon").unwrap();
+        let found = service
+            .get_monster_by_name(&campaign_id, "Custom Dragon")
+            .unwrap();
         assert!(found.is_some());
 
-        let not_found = service.get_monster_by_name(&campaign_id, "Nonexistent").unwrap();
+        let not_found = service
+            .get_monster_by_name(&campaign_id, "Nonexistent")
+            .unwrap();
         assert!(not_found.is_none());
     }
 
@@ -1260,10 +1278,14 @@ mod tests {
             })
             .unwrap();
 
-        let found = service.get_spell_by_name(&campaign_id, "Custom Spell").unwrap();
+        let found = service
+            .get_spell_by_name(&campaign_id, "Custom Spell")
+            .unwrap();
         assert!(found.is_some());
 
-        let not_found = service.get_spell_by_name(&campaign_id, "Nonexistent").unwrap();
+        let not_found = service
+            .get_spell_by_name(&campaign_id, "Nonexistent")
+            .unwrap();
         assert!(not_found.is_none());
     }
 

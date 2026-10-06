@@ -3,7 +3,9 @@
 //! Commands for class info, spellcasting, and character option helpers.
 
 use mimir_core::models::catalog::FeatFilter;
-use mimir_core::services::{CatalogEntityService, ClassService, FeatService, OptionalFeatureService};
+use mimir_core::services::{
+    CatalogEntityService, ClassService, FeatService, OptionalFeatureService,
+};
 use serde_json::Value;
 use tauri::State;
 
@@ -40,7 +42,8 @@ pub fn get_class_info(
             };
 
             // Extract hit die
-            let hit_die = data.get("hd")
+            let hit_die = data
+                .get("hd")
                 .and_then(|hd| hd.get("faces"))
                 .and_then(|f| f.as_i64())
                 .unwrap_or(8) as i32;
@@ -49,18 +52,20 @@ pub fn get_class_info(
             let subclass_level = find_subclass_level(&data);
 
             // Extract spellcasting type from casterProgression
-            let spellcasting_type = data.get("casterProgression")
-                .and_then(|p| p.as_str())
-                .map(|s| match s {
-                    "full" => "Full",
-                    "1/2" | "half" => "Half",
-                    "1/3" | "third" => "Third",
-                    "pact" => "PactMagic",
-                    _ => "None",
-                });
+            let spellcasting_type =
+                data.get("casterProgression")
+                    .and_then(|p| p.as_str())
+                    .map(|s| match s {
+                        "full" => "Full",
+                        "1/2" | "half" => "Half",
+                        "1/3" | "third" => "Third",
+                        "pact" => "PactMagic",
+                        _ => "None",
+                    });
 
             // Extract spellcasting ability
-            let spellcasting_ability = data.get("spellcastingAbility")
+            let spellcasting_ability = data
+                .get("spellcastingAbility")
                 .and_then(|a| a.as_str())
                 .map(|s| s.to_string());
 
@@ -85,17 +90,23 @@ pub fn get_class_info(
 
             // Add optional feature progression if present (invocations, metamagic, etc.)
             if let Some(opt_prog) = data.get("optionalfeatureProgression") {
-                response.as_object_mut().unwrap()
+                response
+                    .as_object_mut()
+                    .unwrap()
                     .insert("optional_feature_progression".to_string(), opt_prog.clone());
             }
 
             // Add cantrip/spells known progression if present
             if let Some(cantrips) = data.get("cantripProgression") {
-                response.as_object_mut().unwrap()
+                response
+                    .as_object_mut()
+                    .unwrap()
                     .insert("cantrip_progression".to_string(), cantrips.clone());
             }
             if let Some(spells_known) = data.get("spellsKnownProgression") {
-                response.as_object_mut().unwrap()
+                response
+                    .as_object_mut()
+                    .unwrap()
                     .insert("spells_known_progression".to_string(), spells_known.clone());
             }
 
@@ -128,8 +139,7 @@ pub fn get_class_spellcasting(
                 Err(e) => return ApiResponse::err(format!("Failed to parse class data: {}", e)),
             };
 
-            let caster_type = data.get("casterProgression")
-                .and_then(|p| p.as_str());
+            let caster_type = data.get("casterProgression").and_then(|p| p.as_str());
 
             if caster_type.is_none() {
                 return ApiResponse::ok(serde_json::json!({
@@ -149,19 +159,25 @@ pub fn get_class_spellcasting(
 
             // Add cantrip progression
             if let Some(cantrips) = data.get("cantripProgression") {
-                response.as_object_mut().unwrap()
+                response
+                    .as_object_mut()
+                    .unwrap()
                     .insert("cantrip_progression".to_string(), cantrips.clone());
             }
 
             // Add spells known progression (for known casters like Bard, Sorcerer)
             if let Some(spells_known) = data.get("spellsKnownProgression") {
-                response.as_object_mut().unwrap()
+                response
+                    .as_object_mut()
+                    .unwrap()
                     .insert("spells_known_progression".to_string(), spells_known.clone());
             }
 
             // Add prepared spell formula (for prepared casters like Cleric, Druid)
             if let Some(prepared) = data.get("preparedSpells") {
-                response.as_object_mut().unwrap()
+                response
+                    .as_object_mut()
+                    .unwrap()
                     .insert("prepared_spells".to_string(), prepared.clone());
             }
 
@@ -169,7 +185,9 @@ pub fn get_class_spellcasting(
             if let Some(table_groups) = data.get("classTableGroups").and_then(|g| g.as_array()) {
                 let spell_slots = extract_spell_slots_from_table(table_groups);
                 if !spell_slots.is_empty() {
-                    response.as_object_mut().unwrap()
+                    response
+                        .as_object_mut()
+                        .unwrap()
                         .insert("spell_slots_by_level".to_string(), spell_slots.into());
                 }
             }
@@ -178,7 +196,9 @@ pub fn get_class_spellcasting(
             if response.get("spell_slots_by_level").is_none() {
                 if let Some(ct) = caster_type {
                     let slots = generate_spell_slot_progression(ct);
-                    response.as_object_mut().unwrap()
+                    response
+                        .as_object_mut()
+                        .unwrap()
                         .insert("spell_slots_by_level".to_string(), slots.into());
                 }
             }
@@ -205,7 +225,8 @@ pub fn list_fighting_styles(state: State<'_, AppState>) -> ApiResponse<Vec<Value
             let fighting_styles: Vec<Value> = features
                 .into_iter()
                 .filter(|f| {
-                    f.feature_type.as_ref()
+                    f.feature_type
+                        .as_ref()
                         .map(|t| t.starts_with("FS"))
                         .unwrap_or(false)
                 })
@@ -255,7 +276,8 @@ pub fn list_maneuvers(state: State<'_, AppState>) -> ApiResponse<Vec<Value>> {
             let maneuvers: Vec<Value> = features
                 .into_iter()
                 .filter(|f| {
-                    f.feature_type.as_ref()
+                    f.feature_type
+                        .as_ref()
                         .map(|t| t.starts_with("MV"))
                         .unwrap_or(false)
                 })

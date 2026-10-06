@@ -13,8 +13,10 @@ pub fn insert_psionic(conn: &mut SqliteConnection, psionic: &NewPsionic) -> Quer
         .values(psionic)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple psionics in a batch.
@@ -86,10 +88,7 @@ pub fn delete_psionic(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize
 }
 
 /// Delete all psionics from a specific source.
-pub fn delete_psionics_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_psionics_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(psionics::table.filter(psionics::source.eq(source))).execute(conn)
 }
 
@@ -194,8 +193,8 @@ pub fn search_psionics_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -208,9 +207,13 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let psionic = NewPsionic::new("Mastery of Force", "UAMystic", r#"{"name":"Mastery of Force"}"#)
-            .with_type("D")
-            .with_order("Wu Jen");
+        let psionic = NewPsionic::new(
+            "Mastery of Force",
+            "UAMystic",
+            r#"{"name":"Mastery of Force"}"#,
+        )
+        .with_type("D")
+        .with_order("Wu Jen");
         let id = insert_psionic(&mut conn, &psionic).expect("Failed to insert");
 
         let retrieved = get_psionic(&mut conn, id).expect("Failed to get");

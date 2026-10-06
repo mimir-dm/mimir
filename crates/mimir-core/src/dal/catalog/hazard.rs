@@ -13,15 +13,14 @@ pub fn insert_hazard(conn: &mut SqliteConnection, hazard: &NewHazard) -> QueryRe
         .values(hazard)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple hazards in a batch.
-pub fn insert_hazards(
-    conn: &mut SqliteConnection,
-    hazards: &[NewHazard],
-) -> QueryResult<usize> {
+pub fn insert_hazards(conn: &mut SqliteConnection, hazards: &[NewHazard]) -> QueryResult<usize> {
     diesel::insert_into(hazards::table)
         .values(hazards)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_hazards(
 
 /// Get a hazard by its ID.
 pub fn get_hazard(conn: &mut SqliteConnection, id: i32) -> QueryResult<Hazard> {
-    hazards::table
-        .filter(hazards::id.eq(id))
-        .first(conn)
+    hazards::table.filter(hazards::id.eq(id)).first(conn)
 }
 
 /// Get a hazard by its ID, returning None if not found.
@@ -81,10 +78,7 @@ pub fn delete_hazard(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize>
 }
 
 /// Delete all hazards from a specific source.
-pub fn delete_hazards_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_hazards_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(hazards::table.filter(hazards::source.eq(source))).execute(conn)
 }
 
@@ -111,7 +105,10 @@ pub fn list_hazard_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<Strin
 }
 
 /// Search hazards with filters.
-pub fn search_hazards(conn: &mut SqliteConnection, filter: &HazardFilter) -> QueryResult<Vec<Hazard>> {
+pub fn search_hazards(
+    conn: &mut SqliteConnection,
+    filter: &HazardFilter,
+) -> QueryResult<Vec<Hazard>> {
     // If sources filter is explicitly empty, return no results
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);

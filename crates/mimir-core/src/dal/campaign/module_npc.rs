@@ -30,7 +30,10 @@ pub fn get_module_npc_optional(
 }
 
 /// List all NPCs for a module.
-pub fn list_module_npcs(conn: &mut SqliteConnection, module_id: &str) -> QueryResult<Vec<ModuleNpc>> {
+pub fn list_module_npcs(
+    conn: &mut SqliteConnection,
+    module_id: &str,
+) -> QueryResult<Vec<ModuleNpc>> {
     module_npcs::table
         .filter(module_npcs::module_id.eq(module_id))
         .order(module_npcs::name.asc())
@@ -90,8 +93,8 @@ pub fn count_module_npcs(conn: &mut SqliteConnection, module_id: &str) -> QueryR
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewModule};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -158,12 +161,9 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let merchant = NewModuleNpc::new("npc-1", "mod-1", "Barthen")
-            .with_role("Merchant");
-        let quest_giver1 = NewModuleNpc::new("npc-2", "mod-1", "Gundren")
-            .with_role("Quest Giver");
-        let quest_giver2 = NewModuleNpc::new("npc-3", "mod-1", "Halia")
-            .with_role("Quest Giver");
+        let merchant = NewModuleNpc::new("npc-1", "mod-1", "Barthen").with_role("Merchant");
+        let quest_giver1 = NewModuleNpc::new("npc-2", "mod-1", "Gundren").with_role("Quest Giver");
+        let quest_giver2 = NewModuleNpc::new("npc-3", "mod-1", "Halia").with_role("Quest Giver");
         insert_module_npc(&mut conn, &merchant).expect("Failed to insert");
         insert_module_npc(&mut conn, &quest_giver1).expect("Failed to insert");
         insert_module_npc(&mut conn, &quest_giver2).expect("Failed to insert");

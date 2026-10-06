@@ -135,7 +135,10 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
 
     // Use cached resolution (fast path) or fall back to UVTT JSON
     let meta = service.ensure_resolution_meta(&map);
-    let pixels_per_grid = meta.as_ref().map(|m| m.pixels_per_grid.round() as i32).unwrap_or(70);
+    let pixels_per_grid = meta
+        .as_ref()
+        .map(|m| m.pixels_per_grid.round() as i32)
+        .unwrap_or(70);
     let map_size_x = meta.as_ref().map(|m| m.map_size_x).unwrap_or(25.0);
     let map_size_y = meta.as_ref().map(|m| m.map_size_y).unwrap_or(25.0);
 
@@ -162,78 +165,97 @@ pub fn get_uvtt_map(state: State<'_, AppState>, id: String) -> ApiResponse<UvttD
         });
 
     // Extract portals (doors)
-    let portals: Option<Vec<UvttPortal>> = uvtt_json
-        .get("portals")
-        .and_then(|p| p.as_array())
-        .map(|portals| {
-            portals
-                .iter()
-                .filter_map(|portal| {
-                    let position = portal.get("position")?;
-                    let pos_x = position.get("x").and_then(|v| v.as_f64())?;
-                    let pos_y = position.get("y").and_then(|v| v.as_f64())?;
+    let portals: Option<Vec<UvttPortal>> =
+        uvtt_json
+            .get("portals")
+            .and_then(|p| p.as_array())
+            .map(|portals| {
+                portals
+                    .iter()
+                    .filter_map(|portal| {
+                        let position = portal.get("position")?;
+                        let pos_x = position.get("x").and_then(|v| v.as_f64())?;
+                        let pos_y = position.get("y").and_then(|v| v.as_f64())?;
 
-                    let bounds = portal.get("bounds").and_then(|b| b.as_array())?;
-                    if bounds.len() < 2 {
-                        return None;
-                    }
-                    let b0_x = bounds[0].get("x").and_then(|v| v.as_f64())?;
-                    let b0_y = bounds[0].get("y").and_then(|v| v.as_f64())?;
-                    let b1_x = bounds[1].get("x").and_then(|v| v.as_f64())?;
-                    let b1_y = bounds[1].get("y").and_then(|v| v.as_f64())?;
+                        let bounds = portal.get("bounds").and_then(|b| b.as_array())?;
+                        if bounds.len() < 2 {
+                            return None;
+                        }
+                        let b0_x = bounds[0].get("x").and_then(|v| v.as_f64())?;
+                        let b0_y = bounds[0].get("y").and_then(|v| v.as_f64())?;
+                        let b1_x = bounds[1].get("x").and_then(|v| v.as_f64())?;
+                        let b1_y = bounds[1].get("y").and_then(|v| v.as_f64())?;
 
-                    Some(UvttPortal {
-                        position: UvttPoint { x: pos_x, y: pos_y },
-                        bounds: [
-                            UvttPoint { x: b0_x, y: b0_y },
-                            UvttPoint { x: b1_x, y: b1_y },
-                        ],
-                        rotation: portal.get("rotation").and_then(|v| v.as_f64()).unwrap_or(0.0),
-                        closed: portal.get("closed").and_then(|v| v.as_bool()).unwrap_or(true),
-                        freestanding: portal.get("freestanding").and_then(|v| v.as_bool()).unwrap_or(false),
+                        Some(UvttPortal {
+                            position: UvttPoint { x: pos_x, y: pos_y },
+                            bounds: [
+                                UvttPoint { x: b0_x, y: b0_y },
+                                UvttPoint { x: b1_x, y: b1_y },
+                            ],
+                            rotation: portal
+                                .get("rotation")
+                                .and_then(|v| v.as_f64())
+                                .unwrap_or(0.0),
+                            closed: portal
+                                .get("closed")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(true),
+                            freestanding: portal
+                                .get("freestanding")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(false),
+                        })
                     })
-                })
-                .collect()
-        });
+                    .collect()
+            });
 
     // Extract lights
-    let lights: Option<Vec<UvttLight>> = uvtt_json
-        .get("lights")
-        .and_then(|l| l.as_array())
-        .map(|lights| {
-            lights
-                .iter()
-                .filter_map(|light| {
-                    let position = light.get("position")?;
-                    let pos_x = position.get("x").and_then(|v| v.as_f64())?;
-                    let pos_y = position.get("y").and_then(|v| v.as_f64())?;
+    let lights: Option<Vec<UvttLight>> =
+        uvtt_json
+            .get("lights")
+            .and_then(|l| l.as_array())
+            .map(|lights| {
+                lights
+                    .iter()
+                    .filter_map(|light| {
+                        let position = light.get("position")?;
+                        let pos_x = position.get("x").and_then(|v| v.as_f64())?;
+                        let pos_y = position.get("y").and_then(|v| v.as_f64())?;
 
-                    Some(UvttLight {
-                        position: UvttPoint { x: pos_x, y: pos_y },
-                        range: light.get("range").and_then(|v| v.as_f64()).unwrap_or(5.0),
-                        intensity: light.get("intensity").and_then(|v| v.as_f64()).unwrap_or(1.0),
-                        color: light
-                            .get("color")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("ffffffff")
-                            .to_string(),
-                        shadows: light.get("shadows").and_then(|v| v.as_bool()).unwrap_or(true),
+                        Some(UvttLight {
+                            position: UvttPoint { x: pos_x, y: pos_y },
+                            range: light.get("range").and_then(|v| v.as_f64()).unwrap_or(5.0),
+                            intensity: light
+                                .get("intensity")
+                                .and_then(|v| v.as_f64())
+                                .unwrap_or(1.0),
+                            color: light
+                                .get("color")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("ffffffff")
+                                .to_string(),
+                            shadows: light
+                                .get("shadows")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(true),
+                        })
                     })
-                })
-                .collect()
-        });
+                    .collect()
+            });
 
     // Extract environment
-    let environment: Option<UvttEnvironment> = uvtt_json.get("environment").map(|env| {
-        UvttEnvironment {
-            baked_lighting: env.get("baked_lighting").and_then(|v| v.as_bool()).unwrap_or(false),
+    let environment: Option<UvttEnvironment> =
+        uvtt_json.get("environment").map(|env| UvttEnvironment {
+            baked_lighting: env
+                .get("baked_lighting")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
             ambient_light: env
                 .get("ambient_light")
                 .and_then(|v| v.as_str())
                 .unwrap_or("ffffffff")
                 .to_string(),
-        }
-    });
+        });
 
     ApiResponse::ok(UvttData {
         resolution: UvttResolution {
@@ -276,7 +298,7 @@ pub fn serve_map_image(state: State<'_, AppState>, id: String) -> ApiResponse<St
             return ApiResponse::ok(path.to_string_lossy().to_string());
         }
         Ok(None) => {} // Fall through to legacy path
-        Err(_) => {}    // Fall through to legacy path
+        Err(_) => {}   // Fall through to legacy path
     }
 
     // Legacy fallback: parse UVTT JSON, extract base64, return data URL

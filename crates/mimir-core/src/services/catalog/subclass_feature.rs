@@ -46,7 +46,10 @@ impl<'a> SubclassFeatureService<'a> {
     }
 
     /// Search subclass features with filters.
-    pub fn search(&mut self, filter: &SubclassFeatureFilter) -> ServiceResult<Vec<SubclassFeature>> {
+    pub fn search(
+        &mut self,
+        filter: &SubclassFeatureFilter,
+    ) -> ServiceResult<Vec<SubclassFeature>> {
         dal::search_subclass_features(self.conn, filter).map_err(ServiceError::from)
     }
 

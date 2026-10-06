@@ -93,8 +93,7 @@ mod tests {
 
     #[test]
     fn test_new_variant_rule() {
-        let rule = NewVariantRule::new("Flanking", "DMG", r#"{"name":"Flanking"}"#)
-            .with_type("O");
+        let rule = NewVariantRule::new("Flanking", "DMG", r#"{"name":"Flanking"}"#).with_type("O");
         assert_eq!(rule.name, "Flanking");
         assert_eq!(rule.rule_type, Some("O"));
     }

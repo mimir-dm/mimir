@@ -13,15 +13,14 @@ pub fn insert_cult(conn: &mut SqliteConnection, cult: &NewCult) -> QueryResult<i
         .values(cult)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple cults in a batch.
-pub fn insert_cults(
-    conn: &mut SqliteConnection,
-    cults: &[NewCult],
-) -> QueryResult<usize> {
+pub fn insert_cults(conn: &mut SqliteConnection, cults: &[NewCult]) -> QueryResult<usize> {
     diesel::insert_into(cults::table)
         .values(cults)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_cults(
 
 /// Get a cult by its ID.
 pub fn get_cult(conn: &mut SqliteConnection, id: i32) -> QueryResult<Cult> {
-    cults::table
-        .filter(cults::id.eq(id))
-        .first(conn)
+    cults::table.filter(cults::id.eq(id)).first(conn)
 }
 
 /// Get a cult by name and source.
@@ -53,10 +50,7 @@ pub fn list_cults(conn: &mut SqliteConnection) -> QueryResult<Vec<Cult>> {
 }
 
 /// List cults from a specific source.
-pub fn list_cults_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<Vec<Cult>> {
+pub fn list_cults_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Cult>> {
     cults::table
         .filter(cults::source.eq(source))
         .order(cults::name.asc())
@@ -69,10 +63,7 @@ pub fn delete_cult(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize> {
 }
 
 /// Delete all cults from a specific source.
-pub fn delete_cults_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_cults_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(cults::table.filter(cults::source.eq(source))).execute(conn)
 }
 
@@ -91,10 +82,7 @@ pub fn count_cults_by_source(conn: &mut SqliteConnection, source: &str) -> Query
 
 /// Get a cult by its ID, returning None if not found.
 pub fn get_cult_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Cult>> {
-    cults::table
-        .filter(cults::id.eq(id))
-        .first(conn)
-        .optional()
+    cults::table.filter(cults::id.eq(id)).first(conn).optional()
 }
 
 /// List all distinct sources that have cults.
@@ -107,10 +95,7 @@ pub fn list_cult_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String>
 }
 
 /// Search cults with filters.
-pub fn search_cults(
-    conn: &mut SqliteConnection,
-    filter: &CultFilter,
-) -> QueryResult<Vec<Cult>> {
+pub fn search_cults(conn: &mut SqliteConnection, filter: &CultFilter) -> QueryResult<Vec<Cult>> {
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);
     }
@@ -161,8 +146,8 @@ pub fn search_cults_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -175,7 +160,11 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let cult = NewCult::new("Cult of the Dragon", "MM", r#"{"name":"Cult of the Dragon"}"#);
+        let cult = NewCult::new(
+            "Cult of the Dragon",
+            "MM",
+            r#"{"name":"Cult of the Dragon"}"#,
+        );
         let id = insert_cult(&mut conn, &cult).expect("Failed to insert");
 
         let retrieved = get_cult(&mut conn, id).expect("Failed to get");

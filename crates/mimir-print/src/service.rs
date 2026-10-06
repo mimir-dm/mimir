@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, instrument};
-use typst::diag::{SourceDiagnostic, Severity};
+use typst::diag::{Severity, SourceDiagnostic};
 
 use crate::error::{PrintError, Result};
 use crate::world::MimirTypstWorld;
@@ -51,19 +51,12 @@ impl PrintService {
     /// # Returns
     /// PDF file contents as bytes
     #[instrument(skip(self, data), fields(template = %template_path))]
-    pub fn render_to_pdf(
-        &self,
-        template_path: &str,
-        data: serde_json::Value,
-    ) -> Result<Vec<u8>> {
+    pub fn render_to_pdf(&self, template_path: &str, data: serde_json::Value) -> Result<Vec<u8>> {
         info!("Rendering template to PDF");
 
         // Create world with template and data
-        let world = MimirTypstWorld::from_template(
-            self.templates_root.clone(),
-            template_path,
-            data,
-        )?;
+        let world =
+            MimirTypstWorld::from_template(self.templates_root.clone(), template_path, data)?;
 
         // Compile the document
         debug!("Compiling Typst document");

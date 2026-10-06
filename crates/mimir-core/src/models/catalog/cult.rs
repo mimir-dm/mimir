@@ -69,7 +69,11 @@ mod tests {
 
     #[test]
     fn test_new_cult() {
-        let cult = NewCult::new("Cult of the Dragon", "MM", r#"{"name":"Cult of the Dragon"}"#);
+        let cult = NewCult::new(
+            "Cult of the Dragon",
+            "MM",
+            r#"{"name":"Cult of the Dragon"}"#,
+        );
         assert_eq!(cult.name, "Cult of the Dragon");
     }
 }

@@ -3,8 +3,7 @@
 //! Commands for races, backgrounds, classes, subclasses, feats, and features.
 
 use mimir_core::models::catalog::{
-    Background, BackgroundFilter, Class, ClassFilter, Feat, FeatFilter, Race,
-    RaceFilter, Subclass,
+    Background, BackgroundFilter, Class, ClassFilter, Feat, FeatFilter, Race, RaceFilter, Subclass,
 };
 use mimir_core::services::{
     BackgroundService, CatalogEntityService, ClassFeatureService, ClassService, FeatService,
@@ -302,7 +301,10 @@ pub fn get_class_feature(
     let result = ClassFeatureService::new(&mut db).get_by_name_and_class(&name, &class_name);
     match result {
         Ok(Some(feature)) => ApiResponse::ok(entity_to_json(&feature)),
-        Ok(None) => ApiResponse::err(format!("Class feature not found: {} ({})", name, class_name)),
+        Ok(None) => ApiResponse::err(format!(
+            "Class feature not found: {} ({})",
+            name, class_name
+        )),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -416,8 +418,11 @@ pub fn get_subclass_feature(
         Err(e) => return ApiResponse::<Value>::err(e),
     };
 
-    let result =
-        SubclassFeatureService::new(&mut db).get_by_name_and_subclass(&name, &subclass_name, &subclass_source);
+    let result = SubclassFeatureService::new(&mut db).get_by_name_and_subclass(
+        &name,
+        &subclass_name,
+        &subclass_source,
+    );
     match result {
         Ok(Some(feature)) => ApiResponse::ok(entity_to_json(&feature)),
         Ok(None) => ApiResponse::err(format!(
@@ -440,7 +445,8 @@ pub fn list_subclass_features(
         Err(e) => return ApiResponse::<Vec<Value>>::err(e),
     };
 
-    let result = SubclassFeatureService::new(&mut db).list_by_subclass(&subclass_name, &subclass_source);
+    let result =
+        SubclassFeatureService::new(&mut db).list_by_subclass(&subclass_name, &subclass_source);
     match result {
         Ok(features) => ApiResponse::ok(entities_to_json(features)),
         Err(e) => ApiResponse::err(e.to_string()),

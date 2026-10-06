@@ -107,9 +107,7 @@ pub fn generate_lake(
     }
 
     // Build water tree node
-    let points: Vec<Vector2> = closed.iter()
-        .map(|&(x, y)| Vector2::new(x, y))
-        .collect();
+    let points: Vec<Vector2> = closed.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
     let water_tree = WaterTree {
         node_ref: rand_ref(),
@@ -170,7 +168,9 @@ fn rand_ref() -> i64 {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos() as i64)
         .unwrap_or(42);
-    seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407) & 0x7FFFFFFF
+    seed.wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407)
+        & 0x7FFFFFFF
 }
 
 /// Check if a point is inside a lake polygon (public for object exclusion).
@@ -228,7 +228,14 @@ mod tests {
 
     #[test]
     fn test_generate_lake_basic() {
-        let noise = NoiseMap::generate(40, 40, &NoiseConfig { seed: 42, ..Default::default() });
+        let noise = NoiseMap::generate(
+            40,
+            40,
+            &NoiseConfig {
+                seed: 42,
+                ..Default::default()
+            },
+        );
         let alloc = NodeIdAllocator::new(1);
 
         let config = LakeConfig {
@@ -242,13 +249,23 @@ mod tests {
         };
 
         let result = generate_lake(&config, &noise, &alloc);
-        assert!(result.shoreline.len() > 10, "Shoreline should have many points");
+        assert!(
+            result.shoreline.len() > 10,
+            "Shoreline should have many points"
+        );
         assert_eq!(result.water_tree.deep_color, "ff2a7f6f");
     }
 
     #[test]
     fn test_shoreline_is_organic() {
-        let noise = NoiseMap::generate(40, 40, &NoiseConfig { seed: 42, ..Default::default() });
+        let noise = NoiseMap::generate(
+            40,
+            40,
+            &NoiseConfig {
+                seed: 42,
+                ..Default::default()
+            },
+        );
         let alloc = NodeIdAllocator::new(1);
 
         let config = LakeConfig {
@@ -265,17 +282,30 @@ mod tests {
         // With roughness 0.8, distances from center should vary
         let cx = 5.0 * 256.0;
         let cy = 5.0 * 256.0;
-        let distances: Vec<f64> = result.shoreline.iter()
+        let distances: Vec<f64> = result
+            .shoreline
+            .iter()
             .map(|&(x, y)| ((x - cx).powi(2) + (y - cy).powi(2)).sqrt())
             .collect();
         let min_d = distances.iter().cloned().fold(f64::MAX, f64::min);
         let max_d = distances.iter().cloned().fold(0.0_f64, f64::max);
-        assert!(max_d - min_d > 50.0, "Organic shoreline should have varied distances, got range {}", max_d - min_d);
+        assert!(
+            max_d - min_d > 50.0,
+            "Organic shoreline should have varied distances, got range {}",
+            max_d - min_d
+        );
     }
 
     #[test]
     fn test_zero_roughness_is_smooth() {
-        let noise = NoiseMap::generate(40, 40, &NoiseConfig { seed: 42, ..Default::default() });
+        let noise = NoiseMap::generate(
+            40,
+            40,
+            &NoiseConfig {
+                seed: 42,
+                ..Default::default()
+            },
+        );
         let alloc = NodeIdAllocator::new(1);
 
         let config = LakeConfig {
@@ -291,32 +321,50 @@ mod tests {
         let result = generate_lake(&config, &noise, &alloc);
         let cx = 5.0 * 256.0;
         let cy = 5.0 * 256.0;
-        let distances: Vec<f64> = result.shoreline.iter()
+        let distances: Vec<f64> = result
+            .shoreline
+            .iter()
             .map(|&(x, y)| ((x - cx).powi(2) + (y - cy).powi(2)).sqrt())
             .collect();
         let min_d = distances.iter().cloned().fold(f64::MAX, f64::min);
         let max_d = distances.iter().cloned().fold(0.0_f64, f64::max);
         // Zero roughness should still have some variation from Bezier smoothing but minimal
-        assert!(max_d - min_d < 100.0, "Zero roughness should be nearly circular, got range {}", max_d - min_d);
+        assert!(
+            max_d - min_d < 100.0,
+            "Zero roughness should be nearly circular, got range {}",
+            max_d - min_d
+        );
     }
 
     #[test]
     fn test_depress_noise() {
-        let mut noise = NoiseMap::generate(40, 40, &NoiseConfig { seed: 42, ..Default::default() });
+        let mut noise = NoiseMap::generate(
+            40,
+            40,
+            &NoiseConfig {
+                seed: 42,
+                ..Default::default()
+            },
+        );
         let original_center = noise.data[20][20];
 
         // Simple square "lake" polygon
         let shoreline = vec![
-            (1024.0, 1024.0), (1536.0, 1024.0),
-            (1536.0, 1536.0), (1024.0, 1536.0),
+            (1024.0, 1024.0),
+            (1536.0, 1024.0),
+            (1536.0, 1536.0),
+            (1024.0, 1536.0),
         ];
 
         depress_noise_for_lake(&mut noise, &shoreline, 64.0);
 
         // Center should be depressed
-        assert!(noise.data[20][20] < original_center,
+        assert!(
+            noise.data[20][20] < original_center,
             "Noise at lake center should be depressed: {} vs original {}",
-            noise.data[20][20], original_center);
+            noise.data[20][20],
+            original_center
+        );
     }
 
     #[test]

@@ -43,7 +43,12 @@ pub struct NewClass<'a> {
 impl<'a> NewClass<'a> {
     /// Create a new class entry.
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, data, fluff: None }
+        Self {
+            name,
+            source,
+            data,
+            fluff: None,
+        }
     }
 }
 

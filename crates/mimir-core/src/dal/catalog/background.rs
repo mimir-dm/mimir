@@ -8,13 +8,18 @@ use diesel::prelude::*;
 use diesel::SqliteConnection;
 
 /// Insert a new background.
-pub fn insert_background(conn: &mut SqliteConnection, background: &NewBackground) -> QueryResult<i32> {
+pub fn insert_background(
+    conn: &mut SqliteConnection,
+    background: &NewBackground,
+) -> QueryResult<i32> {
     diesel::insert_into(backgrounds::table)
         .values(background)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple backgrounds in a batch.

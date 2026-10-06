@@ -45,7 +45,10 @@ pub fn search_conditions(
             .map(|e| {
                 let mut json = entity_to_json(e);
                 if let Value::Object(ref mut map) = json {
-                    map.insert("item_type".to_string(), Value::String("Condition".to_string()));
+                    map.insert(
+                        "item_type".to_string(),
+                        Value::String("Condition".to_string()),
+                    );
                 }
                 json
             })
@@ -59,7 +62,11 @@ pub fn search_conditions(
         for disease in disease_list {
             // Apply name filter if present
             if let Some(ref name_filter) = filter.name_contains {
-                if !disease.name.to_lowercase().contains(&name_filter.to_lowercase()) {
+                if !disease
+                    .name
+                    .to_lowercase()
+                    .contains(&name_filter.to_lowercase())
+                {
                     continue;
                 }
             }
@@ -77,7 +84,10 @@ pub fn search_conditions(
 
             let mut json = entity_to_json(&disease);
             if let Value::Object(ref mut map) = json {
-                map.insert("item_type".to_string(), Value::String("Disease".to_string()));
+                map.insert(
+                    "item_type".to_string(),
+                    Value::String("Disease".to_string()),
+                );
             }
             results.push(json);
         }
@@ -291,10 +301,11 @@ pub fn search_traps(
                 if let Value::Object(ref mut map) = json {
                     map.insert("category".to_string(), Value::String("Trap".to_string()));
                     // Extract trapHazType from JSON and format it
-                    let trap_type = map
-                        .get("trapHazType")
-                        .and_then(|v| v.as_str());
-                    map.insert("trap_type".to_string(), Value::String(format_trap_type(trap_type)));
+                    let trap_type = map.get("trapHazType").and_then(|v| v.as_str());
+                    map.insert(
+                        "trap_type".to_string(),
+                        Value::String(format_trap_type(trap_type)),
+                    );
                 }
                 json
             })
@@ -315,10 +326,11 @@ pub fn search_traps(
             if let Value::Object(ref mut map) = json {
                 map.insert("category".to_string(), Value::String("Hazard".to_string()));
                 // Extract trapHazType from JSON and format it
-                let trap_type = map
-                    .get("trapHazType")
-                    .and_then(|v| v.as_str());
-                map.insert("trap_type".to_string(), Value::String(format_trap_type(trap_type)));
+                let trap_type = map.get("trapHazType").and_then(|v| v.as_str());
+                map.insert(
+                    "trap_type".to_string(),
+                    Value::String(format_trap_type(trap_type)),
+                );
             }
             results.push(json);
         }

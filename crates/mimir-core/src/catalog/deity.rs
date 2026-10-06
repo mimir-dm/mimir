@@ -124,7 +124,10 @@ mod tests {
         let deity: Deity = serde_json::from_value(json).unwrap();
         assert_eq!(deity.name, "Tyr");
         assert_eq!(deity.title, Some("God of Justice".to_string()));
-        assert_eq!(deity.alignment, Some(vec!["L".to_string(), "G".to_string()]));
+        assert_eq!(
+            deity.alignment,
+            Some(vec!["L".to_string(), "G".to_string()])
+        );
     }
 
     #[test]

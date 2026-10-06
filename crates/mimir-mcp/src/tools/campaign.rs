@@ -181,7 +181,9 @@ pub async fn list_campaigns(
     let mut db = ctx.connect()?;
     let mut service = CampaignService::new(&mut db);
 
-    let campaigns = service.list(false).map_err(|e| McpError::Internal(e.to_string()))?;
+    let campaigns = service
+        .list(false)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
 
     let campaign_data: Vec<Value> = campaigns
         .iter()
@@ -253,7 +255,9 @@ pub async fn set_active_campaign(
     let campaign = service
         .get(campaign_id)
         .map_err(|e| McpError::Internal(e.to_string()))?
-        .ok_or_else(|| McpError::InvalidArguments(format!("Campaign '{}' not found", campaign_id)))?;
+        .ok_or_else(|| {
+            McpError::InvalidArguments(format!("Campaign '{}' not found", campaign_id))
+        })?;
 
     ctx.set_active_campaign_id(Some(campaign_id.clone()));
 
@@ -283,7 +287,9 @@ pub async fn get_campaign_details(
     let campaign = campaign_service
         .get(&campaign_id)
         .map_err(|e| McpError::Internal(e.to_string()))?
-        .ok_or_else(|| McpError::InvalidArguments(format!("Campaign '{}' not found", campaign_id)))?;
+        .ok_or_else(|| {
+            McpError::InvalidArguments(format!("Campaign '{}' not found", campaign_id))
+        })?;
 
     // Get modules
     let mut module_service = ModuleService::new(&mut db);
@@ -378,11 +384,14 @@ pub async fn create_campaign(
     // Auto-set as active
     ctx.set_active_campaign_id(Some(campaign.id.clone()));
 
-    McpResponse::created("campaign", json!({
-        "id": campaign.id,
-        "name": campaign.name,
-        "description": campaign.description
-    }))
+    McpResponse::created(
+        "campaign",
+        json!({
+            "id": campaign.id,
+            "name": campaign.name,
+            "description": campaign.description
+        }),
+    )
 }
 
 pub async fn update_campaign(
@@ -409,11 +418,14 @@ pub async fn update_campaign(
         .update(&campaign_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::updated("campaign", json!({
-        "id": campaign.id,
-        "name": campaign.name,
-        "description": campaign.description
-    }))
+    McpResponse::updated(
+        "campaign",
+        json!({
+            "id": campaign.id,
+            "name": campaign.name,
+            "description": campaign.description
+        }),
+    )
 }
 
 pub async fn delete_campaign(
@@ -441,7 +453,8 @@ pub async fn export_campaign(
     ctx: &Arc<McpContext>,
     args: ExportCampaignArgs,
 ) -> Result<Value, McpError> {
-    let campaign_id = ctx.get_active_campaign_id()
+    let campaign_id = ctx
+        .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
     let mut db = ctx.connect()?;

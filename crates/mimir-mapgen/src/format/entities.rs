@@ -317,7 +317,10 @@ pub struct MapPortal {
     /// Which wall segment this portal sits on (0-indexed).
     pub point_index: i32,
     /// Parent wall's node_id ("ffffffff" for freestanding portals).
-    #[serde(serialize_with = "serialize_wall_id", deserialize_with = "deserialize_wall_id")]
+    #[serde(
+        serialize_with = "serialize_wall_id",
+        deserialize_with = "deserialize_wall_id"
+    )]
     pub wall_id: String,
     /// Fractional position along wall: integer part = segment index,
     /// fractional part = position within that segment.

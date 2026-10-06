@@ -45,9 +45,9 @@ impl PortalType {
     /// Return the default radius (half-width in pixels) for this portal type.
     pub fn default_radius(&self) -> f64 {
         match self {
-            PortalType::Door => 128.0,      // 1 grid square
-            PortalType::Window => 99.5,     // slightly smaller
-            PortalType::Archway => 128.0,   // 1 grid square
+            PortalType::Door => 128.0,       // 1 grid square
+            PortalType::Window => 99.5,      // slightly smaller
+            PortalType::Archway => 128.0,    // 1 grid square
             PortalType::SecretDoor => 128.0, // 1 grid square
         }
     }
@@ -203,7 +203,10 @@ impl ExclusionZone {
 }
 
 /// Build exclusion zones from room configs (rooms + corridors).
-pub fn build_exclusion_zones(rooms: &[RoomConfig], corridors: &[CorridorConfig]) -> Vec<ExclusionZone> {
+pub fn build_exclusion_zones(
+    rooms: &[RoomConfig],
+    corridors: &[CorridorConfig],
+) -> Vec<ExclusionZone> {
     let mut zones = Vec::new();
 
     // Pad exclusion zones by 1 grid square so trees/clutter don't overlap walls.
@@ -357,11 +360,7 @@ pub fn generate_room_layout(
 }
 
 /// Generate walls, portals, shapes, and terrain override for a single room.
-fn generate_single_room(
-    room: &RoomConfig,
-    alloc: &NodeIdAllocator,
-    result: &mut RoomLayoutResult,
-) {
+fn generate_single_room(room: &RoomConfig, alloc: &NodeIdAllocator, result: &mut RoomLayoutResult) {
     let px = room.x as f64 * PIXELS_PER_GRID;
     let py = room.y as f64 * PIXELS_PER_GRID;
     let pw = room.width as f64 * PIXELS_PER_GRID;
@@ -376,7 +375,12 @@ fn generate_single_room(
     ];
 
     // Segments: North (0→1), East (1→2), South (2→3), West (3→0)
-    let sides = [WallSide::North, WallSide::East, WallSide::South, WallSide::West];
+    let sides = [
+        WallSide::North,
+        WallSide::East,
+        WallSide::South,
+        WallSide::West,
+    ];
 
     // Build the wall points — only include sides that have walls enabled
     let mut points = Vec::new();
@@ -412,9 +416,11 @@ fn generate_single_room(
 
         // Add shapes entry: wall ID as decimal integer, polygon as the room outline
         let wall_id_decimal: i64 = wall_id.parse().unwrap_or(0);
-        result.shape_wall_ids.push(serde_json::Value::Number(
-            serde_json::Number::from(wall_id_decimal),
-        ));
+        result
+            .shape_wall_ids
+            .push(serde_json::Value::Number(serde_json::Number::from(
+                wall_id_decimal,
+            )));
 
         // Build polygon value as a PoolVector2Array string
         let polygon_str = format!(
@@ -571,10 +577,14 @@ fn generate_corridor(
         let center_y = from_y;
 
         generate_straight_corridor_walls(
-            min_x, center_y - half_width,
-            max_x, center_y + half_width,
+            min_x,
+            center_y - half_width,
+            max_x,
+            center_y + half_width,
             true, // horizontal
-            corridor, alloc, result,
+            corridor,
+            alloc,
+            result,
         );
     } else if is_vertical && (from_x - to_x).abs() < 1.0 {
         // Straight vertical corridor
@@ -583,22 +593,30 @@ fn generate_corridor(
         let center_x = from_x;
 
         generate_straight_corridor_walls(
-            center_x - half_width, min_y,
-            center_x + half_width, max_y,
+            center_x - half_width,
+            min_y,
+            center_x + half_width,
+            max_y,
             false, // vertical
-            corridor, alloc, result,
+            corridor,
+            alloc,
+            result,
         );
     } else {
         // L-shaped corridor: horizontal from source, then vertical to destination
         // (or vice versa depending on wall sides)
-        generate_l_corridor(from_x, from_y, to_x, to_y, half_width, corridor, alloc, result);
+        generate_l_corridor(
+            from_x, from_y, to_x, to_y, half_width, corridor, alloc, result,
+        );
     }
 }
 
 /// Generate walls for a straight corridor (axis-aligned rectangle).
 fn generate_straight_corridor_walls(
-    x1: f64, y1: f64, // top-left
-    x2: f64, y2: f64, // bottom-right
+    x1: f64,
+    y1: f64, // top-left
+    x2: f64,
+    y2: f64, // bottom-right
     horizontal: bool,
     corridor: &CorridorConfig,
     alloc: &NodeIdAllocator,
@@ -721,8 +739,10 @@ fn generate_straight_corridor_walls(
 ///
 /// Routes horizontally first to align X coordinates, then vertically.
 fn generate_l_corridor(
-    from_x: f64, from_y: f64,
-    to_x: f64, to_y: f64,
+    from_x: f64,
+    from_y: f64,
+    to_x: f64,
+    to_y: f64,
     half_width: f64,
     corridor: &CorridorConfig,
     alloc: &NodeIdAllocator,
@@ -1079,9 +1099,9 @@ to_wall: "north"
         assert_eq!(result.terrain_overrides.len(), 1);
 
         let ovr = &result.terrain_overrides[0];
-        assert_eq!(ovr.cell_x, 12);  // 3 * 4
-        assert_eq!(ovr.cell_y, 20);  // 5 * 4
-        assert_eq!(ovr.cell_width, 16);  // 4 * 4
+        assert_eq!(ovr.cell_x, 12); // 3 * 4
+        assert_eq!(ovr.cell_y, 20); // 5 * 4
+        assert_eq!(ovr.cell_width, 16); // 4 * 4
         assert_eq!(ovr.cell_height, 12); // 3 * 4
         assert_eq!(ovr.slot, 2);
     }
@@ -1103,7 +1123,7 @@ to_wall: "north"
 
         // Check a cell inside the override region
         let idx = (2 * map_cells_x + 2) * 4;
-        assert_eq!(splat[idx], 0);     // slot 0
+        assert_eq!(splat[idx], 0); // slot 0
         assert_eq!(splat[idx + 1], 0); // slot 1
         assert_eq!(splat[idx + 2], 0); // slot 2
         assert_eq!(splat[idx + 3], 255); // slot 3
@@ -1189,14 +1209,20 @@ to_wall: "north"
         vec![
             RoomConfig {
                 id: "room_a".to_string(),
-                x: 2, y: 4, width: 4, height: 4,
+                x: 2,
+                y: 4,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
             },
             RoomConfig {
                 id: "room_b".to_string(),
-                x: 10, y: 4, width: 4, height: 4,
+                x: 10,
+                y: 4,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
@@ -1236,14 +1262,20 @@ to_wall: "north"
         let rooms = vec![
             RoomConfig {
                 id: "top".to_string(),
-                x: 4, y: 2, width: 4, height: 4,
+                x: 4,
+                y: 2,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
             },
             RoomConfig {
                 id: "bottom".to_string(),
-                x: 4, y: 10, width: 4, height: 4,
+                x: 4,
+                y: 10,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
@@ -1272,14 +1304,20 @@ to_wall: "north"
         let rooms = vec![
             RoomConfig {
                 id: "left".to_string(),
-                x: 2, y: 2, width: 4, height: 4,
+                x: 2,
+                y: 2,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
             },
             RoomConfig {
                 id: "lower_right".to_string(),
-                x: 10, y: 10, width: 4, height: 4,
+                x: 10,
+                y: 10,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
@@ -1299,7 +1337,11 @@ to_wall: "north"
         // 2 room walls + 4 corridor walls (2 per leg of L)
         assert!(result.walls.len() >= 4);
         // Should have terrain overrides for both legs
-        let corridor_terrains: Vec<_> = result.terrain_overrides.iter().filter(|t| t.slot == 2).collect();
+        let corridor_terrains: Vec<_> = result
+            .terrain_overrides
+            .iter()
+            .filter(|t| t.slot == 2)
+            .collect();
         assert!(corridor_terrains.len() >= 1);
     }
 
@@ -1314,13 +1356,11 @@ to_wall: "north"
             to_wall: WallSide::West,
             width: 2,
             terrain_slot: None,
-            portals: vec![
-                CorridorPortalConfig {
-                    end: CorridorEnd::From,
-                    portal_type: PortalType::Door,
-                    width: 1,
-                },
-            ],
+            portals: vec![CorridorPortalConfig {
+                end: CorridorEnd::From,
+                portal_type: PortalType::Door,
+                width: 1,
+            }],
         }];
 
         let result = generate_room_layout(&rooms, &corridors, &alloc);

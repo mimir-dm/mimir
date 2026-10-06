@@ -116,7 +116,13 @@ impl<'a> NewCharacterFeat<'a> {
         feat_name: &'a str,
         feat_source: &'a str,
     ) -> Self {
-        Self::new(id, character_id, feat_name, feat_source, FeatSourceType::Asi)
+        Self::new(
+            id,
+            character_id,
+            feat_name,
+            feat_source,
+            FeatSourceType::Asi,
+        )
     }
 
     /// Create a racial feat.
@@ -126,7 +132,13 @@ impl<'a> NewCharacterFeat<'a> {
         feat_name: &'a str,
         feat_source: &'a str,
     ) -> Self {
-        Self::new(id, character_id, feat_name, feat_source, FeatSourceType::Race)
+        Self::new(
+            id,
+            character_id,
+            feat_name,
+            feat_source,
+            FeatSourceType::Race,
+        )
     }
 
     /// Create a class-granted feat.
@@ -136,7 +148,13 @@ impl<'a> NewCharacterFeat<'a> {
         feat_name: &'a str,
         feat_source: &'a str,
     ) -> Self {
-        Self::new(id, character_id, feat_name, feat_source, FeatSourceType::Class)
+        Self::new(
+            id,
+            character_id,
+            feat_name,
+            feat_source,
+            FeatSourceType::Class,
+        )
     }
 
     /// Create a bonus feat (DM granted).
@@ -146,7 +164,13 @@ impl<'a> NewCharacterFeat<'a> {
         feat_name: &'a str,
         feat_source: &'a str,
     ) -> Self {
-        Self::new(id, character_id, feat_name, feat_source, FeatSourceType::Bonus)
+        Self::new(
+            id,
+            character_id,
+            feat_name,
+            feat_source,
+            FeatSourceType::Bonus,
+        )
     }
 }
 

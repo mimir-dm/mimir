@@ -83,7 +83,10 @@ mod tests {
             "entries": ["You can make an opportunity attack..."]
         });
         let action: Action = serde_json::from_value(json).unwrap();
-        if let ActionTime::Structured { unit, condition, .. } = &action.time[0] {
+        if let ActionTime::Structured {
+            unit, condition, ..
+        } = &action.time[0]
+        {
             assert_eq!(unit, "reaction");
             assert!(condition.is_some());
         } else {

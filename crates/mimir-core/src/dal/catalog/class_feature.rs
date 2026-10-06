@@ -8,7 +8,10 @@ use diesel::prelude::*;
 use diesel::SqliteConnection;
 
 /// Insert a new class feature, ignoring duplicates.
-pub fn insert_class_feature(conn: &mut SqliteConnection, feature: &NewClassFeature) -> QueryResult<i32> {
+pub fn insert_class_feature(
+    conn: &mut SqliteConnection,
+    feature: &NewClassFeature,
+) -> QueryResult<i32> {
     diesel::insert_or_ignore_into(class_features::table)
         .values(feature)
         .execute(conn)?;
@@ -24,7 +27,10 @@ pub fn insert_class_feature(conn: &mut SqliteConnection, feature: &NewClassFeatu
 }
 
 /// Insert multiple class features in a batch.
-pub fn insert_class_features(conn: &mut SqliteConnection, features: &[NewClassFeature]) -> QueryResult<usize> {
+pub fn insert_class_features(
+    conn: &mut SqliteConnection,
+    features: &[NewClassFeature],
+) -> QueryResult<usize> {
     diesel::insert_or_ignore_into(class_features::table)
         .values(features)
         .execute(conn)
@@ -32,7 +38,9 @@ pub fn insert_class_features(conn: &mut SqliteConnection, features: &[NewClassFe
 
 /// Get a class feature by its ID.
 pub fn get_class_feature(conn: &mut SqliteConnection, id: i32) -> QueryResult<ClassFeature> {
-    class_features::table.filter(class_features::id.eq(id)).first(conn)
+    class_features::table
+        .filter(class_features::id.eq(id))
+        .first(conn)
 }
 
 // Define the LOWER SQL function for case-insensitive matching
@@ -86,7 +94,10 @@ pub fn list_class_features_by_class(
 }
 
 /// Delete all class features from a specific source.
-pub fn delete_class_features_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
+pub fn delete_class_features_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<usize> {
     diesel::delete(class_features::table.filter(class_features::source.eq(source))).execute(conn)
 }
 
@@ -96,7 +107,10 @@ pub fn count_class_features(conn: &mut SqliteConnection) -> QueryResult<i64> {
 }
 
 /// Count class features from a specific source.
-pub fn count_class_features_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+pub fn count_class_features_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<i64> {
     class_features::table
         .filter(class_features::source.eq(source))
         .count()
@@ -145,6 +159,10 @@ pub fn search_class_features(
     }
 
     query
-        .order((class_features::class_name.asc(), class_features::level.asc(), class_features::name.asc()))
+        .order((
+            class_features::class_name.asc(),
+            class_features::level.asc(),
+            class_features::name.asc(),
+        ))
         .load(conn)
 }
