@@ -31,15 +31,16 @@ DM map window (4), app info & dev tools (6), print/PDF export (12).
 These are internal app plumbing — documented indirectly through UI reference/how-tos,
 not as a public API (deferred: not a user-callable surface).
 
-### 2.2 MCP tools — 54 tools (user-facing via Claude)
+### 2.2 MCP tools — 71 tools (user-facing via Claude)
 
-Registered in `crates/mimir-mcp/src/handler.rs:42-107`. Tool files in
-`crates/mimir-mcp/src/tools/{campaign,module,document,character,map,homebrew,catalog,mapgen}.rs`.
-- Campaign (10): list_campaigns, set_active_campaign, get_campaign_details, get_campaign_sources, create_campaign, update_campaign, delete_campaign, export_campaign, import_campaign, preview_archive
-- Module (8): create_module, list_modules, get_module_details, update_module, delete_module, add_monster_to_module, remove_monster_from_module, add_item_to_module
+Registered once each through the registry (`crates/mimir-mcp/src/registry.rs`); each family's `registered_tools()` lives in
+`crates/mimir-mcp/src/tools/{campaign,module,document,character,map,map_state,homebrew,catalog,mapgen}.rs`.
+- Campaign (11): list_campaigns, get_active_campaign, set_active_campaign, get_campaign_details, get_campaign_sources, create_campaign, update_campaign, delete_campaign, export_campaign, import_campaign, preview_archive
+- Module (9): create_module, list_modules, get_module_details, update_module, delete_module, add_monster_to_module, update_module_monster, remove_monster_from_module, add_item_to_module
 - Document (6): list_documents, read_document, create_document, edit_document, delete_document, reorder_document
-- Character (13): list_characters, get_character, create_character, edit_character, delete_character, level_up_character, get_character_inventory, add_item_to_character, remove_item_from_character, update_character_inventory, add_character_spell, remove_character_spell, list_character_spells
+- Character (16): list_characters, get_character, create_character, edit_character, delete_character, level_up_character, get_character_inventory, add_item_to_character, remove_item_from_character, update_character_inventory, add_character_spell, remove_character_spell, list_character_spells, add_character_feat, list_character_feats, remove_character_feat
 - Map (8): create_map, list_maps, get_map, update_map, delete_map, add_token_to_map, list_tokens_on_map, remove_token
+- Map state (12, authoring only; no fog, trigger/reset, visibility, or light on/off): add_trap_to_map, list_map_traps, update_map_trap, remove_map_trap, add_poi_to_map, list_map_pois, update_map_poi, remove_map_poi, add_light_to_map, list_map_lights, update_map_light, remove_map_light
 - Homebrew (5): list_homebrew, get_homebrew, create_homebrew, update_homebrew, delete_homebrew
 - Mapgen (3): generate_map, list_map_presets, validate_map_config
 - Catalog (1): search_catalog (`crates/mimir-mcp/src/tools/catalog.rs:39`)

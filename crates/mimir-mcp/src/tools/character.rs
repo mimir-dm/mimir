@@ -5,6 +5,7 @@
 //! `registered_tools()`.
 
 use mimir_core::dal::campaign as dal;
+use mimir_core::models::campaign::{CharacterFeat, FeatSourceType};
 use mimir_core::services::{
     AddInventoryInput, CharacterService, CreateCharacterInput, UpdateCharacterInput,
 };
@@ -100,6 +101,24 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
             "List all spells known by a character, optionally filtered by class",
             ListSpellsArgs,
             list_character_spells
+        ),
+        tool!(
+            "add_character_feat",
+            "Record a feat for a character outside level-up, for example an ASI choice the player made later. The feat must exist in the catalog (use search_catalog with category feat to find its name and source). A character can hold a feat once, unless the catalog marks it repeatable. To take a feat as part of gaining a level, use level_up_character instead.",
+            AddFeatArgs,
+            add_character_feat
+        ),
+        tool!(
+            "list_character_feats",
+            "List the feats a character has, with the catalog source and how each was gained (asi, race, class, bonus).",
+            ListFeatsArgs,
+            list_character_feats
+        ),
+        tool!(
+            "remove_character_feat",
+            "Remove a feat from a character by name (case-insensitive). Removes every instance of the feat.",
+            RemoveFeatArgs,
+            remove_character_feat
         ),
     ]
 }
@@ -325,6 +344,35 @@ tool_args! {
         pub source_class: Option<String>,
         /// Only return prepared spells
         pub prepared_only: Option<bool>,
+    }
+}
+
+tool_args! {
+    pub struct AddFeatArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Name of the feat as in the catalog (e.g. Alert, Great Weapon Master)
+        pub feat_name: String,
+        /// Source book abbreviation of the feat (default: PHB)
+        pub feat_source: Option<String>,
+        /// How the character gained the feat: asi, race, class, or bonus (default: asi)
+        pub source_type: Option<String>,
+    }
+}
+
+tool_args! {
+    pub struct ListFeatsArgs {
+        /// The ID of the character
+        pub character_id: String,
+    }
+}
+
+tool_args! {
+    pub struct RemoveFeatArgs {
+        /// The ID of the character
+        pub character_id: String,
+        /// Name of the feat to remove
+        pub feat_name: String,
     }
 }
 
@@ -994,5 +1042,78 @@ pub async fn list_character_spells(
         "character_id": character_id,
         "spell_count": spell_data.len(),
         "spells": spell_data
+    }))
+}
+
+fn feat_json(feat: &CharacterFeat) -> Value {
+    json!({
+        "id": feat.id,
+        "feat_name": feat.feat_name,
+        "feat_source": feat.feat_source,
+        "source_type": feat.source_type
+    })
+}
+
+pub async fn add_character_feat(
+    ctx: &Arc<McpContext>,
+    args: AddFeatArgs,
+) -> Result<Value, McpError> {
+    let source_type = match args.source_type.as_deref() {
+        None => FeatSourceType::Asi,
+        Some(s) => FeatSourceType::parse(s).ok_or_else(|| {
+            McpError::InvalidArguments(format!(
+                "source_type must be one of asi, race, class, bonus (got '{}')",
+                s
+            ))
+        })?,
+    };
+    let feat_source = args.feat_source.as_deref().unwrap_or("PHB");
+
+    let mut db = ctx.connect()?;
+    let feat = CharacterService::new(&mut db)
+        .add_feat(
+            &args.character_id,
+            &args.feat_name,
+            feat_source,
+            source_type,
+        )
+        .map_err(McpError::caller_fault)?;
+
+    McpResponse::success(json!({
+        "action": "feat_added",
+        "character_id": args.character_id,
+        "feat": feat_json(&feat)
+    }))
+}
+
+pub async fn list_character_feats(
+    ctx: &Arc<McpContext>,
+    args: ListFeatsArgs,
+) -> Result<Value, McpError> {
+    let mut db = ctx.connect()?;
+    let feats = CharacterService::new(&mut db)
+        .list_feats(&args.character_id)
+        .map_err(McpError::caller_fault)?;
+
+    McpResponse::success(json!({
+        "character_id": args.character_id,
+        "feats": feats.iter().map(feat_json).collect::<Vec<_>>()
+    }))
+}
+
+pub async fn remove_character_feat(
+    ctx: &Arc<McpContext>,
+    args: RemoveFeatArgs,
+) -> Result<Value, McpError> {
+    let mut db = ctx.connect()?;
+    let removed = CharacterService::new(&mut db)
+        .remove_feat(&args.character_id, &args.feat_name)
+        .map_err(McpError::caller_fault)?;
+
+    McpResponse::success(json!({
+        "action": "feat_removed",
+        "character_id": args.character_id,
+        "feat_name": args.feat_name,
+        "removed": removed
     }))
 }

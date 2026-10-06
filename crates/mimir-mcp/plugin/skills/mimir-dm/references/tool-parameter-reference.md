@@ -193,6 +193,33 @@ Accepts the same fields as `create_homebrew` plus `id` (required). Only fields y
 - `source_class` — Filter by granting class (e.g., "Wizard")
 - `prepared_only` — Only return prepared spells (default: false)
 
+## Character Feat Tools
+
+### add_character_feat
+- `character_id` (required) — The character's ID
+- `feat_name` (required) — Feat name as in the catalog (e.g., "Alert"). Case is not important.
+- `feat_source` — Source book abbreviation of the feat (default: "PHB")
+- `source_type` — How the character got the feat: `"asi"`, `"race"`, `"class"`, or `"bonus"` (default: `"asi"`)
+
+The feat must be in the catalog. A character can have a feat only one time, unless the catalog marks the feat as repeatable.
+
+### list_character_feats
+- `character_id` (required) — The character's ID
+
+### remove_character_feat
+- `character_id` (required) — The character's ID
+- `feat_name` (required) — Name of the feat to remove. Case is not important. Removes all instances of the feat.
+
+## Document Tools
+
+### edit_document
+- `document_id` (required) — The document's ID
+- `title` — New title for the document
+- `search` — Text to find in the content. Give it together with `replace`.
+- `replace` — Text that replaces each occurrence of `search`. Give it together with `search`.
+
+Give `title`, the `search`/`replace` pair, or both. A call with both changes the title and the content together.
+
 ## Map Generation Tools
 
 ### generate_map
