@@ -425,6 +425,111 @@ mod tests {
         .await;
     }
 
+    // -- Document edit modes (MIMIR-T-0657) -----------------------------------
+
+    #[tokio::test]
+    async fn edit_document_supports_rename_content_and_combined_edits() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        let res = call_ok(
+            &handler,
+            "create_document",
+            json!({
+                "title": "Player Secrets",
+                "document_type": "dm_notes",
+                "content": "The duke is a vampire."
+            }),
+        )
+        .await;
+        let doc_id = res["document"]["id"].as_str().unwrap().to_string();
+
+        // Rename only: content untouched.
+        let res = call_ok(
+            &handler,
+            "edit_document",
+            json!({"document_id": doc_id, "title": "DM Secrets"}),
+        )
+        .await;
+        assert_eq!(res["status"], "updated");
+        assert_eq!(res["document"]["title"], "DM Secrets");
+        assert_eq!(res["document"]["content"], "The duke is a vampire.");
+
+        // Content only: title untouched.
+        let res = call_ok(
+            &handler,
+            "edit_document",
+            json!({"document_id": doc_id, "search": "vampire", "replace": "lich"}),
+        )
+        .await;
+        assert_eq!(res["document"]["title"], "DM Secrets");
+        assert_eq!(res["document"]["content"], "The duke is a lich.");
+
+        // Combined: both change in one call.
+        let res = call_ok(
+            &handler,
+            "edit_document",
+            json!({
+                "document_id": doc_id,
+                "title": "Ducal Secrets",
+                "search": "duke",
+                "replace": "duchess"
+            }),
+        )
+        .await;
+        assert_eq!(res["document"]["title"], "Ducal Secrets");
+        assert_eq!(res["document"]["content"], "The duchess is a lich.");
+
+        // Persisted, not just echoed.
+        let res = call_ok(&handler, "read_document", json!({"document_id": doc_id})).await;
+        assert_eq!(res["document"]["title"], "Ducal Secrets");
+        assert_eq!(res["document"]["content"], "The duchess is a lich.");
+    }
+
+    #[tokio::test]
+    async fn edit_document_rejects_incomplete_or_empty_edits() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+
+        let res = call_ok(
+            &handler,
+            "create_document",
+            json!({"title": "Notes", "document_type": "dm_notes", "content": "abc"}),
+        )
+        .await;
+        let doc_id = res["document"]["id"].as_str().unwrap().to_string();
+
+        for bad in [
+            json!({"document_id": doc_id}),
+            json!({"document_id": doc_id, "search": "abc"}),
+            json!({"document_id": doc_id, "replace": "xyz"}),
+            json!({"document_id": doc_id, "title": "   "}),
+        ] {
+            let err = call_err(&handler, "edit_document", bad.clone()).await;
+            assert!(
+                matches!(err, McpError::InvalidArguments(_)),
+                "expected InvalidArguments for {bad}, got {err:?}"
+            );
+        }
+
+        // Renaming a missing document is the caller's fault, as on the content path.
+        let err = call_err(
+            &handler,
+            "edit_document",
+            json!({"document_id": "no-such-doc", "title": "X"}),
+        )
+        .await;
+        assert!(
+            matches!(&err, McpError::InvalidArguments(m) if m.contains("not found")),
+            "got {err:?}"
+        );
+
+        // Nothing changed.
+        let res = call_ok(&handler, "read_document", json!({"document_id": doc_id})).await;
+        assert_eq!(res["document"]["title"], "Notes");
+        assert_eq!(res["document"]["content"], "abc");
+    }
+
     // -- Campaign-level documents ---------------------------------------------
 
     #[tokio::test]

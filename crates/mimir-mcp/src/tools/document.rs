@@ -40,7 +40,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         ),
         tool!(
             "edit_document",
-            "Edit a document using search and replace",
+            "Edit a document: rename it with `title`, change its content with a `search`/`replace` pair, or do both in one call. At least one edit is required; `search` and `replace` must be given together. The search string must occur in the current content; every occurrence is replaced. Use read_document first to see the exact text.",
             EditDocumentArgs,
             edit_document
         ),
@@ -94,10 +94,12 @@ tool_args! {
     pub struct EditDocumentArgs {
         /// The ID of the document
         pub document_id: String,
-        /// Text to search for
-        pub search: String,
-        /// Text to replace with
-        pub replace: String,
+        /// New title for the document (omit to keep the current title)
+        pub title: Option<String>,
+        /// Text to search for in the content (give together with replace)
+        pub search: Option<String>,
+        /// Text to replace every occurrence of search with (give together with search)
+        pub replace: Option<String>,
     }
 }
 
@@ -226,32 +228,61 @@ pub async fn edit_document(
 ) -> Result<Value, McpError> {
     let document_id = &args.document_id;
 
-    let mut db = ctx.connect()?;
-    let mut service = DocumentService::new(&mut db);
-
-    // Get the current document
-    let document = service
-        .get(document_id)
-        .map_err(|e| McpError::Internal(e.to_string()))?
-        .ok_or_else(|| {
-            McpError::InvalidArguments(format!("Document '{}' not found", document_id))
-        })?;
-
-    // Perform search and replace on content (MCP-only convenience; the
-    // service seam is a plain content update)
-    if !document.content.contains(&args.search) {
+    // Validate the shape of the edit before touching the database.
+    let content_edit = match (args.search, args.replace) {
+        (Some(search), Some(replace)) => Some((search, replace)),
+        (None, None) => None,
+        _ => {
+            return Err(McpError::InvalidArguments(
+                "search and replace must be given together".to_string(),
+            ))
+        }
+    };
+    let title = match args.title {
+        Some(t) if t.trim().is_empty() => {
+            return Err(McpError::InvalidArguments(
+                "title must not be empty".to_string(),
+            ))
+        }
+        other => other,
+    };
+    if title.is_none() && content_edit.is_none() {
         return Err(McpError::InvalidArguments(
-            "Search string not found in document content".to_string(),
+            "Nothing to edit: give a title, a search/replace pair, or both".to_string(),
         ));
     }
 
-    let new_content = document.content.replace(&args.search, &args.replace);
+    let mut db = ctx.connect()?;
+    let mut service = DocumentService::new(&mut db);
 
-    // Update the document
-    let update = UpdateDocumentInput::set_content(new_content);
+    let mut update = UpdateDocumentInput {
+        title,
+        ..Default::default()
+    };
+
+    if let Some((search, replace)) = content_edit {
+        let document = service
+            .get(document_id)
+            .map_err(|e| McpError::Internal(e.to_string()))?
+            .ok_or_else(|| {
+                McpError::InvalidArguments(format!("Document '{}' not found", document_id))
+            })?;
+
+        // Search and replace is an MCP-only convenience; the service seam is a
+        // plain content update.
+        if !document.content.contains(&search) {
+            return Err(McpError::InvalidArguments(
+                "Search string not found in document content".to_string(),
+            ));
+        }
+        update.content = Some(document.content.replace(&search, &replace));
+    }
+
+    // One update call, so a combined rename + content edit is atomic. A
+    // missing document is the caller's fault, as on the content path.
     let updated = service
         .update(document_id, update)
-        .map_err(|e| McpError::Internal(e.to_string()))?;
+        .map_err(McpError::caller_fault)?;
 
     McpResponse::updated("document", json!({
         "id": updated.id,
