@@ -87,7 +87,7 @@ def docs_build(dest_dir: str = None):
 @angreal.command(name="serve", about="Serve documentation locally with hot-reload")
 @angreal.argument(name="port", short="p", default="3000", help="Port to serve on (default: 3000)")
 @angreal.argument(name="hostname", short="h", default="localhost", help="Hostname to bind to")
-@angreal.argument(name="open", short="o", takes_value=False, help="Open browser automatically")
+@angreal.argument(name="open", short="o", takes_value=False, is_flag=True, help="Open browser automatically")
 def docs_serve(port: str = "3000", hostname: str = "localhost", open: bool = False):
     """Serve the documentation with hot-reload for development"""
     if not check_mdbook_installed():

@@ -24,10 +24,10 @@ test = angreal.command_group(name="test", about="Testing commands for the Mimir 
 
 @test()
 @angreal.command(name="unit", about="Run tests")
-@angreal.argument(name="watch", long="watch", short="w", takes_value=False, help="Run tests in watch mode")
-@angreal.argument(name="core", long="core", short="c", takes_value=False, help="Run core/CLI crate tests only (default)")
-@angreal.argument(name="ui", long="ui", short="u", takes_value=False, help="Run UI/frontend tests only")
-@angreal.argument(name="all", long="all", short="a", takes_value=False, help="Run all tests (core + UI)")
+@angreal.argument(name="watch", long="watch", short="w", takes_value=False, is_flag=True, help="Run tests in watch mode")
+@angreal.argument(name="core", long="core", short="c", takes_value=False, is_flag=True, help="Run core/CLI crate tests only (default)")
+@angreal.argument(name="ui", long="ui", short="u", takes_value=False, is_flag=True, help="Run UI/frontend tests only")
+@angreal.argument(name="all", long="all", short="a", takes_value=False, is_flag=True, help="Run all tests (core + UI)")
 def unit(watch: bool = False, core: bool = False, ui: bool = False, all: bool = False):
     """Run tests (core only by default, or UI only, or all)"""
     failures = []
@@ -88,10 +88,10 @@ def unit(watch: bool = False, core: bool = False, ui: bool = False, all: bool = 
 
 @test()
 @angreal.command(name="coverage", about="Run tests with coverage reporting")
-@angreal.argument(name="core", long="core", short="c", takes_value=False, help="Run core crate coverage only (default)")
-@angreal.argument(name="ui", long="ui", short="u", takes_value=False, help="Run UI/frontend coverage only")
-@angreal.argument(name="all", long="all", short="a", takes_value=False, help="Run all coverage (core + UI)")
-@angreal.argument(name="open", long="open",short="o", takes_value=False, help="Open coverage reports in browser")
+@angreal.argument(name="core", long="core", short="c", takes_value=False, is_flag=True, help="Run core crate coverage only (default)")
+@angreal.argument(name="ui", long="ui", short="u", takes_value=False, is_flag=True, help="Run UI/frontend coverage only")
+@angreal.argument(name="all", long="all", short="a", takes_value=False, is_flag=True, help="Run all coverage (core + UI)")
+@angreal.argument(name="open", long="open", short="o", takes_value=False, is_flag=True, help="Open coverage reports in browser")
 def coverage(core: bool = False, ui: bool = False, all: bool = False, open: bool = False):
     """Run tests with code coverage (core only by default, or UI only, or all)"""
     print("Running tests with coverage...")
