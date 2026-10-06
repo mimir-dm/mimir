@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 mimir = { path = "../mimir" }
-mimir-core = { path = "../mimir-core" }
+mimir-core = { path = "../mimir-core", features = ["fixtures"] }
 mimir-print = { path = "../mimir-print" }
 
 tauri = { version = "2", features = ["test"] }
@@ -21,3 +21,7 @@ axum = "0.8"
 tower-http = { version = "0.6", features = ["cors"] }
 tokio = { version = "1", features = ["full"] }
 serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }

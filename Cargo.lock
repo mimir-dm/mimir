@@ -3333,6 +3333,7 @@ dependencies = [
  "flate2",
  "image",
  "libsqlite3-sys",
+ "mimir-core",
  "once_cell",
  "paste",
  "regex",
@@ -3423,8 +3424,10 @@ dependencies = [
  "mimir",
  "mimir-core",
  "mimir-print",
+ "serde",
  "serde_json",
  "tauri",
+ "tempfile",
  "tokio",
  "tower-http",
 ]

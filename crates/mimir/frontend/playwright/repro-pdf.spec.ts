@@ -1,13 +1,13 @@
 import { test } from '@playwright/test'
-
-const PC_MAJOR = 'cb5da3b1-73e2-4ad9-870e-1ce5633dcb7b'
+import { resolveFixture } from './fixture'
 
 test('reproduce PDF print failure', async ({ page }) => {
   const logs: string[] = []
   page.on('console', (msg) => logs.push(`[${msg.type()}] ${msg.text()}`))
   page.on('pageerror', (err) => logs.push(`[pageerror] ${err}`))
 
-  await page.goto(`/characters/${PC_MAJOR}`)
+  const ids = await resolveFixture()
+  await page.goto(`/characters/${ids.spellcaster}`)
   await page.waitForLoadState('networkidle')
 
   await page.getByRole('button', { name: 'Print PDF' }).click()
