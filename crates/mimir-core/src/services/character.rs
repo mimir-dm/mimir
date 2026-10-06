@@ -1693,7 +1693,13 @@ impl<'a> CharacterService<'a> {
             .ok()
             .and_then(|d| d.get("repeatable").and_then(|r| r.as_bool()))
             .unwrap_or(false);
-        if !repeatable && dal::character_has_feat(self.conn, character_id, &catalog_feat.name)? {
+        // Compare case-insensitively: level-up stores the name as the caller
+        // typed it, so an existing row may not use the catalog's spelling.
+        let wanted = catalog_feat.name.to_lowercase();
+        let already_has = dal::list_character_feats(self.conn, character_id)?
+            .iter()
+            .any(|f| f.feat_name.to_lowercase() == wanted);
+        if !repeatable && already_has {
             return Err(ServiceError::Validation(format!(
                 "Character already has {}",
                 catalog_feat.name
@@ -2407,6 +2413,25 @@ mod tests {
             .expect("repeatable feat may be taken again");
 
         assert_eq!(service.list_feats(&character_id).unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_add_feat_duplicate_check_ignores_case_of_existing_rows() {
+        let (mut conn, character_id) = feat_fixture();
+
+        // A level-up stores the feat name as typed, e.g. lowercase.
+        let id = Uuid::new_v4().to_string();
+        dal::insert_character_feat(
+            &mut conn,
+            &NewCharacterFeat::new(&id, &character_id, "alert", "PHB", FeatSourceType::Asi),
+        )
+        .unwrap();
+
+        let mut service = CharacterService::new(&mut conn);
+        let err = service
+            .add_feat(&character_id, "Alert", "PHB", FeatSourceType::Asi)
+            .expect_err("lowercase row must count as a duplicate");
+        assert!(matches!(err, ServiceError::Validation(ref m) if m.contains("already has")));
     }
 
     #[test]
