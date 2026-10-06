@@ -776,3 +776,6 @@ impl<'a> CharacterService<'a> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests;
