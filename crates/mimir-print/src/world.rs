@@ -189,8 +189,7 @@ impl MimirTypstWorld {
         }
 
         let path = self.resolve_path(id);
-        let content = std::fs::read_to_string(&path)
-            .map_err(|e| FileError::from_io(e, &path))?;
+        let content = std::fs::read_to_string(&path).map_err(|e| FileError::from_io(e, &path))?;
 
         let source = TypstSource::new(id, content);
 
@@ -294,10 +293,8 @@ mod tests {
     #[test]
     fn test_from_content() {
         let temp = TempDir::new().unwrap();
-        let world = MimirTypstWorld::from_content(
-            "= Hello World".to_string(),
-            temp.path().to_path_buf(),
-        );
+        let world =
+            MimirTypstWorld::from_content("= Hello World".to_string(), temp.path().to_path_buf());
 
         assert!(world.main_content.is_some());
         assert_eq!(world.main_content.unwrap(), "= Hello World");

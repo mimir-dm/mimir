@@ -13,18 +13,17 @@ use crate::commands::ApiResponse;
 use crate::state::AppState;
 
 /// Look up the grid size for a map (presentation: pixels per grid unit).
-fn grid_size_px(
-    db: &mut diesel::SqliteConnection,
-    app_dir: &std::path::Path,
-    map_id: &str,
-) -> i32 {
+fn grid_size_px(db: &mut diesel::SqliteConnection, app_dir: &std::path::Path, map_id: &str) -> i32 {
     let mut service = MapService::new(db, app_dir);
     get_map_grid_size_for_lights(&mut service, map_id)
 }
 
 /// List all light sources for a map.
 #[tauri::command]
-pub fn list_light_sources(state: State<'_, AppState>, map_id: String) -> ApiResponse<Vec<LightSourceResponse>> {
+pub fn list_light_sources(
+    state: State<'_, AppState>,
+    map_id: String,
+) -> ApiResponse<Vec<LightSourceResponse>> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -92,7 +91,10 @@ pub fn create_light_source(
 
 /// Toggle a light source on/off.
 #[tauri::command]
-pub fn toggle_light_source(state: State<'_, AppState>, id: String) -> ApiResponse<LightSourceResponse> {
+pub fn toggle_light_source(
+    state: State<'_, AppState>,
+    id: String,
+) -> ApiResponse<LightSourceResponse> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),

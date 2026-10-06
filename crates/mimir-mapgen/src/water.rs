@@ -111,7 +111,8 @@ fn generate_water_inner(
                 .filter(|c| c.len() >= config.min_contour_points)
                 .map(|c| {
                     // Scale to pixel coords
-                    let pixel_pts: Vec<(f64, f64)> = c.iter()
+                    let pixel_pts: Vec<(f64, f64)> = c
+                        .iter()
                         .map(|&(x, y)| (x * config.pixels_per_cell, y * config.pixels_per_cell))
                         .collect();
                     // Apply Bezier smoothing for organic curves
@@ -180,10 +181,7 @@ fn generate_island_water_tree(
     ];
 
     // Island shoreline — child with transparent colors to punch a hole
-    let shore_points: Vec<Vector2> = shoreline
-        .iter()
-        .map(|&(x, y)| Vector2::new(x, y))
-        .collect();
+    let shore_points: Vec<Vector2> = shoreline.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
     let island_hole = WaterTree {
         node_ref: water_node_ref(alloc),
@@ -315,10 +313,7 @@ fn island_shoreline(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<(f64, f64
         while r < max_radius {
             let sx = ncx + dx * r;
             let sy = ncy + dy * r;
-            if sx < 0.0
-                || sy < 0.0
-                || sx >= noise_map.width as f64
-                || sy >= noise_map.height as f64
+            if sx < 0.0 || sy < 0.0 || sx >= noise_map.width as f64 || sy >= noise_map.height as f64
             {
                 boundary_r = r;
                 break;
@@ -383,10 +378,7 @@ pub fn water_from_polygon(
     config: &WaterConfig,
     alloc: &NodeIdAllocator,
 ) -> WaterTree {
-    let points: Vec<Vector2> = polygon
-        .iter()
-        .map(|&(x, y)| Vector2::new(x, y))
-        .collect();
+    let points: Vec<Vector2> = polygon.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
     WaterTree {
         node_ref: water_node_ref(alloc),
@@ -407,10 +399,7 @@ pub fn water_from_river(
     config: &crate::paths::RiverConfig,
     alloc: &NodeIdAllocator,
 ) -> WaterTree {
-    let points: Vec<Vector2> = polygon
-        .iter()
-        .map(|&(x, y)| Vector2::new(x, y))
-        .collect();
+    let points: Vec<Vector2> = polygon.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
 
     WaterTree {
         node_ref: water_node_ref(alloc),
@@ -467,7 +456,7 @@ mod tests {
         // Should have at least the root tree
         let tree = water.tree.as_ref().expect("Water should have a tree");
         assert_eq!(tree.deep_color, "00000000"); // Root is transparent
-        // With island mode, should find water contours at edges
+                                                 // With island mode, should find water contours at edges
     }
 
     #[test]

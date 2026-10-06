@@ -16,8 +16,10 @@ pub fn insert_item(conn: &mut SqliteConnection, item: &NewItem) -> QueryResult<i
         .execute(conn)?;
 
     // Get the last inserted rowid
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple items in a batch.
@@ -29,17 +31,12 @@ pub fn insert_items(conn: &mut SqliteConnection, items: &[NewItem]) -> QueryResu
 
 /// Get an item by its ID.
 pub fn get_item(conn: &mut SqliteConnection, id: i32) -> QueryResult<Item> {
-    items::table
-        .filter(items::id.eq(id))
-        .first(conn)
+    items::table.filter(items::id.eq(id)).first(conn)
 }
 
 /// Get an item by its ID, returning None if not found.
 pub fn get_item_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Item>> {
-    items::table
-        .filter(items::id.eq(id))
-        .first(conn)
-        .optional()
+    items::table.filter(items::id.eq(id)).first(conn).optional()
 }
 
 // Define the LOWER SQL function for case-insensitive matching
@@ -65,10 +62,7 @@ pub fn list_items(conn: &mut SqliteConnection) -> QueryResult<Vec<Item>> {
 }
 
 /// List items from a specific source.
-pub fn list_items_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<Vec<Item>> {
+pub fn list_items_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Item>> {
     items::table
         .filter(items::source.eq(source))
         .order(items::name.asc())
@@ -76,10 +70,7 @@ pub fn list_items_by_source(
 }
 
 /// Search items with filters.
-pub fn search_items(
-    conn: &mut SqliteConnection,
-    filter: &ItemFilter,
-) -> QueryResult<Vec<Item>> {
+pub fn search_items(conn: &mut SqliteConnection, filter: &ItemFilter) -> QueryResult<Vec<Item>> {
     // If sources filter is explicitly empty, return no results
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);
@@ -255,9 +246,13 @@ mod tests {
             NewItem::new("Plate Armor", "PHB", r#"{"name":"Plate Armor"}"#)
                 .with_type("HA")
                 .with_rarity("none"),
-            NewItem::new("Ring of Protection", "PHB", r#"{"name":"Ring of Protection"}"#)
-                .with_type("RG")
-                .with_rarity("rare"),
+            NewItem::new(
+                "Ring of Protection",
+                "PHB",
+                r#"{"name":"Ring of Protection"}"#,
+            )
+            .with_type("RG")
+            .with_rarity("rare"),
         ];
         insert_items(&mut conn, &items).expect("Failed to insert");
 

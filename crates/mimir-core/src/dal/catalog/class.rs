@@ -40,7 +40,10 @@ pub fn get_class(conn: &mut SqliteConnection, id: i32) -> QueryResult<Class> {
 
 /// Get a class by its ID, returning None if not found.
 pub fn get_class_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Class>> {
-    classes::table.filter(classes::id.eq(id)).first(conn).optional()
+    classes::table
+        .filter(classes::id.eq(id))
+        .first(conn)
+        .optional()
 }
 
 // Define the LOWER SQL function for case-insensitive matching
@@ -66,7 +69,10 @@ pub fn list_classes(conn: &mut SqliteConnection) -> QueryResult<Vec<Class>> {
 }
 
 /// List classes from a specific source.
-pub fn list_classes_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Class>> {
+pub fn list_classes_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<Vec<Class>> {
     classes::table
         .filter(classes::source.eq(source))
         .order(classes::name.asc())

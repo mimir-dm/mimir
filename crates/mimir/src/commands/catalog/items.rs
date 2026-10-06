@@ -65,7 +65,8 @@ pub fn get_item_by_name(
     // Check homebrew items first when source is "HB" and campaign_id is provided
     if source == "HB" {
         if let Some(ref cid) = campaign_id {
-            match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(&mut db, cid, &name) {
+            match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(&mut db, cid, &name)
+            {
                 Ok(Some(item)) => {
                     // Return homebrew item data as parsed JSON, similar to catalog items
                     let mut json: Value = serde_json::from_str(&item.data)

@@ -7,8 +7,8 @@ use mimir_core::dal::campaign as dal;
 use mimir_core::dal::catalog as catalog_dal;
 use mimir_core::services::CharacterService;
 use mimir_print::sections::{
-    CharacterBattleCardSection, CharacterData, CharacterSection, ClassInfo, EquipmentCardsSection,
-    Proficiencies, ProficiencyEntry, SpellCardsSection, is_card_worthy,
+    is_card_worthy, CharacterBattleCardSection, CharacterData, CharacterSection, ClassInfo,
+    EquipmentCardsSection, Proficiencies, ProficiencyEntry, SpellCardsSection,
 };
 use mimir_print::{DocumentBuilder, PrintState};
 use serde_json::Value;
@@ -26,12 +26,19 @@ use super::{ApiResponse, CharacterExportOptions, PrintResult};
 
 /// Map human-readable homebrew item_type (from frontend UI) to 5etools type codes.
 /// For weapons, inspects the JSON data to determine melee (M) vs ranged (R).
-pub(super) fn homebrew_item_type_to_code(item_type: &str, data: &serde_json::Map<String, Value>) -> Option<String> {
+pub(super) fn homebrew_item_type_to_code(
+    item_type: &str,
+    data: &serde_json::Map<String, Value>,
+) -> Option<String> {
     match item_type.to_lowercase().as_str() {
         "weapon" => {
             // Check for ranged indicators in the data
-            let has_range = data.get("range").and_then(|v| v.as_str()).is_some_and(|r| !r.is_empty());
-            let has_ammo_prop = data.get("property")
+            let has_range = data
+                .get("range")
+                .and_then(|v| v.as_str())
+                .is_some_and(|r| !r.is_empty());
+            let has_ammo_prop = data
+                .get("property")
                 .and_then(|v| v.as_array())
                 .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("A")));
             if has_range && !has_ammo_prop {
@@ -54,9 +61,8 @@ pub(super) fn homebrew_item_type_to_code(item_type: &str, data: &serde_json::Map
         "staff" | "wondrous item" => Some("W".to_string()),
         "adventuring gear" => Some("G".to_string()),
         // Already a 5etools code (e.g., "M", "R", "W")
-        "m" | "r" | "a" | "af" | "s" | "la" | "ma" | "ha" | "rg" | "rd" | "wd" | "w" | "p" | "sc" => {
-            Some(item_type.to_uppercase())
-        }
+        "m" | "r" | "a" | "af" | "s" | "la" | "ma" | "ha" | "rg" | "rd" | "wd" | "w" | "p"
+        | "sc" => Some(item_type.to_uppercase()),
         _ => None,
     }
 }
@@ -186,7 +192,7 @@ pub fn export_character(
         speed: 30, // Default speed - could be looked up from race catalog
         ac: 10,    // computed below
 
-        hit_points_max: 0,   // computed below
+        hit_points_max: 0,      // computed below
         hit_die: String::new(), // computed below
         spellcasting_ability: None,
         spell_save_dc: None,
@@ -295,7 +301,10 @@ pub fn export_character(
         let allowed_sources: Option<std::collections::HashSet<String>> =
             match dal::list_character_source_codes(&mut db, &character_id) {
                 Ok(sources) if !sources.is_empty() => {
-                    info!("  Character has {} allowed sources configured", sources.len());
+                    info!(
+                        "  Character has {} allowed sources configured",
+                        sources.len()
+                    );
                     Some(sources.into_iter().collect())
                 }
                 Ok(_) => {
@@ -406,7 +415,10 @@ pub fn export_character(
         if let Some(ref campaign_id) = character.campaign_id {
             match dal::list_campaign_homebrew_spells(&mut db, campaign_id) {
                 Ok(homebrew_spells) => {
-                    info!("  Found {} homebrew spells in campaign", homebrew_spells.len());
+                    info!(
+                        "  Found {} homebrew spells in campaign",
+                        homebrew_spells.len()
+                    );
                     for hb_spell in homebrew_spells {
                         let spell_level = hb_spell.level.unwrap_or(0);
 
@@ -431,18 +443,33 @@ pub fn export_character(
                         match serde_json::from_str::<Value>(&hb_spell.data) {
                             Ok(mut data) => {
                                 if let Some(obj) = data.as_object_mut() {
-                                    obj.insert("name".to_string(), Value::String(hb_spell.name.clone()));
-                                    obj.insert("source".to_string(), Value::String("HB".to_string()));
-                                    obj.insert("level".to_string(), Value::Number(spell_level.into()));
+                                    obj.insert(
+                                        "name".to_string(),
+                                        Value::String(hb_spell.name.clone()),
+                                    );
+                                    obj.insert(
+                                        "source".to_string(),
+                                        Value::String("HB".to_string()),
+                                    );
+                                    obj.insert(
+                                        "level".to_string(),
+                                        Value::Number(spell_level.into()),
+                                    );
                                     if let Some(ref school) = hb_spell.school {
-                                        obj.insert("school".to_string(), Value::String(school.clone()));
+                                        obj.insert(
+                                            "school".to_string(),
+                                            Value::String(school.clone()),
+                                        );
                                     }
                                     obj.insert("homebrew".to_string(), Value::Bool(true));
                                 }
                                 spell_data.push(data);
                             }
                             Err(e) => {
-                                error!("    Failed to parse homebrew spell '{}': {}", hb_spell.name, e);
+                                error!(
+                                    "    Failed to parse homebrew spell '{}': {}",
+                                    hb_spell.name, e
+                                );
                             }
                         }
                     }
@@ -505,15 +532,26 @@ pub fn export_character(
                                 Ok(mut data) => {
                                     if let Some(obj) = data.as_object_mut() {
                                         obj.insert("name".to_string(), Value::String(hb_item.name));
-                                        obj.insert("source".to_string(), Value::String("HB".to_string()));
+                                        obj.insert(
+                                            "source".to_string(),
+                                            Value::String("HB".to_string()),
+                                        );
                                         if let Some(ref r) = hb_item.rarity {
-                                            obj.insert("rarity".to_string(), Value::String(r.clone()));
+                                            obj.insert(
+                                                "rarity".to_string(),
+                                                Value::String(r.clone()),
+                                            );
                                         }
                                         // Inject 5etools type code from item_type if not already in data
                                         if !obj.contains_key("type") {
                                             if let Some(ref it) = hb_item.item_type {
-                                                if let Some(code) = homebrew_item_type_to_code(it, obj) {
-                                                    obj.insert("type".to_string(), Value::String(code));
+                                                if let Some(code) =
+                                                    homebrew_item_type_to_code(it, obj)
+                                                {
+                                                    obj.insert(
+                                                        "type".to_string(),
+                                                        Value::String(code),
+                                                    );
                                                 }
                                             }
                                         }
@@ -568,14 +606,8 @@ pub fn export_character(
                                 "quantity".to_string(),
                                 Value::Number(inv_item.quantity.into()),
                             );
-                            obj.insert(
-                                "equipped".to_string(),
-                                Value::Bool(inv_item.is_equipped()),
-                            );
-                            obj.insert(
-                                "attuned".to_string(),
-                                Value::Bool(inv_item.is_attuned()),
-                            );
+                            obj.insert("equipped".to_string(), Value::Bool(inv_item.is_equipped()));
+                            obj.insert("attuned".to_string(), Value::Bool(inv_item.is_attuned()));
                             if let Some(ref notes) = inv_item.notes {
                                 obj.insert("notes".to_string(), Value::String(notes.clone()));
                             }
@@ -671,86 +703,138 @@ mod tests {
     #[test]
     fn test_homebrew_weapon_case_insensitive() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("Weapon", &data), Some("M".to_string()));
-        assert_eq!(homebrew_item_type_to_code("WEAPON", &data), Some("M".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("Weapon", &data),
+            Some("M".to_string())
+        );
+        assert_eq!(
+            homebrew_item_type_to_code("WEAPON", &data),
+            Some("M".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_armor() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("armor", &data), Some("LA".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("armor", &data),
+            Some("LA".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_shield() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("shield", &data), Some("S".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("shield", &data),
+            Some("S".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_potion() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("potion", &data), Some("P".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("potion", &data),
+            Some("P".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_ring() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("ring", &data), Some("RG".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("ring", &data),
+            Some("RG".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_rod() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("rod", &data), Some("RD".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("rod", &data),
+            Some("RD".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_wand() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("wand", &data), Some("WD".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("wand", &data),
+            Some("WD".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_scroll() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("scroll", &data), Some("SC".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("scroll", &data),
+            Some("SC".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_staff() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("staff", &data), Some("W".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("staff", &data),
+            Some("W".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_wondrous_item() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("wondrous item", &data), Some("W".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("wondrous item", &data),
+            Some("W".to_string())
+        );
     }
 
     #[test]
     fn test_homebrew_adventuring_gear() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("adventuring gear", &data), Some("G".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("adventuring gear", &data),
+            Some("G".to_string())
+        );
     }
 
     #[test]
     fn test_passthrough_raw_5etools_codes() {
         let data = serde_json::Map::new();
-        let codes = vec!["M", "R", "A", "AF", "S", "LA", "MA", "HA", "RG", "RD", "WD", "W", "P", "SC"];
+        let codes = vec![
+            "M", "R", "A", "AF", "S", "LA", "MA", "HA", "RG", "RD", "WD", "W", "P", "SC",
+        ];
         for code in codes {
             let result = homebrew_item_type_to_code(code, &data);
-            assert_eq!(result, Some(code.to_uppercase()), "Failed for code: {}", code);
+            assert_eq!(
+                result,
+                Some(code.to_uppercase()),
+                "Failed for code: {}",
+                code
+            );
         }
     }
 
     #[test]
     fn test_passthrough_lowercase_5etools_codes() {
         let data = serde_json::Map::new();
-        assert_eq!(homebrew_item_type_to_code("m", &data), Some("M".to_string()));
-        assert_eq!(homebrew_item_type_to_code("la", &data), Some("LA".to_string()));
-        assert_eq!(homebrew_item_type_to_code("ha", &data), Some("HA".to_string()));
+        assert_eq!(
+            homebrew_item_type_to_code("m", &data),
+            Some("M".to_string())
+        );
+        assert_eq!(
+            homebrew_item_type_to_code("la", &data),
+            Some("LA".to_string())
+        );
+        assert_eq!(
+            homebrew_item_type_to_code("ha", &data),
+            Some("HA".to_string())
+        );
     }
 
     #[test]

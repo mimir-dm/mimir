@@ -73,7 +73,10 @@ fn main() {
                 (None, Some(name)) => match biomes::get_preset(&name) {
                     Some(p) => p.config,
                     None => {
-                        eprintln!("Unknown preset '{}'. Use 'list-presets' to see available presets.", name);
+                        eprintln!(
+                            "Unknown preset '{}'. Use 'list-presets' to see available presets.",
+                            name
+                        );
                         std::process::exit(1);
                     }
                 },

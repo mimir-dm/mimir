@@ -115,8 +115,8 @@ pub fn count_module_assets(conn: &mut SqliteConnection, module_id: &str) -> Quer
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewModule};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -278,7 +278,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let result = get_campaign_asset_optional(&mut conn, "nonexistent").expect("Failed to query");
+        let result =
+            get_campaign_asset_optional(&mut conn, "nonexistent").expect("Failed to query");
         assert!(result.is_none());
 
         let asset = NewCampaignAsset::for_campaign(

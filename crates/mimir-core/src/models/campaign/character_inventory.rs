@@ -163,8 +163,7 @@ mod tests {
 
     #[test]
     fn test_with_quantity() {
-        let item = NewCharacterInventory::new("inv-1", "char-1", "Arrow", "PHB")
-            .with_quantity(20);
+        let item = NewCharacterInventory::new("inv-1", "char-1", "Arrow", "PHB").with_quantity(20);
         assert_eq!(item.quantity, 20);
     }
 

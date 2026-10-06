@@ -35,11 +35,36 @@ pub fn setup_test_db_with_sources() -> SqliteConnection {
     let sources = [
         NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z"),
         NewCatalogSource::new("MM", "Monster Manual", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("XGE", "Xanathar's Guide to Everything", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("TCE", "Tasha's Cauldron of Everything", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("VGM", "Volo's Guide to Monsters", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("MPMM", "Mordenkainen Presents: Monsters of the Multiverse", true, "2024-01-20T12:00:00Z"),
+        NewCatalogSource::new(
+            "DMG",
+            "Dungeon Master's Guide",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
+        NewCatalogSource::new(
+            "XGE",
+            "Xanathar's Guide to Everything",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
+        NewCatalogSource::new(
+            "TCE",
+            "Tasha's Cauldron of Everything",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
+        NewCatalogSource::new(
+            "VGM",
+            "Volo's Guide to Monsters",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
+        NewCatalogSource::new(
+            "MPMM",
+            "Mordenkainen Presents: Monsters of the Multiverse",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
         NewCatalogSource::new("GoS", "Ghosts of Saltmarsh", true, "2024-01-20T12:00:00Z"),
         NewCatalogSource::new("CR", "Critical Role", true, "2024-01-20T12:00:00Z"),
     ];

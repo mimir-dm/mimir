@@ -202,12 +202,15 @@ pub async fn create_module(
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::created("module", json!({
-        "id": module.id,
-        "name": module.name,
-        "description": module.description,
-        "module_number": module.module_number
-    }))
+    McpResponse::created(
+        "module",
+        json!({
+            "id": module.id,
+            "name": module.name,
+            "description": module.description,
+            "module_number": module.module_number
+        }),
+    )
 }
 
 pub async fn list_modules(
@@ -321,12 +324,15 @@ pub async fn update_module(
         .update(&args.module_id, input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::updated("module", json!({
-        "id": module.id,
-        "name": module.name,
-        "description": module.description,
-        "module_number": module.module_number
-    }))
+    McpResponse::updated(
+        "module",
+        json!({
+            "id": module.id,
+            "name": module.name,
+            "description": module.description,
+            "module_number": module.module_number
+        }),
+    )
 }
 
 pub async fn delete_module(
@@ -382,15 +388,18 @@ pub async fn add_monster_to_module(
         .add_monster(input)
         .map_err(McpError::caller_fault)?;
 
-    McpResponse::added("module_monster", json!({
-        "id": monster.id,
-        "monster_name": monster.monster_name,
-        "monster_source": monster.monster_source,
-        "homebrew_monster_id": monster.homebrew_monster_id,
-        "quantity": monster.quantity,
-        "display_name": monster.display_name,
-        "notes": monster.notes
-    }))
+    McpResponse::added(
+        "module_monster",
+        json!({
+            "id": monster.id,
+            "monster_name": monster.monster_name,
+            "monster_source": monster.monster_source,
+            "homebrew_monster_id": monster.homebrew_monster_id,
+            "quantity": monster.quantity,
+            "display_name": monster.display_name,
+            "notes": monster.notes
+        }),
+    )
 }
 
 pub async fn update_module_monster(
@@ -413,15 +422,18 @@ pub async fn update_module_monster(
         )
         .map_err(McpError::caller_fault)?;
 
-    McpResponse::updated("module_monster", json!({
-        "id": monster.id,
-        "monster_name": monster.monster_name,
-        "monster_source": monster.monster_source,
-        "homebrew_monster_id": monster.homebrew_monster_id,
-        "quantity": monster.quantity,
-        "display_name": monster.display_name,
-        "notes": monster.notes
-    }))
+    McpResponse::updated(
+        "module_monster",
+        json!({
+            "id": monster.id,
+            "monster_name": monster.monster_name,
+            "monster_source": monster.monster_source,
+            "homebrew_monster_id": monster.homebrew_monster_id,
+            "quantity": monster.quantity,
+            "display_name": monster.display_name,
+            "notes": monster.notes
+        }),
+    )
 }
 
 pub async fn remove_monster_from_module(

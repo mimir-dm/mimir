@@ -16,8 +16,10 @@ pub fn insert_monster(conn: &mut SqliteConnection, monster: &NewMonster) -> Quer
         .execute(conn)?;
 
     // Get the last inserted rowid
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple monsters in a batch.
@@ -29,9 +31,7 @@ pub fn insert_monsters(conn: &mut SqliteConnection, monsters: &[NewMonster]) -> 
 
 /// Get a monster by its ID.
 pub fn get_monster(conn: &mut SqliteConnection, id: i32) -> QueryResult<Monster> {
-    monsters::table
-        .filter(monsters::id.eq(id))
-        .first(conn)
+    monsters::table.filter(monsters::id.eq(id)).first(conn)
 }
 
 /// Get a monster by its ID, returning None if not found.

@@ -47,7 +47,13 @@ pub struct NewTrap<'a> {
 
 impl<'a> NewTrap<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, trap_tier: None, data, fluff: None }
+        Self {
+            name,
+            source,
+            trap_tier: None,
+            data,
+            fluff: None,
+        }
     }
 
     pub fn with_tier(mut self, tier: &'a str) -> Self {
@@ -114,8 +120,7 @@ mod tests {
 
     #[test]
     fn test_new_trap() {
-        let trap = NewTrap::new("Pit Trap", "DMG", r#"{"name":"Pit Trap"}"#)
-            .with_tier("simple");
+        let trap = NewTrap::new("Pit Trap", "DMG", r#"{"name":"Pit Trap"}"#).with_tier("simple");
         assert_eq!(trap.name, "Pit Trap");
         assert_eq!(trap.trap_tier, Some("simple"));
     }

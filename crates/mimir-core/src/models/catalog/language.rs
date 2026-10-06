@@ -26,12 +26,14 @@ impl Language {
 
     /// Get the human-readable type name.
     pub fn type_name(&self) -> &str {
-        self.language_type.as_ref().map_or("Unknown", |t| match t.as_str() {
-            "standard" => "Standard",
-            "exotic" => "Exotic",
-            "secret" => "Secret",
-            _ => "Unknown",
-        })
+        self.language_type
+            .as_ref()
+            .map_or("Unknown", |t| match t.as_str() {
+                "standard" => "Standard",
+                "exotic" => "Exotic",
+                "secret" => "Secret",
+                _ => "Unknown",
+            })
     }
 }
 
@@ -47,7 +49,13 @@ pub struct NewLanguage<'a> {
 
 impl<'a> NewLanguage<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, language_type: None, data, fluff: None }
+        Self {
+            name,
+            source,
+            language_type: None,
+            data,
+            fluff: None,
+        }
     }
 
     pub fn with_type(mut self, language_type: &'a str) -> Self {
@@ -113,8 +121,8 @@ mod tests {
 
     #[test]
     fn test_new_language() {
-        let language = NewLanguage::new("Elvish", "PHB", r#"{"name":"Elvish"}"#)
-            .with_type("standard");
+        let language =
+            NewLanguage::new("Elvish", "PHB", r#"{"name":"Elvish"}"#).with_type("standard");
         assert_eq!(language.name, "Elvish");
         assert_eq!(language.language_type, Some("standard"));
     }

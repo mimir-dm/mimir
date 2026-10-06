@@ -13,15 +13,14 @@ pub fn insert_trap(conn: &mut SqliteConnection, trap: &NewTrap) -> QueryResult<i
         .values(trap)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple traps in a batch.
-pub fn insert_traps(
-    conn: &mut SqliteConnection,
-    traps: &[NewTrap],
-) -> QueryResult<usize> {
+pub fn insert_traps(conn: &mut SqliteConnection, traps: &[NewTrap]) -> QueryResult<usize> {
     diesel::insert_into(traps::table)
         .values(traps)
         .execute(conn)
@@ -29,17 +28,12 @@ pub fn insert_traps(
 
 /// Get a trap by its ID.
 pub fn get_trap(conn: &mut SqliteConnection, id: i32) -> QueryResult<Trap> {
-    traps::table
-        .filter(traps::id.eq(id))
-        .first(conn)
+    traps::table.filter(traps::id.eq(id)).first(conn)
 }
 
 /// Get a trap by its ID, returning None if not found.
 pub fn get_trap_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Trap>> {
-    traps::table
-        .filter(traps::id.eq(id))
-        .first(conn)
-        .optional()
+    traps::table.filter(traps::id.eq(id)).first(conn).optional()
 }
 
 // Define the LOWER SQL function for case-insensitive matching
@@ -65,10 +59,7 @@ pub fn list_traps(conn: &mut SqliteConnection) -> QueryResult<Vec<Trap>> {
 }
 
 /// List traps from a specific source.
-pub fn list_traps_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<Vec<Trap>> {
+pub fn list_traps_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Trap>> {
     traps::table
         .filter(traps::source.eq(source))
         .order(traps::name.asc())
@@ -76,10 +67,7 @@ pub fn list_traps_by_source(
 }
 
 /// List traps by tier (e.g., "simple", "complex").
-pub fn list_traps_by_tier(
-    conn: &mut SqliteConnection,
-    tier: &str,
-) -> QueryResult<Vec<Trap>> {
+pub fn list_traps_by_tier(conn: &mut SqliteConnection, tier: &str) -> QueryResult<Vec<Trap>> {
     traps::table
         .filter(traps::trap_tier.eq(tier))
         .order(traps::name.asc())
@@ -102,10 +90,7 @@ pub fn delete_trap(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize> {
 }
 
 /// Delete all traps from a specific source.
-pub fn delete_traps_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_traps_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(traps::table.filter(traps::source.eq(source))).execute(conn)
 }
 
@@ -201,8 +186,7 @@ mod tests {
     fn test_trap_crud() {
         let mut conn = setup_test_db_with_sources();
 
-        let trap = NewTrap::new("Pit Trap", "DMG", r#"{"name":"Pit Trap"}"#)
-            .with_tier("simple");
+        let trap = NewTrap::new("Pit Trap", "DMG", r#"{"name":"Pit Trap"}"#).with_tier("simple");
         let id = insert_trap(&mut conn, &trap).expect("Failed to insert");
 
         let retrieved = get_trap(&mut conn, id).expect("Failed to get");

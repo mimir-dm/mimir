@@ -14,8 +14,8 @@ use crate::lights::{self, LightConfig};
 use crate::materials::{self, MaterialScatterConfig};
 use crate::noise_gen::{NoiseConfig, NoiseMap};
 use crate::objects::{self, clear_corridor, ClumpConfig, ObjectConfig, TreeConfig};
-use crate::patterns::{self, PatternConfig};
 use crate::paths::{self, RiverConfig, RoadConfig};
+use crate::patterns::{self, PatternConfig};
 use crate::polygons::{self, PolygonConfig};
 use crate::rooms::{self, CorridorConfig, RoomConfig};
 use crate::terrain::{self, TerrainConfig};
@@ -292,10 +292,7 @@ fn validate_rooms(config: &MapConfig, errors: &mut Vec<ValidationError>) {
             if overlaps {
                 errors.push(ValidationError {
                     field: format!("{}", field_prefix),
-                    message: format!(
-                        "Room \"{}\" overlaps with room \"{}\"",
-                        room.id, other.id
-                    ),
+                    message: format!("Room \"{}\" overlaps with room \"{}\"", room.id, other.id),
                 });
             }
         }
@@ -411,14 +408,19 @@ fn validate_polygons(config: &MapConfig, errors: &mut Vec<ValidationError>) {
                              walking them in sequence describes a single, non-overlapping loop \
                              around the shape.",
                             a = a,
-                            a_x = poly.points[a][0], a_y = poly.points[a][1],
+                            a_x = poly.points[a][0],
+                            a_y = poly.points[a][1],
                             a1 = a_next,
-                            a1_x = poly.points[a_next][0], a1_y = poly.points[a_next][1],
+                            a1_x = poly.points[a_next][0],
+                            a1_y = poly.points[a_next][1],
                             b = b,
-                            b_x = poly.points[b][0], b_y = poly.points[b][1],
+                            b_x = poly.points[b][0],
+                            b_y = poly.points[b][1],
                             b1 = b_next,
-                            b1_x = poly.points[b_next][0], b1_y = poly.points[b_next][1],
-                            cx = crossing[0], cy = crossing[1],
+                            b1_x = poly.points[b_next][0],
+                            b1_y = poly.points[b_next][1],
+                            cx = crossing[0],
+                            cy = crossing[1],
                         ),
                     });
                 }
@@ -580,7 +582,8 @@ impl GeneratedFeatures {
 
 /// Resolve an optional ID or fall back to type_index naming.
 fn feature_name(id: &Option<String>, type_prefix: &str, index: usize) -> String {
-    id.clone().unwrap_or_else(|| format!("{}_{}", type_prefix, index))
+    id.clone()
+        .unwrap_or_else(|| format!("{}_{}", type_prefix, index))
 }
 
 /// Generate a complete `.dungeondraft_map` from a config.
@@ -620,9 +623,17 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     exclusion_zones.extend(polygons::build_polygon_exclusion_zones(&config.polygons));
 
     stats.walls_generated = room_layout.walls.len() + polygon_layout.walls.len();
-    stats.portals_generated = room_layout.walls.iter().map(|w| w.portals.len()).sum::<usize>()
+    stats.portals_generated = room_layout
+        .walls
+        .iter()
+        .map(|w| w.portals.len())
+        .sum::<usize>()
         + room_layout.portals.len()
-        + polygon_layout.walls.iter().map(|w| w.portals.len()).sum::<usize>()
+        + polygon_layout
+            .walls
+            .iter()
+            .map(|w| w.portals.len())
+            .sum::<usize>()
         + polygon_layout.portals.len();
 
     // 1. Generate noise map
@@ -653,15 +664,20 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         let y0 = room.y as f64 * 256.0;
         let x1 = (room.x + room.width) as f64 * 256.0;
         let y1 = (room.y + room.height) as f64 * 256.0;
-        features.rooms.insert(room.id.clone(), RoomGeometry {
-            center: (cx, cy),
-            boundary: vec![(x0, y0), (x1, y0), (x1, y1), (x0, y1)],
-        });
+        features.rooms.insert(
+            room.id.clone(),
+            RoomGeometry {
+                center: (cx, cy),
+                boundary: vec![(x0, y0), (x1, y0), (x1, y1), (x0, y1)],
+            },
+        );
     }
 
     // Register polygons into feature registry
     for polygon in &config.polygons {
-        let boundary: Vec<(f64, f64)> = polygon.points.iter()
+        let boundary: Vec<(f64, f64)> = polygon
+            .points
+            .iter()
             .map(|p| (p[0] * 256.0, p[1] * 256.0))
             .collect();
         features.polygons.insert(polygon.id.clone(), boundary);
@@ -672,12 +688,8 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 3. Generate terrain + room terrain overrides
     if let Some(ref terrain_config) = config.terrain {
-        let mut terrain = terrain::generate_terrain(
-            &noise_map,
-            config.width,
-            config.height,
-            terrain_config,
-        );
+        let mut terrain =
+            terrain::generate_terrain(&noise_map, config.width, config.height, terrain_config);
 
         // Apply room and polygon terrain overrides (floors override noise-based terrain)
         let map_cells_x = (config.width * 4) as usize;
@@ -705,29 +717,34 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
         // Register lake in features
         let center = (lake_config.center[0] * 256.0, lake_config.center[1] * 256.0);
-        features.rooms.insert(lake_config.id.clone(), RoomGeometry {
-            center,
-            boundary: result.shoreline.clone(),
-        });
+        features.rooms.insert(
+            lake_config.id.clone(),
+            RoomGeometry {
+                center,
+                boundary: result.shoreline.clone(),
+            },
+        );
         features.water_polygons.push(result.shoreline.clone());
         lake_exclusion_polygons.push(result.shoreline.clone());
 
         // Add water tree as child
         let level = map.ground_level_mut();
-        let water = level.water.get_or_insert_with(|| crate::format::world::Water {
-            disable_border: false,
-            tree: Some(crate::format::world::WaterTree {
-                node_ref: 0,
-                polygon: crate::format::godot_types::PoolVector2Array::new(),
-                join: 0,
-                end: 0,
-                is_open: false,
-                deep_color: "00000000".to_string(),
-                shallow_color: "00000000".to_string(),
-                blend_distance: 0.0,
-                children: Vec::new(),
-            }),
-        });
+        let water = level
+            .water
+            .get_or_insert_with(|| crate::format::world::Water {
+                disable_border: false,
+                tree: Some(crate::format::world::WaterTree {
+                    node_ref: 0,
+                    polygon: crate::format::godot_types::PoolVector2Array::new(),
+                    join: 0,
+                    end: 0,
+                    is_open: false,
+                    deep_color: "00000000".to_string(),
+                    shallow_color: "00000000".to_string(),
+                    blend_distance: 0.0,
+                    children: Vec::new(),
+                }),
+            });
         if let Some(ref mut tree) = water.tree {
             tree.children.push(result.water_tree);
         }
@@ -743,7 +760,10 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         stats.contour_paths = contour_paths.len();
         // Register ALL contour polylines in feature registry (absolute coordinates)
         for path in contour_paths.iter() {
-            let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+            let points: Vec<(f64, f64)> = path
+                .edit_points
+                .0
+                .iter()
                 .map(|p| (path.position.x + p.x, path.position.y + p.y))
                 .collect();
             features.contour_polylines.push(points);
@@ -752,7 +772,10 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         for (i, level_config) in elev_config.levels.iter().enumerate() {
             let name = feature_name(&level_config.id, "elevation", i);
             if let Some(path) = contour_paths.get(i) {
-                let points: Vec<(f64, f64)> = path.edit_points.0.iter()
+                let points: Vec<(f64, f64)> = path
+                    .edit_points
+                    .0
+                    .iter()
                     .map(|p| (path.position.x + p.x, path.position.y + p.y))
                     .collect();
                 features.paths.insert(name, points);
@@ -765,20 +788,29 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     if !features.contour_polylines.is_empty() {
         // Estimate contour corridor coverage
         let map_area = pixel_width * pixel_height;
-        let contour_area: f64 = features.contour_polylines.iter().map(|poly| {
-            // Approximate area as polyline length * average contour width
-            let length: f64 = poly.windows(2).map(|w| {
-                let dx = w[1].0 - w[0].0;
-                let dy = w[1].1 - w[0].1;
-                (dx * dx + dy * dy).sqrt()
-            }).sum();
-            // Use 256px as approximate contour corridor width (1 grid square)
-            length * 256.0
-        }).sum();
+        let contour_area: f64 = features
+            .contour_polylines
+            .iter()
+            .map(|poly| {
+                // Approximate area as polyline length * average contour width
+                let length: f64 = poly
+                    .windows(2)
+                    .map(|w| {
+                        let dx = w[1].0 - w[0].0;
+                        let dy = w[1].1 - w[0].1;
+                        (dx * dx + dy * dy).sqrt()
+                    })
+                    .sum();
+                // Use 256px as approximate contour corridor width (1 grid square)
+                length * 256.0
+            })
+            .sum();
         let coverage = (contour_area / map_area * 100.0).min(100.0);
         if coverage > 30.0 && (!config.roads.is_empty() || !config.rivers.is_empty()) {
             eprintln!("Warning: contour corridors cover ~{:.0}% of map area — road/river generation may produce unrealistic paths. Consider fewer elevation levels or higher effort.", coverage);
-            warnings.push(TerrainWarning::HighContourDensity { coverage_percent: coverage });
+            warnings.push(TerrainWarning::HighContourDensity {
+                coverage_percent: coverage,
+            });
         }
     }
 
@@ -801,7 +833,9 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             features.paths.insert(name, result.corridor_points.clone());
 
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
-            features.corridors.push((result.corridor_points.clone(), result.corridor_half_width));
+            features
+                .corridors
+                .push((result.corridor_points.clone(), result.corridor_half_width));
             map.ground_level_mut().paths.push(result.road);
             stats.paths_generated += 1;
             for ep in result.edge_paths {
@@ -824,9 +858,13 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 5. Generate rivers
     // Build lake shoreline lookup for river source/drain connections
-    let lake_shorelines: std::collections::HashMap<String, Vec<(f64, f64)>> = config.lakes.iter()
+    let lake_shorelines: std::collections::HashMap<String, Vec<(f64, f64)>> = config
+        .lakes
+        .iter()
         .filter_map(|lake| {
-            features.get_room(&lake.id).map(|geom| (lake.id.clone(), geom.boundary.clone()))
+            features
+                .get_room(&lake.id)
+                .map(|geom| (lake.id.clone(), geom.boundary.clone()))
         })
         .collect();
 
@@ -844,29 +882,32 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         ) {
             // Register river path and water polygon in feature registry
             let name = feature_name(&river_config.id, "river", i);
-            features.paths.insert(name.clone(), result.corridor_points.clone());
+            features
+                .paths
+                .insert(name.clone(), result.corridor_points.clone());
             features.water_polygons.push(result.water_polygon.clone());
 
             corridors.push((result.corridor_points.clone(), result.corridor_half_width));
-            features.corridors.push((result.corridor_points.clone(), result.corridor_half_width));
+            features
+                .corridors
+                .push((result.corridor_points.clone(), result.corridor_half_width));
             for bp in result.bank_paths {
                 map.ground_level_mut().paths.push(bp);
                 stats.paths_generated += 1;
             }
 
             // Add river water as child of root tree (matching DD's structure).
-            let river_water = water::water_from_river(
-                &result.water_polygon,
-                river_config,
-                &alloc,
-            );
+            let river_water = water::water_from_river(&result.water_polygon, river_config, &alloc);
             let level = map.ground_level_mut();
-            let water = level.water.get_or_insert_with(|| crate::format::world::Water {
-                disable_border: false,
-                tree: None,
-            });
-            let tree = water.tree.get_or_insert_with(|| {
-                crate::format::world::WaterTree {
+            let water = level
+                .water
+                .get_or_insert_with(|| crate::format::world::Water {
+                    disable_border: false,
+                    tree: None,
+                });
+            let tree = water
+                .tree
+                .get_or_insert_with(|| crate::format::world::WaterTree {
                     node_ref: water::water_node_ref_pub(&alloc),
                     polygon: crate::format::godot_types::PoolVector2Array::new(),
                     join: 0,
@@ -876,8 +917,7 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
                     shallow_color: "00000000".to_string(),
                     blend_distance: 0.0,
                     children: Vec::new(),
-                }
-            });
+                });
             tree.children.push(river_water);
             stats.water_polygons += 1;
 
@@ -900,7 +940,8 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         );
         // Register tree positions in feature registry
         let name = feature_name(&tree_config.id, "trees", i);
-        let positions: Vec<(f64, f64)> = trees.iter().map(|o| (o.position.x, o.position.y)).collect();
+        let positions: Vec<(f64, f64)> =
+            trees.iter().map(|o| (o.position.x, o.position.y)).collect();
         features.object_positions.insert(name, positions);
         all_objects.extend(trees);
     }
@@ -915,7 +956,10 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &mut rng,
         );
         let name = feature_name(&clutter_config.id, "clutter", i);
-        let positions: Vec<(f64, f64)> = clutter.iter().map(|o| (o.position.x, o.position.y)).collect();
+        let positions: Vec<(f64, f64)> = clutter
+            .iter()
+            .map(|o| (o.position.x, o.position.y))
+            .collect();
         features.object_positions.insert(name, positions);
         all_objects.extend(clutter);
     }
@@ -930,7 +974,10 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             &mut rng,
         );
         let name = feature_name(&clump_config.id, "clumps", i);
-        let positions: Vec<(f64, f64)> = clumps.iter().map(|o| (o.position.x, o.position.y)).collect();
+        let positions: Vec<(f64, f64)> = clumps
+            .iter()
+            .map(|o| (o.position.x, o.position.y))
+            .collect();
         features.object_positions.insert(name, positions);
         all_objects.extend(clumps);
     }
@@ -942,15 +989,16 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 7b. Filter objects from room exclusion zones
     if !exclusion_zones.is_empty() {
-        all_objects.retain(|obj| !rooms::is_excluded(&exclusion_zones, obj.position.x, obj.position.y));
+        all_objects
+            .retain(|obj| !rooms::is_excluded(&exclusion_zones, obj.position.x, obj.position.y));
     }
 
     // 7c. Filter objects from lake areas
     if !lake_exclusion_polygons.is_empty() {
         all_objects.retain(|obj| {
-            !lake_exclusion_polygons.iter().any(|poly| {
-                crate::lakes::point_in_lake(obj.position.x, obj.position.y, poly)
-            })
+            !lake_exclusion_polygons
+                .iter()
+                .any(|poly| crate::lakes::point_in_lake(obj.position.x, obj.position.y, poly))
         });
     }
 
@@ -960,12 +1008,8 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // 8. Generate water bodies
     if let Some(ref water_config) = config.water {
         let water = match config.island_mode {
-            Some(v) if v < 0.0 => {
-                water::generate_water_radial(&noise_map, water_config, &alloc)
-            }
-            Some(v) if v > 0.0 => {
-                water::generate_water_island(&noise_map, water_config, &alloc)
-            }
+            Some(v) if v < 0.0 => water::generate_water_radial(&noise_map, water_config, &alloc),
+            Some(v) if v > 0.0 => water::generate_water_island(&noise_map, water_config, &alloc),
             _ => water::generate_water(&noise_map, water_config, &alloc),
         };
         if let Some(ref tree) = water.tree {
@@ -976,7 +1020,9 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
 
     // 9. Clip contours against road/river corridors and add to level
     if !contour_paths.is_empty() {
-        let clip_corridors: Vec<crate::contour_clip::Corridor> = features.corridors.iter()
+        let clip_corridors: Vec<crate::contour_clip::Corridor> = features
+            .corridors
+            .iter()
             .map(|(pts, hw)| crate::contour_clip::Corridor {
                 points: pts.clone(),
                 half_width: *hw + 32.0, // extra margin to avoid visual overlap
@@ -1015,18 +1061,18 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
         );
         let level = map.ground_level_mut();
         for (layer_key, entries) in material_map {
-            level.materials.entry(layer_key).or_default().extend(entries);
+            level
+                .materials
+                .entry(layer_key)
+                .or_default()
+                .extend(entries);
         }
     }
 
     // 9d. Generate custom paths
     if !config.custom_paths.is_empty() {
-        let custom = custom_paths::generate_custom_paths(
-            &config.custom_paths,
-            &features,
-            &alloc,
-            &mut rng,
-        );
+        let custom =
+            custom_paths::generate_custom_paths(&config.custom_paths, &features, &alloc, &mut rng);
         map.ground_level_mut().paths.extend(custom);
     }
 
@@ -1088,7 +1134,12 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
     // Update next_node_id
     map.world.next_node_id = alloc.current();
 
-    GenerateResult { map, stats, features, warnings }
+    GenerateResult {
+        map,
+        stats,
+        features,
+        warnings,
+    }
 }
 
 #[cfg(test)]
@@ -1138,13 +1189,7 @@ mod tests {
         config.terrain = Some(TerrainConfig::default());
 
         let result = generate(&config, None);
-        let terrain = result
-            .map
-            .ground_level()
-            .unwrap()
-            .terrain
-            .as_ref()
-            .unwrap();
+        let terrain = result.map.ground_level().unwrap().terrain.as_ref().unwrap();
         assert!(terrain.enabled);
         assert_eq!(terrain.splat.0.len(), 10 * 4 * 10 * 4 * 4);
     }
@@ -1277,14 +1322,15 @@ mod tests {
 
     #[test]
     fn test_generate_with_rooms() {
-        use crate::rooms::{RoomConfig, WallToggles, PortalConfig, WallSide, PortalType};
         use crate::rooms::{CorridorConfig, CorridorEnd, CorridorPortalConfig};
+        use crate::rooms::{PortalConfig, PortalType, RoomConfig, WallSide, WallToggles};
 
         let mut config = minimal_config();
         config.width = 20;
         config.height = 20;
         config.terrain = Some(TerrainConfig::default());
-        config.trees = vec![TreeConfig { id: None,
+        config.trees = vec![TreeConfig {
+            id: None,
             tree: ObjectConfig {
                 textures: vec!["res://textures/objects/trees/tree_01.png".to_string()],
                 min_distance: 100.0,
@@ -1296,7 +1342,10 @@ mod tests {
         config.rooms = vec![
             RoomConfig {
                 id: "guard_room".to_string(),
-                x: 3, y: 3, width: 5, height: 4,
+                x: 3,
+                y: 3,
+                width: 5,
+                height: 4,
                 terrain_slot: Some(2),
                 walls: WallToggles::default(),
                 portals: vec![PortalConfig {
@@ -1308,7 +1357,10 @@ mod tests {
             },
             RoomConfig {
                 id: "throne_room".to_string(),
-                x: 12, y: 3, width: 6, height: 4,
+                x: 12,
+                y: 3,
+                width: 6,
+                height: 4,
                 terrain_slot: Some(3),
                 walls: WallToggles::default(),
                 portals: vec![],
@@ -1342,12 +1394,24 @@ mod tests {
 
         // No objects inside room exclusion zones
         for obj in &level.objects {
-            let in_guard = obj.position.x >= 768.0 && obj.position.x <= 2048.0
-                && obj.position.y >= 768.0 && obj.position.y <= 1792.0;
-            let in_throne = obj.position.x >= 3072.0 && obj.position.x <= 4608.0
-                && obj.position.y >= 768.0 && obj.position.y <= 1792.0;
-            assert!(!in_guard, "Object at ({}, {}) inside guard room", obj.position.x, obj.position.y);
-            assert!(!in_throne, "Object at ({}, {}) inside throne room", obj.position.x, obj.position.y);
+            let in_guard = obj.position.x >= 768.0
+                && obj.position.x <= 2048.0
+                && obj.position.y >= 768.0
+                && obj.position.y <= 1792.0;
+            let in_throne = obj.position.x >= 3072.0
+                && obj.position.x <= 4608.0
+                && obj.position.y >= 768.0
+                && obj.position.y <= 1792.0;
+            assert!(
+                !in_guard,
+                "Object at ({}, {}) inside guard room",
+                obj.position.x, obj.position.y
+            );
+            assert!(
+                !in_throne,
+                "Object at ({}, {}) inside throne room",
+                obj.position.x, obj.position.y
+            );
         }
 
         // Terrain override applied
@@ -1372,7 +1436,8 @@ mod tests {
         // Verify that configs without rooms produce the same output as before
         let mut config = minimal_config();
         config.terrain = Some(TerrainConfig::default());
-        config.trees = vec![TreeConfig { id: None,
+        config.trees = vec![TreeConfig {
+            id: None,
             tree: ObjectConfig {
                 textures: vec!["res://textures/objects/trees/tree_01.png".to_string()],
                 min_distance: 100.0,
@@ -1396,13 +1461,18 @@ mod tests {
         let mut config = minimal_config();
         config.rooms = vec![RoomConfig {
             id: "too_big".to_string(),
-            x: 8, y: 8, width: 5, height: 5,
+            x: 8,
+            y: 8,
+            width: 5,
+            height: 5,
             terrain_slot: None,
             walls: WallToggles::default(),
             portals: vec![],
         }];
         let errors = validate_config(&config);
-        assert!(errors.iter().any(|e| e.field.contains("too_big") && e.message.contains("beyond")));
+        assert!(errors
+            .iter()
+            .any(|e| e.field.contains("too_big") && e.message.contains("beyond")));
     }
 
     #[test]
@@ -1412,14 +1482,20 @@ mod tests {
         config.rooms = vec![
             RoomConfig {
                 id: "a".to_string(),
-                x: 2, y: 2, width: 4, height: 4,
+                x: 2,
+                y: 2,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
             },
             RoomConfig {
                 id: "b".to_string(),
-                x: 4, y: 4, width: 4, height: 4,
+                x: 4,
+                y: 4,
+                width: 4,
+                height: 4,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
@@ -1436,14 +1512,20 @@ mod tests {
         config.rooms = vec![
             RoomConfig {
                 id: "same".to_string(),
-                x: 0, y: 0, width: 2, height: 2,
+                x: 0,
+                y: 0,
+                width: 2,
+                height: 2,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
             },
             RoomConfig {
                 id: "same".to_string(),
-                x: 5, y: 5, width: 2, height: 2,
+                x: 5,
+                y: 5,
+                width: 2,
+                height: 2,
                 terrain_slot: None,
                 walls: WallToggles::default(),
                 portals: vec![],
@@ -1455,11 +1537,14 @@ mod tests {
 
     #[test]
     fn test_validate_portal_out_of_wall() {
-        use crate::rooms::{RoomConfig, WallToggles, PortalConfig, WallSide, PortalType};
+        use crate::rooms::{PortalConfig, PortalType, RoomConfig, WallSide, WallToggles};
         let mut config = minimal_config();
         config.rooms = vec![RoomConfig {
             id: "small".to_string(),
-            x: 0, y: 0, width: 3, height: 3,
+            x: 0,
+            y: 0,
+            width: 3,
+            height: 3,
             terrain_slot: None,
             walls: WallToggles::default(),
             portals: vec![PortalConfig {
@@ -1470,7 +1555,9 @@ mod tests {
             }],
         }];
         let errors = validate_config(&config);
-        assert!(errors.iter().any(|e| e.message.contains("extends beyond wall")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("extends beyond wall")));
     }
 
     #[test]
@@ -1497,7 +1584,10 @@ mod tests {
         let mut config = minimal_config();
         config.rooms = vec![RoomConfig {
             id: "bad_slot".to_string(),
-            x: 0, y: 0, width: 3, height: 3,
+            x: 0,
+            y: 0,
+            width: 3,
+            height: 3,
             terrain_slot: Some(5),
             walls: WallToggles::default(),
             portals: vec![],
@@ -1520,26 +1610,47 @@ mod tests {
         let result = generate(&config, Some(42));
 
         // River should have generated bank paths
-        assert!(result.stats.paths_generated >= 2, "Expected bank paths, got {}", result.stats.paths_generated);
+        assert!(
+            result.stats.paths_generated >= 2,
+            "Expected bank paths, got {}",
+            result.stats.paths_generated
+        );
 
         // River water polygon should exist
-        assert!(result.stats.water_polygons > 0, "Expected water polygons from river, got 0");
+        assert!(
+            result.stats.water_polygons > 0,
+            "Expected water polygons from river, got 0"
+        );
 
         let level = result.map.ground_level().unwrap();
-        let water = level.water.as_ref().expect("water should be Some after river generation");
+        let water = level
+            .water
+            .as_ref()
+            .expect("water should be Some after river generation");
         let tree = water.tree.as_ref().expect("water tree should exist");
         // Root is empty container; river is a child
         assert!(tree.polygon.0.is_empty(), "root should have empty polygon");
         assert_eq!(tree.children.len(), 1);
         let river = &tree.children[0];
-        assert!(!river.polygon.0.is_empty(), "river polygon should be non-empty");
+        assert!(
+            !river.polygon.0.is_empty(),
+            "river polygon should be non-empty"
+        );
         assert_eq!(river.deep_color, "ff3aa19a");
         assert!(river.node_ref < 0, "ref should be large negative");
 
         // Water colors should be in header palettes
-        let palettes = result.map.header.editor_state.color_palettes.as_ref().unwrap();
+        let palettes = result
+            .map
+            .header
+            .editor_state
+            .color_palettes
+            .as_ref()
+            .unwrap();
         assert!(palettes.deep_water_colors.contains(&"ff3aa19a".to_string()));
-        assert!(palettes.shallow_water_colors.contains(&"ff3ac3b2".to_string()));
+        assert!(palettes
+            .shallow_water_colors
+            .contains(&"ff3ac3b2".to_string()));
     }
 
     #[test]
@@ -1560,7 +1671,10 @@ mod tests {
 
         // Water should exist (from step 8)
         let level = result.map.ground_level().unwrap();
-        assert!(level.water.is_some(), "water should exist from water config");
+        assert!(
+            level.water.is_some(),
+            "water should exist from water config"
+        );
     }
 
     #[test]
@@ -1569,13 +1683,18 @@ mod tests {
         let mut config = minimal_config();
         config.rooms = vec![RoomConfig {
             id: "flat".to_string(),
-            x: 0, y: 0, width: 0, height: 3,
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 3,
             terrain_slot: None,
             walls: WallToggles::default(),
             portals: vec![],
         }];
         let errors = validate_config(&config);
-        assert!(errors.iter().any(|e| e.message.contains("dimensions must be > 0")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("dimensions must be > 0")));
     }
 
     #[test]
@@ -1624,7 +1743,10 @@ mod tests {
         );
         // Should include the crossing point
         let msg = &crossing_errors[0].message;
-        assert!(msg.contains("crosses edge"), "Should name the crossing edges");
+        assert!(
+            msg.contains("crosses edge"),
+            "Should name the crossing edges"
+        );
         assert!(msg.contains("at ["), "Should include crossing coordinates");
         assert!(
             msg.contains("Reorder"),
@@ -1681,9 +1803,7 @@ mod tests {
             portals: vec![],
         }];
         let errors = validate_config(&config);
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("zero length")));
+        assert!(errors.iter().any(|e| e.message.contains("zero length")));
     }
 
     #[test]
@@ -1745,7 +1865,10 @@ mod tests {
         assert!(
             polygon_errors.is_empty(),
             "Valid L-shape should pass: {:?}",
-            polygon_errors.iter().map(|e| &e.message).collect::<Vec<_>>()
+            polygon_errors
+                .iter()
+                .map(|e| &e.message)
+                .collect::<Vec<_>>()
         );
     }
 
@@ -1762,10 +1885,10 @@ mod tests {
         config.polygons = vec![PolygonConfig {
             id: "figure8".to_string(),
             points: vec![
-                [0.0, 0.0],  // 0: top-left
-                [4.0, 0.0],  // 1: top-right
-                [0.0, 4.0],  // 2: bottom-left (crosses!)
-                [4.0, 4.0],  // 3: bottom-right (crosses!)
+                [0.0, 0.0], // 0: top-left
+                [4.0, 0.0], // 1: top-right
+                [0.0, 4.0], // 2: bottom-left (crosses!)
+                [4.0, 4.0], // 3: bottom-right (crosses!)
             ],
             terrain_slot: None,
             wall_texture: "res://textures/walls/stone.png".to_string(),
@@ -1773,7 +1896,9 @@ mod tests {
         }];
         let errors = validate_config(&config);
         assert!(
-            errors.iter().any(|e| e.message.contains("Self-intersecting")),
+            errors
+                .iter()
+                .any(|e| e.message.contains("Self-intersecting")),
             "Figure-8 should be caught: {:?}",
             errors.iter().map(|e| &e.message).collect::<Vec<_>>()
         );

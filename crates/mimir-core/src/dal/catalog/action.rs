@@ -13,15 +13,14 @@ pub fn insert_action(conn: &mut SqliteConnection, action: &NewAction) -> QueryRe
         .values(action)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple actions in a batch.
-pub fn insert_actions(
-    conn: &mut SqliteConnection,
-    actions: &[NewAction],
-) -> QueryResult<usize> {
+pub fn insert_actions(conn: &mut SqliteConnection, actions: &[NewAction]) -> QueryResult<usize> {
     diesel::insert_into(actions::table)
         .values(actions)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_actions(
 
 /// Get an action by its ID.
 pub fn get_action(conn: &mut SqliteConnection, id: i32) -> QueryResult<Action> {
-    actions::table
-        .filter(actions::id.eq(id))
-        .first(conn)
+    actions::table.filter(actions::id.eq(id)).first(conn)
 }
 
 /// Get an action by its ID, returning None if not found.
@@ -81,10 +78,7 @@ pub fn delete_action(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize>
 }
 
 /// Delete all actions from a specific source.
-pub fn delete_actions_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_actions_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(actions::table.filter(actions::source.eq(source))).execute(conn)
 }
 
@@ -111,7 +105,10 @@ pub fn list_action_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<Strin
 }
 
 /// Search actions with filters.
-pub fn search_actions(conn: &mut SqliteConnection, filter: &ActionFilter) -> QueryResult<Vec<Action>> {
+pub fn search_actions(
+    conn: &mut SqliteConnection,
+    filter: &ActionFilter,
+) -> QueryResult<Vec<Action>> {
     // If sources filter is explicitly empty, return no results
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);
@@ -166,12 +163,13 @@ pub fn search_actions_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 

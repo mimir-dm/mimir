@@ -38,10 +38,7 @@ pub fn list_fog_revealed_areas(
 }
 
 /// Delete a revealed area.
-pub fn delete_fog_revealed_area(
-    conn: &mut SqliteConnection,
-    id: &str,
-) -> QueryResult<usize> {
+pub fn delete_fog_revealed_area(conn: &mut SqliteConnection, id: &str) -> QueryResult<usize> {
     diesel::delete(fog_revealed_areas::table.find(id)).execute(conn)
 }
 
@@ -50,16 +47,12 @@ pub fn delete_all_fog_revealed_areas(
     conn: &mut SqliteConnection,
     map_id: &str,
 ) -> QueryResult<usize> {
-    diesel::delete(
-        fog_revealed_areas::table.filter(fog_revealed_areas::map_id.eq(map_id))
-    ).execute(conn)
+    diesel::delete(fog_revealed_areas::table.filter(fog_revealed_areas::map_id.eq(map_id)))
+        .execute(conn)
 }
 
 /// Count revealed areas for a map.
-pub fn count_fog_revealed_areas(
-    conn: &mut SqliteConnection,
-    map_id: &str,
-) -> QueryResult<i64> {
+pub fn count_fog_revealed_areas(conn: &mut SqliteConnection, map_id: &str) -> QueryResult<i64> {
     fog_revealed_areas::table
         .filter(fog_revealed_areas::map_id.eq(map_id))
         .count()
@@ -69,15 +62,21 @@ pub fn count_fog_revealed_areas(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_campaign_asset, insert_map};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCampaignAsset, NewMap};
 
     fn setup_test_map(conn: &mut SqliteConnection) -> String {
         let campaign = NewCampaign::new("camp-test", "Test Campaign");
         insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        let asset = NewCampaignAsset::for_campaign("asset-test", "camp-test", "test.uvtt", "application/octet-stream", "/path/to/test.uvtt");
+        let asset = NewCampaignAsset::for_campaign(
+            "asset-test",
+            "camp-test",
+            "test.uvtt",
+            "application/octet-stream",
+            "/path/to/test.uvtt",
+        );
         insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
         let map = NewMap::for_campaign("map-test", "camp-test", "Test Map", "asset-test");

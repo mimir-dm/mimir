@@ -313,8 +313,7 @@ impl Level {
         let cell_count = (width * height) as usize;
         // Cave bitmap size: w*h*2 + floor(1.5*(w+h)) + 2
         // (empirically determined from Dungeondraft's own format)
-        let cave_bitmap_size =
-            (width * height * 2 + (3 * (width + height)) / 2 + 2) as usize;
+        let cave_bitmap_size = (width * height * 2 + (3 * (width + height)) / 2 + 2) as usize;
 
         Self {
             label: "Ground".to_string(),

@@ -61,9 +61,7 @@ impl McpError {
             mimir_core::services::ServiceError::NotFound { entity_type, id } => {
                 McpError::InvalidArguments(format!("{} '{}' not found", entity_type, id))
             }
-            mimir_core::services::ServiceError::Validation(msg) => {
-                McpError::InvalidArguments(msg)
-            }
+            mimir_core::services::ServiceError::Validation(msg) => McpError::InvalidArguments(msg),
             other => McpError::Internal(other.to_string()),
         }
     }
@@ -75,15 +73,9 @@ impl From<mimir_core::services::ServiceError> for McpError {
             mimir_core::services::ServiceError::NotFound { entity_type, id } => {
                 McpError::NotFound(entity_type, id)
             }
-            mimir_core::services::ServiceError::Validation(msg) => {
-                McpError::InvalidArguments(msg)
-            }
-            mimir_core::services::ServiceError::Database(e) => {
-                McpError::Database(e.to_string())
-            }
-            mimir_core::services::ServiceError::Io(e) => {
-                McpError::Internal(e.to_string())
-            }
+            mimir_core::services::ServiceError::Validation(msg) => McpError::InvalidArguments(msg),
+            mimir_core::services::ServiceError::Database(e) => McpError::Database(e.to_string()),
+            mimir_core::services::ServiceError::Io(e) => McpError::Internal(e.to_string()),
         }
     }
 }

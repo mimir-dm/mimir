@@ -89,7 +89,8 @@ impl Renderable for MapPreview {
                 let image_base64 = STANDARD.encode(&raw_bytes);
 
                 // Use unified render function
-                let rendered = render_map_for_print(map, tokens, base_path, &image_base64, options)?;
+                let rendered =
+                    render_map_for_print(map, tokens, base_path, &image_base64, options)?;
                 tracing::debug!("Rendered map preview: {} bytes", rendered.image_bytes.len());
                 rendered.image_bytes
             }
@@ -112,7 +113,8 @@ impl Renderable for MapPreview {
   ]
 ]
 "#,
-            escape_typst_string(&self.name), virtual_path
+            escape_typst_string(&self.name),
+            virtual_path
         );
         Ok(typst)
     }
@@ -285,7 +287,12 @@ impl TiledMapSection {
 impl Renderable for TiledMapSection {
     fn to_typst(&self, ctx: &RenderContext) -> Result<String> {
         match &self.source {
-            TiledMapSource::FromMap { map, tokens: _, options, base_path } => {
+            TiledMapSource::FromMap {
+                map,
+                tokens: _,
+                options,
+                base_path,
+            } => {
                 // Load the map image and convert to base64
                 let file_path = base_path.join(&map.image_path);
                 let image_bytes = load_image_from_file(&file_path)?;
@@ -298,7 +305,9 @@ impl Renderable for TiledMapSection {
                 let (width_px, height_px) = (rendered.width_px, rendered.height_px);
 
                 // Register image in virtual file system
-                let virtual_path = ctx.virtual_files.register(&image_filename, rendered.image_bytes);
+                let virtual_path = ctx
+                    .virtual_files
+                    .register(&image_filename, rendered.image_bytes);
                 tracing::debug!("Registered tiled map as: {}", virtual_path);
 
                 // Calculate dimensions for true scale
@@ -407,7 +416,8 @@ impl Renderable for TiledMapSection {
                         let x_start = c * tile_width_px;
                         let y_start = r * tile_height_px;
                         let crop_width = (tile_width_px).min(actual_width.saturating_sub(x_start));
-                        let crop_height = (tile_height_px).min(actual_height.saturating_sub(y_start));
+                        let crop_height =
+                            (tile_height_px).min(actual_height.saturating_sub(y_start));
 
                         // Skip empty tiles
                         if crop_width == 0 || crop_height == 0 {
@@ -432,11 +442,8 @@ impl Renderable for TiledMapSection {
                             })?;
 
                         // Register tile image
-                        let tile_filename = format!(
-                            "tile_{}_{}.png",
-                            sanitize_filename(&self.name),
-                            tile_label
-                        );
+                        let tile_filename =
+                            format!("tile_{}_{}.png", sanitize_filename(&self.name), tile_label);
                         let virtual_path = ctx.virtual_files.register(&tile_filename, tile_bytes);
 
                         // Calculate tile size in inches for display
@@ -481,7 +488,9 @@ impl Renderable for TiledMapSection {
                     // Register tile image in virtual file system
                     let tile_filename =
                         format!("tile_{}_{}.png", sanitize_filename(&self.name), tile.label);
-                    let virtual_path = ctx.virtual_files.register(&tile_filename, tile.image_bytes.clone());
+                    let virtual_path = ctx
+                        .virtual_files
+                        .register(&tile_filename, tile.image_bytes.clone());
 
                     // Use block(breakable: false) to keep label and image together
                     typst.push_str("\n#pagebreak()\n");
@@ -524,7 +533,13 @@ impl Renderable for TiledMapSection {
 /// Sanitize a filename for use in paths
 fn sanitize_filename(name: &str) -> String {
     name.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' || c == '-' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -560,7 +575,10 @@ mod tests {
     fn test_sanitize_filename() {
         assert_eq!(sanitize_filename("Test Map"), "Test_Map");
         assert_eq!(sanitize_filename("map-1_final"), "map-1_final");
-        assert_eq!(sanitize_filename("map/with:bad*chars"), "map_with_bad_chars");
+        assert_eq!(
+            sanitize_filename("map/with:bad*chars"),
+            "map_with_bad_chars"
+        );
     }
 
     #[test]
@@ -580,8 +598,11 @@ mod tests {
             *pixel = Rgba([128, 128, 128, 255]);
         }
         let mut bytes = Vec::new();
-        img.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
-            .expect("Failed to encode test image");
+        img.write_to(
+            &mut std::io::Cursor::new(&mut bytes),
+            image::ImageFormat::Png,
+        )
+        .expect("Failed to encode test image");
         bytes
     }
 
@@ -596,7 +617,10 @@ mod tests {
     #[test]
     fn test_tiled_map_toc_title() {
         let section = TiledMapSection::from_tiles("Dungeon Level 1".to_string(), vec![], 1, 1);
-        assert_eq!(section.toc_title(), Some("Tiled Map: Dungeon Level 1".to_string()));
+        assert_eq!(
+            section.toc_title(),
+            Some("Tiled Map: Dungeon Level 1".to_string())
+        );
     }
 
     #[test]
@@ -613,8 +637,8 @@ mod tests {
 
     #[test]
     fn test_tiled_map_custom_margin() {
-        let section = TiledMapSection::from_tiles("Test".to_string(), vec![], 1, 1)
-            .with_margin(0.5);
+        let section =
+            TiledMapSection::from_tiles("Test".to_string(), vec![], 1, 1).with_margin(0.5);
         assert_eq!(section.page_margin(), Some(0.5));
     }
 
@@ -652,8 +676,11 @@ mod tests {
             *pixel = Rgba([100, 100, 100, 255]);
         }
         let mut bytes = Vec::new();
-        img.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
-            .expect("Failed to encode test image");
+        img.write_to(
+            &mut std::io::Cursor::new(&mut bytes),
+            image::ImageFormat::Png,
+        )
+        .expect("Failed to encode test image");
 
         let section = TiledMapSection::from_rendered("Small Map".to_string(), bytes, 100);
         let ctx = RenderContext::new(std::env::temp_dir().join("mimir-test-tiled-rendered"));

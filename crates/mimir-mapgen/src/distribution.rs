@@ -232,7 +232,11 @@ mod tests {
         // All gated points should be in noise range
         for &(x, y) in &points {
             let val = noise.sample(x, y);
-            assert!(val >= 0.3 && val <= 0.7, "Noise value out of range: {}", val);
+            assert!(
+                val >= 0.3 && val <= 0.7,
+                "Noise value out of range: {}",
+                val
+            );
         }
     }
 

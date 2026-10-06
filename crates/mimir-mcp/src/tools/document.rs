@@ -179,13 +179,16 @@ pub async fn read_document(
             McpError::InvalidArguments(format!("Document '{}' not found", document_id))
         })?;
 
-    McpResponse::get("document", json!({
-        "id": document.id,
-        "title": document.title,
-        "doc_type": document.doc_type,
-        "content": document.content,
-        "module_id": document.module_id
-    }))
+    McpResponse::get(
+        "document",
+        json!({
+            "id": document.id,
+            "title": document.title,
+            "doc_type": document.doc_type,
+            "content": document.content,
+            "module_id": document.module_id
+        }),
+    )
 }
 
 pub async fn create_document(
@@ -214,12 +217,15 @@ pub async fn create_document(
         .create(input)
         .map_err(|e| McpError::Internal(e.to_string()))?;
 
-    McpResponse::created("document", json!({
-        "id": document.id,
-        "title": document.title,
-        "doc_type": document.doc_type,
-        "content": document.content
-    }))
+    McpResponse::created(
+        "document",
+        json!({
+            "id": document.id,
+            "title": document.title,
+            "doc_type": document.doc_type,
+            "content": document.content
+        }),
+    )
 }
 
 pub async fn edit_document(
@@ -284,12 +290,15 @@ pub async fn edit_document(
         .update(document_id, update)
         .map_err(McpError::caller_fault)?;
 
-    McpResponse::updated("document", json!({
-        "id": updated.id,
-        "title": updated.title,
-        "doc_type": updated.doc_type,
-        "content": updated.content
-    }))
+    McpResponse::updated(
+        "document",
+        json!({
+            "id": updated.id,
+            "title": updated.title,
+            "doc_type": updated.doc_type,
+            "content": updated.content
+        }),
+    )
 }
 
 pub async fn reorder_document(

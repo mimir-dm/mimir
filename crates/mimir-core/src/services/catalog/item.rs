@@ -94,9 +94,13 @@ mod tests {
             NewItem::new("Plate Armor", "PHB", r#"{"name":"Plate Armor"}"#)
                 .with_type("HA")
                 .with_rarity("none"),
-            NewItem::new("Ring of Protection", "DMG", r#"{"name":"Ring of Protection"}"#)
-                .with_type("RG")
-                .with_rarity("rare"),
+            NewItem::new(
+                "Ring of Protection",
+                "DMG",
+                r#"{"name":"Ring of Protection"}"#,
+            )
+            .with_type("RG")
+            .with_rarity("rare"),
             NewItem::new("Bag of Holding", "DMG", r#"{"name":"Bag of Holding"}"#)
                 .with_type("W")
                 .with_rarity("uncommon"),
@@ -112,7 +116,9 @@ mod tests {
         let mut service = ItemService::new(&mut conn);
 
         // Search all
-        let results = service.search(&ItemFilter::default()).expect("Search failed");
+        let results = service
+            .search(&ItemFilter::default())
+            .expect("Search failed");
         assert_eq!(results.len(), 4);
 
         // Search by type

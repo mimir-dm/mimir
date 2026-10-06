@@ -13,8 +13,10 @@ pub fn insert_reward(conn: &mut SqliteConnection, reward: &NewReward) -> QueryRe
         .values(reward)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple rewards in a batch.
@@ -172,12 +174,17 @@ pub fn search_rewards_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z");
+        let source = NewCatalogSource::new(
+            "DMG",
+            "Dungeon Master's Guide",
+            true,
+            "2024-01-20T12:00:00Z",
+        );
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -186,8 +193,12 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let reward = NewReward::new("Blessing of Health", "DMG", r#"{"name":"Blessing of Health"}"#)
-            .with_type("blessing");
+        let reward = NewReward::new(
+            "Blessing of Health",
+            "DMG",
+            r#"{"name":"Blessing of Health"}"#,
+        )
+        .with_type("blessing");
         let id = insert_reward(&mut conn, &reward).expect("Failed to insert");
 
         let retrieved = get_reward(&mut conn, id).expect("Failed to get");

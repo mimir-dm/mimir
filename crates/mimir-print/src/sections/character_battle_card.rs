@@ -53,7 +53,12 @@ impl CharacterBattleCardSection {
 
     /// Calculate total character level
     fn total_level(character: &CharacterData) -> i32 {
-        character.classes.iter().map(|c| c.level).sum::<i32>().max(1)
+        character
+            .classes
+            .iter()
+            .map(|c| c.level)
+            .sum::<i32>()
+            .max(1)
     }
 
     /// Calculate proficiency bonus from total level
@@ -163,7 +168,11 @@ impl CharacterBattleCardSection {
         let attacks = Self::get_attacks(character);
 
         // Footer text
-        let footer_text = if character.is_npc { "NPC" } else { "Player Character" };
+        let footer_text = if character.is_npc {
+            "NPC"
+        } else {
+            "Player Character"
+        };
 
         format!(
             r##"box(
@@ -310,8 +319,9 @@ impl CharacterBattleCardSection {
                 || lower.contains("scimitar")
             {
                 // Determine if finesse or ranged
-                let is_finesse =
-                    lower.contains("rapier") || lower.contains("dagger") || lower.contains("scimitar");
+                let is_finesse = lower.contains("rapier")
+                    || lower.contains("dagger")
+                    || lower.contains("scimitar");
                 let is_ranged = lower.contains("bow") || lower.contains("crossbow");
                 let ability_mod = if is_finesse || is_ranged {
                     dex_mod
@@ -330,7 +340,10 @@ impl CharacterBattleCardSection {
 
         if attacks.is_empty() {
             // Default unarmed strike
-            attacks.push(format!("*Unarmed Strike.* {:+} to hit", prof_bonus + str_mod));
+            attacks.push(format!(
+                "*Unarmed Strike.* {:+} to hit",
+                prof_bonus + str_mod
+            ));
         }
 
         format!(

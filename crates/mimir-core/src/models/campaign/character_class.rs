@@ -141,7 +141,11 @@ impl<'a> UpdateCharacterClass<'a> {
     }
 
     /// Update level and subclass together.
-    pub fn set_level_and_subclass(level: i32, subclass_name: &'a str, subclass_source: &'a str) -> Self {
+    pub fn set_level_and_subclass(
+        level: i32,
+        subclass_name: &'a str,
+        subclass_source: &'a str,
+    ) -> Self {
         Self {
             level: Some(level),
             subclass_name: Some(Some(subclass_name)),
@@ -164,8 +168,8 @@ mod tests {
 
     #[test]
     fn test_new_multiclass() {
-        let class = NewCharacterClass::multiclass("class-1", "char-1", "Rogue", "PHB")
-            .with_level(3);
+        let class =
+            NewCharacterClass::multiclass("class-1", "char-1", "Rogue", "PHB").with_level(3);
         assert_eq!(class.class_name, "Rogue");
         assert_eq!(class.starting_class, 0);
         assert_eq!(class.level, 3);

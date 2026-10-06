@@ -8,8 +8,8 @@ use mimir_core::services::{
 };
 use tauri::State;
 
-use crate::state::AppState;
 use super::{to_api_response, ApiResponse};
+use crate::state::AppState;
 
 /// List all campaigns.
 ///
@@ -143,7 +143,10 @@ pub fn archive_campaign(state: State<'_, AppState>, campaign_id: String) -> ApiR
 
 /// Unarchive a campaign.
 #[tauri::command]
-pub fn unarchive_campaign(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Campaign> {
+pub fn unarchive_campaign(
+    state: State<'_, AppState>,
+    campaign_id: String,
+) -> ApiResponse<Campaign> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),

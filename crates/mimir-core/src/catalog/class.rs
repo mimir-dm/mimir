@@ -367,7 +367,10 @@ mod tests {
         });
         let prog: OptionalFeatureProgression = serde_json::from_value(json).unwrap();
         assert_eq!(prog.name, Some("Eldritch Invocations".to_string()));
-        assert!(matches!(prog.progression, Some(OptionalFeatureProgressionValue::Array(_))));
+        assert!(matches!(
+            prog.progression,
+            Some(OptionalFeatureProgressionValue::Array(_))
+        ));
     }
 
     #[test]

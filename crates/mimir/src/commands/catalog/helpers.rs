@@ -10,7 +10,8 @@ pub fn find_subclass_level(data: &Value) -> i32 {
         for feature in features {
             // Check if this feature grants subclass
             let grants_subclass = match feature {
-                Value::Object(obj) => obj.get("gainSubclassFeature")
+                Value::Object(obj) => obj
+                    .get("gainSubclassFeature")
                     .and_then(|v| v.as_bool())
                     .unwrap_or(false),
                 Value::String(_) => false, // Simple string refs don't grant subclass
@@ -67,14 +68,18 @@ pub fn determine_asi_levels(class_name: &str, data: &Value) -> Vec<i32> {
                 for feature in features {
                     let feature_str = match feature {
                         Value::String(s) => s.clone(),
-                        Value::Object(obj) => obj.get("classFeature")
+                        Value::Object(obj) => obj
+                            .get("classFeature")
                             .and_then(|v| v.as_str())
                             .unwrap_or("")
                             .to_string(),
                         _ => continue,
                     };
 
-                    if feature_str.to_lowercase().contains("ability score improvement") {
+                    if feature_str
+                        .to_lowercase()
+                        .contains("ability score improvement")
+                    {
                         // Parse level from format: "Feature|Class|Source|Level"
                         let parts: Vec<&str> = feature_str.split('|').collect();
                         if parts.len() >= 4 {
@@ -99,7 +104,11 @@ pub fn extract_spell_slots_from_table(table_groups: &[Value]) -> Vec<Value> {
         if let Some(labels) = group.get("colLabels").and_then(|l| l.as_array()) {
             // Look for spell slot columns (1st, 2nd, 3rd, etc.)
             let has_spell_slots = labels.iter().any(|l| {
-                l.as_str().map(|s| s.contains("st") || s.contains("nd") || s.contains("rd") || s.contains("th")).unwrap_or(false)
+                l.as_str()
+                    .map(|s| {
+                        s.contains("st") || s.contains("nd") || s.contains("rd") || s.contains("th")
+                    })
+                    .unwrap_or(false)
             });
 
             if has_spell_slots {
@@ -237,7 +246,9 @@ pub fn extract_fighting_style_classes(feature_type: Option<&str>) -> Vec<String>
 }
 
 /// Extract invocation prerequisites (level, pact boon, spell requirements).
-pub fn extract_invocation_prereqs(prereq: Option<&Value>) -> (Option<i32>, Option<String>, Option<String>) {
+pub fn extract_invocation_prereqs(
+    prereq: Option<&Value>,
+) -> (Option<i32>, Option<String>, Option<String>) {
     let mut level_prereq = None;
     let mut pact_prereq = None;
     let mut spell_prereq = None;
@@ -262,7 +273,8 @@ pub fn extract_invocation_prereqs(prereq: Option<&Value>) -> (Option<i32>, Optio
                 // Spell requirement
                 if let Some(spell) = obj.get("spell") {
                     if let Some(spells) = spell.as_array() {
-                        spell_prereq = spells.first()
+                        spell_prereq = spells
+                            .first()
                             .and_then(|s| s.as_str())
                             .map(|s| s.replace("#c", "").to_string());
                     }

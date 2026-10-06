@@ -385,8 +385,7 @@ impl<'a> MapStateService<'a> {
     /// Create a trap.
     pub fn create_trap(&mut self, input: CreateTrapInput) -> ServiceResult<MapTrap> {
         let id = Uuid::new_v4().to_string();
-        let mut trap =
-            NewMapTrap::new(&id, &input.map_id, &input.name, input.grid_x, input.grid_y);
+        let mut trap = NewMapTrap::new(&id, &input.map_id, &input.name, input.grid_x, input.grid_y);
 
         if let Some(ref desc) = input.description {
             trap = trap.with_description(desc);
@@ -414,10 +413,7 @@ impl<'a> MapStateService<'a> {
         let update = UpdateMapTrap {
             name: input.name.as_deref(),
             description: input.description.as_ref().map(|s| Some(s.as_str())),
-            trigger_description: input
-                .trigger_description
-                .as_ref()
-                .map(|s| Some(s.as_str())),
+            trigger_description: input.trigger_description.as_ref().map(|s| Some(s.as_str())),
             effect_description: input.effect_description.as_ref().map(|s| Some(s.as_str())),
             dc: input.dc.map(Some),
             updated_at: Some(&now),
@@ -632,7 +628,10 @@ mod tests {
         let mut svc = MapStateService::new(&mut conn);
 
         let rect = svc.reveal_rect(&map_id, 1.0, 2.0, 3.0, 4.0).unwrap();
-        assert_eq!((rect.x, rect.y, rect.width, rect.height), (1.0, 2.0, 3.0, 4.0));
+        assert_eq!(
+            (rect.x, rect.y, rect.width, rect.height),
+            (1.0, 2.0, 3.0, 4.0)
+        );
 
         let circle = svc.reveal_circle(&map_id, 10.0, 10.0, 5.0).unwrap();
         assert_eq!(
@@ -641,7 +640,10 @@ mod tests {
         );
 
         let all = svc.reveal_all(&map_id, 100.0, 80.0).unwrap();
-        assert_eq!((all.x, all.y, all.width, all.height), (0.0, 0.0, 100.0, 80.0));
+        assert_eq!(
+            (all.x, all.y, all.width, all.height),
+            (0.0, 0.0, 100.0, 80.0)
+        );
 
         assert_eq!(svc.fog_state(&map_id).unwrap().revealed_areas.len(), 3);
     }

@@ -16,7 +16,10 @@ use crate::state::AppState;
 
 /// List all maps for a campaign (including module maps).
 #[tauri::command]
-pub fn list_campaign_maps(state: State<'_, AppState>, campaign_id: String) -> ApiResponse<Vec<MapResponse>> {
+pub fn list_campaign_maps(
+    state: State<'_, AppState>,
+    campaign_id: String,
+) -> ApiResponse<Vec<MapResponse>> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -24,7 +27,11 @@ pub fn list_campaign_maps(state: State<'_, AppState>, campaign_id: String) -> Ap
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
     match service.list_for_campaign(&campaign_id) {
-        Ok(maps) => ApiResponse::ok(enrich_maps_with_uvtt(maps, &mut service, &state.paths.app_dir)),
+        Ok(maps) => ApiResponse::ok(enrich_maps_with_uvtt(
+            maps,
+            &mut service,
+            &state.paths.app_dir,
+        )),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -42,14 +49,21 @@ pub fn list_campaign_level_maps(
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
     match service.list_campaign_level(&campaign_id) {
-        Ok(maps) => ApiResponse::ok(enrich_maps_with_uvtt(maps, &mut service, &state.paths.app_dir)),
+        Ok(maps) => ApiResponse::ok(enrich_maps_with_uvtt(
+            maps,
+            &mut service,
+            &state.paths.app_dir,
+        )),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
 
 /// List all maps for a module.
 #[tauri::command]
-pub fn list_module_maps(state: State<'_, AppState>, module_id: String) -> ApiResponse<Vec<MapResponse>> {
+pub fn list_module_maps(
+    state: State<'_, AppState>,
+    module_id: String,
+) -> ApiResponse<Vec<MapResponse>> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
@@ -57,7 +71,11 @@ pub fn list_module_maps(state: State<'_, AppState>, module_id: String) -> ApiRes
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
     match service.list_for_module(&module_id) {
-        Ok(maps) => ApiResponse::ok(enrich_maps_with_uvtt(maps, &mut service, &state.paths.app_dir)),
+        Ok(maps) => ApiResponse::ok(enrich_maps_with_uvtt(
+            maps,
+            &mut service,
+            &state.paths.app_dir,
+        )),
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }
@@ -76,7 +94,11 @@ pub fn get_map(state: State<'_, AppState>, id: String) -> ApiResponse<MapRespons
 
     let mut service = MapService::new(&mut db, &state.paths.app_dir);
     match service.get(&id) {
-        Ok(Some(map)) => ApiResponse::ok(enrich_map_with_uvtt(&map, &mut service, &state.paths.app_dir)),
+        Ok(Some(map)) => ApiResponse::ok(enrich_map_with_uvtt(
+            &map,
+            &mut service,
+            &state.paths.app_dir,
+        )),
         Ok(None) => ApiResponse::err(format!("Map not found: {}", id)),
         Err(e) => ApiResponse::err(e.to_string()),
     }
@@ -127,7 +149,12 @@ pub fn create_map(state: State<'_, AppState>, request: CreateMapRequest) -> ApiR
             uvtt_data,
         )
     } else {
-        CreateMapInput::for_campaign(&request.campaign_id, &request.name, &request.filename, uvtt_data)
+        CreateMapInput::for_campaign(
+            &request.campaign_id,
+            &request.name,
+            &request.filename,
+            uvtt_data,
+        )
     };
 
     if let Some(desc) = request.description {
@@ -166,7 +193,10 @@ pub fn update_map(
         name: request.name,
         description: request.description,
         sort_order: request.sort_order,
-        lighting_mode: request.lighting_mode.as_deref().map(|s| parse_lighting_mode(Some(s))),
+        lighting_mode: request
+            .lighting_mode
+            .as_deref()
+            .map(|s| parse_lighting_mode(Some(s))),
         module_id: None, // Don't allow moving maps via update
     };
 

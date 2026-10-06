@@ -127,7 +127,12 @@ impl<'a> NewMonster<'a> {
     /// - `cr` from `data.cr` (handles both string and object formats)
     /// - `creature_type` from `data.type.type` or `data.type` (string)
     /// - `size` from `data.size[0]`
-    pub fn from_json(name: &'a str, source: &'a str, data: &'a str, json: &serde_json::Value) -> Self {
+    pub fn from_json(
+        name: &'a str,
+        source: &'a str,
+        data: &'a str,
+        json: &serde_json::Value,
+    ) -> Self {
         let mut monster = Self::new(name, source, data);
 
         // Extract CR (can be string, number, or object with "cr" field)
@@ -148,10 +153,12 @@ impl<'a> NewMonster<'a> {
         // Extract creature type
         if let Some(type_val) = json.get("type") {
             if let Some(type_str) = type_val.as_str() {
-                monster.creature_type = Some(unsafe { std::mem::transmute::<&str, &'a str>(type_str) });
+                monster.creature_type =
+                    Some(unsafe { std::mem::transmute::<&str, &'a str>(type_str) });
             } else if let Some(type_obj) = type_val.as_object() {
                 if let Some(type_str) = type_obj.get("type").and_then(|v| v.as_str()) {
-                    monster.creature_type = Some(unsafe { std::mem::transmute::<&str, &'a str>(type_str) });
+                    monster.creature_type =
+                        Some(unsafe { std::mem::transmute::<&str, &'a str>(type_str) });
                 }
             }
         }

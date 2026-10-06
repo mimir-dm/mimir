@@ -56,7 +56,14 @@ impl<'a> NewClassFeature<'a> {
         level: i32,
         data: &'a str,
     ) -> Self {
-        Self { name, source, class_name, class_source, level, data }
+        Self {
+            name,
+            source,
+            class_name,
+            class_source,
+            level,
+            data,
+        }
     }
 }
 
@@ -83,7 +90,11 @@ impl ClassFeatureFilter {
         self
     }
 
-    pub fn with_class(mut self, class_name: impl Into<String>, class_source: impl Into<String>) -> Self {
+    pub fn with_class(
+        mut self,
+        class_name: impl Into<String>,
+        class_source: impl Into<String>,
+    ) -> Self {
         self.class_name = Some(class_name.into());
         self.class_source = Some(class_source.into());
         self

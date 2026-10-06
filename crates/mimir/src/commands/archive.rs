@@ -82,10 +82,7 @@ pub fn import_campaign(
     let archive = Path::new(&archive_path);
     let assets_path = &state.paths.assets_dir;
 
-    let result = ArchiveService::new(&mut db).import_campaign(
-        archive,
-        assets_path,
-        new_name.as_deref(),
-    );
+    let result =
+        ArchiveService::new(&mut db).import_campaign(archive, assets_path, new_name.as_deref());
     to_api_response(result)
 }

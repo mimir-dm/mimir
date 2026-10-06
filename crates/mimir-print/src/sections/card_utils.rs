@@ -52,12 +52,8 @@ pub fn split_text_natural(text: &str, budget: usize) -> CardTextSplit {
             search_region.rfind("\n- ").map(|p| p + 1)
         })
         // 2. Sentence boundary: `. ` or `.\n`
-        .or_else(|| {
-            search_region.rfind(". ").map(|p| p + 2)
-        })
-        .or_else(|| {
-            search_region.rfind(".\n").map(|p| p + 2)
-        })
+        .or_else(|| search_region.rfind(". ").map(|p| p + 2))
+        .or_else(|| search_region.rfind(".\n").map(|p| p + 2))
         // 3. Clause boundary: `, `
         .or_else(|| {
             // Only use comma splits in the back half to avoid tiny front cards
@@ -65,9 +61,7 @@ pub fn split_text_natural(text: &str, budget: usize) -> CardTextSplit {
             search_region[half..].rfind(", ").map(|p| half + p + 2)
         })
         // 4. Word boundary: last space
-        .or_else(|| {
-            search_region.rfind(' ').map(|p| p + 1)
-        })
+        .or_else(|| search_region.rfind(' ').map(|p| p + 1))
         // 5. Hard cut
         .unwrap_or(budget);
 
@@ -96,8 +90,7 @@ pub fn flatten_entries(entries: &[Value]) -> String {
                 for item in items {
                     if let Some(s) = item.as_str() {
                         parts.push(format!("- {}", s));
-                    } else if let Some(sub_entries) =
-                        item.get("entries").and_then(|v| v.as_array())
+                    } else if let Some(sub_entries) = item.get("entries").and_then(|v| v.as_array())
                     {
                         parts.push(flatten_entries(sub_entries));
                     } else if let Some(entry_str) = item.get("entry").and_then(|v| v.as_str()) {
@@ -259,10 +252,7 @@ mod tests {
 
     #[test]
     fn test_escape_5etools_tags() {
-        assert_eq!(
-            escape_typst("{@damage 1d6}"),
-            "\\{\\@damage 1d6\\}"
-        );
+        assert_eq!(escape_typst("{@damage 1d6}"), "\\{\\@damage 1d6\\}");
     }
 
     #[test]

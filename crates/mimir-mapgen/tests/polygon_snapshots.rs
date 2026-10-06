@@ -11,25 +11,23 @@
 use mimir_mapgen::pipeline;
 
 fn fixture(name: &str) -> String {
-    format!(
-        "{}/tests/fixtures/{}",
-        env!("CARGO_MANIFEST_DIR"),
-        name
-    )
+    format!("{}/tests/fixtures/{}", env!("CARGO_MANIFEST_DIR"), name)
 }
 
 fn load_config(yaml_name: &str) -> pipeline::MapConfig {
     let path = fixture(yaml_name);
-    let yaml = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
-    serde_yaml::from_str(&yaml)
-        .unwrap_or_else(|e| panic!("Failed to parse {}: {}", path, e))
+    let yaml =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
+    serde_yaml::from_str(&yaml).unwrap_or_else(|e| panic!("Failed to parse {}: {}", path, e))
 }
 
 fn assert_world_matches(yaml_name: &str, baseline_name: &str) {
     let config = load_config(yaml_name);
     let result = pipeline::generate(&config, None);
-    let generated_json = result.map.to_json().expect("Failed to serialize generated map");
+    let generated_json = result
+        .map
+        .to_json()
+        .expect("Failed to serialize generated map");
     let generated: serde_json::Value =
         serde_json::from_str(&generated_json).expect("Failed to parse generated JSON");
 

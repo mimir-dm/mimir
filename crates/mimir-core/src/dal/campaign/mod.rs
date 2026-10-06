@@ -4,7 +4,6 @@
 
 mod campaign;
 mod campaign_asset;
-mod homebrew_crud;
 mod campaign_homebrew_item;
 mod campaign_homebrew_monster;
 mod campaign_homebrew_spell;
@@ -19,6 +18,7 @@ mod character_source;
 mod character_spell;
 mod document;
 mod fog;
+mod homebrew_crud;
 mod light_source;
 mod map;
 mod map_poi;

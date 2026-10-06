@@ -8,16 +8,15 @@ use diesel::prelude::*;
 use diesel::SqliteConnection;
 
 /// Insert a new variant rule.
-pub fn insert_variant_rule(
-    conn: &mut SqliteConnection,
-    rule: &NewVariantRule,
-) -> QueryResult<i32> {
+pub fn insert_variant_rule(conn: &mut SqliteConnection, rule: &NewVariantRule) -> QueryResult<i32> {
     diesel::insert_into(variant_rules::table)
         .values(rule)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple variant rules in a batch.
@@ -87,7 +86,10 @@ pub fn count_variant_rules(conn: &mut SqliteConnection) -> QueryResult<i64> {
 }
 
 /// Count variant rules from a specific source.
-pub fn count_variant_rules_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+pub fn count_variant_rules_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<i64> {
     variant_rules::table
         .filter(variant_rules::source.eq(source))
         .count()
@@ -95,7 +97,10 @@ pub fn count_variant_rules_by_source(conn: &mut SqliteConnection, source: &str) 
 }
 
 /// Get a variant rule by its ID, returning None if not found.
-pub fn get_variant_rule_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<VariantRule>> {
+pub fn get_variant_rule_optional(
+    conn: &mut SqliteConnection,
+    id: i32,
+) -> QueryResult<Option<VariantRule>> {
     variant_rules::table
         .filter(variant_rules::id.eq(id))
         .first(conn)
@@ -174,12 +179,17 @@ pub fn search_variant_rules_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z");
+        let source = NewCatalogSource::new(
+            "DMG",
+            "Dungeon Master's Guide",
+            true,
+            "2024-01-20T12:00:00Z",
+        );
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -188,8 +198,7 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let rule = NewVariantRule::new("Flanking", "DMG", r#"{"name":"Flanking"}"#)
-            .with_type("O");
+        let rule = NewVariantRule::new("Flanking", "DMG", r#"{"name":"Flanking"}"#).with_type("O");
         let id = insert_variant_rule(&mut conn, &rule).expect("Failed to insert");
 
         let retrieved = get_variant_rule(&mut conn, id).expect("Failed to get");

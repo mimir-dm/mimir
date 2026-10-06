@@ -46,7 +46,8 @@ impl<'a> CatalogEntityService for CatalogTableService<'a> {
         limit: i64,
         offset: i64,
     ) -> ServiceResult<Vec<Self::Entity>> {
-        dal::search_catalog_tables_paginated(self.conn, filter, limit, offset).map_err(ServiceError::from)
+        dal::search_catalog_tables_paginated(self.conn, filter, limit, offset)
+            .map_err(ServiceError::from)
     }
 
     fn get(&mut self, id: i32) -> ServiceResult<Option<Self::Entity>> {

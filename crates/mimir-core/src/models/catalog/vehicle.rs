@@ -26,14 +26,16 @@ impl Vehicle {
 
     /// Get the human-readable type name.
     pub fn type_name(&self) -> &str {
-        self.vehicle_type.as_ref().map_or("Unknown", |t| match t.as_str() {
-            "SHIP" => "Ship",
-            "INFERNAL" => "Infernal War Machine",
-            "CREATURE" => "Creature",
-            "OBJECT" => "Object",
-            "SPELLJAMMER" => "Spelljammer",
-            _ => "Unknown",
-        })
+        self.vehicle_type
+            .as_ref()
+            .map_or("Unknown", |t| match t.as_str() {
+                "SHIP" => "Ship",
+                "INFERNAL" => "Infernal War Machine",
+                "CREATURE" => "Creature",
+                "OBJECT" => "Object",
+                "SPELLJAMMER" => "Spelljammer",
+                _ => "Unknown",
+            })
     }
 }
 
@@ -49,7 +51,13 @@ pub struct NewVehicle<'a> {
 
 impl<'a> NewVehicle<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, vehicle_type: None, data, fluff: None }
+        Self {
+            name,
+            source,
+            vehicle_type: None,
+            data,
+            fluff: None,
+        }
     }
 
     pub fn with_type(mut self, vehicle_type: &'a str) -> Self {
@@ -91,8 +99,7 @@ mod tests {
 
     #[test]
     fn test_new_vehicle() {
-        let vehicle = NewVehicle::new("Galley", "GoS", r#"{"name":"Galley"}"#)
-            .with_type("SHIP");
+        let vehicle = NewVehicle::new("Galley", "GoS", r#"{"name":"Galley"}"#).with_type("SHIP");
         assert_eq!(vehicle.name, "Galley");
         assert_eq!(vehicle.vehicle_type, Some("SHIP"));
     }

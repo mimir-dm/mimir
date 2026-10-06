@@ -16,8 +16,10 @@ pub fn insert_spell(conn: &mut SqliteConnection, spell: &NewSpell) -> QueryResul
         .execute(conn)?;
 
     // Get the last inserted rowid
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple spells in a batch.
@@ -29,9 +31,7 @@ pub fn insert_spells(conn: &mut SqliteConnection, spells: &[NewSpell]) -> QueryR
 
 /// Get a spell by its ID.
 pub fn get_spell(conn: &mut SqliteConnection, id: i32) -> QueryResult<Spell> {
-    spells::table
-        .filter(spells::id.eq(id))
-        .first(conn)
+    spells::table.filter(spells::id.eq(id)).first(conn)
 }
 
 /// Get a spell by its ID, returning None if not found.
@@ -67,10 +67,7 @@ pub fn list_spells(conn: &mut SqliteConnection) -> QueryResult<Vec<Spell>> {
 }
 
 /// List spells from a specific source.
-pub fn list_spells_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<Vec<Spell>> {
+pub fn list_spells_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Spell>> {
     spells::table
         .filter(spells::source.eq(source))
         .order((spells::level.asc(), spells::name.asc()))
@@ -102,7 +99,10 @@ pub fn list_ritual_spells(conn: &mut SqliteConnection) -> QueryResult<Vec<Spell>
 ///
 /// Joins the spells table with spell_classes to find all spells
 /// that the given class has access to.
-pub fn list_spells_by_class(conn: &mut SqliteConnection, class_name: &str) -> QueryResult<Vec<Spell>> {
+pub fn list_spells_by_class(
+    conn: &mut SqliteConnection,
+    class_name: &str,
+) -> QueryResult<Vec<Spell>> {
     spells::table
         .inner_join(spell_classes::table)
         .filter(spell_classes::class_name.eq(class_name))
@@ -129,10 +129,7 @@ pub fn list_spells_by_class_and_level(
 }
 
 /// Search spells with filters.
-pub fn search_spells(
-    conn: &mut SqliteConnection,
-    filter: &SpellFilter,
-) -> QueryResult<Vec<Spell>> {
+pub fn search_spells(conn: &mut SqliteConnection, filter: &SpellFilter) -> QueryResult<Vec<Spell>> {
     // If sources filter is explicitly empty, return no results
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);
@@ -302,7 +299,8 @@ mod tests {
             .expect("Spell not found");
         assert_eq!(found.name, "Fireball");
 
-        let not_found = get_spell_by_name(&mut conn, "Magic Missile", "PHB").expect("Failed to query");
+        let not_found =
+            get_spell_by_name(&mut conn, "Magic Missile", "PHB").expect("Failed to query");
         assert!(not_found.is_none());
     }
 
@@ -329,7 +327,12 @@ mod tests {
 
         let spells = vec![
             NewSpell::new("Fire Bolt", "PHB", 0, r#"{"name":"Fire Bolt"}"#),
-            NewSpell::new("Prestidigitation", "PHB", 0, r#"{"name":"Prestidigitation"}"#),
+            NewSpell::new(
+                "Prestidigitation",
+                "PHB",
+                0,
+                r#"{"name":"Prestidigitation"}"#,
+            ),
             NewSpell::new("Fireball", "PHB", 3, r#"{"name":"Fireball"}"#),
         ];
         insert_spells(&mut conn, &spells).expect("Failed to insert");
@@ -365,10 +368,8 @@ mod tests {
         let mut conn = setup_test_db_with_sources();
 
         let spells = vec![
-            NewSpell::new("Fireball", "PHB", 3, r#"{"name":"Fireball"}"#)
-                .with_school("V"),
-            NewSpell::new("Fire Bolt", "PHB", 0, r#"{"name":"Fire Bolt"}"#)
-                .with_school("V"),
+            NewSpell::new("Fireball", "PHB", 3, r#"{"name":"Fireball"}"#).with_school("V"),
+            NewSpell::new("Fire Bolt", "PHB", 0, r#"{"name":"Fire Bolt"}"#).with_school("V"),
             NewSpell::new("Detect Magic", "PHB", 1, r#"{"name":"Detect Magic"}"#)
                 .with_school("D")
                 .with_ritual(true)

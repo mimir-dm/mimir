@@ -115,10 +115,8 @@ pub fn delete_all_character_spells(
     conn: &mut SqliteConnection,
     character_id: &str,
 ) -> QueryResult<usize> {
-    diesel::delete(
-        character_spells::table.filter(character_spells::character_id.eq(character_id)),
-    )
-    .execute(conn)
+    diesel::delete(character_spells::table.filter(character_spells::character_id.eq(character_id)))
+        .execute(conn)
 }
 
 /// Check if a character spell exists.
@@ -169,8 +167,8 @@ pub fn count_spells_by_class(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCharacter};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -216,10 +214,10 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let fireball = NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard")
-            .prepared();
-        let shield = NewCharacterSpell::new("spell-2", "char-1", "Shield", "PHB", "Wizard")
-            .prepared();
+        let fireball =
+            NewCharacterSpell::new("spell-1", "char-1", "Fireball", "PHB", "Wizard").prepared();
+        let shield =
+            NewCharacterSpell::new("spell-2", "char-1", "Shield", "PHB", "Wizard").prepared();
         let mm = NewCharacterSpell::new("spell-3", "char-1", "Magic Missile", "PHB", "Wizard");
         insert_character_spell(&mut conn, &fireball).expect("Failed to insert");
         insert_character_spell(&mut conn, &shield).expect("Failed to insert");

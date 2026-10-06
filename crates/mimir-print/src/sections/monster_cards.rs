@@ -46,10 +46,7 @@ impl MonsterCardSection {
             .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or("Unknown");
-        let source = monster
-            .get("source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let source = monster.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
         // Size
         let size = monster
@@ -112,9 +109,11 @@ impl MonsterCardSection {
         let languages = extract_languages(monster);
 
         // Damage vulnerabilities, resistances, immunities
-        let vulnerabilities = extract_damage_list(monster, "damage_vulnerabilities", "damageVulnerabilities");
+        let vulnerabilities =
+            extract_damage_list(monster, "damage_vulnerabilities", "damageVulnerabilities");
         let resistances = extract_damage_list(monster, "damage_resistances", "damageResistances");
-        let damage_immunities = extract_damage_list(monster, "damage_immunities", "damageImmunities");
+        let damage_immunities =
+            extract_damage_list(monster, "damage_immunities", "damageImmunities");
         let condition_immunities = extract_condition_immunities(monster);
 
         // Plan card layout (single or foldable)
@@ -268,10 +267,19 @@ impl MonsterCardSection {
             } else {
                 format!("*Languages* {}", escape_typst(&languages))
             },
-            resistances_block = render_resistances_block(&vulnerabilities, &resistances, &damage_immunities, &condition_immunities),
+            resistances_block = render_resistances_block(
+                &vulnerabilities,
+                &resistances,
+                &damage_immunities,
+                &condition_immunities
+            ),
             front_sections_content = front_sections_content,
             source = escape_typst(source),
-            fold_indicator = if layout.is_foldable { " ▶ continued" } else { "" },
+            fold_indicator = if layout.is_foldable {
+                " ▶ continued"
+            } else {
+                ""
+            },
         )
     }
 
@@ -287,10 +295,7 @@ impl MonsterCardSection {
             .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or("Unknown");
-        let source = monster
-            .get("source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let source = monster.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
         let back_sections_content = render_sections(&layout.back_sections);
 
@@ -398,7 +403,6 @@ impl Renderable for MonsterCardSection {
         }
 
         for (page_num, page_cards) in pages.iter().enumerate() {
-
             if page_num > 0 {
                 typst.push_str("\n#pagebreak()\n");
             }
@@ -509,10 +513,7 @@ fn extract_ac_full(monster: &Value) -> String {
             } else if let Some(obj) = ac.as_object() {
                 let ac_val = obj.get("ac").and_then(|v| v.as_i64()).unwrap_or(10);
                 if let Some(from) = obj.get("from").and_then(|v| v.as_array()) {
-                    let sources: Vec<_> = from
-                        .iter()
-                        .filter_map(|f| f.as_str())
-                        .collect();
+                    let sources: Vec<_> = from.iter().filter_map(|f| f.as_str()).collect();
                     if !sources.is_empty() {
                         return format!("{} ({})", ac_val, sources.join(", "));
                     }
@@ -579,7 +580,10 @@ fn render_individual_boxes(hp: i64) -> String {
     for i in 1..=hp {
         if i % 10 == 0 {
             // Styled 10th box - thicker border, slight fill
-            boxes.push(r##"#box(width: 7pt, height: 7pt, stroke: 1pt + black, fill: rgb("#e5e5e5"))"##.to_string());
+            boxes.push(
+                r##"#box(width: 7pt, height: 7pt, stroke: 1pt + black, fill: rgb("#e5e5e5"))"##
+                    .to_string(),
+            );
         } else {
             // Regular 1-HP box
             boxes.push(r##"#box(width: 6pt, height: 6pt, stroke: 0.5pt + black)"##.to_string());
@@ -660,7 +664,10 @@ fn extract_speed_full(monster: &Value) -> String {
                 }
                 if let Some(fly) = obj.get("fly").and_then(|v| v.as_i64()) {
                     let hover = obj.get("hover").and_then(|v| v.as_bool()).unwrap_or(false)
-                        || obj.get("canHover").and_then(|v| v.as_bool()).unwrap_or(false);
+                        || obj
+                            .get("canHover")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false);
                     if hover {
                         parts.push(format!("fly {} ft. (hover)", fly));
                     } else {
@@ -796,7 +803,12 @@ fn extract_condition_immunities(monster: &Value) -> String {
         .unwrap_or_default()
 }
 
-fn render_resistances_block(vuln: &str, resist: &str, dmg_immune: &str, cond_immune: &str) -> String {
+fn render_resistances_block(
+    vuln: &str,
+    resist: &str,
+    dmg_immune: &str,
+    cond_immune: &str,
+) -> String {
     let mut lines = Vec::new();
 
     if !vuln.is_empty() {
@@ -1487,7 +1499,12 @@ mod tests {
         assert!(typst.contains("#grid("));
 
         // One monster = 3 empty slots filled
-        assert_eq!(typst.matches("box(width: 3.875in, height: 5.125in)").count(), 3);
+        assert_eq!(
+            typst
+                .matches("box(width: 3.875in, height: 5.125in)")
+                .count(),
+            3
+        );
     }
 
     #[test]
@@ -1519,13 +1536,21 @@ mod tests {
 
         // 3 goblins on one page, 1 empty slot
         assert_eq!(typst.matches("Goblin").count() >= 3, true);
-        assert_eq!(typst.matches("box(width: 3.875in, height: 5.125in)").count(), 1);
+        assert_eq!(
+            typst
+                .matches("box(width: 3.875in, height: 5.125in)")
+                .count(),
+            1
+        );
     }
 
     #[test]
     fn test_to_typst_page_break_after_four() {
         let monsters = vec![
-            test_goblin(), test_goblin(), test_goblin(), test_goblin(),
+            test_goblin(),
+            test_goblin(),
+            test_goblin(),
+            test_goblin(),
             test_goblin(),
         ];
         let section = MonsterCardSection::new(monsters);
@@ -1539,13 +1564,22 @@ mod tests {
     #[test]
     fn test_size_name_mapping() {
         let sizes = vec![
-            ("T", "Tiny"), ("S", "Small"), ("M", "Medium"),
-            ("L", "Large"), ("H", "Huge"), ("G", "Gargantuan"),
+            ("T", "Tiny"),
+            ("S", "Small"),
+            ("M", "Medium"),
+            ("L", "Large"),
+            ("H", "Huge"),
+            ("G", "Gargantuan"),
         ];
         for (code, name) in sizes {
             let monster = json!({"name": "Test", "size": [code]});
             let card = MonsterCardSection::render_card(&monster);
-            assert!(card.contains(name), "Expected '{}' for size code '{}'", name, code);
+            assert!(
+                card.contains(name),
+                "Expected '{}' for size code '{}'",
+                name,
+                code
+            );
         }
     }
 
@@ -1634,10 +1668,16 @@ mod tests {
         assert_eq!(strip_5etools_tags("{@atk rw}"), "Ranged Weapon Attack:");
         assert_eq!(strip_5etools_tags("{@atk ms}"), "Melee Spell Attack:");
         assert_eq!(strip_5etools_tags("{@atk rs}"), "Ranged Spell Attack:");
-        assert_eq!(strip_5etools_tags("{@atk mw,rw}"), "Melee or Ranged Weapon Attack:");
+        assert_eq!(
+            strip_5etools_tags("{@atk mw,rw}"),
+            "Melee or Ranged Weapon Attack:"
+        );
         assert_eq!(strip_5etools_tags("{@dice 2d6}"), "2d6");
         assert_eq!(strip_5etools_tags("{@creature goblin|mm}"), "goblin");
-        assert_eq!(strip_5etools_tags("{@condition frightened|phb}"), "frightened");
+        assert_eq!(
+            strip_5etools_tags("{@condition frightened|phb}"),
+            "frightened"
+        );
     }
 
     #[test]
@@ -1673,11 +1713,17 @@ mod tests {
         let layout = plan_card_layout(&dragon);
 
         // Check that section names exist
-        let section_names: Vec<&str> = layout.front_sections.iter()
+        let section_names: Vec<&str> = layout
+            .front_sections
+            .iter()
             .chain(layout.back_sections.iter())
             .map(|s| s.name)
             .collect();
 
-        assert!(section_names.contains(&"Traits") || section_names.contains(&"Actions") || section_names.contains(&"Legendary"));
+        assert!(
+            section_names.contains(&"Traits")
+                || section_names.contains(&"Actions")
+                || section_names.contains(&"Legendary")
+        );
     }
 }

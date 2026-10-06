@@ -27,10 +27,7 @@ pub fn insert_deity(conn: &mut SqliteConnection, deity: &NewDeity) -> QueryResul
 }
 
 /// Insert multiple deities in a batch.
-pub fn insert_deities(
-    conn: &mut SqliteConnection,
-    deities: &[NewDeity],
-) -> QueryResult<usize> {
+pub fn insert_deities(conn: &mut SqliteConnection, deities: &[NewDeity]) -> QueryResult<usize> {
     diesel::insert_into(deities::table)
         .values(deities)
         .execute(conn)
@@ -38,9 +35,7 @@ pub fn insert_deities(
 
 /// Get a deity by its ID.
 pub fn get_deity(conn: &mut SqliteConnection, id: i32) -> QueryResult<Deity> {
-    deities::table
-        .filter(deities::id.eq(id))
-        .first(conn)
+    deities::table.filter(deities::id.eq(id)).first(conn)
 }
 
 /// Get a deity by name and source.
@@ -89,10 +84,7 @@ pub fn delete_deity(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize> 
 }
 
 /// Delete all deities from a specific source.
-pub fn delete_deities_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_deities_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(deities::table.filter(deities::source.eq(source))).execute(conn)
 }
 
@@ -127,7 +119,10 @@ pub fn list_deity_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<String
 }
 
 /// Search deities with filters.
-pub fn search_deities(conn: &mut SqliteConnection, filter: &DeityFilter) -> QueryResult<Vec<Deity>> {
+pub fn search_deities(
+    conn: &mut SqliteConnection,
+    filter: &DeityFilter,
+) -> QueryResult<Vec<Deity>> {
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);
     }
@@ -186,12 +181,13 @@ pub fn search_deities_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -200,8 +196,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let deity = NewDeity::new("Tyr", "PHB", r#"{"name":"Tyr"}"#)
-            .with_pantheon("Forgotten Realms");
+        let deity =
+            NewDeity::new("Tyr", "PHB", r#"{"name":"Tyr"}"#).with_pantheon("Forgotten Realms");
         let id = insert_deity(&mut conn, &deity).expect("Failed to insert");
 
         let retrieved = get_deity(&mut conn, id).expect("Failed to get");

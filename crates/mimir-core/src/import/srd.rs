@@ -344,18 +344,12 @@ mod tests {
 
     #[test]
     fn test_check_srd_status() {
-        assert_eq!(
-            check_srd_status(&json!({"srd": true})),
-            SrdStatus::Include
-        );
+        assert_eq!(check_srd_status(&json!({"srd": true})), SrdStatus::Include);
         assert_eq!(
             check_srd_status(&json!({"srd": "Orb"})),
             SrdStatus::IncludeRenamed("Orb".to_string())
         );
-        assert_eq!(
-            check_srd_status(&json!({"srd": false})),
-            SrdStatus::Exclude
-        );
+        assert_eq!(check_srd_status(&json!({"srd": false})), SrdStatus::Exclude);
         assert_eq!(
             check_srd_status(&json!({"basicRules": true})),
             SrdStatus::Include

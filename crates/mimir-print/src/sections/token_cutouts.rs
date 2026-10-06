@@ -125,10 +125,13 @@ impl TokenCutoutSection {
             let png_bytes = match image::load_from_memory(bytes) {
                 Ok(img) => {
                     let mut png_data = Vec::new();
-                    if img.write_to(
-                        &mut std::io::Cursor::new(&mut png_data),
-                        image::ImageFormat::Png,
-                    ).is_ok() {
+                    if img
+                        .write_to(
+                            &mut std::io::Cursor::new(&mut png_data),
+                            image::ImageFormat::Png,
+                        )
+                        .is_ok()
+                    {
                         png_data
                     } else {
                         bytes.clone()
@@ -212,10 +215,7 @@ impl TokenCutoutSection {
 
         let mut typst = String::new();
 
-        typst.push_str(&format!(
-            "#grid(columns: {}, gutter: 4pt,\n",
-            cols
-        ));
+        typst.push_str(&format!("#grid(columns: {}, gutter: 4pt,\n", cols));
 
         for token in tokens {
             // Render each copy of the token
@@ -377,7 +377,9 @@ mod tests {
         assert_eq!(detect_image_format(&jpg), "jpg");
 
         // WebP magic bytes
-        let webp = [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50];
+        let webp = [
+            0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+        ];
         assert_eq!(detect_image_format(&webp), "webp");
     }
 
@@ -386,17 +388,28 @@ mod tests {
     #[test]
     fn test_size_multiplier_all_sizes() {
         let cases = vec![
-            ("tiny", 0.5), ("t", 0.5),
-            ("small", 1.0), ("s", 1.0),
-            ("medium", 1.0), ("m", 1.0),
-            ("large", 2.0), ("l", 2.0),
-            ("huge", 3.0), ("h", 3.0),
-            ("gargantuan", 4.0), ("g", 4.0),
+            ("tiny", 0.5),
+            ("t", 0.5),
+            ("small", 1.0),
+            ("s", 1.0),
+            ("medium", 1.0),
+            ("m", 1.0),
+            ("large", 2.0),
+            ("l", 2.0),
+            ("huge", 3.0),
+            ("h", 3.0),
+            ("gargantuan", 4.0),
+            ("g", 4.0),
             ("unknown", 1.0),
         ];
         for (size, expected) in cases {
             let token = CutoutToken::new("Test".into(), size.into(), "monster".into());
-            assert_eq!(token.size_multiplier(), expected, "Failed for size: {}", size);
+            assert_eq!(
+                token.size_multiplier(),
+                expected,
+                "Failed for size: {}",
+                size
+            );
         }
     }
 
@@ -415,8 +428,8 @@ mod tests {
 
     #[test]
     fn test_cutout_token_with_quantity() {
-        let token = CutoutToken::new("Goblin".into(), "small".into(), "monster".into())
-            .with_quantity(3);
+        let token =
+            CutoutToken::new("Goblin".into(), "small".into(), "monster".into()).with_quantity(3);
         assert_eq!(token.quantity, 3);
         assert_eq!(token.name, "Goblin");
     }
@@ -480,7 +493,11 @@ mod tests {
 
     #[test]
     fn test_render_token_name_truncation() {
-        let token = CutoutToken::new("Ancient Red Dragon Wyrm".into(), "huge".into(), "monster".into());
+        let token = CutoutToken::new(
+            "Ancient Red Dragon Wyrm".into(),
+            "huge".into(),
+            "monster".into(),
+        );
         let section = TokenCutoutSection::new(vec![]);
         let ctx = RenderContext::default();
 
@@ -512,8 +529,8 @@ mod tests {
 
     #[test]
     fn test_render_respects_quantity() {
-        let token = CutoutToken::new("Goblin".into(), "small".into(), "monster".into())
-            .with_quantity(3);
+        let token =
+            CutoutToken::new("Goblin".into(), "small".into(), "monster".into()).with_quantity(3);
         let section = TokenCutoutSection::new(vec![token]);
         let ctx = RenderContext::default();
         let typst = section.to_typst(&ctx).unwrap();
@@ -539,10 +556,13 @@ mod tests {
         let ctx = RenderContext::default();
 
         // Test at the individual token render level — stroke style changes
-        let result = section.render_token(
-            &CutoutToken::new("Test".into(), "medium".into(), "monster".into()),
-            &ctx, 1.0
-        ).unwrap();
+        let result = section
+            .render_token(
+                &CutoutToken::new("Test".into(), "medium".into(), "monster".into()),
+                &ctx,
+                1.0,
+            )
+            .unwrap();
         assert!(!result.contains("dashed"));
         assert!(result.contains("luma(220)")); // non-cut-line style
     }

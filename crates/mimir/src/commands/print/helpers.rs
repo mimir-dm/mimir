@@ -41,15 +41,15 @@ pub fn caster_level_multiplier(class_name: &str) -> f64 {
 /// Standard 5e spell slot table indexed by caster level (1-20), returning slots for levels 1-9
 pub fn spell_slots_for_caster_level(caster_level: i32) -> Vec<i32> {
     match caster_level {
-        1  => vec![2, 0, 0, 0, 0, 0, 0, 0, 0],
-        2  => vec![3, 0, 0, 0, 0, 0, 0, 0, 0],
-        3  => vec![4, 2, 0, 0, 0, 0, 0, 0, 0],
-        4  => vec![4, 3, 0, 0, 0, 0, 0, 0, 0],
-        5  => vec![4, 3, 2, 0, 0, 0, 0, 0, 0],
-        6  => vec![4, 3, 3, 0, 0, 0, 0, 0, 0],
-        7  => vec![4, 3, 3, 1, 0, 0, 0, 0, 0],
-        8  => vec![4, 3, 3, 2, 0, 0, 0, 0, 0],
-        9  => vec![4, 3, 3, 3, 1, 0, 0, 0, 0],
+        1 => vec![2, 0, 0, 0, 0, 0, 0, 0, 0],
+        2 => vec![3, 0, 0, 0, 0, 0, 0, 0, 0],
+        3 => vec![4, 2, 0, 0, 0, 0, 0, 0, 0],
+        4 => vec![4, 3, 0, 0, 0, 0, 0, 0, 0],
+        5 => vec![4, 3, 2, 0, 0, 0, 0, 0, 0],
+        6 => vec![4, 3, 3, 0, 0, 0, 0, 0, 0],
+        7 => vec![4, 3, 3, 1, 0, 0, 0, 0, 0],
+        8 => vec![4, 3, 3, 2, 0, 0, 0, 0, 0],
+        9 => vec![4, 3, 3, 3, 1, 0, 0, 0, 0],
         10 => vec![4, 3, 3, 3, 2, 0, 0, 0, 0],
         11 => vec![4, 3, 3, 3, 2, 1, 0, 0, 0],
         12 => vec![4, 3, 3, 3, 2, 1, 0, 0, 0],
@@ -76,7 +76,10 @@ pub fn compute_hp_max(classes: &[ClassInfo], con_mod: i32) -> i32 {
     let mut is_first_level = true;
 
     // Find starting class for first-level HP
-    let starting = classes.iter().find(|c| c.is_starting).unwrap_or(&classes[0]);
+    let starting = classes
+        .iter()
+        .find(|c| c.is_starting)
+        .unwrap_or(&classes[0]);
     let starting_die = hit_die_for_class(&starting.class_name);
     // Level 1: max die + CON mod
     hp += starting_die + con_mod;
@@ -117,63 +120,67 @@ pub fn enrich_inventory_item(
 
     // Parse item data from either homebrew or catalog
     let parse_item_data = |data: &serde_json::Value| {
-        let it = data.get("type")
+        let it = data
+            .get("type")
             .or_else(|| data.get("item_type"))
             .and_then(|v| v.as_str())
             .map(String::from);
         let dmg = data.get("dmg1").and_then(|v| v.as_str()).map(String::from);
-        let dt = data.get("dmg_type")
+        let dt = data
+            .get("dmg_type")
             .or_else(|| data.get("dmgType"))
             .and_then(|v| v.as_str())
             .map(String::from);
         let ac = data.get("ac").and_then(|v| v.as_i64()).map(|v| v as i32);
-        let fin = data.get("property")
+        let fin = data
+            .get("property")
             .and_then(|v| v.as_array())
             .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("F")));
         (it, dmg, dt, ac, fin)
     };
 
     // Try homebrew first if source is "HB", then fall back to catalog
-    let (item_type, damage, damage_type, armor_ac, finesse) =
-        if inv_item.item_source == "HB" {
-            if let Some(cid) = campaign_id {
-                match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(
-                    db, cid, &inv_item.item_name,
-                ) {
-                    Ok(Some(hb_item)) => {
-                        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&hb_item.data) {
-                            let (it, dmg, dt, ac, fin) = parse_item_data(&data);
-                            // Fall back to DB item_type if JSON data has no type field
-                            let item_type = it.or_else(|| {
-                                hb_item.item_type.as_deref().and_then(|t| {
-                                    super::character::homebrew_item_type_to_code(
-                                        t,
-                                        data.as_object().unwrap_or(&serde_json::Map::new()),
-                                    )
-                                })
-                            });
-                            (item_type, dmg, dt, ac, fin)
-                        } else {
-                            (None, None, None, None, false)
-                        }
-                    }
-                    _ => (None, None, None, None, false),
-                }
-            } else {
-                (None, None, None, None, false)
-            }
-        } else {
-            match catalog_dal::get_item_by_name(db, &inv_item.item_name, &inv_item.item_source) {
-                Ok(Some(catalog_item)) => {
-                    if let Ok(data) = catalog_item.parse_data() {
-                        parse_item_data(&data)
+    let (item_type, damage, damage_type, armor_ac, finesse) = if inv_item.item_source == "HB" {
+        if let Some(cid) = campaign_id {
+            match mimir_core::dal::campaign::get_campaign_homebrew_item_by_name(
+                db,
+                cid,
+                &inv_item.item_name,
+            ) {
+                Ok(Some(hb_item)) => {
+                    if let Ok(data) = serde_json::from_str::<serde_json::Value>(&hb_item.data) {
+                        let (it, dmg, dt, ac, fin) = parse_item_data(&data);
+                        // Fall back to DB item_type if JSON data has no type field
+                        let item_type = it.or_else(|| {
+                            hb_item.item_type.as_deref().and_then(|t| {
+                                super::character::homebrew_item_type_to_code(
+                                    t,
+                                    data.as_object().unwrap_or(&serde_json::Map::new()),
+                                )
+                            })
+                        });
+                        (item_type, dmg, dt, ac, fin)
                     } else {
                         (None, None, None, None, false)
                     }
                 }
                 _ => (None, None, None, None, false),
             }
-        };
+        } else {
+            (None, None, None, None, false)
+        }
+    } else {
+        match catalog_dal::get_item_by_name(db, &inv_item.item_name, &inv_item.item_source) {
+            Ok(Some(catalog_item)) => {
+                if let Ok(data) = catalog_item.parse_data() {
+                    parse_item_data(&data)
+                } else {
+                    (None, None, None, None, false)
+                }
+            }
+            _ => (None, None, None, None, false),
+        }
+    };
 
     InventoryItem {
         name: inv_item.item_name.clone(),
@@ -232,9 +239,7 @@ pub fn compute_ac(inventory: &[InventoryItem], dex_mod: i32) -> i32 {
 pub fn max_spell_level_for_class(class_name: &str, class_level: i32) -> i32 {
     match class_name {
         // Full casters: spell level = (class_level + 1) / 2, max 9
-        "Bard" | "Cleric" | "Druid" | "Sorcerer" | "Wizard" => {
-            ((class_level + 1) / 2).min(9)
-        }
+        "Bard" | "Cleric" | "Druid" | "Sorcerer" | "Wizard" => ((class_level + 1) / 2).min(9),
         // Warlock: uses pact magic, different progression but similar max
         "Warlock" => {
             match class_level {
@@ -265,16 +270,14 @@ pub fn max_spell_level_for_class(class_name: &str, class_level: i32) -> i32 {
             }
         }
         // Artificer: half caster but starts at 1
-        "Artificer" => {
-            match class_level {
-                1..=4 => 1,
-                5..=8 => 2,
-                9..=12 => 3,
-                13..=16 => 4,
-                17..=20 => 5,
-                _ => 0,
-            }
-        }
+        "Artificer" => match class_level {
+            1..=4 => 1,
+            5..=8 => 2,
+            9..=12 => 3,
+            13..=16 => 4,
+            17..=20 => 5,
+            _ => 0,
+        },
         // Third casters (subclasses, but if they appear as class names)
         "Eldritch Knight" | "Arcane Trickster" => {
             if class_level < 3 {
@@ -322,7 +325,15 @@ mod tests {
 
     #[test]
     fn hit_die_d8_classes() {
-        for class in &["Bard", "Cleric", "Druid", "Monk", "Rogue", "Warlock", "Artificer"] {
+        for class in &[
+            "Bard",
+            "Cleric",
+            "Druid",
+            "Monk",
+            "Rogue",
+            "Warlock",
+            "Artificer",
+        ] {
             assert_eq!(hit_die_for_class(class), 8, "Expected d8 for {}", class);
         }
     }
@@ -378,14 +389,24 @@ mod tests {
     #[test]
     fn caster_multiplier_full_casters() {
         for class in &["Bard", "Cleric", "Druid", "Sorcerer", "Wizard"] {
-            assert_eq!(caster_level_multiplier(class), 1.0, "Expected 1.0 for {}", class);
+            assert_eq!(
+                caster_level_multiplier(class),
+                1.0,
+                "Expected 1.0 for {}",
+                class
+            );
         }
     }
 
     #[test]
     fn caster_multiplier_half_casters() {
         for class in &["Artificer", "Paladin", "Ranger"] {
-            assert_eq!(caster_level_multiplier(class), 0.5, "Expected 0.5 for {}", class);
+            assert_eq!(
+                caster_level_multiplier(class),
+                0.5,
+                "Expected 0.5 for {}",
+                class
+            );
         }
     }
 
@@ -407,37 +428,58 @@ mod tests {
 
     #[test]
     fn spell_slots_level_0() {
-        assert_eq!(spell_slots_for_caster_level(0), vec![0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            spell_slots_for_caster_level(0),
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 0]
+        );
     }
 
     #[test]
     fn spell_slots_level_1() {
-        assert_eq!(spell_slots_for_caster_level(1), vec![2, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            spell_slots_for_caster_level(1),
+            vec![2, 0, 0, 0, 0, 0, 0, 0, 0]
+        );
     }
 
     #[test]
     fn spell_slots_level_5() {
-        assert_eq!(spell_slots_for_caster_level(5), vec![4, 3, 2, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            spell_slots_for_caster_level(5),
+            vec![4, 3, 2, 0, 0, 0, 0, 0, 0]
+        );
     }
 
     #[test]
     fn spell_slots_level_9() {
-        assert_eq!(spell_slots_for_caster_level(9), vec![4, 3, 3, 3, 1, 0, 0, 0, 0]);
+        assert_eq!(
+            spell_slots_for_caster_level(9),
+            vec![4, 3, 3, 3, 1, 0, 0, 0, 0]
+        );
     }
 
     #[test]
     fn spell_slots_level_20() {
-        assert_eq!(spell_slots_for_caster_level(20), vec![4, 3, 3, 3, 3, 2, 2, 1, 1]);
+        assert_eq!(
+            spell_slots_for_caster_level(20),
+            vec![4, 3, 3, 3, 3, 2, 2, 1, 1]
+        );
     }
 
     #[test]
     fn spell_slots_above_20_caps() {
-        assert_eq!(spell_slots_for_caster_level(25), vec![4, 3, 3, 3, 3, 2, 2, 1, 1]);
+        assert_eq!(
+            spell_slots_for_caster_level(25),
+            vec![4, 3, 3, 3, 3, 2, 2, 1, 1]
+        );
     }
 
     #[test]
     fn spell_slots_negative_level() {
-        assert_eq!(spell_slots_for_caster_level(-1), vec![0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            spell_slots_for_caster_level(-1),
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 0]
+        );
     }
 
     // ─── compute_hp_max ─────────────────────────────────────────────────

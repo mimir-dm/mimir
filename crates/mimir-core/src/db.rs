@@ -50,7 +50,9 @@ fn configure_connection(conn: &mut SqliteConnection) {
 /// Run all pending migrations on the given connection.
 ///
 /// Returns the list of migration names that were run.
-pub fn run_migrations(conn: &mut SqliteConnection) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
+pub fn run_migrations(
+    conn: &mut SqliteConnection,
+) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
     let migrations = conn.run_pending_migrations(MIGRATIONS)?;
     Ok(migrations.iter().map(|m| m.to_string()).collect())
 }
@@ -59,7 +61,9 @@ pub fn run_migrations(conn: &mut SqliteConnection) -> Result<Vec<String>, Box<dy
 ///
 /// This is used during application startup to ensure the database is ready.
 /// For on-demand connections after startup, use `create_connection`.
-pub fn init_database(db_url: &str) -> Result<SqliteConnection, Box<dyn std::error::Error + Send + Sync>> {
+pub fn init_database(
+    db_url: &str,
+) -> Result<SqliteConnection, Box<dyn std::error::Error + Send + Sync>> {
     let mut conn = SqliteConnection::establish(db_url)?;
 
     // Configure pragmas (including WAL mode)
@@ -75,7 +79,9 @@ pub fn init_database(db_url: &str) -> Result<SqliteConnection, Box<dyn std::erro
 ///
 /// Use this for on-demand connections after the database has been initialized.
 /// Each connection is configured with WAL mode, foreign keys, and optimal settings.
-pub fn create_connection(db_url: &str) -> Result<SqliteConnection, Box<dyn std::error::Error + Send + Sync>> {
+pub fn create_connection(
+    db_url: &str,
+) -> Result<SqliteConnection, Box<dyn std::error::Error + Send + Sync>> {
     let mut conn = SqliteConnection::establish(db_url)?;
     configure_connection(&mut conn);
     Ok(conn)

@@ -210,8 +210,8 @@ mod tests {
 
     #[test]
     fn test_with_role() {
-        let npc = NewModuleNpc::new("npc-1", "mod-1", "Gundren Rockseeker")
-            .with_role("Quest Giver");
+        let npc =
+            NewModuleNpc::new("npc-1", "mod-1", "Gundren Rockseeker").with_role("Quest Giver");
         assert_eq!(npc.role, Some("Quest Giver"));
     }
 

@@ -3,7 +3,9 @@
 //! Tauri commands for managing campaign homebrew monsters.
 
 use mimir_core::models::campaign::CampaignHomebrewMonster;
-use mimir_core::services::{CreateHomebrewMonsterInput, HomebrewService, UpdateHomebrewMonsterInput};
+use mimir_core::services::{
+    CreateHomebrewMonsterInput, HomebrewService, UpdateHomebrewMonsterInput,
+};
 use serde::Deserialize;
 use tauri::State;
 
@@ -111,14 +113,15 @@ pub fn update_homebrew_monster(
 
 /// Delete a homebrew monster.
 #[tauri::command]
-pub fn delete_homebrew_monster(
-    state: State<'_, AppState>,
-    id: String,
-) -> ApiResponse<bool> {
+pub fn delete_homebrew_monster(state: State<'_, AppState>, id: String) -> ApiResponse<bool> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
     };
 
-    to_api_response(HomebrewService::new(&mut db).delete_monster(&id).map(|_| true))
+    to_api_response(
+        HomebrewService::new(&mut db)
+            .delete_monster(&id)
+            .map(|_| true),
+    )
 }

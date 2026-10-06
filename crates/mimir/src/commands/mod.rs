@@ -10,10 +10,10 @@ pub mod catalog;
 pub mod character;
 pub mod dev;
 pub mod dm_map;
+pub mod document;
 pub mod homebrew;
 pub mod homebrew_monster;
 pub mod homebrew_spell;
-pub mod document;
 pub mod map;
 pub mod module;
 pub mod player_display;
@@ -56,9 +56,7 @@ impl<T: Serialize> ApiResponse<T> {
 }
 
 /// Helper to convert service results to API responses.
-pub fn to_api_response<T: Serialize, E: std::fmt::Display>(
-    result: Result<T, E>,
-) -> ApiResponse<T> {
+pub fn to_api_response<T: Serialize, E: std::fmt::Display>(result: Result<T, E>) -> ApiResponse<T> {
     match result {
         Ok(data) => ApiResponse::ok(data),
         Err(e) => ApiResponse::err(e.to_string()),
@@ -72,14 +70,17 @@ pub trait CatalogEntity {
     fn name(&self) -> &str;
     fn source(&self) -> &str;
     fn data(&self) -> &str;
-    fn fluff(&self) -> Option<&str> { None }
+    fn fluff(&self) -> Option<&str> {
+        None
+    }
 }
 
 /// Convert a catalog entity to a JSON Value with parsed data.
 /// Merges the entity's metadata (id, name, source) with the parsed data blob.
 pub fn entity_to_json<E: CatalogEntity>(entity: &E) -> Value {
     // Parse the data field
-    let mut json: Value = serde_json::from_str(entity.data()).unwrap_or(Value::Object(Default::default()));
+    let mut json: Value =
+        serde_json::from_str(entity.data()).unwrap_or(Value::Object(Default::default()));
 
     // Ensure it's an object and add/override metadata fields
     if let Value::Object(ref mut map) = json {
@@ -87,7 +88,10 @@ pub fn entity_to_json<E: CatalogEntity>(entity: &E) -> Value {
             map.insert("id".to_string(), Value::Number(id.into()));
         }
         map.insert("name".to_string(), Value::String(entity.name().to_string()));
-        map.insert("source".to_string(), Value::String(entity.source().to_string()));
+        map.insert(
+            "source".to_string(),
+            Value::String(entity.source().to_string()),
+        );
 
         // Add fluff if present
         if let Some(fluff) = entity.fluff() {

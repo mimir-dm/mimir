@@ -103,9 +103,13 @@ mod tests {
 
     #[test]
     fn test_new_psionic() {
-        let psionic = NewPsionic::new("Mastery of Force", "UAMystic", r#"{"name":"Mastery of Force"}"#)
-            .with_type("D")
-            .with_order("Wu Jen");
+        let psionic = NewPsionic::new(
+            "Mastery of Force",
+            "UAMystic",
+            r#"{"name":"Mastery of Force"}"#,
+        )
+        .with_type("D")
+        .with_order("Wu Jen");
         assert_eq!(psionic.name, "Mastery of Force");
         assert_eq!(psionic.psionic_type, Some("D"));
         assert_eq!(psionic.psionic_order, Some("Wu Jen"));

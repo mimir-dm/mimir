@@ -37,7 +37,13 @@ pub struct NewObject<'a> {
 
 impl<'a> NewObject<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, object_type: None, data, fluff: None }
+        Self {
+            name,
+            source,
+            object_type: None,
+            data,
+            fluff: None,
+        }
     }
 
     pub fn with_type(mut self, object_type: &'a str) -> Self {
@@ -79,8 +85,7 @@ mod tests {
 
     #[test]
     fn test_new_object() {
-        let object = NewObject::new("Ballista", "DMG", r#"{"name":"Ballista"}"#)
-            .with_type("SW");
+        let object = NewObject::new("Ballista", "DMG", r#"{"name":"Ballista"}"#).with_type("SW");
         assert_eq!(object.name, "Ballista");
         assert_eq!(object.object_type, Some("SW"));
     }

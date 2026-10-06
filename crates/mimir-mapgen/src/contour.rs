@@ -95,7 +95,8 @@ fn merge_contours(mut fragments: Vec<Contour>) -> Vec<Contour> {
                     break;
                 }
                 // frag start matches current start → prepend reversed frag
-                let d3 = ((f_start.0 - cur_start.0).powi(2) + (f_start.1 - cur_start.1).powi(2)).sqrt();
+                let d3 =
+                    ((f_start.0 - cur_start.0).powi(2) + (f_start.1 - cur_start.1).powi(2)).sqrt();
                 if d3 < eps {
                     best_idx = Some(i);
                     best_mode = 3;
@@ -319,13 +320,7 @@ fn trace_contour(
 }
 
 /// Determine the next cell to visit based on the exit point.
-fn next_cell(
-    cx: usize,
-    cy: usize,
-    exit: (f64, f64),
-    w: usize,
-    h: usize,
-) -> Option<(usize, usize)> {
+fn next_cell(cx: usize, cy: usize, exit: (f64, f64), w: usize, h: usize) -> Option<(usize, usize)> {
     let xf = cx as f64;
     let yf = cy as f64;
 
@@ -363,7 +358,10 @@ mod tests {
             },
         );
         let contours = find_contours(&noise, 0.5);
-        assert!(!contours.is_empty(), "Should find contours at threshold 0.5");
+        assert!(
+            !contours.is_empty(),
+            "Should find contours at threshold 0.5"
+        );
         for contour in &contours {
             assert!(contour.len() >= 2, "Contour should have at least 2 points");
         }

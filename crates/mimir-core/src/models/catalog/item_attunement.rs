@@ -32,7 +32,10 @@ pub struct NewItemAttunementClass<'a> {
 impl<'a> NewItemAttunementClass<'a> {
     /// Create a new item attunement class requirement.
     pub fn new(item_id: i32, class_name: &'a str) -> Self {
-        Self { item_id, class_name }
+        Self {
+            item_id,
+            class_name,
+        }
     }
 }
 

@@ -113,9 +113,9 @@ pub fn count_campaign_sources(conn: &mut SqliteConnection, campaign_id: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::insert_campaign;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::campaign::NewCampaign;
     use crate::models::catalog::NewCatalogSource;
 

@@ -16,8 +16,10 @@ pub fn insert_optional_feature(
         .values(feature)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple optional features in a batch.
@@ -99,7 +101,10 @@ pub fn count_optional_features(conn: &mut SqliteConnection) -> QueryResult<i64> 
 }
 
 /// Count optional features from a specific source.
-pub fn count_optional_features_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<i64> {
+pub fn count_optional_features_by_source(
+    conn: &mut SqliteConnection,
+    source: &str,
+) -> QueryResult<i64> {
     optional_features::table
         .filter(optional_features::source.eq(source))
         .count()
@@ -107,7 +112,10 @@ pub fn count_optional_features_by_source(conn: &mut SqliteConnection, source: &s
 }
 
 /// Get an optional feature by its ID, returning None if not found.
-pub fn get_optional_feature_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<OptionalFeature>> {
+pub fn get_optional_feature_optional(
+    conn: &mut SqliteConnection,
+    id: i32,
+) -> QueryResult<Option<OptionalFeature>> {
     optional_features::table
         .filter(optional_features::id.eq(id))
         .first(conn)
@@ -186,12 +194,13 @@ pub fn search_optional_features_paginated(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -200,8 +209,9 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let feature = NewOptionalFeature::new("Agonizing Blast", "PHB", r#"{"name":"Agonizing Blast"}"#)
-            .with_feature_type("EI");
+        let feature =
+            NewOptionalFeature::new("Agonizing Blast", "PHB", r#"{"name":"Agonizing Blast"}"#)
+                .with_feature_type("EI");
         let id = insert_optional_feature(&mut conn, &feature).expect("Failed to insert");
 
         let retrieved = get_optional_feature(&mut conn, id).expect("Failed to get");
@@ -209,7 +219,10 @@ mod tests {
         assert_eq!(retrieved.feature_type, Some("EI".to_string()));
 
         delete_optional_feature(&mut conn, id).expect("Failed to delete");
-        assert_eq!(count_optional_features(&mut conn).expect("Failed to count"), 0);
+        assert_eq!(
+            count_optional_features(&mut conn).expect("Failed to count"),
+            0
+        );
     }
 
     #[test]

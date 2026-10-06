@@ -232,10 +232,7 @@ pub async fn list_homebrew(
     }
 }
 
-pub async fn get_homebrew(
-    ctx: &Arc<McpContext>,
-    args: HomebrewIdArgs,
-) -> Result<Value, McpError> {
+pub async fn get_homebrew(ctx: &Arc<McpContext>, args: HomebrewIdArgs) -> Result<Value, McpError> {
     validate_content_type(&args.content_type)?;
 
     let mut db = ctx.connect()?;
@@ -268,8 +265,7 @@ pub async fn create_homebrew(
         .ok_or(McpError::NoActiveCampaign)?;
 
     // data is required when not cloning
-    if args.data.is_none()
-        && (args.cloned_from_name.is_none() || args.cloned_from_source.is_none())
+    if args.data.is_none() && (args.cloned_from_name.is_none() || args.cloned_from_source.is_none())
     {
         return Err(McpError::InvalidArguments(
             "data is required when not cloning from catalog (provide cloned_from_name and cloned_from_source to clone)".to_string(),

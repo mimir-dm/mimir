@@ -265,10 +265,16 @@ mod tests {
             for pt in &path.edit_points.0 {
                 let abs_x = path.position.x + pt.x;
                 let abs_y = path.position.y + pt.y;
-                assert!(abs_x >= 0.0 && abs_x <= 50.0 * ppc,
-                    "abs_x={} out of range", abs_x);
-                assert!(abs_y >= 0.0 && abs_y <= 50.0 * ppc,
-                    "abs_y={} out of range", abs_y);
+                assert!(
+                    abs_x >= 0.0 && abs_x <= 50.0 * ppc,
+                    "abs_x={} out of range",
+                    abs_x
+                );
+                assert!(
+                    abs_y >= 0.0 && abs_y <= 50.0 * ppc,
+                    "abs_y={} out of range",
+                    abs_y
+                );
             }
         }
     }

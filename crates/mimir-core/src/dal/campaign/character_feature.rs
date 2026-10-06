@@ -20,7 +20,10 @@ pub fn insert_character_feature(
 }
 
 /// Get a character feature by ID.
-pub fn get_character_feature(conn: &mut SqliteConnection, id: &str) -> QueryResult<CharacterFeature> {
+pub fn get_character_feature(
+    conn: &mut SqliteConnection,
+    id: &str,
+) -> QueryResult<CharacterFeature> {
     character_features::table.find(id).first(conn)
 }
 
@@ -142,7 +145,10 @@ pub fn character_feature_exists(conn: &mut SqliteConnection, id: &str) -> QueryR
 }
 
 /// Count features for a character.
-pub fn count_character_features(conn: &mut SqliteConnection, character_id: &str) -> QueryResult<i64> {
+pub fn count_character_features(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+) -> QueryResult<i64> {
     character_features::table
         .filter(character_features::character_id.eq(character_id))
         .count()
@@ -165,8 +171,8 @@ pub fn count_features_by_type(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCharacter};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -182,9 +188,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let feature = NewCharacterFeature::fighting_style(
-            "feat-1", "char-1", "Defense", "PHB", "Fighter"
-        );
+        let feature =
+            NewCharacterFeature::fighting_style("feat-1", "char-1", "Defense", "PHB", "Fighter");
         let id = insert_character_feature(&mut conn, &feature).expect("Failed to insert");
         assert_eq!(id, "feat-1");
 
@@ -206,12 +211,12 @@ mod tests {
         insert_character_feature(&mut conn, &mm1).expect("Failed to insert");
         insert_character_feature(&mut conn, &mm2).expect("Failed to insert");
 
-        let fighting_styles = list_features_by_type(&mut conn, "char-1", "fighting_style")
-            .expect("Failed to list");
+        let fighting_styles =
+            list_features_by_type(&mut conn, "char-1", "fighting_style").expect("Failed to list");
         assert_eq!(fighting_styles.len(), 1);
 
-        let metamagic = list_features_by_type(&mut conn, "char-1", "metamagic")
-            .expect("Failed to list");
+        let metamagic =
+            list_features_by_type(&mut conn, "char-1", "metamagic").expect("Failed to list");
         assert_eq!(metamagic.len(), 2);
     }
 
@@ -220,16 +225,19 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        assert!(!character_has_feature(&mut conn, "char-1", "fighting_style", "Defense")
-            .expect("Failed to check"));
-
-        let feature = NewCharacterFeature::fighting_style(
-            "feat-1", "char-1", "Defense", "PHB", "Fighter"
+        assert!(
+            !character_has_feature(&mut conn, "char-1", "fighting_style", "Defense")
+                .expect("Failed to check")
         );
+
+        let feature =
+            NewCharacterFeature::fighting_style("feat-1", "char-1", "Defense", "PHB", "Fighter");
         insert_character_feature(&mut conn, &feature).expect("Failed to insert");
 
-        assert!(character_has_feature(&mut conn, "char-1", "fighting_style", "Defense")
-            .expect("Failed to check"));
+        assert!(
+            character_has_feature(&mut conn, "char-1", "fighting_style", "Defense")
+                .expect("Failed to check")
+        );
     }
 
     #[test]
@@ -237,9 +245,7 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let feature = NewCharacterFeature::invocation(
-            "feat-1", "char-1", "Agonizing Blast", "PHB"
-        );
+        let feature = NewCharacterFeature::invocation("feat-1", "char-1", "Agonizing Blast", "PHB");
         insert_character_feature(&mut conn, &feature).expect("Failed to insert");
 
         let found = find_feature_by_name(&mut conn, "char-1", "invocation", "Agonizing Blast")
@@ -279,8 +285,8 @@ mod tests {
         insert_character_feature(&mut conn, &m2).expect("Failed to insert");
         insert_character_feature(&mut conn, &m3).expect("Failed to insert");
 
-        let count = count_features_by_type(&mut conn, "char-1", "maneuver")
-            .expect("Failed to count");
+        let count =
+            count_features_by_type(&mut conn, "char-1", "maneuver").expect("Failed to count");
         assert_eq!(count, 3);
     }
 

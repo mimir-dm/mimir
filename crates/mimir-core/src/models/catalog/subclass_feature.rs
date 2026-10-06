@@ -65,8 +65,14 @@ impl<'a> NewSubclassFeature<'a> {
         data: &'a str,
     ) -> Self {
         Self {
-            name, source, class_name, class_source,
-            subclass_name, subclass_source, level, data
+            name,
+            source,
+            class_name,
+            class_source,
+            subclass_name,
+            subclass_source,
+            level,
+            data,
         }
     }
 }
@@ -96,13 +102,21 @@ impl SubclassFeatureFilter {
         self
     }
 
-    pub fn with_class(mut self, class_name: impl Into<String>, class_source: impl Into<String>) -> Self {
+    pub fn with_class(
+        mut self,
+        class_name: impl Into<String>,
+        class_source: impl Into<String>,
+    ) -> Self {
         self.class_name = Some(class_name.into());
         self.class_source = Some(class_source.into());
         self
     }
 
-    pub fn with_subclass(mut self, subclass_name: impl Into<String>, subclass_source: impl Into<String>) -> Self {
+    pub fn with_subclass(
+        mut self,
+        subclass_name: impl Into<String>,
+        subclass_source: impl Into<String>,
+    ) -> Self {
         self.subclass_name = Some(subclass_name.into());
         self.subclass_source = Some(subclass_source.into());
         self

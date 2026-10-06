@@ -318,7 +318,8 @@ fn collect_classes_from_directory(
                         }
 
                         // Extract subclass features matching the source
-                        let subclass_features = data.filter_key_by_source("subclassFeature", source);
+                        let subclass_features =
+                            data.filter_key_by_source("subclassFeature", source);
                         if !subclass_features.is_empty() {
                             collected.add("subclassFeature", subclass_features);
                         }
@@ -340,10 +341,18 @@ fn collect_fluff(collected: &mut CollectedEntities, data_dir: &Path, source: &st
         ("fluff-backgrounds.json", "backgroundFluff", "background"),
         ("fluff-feats.json", "featFluff", "feat"),
         ("fluff-items.json", "itemFluff", "item"),
-        ("fluff-conditionsdiseases.json", "conditionFluff", "condition"),
+        (
+            "fluff-conditionsdiseases.json",
+            "conditionFluff",
+            "condition",
+        ),
         ("fluff-conditionsdiseases.json", "diseaseFluff", "disease"),
         ("fluff-rewards.json", "rewardFluff", "reward"),
-        ("fluff-optionalfeatures.json", "optionalfeatureFluff", "optionalfeature"),
+        (
+            "fluff-optionalfeatures.json",
+            "optionalfeatureFluff",
+            "optionalfeature",
+        ),
     ];
 
     for (filename, json_key, entity_type) in root_fluff_files {
@@ -358,7 +367,13 @@ fn collect_fluff(collected: &mut CollectedEntities, data_dir: &Path, source: &st
         .join("bestiary")
         .join(format!("fluff-bestiary-{}.json", source.to_lowercase()));
     if monster_fluff_path.exists() {
-        collect_fluff_from_file(collected, &monster_fluff_path, "monsterFluff", "monster", source)?;
+        collect_fluff_from_file(
+            collected,
+            &monster_fluff_path,
+            "monsterFluff",
+            "monster",
+            source,
+        )?;
     }
 
     // Spell fluff - in spells subdirectory, named fluff-spells-{source}.json
@@ -790,10 +805,7 @@ mod tests {
     #[test]
     fn test_summarize_collection() {
         let mut collected = CollectedEntities::new("PHB");
-        collected.add(
-            "monster",
-            vec![json!({"name": "A"}), json!({"name": "B"})],
-        );
+        collected.add("monster", vec![json!({"name": "A"}), json!({"name": "B"})]);
         collected.add("spell", vec![json!({"name": "C"})]);
 
         let summary = summarize_collection(&collected);

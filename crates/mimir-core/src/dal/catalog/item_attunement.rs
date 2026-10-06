@@ -16,8 +16,10 @@ pub fn insert_item_attunement_class(
         .values(attunement)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple item attunement class requirements in a batch.
@@ -91,12 +93,17 @@ pub fn count_item_attunement_classes(conn: &mut SqliteConnection) -> QueryResult
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::{insert_item, insert_source};
+    use crate::db::test_connection;
     use crate::models::catalog::{NewCatalogSource, NewItem};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z");
+        let source = NewCatalogSource::new(
+            "DMG",
+            "Dungeon Master's Guide",
+            true,
+            "2024-01-20T12:00:00Z",
+        );
         insert_source(conn, &source).expect("Failed to insert source");
     }
 
@@ -125,7 +132,8 @@ mod tests {
         assert_eq!(found[0].class_name, "Paladin");
 
         // Get class names
-        let names = get_attunement_class_names_for_item(&mut conn, item_id).expect("Failed to query");
+        let names =
+            get_attunement_class_names_for_item(&mut conn, item_id).expect("Failed to query");
         assert_eq!(names, vec!["Paladin"]);
 
         // Delete
@@ -153,7 +161,8 @@ mod tests {
         ];
         insert_item_attunement_classes(&mut conn, &attunements).expect("Failed to insert");
 
-        let names = get_attunement_class_names_for_item(&mut conn, item_id).expect("Failed to query");
+        let names =
+            get_attunement_class_names_for_item(&mut conn, item_id).expect("Failed to query");
         assert_eq!(names, vec!["Bard", "Cleric", "Druid"]);
     }
 
@@ -182,12 +191,14 @@ mod tests {
         .expect("Failed to insert");
 
         // Paladin can use Holy Avenger
-        let paladin_items = get_items_attuneable_by_class(&mut conn, "Paladin").expect("Failed to query");
+        let paladin_items =
+            get_items_attuneable_by_class(&mut conn, "Paladin").expect("Failed to query");
         assert_eq!(paladin_items.len(), 1);
         assert_eq!(paladin_items[0].item_id, holy_avenger_id);
 
         // Cleric can use Staff of Healing
-        let cleric_items = get_items_attuneable_by_class(&mut conn, "Cleric").expect("Failed to query");
+        let cleric_items =
+            get_items_attuneable_by_class(&mut conn, "Cleric").expect("Failed to query");
         assert_eq!(cleric_items.len(), 1);
         assert_eq!(cleric_items[0].item_id, staff_healing_id);
     }

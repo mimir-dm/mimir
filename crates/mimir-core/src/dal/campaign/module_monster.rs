@@ -39,7 +39,10 @@ pub fn list_module_monsters(
 ) -> QueryResult<Vec<ModuleMonster>> {
     module_monsters::table
         .filter(module_monsters::module_id.eq(module_id))
-        .order((module_monsters::monster_name.asc(), module_monsters::created_at.asc()))
+        .order((
+            module_monsters::monster_name.asc(),
+            module_monsters::created_at.asc(),
+        ))
         .load(conn)
 }
 
@@ -98,8 +101,8 @@ pub fn get_total_monster_count(conn: &mut SqliteConnection, module_id: &str) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_module};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewModule};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -197,10 +200,8 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let goblin = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM")
-            .with_quantity(6);
-        let wolf = NewModuleMonster::new("mm-2", "mod-1", "Wolf", "MM")
-            .with_quantity(2);
+        let goblin = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM").with_quantity(6);
+        let wolf = NewModuleMonster::new("mm-2", "mod-1", "Wolf", "MM").with_quantity(2);
         insert_module_monster(&mut conn, &goblin).expect("Failed to insert");
         insert_module_monster(&mut conn, &wolf).expect("Failed to insert");
 
@@ -227,19 +228,24 @@ mod tests {
 
         // Create a homebrew monster in the campaign first (FK target)
         let hb = NewCampaignHomebrewMonster::new("hb-1", "camp-1", "Flame Skulker", "{}");
-        insert_campaign_homebrew_monster(&mut conn, &hb).expect("Failed to create homebrew monster");
+        insert_campaign_homebrew_monster(&mut conn, &hb)
+            .expect("Failed to create homebrew monster");
 
         // Add it to the module via homebrew reference
         let monster = NewModuleMonster::from_homebrew("mm-hb-1", "mod-1", "hb-1")
             .with_display_name("Flame Skulker Alpha")
             .with_quantity(2);
-        insert_module_monster(&mut conn, &monster).expect("Failed to insert homebrew module monster");
+        insert_module_monster(&mut conn, &monster)
+            .expect("Failed to insert homebrew module monster");
 
         let retrieved = get_module_monster(&mut conn, "mm-hb-1").expect("Failed to get");
         assert!(retrieved.monster_name.is_none());
         assert!(retrieved.monster_source.is_none());
         assert_eq!(retrieved.homebrew_monster_id, Some("hb-1".to_string()));
-        assert_eq!(retrieved.display_name, Some("Flame Skulker Alpha".to_string()));
+        assert_eq!(
+            retrieved.display_name,
+            Some("Flame Skulker Alpha".to_string())
+        );
         assert_eq!(retrieved.quantity, 2);
         assert!(retrieved.is_homebrew());
         assert!(!retrieved.is_catalog());

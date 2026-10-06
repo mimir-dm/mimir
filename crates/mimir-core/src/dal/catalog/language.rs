@@ -13,8 +13,10 @@ pub fn insert_language(conn: &mut SqliteConnection, language: &NewLanguage) -> Q
         .values(language)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple languages in a batch.
@@ -29,13 +31,14 @@ pub fn insert_languages(
 
 /// Get a language by its ID.
 pub fn get_language(conn: &mut SqliteConnection, id: i32) -> QueryResult<Language> {
-    languages::table
-        .filter(languages::id.eq(id))
-        .first(conn)
+    languages::table.filter(languages::id.eq(id)).first(conn)
 }
 
 /// Get a language by its ID, returning None if not found.
-pub fn get_language_optional(conn: &mut SqliteConnection, id: i32) -> QueryResult<Option<Language>> {
+pub fn get_language_optional(
+    conn: &mut SqliteConnection,
+    id: i32,
+) -> QueryResult<Option<Language>> {
     languages::table
         .filter(languages::id.eq(id))
         .first(conn)
@@ -92,10 +95,7 @@ pub fn delete_language(conn: &mut SqliteConnection, id: i32) -> QueryResult<usiz
 }
 
 /// Delete all languages from a specific source.
-pub fn delete_languages_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_languages_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(languages::table.filter(languages::source.eq(source))).execute(conn)
 }
 
@@ -122,7 +122,10 @@ pub fn list_language_sources(conn: &mut SqliteConnection) -> QueryResult<Vec<Str
 }
 
 /// Search languages with filters.
-pub fn search_languages(conn: &mut SqliteConnection, filter: &LanguageFilter) -> QueryResult<Vec<Language>> {
+pub fn search_languages(
+    conn: &mut SqliteConnection,
+    filter: &LanguageFilter,
+) -> QueryResult<Vec<Language>> {
     // If sources filter is explicitly empty, return no results
     if filter.has_empty_sources_filter() {
         return Ok(vec![]);
@@ -191,8 +194,8 @@ mod tests {
     fn test_language_crud() {
         let mut conn = setup_test_db_with_sources();
 
-        let language = NewLanguage::new("Common", "PHB", r#"{"name":"Common"}"#)
-            .with_type("Standard");
+        let language =
+            NewLanguage::new("Common", "PHB", r#"{"name":"Common"}"#).with_type("Standard");
         let id = insert_language(&mut conn, &language).expect("Failed to insert");
 
         let retrieved = get_language(&mut conn, id).expect("Failed to get");

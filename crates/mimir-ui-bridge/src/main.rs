@@ -202,7 +202,9 @@ fn main() {
             .await
             .expect("Failed to bind bridge port");
         eprintln!("ui-bridge: listening on http://127.0.0.1:{}", port);
-        axum::serve(listener, app).await.expect("Bridge server error");
+        axum::serve(listener, app)
+            .await
+            .expect("Bridge server error");
     });
 }
 
@@ -252,7 +254,10 @@ async fn health(State(state): State<BridgeState>) -> Response {
     (
         StatusCode::OK,
         [("content-type", "application/json")],
-        format!(r#"{{"status":"ok","database":{}}}"#, serde_json::json!(state.db_path)),
+        format!(
+            r#"{{"status":"ok","database":{}}}"#,
+            serde_json::json!(state.db_path)
+        ),
     )
         .into_response()
 }
@@ -312,22 +317,25 @@ async fn invoke(
     Path(cmd): Path<String>,
     body: Option<axum::Json<serde_json::Value>>,
 ) -> Response {
-    let args = body.map(|axum::Json(v)| v).unwrap_or_else(|| serde_json::json!({}));
+    let args = body
+        .map(|axum::Json(v)| v)
+        .unwrap_or_else(|| serde_json::json!({}));
     let (reply_tx, reply_rx) = tokio::sync::oneshot::channel();
     if state
         .tx
-        .send(BridgeRequest { cmd, args, reply: reply_tx })
+        .send(BridgeRequest {
+            cmd,
+            args,
+            reply: reply_tx,
+        })
         .is_err()
     {
         return (StatusCode::INTERNAL_SERVER_ERROR, "dispatch thread gone").into_response();
     }
     match reply_rx.await {
-        Ok(Ok(InvokeResponseBody::Json(json))) => (
-            StatusCode::OK,
-            [("content-type", "application/json")],
-            json,
-        )
-            .into_response(),
+        Ok(Ok(InvokeResponseBody::Json(json))) => {
+            (StatusCode::OK, [("content-type", "application/json")], json).into_response()
+        }
         Ok(Ok(InvokeResponseBody::Raw(bytes))) => (
             StatusCode::OK,
             [("content-type", "application/octet-stream")],

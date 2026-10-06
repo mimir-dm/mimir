@@ -27,10 +27,7 @@ impl TrapCardSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(traps: Value) -> Self {
-        let trap_vec = traps
-            .as_array()
-            .map(|arr| arr.clone())
-            .unwrap_or_default();
+        let trap_vec = traps.as_array().map(|arr| arr.clone()).unwrap_or_default();
         Self::new(trap_vec)
     }
 
@@ -65,18 +62,12 @@ impl TrapCardSection {
             .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or("Unknown Trap");
-        let source = trap
-            .get("source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let source = trap.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
         let (type_label, accent_color) = Self::get_trap_type_info(trap);
 
         // Threat level (simple, moderate, dangerous, deadly)
-        let threat = trap
-            .get("threat")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let threat = trap.get("threat").and_then(|v| v.as_str()).unwrap_or("");
 
         // Plan layout and get front entries
         let layout = plan_trap_layout(trap, accent_color);
@@ -188,10 +179,7 @@ impl TrapCardSection {
             .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or("Unknown Trap");
-        let source = trap
-            .get("source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let source = trap.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
         let back_entries_content: String = layout
             .back_entries
@@ -455,8 +443,10 @@ fn render_trap_entries(trap: &Value, accent_color: &str) -> Vec<RenderedEntry> {
                                     total_chars += cleaned.len();
                                     Some(format!("[{}]", escape_typst(&cleaned)))
                                 } else if let Some(obj) = item.as_object() {
-                                    let name = obj.get("name").and_then(|v| v.as_str()).unwrap_or("");
-                                    let item_entries = obj.get("entries").and_then(|v| v.as_array());
+                                    let name =
+                                        obj.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                                    let item_entries =
+                                        obj.get("entries").and_then(|v| v.as_array());
                                     let text = item_entries
                                         .map(|e| {
                                             e.iter()
@@ -468,7 +458,11 @@ fn render_trap_entries(trap: &Value, accent_color: &str) -> Vec<RenderedEntry> {
                                         .unwrap_or_default();
                                     total_chars += name.len() + text.len();
                                     if !name.is_empty() {
-                                        Some(format!("[*{}.* {}]", escape_typst(name), escape_typst(&text)))
+                                        Some(format!(
+                                            "[*{}.* {}]",
+                                            escape_typst(name),
+                                            escape_typst(&text)
+                                        ))
                                     } else {
                                         Some(format!("[{}]", escape_typst(&text)))
                                     }
@@ -679,12 +673,20 @@ fn render_dc_block(trap: &Value) -> String {
     let mut dc_parts = Vec::new();
 
     // Detection DC
-    if let Some(dc) = trap.get("perception_dc").or_else(|| trap.get("stealth")).and_then(|v| v.as_i64()) {
+    if let Some(dc) = trap
+        .get("perception_dc")
+        .or_else(|| trap.get("stealth"))
+        .and_then(|v| v.as_i64())
+    {
         dc_parts.push(format!("*Detect* DC {}", dc));
     }
 
     // Disable DC
-    if let Some(dc) = trap.get("disable_dc").or_else(|| trap.get("disarm")).and_then(|v| v.as_i64()) {
+    if let Some(dc) = trap
+        .get("disable_dc")
+        .or_else(|| trap.get("disarm"))
+        .and_then(|v| v.as_i64())
+    {
         dc_parts.push(format!("*Disable* DC {}", dc));
     }
 
@@ -721,7 +723,11 @@ fn render_dc_block(trap: &Value) -> String {
     )
   ]"#,
             dc_parts.len().min(4),
-            dc_parts.iter().map(|p| format!("[{}]", p)).collect::<Vec<_>>().join(",\n      ")
+            dc_parts
+                .iter()
+                .map(|p| format!("[{}]", p))
+                .collect::<Vec<_>>()
+                .join(",\n      ")
         )
     }
 }
@@ -1073,7 +1079,12 @@ mod tests {
         assert!(typst.contains("Pit Trap"));
         assert!(typst.contains("Glyph of Warding"));
         // 2 traps = 2 empty slots
-        assert_eq!(typst.matches("box(width: 3.875in, height: 5.125in)").count(), 2);
+        assert_eq!(
+            typst
+                .matches("box(width: 3.875in, height: 5.125in)")
+                .count(),
+            2
+        );
     }
 
     #[test]
@@ -1203,7 +1214,10 @@ mod tests {
     #[test]
     fn test_page_break_with_five_traps() {
         let traps = vec![
-            test_pit_trap(), test_pit_trap(), test_pit_trap(), test_pit_trap(),
+            test_pit_trap(),
+            test_pit_trap(),
+            test_pit_trap(),
+            test_pit_trap(),
             test_fire_glyph(),
         ];
         let section = TrapCardSection::new(traps);

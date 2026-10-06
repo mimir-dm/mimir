@@ -16,7 +16,10 @@ pub fn search_monsters(
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
-    println!("[search_monsters] filter: {:?}, limit: {:?}, offset: {:?}", filter, limit, offset);
+    println!(
+        "[search_monsters] filter: {:?}, limit: {:?}, offset: {:?}",
+        filter, limit, offset
+    );
 
     let mut db = match state.connect() {
         Ok(db) => db,
@@ -35,7 +38,7 @@ pub fn search_monsters(
         Ok(entities) => {
             println!("[search_monsters] found {} entities", entities.len());
             ApiResponse::ok(entities_to_json(entities))
-        },
+        }
         Err(e) => ApiResponse::err(e.to_string()),
     }
 }

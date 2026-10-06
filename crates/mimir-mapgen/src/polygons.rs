@@ -65,10 +65,26 @@ impl PolygonTerrainOverride {
     /// Apply this override to a terrain splat map, only filling cells
     /// whose center lies inside the polygon.
     pub fn apply(&self, splat_data: &mut [u8], map_cells_x: usize) {
-        let min_x = self.points.iter().map(|p| p[0]).fold(f64::INFINITY, f64::min);
-        let min_y = self.points.iter().map(|p| p[1]).fold(f64::INFINITY, f64::min);
-        let max_x = self.points.iter().map(|p| p[0]).fold(f64::NEG_INFINITY, f64::max);
-        let max_y = self.points.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max);
+        let min_x = self
+            .points
+            .iter()
+            .map(|p| p[0])
+            .fold(f64::INFINITY, f64::min);
+        let min_y = self
+            .points
+            .iter()
+            .map(|p| p[1])
+            .fold(f64::INFINITY, f64::min);
+        let max_x = self
+            .points
+            .iter()
+            .map(|p| p[0])
+            .fold(f64::NEG_INFINITY, f64::max);
+        let max_y = self
+            .points
+            .iter()
+            .map(|p| p[1])
+            .fold(f64::NEG_INFINITY, f64::max);
 
         let cell_x0 = (min_x * 4.0).floor() as usize;
         let cell_y0 = (min_y * 4.0).floor() as usize;
@@ -359,8 +375,7 @@ fn walk_cw_loops(segments: Vec<Segment>) -> Vec<Vec<[f64; 2]>> {
                 }
                 let p = seg.start;
                 if let Some(bp) = best_point {
-                    if p[1] < bp[1] - EPS || ((p[1] - bp[1]).abs() < EPS && p[0] < bp[0] - EPS)
-                    {
+                    if p[1] < bp[1] - EPS || ((p[1] - bp[1]).abs() < EPS && p[0] < bp[0] - EPS) {
                         best_point = Some(p);
                     }
                 } else {
@@ -453,8 +468,8 @@ fn remove_collinear_points(pts: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
         let curr = pts[i];
         let next = pts[(i + 1) % n];
         // Cross product of (prev→curr) × (curr→next). Zero means collinear.
-        let cross = (curr[0] - prev[0]) * (next[1] - curr[1])
-            - (curr[1] - prev[1]) * (next[0] - curr[0]);
+        let cross =
+            (curr[0] - prev[0]) * (next[1] - curr[1]) - (curr[1] - prev[1]) * (next[0] - curr[0]);
         if cross.abs() > 0.1 {
             keep.push(curr);
         }
@@ -523,8 +538,8 @@ fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
         let yi = polygon[i][1];
         let yj = polygon[j][1];
         if (yi > point[1]) != (yj > point[1]) {
-            let x_int = polygon[i][0]
-                + (point[1] - yi) * (polygon[j][0] - polygon[i][0]) / (yj - yi);
+            let x_int =
+                polygon[i][0] + (point[1] - yi) * (polygon[j][0] - polygon[i][0]) / (yj - yi);
             if point[0] < x_int {
                 inside = !inside;
             }
@@ -817,10 +832,22 @@ mod tests {
     fn single_square_no_removal() {
         // One square: 4 edges, nothing shared → 4 segments survive.
         let edges = vec![
-            Segment { start: [0.0, 0.0], end: [10.0, 0.0] },
-            Segment { start: [10.0, 0.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [0.0, 10.0] },
-            Segment { start: [0.0, 10.0], end: [0.0, 0.0] },
+            Segment {
+                start: [0.0, 0.0],
+                end: [10.0, 0.0],
+            },
+            Segment {
+                start: [10.0, 0.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [0.0, 10.0],
+            },
+            Segment {
+                start: [0.0, 10.0],
+                end: [0.0, 0.0],
+            },
         ];
         let result = remove_shared_edges(edges);
         assert_eq!(result.len(), 4);
@@ -833,15 +860,39 @@ mod tests {
         // Shared edge: left's east (10,0)→(10,10) and right's west (10,10)→(10,0)
         let edges = vec![
             // Left
-            Segment { start: [0.0, 0.0], end: [10.0, 0.0] },
-            Segment { start: [10.0, 0.0], end: [10.0, 10.0] },  // shared
-            Segment { start: [10.0, 10.0], end: [0.0, 10.0] },
-            Segment { start: [0.0, 10.0], end: [0.0, 0.0] },
+            Segment {
+                start: [0.0, 0.0],
+                end: [10.0, 0.0],
+            },
+            Segment {
+                start: [10.0, 0.0],
+                end: [10.0, 10.0],
+            }, // shared
+            Segment {
+                start: [10.0, 10.0],
+                end: [0.0, 10.0],
+            },
+            Segment {
+                start: [0.0, 10.0],
+                end: [0.0, 0.0],
+            },
             // Right
-            Segment { start: [10.0, 0.0], end: [20.0, 0.0] },
-            Segment { start: [20.0, 0.0], end: [20.0, 10.0] },
-            Segment { start: [20.0, 10.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [10.0, 0.0] },  // shared
+            Segment {
+                start: [10.0, 0.0],
+                end: [20.0, 0.0],
+            },
+            Segment {
+                start: [20.0, 0.0],
+                end: [20.0, 10.0],
+            },
+            Segment {
+                start: [20.0, 10.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [10.0, 0.0],
+            }, // shared
         ];
         let result = remove_shared_edges(edges);
         // 8 edges - 2 shared = 6 surviving
@@ -852,8 +903,14 @@ mod tests {
     fn partial_overlap_splits_edge() {
         // Long edge (0,0)→(20,0) partially overlapped by (5,0)→(15,0)
         let edges = vec![
-            Segment { start: [0.0, 0.0], end: [20.0, 0.0] },
-            Segment { start: [15.0, 0.0], end: [5.0, 0.0] },  // reverse direction overlap
+            Segment {
+                start: [0.0, 0.0],
+                end: [20.0, 0.0],
+            },
+            Segment {
+                start: [15.0, 0.0],
+                end: [5.0, 0.0],
+            }, // reverse direction overlap
         ];
         let result = remove_shared_edges(edges);
         // Long edge splits into (0,0)→(5,0) and (15,0)→(20,0) = 2 segments
@@ -866,20 +923,56 @@ mod tests {
         // Three squares side by side: 12 edges, 4 shared → 8 survive
         let edges = vec![
             // Square 0: (0,0)-(10,0)-(10,10)-(0,10)
-            Segment { start: [0.0, 0.0], end: [10.0, 0.0] },
-            Segment { start: [10.0, 0.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [0.0, 10.0] },
-            Segment { start: [0.0, 10.0], end: [0.0, 0.0] },
+            Segment {
+                start: [0.0, 0.0],
+                end: [10.0, 0.0],
+            },
+            Segment {
+                start: [10.0, 0.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [0.0, 10.0],
+            },
+            Segment {
+                start: [0.0, 10.0],
+                end: [0.0, 0.0],
+            },
             // Square 1: (10,0)-(20,0)-(20,10)-(10,10)
-            Segment { start: [10.0, 0.0], end: [20.0, 0.0] },
-            Segment { start: [20.0, 0.0], end: [20.0, 10.0] },
-            Segment { start: [20.0, 10.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [10.0, 0.0] },
+            Segment {
+                start: [10.0, 0.0],
+                end: [20.0, 0.0],
+            },
+            Segment {
+                start: [20.0, 0.0],
+                end: [20.0, 10.0],
+            },
+            Segment {
+                start: [20.0, 10.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [10.0, 0.0],
+            },
             // Square 2: (20,0)-(30,0)-(30,10)-(20,10)
-            Segment { start: [20.0, 0.0], end: [30.0, 0.0] },
-            Segment { start: [30.0, 0.0], end: [30.0, 10.0] },
-            Segment { start: [30.0, 10.0], end: [20.0, 10.0] },
-            Segment { start: [20.0, 10.0], end: [20.0, 0.0] },
+            Segment {
+                start: [20.0, 0.0],
+                end: [30.0, 0.0],
+            },
+            Segment {
+                start: [30.0, 0.0],
+                end: [30.0, 10.0],
+            },
+            Segment {
+                start: [30.0, 10.0],
+                end: [20.0, 10.0],
+            },
+            Segment {
+                start: [20.0, 10.0],
+                end: [20.0, 0.0],
+            },
         ];
         let result = remove_shared_edges(edges);
         assert_eq!(result.len(), 8);
@@ -890,10 +983,22 @@ mod tests {
     #[test]
     fn chain_simple_square() {
         let segments = vec![
-            Segment { start: [0.0, 0.0], end: [10.0, 0.0] },
-            Segment { start: [10.0, 0.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [0.0, 10.0] },
-            Segment { start: [0.0, 10.0], end: [0.0, 0.0] },
+            Segment {
+                start: [0.0, 0.0],
+                end: [10.0, 0.0],
+            },
+            Segment {
+                start: [10.0, 0.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [0.0, 10.0],
+            },
+            Segment {
+                start: [0.0, 10.0],
+                end: [0.0, 0.0],
+            },
         ];
         let loops = walk_cw_loops(segments);
         assert_eq!(loops.len(), 1);
@@ -906,15 +1011,39 @@ mod tests {
         // the 6 surviving segments should form one closed loop.
         let edges = vec![
             // Left
-            Segment { start: [0.0, 0.0], end: [10.0, 0.0] },
-            Segment { start: [10.0, 0.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [0.0, 10.0] },
-            Segment { start: [0.0, 10.0], end: [0.0, 0.0] },
+            Segment {
+                start: [0.0, 0.0],
+                end: [10.0, 0.0],
+            },
+            Segment {
+                start: [10.0, 0.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [0.0, 10.0],
+            },
+            Segment {
+                start: [0.0, 10.0],
+                end: [0.0, 0.0],
+            },
             // Right
-            Segment { start: [10.0, 0.0], end: [20.0, 0.0] },
-            Segment { start: [20.0, 0.0], end: [20.0, 10.0] },
-            Segment { start: [20.0, 10.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [10.0, 0.0] },
+            Segment {
+                start: [10.0, 0.0],
+                end: [20.0, 0.0],
+            },
+            Segment {
+                start: [20.0, 0.0],
+                end: [20.0, 10.0],
+            },
+            Segment {
+                start: [20.0, 10.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [10.0, 0.0],
+            },
         ];
         let surviving = remove_shared_edges(edges);
         let loops = walk_cw_loops(surviving);
@@ -928,15 +1057,39 @@ mod tests {
         // Shared: part of room's south edge overlaps corridor's north edge
         let edges = vec![
             // Room
-            Segment { start: [0.0, 0.0], end: [10.0, 0.0] },
-            Segment { start: [10.0, 0.0], end: [10.0, 10.0] },
-            Segment { start: [10.0, 10.0], end: [0.0, 10.0] },
-            Segment { start: [0.0, 10.0], end: [0.0, 0.0] },
+            Segment {
+                start: [0.0, 0.0],
+                end: [10.0, 0.0],
+            },
+            Segment {
+                start: [10.0, 0.0],
+                end: [10.0, 10.0],
+            },
+            Segment {
+                start: [10.0, 10.0],
+                end: [0.0, 10.0],
+            },
+            Segment {
+                start: [0.0, 10.0],
+                end: [0.0, 0.0],
+            },
             // Corridor
-            Segment { start: [3.0, 10.0], end: [7.0, 10.0] },
-            Segment { start: [7.0, 10.0], end: [7.0, 15.0] },
-            Segment { start: [7.0, 15.0], end: [3.0, 15.0] },
-            Segment { start: [3.0, 15.0], end: [3.0, 10.0] },
+            Segment {
+                start: [3.0, 10.0],
+                end: [7.0, 10.0],
+            },
+            Segment {
+                start: [7.0, 10.0],
+                end: [7.0, 15.0],
+            },
+            Segment {
+                start: [7.0, 15.0],
+                end: [3.0, 15.0],
+            },
+            Segment {
+                start: [3.0, 15.0],
+                end: [3.0, 10.0],
+            },
         ];
         let surviving = remove_shared_edges(edges);
         let loops = walk_cw_loops(surviving);
@@ -1189,8 +1342,14 @@ mod tests {
             PolygonConfig {
                 id: "oval_left".to_string(),
                 points: vec![
-                    [8.0, 10.0], [10.0, 7.0], [13.0, 6.0], [16.0, 7.0],
-                    [18.0, 10.0], [16.0, 13.0], [13.0, 14.0], [10.0, 13.0],
+                    [8.0, 10.0],
+                    [10.0, 7.0],
+                    [13.0, 6.0],
+                    [16.0, 7.0],
+                    [18.0, 10.0],
+                    [16.0, 13.0],
+                    [13.0, 14.0],
+                    [10.0, 13.0],
                 ],
                 terrain_slot: Some(3),
                 wall_texture: default_wall_texture(),
@@ -1199,8 +1358,14 @@ mod tests {
             PolygonConfig {
                 id: "oval_right".to_string(),
                 points: vec![
-                    [14.0, 10.0], [16.0, 7.0], [19.0, 6.0], [22.0, 7.0],
-                    [24.0, 10.0], [22.0, 13.0], [19.0, 14.0], [16.0, 13.0],
+                    [14.0, 10.0],
+                    [16.0, 7.0],
+                    [19.0, 6.0],
+                    [22.0, 7.0],
+                    [24.0, 10.0],
+                    [22.0, 13.0],
+                    [19.0, 14.0],
+                    [16.0, 13.0],
                 ],
                 terrain_slot: Some(3),
                 wall_texture: default_wall_texture(),
@@ -1229,8 +1394,14 @@ mod tests {
             PolygonConfig {
                 id: "oval_left".to_string(),
                 points: vec![
-                    [8.0, 10.0], [10.0, 7.0], [13.0, 6.0], [16.0, 7.0],
-                    [18.0, 10.0], [16.0, 13.0], [13.0, 14.0], [10.0, 13.0],
+                    [8.0, 10.0],
+                    [10.0, 7.0],
+                    [13.0, 6.0],
+                    [16.0, 7.0],
+                    [18.0, 10.0],
+                    [16.0, 13.0],
+                    [13.0, 14.0],
+                    [10.0, 13.0],
                 ],
                 terrain_slot: Some(3),
                 wall_texture: default_wall_texture(),
@@ -1243,8 +1414,14 @@ mod tests {
             PolygonConfig {
                 id: "oval_right".to_string(),
                 points: vec![
-                    [14.0, 10.0], [16.0, 7.0], [19.0, 6.0], [22.0, 7.0],
-                    [24.0, 10.0], [22.0, 13.0], [19.0, 14.0], [16.0, 13.0],
+                    [14.0, 10.0],
+                    [16.0, 7.0],
+                    [19.0, 6.0],
+                    [22.0, 7.0],
+                    [24.0, 10.0],
+                    [22.0, 13.0],
+                    [19.0, 14.0],
+                    [16.0, 13.0],
                 ],
                 terrain_slot: Some(3),
                 wall_texture: default_wall_texture(),
@@ -1272,8 +1449,14 @@ mod tests {
             PolygonConfig {
                 id: "oval_left".to_string(),
                 points: vec![
-                    [8.0, 10.0], [10.0, 7.0], [13.0, 6.0], [16.0, 7.0],
-                    [18.0, 10.0], [16.0, 13.0], [13.0, 14.0], [10.0, 13.0],
+                    [8.0, 10.0],
+                    [10.0, 7.0],
+                    [13.0, 6.0],
+                    [16.0, 7.0],
+                    [18.0, 10.0],
+                    [16.0, 13.0],
+                    [13.0, 14.0],
+                    [10.0, 13.0],
                 ],
                 terrain_slot: Some(3),
                 wall_texture: default_wall_texture(),
@@ -1286,8 +1469,14 @@ mod tests {
             PolygonConfig {
                 id: "oval_right".to_string(),
                 points: vec![
-                    [14.0, 10.0], [16.0, 7.0], [19.0, 6.0], [22.0, 7.0],
-                    [24.0, 10.0], [22.0, 13.0], [19.0, 14.0], [16.0, 13.0],
+                    [14.0, 10.0],
+                    [16.0, 7.0],
+                    [19.0, 6.0],
+                    [22.0, 7.0],
+                    [24.0, 10.0],
+                    [22.0, 13.0],
+                    [19.0, 14.0],
+                    [16.0, 13.0],
                 ],
                 terrain_slot: Some(3),
                 wall_texture: default_wall_texture(),
@@ -1341,11 +1530,23 @@ mod tests {
         let result = generate_polygon_layout(&polygons, &alloc);
 
         // Shared vertical edge at x=5 should be removed → one merged wall
-        assert_eq!(result.walls.len(), 1, "Should produce 1 merged wall, got {}", result.walls.len());
-        assert!(result.walls[0].is_loop, "Merged wall should be a closed loop");
+        assert_eq!(
+            result.walls.len(),
+            1,
+            "Should produce 1 merged wall, got {}",
+            result.walls.len()
+        );
+        assert!(
+            result.walls[0].is_loop,
+            "Merged wall should be a closed loop"
+        );
         // Clean rectangle after collinear point collapse
-        assert_eq!(total_wall_points(&result), 4,
-            "Expected 4 vertices on merged boundary, got {}", total_wall_points(&result));
+        assert_eq!(
+            total_wall_points(&result),
+            4,
+            "Expected 4 vertices on merged boundary, got {}",
+            total_wall_points(&result)
+        );
     }
 
     #[test]
@@ -1376,10 +1577,19 @@ mod tests {
 
         let result = generate_polygon_layout(&polygons, &alloc);
 
-        assert_eq!(result.walls.len(), 1, "Stacked rooms should merge to 1 wall, got {}", result.walls.len());
+        assert_eq!(
+            result.walls.len(),
+            1,
+            "Stacked rooms should merge to 1 wall, got {}",
+            result.walls.len()
+        );
         assert!(result.walls[0].is_loop);
-        assert_eq!(total_wall_points(&result), 4,
-            "Expected 4 vertices after collinear collapse, got {}", total_wall_points(&result));
+        assert_eq!(
+            total_wall_points(&result),
+            4,
+            "Expected 4 vertices after collinear collapse, got {}",
+            total_wall_points(&result)
+        );
     }
 
     #[test]
@@ -1415,9 +1625,18 @@ mod tests {
 
         let result = generate_polygon_layout(&polygons, &alloc);
 
-        assert_eq!(result.walls.len(), 1, "Three adjacent rooms should merge to 1 wall, got {}", result.walls.len());
-        assert_eq!(total_wall_points(&result), 4,
-            "Expected 4 vertices (clean rectangle), got {}", total_wall_points(&result));
+        assert_eq!(
+            result.walls.len(),
+            1,
+            "Three adjacent rooms should merge to 1 wall, got {}",
+            result.walls.len()
+        );
+        assert_eq!(
+            total_wall_points(&result),
+            4,
+            "Expected 4 vertices (clean rectangle), got {}",
+            total_wall_points(&result)
+        );
     }
 
     #[test]
@@ -1448,11 +1667,20 @@ mod tests {
 
         let result = generate_polygon_layout(&polygons, &alloc);
 
-        assert_eq!(result.walls.len(), 1, "L-shape should merge to 1 wall, got {}", result.walls.len());
+        assert_eq!(
+            result.walls.len(),
+            1,
+            "L-shape should merge to 1 wall, got {}",
+            result.walls.len()
+        );
         // L-shape boundary: [0,0]→[6,0]→[6,4]→[3,4]→[3,8]→[0,8]→back
         // 6 vertices — [0,4] collapsed because [0,8]→[0,4]→[0,0] is collinear (all x=0).
-        assert_eq!(total_wall_points(&result), 6,
-            "Expected 6 vertices for L-shape, got {}", total_wall_points(&result));
+        assert_eq!(
+            total_wall_points(&result),
+            6,
+            "Expected 6 vertices for L-shape, got {}",
+            total_wall_points(&result)
+        );
     }
 
     #[test]
@@ -1483,10 +1711,19 @@ mod tests {
 
         let result = generate_polygon_layout(&polygons, &alloc);
 
-        assert_eq!(result.walls.len(), 1, "T-junction should merge to 1 wall, got {}", result.walls.len());
+        assert_eq!(
+            result.walls.len(),
+            1,
+            "T-junction should merge to 1 wall, got {}",
+            result.walls.len()
+        );
         // T-shape: 8 vertices
-        assert_eq!(total_wall_points(&result), 8,
-            "Expected 8 vertices for T-shape, got {}", total_wall_points(&result));
+        assert_eq!(
+            total_wall_points(&result),
+            8,
+            "Expected 8 vertices for T-shape, got {}",
+            total_wall_points(&result)
+        );
     }
 
     #[test]
@@ -1532,11 +1769,19 @@ mod tests {
         let result = generate_polygon_layout(&polygons, &alloc);
 
         // All 4 interior edges removed → single outer rectangle
-        assert_eq!(result.walls.len(), 1,
-            "2x2 grid should merge to 1 wall, got {} walls", result.walls.len());
+        assert_eq!(
+            result.walls.len(),
+            1,
+            "2x2 grid should merge to 1 wall, got {} walls",
+            result.walls.len()
+        );
         // Clean rectangle: 4 corners, collinear midpoints collapsed
-        assert_eq!(total_wall_points(&result), 4,
-            "Expected 4 vertices for 2x2 grid outer rectangle, got {}", total_wall_points(&result));
+        assert_eq!(
+            total_wall_points(&result),
+            4,
+            "Expected 4 vertices for 2x2 grid outer rectangle, got {}",
+            total_wall_points(&result)
+        );
     }
 
     #[test]
@@ -1563,8 +1808,12 @@ mod tests {
         let result = generate_polygon_layout(&polygons, &alloc);
 
         // No shared edge → two separate walls
-        assert_eq!(result.walls.len(), 2,
-            "Disjoint rooms should produce 2 walls, got {}", result.walls.len());
+        assert_eq!(
+            result.walls.len(),
+            2,
+            "Disjoint rooms should produce 2 walls, got {}",
+            result.walls.len()
+        );
     }
 
     #[test]
@@ -1596,19 +1845,30 @@ mod tests {
 
         // Shared edge: A's [5,0]→[5,4] and B's [5,4]→[5,0] should BOTH be removed
         // Leaving 6 edges (3 per polygon minus shared)
-        assert_eq!(surviving.len(), 6,
+        assert_eq!(
+            surviving.len(),
+            6,
             "Expected 6 surviving edges after removing shared edge, got {}.\nEdges: {:?}",
             surviving.len(),
-            surviving.iter().map(|s| format!("[{:.0},{:.0}]→[{:.0},{:.0}]", s.start[0], s.start[1], s.end[0], s.end[1])).collect::<Vec<_>>());
+            surviving
+                .iter()
+                .map(|s| format!(
+                    "[{:.0},{:.0}]→[{:.0},{:.0}]",
+                    s.start[0], s.start[1], s.end[0], s.end[1]
+                ))
+                .collect::<Vec<_>>()
+        );
 
         // Verify no segment has both endpoints on x=5*256=1280 (the shared edge line)
         let shared_x = 5.0 * PIXELS_PER_GRID;
         for seg in &surviving {
-            let on_shared = (seg.start[0] - shared_x).abs() < 1.0
-                && (seg.end[0] - shared_x).abs() < 1.0;
-            assert!(!on_shared,
+            let on_shared =
+                (seg.start[0] - shared_x).abs() < 1.0 && (seg.end[0] - shared_x).abs() < 1.0;
+            assert!(
+                !on_shared,
                 "Found surviving segment on shared edge: [{:.0},{:.0}]→[{:.0},{:.0}]",
-                seg.start[0], seg.start[1], seg.end[0], seg.end[1]);
+                seg.start[0], seg.start[1], seg.end[0], seg.end[1]
+            );
         }
     }
 }

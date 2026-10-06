@@ -103,7 +103,10 @@ pub(super) fn extract_class_proficiencies(
 
         // Weapon proficiencies
         if let Some(weapons) = sp.get("weapons").and_then(|v| v.as_array()) {
-            profs.extend(extract_keyed_proficiencies(weapons, ProficiencyType::Weapon));
+            profs.extend(extract_keyed_proficiencies(
+                weapons,
+                ProficiencyType::Weapon,
+            ));
         }
 
         // Tool proficiencies
@@ -124,7 +127,9 @@ pub(super) fn extract_class_proficiencies(
 }
 
 /// Extract proficiencies from background catalog data.
-pub(super) fn extract_background_proficiencies(bg_data: &serde_json::Value) -> Vec<ProficiencyEntry> {
+pub(super) fn extract_background_proficiencies(
+    bg_data: &serde_json::Value,
+) -> Vec<ProficiencyEntry> {
     let mut profs = Vec::new();
 
     // Skill proficiencies (usually deterministic for backgrounds)
@@ -138,8 +143,14 @@ pub(super) fn extract_background_proficiencies(bg_data: &serde_json::Value) -> V
     }
 
     // Language proficiencies
-    if let Some(langs) = bg_data.get("languageProficiencies").and_then(|v| v.as_array()) {
-        profs.extend(extract_keyed_proficiencies(langs, ProficiencyType::Language));
+    if let Some(langs) = bg_data
+        .get("languageProficiencies")
+        .and_then(|v| v.as_array())
+    {
+        profs.extend(extract_keyed_proficiencies(
+            langs,
+            ProficiencyType::Language,
+        ));
     }
 
     profs
@@ -150,35 +161,58 @@ pub(super) fn extract_race_proficiencies(race_data: &serde_json::Value) -> Vec<P
     let mut profs = Vec::new();
 
     // Skill proficiencies
-    if let Some(skills) = race_data.get("skillProficiencies").and_then(|v| v.as_array()) {
+    if let Some(skills) = race_data
+        .get("skillProficiencies")
+        .and_then(|v| v.as_array())
+    {
         profs.extend(extract_keyed_proficiencies(skills, ProficiencyType::Skill));
     }
 
     // Weapon proficiencies
-    if let Some(weapons) = race_data.get("weaponProficiencies").and_then(|v| v.as_array()) {
-        profs.extend(extract_keyed_proficiencies(weapons, ProficiencyType::Weapon));
+    if let Some(weapons) = race_data
+        .get("weaponProficiencies")
+        .and_then(|v| v.as_array())
+    {
+        profs.extend(extract_keyed_proficiencies(
+            weapons,
+            ProficiencyType::Weapon,
+        ));
     }
 
     // Armor proficiencies
-    if let Some(armor) = race_data.get("armorProficiencies").and_then(|v| v.as_array()) {
+    if let Some(armor) = race_data
+        .get("armorProficiencies")
+        .and_then(|v| v.as_array())
+    {
         profs.extend(extract_keyed_proficiencies(armor, ProficiencyType::Armor));
     }
 
     // Tool proficiencies
-    if let Some(tools) = race_data.get("toolProficiencies").and_then(|v| v.as_array()) {
+    if let Some(tools) = race_data
+        .get("toolProficiencies")
+        .and_then(|v| v.as_array())
+    {
         profs.extend(extract_keyed_proficiencies(tools, ProficiencyType::Tool));
     }
 
     // Language proficiencies
-    if let Some(langs) = race_data.get("languageProficiencies").and_then(|v| v.as_array()) {
-        profs.extend(extract_keyed_proficiencies(langs, ProficiencyType::Language));
+    if let Some(langs) = race_data
+        .get("languageProficiencies")
+        .and_then(|v| v.as_array())
+    {
+        profs.extend(extract_keyed_proficiencies(
+            langs,
+            ProficiencyType::Language,
+        ));
     }
 
     profs
 }
 
 /// Extract multiclass proficiencies from class catalog data.
-pub(super) fn extract_multiclass_proficiencies(class_data: &serde_json::Value) -> Vec<ProficiencyEntry> {
+pub(super) fn extract_multiclass_proficiencies(
+    class_data: &serde_json::Value,
+) -> Vec<ProficiencyEntry> {
     let mut profs = Vec::new();
 
     if let Some(mc) = class_data.get("multiclassing") {
@@ -187,7 +221,10 @@ pub(super) fn extract_multiclass_proficiencies(class_data: &serde_json::Value) -
                 profs.extend(extract_keyed_proficiencies(armor, ProficiencyType::Armor));
             }
             if let Some(weapons) = gained.get("weapons").and_then(|v| v.as_array()) {
-                profs.extend(extract_keyed_proficiencies(weapons, ProficiencyType::Weapon));
+                profs.extend(extract_keyed_proficiencies(
+                    weapons,
+                    ProficiencyType::Weapon,
+                ));
             }
             if let Some(tools) = gained.get("tools").and_then(|v| v.as_array()) {
                 profs.extend(extract_keyed_proficiencies(tools, ProficiencyType::Tool));

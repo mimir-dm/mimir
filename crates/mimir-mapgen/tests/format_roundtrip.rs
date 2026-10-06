@@ -52,10 +52,7 @@ fn test_wall_portal_roundtrip() {
     assert_eq!(level.walls.len(), 1, "Expected 1 merged wall");
     assert!(level.walls[0].is_loop, "Wall 0 should be a closed loop");
     assert_eq!(level.walls[0].wall_type, 0);
-    assert_eq!(
-        level.walls[0].texture,
-        "res://textures/walls/stone.png"
-    );
+    assert_eq!(level.walls[0].texture, "res://textures/walls/stone.png");
     assert!(
         !level.walls[0].points.0.is_empty(),
         "Wall 0 should have points"
@@ -97,27 +94,27 @@ fn test_wall_portal_roundtrip() {
 
 #[test]
 fn test_wall_builder() {
+    use mimir_mapgen::format::entities::{MapPortal, MapWall};
     use mimir_mapgen::format::godot_types::Vector2;
-    use mimir_mapgen::format::entities::{MapWall, MapPortal};
 
     // Build a simple rectangular room wall
     let points = vec![
-        Vector2::new(1024.0, 1536.0),  // (4, 6) * 256
-        Vector2::new(2304.0, 1536.0),  // (9, 6) * 256
-        Vector2::new(2304.0, 2560.0),  // (9, 10) * 256
-        Vector2::new(1024.0, 2560.0),  // (4, 10) * 256
+        Vector2::new(1024.0, 1536.0), // (4, 6) * 256
+        Vector2::new(2304.0, 1536.0), // (9, 6) * 256
+        Vector2::new(2304.0, 2560.0), // (9, 10) * 256
+        Vector2::new(1024.0, 2560.0), // (4, 10) * 256
     ];
 
     let portal = MapPortal::new(
-        Vector2::new(1664.0, 1536.0),  // center of north wall
-        0.0,                            // horizontal wall
-        Vector2::new(0.0, -1.0),        // pointing north
+        Vector2::new(1664.0, 1536.0), // center of north wall
+        0.0,                          // horizontal wall
+        Vector2::new(0.0, -1.0),      // pointing north
         "res://textures/portals/door_00.png",
-        128.0,                          // 1 grid square door
-        0,                              // first segment
-        "a",                            // parent wall ID
-        0.5,                            // middle of segment
-        "b",                            // portal ID
+        128.0, // 1 grid square door
+        0,     // first segment
+        "a",   // parent wall ID
+        0.5,   // middle of segment
+        "b",   // portal ID
     );
 
     let wall = MapWall::new_room(points, "res://textures/walls/battlements.png", "a")

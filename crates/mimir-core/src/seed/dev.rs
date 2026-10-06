@@ -155,7 +155,10 @@ fn seed_campaign(conn: &mut SqliteConnection) -> ServiceResult<crate::models::ca
 // Character Seeding
 // =============================================================================
 
-fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceResult<Vec<Character>> {
+fn seed_characters(
+    conn: &mut SqliteConnection,
+    campaign_id: &str,
+) -> ServiceResult<Vec<Character>> {
     let mut characters = Vec::new();
 
     // Thorin Ironforge - Dwarf Fighter
@@ -192,8 +195,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Oathkeeper", "HB", 1, true),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &thorin_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &thorin_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -231,8 +234,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Potion of Healing", "DMG", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &elara_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &elara_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -292,8 +295,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Whisper", "HB", 1, true),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &finn_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &finn_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -332,8 +335,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Blessed Talisman of Tyr", "HB", 1, true),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &helena_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &helena_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -383,8 +386,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     dal::insert_character(conn, &sildar)?;
 
     let sildar_class_id = Uuid::new_v4().to_string();
-    let sildar_class = NewCharacterClass::starting(&sildar_class_id, &sildar_id, "Fighter", "PHB")
-        .with_level(5);
+    let sildar_class =
+        NewCharacterClass::starting(&sildar_class_id, &sildar_id, "Fighter", "PHB").with_level(5);
     dal::insert_character_class(conn, &sildar_class)?;
 
     for (name, source, qty, is_equipped) in [
@@ -395,8 +398,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Potion of Healing", "DMG", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &sildar_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &sildar_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -421,8 +424,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     dal::insert_character(conn, &gundren)?;
 
     let gundren_class_id = Uuid::new_v4().to_string();
-    let gundren_class = NewCharacterClass::starting(&gundren_class_id, &gundren_id, "Fighter", "PHB")
-        .with_level(3);
+    let gundren_class =
+        NewCharacterClass::starting(&gundren_class_id, &gundren_id, "Fighter", "PHB").with_level(3);
     dal::insert_character_class(conn, &gundren_class)?;
 
     for (name, source, qty, is_equipped) in [
@@ -432,8 +435,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Pouch", "PHB", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &gundren_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &gundren_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -458,8 +461,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     dal::insert_character(conn, &toblen)?;
 
     let toblen_class_id = Uuid::new_v4().to_string();
-    let toblen_class = NewCharacterClass::starting(&toblen_class_id, &toblen_id, "Commoner", "PHB")
-        .with_level(1);
+    let toblen_class =
+        NewCharacterClass::starting(&toblen_class_id, &toblen_id, "Commoner", "PHB").with_level(1);
     dal::insert_character_class(conn, &toblen_class)?;
 
     for (name, source, qty, is_equipped) in [
@@ -469,8 +472,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Key Ring", "PHB", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &toblen_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &toblen_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -485,7 +488,11 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         .with_background("Criminal", "PHB")
         .with_ability_scores(10, 12, 10, 16, 14, 14)
         .with_currency(0, 30, 0, 75, 0)
-        .with_npc_info(Some("Antagonist"), Some("Tresendar Manor"), Some("Redbrands"))
+        .with_npc_info(
+            Some("Antagonist"),
+            Some("Tresendar Manor"),
+            Some("Redbrands"),
+        )
         .with_roleplay(
             Some("I am incredibly slow to trust. Those who seem fair often have hidden motives."),
             Some("Power. I will do whatever it takes to become powerful."),
@@ -495,8 +502,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     dal::insert_character(conn, &iarno)?;
 
     let iarno_class_id = Uuid::new_v4().to_string();
-    let iarno_class = NewCharacterClass::starting(&iarno_class_id, &iarno_id, "Wizard", "PHB")
-        .with_level(4);
+    let iarno_class =
+        NewCharacterClass::starting(&iarno_class_id, &iarno_id, "Wizard", "PHB").with_level(4);
     dal::insert_character_class(conn, &iarno_class)?;
 
     for (name, source, qty, is_equipped) in [
@@ -509,8 +516,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Spell Scroll (3rd Level)", "DMG", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &iarno_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &iarno_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -535,8 +542,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
     dal::insert_character(conn, &klarg)?;
 
     let klarg_class_id = Uuid::new_v4().to_string();
-    let klarg_class = NewCharacterClass::starting(&klarg_class_id, &klarg_id, "Fighter", "PHB")
-        .with_level(3);
+    let klarg_class =
+        NewCharacterClass::starting(&klarg_class_id, &klarg_id, "Fighter", "PHB").with_level(3);
     dal::insert_character_class(conn, &klarg_class)?;
 
     for (name, source, qty, is_equipped) in [
@@ -546,8 +553,8 @@ fn seed_characters(conn: &mut SqliteConnection, campaign_id: &str) -> ServiceRes
         ("Pouch", "PHB", 1, false),
     ] {
         let item_id = Uuid::new_v4().to_string();
-        let mut item = NewCharacterInventory::new(&item_id, &klarg_id, name, source)
-            .with_quantity(qty);
+        let mut item =
+            NewCharacterInventory::new(&item_id, &klarg_id, name, source).with_quantity(qty);
         if is_equipped {
             item = item.equipped();
         }
@@ -604,15 +611,11 @@ fn seed_homebrew_items(conn: &mut SqliteConnection, campaign_id: &str) -> Servic
         ]
     });
     let oathkeeper_json = oathkeeper_data.to_string();
-    let oathkeeper = NewCampaignHomebrewItem::new(
-        &oathkeeper_id,
-        campaign_id,
-        "Oathkeeper",
-        &oathkeeper_json,
-    )
-    .with_item_type("M")
-    .with_rarity("rare")
-    .cloned_from("Longsword", "PHB");
+    let oathkeeper =
+        NewCampaignHomebrewItem::new(&oathkeeper_id, campaign_id, "Oathkeeper", &oathkeeper_json)
+            .with_item_type("M")
+            .with_rarity("rare")
+            .cloned_from("Longsword", "PHB");
     dal::insert_campaign_homebrew_item(conn, &oathkeeper)?;
     count += 1;
 
@@ -665,15 +668,10 @@ fn seed_homebrew_items(conn: &mut SqliteConnection, campaign_id: &str) -> Servic
         ]
     });
     let whisper_json = whisper_data.to_string();
-    let whisper = NewCampaignHomebrewItem::new(
-        &whisper_id,
-        campaign_id,
-        "Whisper",
-        &whisper_json,
-    )
-    .with_item_type("M")
-    .with_rarity("rare")
-    .cloned_from("Dagger", "PHB");
+    let whisper = NewCampaignHomebrewItem::new(&whisper_id, campaign_id, "Whisper", &whisper_json)
+        .with_item_type("M")
+        .with_rarity("rare")
+        .cloned_from("Dagger", "PHB");
     dal::insert_campaign_homebrew_item(conn, &whisper)?;
     count += 1;
 
@@ -692,14 +690,9 @@ fn seed_homebrew_items(conn: &mut SqliteConnection, campaign_id: &str) -> Servic
         ]
     });
     let brew_json = brew_data.to_string();
-    let brew = NewCampaignHomebrewItem::new(
-        &brew_id,
-        campaign_id,
-        "Cragmaw Brew",
-        &brew_json,
-    )
-    .with_item_type("P")
-    .with_rarity("common");
+    let brew = NewCampaignHomebrewItem::new(&brew_id, campaign_id, "Cragmaw Brew", &brew_json)
+        .with_item_type("P")
+        .with_rarity("common");
     dal::insert_campaign_homebrew_item(conn, &brew)?;
     count += 1;
 
@@ -772,15 +765,11 @@ fn seed_homebrew_monsters(
         ]
     });
     let mutant_json = mutant_data.to_string();
-    let mutant = NewCampaignHomebrewMonster::new(
-        &mutant_id,
-        campaign_id,
-        "Cragmaw Mutant",
-        &mutant_json,
-    )
-    .with_cr("2")
-    .with_creature_type("humanoid")
-    .with_size("M");
+    let mutant =
+        NewCampaignHomebrewMonster::new(&mutant_id, campaign_id, "Cragmaw Mutant", &mutant_json)
+            .with_cr("2")
+            .with_creature_type("humanoid")
+            .with_size("M");
     dal::insert_campaign_homebrew_monster(conn, &mutant)?;
 
     Ok(SeededHomebrewMonsters {
@@ -822,18 +811,66 @@ fn seed_monsters(
     // Monsters from Monster Manual (MM) and Fizban's Treasury of Dragons (FTD)
     // (id, name, source, quantity, display_name, notes)
     let monsters: &[(&str, &str, &str, i32, Option<&str>, Option<&str>)] = &[
-        (&entrance_guards_id, "Goblin", "MM", 6, None, Some("Cave entrance guards")),
-        (&bridge_archers_id, "Goblin", "MM", 3, Some("Goblin Archers"), Some("Guard post on bridge")),
-        (&main_chamber_id, "Goblin", "MM", 5, None, Some("Main chamber")),
-        (&klarg_id, "Bugbear", "MM", 1, Some("Klarg"), Some("Bugbear chief - boss encounter")),
-        (&wolves_id, "Wolf", "MM", 2, Some("Ripper & Fang"), Some("Klarg's pet wolves")),
-        (&yeemik_guards_id, "Goblin", "MM", 2, Some("Yeemik's Guards"), Some("With the second-in-command")),
-        (&amethyst_dragon_id, "Adult Amethyst Dragon", "FTD", 1, None, Some("Surprise boss encounter")),
+        (
+            &entrance_guards_id,
+            "Goblin",
+            "MM",
+            6,
+            None,
+            Some("Cave entrance guards"),
+        ),
+        (
+            &bridge_archers_id,
+            "Goblin",
+            "MM",
+            3,
+            Some("Goblin Archers"),
+            Some("Guard post on bridge"),
+        ),
+        (
+            &main_chamber_id,
+            "Goblin",
+            "MM",
+            5,
+            None,
+            Some("Main chamber"),
+        ),
+        (
+            &klarg_id,
+            "Bugbear",
+            "MM",
+            1,
+            Some("Klarg"),
+            Some("Bugbear chief - boss encounter"),
+        ),
+        (
+            &wolves_id,
+            "Wolf",
+            "MM",
+            2,
+            Some("Ripper & Fang"),
+            Some("Klarg's pet wolves"),
+        ),
+        (
+            &yeemik_guards_id,
+            "Goblin",
+            "MM",
+            2,
+            Some("Yeemik's Guards"),
+            Some("With the second-in-command"),
+        ),
+        (
+            &amethyst_dragon_id,
+            "Adult Amethyst Dragon",
+            "FTD",
+            1,
+            None,
+            Some("Surprise boss encounter"),
+        ),
     ];
 
     for (id, name, source, qty, display_name, notes) in monsters {
-        let mut monster = NewModuleMonster::new(id, module_id, name, source)
-            .with_quantity(*qty);
+        let mut monster = NewModuleMonster::new(id, module_id, name, source).with_quantity(*qty);
 
         if let Some(dn) = display_name {
             monster = monster.with_display_name(dn);
@@ -969,13 +1006,27 @@ fn seed_maps(
     // Seed battle map (UVTT)
     let uvtt_path = assets_dir.join("goblin-hideout.dd2vtt");
     if uvtt_path.exists() {
-        battle_map_id = Some(seed_uvtt_map(conn, campaign_id, Some(module_id), &uvtt_path, app_data_dir, "Goblin Hideout")?);
+        battle_map_id = Some(seed_uvtt_map(
+            conn,
+            campaign_id,
+            Some(module_id),
+            &uvtt_path,
+            app_data_dir,
+            "Goblin Hideout",
+        )?);
     }
 
     // Seed region map (PNG wrapped in UVTT)
     let region_path = assets_dir.join("GoblinRegion.png");
     if region_path.exists() {
-        seed_png_map(conn, campaign_id, None, &region_path, app_data_dir, "Triboar Trail Region")?;
+        seed_png_map(
+            conn,
+            campaign_id,
+            None,
+            &region_path,
+            app_data_dir,
+            "Triboar Trail Region",
+        )?;
     }
 
     Ok(battle_map_id)
@@ -1003,9 +1054,21 @@ fn seed_uvtt_map(
     std::fs::write(&full_path, &data)?;
 
     let asset = if let Some(mid) = module_id {
-        NewCampaignAsset::for_module(&asset_id, mid, filename, "application/octet-stream", &relative_path)
+        NewCampaignAsset::for_module(
+            &asset_id,
+            mid,
+            filename,
+            "application/octet-stream",
+            &relative_path,
+        )
     } else {
-        NewCampaignAsset::for_campaign(&asset_id, campaign_id, filename, "application/octet-stream", &relative_path)
+        NewCampaignAsset::for_campaign(
+            &asset_id,
+            campaign_id,
+            filename,
+            "application/octet-stream",
+            &relative_path,
+        )
     };
     let asset = asset.with_file_size(data.len() as i32);
     dal::insert_campaign_asset(conn, &asset)?;
@@ -1065,9 +1128,21 @@ fn seed_png_map(
 
     let uvtt_filename = filename.replace(".png", ".dd2vtt");
     let asset = if let Some(mid) = module_id {
-        NewCampaignAsset::for_module(&asset_id, mid, &uvtt_filename, "application/octet-stream", &relative_path)
+        NewCampaignAsset::for_module(
+            &asset_id,
+            mid,
+            &uvtt_filename,
+            "application/octet-stream",
+            &relative_path,
+        )
     } else {
-        NewCampaignAsset::for_campaign(&asset_id, campaign_id, &uvtt_filename, "application/octet-stream", &relative_path)
+        NewCampaignAsset::for_campaign(
+            &asset_id,
+            campaign_id,
+            &uvtt_filename,
+            "application/octet-stream",
+            &relative_path,
+        )
     };
     let asset = asset.with_file_size(uvtt_data.len() as i32);
     dal::insert_campaign_asset(conn, &asset)?;
@@ -1101,9 +1176,10 @@ fn seed_tokens(
 
     // Klarg the Bugbear boss
     let klarg_id = Uuid::new_v4().to_string();
-    let klarg_placement = NewTokenPlacement::for_monster(&klarg_id, map_id, &monsters.klarg, 12, 15)
-        .with_label("Klarg")
-        .with_faction_color("#7C3AED"); // Purple for boss
+    let klarg_placement =
+        NewTokenPlacement::for_monster(&klarg_id, map_id, &monsters.klarg, 12, 15)
+            .with_label("Klarg")
+            .with_faction_color("#7C3AED"); // Purple for boss
     dal::insert_token_placement(conn, &klarg_placement)?;
     count += 1;
 
@@ -1112,9 +1188,10 @@ fn seed_tokens(
     for (i, (x, y)) in klarg_goblin_positions.iter().enumerate() {
         let id = Uuid::new_v4().to_string();
         let label = format!("Goblin {}", i + 1);
-        let placement = NewTokenPlacement::for_monster(&id, map_id, &monsters.entrance_guards, *x, *y)
-            .with_label(&label)
-            .with_faction_color("#DC2626"); // Red for enemies
+        let placement =
+            NewTokenPlacement::for_monster(&id, map_id, &monsters.entrance_guards, *x, *y)
+                .with_label(&label)
+                .with_faction_color("#DC2626"); // Red for enemies
         dal::insert_token_placement(conn, &placement)?;
         count += 1;
     }
@@ -1124,18 +1201,20 @@ fn seed_tokens(
     for (i, (x, y)) in archer_positions.iter().enumerate() {
         let id = Uuid::new_v4().to_string();
         let label = format!("Archer {}", i + 1);
-        let placement = NewTokenPlacement::for_monster(&id, map_id, &monsters.bridge_archers, *x, *y)
-            .with_label(&label)
-            .with_faction_color("#DC2626");
+        let placement =
+            NewTokenPlacement::for_monster(&id, map_id, &monsters.bridge_archers, *x, *y)
+                .with_label(&label)
+                .with_faction_color("#DC2626");
         dal::insert_token_placement(conn, &placement)?;
         count += 1;
     }
 
     // Goblin in passage
     let passage_goblin_id = Uuid::new_v4().to_string();
-    let passage_goblin = NewTokenPlacement::for_monster(&passage_goblin_id, map_id, &monsters.main_chamber, 38, 10)
-        .with_label("Goblin Sentry")
-        .with_faction_color("#DC2626");
+    let passage_goblin =
+        NewTokenPlacement::for_monster(&passage_goblin_id, map_id, &monsters.main_chamber, 38, 10)
+            .with_label("Goblin Sentry")
+            .with_faction_color("#DC2626");
     dal::insert_token_placement(conn, &passage_goblin)?;
     count += 1;
 
@@ -1153,34 +1232,38 @@ fn seed_tokens(
 
     // Goblin wolf handler
     let wolf_goblin_id = Uuid::new_v4().to_string();
-    let wolf_goblin = NewTokenPlacement::for_monster(&wolf_goblin_id, map_id, &monsters.yeemik_guards, 33, 19)
-        .with_label("Wolf Handler")
-        .with_faction_color("#DC2626");
+    let wolf_goblin =
+        NewTokenPlacement::for_monster(&wolf_goblin_id, map_id, &monsters.yeemik_guards, 33, 19)
+            .with_label("Wolf Handler")
+            .with_faction_color("#DC2626");
     dal::insert_token_placement(conn, &wolf_goblin)?;
     count += 1;
 
     // Sildar Hallwinter - captive NPC
     let sildar_token_id = Uuid::new_v4().to_string();
-    let sildar_placement = NewTokenPlacement::for_npc(&sildar_token_id, map_id, &npcs.sildar, 35, 7)
-        .with_label("Sildar (captive)")
-        .with_faction_color("#22C55E") // Green for ally
-        .hidden(); // Hidden until discovered
+    let sildar_placement =
+        NewTokenPlacement::for_npc(&sildar_token_id, map_id, &npcs.sildar, 35, 7)
+            .with_label("Sildar (captive)")
+            .with_faction_color("#22C55E") // Green for ally
+            .hidden(); // Hidden until discovered
     dal::insert_token_placement(conn, &sildar_placement)?;
     count += 1;
 
     // Yeemik - negotiable goblin leader
     let yeemik_token_id = Uuid::new_v4().to_string();
-    let yeemik_placement = NewTokenPlacement::for_npc(&yeemik_token_id, map_id, &npcs.yeemik, 32, 7)
-        .with_label("Yeemik")
-        .with_faction_color("#F59E0B"); // Amber for neutral/negotiable
+    let yeemik_placement =
+        NewTokenPlacement::for_npc(&yeemik_token_id, map_id, &npcs.yeemik, 32, 7)
+            .with_label("Yeemik")
+            .with_faction_color("#F59E0B"); // Amber for neutral/negotiable
     dal::insert_token_placement(conn, &yeemik_placement)?;
     count += 1;
 
     // Adult Amethyst Dragon - surprise boss
     let dragon_id = Uuid::new_v4().to_string();
-    let dragon_placement = NewTokenPlacement::for_monster(&dragon_id, map_id, &monsters.amethyst_dragon, 8, 5)
-        .with_label("Adult Amethyst Dragon")
-        .with_faction_color("#dc2626"); // Red for enemy
+    let dragon_placement =
+        NewTokenPlacement::for_monster(&dragon_id, map_id, &monsters.amethyst_dragon, 8, 5)
+            .with_label("Adult Amethyst Dragon")
+            .with_faction_color("#dc2626"); // Red for enemy
     dal::insert_token_placement(conn, &dragon_placement)?;
     count += 1;
 
@@ -1189,9 +1272,10 @@ fn seed_tokens(
     for (i, (x, y)) in mutant_positions.iter().enumerate() {
         let id = Uuid::new_v4().to_string();
         let label = format!("Cragmaw Mutant {}", i + 1);
-        let placement = NewTokenPlacement::for_monster(&id, map_id, &monsters.cragmaw_mutant, *x, *y)
-            .with_label(&label)
-            .with_faction_color("#DC2626"); // Red for enemies
+        let placement =
+            NewTokenPlacement::for_monster(&id, map_id, &monsters.cragmaw_mutant, *x, *y)
+                .with_label(&label)
+                .with_faction_color("#DC2626"); // Red for enemies
         dal::insert_token_placement(conn, &placement)?;
         count += 1;
     }
@@ -1209,15 +1293,13 @@ fn seed_lights(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize
 
     // Wall torch in main chamber
     let torch1_id = Uuid::new_v4().to_string();
-    let torch1 = NewLightSource::torch(&torch1_id, map_id, 16, 14)
-        .with_name("Wall Torch");
+    let torch1 = NewLightSource::torch(&torch1_id, map_id, 16, 14).with_name("Wall Torch");
     dal::insert_light_source(conn, &torch1)?;
     count += 1;
 
     // Hanging lantern near treasure cache
     let lantern_id = Uuid::new_v4().to_string();
-    let lantern = NewLightSource::lantern(&lantern_id, map_id, 43, 16)
-        .with_name("Hanging Lantern");
+    let lantern = NewLightSource::lantern(&lantern_id, map_id, 43, 16).with_name("Hanging Lantern");
     dal::insert_light_source(conn, &lantern)?;
     count += 1;
 
@@ -1241,15 +1323,13 @@ fn seed_traps(conn: &mut SqliteConnection, map_id: &str) -> ServiceResult<usize>
 
     // Pit trap near entrance (catalog name is "Pits" in DMG)
     let pit_trap_id = Uuid::new_v4().to_string();
-    let pit_trap = NewMapTrap::new(&pit_trap_id, map_id, "Pits", 21, 19)
-        .visible();
+    let pit_trap = NewMapTrap::new(&pit_trap_id, map_id, "Pits", 21, 19).visible();
     dal::insert_map_trap(conn, &pit_trap)?;
     count += 1;
 
     // Poison dart trap in corridor
     let dart_trap_id = Uuid::new_v4().to_string();
-    let dart_trap = NewMapTrap::new(&dart_trap_id, map_id, "Poison Darts", 25, 18)
-        .visible();
+    let dart_trap = NewMapTrap::new(&dart_trap_id, map_id, "Poison Darts", 25, 18).visible();
     dal::insert_map_trap(conn, &dart_trap)?;
     count += 1;
 

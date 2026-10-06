@@ -25,7 +25,11 @@ impl Vector2 {
 
 impl Serialize for Vector2 {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&format!("Vector2( {}, {} )", format_f64(self.x), format_f64(self.y)))
+        serializer.serialize_str(&format!(
+            "Vector2( {}, {} )",
+            format_f64(self.x),
+            format_f64(self.y)
+        ))
     }
 }
 
@@ -51,8 +55,14 @@ fn parse_vector2(s: &str) -> Result<Vector2, String> {
         return Err(format!("Vector2 needs 2 components, got {}", parts.len()));
     }
     Ok(Vector2 {
-        x: parts[0].trim().parse().map_err(|e| format!("Bad x: {}", e))?,
-        y: parts[1].trim().parse().map_err(|e| format!("Bad y: {}", e))?,
+        x: parts[0]
+            .trim()
+            .parse()
+            .map_err(|e| format!("Bad x: {}", e))?,
+        y: parts[1]
+            .trim()
+            .parse()
+            .map_err(|e| format!("Bad y: {}", e))?,
     })
 }
 
@@ -181,10 +191,7 @@ fn parse_pool_vector2_array(s: &str) -> Result<PoolVector2Array, String> {
             nums.len()
         ));
     }
-    let points = nums
-        .chunks(2)
-        .map(|c| Vector2::new(c[0], c[1]))
-        .collect();
+    let points = nums.chunks(2).map(|c| Vector2::new(c[0], c[1])).collect();
     Ok(PoolVector2Array(points))
 }
 
@@ -289,7 +296,12 @@ impl<'de> Deserialize<'de> for NullableVector2 {
 
 impl fmt::Display for Vector2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Vector2( {}, {} )", format_f64(self.x), format_f64(self.y))
+        write!(
+            f,
+            "Vector2( {}, {} )",
+            format_f64(self.x),
+            format_f64(self.y)
+        )
     }
 }
 
@@ -335,10 +347,8 @@ mod tests {
 
     #[test]
     fn test_pool_vector2_array_roundtrip() {
-        let arr = PoolVector2Array::from_points(vec![
-            Vector2::new(10.0, 20.0),
-            Vector2::new(30.0, 40.0),
-        ]);
+        let arr =
+            PoolVector2Array::from_points(vec![Vector2::new(10.0, 20.0), Vector2::new(30.0, 40.0)]);
         let json = serde_json::to_string(&arr).unwrap();
         assert_eq!(json, r#""PoolVector2Array( 10, 20, 30, 40 )""#);
         let parsed: PoolVector2Array = serde_json::from_str(&json).unwrap();

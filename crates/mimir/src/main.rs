@@ -39,7 +39,7 @@ fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("mimir=info,mimir_core=info"))
+                .unwrap_or_else(|_| EnvFilter::new("mimir=info,mimir_core=info")),
         )
         .with_writer(writer)
         .init();
@@ -59,8 +59,8 @@ fn main() {
                 .expect("Failed to initialize application paths");
 
             // Initialize database with migrations (this creates the DB and runs migrations)
-            let _conn = init_database(&paths.database_url())
-                .expect("Failed to initialize database");
+            let _conn =
+                init_database(&paths.database_url()).expect("Failed to initialize database");
             // Connection is dropped here - we'll create on-demand connections
 
             // Create and manage app state (stores DB path for on-demand connections)
@@ -68,10 +68,8 @@ fn main() {
             app.manage(state);
 
             // Create and manage print state
-            let print_state = PrintState::new(
-                paths.app_dir.join("templates"),
-                paths.assets_dir.clone(),
-            );
+            let print_state =
+                PrintState::new(paths.app_dir.join("templates"), paths.assets_dir.clone());
             app.manage(print_state);
 
             Ok(())

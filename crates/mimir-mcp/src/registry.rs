@@ -133,8 +133,7 @@ macro_rules! tool_args {
 }
 
 /// Future type returned by tool handlers.
-pub type HandlerFuture<'a> =
-    Pin<Box<dyn Future<Output = Result<Value, McpError>> + Send + 'a>>;
+pub type HandlerFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, McpError>> + Send + 'a>>;
 
 /// A registered tool handler: decodes raw args and runs the tool.
 pub type ToolHandler = for<'a> fn(&'a Arc<McpContext>, Value) -> HandlerFuture<'a>;

@@ -197,7 +197,11 @@ fn get_multiclass_prerequisites(class_name: &str) -> Option<Vec<(&'static str, i
         // Artificer from Tasha's
         "artificer" => Some(vec![("intelligence", 13, false)]),
         // Blood Hunter from Critical Role
-        "blood hunter" => Some(vec![("strength", 13, true), ("dexterity", 13, true), ("intelligence", 13, false)]),
+        "blood hunter" => Some(vec![
+            ("strength", 13, true),
+            ("dexterity", 13, true),
+            ("intelligence", 13, false),
+        ]),
         _ => None, // Unknown class - allow without prerequisite check
     }
 }
@@ -229,9 +233,9 @@ fn check_multiclass_prerequisites(
 
     // Check OR requirements - at least one must pass
     if !or_reqs.is_empty() {
-        let any_pass = or_reqs.iter().any(|(ability, min_score, _)| {
-            get_ability_score(character, ability) >= *min_score
-        });
+        let any_pass = or_reqs
+            .iter()
+            .any(|(ability, min_score, _)| get_ability_score(character, ability) >= *min_score);
         if !any_pass {
             let reqs_str = or_reqs
                 .iter()
@@ -349,7 +353,9 @@ fn calculate_hp_gain(method: &HpGainMethod, hit_die: i32, con_mod: i32) -> i32 {
 /// Get hit die value for a class from catalog, returns d8 as default.
 fn get_class_hit_die(conn: &mut SqliteConnection, class_name: &str, class_source: &str) -> i32 {
     // Try to get from catalog
-    if let Ok(Some(class)) = ClassService::new(conn).get_by_name_and_source(class_name, class_source) {
+    if let Ok(Some(class)) =
+        ClassService::new(conn).get_by_name_and_source(class_name, class_source)
+    {
         // Parse hit die from JSON data
         if let Ok(data) = class.parse_data() {
             if let Some(hd) = data.get("hd") {
@@ -499,8 +505,13 @@ impl<'a> CharacterService<'a> {
                 AsiOrFeat::Feat { name, source } => {
                     // Add feat to character
                     let feat_id = Uuid::new_v4().to_string();
-                    let new_feat =
-                        NewCharacterFeat::new(&feat_id, character_id, name, source, FeatSourceType::Asi);
+                    let new_feat = NewCharacterFeat::new(
+                        &feat_id,
+                        character_id,
+                        name,
+                        source,
+                        FeatSourceType::Asi,
+                    );
                     dal::insert_character_feat(self.conn, &new_feat)?;
                 }
             }
@@ -509,7 +520,9 @@ impl<'a> CharacterService<'a> {
         // 8. Handle spell changes if provided
         if let Some(ref spell_changes) = request.spell_changes {
             // Handle spell swap first (remove old, add new)
-            if let (Some(ref swap_out), Some(ref swap_in)) = (&spell_changes.swap_out, &spell_changes.swap_in) {
+            if let (Some(ref swap_out), Some(ref swap_in)) =
+                (&spell_changes.swap_out, &spell_changes.swap_in)
+            {
                 // Find and remove the spell being swapped out
                 let existing_spell = dal::find_character_spell_by_name(
                     self.conn,
@@ -748,8 +761,7 @@ impl<'a> CharacterService<'a> {
             if let Some(ref expertise_skills) = feature_choices.expertise_skills {
                 for skill_name in expertise_skills {
                     // Find the existing skill proficiency and upgrade to expertise
-                    let proficiencies =
-                        dal::list_character_proficiencies(self.conn, character_id)?;
+                    let proficiencies = dal::list_character_proficiencies(self.conn, character_id)?;
                     let skill_prof = proficiencies
                         .iter()
                         .find(|p| p.proficiency_type == "skill" && p.name == *skill_name);
@@ -783,7 +795,11 @@ impl<'a> CharacterService<'a> {
 
             // Build update with new level and optional subclass
             let update = if let Some(ref subclass) = request.subclass {
-                UpdateCharacterClass::set_level_and_subclass(new_level, &subclass.name, &subclass.source)
+                UpdateCharacterClass::set_level_and_subclass(
+                    new_level,
+                    &subclass.name,
+                    &subclass.source,
+                )
             } else {
                 UpdateCharacterClass::set_level(new_level)
             };
@@ -796,9 +812,19 @@ impl<'a> CharacterService<'a> {
             let is_starting = !has_existing_class;
 
             let mut new_class = if is_starting {
-                NewCharacterClass::starting(&class_id, character_id, &request.class_name, &request.class_source)
+                NewCharacterClass::starting(
+                    &class_id,
+                    character_id,
+                    &request.class_name,
+                    &request.class_source,
+                )
             } else {
-                NewCharacterClass::multiclass(&class_id, character_id, &request.class_name, &request.class_source)
+                NewCharacterClass::multiclass(
+                    &class_id,
+                    character_id,
+                    &request.class_name,
+                    &request.class_source,
+                )
             };
 
             // Add subclass if provided

@@ -95,7 +95,10 @@ pub fn character_has_source(
 }
 
 /// Count sources for a character.
-pub fn count_character_sources(conn: &mut SqliteConnection, character_id: &str) -> QueryResult<i64> {
+pub fn count_character_sources(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+) -> QueryResult<i64> {
     character_sources::table
         .filter(character_sources::character_id.eq(character_id))
         .count()

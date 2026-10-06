@@ -22,10 +22,7 @@ pub fn get_map_poi(conn: &mut SqliteConnection, id: &str) -> QueryResult<MapPoi>
 }
 
 /// Get a map POI by ID, returning None if not found.
-pub fn get_map_poi_optional(
-    conn: &mut SqliteConnection,
-    id: &str,
-) -> QueryResult<Option<MapPoi>> {
+pub fn get_map_poi_optional(conn: &mut SqliteConnection, id: &str) -> QueryResult<Option<MapPoi>> {
     map_pois::table.find(id).first(conn).optional()
 }
 
@@ -87,15 +84,21 @@ pub fn count_map_pois(conn: &mut SqliteConnection, map_id: &str) -> QueryResult<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_campaign_asset, insert_map};
+    use crate::db::test_connection;
     use crate::models::campaign::{NewCampaign, NewCampaignAsset, NewMap};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
         insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        let asset = NewCampaignAsset::for_campaign("asset-1", "camp-1", "dungeon.uvtt", "application/octet-stream", "/blobs/dungeon.uvtt");
+        let asset = NewCampaignAsset::for_campaign(
+            "asset-1",
+            "camp-1",
+            "dungeon.uvtt",
+            "application/octet-stream",
+            "/blobs/dungeon.uvtt",
+        );
         insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
         let map = NewMap::for_campaign("map-1", "camp-1", "Dungeon", "asset-1");

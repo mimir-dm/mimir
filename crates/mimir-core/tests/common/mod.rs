@@ -53,8 +53,18 @@ pub fn setup_srd_db_with_extra_sources() -> SqliteConnection {
 
     let extra_sources = [
         NewCatalogSource::new("MM", "Monster Manual", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("DMG", "Dungeon Master's Guide", true, "2024-01-20T12:00:00Z"),
-        NewCatalogSource::new("XGE", "Xanathar's Guide to Everything", true, "2024-01-20T12:00:00Z"),
+        NewCatalogSource::new(
+            "DMG",
+            "Dungeon Master's Guide",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
+        NewCatalogSource::new(
+            "XGE",
+            "Xanathar's Guide to Everything",
+            true,
+            "2024-01-20T12:00:00Z",
+        ),
     ];
     for source in &extra_sources {
         catalog::insert_source(&mut conn, source).expect("Failed to insert source");

@@ -166,12 +166,11 @@ pub fn place_objects(
             };
             let mirror = config.random_mirror && rng.gen::<bool>();
 
-            let mut obj =
-                MapObject::new(texture, Vector2::new(x, y), &alloc.next())
-                    .with_scale(scale)
-                    .with_rotation(rotation)
-                    .with_layer(config.layer)
-                    .with_mirror(mirror);
+            let mut obj = MapObject::new(texture, Vector2::new(x, y), &alloc.next())
+                .with_scale(scale)
+                .with_rotation(rotation)
+                .with_layer(config.layer)
+                .with_mirror(mirror);
 
             if let Some(ref color) = config.custom_color {
                 obj = obj.with_custom_color(color);
@@ -191,7 +190,14 @@ pub fn place_trees(
     alloc: &NodeIdAllocator,
     rng: &mut impl Rng,
 ) -> Vec<MapObject> {
-    let trees = place_objects(noise_map, &config.tree, pixel_width, pixel_height, alloc, rng);
+    let trees = place_objects(
+        noise_map,
+        &config.tree,
+        pixel_width,
+        pixel_height,
+        alloc,
+        rng,
+    );
     let mut result = Vec::with_capacity(trees.len() * 3);
 
     for tree in &trees {
@@ -216,14 +222,10 @@ pub fn place_trees(
 
         // Canopy on top
         if let Some(ref canopy) = config.canopy {
-            let canopy_obj = MapObject::new(
-                &canopy.texture,
-                tree.position,
-                &alloc.next(),
-            )
-            .with_scale(tree.scale.x * canopy.scale_factor)
-            .with_rotation(tree.rotation)
-            .with_layer(canopy.layer);
+            let canopy_obj = MapObject::new(&canopy.texture, tree.position, &alloc.next())
+                .with_scale(tree.scale.x * canopy.scale_factor)
+                .with_rotation(tree.rotation)
+                .with_layer(canopy.layer);
             result.push(canopy_obj);
         }
     }
@@ -279,11 +281,10 @@ pub fn place_clumps(
                 0.0
             };
 
-            let mut obj =
-                MapObject::new(texture, Vector2::new(sx, sy), &alloc.next())
-                    .with_scale(scale)
-                    .with_rotation(rotation)
-                    .with_layer(config.secondary.layer);
+            let mut obj = MapObject::new(texture, Vector2::new(sx, sy), &alloc.next())
+                .with_scale(scale)
+                .with_rotation(rotation)
+                .with_layer(config.secondary.layer);
 
             if let Some(ref color) = config.secondary.custom_color {
                 obj = obj.with_custom_color(color);
@@ -321,7 +322,14 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     fn test_noise() -> NoiseMap {
-        NoiseMap::generate(100, 100, &NoiseConfig { seed: 42, ..Default::default() })
+        NoiseMap::generate(
+            100,
+            100,
+            &NoiseConfig {
+                seed: 42,
+                ..Default::default()
+            },
+        )
     }
 
     #[test]
@@ -456,7 +464,10 @@ mod tests {
         assert!(!objects.is_empty());
 
         let rocks: Vec<_> = objects.iter().filter(|o| o.texture == "rock.png").collect();
-        let pebbles: Vec<_> = objects.iter().filter(|o| o.texture == "pebble.png").collect();
+        let pebbles: Vec<_> = objects
+            .iter()
+            .filter(|o| o.texture == "pebble.png")
+            .collect();
         assert!(!rocks.is_empty());
         assert!(pebbles.len() >= rocks.len() * 2);
     }

@@ -13,8 +13,10 @@ pub fn insert_feat(conn: &mut SqliteConnection, feat: &NewFeat) -> QueryResult<i
         .values(feat)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple feats in a batch.

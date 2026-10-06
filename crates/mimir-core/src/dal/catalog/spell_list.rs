@@ -17,8 +17,10 @@ pub fn insert_spell_class(conn: &mut SqliteConnection, assoc: &NewSpellClass) ->
         .values(assoc)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple spell-class associations in a batch.
@@ -32,7 +34,10 @@ pub fn insert_spell_classes(
 }
 
 /// Get all class associations for a spell.
-pub fn get_spell_classes(conn: &mut SqliteConnection, spell_id: i32) -> QueryResult<Vec<SpellClass>> {
+pub fn get_spell_classes(
+    conn: &mut SqliteConnection,
+    spell_id: i32,
+) -> QueryResult<Vec<SpellClass>> {
     spell_classes::table
         .filter(spell_classes::spell_id.eq(spell_id))
         .order(spell_classes::class_name.asc())
@@ -40,7 +45,10 @@ pub fn get_spell_classes(conn: &mut SqliteConnection, spell_id: i32) -> QueryRes
 }
 
 /// Get all spell associations for a class.
-pub fn get_class_spells(conn: &mut SqliteConnection, class_name: &str) -> QueryResult<Vec<SpellClass>> {
+pub fn get_class_spells(
+    conn: &mut SqliteConnection,
+    class_name: &str,
+) -> QueryResult<Vec<SpellClass>> {
     spell_classes::table
         .filter(spell_classes::class_name.eq(class_name))
         .load(conn)
@@ -90,8 +98,10 @@ pub fn insert_spell_subclass(
         .values(assoc)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple spell-subclass associations in a batch.
@@ -153,12 +163,13 @@ pub fn count_spell_subclasses(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::{insert_source, insert_spell};
+    use crate::db::test_connection;
     use crate::models::catalog::{NewCatalogSource, NewSpell};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 

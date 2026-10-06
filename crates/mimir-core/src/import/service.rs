@@ -5,7 +5,10 @@
 
 use crate::dal::catalog::{self, insert_source};
 use crate::fts::{flatten_entries, index_entity, ContentType};
-use crate::import::{collect_source_entities, copy_images, discover_available_sources, get_token_path, CollectedEntities};
+use crate::import::{
+    collect_source_entities, copy_images, discover_available_sources, get_token_path,
+    CollectedEntities,
+};
 use crate::models::catalog::*;
 use crate::utils::now_rfc3339;
 use anyhow::{Context, Result};
@@ -181,16 +184,15 @@ impl<'a> CatalogImportService<'a> {
             all_books
                 .into_iter()
                 .filter(|book| {
-                    let dominated = book.group
+                    let dominated = book
+                        .group
                         .as_ref()
                         .map(|g| allowed.iter().any(|a| a.eq_ignore_ascii_case(g)))
                         .unwrap_or(false);
                     if !dominated {
                         info!(
                             "Skipping {} ({}) - group: {:?}",
-                            book.name,
-                            book.id,
-                            book.group
+                            book.name, book.id, book.group
                         );
                     }
                     dominated
@@ -234,7 +236,10 @@ impl<'a> CatalogImportService<'a> {
         match self.expand_magic_variants_from_disk(repo_path) {
             Ok(count) => {
                 if count > 0 {
-                    *result.entity_counts.entry("item (expanded variant)".to_string()).or_insert(0) += count;
+                    *result
+                        .entity_counts
+                        .entry("item (expanded variant)".to_string())
+                        .or_insert(0) += count;
                     result.total_entities += count;
                 }
             }
@@ -260,12 +265,9 @@ impl<'a> CatalogImportService<'a> {
             return Ok(0);
         }
 
-        let variants_data: Value = serde_json::from_str(
-            &std::fs::read_to_string(&variants_file)?
-        )?;
-        let base_items_data: Value = serde_json::from_str(
-            &std::fs::read_to_string(&base_items_file)?
-        )?;
+        let variants_data: Value = serde_json::from_str(&std::fs::read_to_string(&variants_file)?)?;
+        let base_items_data: Value =
+            serde_json::from_str(&std::fs::read_to_string(&base_items_file)?)?;
 
         let all_variants = variants_data
             .get("magicvariant")
@@ -311,8 +313,7 @@ impl<'a> CatalogImportService<'a> {
         info!("Loaded {} JSON files from tarball", json_files.len());
 
         // Parse books.json to discover available sources
-        let books = parse_books_from_memory(&json_files)
-            .context("Failed to parse books.json")?;
+        let books = parse_books_from_memory(&json_files).context("Failed to parse books.json")?;
 
         // Filter by allowed groups
         let total_books = books.len();
@@ -324,16 +325,15 @@ impl<'a> CatalogImportService<'a> {
             books
                 .into_iter()
                 .filter(|book| {
-                    let dominated = book.group
+                    let dominated = book
+                        .group
                         .as_ref()
                         .map(|g| allowed.iter().any(|a| a.eq_ignore_ascii_case(g)))
                         .unwrap_or(false);
                     if !dominated {
                         info!(
                             "Skipping {} ({}) - group: {:?}",
-                            book.name,
-                            book.id,
-                            book.group
+                            book.name, book.id, book.group
                         );
                     }
                     dominated
@@ -377,7 +377,10 @@ impl<'a> CatalogImportService<'a> {
         match self.expand_magic_variants_from_memory(&json_files) {
             Ok(count) => {
                 if count > 0 {
-                    *result.entity_counts.entry("item (expanded variant)".to_string()).or_insert(0) += count;
+                    *result
+                        .entity_counts
+                        .entry("item (expanded variant)".to_string())
+                        .or_insert(0) += count;
                     result.total_entities += count;
                 }
             }
@@ -499,9 +502,13 @@ impl<'a> CatalogImportService<'a> {
         }
 
         // Import spell-class associations from sources.json
-        let spell_class_count = self.import_spell_class_associations_from_memory(json_files, source_code)?;
+        let spell_class_count =
+            self.import_spell_class_associations_from_memory(json_files, source_code)?;
         if spell_class_count > 0 {
-            info!("Imported {} spell-class associations for {}", spell_class_count, source_code);
+            info!(
+                "Imported {} spell-class associations for {}",
+                spell_class_count, source_code
+            );
         }
 
         // Import book content if available
@@ -582,7 +589,10 @@ impl<'a> CatalogImportService<'a> {
         // This is separate from spell data in 5etools
         let spell_class_count = self.import_spell_class_associations(repo_path, source_code)?;
         if spell_class_count > 0 {
-            info!("Imported {} spell-class associations for {}", spell_class_count, source_code);
+            info!(
+                "Imported {} spell-class associations for {}",
+                spell_class_count, source_code
+            );
         }
 
         // Import book content if available
@@ -692,7 +702,14 @@ impl<'a> CatalogImportService<'a> {
 
     // === Entity-specific import functions with field extraction ===
 
-    fn import_monster(&mut self, entity: &Value, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_monster(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let cr = extract_cr(entity);
         let creature_type = extract_creature_type(entity);
         let size = extract_size(entity);
@@ -709,12 +726,15 @@ impl<'a> CatalogImportService<'a> {
             monster = monster.with_size(sz);
         }
 
-        let monster_id = catalog::insert_monster(self.conn, &monster).context("Failed to insert monster")?;
+        let monster_id =
+            catalog::insert_monster(self.conn, &monster).context("Failed to insert monster")?;
 
         // Set token path if images are configured and token exists
         if let Some(dest_img_dir) = &self.dest_img_dir {
             if let Some(token_path) = get_token_path(dest_img_dir, source, name) {
-                if let Err(e) = catalog::set_token_image_path(self.conn, monster_id, Some(&token_path)) {
+                if let Err(e) =
+                    catalog::set_token_image_path(self.conn, monster_id, Some(&token_path))
+                {
                     warn!("Failed to update monster token path: {}", e);
                 }
             }
@@ -723,11 +743,15 @@ impl<'a> CatalogImportService<'a> {
         Ok(monster_id)
     }
 
-    fn import_spell(&mut self, entity: &Value, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
-        let level = entity
-            .get("level")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(0) as i32;
+    fn import_spell(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
+        let level = entity.get("level").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
         let school = entity
             .get("school")
             .and_then(|v| v.as_str())
@@ -743,7 +767,8 @@ impl<'a> CatalogImportService<'a> {
             spell = spell.with_school(sch);
         }
 
-        let spell_id = catalog::insert_spell(self.conn, &spell).context("Failed to insert spell")?;
+        let spell_id =
+            catalog::insert_spell(self.conn, &spell).context("Failed to insert spell")?;
 
         // Extract and insert spell-class relationships
         self.import_spell_classes(spell_id, entity, source)?;
@@ -780,10 +805,9 @@ impl<'a> CatalogImportService<'a> {
         if let Some(subclasses) = entity.get("classes").and_then(|c| c.get("fromSubclass")) {
             if let Some(subclass_array) = subclasses.as_array() {
                 for subclass_entry in subclass_array {
-                    if let (Some(class_obj), Some(subclass_obj)) = (
-                        subclass_entry.get("class"),
-                        subclass_entry.get("subclass"),
-                    ) {
+                    if let (Some(class_obj), Some(subclass_obj)) =
+                        (subclass_entry.get("class"), subclass_entry.get("subclass"))
+                    {
                         let class_name = class_obj.get("name").and_then(|n| n.as_str());
                         let subclass_name = subclass_obj.get("name").and_then(|n| n.as_str());
                         let subclass_source = subclass_obj
@@ -818,16 +842,20 @@ impl<'a> CatalogImportService<'a> {
     ///
     /// In 5etools, spell-class associations are stored separately from spell data
     /// in `data/spells/sources.json`. This file maps source -> spell name -> classes.
-    fn import_spell_class_associations(&mut self, repo_path: &Path, source_code: &str) -> Result<usize> {
+    fn import_spell_class_associations(
+        &mut self,
+        repo_path: &Path,
+        source_code: &str,
+    ) -> Result<usize> {
         let sources_file = repo_path.join("data").join("spells").join("sources.json");
         if !sources_file.exists() {
             return Ok(0);
         }
 
-        let content = std::fs::read_to_string(&sources_file)
-            .context("Failed to read spells/sources.json")?;
-        let sources_data: Value = serde_json::from_str(&content)
-            .context("Failed to parse spells/sources.json")?;
+        let content =
+            std::fs::read_to_string(&sources_file).context("Failed to read spells/sources.json")?;
+        let sources_data: Value =
+            serde_json::from_str(&content).context("Failed to parse spells/sources.json")?;
 
         let mut count = 0;
 
@@ -874,10 +902,9 @@ impl<'a> CatalogImportService<'a> {
                 // Import subclass associations
                 if let Some(subclasses) = spell_data.get("subclass").and_then(|v| v.as_array()) {
                     for subclass_entry in subclasses {
-                        if let (Some(class_obj), Some(subclass_obj)) = (
-                            subclass_entry.get("class"),
-                            subclass_entry.get("subclass"),
-                        ) {
+                        if let (Some(class_obj), Some(subclass_obj)) =
+                            (subclass_entry.get("class"), subclass_entry.get("subclass"))
+                        {
                             let class_name = class_obj.get("name").and_then(|n| n.as_str());
                             let subclass_name = subclass_obj.get("name").and_then(|n| n.as_str());
                             let subclass_source = subclass_obj
@@ -885,7 +912,9 @@ impl<'a> CatalogImportService<'a> {
                                 .and_then(|s| s.as_str())
                                 .unwrap_or(source_code);
 
-                            if let (Some(class_name), Some(subclass_name)) = (class_name, subclass_name) {
+                            if let (Some(class_name), Some(subclass_name)) =
+                                (class_name, subclass_name)
+                            {
                                 let spell_subclass = NewSpellSubclass {
                                     spell_id,
                                     subclass_name,
@@ -913,7 +942,9 @@ impl<'a> CatalogImportService<'a> {
         source_code: &str,
     ) -> Result<usize> {
         // Look for data/spells/sources.json in the in-memory files
-        let sources_key = json_files.keys().find(|k| k.ends_with("data/spells/sources.json"));
+        let sources_key = json_files
+            .keys()
+            .find(|k| k.ends_with("data/spells/sources.json"));
         let content = match sources_key {
             Some(key) => json_files.get(key),
             None => return Ok(0),
@@ -924,8 +955,8 @@ impl<'a> CatalogImportService<'a> {
             None => return Ok(0),
         };
 
-        let sources_data: Value = serde_json::from_str(content)
-            .context("Failed to parse spells/sources.json")?;
+        let sources_data: Value =
+            serde_json::from_str(content).context("Failed to parse spells/sources.json")?;
 
         let mut count = 0;
 
@@ -972,10 +1003,9 @@ impl<'a> CatalogImportService<'a> {
                 // Import subclass associations
                 if let Some(subclasses) = spell_data.get("subclass").and_then(|v| v.as_array()) {
                     for subclass_entry in subclasses {
-                        if let (Some(class_obj), Some(subclass_obj)) = (
-                            subclass_entry.get("class"),
-                            subclass_entry.get("subclass"),
-                        ) {
+                        if let (Some(class_obj), Some(subclass_obj)) =
+                            (subclass_entry.get("class"), subclass_entry.get("subclass"))
+                        {
                             let class_name = class_obj.get("name").and_then(|n| n.as_str());
                             let subclass_name = subclass_obj.get("name").and_then(|n| n.as_str());
                             let subclass_source = subclass_obj
@@ -983,7 +1013,9 @@ impl<'a> CatalogImportService<'a> {
                                 .and_then(|s| s.as_str())
                                 .unwrap_or(source_code);
 
-                            if let (Some(class_name), Some(subclass_name)) = (class_name, subclass_name) {
+                            if let (Some(class_name), Some(subclass_name)) =
+                                (class_name, subclass_name)
+                            {
                                 let spell_subclass = NewSpellSubclass {
                                     spell_id,
                                     subclass_name,
@@ -1002,7 +1034,14 @@ impl<'a> CatalogImportService<'a> {
         Ok(count)
     }
 
-    fn import_item(&mut self, entity: &Value, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_item(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let item_type = entity
             .get("type")
             .and_then(|v| v.as_str())
@@ -1097,9 +1136,18 @@ impl<'a> CatalogImportService<'a> {
             };
 
             // Extract naming rules from inherits
-            let name_prefix = inherits.get("namePrefix").and_then(|v| v.as_str()).unwrap_or("");
-            let name_suffix = inherits.get("nameSuffix").and_then(|v| v.as_str()).unwrap_or("");
-            let name_remove = inherits.get("nameRemove").and_then(|v| v.as_str()).unwrap_or("");
+            let name_prefix = inherits
+                .get("namePrefix")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let name_suffix = inherits
+                .get("nameSuffix")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let name_remove = inherits
+                .get("nameRemove")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
 
             // Determine the source for expanded items
             let variant_source = inherits
@@ -1111,7 +1159,9 @@ impl<'a> CatalogImportService<'a> {
                 // Check requires (ANY requirement object must match)
                 let matches_any_req = requires.iter().any(|req| {
                     if let Some(req_obj) = req.as_object() {
-                        req_obj.iter().all(|(key, val)| base_item_matches_field(base_item, key, val))
+                        req_obj
+                            .iter()
+                            .all(|(key, val)| base_item_matches_field(base_item, key, val))
                     } else {
                         false
                     }
@@ -1138,7 +1188,8 @@ impl<'a> CatalogImportService<'a> {
                 let expanded_name = format!("{}{}{}", name_prefix, cleaned_name, name_suffix);
 
                 // Build expanded item JSON: start with base, overlay inherits
-                let expanded = build_expanded_item(base_item, inherits, &expanded_name, variant_name);
+                let expanded =
+                    build_expanded_item(base_item, inherits, &expanded_name, variant_name);
                 let data = serde_json::to_string(&expanded)?;
 
                 let item_type = expanded
@@ -1163,7 +1214,10 @@ impl<'a> CatalogImportService<'a> {
                         count += 1;
                         // Index in FTS
                         if let Err(e) = self.index_entity_fts("item", item_id, &expanded) {
-                            warn!("Failed to FTS index expanded item '{}': {}", expanded_name, e);
+                            warn!(
+                                "Failed to FTS index expanded item '{}': {}",
+                                expanded_name, e
+                            );
                         }
                         // Import attunement from expanded data
                         if let Err(e) = self.import_item_attunement(item_id, &expanded) {
@@ -1188,7 +1242,13 @@ impl<'a> CatalogImportService<'a> {
         Ok(count)
     }
 
-    fn import_class(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_class(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut class = NewClass::new(name, source, data);
         class.fluff = fluff;
         catalog::insert_class(self.conn, &class).context("Failed to insert class")
@@ -1209,10 +1269,7 @@ impl<'a> CatalogImportService<'a> {
             .get("classSource")
             .and_then(|v| v.as_str())
             .unwrap_or(source);
-        let level = entity
-            .get("level")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(1) as i32;
+        let level = entity.get("level").and_then(|v| v.as_i64()).unwrap_or(1) as i32;
 
         let feature = NewClassFeature::new(name, source, class_name, class_source, level, data);
         catalog::insert_class_feature(self.conn, &feature).context("Failed to insert class feature")
@@ -1259,43 +1316,77 @@ impl<'a> CatalogImportService<'a> {
             .get("subclassSource")
             .and_then(|v| v.as_str())
             .unwrap_or(source);
-        let level = entity
-            .get("level")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(1) as i32;
+        let level = entity.get("level").and_then(|v| v.as_i64()).unwrap_or(1) as i32;
 
         let feature = NewSubclassFeature::new(
-            name, source, class_name, class_source,
-            subclass_name, subclass_source, level, data
+            name,
+            source,
+            class_name,
+            class_source,
+            subclass_name,
+            subclass_source,
+            level,
+            data,
         );
-        catalog::insert_subclass_feature(self.conn, &feature).context("Failed to insert subclass feature")
+        catalog::insert_subclass_feature(self.conn, &feature)
+            .context("Failed to insert subclass feature")
     }
 
-    fn import_race(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_race(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut race = NewRace::new(name, source, data);
         race.fluff = fluff;
         catalog::insert_race(self.conn, &race).context("Failed to insert race")
     }
 
-    fn import_background(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_background(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut background = NewBackground::new(name, source, data);
         background.fluff = fluff;
         catalog::insert_background(self.conn, &background).context("Failed to insert background")
     }
 
-    fn import_feat(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_feat(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut feat = NewFeat::new(name, source, data);
         feat.fluff = fluff;
         catalog::insert_feat(self.conn, &feat).context("Failed to insert feat")
     }
 
-    fn import_condition(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_condition(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut condition = NewCondition::new(name, source, data);
         condition.fluff = fluff;
         catalog::insert_condition(self.conn, &condition).context("Failed to insert condition")
     }
 
-    fn import_disease(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_disease(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut disease = NewDisease::new(name, source, data);
         disease.fluff = fluff;
         catalog::insert_disease(self.conn, &disease).context("Failed to insert disease")
@@ -1369,7 +1460,14 @@ impl<'a> CatalogImportService<'a> {
         catalog::insert_object(self.conn, &object).context("Failed to insert object")
     }
 
-    fn import_trap(&mut self, entity: &Value, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_trap(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let trap_tier = entity
             .get("trapTier")
             .and_then(|v| v.as_str())
@@ -1385,7 +1483,13 @@ impl<'a> CatalogImportService<'a> {
         catalog::insert_trap(self.conn, &trap).context("Failed to insert trap")
     }
 
-    fn import_hazard(&mut self, name: &str, source: &str, data: &str, fluff: Option<&str>) -> Result<i32> {
+    fn import_hazard(
+        &mut self,
+        name: &str,
+        source: &str,
+        data: &str,
+        fluff: Option<&str>,
+    ) -> Result<i32> {
         let mut hazard = NewHazard::new(name, source, data);
         hazard.fluff = fluff;
         catalog::insert_hazard(self.conn, &hazard).context("Failed to insert hazard")
@@ -1422,7 +1526,13 @@ impl<'a> CatalogImportService<'a> {
         catalog::insert_sense(self.conn, &sense).context("Failed to insert sense")
     }
 
-    fn import_skill(&mut self, entity: &Value, name: &str, source: &str, data: &str) -> Result<i32> {
+    fn import_skill(
+        &mut self,
+        entity: &Value,
+        name: &str,
+        source: &str,
+        data: &str,
+    ) -> Result<i32> {
         let ability = entity
             .get("ability")
             .and_then(|v| v.as_str())
@@ -1595,11 +1705,13 @@ impl<'a> CatalogImportService<'a> {
 
     // === FTS Indexing ===
 
-    fn index_entity_fts(&mut self, entity_type: &str, entity_id: i32, entity: &Value) -> Result<()> {
-        let name = entity
-            .get("name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+    fn index_entity_fts(
+        &mut self,
+        entity_type: &str,
+        entity_id: i32,
+        entity: &Value,
+    ) -> Result<()> {
+        let name = entity.get("name").and_then(|v| v.as_str()).unwrap_or("");
 
         // Extract and flatten entries for rules content
         if let Some(entries) = entity.get("entries") {
@@ -1648,8 +1760,7 @@ impl<'a> CatalogImportService<'a> {
 fn read_json_from_tarball(tarball_path: &Path) -> Result<HashMap<String, String>> {
     use std::fs::File;
 
-    let file = File::open(tarball_path)
-        .context("Failed to open tarball")?;
+    let file = File::open(tarball_path).context("Failed to open tarball")?;
 
     let decoder = GzDecoder::new(BufReader::new(file));
     let mut archive = Archive::new(decoder);
@@ -1657,7 +1768,8 @@ fn read_json_from_tarball(tarball_path: &Path) -> Result<HashMap<String, String>
     let mut json_files = HashMap::new();
     let mut prefix_to_strip: Option<String> = None;
 
-    let entries = archive.entries()
+    let entries = archive
+        .entries()
         .context("Failed to read archive entries")?;
 
     for entry_result in entries {
@@ -1732,16 +1844,27 @@ fn parse_books_from_memory(json_files: &HashMap<String, String>) -> Result<Vec<B
         .get("data/books.json")
         .context("books.json not found in archive")?;
 
-    let books_data: Value = serde_json::from_str(books_content)
-        .context("Failed to parse books.json")?;
+    let books_data: Value =
+        serde_json::from_str(books_content).context("Failed to parse books.json")?;
 
     let mut books = Vec::new();
 
     if let Some(book_array) = books_data.get("book").and_then(|b| b.as_array()) {
         for book in book_array {
-            let id = book.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let name = book.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let group = book.get("group").and_then(|v| v.as_str()).map(|s| s.to_string());
+            let id = book
+                .get("id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let name = book
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let group = book
+                .get("group")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
 
             if !id.is_empty() {
                 books.push(BookMeta { id, name, group });
@@ -1761,7 +1884,8 @@ fn collect_entities_from_memory(
 
     // Helper to check if an entity belongs to this source
     let matches_source = |entity: &Value| -> bool {
-        entity.get("source")
+        entity
+            .get("source")
             .and_then(|v| v.as_str())
             .map(|s| s.eq_ignore_ascii_case(source_code))
             .unwrap_or(false)
@@ -1795,7 +1919,11 @@ fn collect_entities_from_memory(
         ("data/deities.json", "deity", "deity"),
         ("data/senses.json", "sense", "sense"),
         ("data/skills.json", "skill", "skill"),
-        ("data/optionalfeatures.json", "optionalfeature", "optionalfeature"),
+        (
+            "data/optionalfeatures.json",
+            "optionalfeature",
+            "optionalfeature",
+        ),
         ("data/psionics.json", "psionic", "psionic"),
         ("data/rewards.json", "reward", "reward"),
         ("data/variantrules.json", "variantrule", "variantrule"),
@@ -1807,10 +1935,22 @@ fn collect_entities_from_memory(
         if path.contains("fluff") {
             if let Ok(data) = serde_json::from_str::<Value>(content) {
                 // Try to find fluff arrays
-                for key in ["monsterFluff", "spellFluff", "itemFluff", "classFluff",
-                            "raceFluff", "backgroundFluff", "featFluff", "languageFluff",
-                            "vehicleFluff", "objectFluff", "trapFluff", "hazardFluff",
-                            "conditionFluff", "diseaseFluff"] {
+                for key in [
+                    "monsterFluff",
+                    "spellFluff",
+                    "itemFluff",
+                    "classFluff",
+                    "raceFluff",
+                    "backgroundFluff",
+                    "featFluff",
+                    "languageFluff",
+                    "vehicleFluff",
+                    "objectFluff",
+                    "trapFluff",
+                    "hazardFluff",
+                    "conditionFluff",
+                    "diseaseFluff",
+                ] {
                     if let Some(fluff_array) = data.get(key).and_then(|v| v.as_array()) {
                         for fluff in fluff_array {
                             let name = fluff.get("name").and_then(|v| v.as_str()).unwrap_or("");
@@ -1893,7 +2033,10 @@ fn collect_entities_from_memory(
 fn extract_cr(entity: &Value) -> Option<String> {
     match entity.get("cr") {
         Some(Value::String(s)) => Some(s.clone()),
-        Some(Value::Object(obj)) => obj.get("cr").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        Some(Value::Object(obj)) => obj
+            .get("cr")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
         Some(Value::Number(n)) => Some(n.to_string()),
         _ => None,
     }
@@ -1937,8 +2080,11 @@ fn extract_concentration(entity: &Value) -> bool {
         .get("duration")
         .and_then(|d| d.as_array())
         .map(|arr| {
-            arr.iter()
-                .any(|d| d.get("concentration").and_then(|c| c.as_bool()).unwrap_or(false))
+            arr.iter().any(|d| {
+                d.get("concentration")
+                    .and_then(|c| c.as_bool())
+                    .unwrap_or(false)
+            })
         })
         .unwrap_or(false)
 }
@@ -1965,8 +2111,14 @@ fn rewrite_book_image_paths(content: &Value) -> Value {
                                     path
                                 };
                                 let mut new_href = serde_json::Map::new();
-                                new_href.insert("type".to_string(), Value::String("internal".to_string()));
-                                new_href.insert("path".to_string(), Value::String(new_path.to_string()));
+                                new_href.insert(
+                                    "type".to_string(),
+                                    Value::String("internal".to_string()),
+                                );
+                                new_href.insert(
+                                    "path".to_string(),
+                                    Value::String(new_path.to_string()),
+                                );
                                 // Copy any other fields
                                 for (k, v) in obj {
                                     if k != "type" && k != "path" {
@@ -2022,12 +2174,10 @@ fn base_item_matches_field(base_item: &Value, key: &str, expected: &Value) -> bo
 
     match expected {
         // Boolean requirement: check if the base item has a truthy value for this key
-        Value::Bool(true) => {
-            actual.map_or(false, |v| v.as_bool().unwrap_or(false) || v == &Value::Bool(true))
-        }
-        Value::Bool(false) => {
-            actual.map_or(true, |v| v.as_bool() == Some(false))
-        }
+        Value::Bool(true) => actual.map_or(false, |v| {
+            v.as_bool().unwrap_or(false) || v == &Value::Bool(true)
+        }),
+        Value::Bool(false) => actual.map_or(true, |v| v.as_bool() == Some(false)),
         // String requirement: exact match against base item field
         Value::String(s) => {
             actual.map_or(false, |v| {
@@ -2042,9 +2192,7 @@ fn base_item_matches_field(base_item: &Value, key: &str, expected: &Value) -> bo
             })
         }
         // Number: exact match
-        Value::Number(_) => {
-            actual.map_or(false, |v| v == expected)
-        }
+        Value::Number(_) => actual.map_or(false, |v| v == expected),
         _ => false,
     }
 }
@@ -2060,7 +2208,11 @@ fn base_item_excluded(base_item: &Value, excludes: &Value) -> bool {
         match val {
             // { "net": true } — exclude if base item has this boolean flag
             Value::Bool(true) => {
-                if base_item.get(key).and_then(|v| v.as_bool()).unwrap_or(false) {
+                if base_item
+                    .get(key)
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
+                {
                     return true;
                 }
                 // Also check name match for string-like excludes
@@ -2114,7 +2266,13 @@ fn build_expanded_item(
     // Overlay inherits fields onto the base item
     if let (Some(base_obj), Some(inherits_obj)) = (expanded.as_object_mut(), inherits.as_object()) {
         // Metadata fields from inherits that we skip (naming handled separately)
-        let skip_keys = ["namePrefix", "nameSuffix", "nameRemove", "reprintedAs", "lootTables"];
+        let skip_keys = [
+            "namePrefix",
+            "nameSuffix",
+            "nameRemove",
+            "reprintedAs",
+            "lootTables",
+        ];
 
         for (key, val) in inherits_obj {
             if skip_keys.contains(&key.as_str()) {
@@ -2203,9 +2361,11 @@ fn resolve_value_templates(val: &Value, lookup: &HashMap<String, String>) -> Val
             }
             Value::String(result)
         }
-        Value::Array(arr) => {
-            Value::Array(arr.iter().map(|v| resolve_value_templates(v, lookup)).collect())
-        }
+        Value::Array(arr) => Value::Array(
+            arr.iter()
+                .map(|v| resolve_value_templates(v, lookup))
+                .collect(),
+        ),
         Value::Object(obj) => {
             let mut new_obj = obj.clone();
             for (k, v) in obj {
@@ -2304,7 +2464,11 @@ mod tests {
     fn test_base_item_matches_string_field() {
         let base = json!({"name": "Shortsword", "type": "M", "weaponCategory": "martial"});
         assert!(base_item_matches_field(&base, "type", &json!("M")));
-        assert!(base_item_matches_field(&base, "weaponCategory", &json!("martial")));
+        assert!(base_item_matches_field(
+            &base,
+            "weaponCategory",
+            &json!("martial")
+        ));
         assert!(!base_item_matches_field(&base, "type", &json!("R")));
     }
 
@@ -2335,7 +2499,10 @@ mod tests {
     #[test]
     fn test_base_item_excluded_array() {
         let base = json!({"name": "Greatsword", "property": ["2H", "H"]});
-        assert!(base_item_excluded(&base, &json!({"property": ["2H", "2H|XPHB"]})));
+        assert!(base_item_excluded(
+            &base,
+            &json!({"property": ["2H", "2H|XPHB"]})
+        ));
         assert!(!base_item_excluded(&base, &json!({"property": ["F", "L"]})));
     }
 
@@ -2390,7 +2557,10 @@ mod tests {
 
         let expanded = build_expanded_item(&base, &inherits, "+1 Longbow", "+1 Weapon");
         let entries = expanded["entries"].as_array().unwrap();
-        assert_eq!(entries[0], "You have a +1 bonus to attack and damage rolls.");
+        assert_eq!(
+            entries[0],
+            "You have a +1 bonus to attack and damage rolls."
+        );
         assert_eq!(entries[1], "Extra Piercing damage on a crit.");
     }
 
@@ -2403,7 +2573,8 @@ mod tests {
             "rarity": "very rare"
         });
 
-        let expanded = build_expanded_item(&base, &inherits, "Arrow of Slaying", "Arrow of Slaying");
+        let expanded =
+            build_expanded_item(&base, &inherits, "Arrow of Slaying", "Arrow of Slaying");
         assert_eq!(expanded["name"], "Arrow of Slaying");
         assert_eq!(expanded["rarity"], "very rare");
     }
@@ -2413,7 +2584,9 @@ mod tests {
         let mut result = ImportResult::default();
         result.sources_imported.push("PHB".to_string());
         result.sources_imported.push("DMG".to_string());
-        result.sources_failed.push(("XGE".to_string(), "Test error".to_string()));
+        result
+            .sources_failed
+            .push(("XGE".to_string(), "Test error".to_string()));
         result.entity_counts.insert("monster".to_string(), 100);
         result.entity_counts.insert("spell".to_string(), 50);
         result.total_entities = 150;

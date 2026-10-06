@@ -107,14 +107,15 @@ pub fn update_homebrew_spell(
 
 /// Delete a homebrew spell.
 #[tauri::command]
-pub fn delete_homebrew_spell(
-    state: State<'_, AppState>,
-    id: String,
-) -> ApiResponse<bool> {
+pub fn delete_homebrew_spell(state: State<'_, AppState>, id: String) -> ApiResponse<bool> {
     let mut db = match state.connect() {
         Ok(db) => db,
         Err(e) => return ApiResponse::err(e),
     };
 
-    to_api_response(HomebrewService::new(&mut db).delete_spell(&id).map(|_| true))
+    to_api_response(
+        HomebrewService::new(&mut db)
+            .delete_spell(&id)
+            .map(|_| true),
+    )
 }

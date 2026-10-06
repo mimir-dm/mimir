@@ -35,7 +35,12 @@ pub struct NewDisease<'a> {
 
 impl<'a> NewDisease<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, data, fluff: None }
+        Self {
+            name,
+            source,
+            data,
+            fluff: None,
+        }
     }
 }
 

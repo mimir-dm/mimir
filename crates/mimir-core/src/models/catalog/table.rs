@@ -69,7 +69,8 @@ mod tests {
 
     #[test]
     fn test_new_catalog_table() {
-        let table = NewCatalogTable::new("Wild Magic Surge", "PHB", r#"{"name":"Wild Magic Surge"}"#);
+        let table =
+            NewCatalogTable::new("Wild Magic Surge", "PHB", r#"{"name":"Wild Magic Surge"}"#);
         assert_eq!(table.name, "Wild Magic Surge");
         assert_eq!(table.source, "PHB");
     }

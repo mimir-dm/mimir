@@ -43,7 +43,12 @@ pub struct NewRace<'a> {
 impl<'a> NewRace<'a> {
     /// Create a new race entry.
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, data, fluff: None }
+        Self {
+            name,
+            source,
+            data,
+            fluff: None,
+        }
     }
 }
 

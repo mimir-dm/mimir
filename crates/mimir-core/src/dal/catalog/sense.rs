@@ -13,15 +13,14 @@ pub fn insert_sense(conn: &mut SqliteConnection, sense: &NewSense) -> QueryResul
         .values(sense)
         .execute(conn)?;
 
-    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>("last_insert_rowid()"))
-        .get_result(conn)
+    diesel::select(diesel::dsl::sql::<diesel::sql_types::Integer>(
+        "last_insert_rowid()",
+    ))
+    .get_result(conn)
 }
 
 /// Insert multiple senses in a batch.
-pub fn insert_senses(
-    conn: &mut SqliteConnection,
-    senses: &[NewSense],
-) -> QueryResult<usize> {
+pub fn insert_senses(conn: &mut SqliteConnection, senses: &[NewSense]) -> QueryResult<usize> {
     diesel::insert_into(senses::table)
         .values(senses)
         .execute(conn)
@@ -29,9 +28,7 @@ pub fn insert_senses(
 
 /// Get a sense by its ID.
 pub fn get_sense(conn: &mut SqliteConnection, id: i32) -> QueryResult<Sense> {
-    senses::table
-        .filter(senses::id.eq(id))
-        .first(conn)
+    senses::table.filter(senses::id.eq(id)).first(conn)
 }
 
 /// Get a sense by name and source.
@@ -53,10 +50,7 @@ pub fn list_senses(conn: &mut SqliteConnection) -> QueryResult<Vec<Sense>> {
 }
 
 /// List senses from a specific source.
-pub fn list_senses_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<Vec<Sense>> {
+pub fn list_senses_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<Vec<Sense>> {
     senses::table
         .filter(senses::source.eq(source))
         .order(senses::name.asc())
@@ -69,10 +63,7 @@ pub fn delete_sense(conn: &mut SqliteConnection, id: i32) -> QueryResult<usize> 
 }
 
 /// Delete all senses from a specific source.
-pub fn delete_senses_by_source(
-    conn: &mut SqliteConnection,
-    source: &str,
-) -> QueryResult<usize> {
+pub fn delete_senses_by_source(conn: &mut SqliteConnection, source: &str) -> QueryResult<usize> {
     diesel::delete(senses::table.filter(senses::source.eq(source))).execute(conn)
 }
 
@@ -84,12 +75,13 @@ pub fn count_senses(conn: &mut SqliteConnection) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::catalog::insert_source;
+    use crate::db::test_connection;
     use crate::models::catalog::NewCatalogSource;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
-        let source = NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
+        let source =
+            NewCatalogSource::new("PHB", "Player's Handbook", true, "2024-01-20T12:00:00Z");
         insert_source(conn, &source).expect("Failed to insert source");
     }
 

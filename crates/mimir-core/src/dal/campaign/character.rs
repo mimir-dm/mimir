@@ -8,7 +8,10 @@ use diesel::prelude::*;
 use diesel::SqliteConnection;
 
 /// Insert a new character.
-pub fn insert_character(conn: &mut SqliteConnection, character: &NewCharacter) -> QueryResult<String> {
+pub fn insert_character(
+    conn: &mut SqliteConnection,
+    character: &NewCharacter,
+) -> QueryResult<String> {
     diesel::insert_into(characters::table)
         .values(character)
         .execute(conn)?;
@@ -131,7 +134,10 @@ pub fn character_exists(conn: &mut SqliteConnection, id: &str) -> QueryResult<bo
 }
 
 /// Count all characters for a campaign.
-pub fn count_campaign_characters(conn: &mut SqliteConnection, campaign_id: &str) -> QueryResult<i64> {
+pub fn count_campaign_characters(
+    conn: &mut SqliteConnection,
+    campaign_id: &str,
+) -> QueryResult<i64> {
     characters::table
         .filter(characters::campaign_id.eq(campaign_id))
         .count()
@@ -159,8 +165,8 @@ pub fn count_npcs(conn: &mut SqliteConnection, campaign_id: &str) -> QueryResult
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::insert_campaign;
+    use crate::db::test_connection;
     use crate::models::campaign::NewCampaign;
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -189,8 +195,11 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Shopkeeper")
-            .with_npc_info(Some("merchant"), Some("Waterdeep"), Some("Merchants Guild"));
+        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Shopkeeper").with_npc_info(
+            Some("merchant"),
+            Some("Waterdeep"),
+            Some("Merchants Guild"),
+        );
         insert_character(&mut conn, &npc).expect("Failed to insert");
 
         let retrieved = get_character(&mut conn, "char-1").expect("Failed to get");
@@ -244,12 +253,21 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let npc1 = NewCharacter::new_npc("char-1", Some("camp-1"), "Guard")
-            .with_npc_info(Some("guard"), Some("Waterdeep"), None);
-        let npc2 = NewCharacter::new_npc("char-2", Some("camp-1"), "Merchant")
-            .with_npc_info(Some("merchant"), Some("Waterdeep"), None);
-        let npc3 = NewCharacter::new_npc("char-3", Some("camp-1"), "Farmer")
-            .with_npc_info(Some("commoner"), Some("Phandalin"), None);
+        let npc1 = NewCharacter::new_npc("char-1", Some("camp-1"), "Guard").with_npc_info(
+            Some("guard"),
+            Some("Waterdeep"),
+            None,
+        );
+        let npc2 = NewCharacter::new_npc("char-2", Some("camp-1"), "Merchant").with_npc_info(
+            Some("merchant"),
+            Some("Waterdeep"),
+            None,
+        );
+        let npc3 = NewCharacter::new_npc("char-3", Some("camp-1"), "Farmer").with_npc_info(
+            Some("commoner"),
+            Some("Phandalin"),
+            None,
+        );
         insert_character(&mut conn, &npc1).expect("Failed to insert");
         insert_character(&mut conn, &npc2).expect("Failed to insert");
         insert_character(&mut conn, &npc3).expect("Failed to insert");
@@ -268,12 +286,21 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let npc1 = NewCharacter::new_npc("char-1", Some("camp-1"), "Agent")
-            .with_npc_info(None, None, Some("Zhentarim"));
-        let npc2 = NewCharacter::new_npc("char-2", Some("camp-1"), "Spy")
-            .with_npc_info(None, None, Some("Zhentarim"));
-        let npc3 = NewCharacter::new_npc("char-3", Some("camp-1"), "Paladin")
-            .with_npc_info(None, None, Some("Order of the Gauntlet"));
+        let npc1 = NewCharacter::new_npc("char-1", Some("camp-1"), "Agent").with_npc_info(
+            None,
+            None,
+            Some("Zhentarim"),
+        );
+        let npc2 = NewCharacter::new_npc("char-2", Some("camp-1"), "Spy").with_npc_info(
+            None,
+            None,
+            Some("Zhentarim"),
+        );
+        let npc3 = NewCharacter::new_npc("char-3", Some("camp-1"), "Paladin").with_npc_info(
+            None,
+            None,
+            Some("Order of the Gauntlet"),
+        );
         insert_character(&mut conn, &npc1).expect("Failed to insert");
         insert_character(&mut conn, &npc2).expect("Failed to insert");
         insert_character(&mut conn, &npc3).expect("Failed to insert");

@@ -54,17 +54,19 @@ impl Spell {
 
     /// Get the human-readable school name.
     pub fn school_name(&self) -> &str {
-        self.school.as_ref().map_or("Unknown", |s| match s.as_str() {
-            "A" => "Abjuration",
-            "C" => "Conjuration",
-            "D" => "Divination",
-            "E" => "Enchantment",
-            "V" => "Evocation",
-            "I" => "Illusion",
-            "N" => "Necromancy",
-            "T" => "Transmutation",
-            _ => "Unknown",
-        })
+        self.school
+            .as_ref()
+            .map_or("Unknown", |s| match s.as_str() {
+                "A" => "Abjuration",
+                "C" => "Conjuration",
+                "D" => "Divination",
+                "E" => "Enchantment",
+                "V" => "Evocation",
+                "I" => "Illusion",
+                "N" => "Necromancy",
+                "T" => "Transmutation",
+                _ => "Unknown",
+            })
     }
 
     /// Get the level as a display string (e.g., "Cantrip", "1st", "2nd").

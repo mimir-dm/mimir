@@ -411,10 +411,7 @@ pub fn search_cults(
                             .map(|s| s.to_lowercase())
                             .unwrap_or_else(|| {
                                 // Fallback: check if name starts with "Cult"
-                                let name = map
-                                    .get("name")
-                                    .and_then(|v| v.as_str())
-                                    .unwrap_or("");
+                                let name = map.get("name").and_then(|v| v.as_str()).unwrap_or("");
                                 if name.to_lowercase().starts_with("cult") {
                                     "cult".to_string()
                                 } else {
@@ -477,10 +474,7 @@ pub fn get_cult_by_name(
                     .map(|s| s.to_lowercase())
                     .unwrap_or_else(|| {
                         // Fallback: check if name starts with "Cult"
-                        let name = map
-                            .get("name")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("");
+                        let name = map.get("name").and_then(|v| v.as_str()).unwrap_or("");
                         if name.to_lowercase().starts_with("cult") {
                             "cult".to_string()
                         } else {

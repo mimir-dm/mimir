@@ -5,16 +5,15 @@
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Campaign, CampaignAsset, CampaignHomebrewItem, CampaignHomebrewMonster,
-    CampaignHomebrewSpell, Character,
-    CharacterClass, CharacterFeat, CharacterFeature, CharacterInventory, CharacterProficiency,
-    CharacterSpell, Document, FogRevealedArea, LightSource, Map, MapPoi, MapTrap, Module,
-    ModuleMonster, ModuleNpc, NewCampaign, NewCampaignAsset, NewCampaignHomebrewItem,
-    NewCampaignHomebrewMonster, NewCampaignHomebrewSpell, NewCharacter, NewCharacterClass,
-    NewCharacterFeat,
-    NewCharacterFeature, NewCharacterInventory, NewCharacterProficiency, NewCharacterSpell,
-    NewDocument, NewFogRevealedArea, NewLightSource, NewMap, NewMapPoi, NewMapTrap, NewModule,
-    NewModuleMonster, NewModuleNpc, NewTokenPlacement, TokenPlacement,
+    Campaign, CampaignAsset, CampaignHomebrewItem, CampaignHomebrewMonster, CampaignHomebrewSpell,
+    Character, CharacterClass, CharacterFeat, CharacterFeature, CharacterInventory,
+    CharacterProficiency, CharacterSpell, Document, FogRevealedArea, LightSource, Map, MapPoi,
+    MapTrap, Module, ModuleMonster, ModuleNpc, NewCampaign, NewCampaignAsset,
+    NewCampaignHomebrewItem, NewCampaignHomebrewMonster, NewCampaignHomebrewSpell, NewCharacter,
+    NewCharacterClass, NewCharacterFeat, NewCharacterFeature, NewCharacterInventory,
+    NewCharacterProficiency, NewCharacterSpell, NewDocument, NewFogRevealedArea, NewLightSource,
+    NewMap, NewMapPoi, NewMapTrap, NewModule, NewModuleMonster, NewModuleNpc, NewTokenPlacement,
+    TokenPlacement,
 };
 use crate::services::{ServiceError, ServiceResult};
 use chrono::{DateTime, Utc};
@@ -254,7 +253,9 @@ impl<'a> ArchiveService<'a> {
 
         // 1. Create campaign
         let new_campaign_id = uuid::Uuid::new_v4().to_string();
-        id_maps.campaign.insert(data.campaign.id.clone(), new_campaign_id.clone());
+        id_maps
+            .campaign
+            .insert(data.campaign.id.clone(), new_campaign_id.clone());
 
         let new_campaign = NewCampaign::new(&new_campaign_id, &campaign_name);
         dal::insert_campaign(self.conn, &new_campaign)?;
@@ -271,7 +272,13 @@ impl<'a> ArchiveService<'a> {
         }
 
         // 2. Import assets first (needed for map references)
-        self.import_assets(&data, &mut id_maps, &new_campaign_id, assets_dir, temp_dir.path())?;
+        self.import_assets(
+            &data,
+            &mut id_maps,
+            &new_campaign_id,
+            assets_dir,
+            temp_dir.path(),
+        )?;
 
         // 3. Import modules
         self.import_modules(&data, &mut id_maps, &new_campaign_id)?;
@@ -339,7 +346,9 @@ impl<'a> ArchiveService<'a> {
 
             if path.file_name() == Some(std::ffi::OsStr::new("manifest.json")) {
                 let mut content = String::new();
-                entry.read_to_string(&mut content).map_err(ServiceError::Io)?;
+                entry
+                    .read_to_string(&mut content)
+                    .map_err(ServiceError::Io)?;
 
                 let manifest: ArchiveManifest = serde_json::from_str(&content)
                     .map_err(|e| ServiceError::validation(format!("Invalid manifest: {}", e)))?;
@@ -490,7 +499,18 @@ impl<'a> ArchiveService<'a> {
                 let name = cap.get(2).map(|m| m.as_str()).unwrap_or("");
                 let source = cap.get(3).map(|m| m.as_str()).unwrap_or("");
 
-                if matches!(ref_type, "monster" | "spell" | "item" | "creature" | "condition" | "feat" | "race" | "class" | "background") {
+                if matches!(
+                    ref_type,
+                    "monster"
+                        | "spell"
+                        | "item"
+                        | "creature"
+                        | "condition"
+                        | "feat"
+                        | "race"
+                        | "class"
+                        | "background"
+                ) {
                     refs.insert(CatalogReference {
                         ref_type: ref_type.to_string(),
                         name: name.to_string(),
@@ -514,8 +534,9 @@ impl<'a> ArchiveService<'a> {
         let gz = GzEncoder::new(file, Compression::default());
         let mut archive = Builder::new(gz);
 
-        let manifest_json = serde_json::to_string_pretty(manifest)
-            .map_err(|e| ServiceError::validation(format!("Failed to serialize manifest: {}", e)))?;
+        let manifest_json = serde_json::to_string_pretty(manifest).map_err(|e| {
+            ServiceError::validation(format!("Failed to serialize manifest: {}", e))
+        })?;
         Self::add_file_to_archive(&mut archive, "manifest.json", manifest_json.as_bytes())?;
 
         let data_json = serde_json::to_string_pretty(data)
@@ -602,7 +623,10 @@ impl<'a> ArchiveService<'a> {
             id_maps.assets.insert(asset.id.clone(), new_id.clone());
 
             // Copy asset file
-            let src_path = temp_dir.join("assets").join(&asset.id).join(&asset.filename);
+            let src_path = temp_dir
+                .join("assets")
+                .join(&asset.id)
+                .join(&asset.filename);
             let blob_path = format!("campaigns/{}/{}", campaign_id, asset.filename);
             let dest_path = assets_dir.join(&blob_path);
 
@@ -635,7 +659,8 @@ impl<'a> ArchiveService<'a> {
             let new_id = uuid::Uuid::new_v4().to_string();
             id_maps.modules.insert(module.id.clone(), new_id.clone());
 
-            let mut new_module = NewModule::new(&new_id, campaign_id, &module.name, module.module_number);
+            let mut new_module =
+                NewModule::new(&new_id, campaign_id, &module.name, module.module_number);
             if let Some(ref desc) = module.description {
                 new_module = new_module.with_description(desc);
             }
@@ -803,7 +828,10 @@ impl<'a> ArchiveService<'a> {
             let new_id = uuid::Uuid::new_v4().to_string();
             id_maps.documents.insert(doc.id.clone(), new_id.clone());
 
-            let module_id = doc.module_id.as_ref().and_then(|old_id| id_maps.modules.get(old_id));
+            let module_id = doc
+                .module_id
+                .as_ref()
+                .and_then(|old_id| id_maps.modules.get(old_id));
 
             let mut new_doc = if let Some(mod_id) = module_id {
                 NewDocument::for_module(&new_id, campaign_id, mod_id, &doc.title, &doc.doc_type)
@@ -828,11 +856,16 @@ impl<'a> ArchiveService<'a> {
             id_maps.maps.insert(m.id.clone(), new_id.clone());
 
             // Map the uvtt_asset_id to new ID
-            let new_uvtt_asset_id = id_maps.assets.get(&m.uvtt_asset_id)
+            let new_uvtt_asset_id = id_maps
+                .assets
+                .get(&m.uvtt_asset_id)
                 .cloned()
                 .unwrap_or_else(|| m.uvtt_asset_id.clone());
 
-            let module_id = m.module_id.as_ref().and_then(|old_id| id_maps.modules.get(old_id));
+            let module_id = m
+                .module_id
+                .as_ref()
+                .and_then(|old_id| id_maps.modules.get(old_id));
 
             let new_map = if let Some(mod_id) = module_id {
                 NewMap::for_module(&new_id, campaign_id, mod_id, &m.name, &new_uvtt_asset_id)
@@ -844,7 +877,8 @@ impl<'a> ArchiveService<'a> {
             // Import POIs
             for poi in &map_data.pois {
                 let poi_id = uuid::Uuid::new_v4().to_string();
-                let mut new_poi = NewMapPoi::new(&poi_id, &new_id, &poi.name, poi.grid_x, poi.grid_y);
+                let mut new_poi =
+                    NewMapPoi::new(&poi_id, &new_id, &poi.name, poi.grid_x, poi.grid_y);
                 if let Some(ref desc) = poi.description {
                     new_poi = new_poi.with_description(desc);
                 }
@@ -861,13 +895,8 @@ impl<'a> ArchiveService<'a> {
             // Import traps
             for trap in &map_data.traps {
                 let trap_id = uuid::Uuid::new_v4().to_string();
-                let mut new_trap = NewMapTrap::new(
-                    &trap_id,
-                    &new_id,
-                    &trap.name,
-                    trap.grid_x,
-                    trap.grid_y,
-                );
+                let mut new_trap =
+                    NewMapTrap::new(&trap_id, &new_id, &trap.name, trap.grid_x, trap.grid_y);
                 if let Some(ref desc) = trap.description {
                     new_trap = new_trap.with_description(desc);
                 }
@@ -913,14 +942,8 @@ impl<'a> ArchiveService<'a> {
             // Import fog areas
             for fog in &map_data.fog_areas {
                 let fog_id = uuid::Uuid::new_v4().to_string();
-                let new_fog = NewFogRevealedArea::new(
-                    &fog_id,
-                    &new_id,
-                    fog.x,
-                    fog.y,
-                    fog.width,
-                    fog.height,
-                );
+                let new_fog =
+                    NewFogRevealedArea::new(&fog_id, &new_id, fog.x, fog.y, fog.width, fog.height);
                 dal::insert_fog_revealed_area(self.conn, &new_fog)?;
             }
         }
@@ -935,21 +958,30 @@ impl<'a> ArchiveService<'a> {
         // Import module monsters
         for monster in &data.module_monsters {
             let new_id = uuid::Uuid::new_v4().to_string();
-            id_maps.module_monsters.insert(monster.id.clone(), new_id.clone());
+            id_maps
+                .module_monsters
+                .insert(monster.id.clone(), new_id.clone());
 
-            let module_id = id_maps.modules.get(&monster.module_id)
+            let module_id = id_maps
+                .modules
+                .get(&monster.module_id)
                 .ok_or_else(|| ServiceError::validation("Module not found for monster"))?;
 
             let mut new_monster = if let Some(ref hb_id) = monster.homebrew_monster_id {
                 // Map old homebrew monster ID to new one
-                let new_hb_id = id_maps.homebrew_monsters.get(hb_id)
-                    .ok_or_else(|| ServiceError::validation("Homebrew monster not found for module monster"))?;
+                let new_hb_id = id_maps.homebrew_monsters.get(hb_id).ok_or_else(|| {
+                    ServiceError::validation("Homebrew monster not found for module monster")
+                })?;
                 NewModuleMonster::from_homebrew(&new_id, module_id, new_hb_id)
             } else {
-                let name = monster.monster_name.as_deref()
-                    .ok_or_else(|| ServiceError::validation("Module monster has no catalog name or homebrew reference"))?;
-                let source = monster.monster_source.as_deref()
-                    .ok_or_else(|| ServiceError::validation("Module monster has no catalog source"))?;
+                let name = monster.monster_name.as_deref().ok_or_else(|| {
+                    ServiceError::validation(
+                        "Module monster has no catalog name or homebrew reference",
+                    )
+                })?;
+                let source = monster.monster_source.as_deref().ok_or_else(|| {
+                    ServiceError::validation("Module monster has no catalog source")
+                })?;
                 NewModuleMonster::new(&new_id, module_id, name, source)
             };
             new_monster.quantity = monster.quantity;
@@ -963,7 +995,9 @@ impl<'a> ArchiveService<'a> {
             let new_id = uuid::Uuid::new_v4().to_string();
             id_maps.module_npcs.insert(npc.id.clone(), new_id.clone());
 
-            let module_id = id_maps.modules.get(&npc.module_id)
+            let module_id = id_maps
+                .modules
+                .get(&npc.module_id)
                 .ok_or_else(|| ServiceError::validation("Module not found for NPC"))?;
 
             let mut new_npc = NewModuleNpc::new(&new_id, module_id, &npc.name);
@@ -988,14 +1022,20 @@ impl<'a> ArchiveService<'a> {
         for token in &data.tokens {
             let new_id = uuid::Uuid::new_v4().to_string();
 
-            let map_id = id_maps.maps.get(&token.map_id)
+            let map_id = id_maps
+                .maps
+                .get(&token.map_id)
                 .ok_or_else(|| ServiceError::validation("Map not found for token"))?;
 
-            let module_monster_id = token.module_monster_id.as_ref()
+            let module_monster_id = token
+                .module_monster_id
+                .as_ref()
                 .and_then(|old_id| id_maps.module_monsters.get(old_id))
                 .map(|s| s.as_str());
 
-            let module_npc_id = token.module_npc_id.as_ref()
+            let module_npc_id = token
+                .module_npc_id
+                .as_ref()
                 .and_then(|old_id| id_maps.module_npcs.get(old_id))
                 .map(|s| s.as_str());
 
@@ -1006,7 +1046,13 @@ impl<'a> ArchiveService<'a> {
             }
 
             let new_token = if let Some(monster_id) = module_monster_id {
-                NewTokenPlacement::for_monster(&new_id, map_id, monster_id, token.grid_x, token.grid_y)
+                NewTokenPlacement::for_monster(
+                    &new_id,
+                    map_id,
+                    monster_id,
+                    token.grid_x,
+                    token.grid_y,
+                )
             } else if let Some(npc_id) = module_npc_id {
                 NewTokenPlacement::for_npc(&new_id, map_id, npc_id, token.grid_x, token.grid_y)
             } else {
@@ -1062,7 +1108,9 @@ impl<'a> ArchiveService<'a> {
     ) -> ServiceResult<()> {
         for monster in &data.homebrew_monsters {
             let new_id = uuid::Uuid::new_v4().to_string();
-            id_maps.homebrew_monsters.insert(monster.id.clone(), new_id.clone());
+            id_maps
+                .homebrew_monsters
+                .insert(monster.id.clone(), new_id.clone());
             let mut new_monster =
                 NewCampaignHomebrewMonster::new(&new_id, campaign_id, &monster.name, &monster.data);
             new_monster.cr = monster.cr.as_deref();
@@ -1092,12 +1140,12 @@ mod tests {
     use super::*;
     use crate::dal::campaign::{insert_campaign, insert_module};
     use crate::models::campaign::{
-        NewCampaign, NewCampaignHomebrewItem, NewCampaignHomebrewMonster,
-        NewCampaignHomebrewSpell, NewCharacterClass, NewCharacterInventory,
-        NewCharacterProficiency, NewModule, NewModuleMonster, NewModuleNpc,
+        NewCampaign, NewCampaignHomebrewItem, NewCampaignHomebrewMonster, NewCampaignHomebrewSpell,
+        NewCharacterClass, NewCharacterInventory, NewCharacterProficiency, NewModule,
+        NewModuleMonster, NewModuleNpc,
     };
-    use crate::services::document::{CreateDocumentInput, DocumentService};
     use crate::services::character::CharacterService;
+    use crate::services::document::{CreateDocumentInput, DocumentService};
     use crate::test_utils::setup_test_db;
     use tempfile::TempDir;
 
@@ -1154,7 +1202,10 @@ mod tests {
 
     #[test]
     fn test_slugify() {
-        assert_eq!(ArchiveService::slugify("Lost Mine of Phandelver"), "lost-mine-of-phandelver");
+        assert_eq!(
+            ArchiveService::slugify("Lost Mine of Phandelver"),
+            "lost-mine-of-phandelver"
+        );
         assert_eq!(ArchiveService::slugify("Test  Campaign!"), "test-campaign");
         assert_eq!(ArchiveService::slugify("D&D 5e"), "d-d-5e");
     }
@@ -1269,7 +1320,10 @@ mod tests {
             .catalog_references
             .iter()
             .find(|r| r.name == "Goblin" && r.source == "MM");
-        assert!(goblin_ref.is_some(), "Should find Goblin|MM catalog reference");
+        assert!(
+            goblin_ref.is_some(),
+            "Should find Goblin|MM catalog reference"
+        );
     }
 
     #[test]
@@ -1317,8 +1371,7 @@ mod tests {
         assert_eq!(import_result.counts.characters, 1);
 
         // Verify imported campaign exists and has data
-        let imported_campaign =
-            dal::get_campaign(&mut conn, &import_result.campaign_id).unwrap();
+        let imported_campaign = dal::get_campaign(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(imported_campaign.name, "Imported Campaign");
 
         // Verify module imported
@@ -1526,18 +1579,13 @@ mod tests {
 
         // Add character class (CharacterService::create doesn't insert a class record)
         let class_id = uuid::Uuid::new_v4().to_string();
-        let new_class = NewCharacterClass::starting(&class_id, &char_id, "Fighter", "PHB")
-            .with_level(3);
+        let new_class =
+            NewCharacterClass::starting(&class_id, &char_id, "Fighter", "PHB").with_level(3);
         dal::insert_character_class(conn, &new_class).unwrap();
 
         // Add inventory item
         let inv_id = uuid::Uuid::new_v4().to_string();
-        let mut inv = NewCharacterInventory::new(
-            &inv_id,
-            &char_id,
-            "Longsword",
-            "PHB",
-        );
+        let mut inv = NewCharacterInventory::new(&inv_id, &char_id, "Longsword", "PHB");
         inv.quantity = 1;
         inv.equipped = 1;
         inv.attuned = 0;
@@ -1557,12 +1605,7 @@ mod tests {
 
         // Add module monster
         let monster_id = uuid::Uuid::new_v4().to_string();
-        let mut monster = NewModuleMonster::new(
-            &monster_id,
-            &module_id,
-            "Goblin Boss",
-            "MM",
-        );
+        let mut monster = NewModuleMonster::new(&monster_id, &module_id, "Goblin Boss", "MM");
         monster.quantity = 1;
         monster.display_name = Some("Grik the Goblin");
         monster.notes = Some("Guards the entrance");
@@ -1609,7 +1652,8 @@ mod tests {
         assert_eq!(import_result.counts.homebrew_spells, 1);
 
         // Verify homebrew items
-        let items = dal::list_campaign_homebrew_items(&mut conn, &import_result.campaign_id).unwrap();
+        let items =
+            dal::list_campaign_homebrew_items(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].name, "Flame Tongue Greatsword");
         assert_eq!(items[0].item_type.as_deref(), Some("weapon"));
@@ -1619,7 +1663,8 @@ mod tests {
         assert!(items[0].data.contains("dmg1"));
 
         // Verify homebrew monsters
-        let monsters = dal::list_campaign_homebrew_monsters(&mut conn, &import_result.campaign_id).unwrap();
+        let monsters =
+            dal::list_campaign_homebrew_monsters(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(monsters.len(), 1);
         assert_eq!(monsters[0].name, "Void Stalker");
         assert_eq!(monsters[0].cr.as_deref(), Some("10"));
@@ -1627,7 +1672,8 @@ mod tests {
         assert_eq!(monsters[0].size.as_deref(), Some("L"));
 
         // Verify homebrew spells
-        let spells = dal::list_campaign_homebrew_spells(&mut conn, &import_result.campaign_id).unwrap();
+        let spells =
+            dal::list_campaign_homebrew_spells(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(spells.len(), 1);
         assert_eq!(spells[0].name, "Eldritch Bolt");
         assert_eq!(spells[0].level, Some(3));
@@ -1682,7 +1728,9 @@ mod tests {
 
         // Verify proficiencies imported
         let profs = dal::list_character_proficiencies(&mut conn, &c.id).unwrap();
-        assert!(profs.iter().any(|p| p.name == "Heavy Armor" && p.proficiency_type == "armor"));
+        assert!(profs
+            .iter()
+            .any(|p| p.name == "Heavy Armor" && p.proficiency_type == "armor"));
     }
 
     #[test]
@@ -1721,7 +1769,10 @@ mod tests {
         assert_eq!(npcs.len(), 1);
         assert_eq!(npcs[0].name, "Elder Miriam");
         assert_eq!(npcs[0].role.as_deref(), Some("Quest Giver"));
-        assert_eq!(npcs[0].description.as_deref(), Some("An elderly half-elf sage"));
+        assert_eq!(
+            npcs[0].description.as_deref(),
+            Some("An elderly half-elf sage")
+        );
         assert_eq!(npcs[0].personality.as_deref(), Some("Kind but secretive"));
     }
 

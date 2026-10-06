@@ -104,8 +104,9 @@ mod tests {
 
     #[test]
     fn test_new_optional_feature() {
-        let feature = NewOptionalFeature::new("Agonizing Blast", "PHB", r#"{"name":"Agonizing Blast"}"#)
-            .with_feature_type("EI");
+        let feature =
+            NewOptionalFeature::new("Agonizing Blast", "PHB", r#"{"name":"Agonizing Blast"}"#)
+                .with_feature_type("EI");
         assert_eq!(feature.name, "Agonizing Blast");
         assert_eq!(feature.feature_type, Some("EI"));
     }

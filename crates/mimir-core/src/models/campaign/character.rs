@@ -163,7 +163,12 @@ pub struct NewCharacter<'a> {
 
 impl<'a> NewCharacter<'a> {
     /// Create a new player character with default ability scores.
-    pub fn new_pc(id: &'a str, campaign_id: Option<&'a str>, name: &'a str, player_name: &'a str) -> Self {
+    pub fn new_pc(
+        id: &'a str,
+        campaign_id: Option<&'a str>,
+        name: &'a str,
+        player_name: &'a str,
+    ) -> Self {
         Self {
             id,
             campaign_id,
@@ -482,8 +487,11 @@ mod tests {
 
     #[test]
     fn test_with_npc_info() {
-        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Guard Captain")
-            .with_npc_info(Some("military"), Some("Waterdeep"), Some("City Watch"));
+        let npc = NewCharacter::new_npc("char-1", Some("camp-1"), "Guard Captain").with_npc_info(
+            Some("military"),
+            Some("Waterdeep"),
+            Some("City Watch"),
+        );
         assert_eq!(npc.role, Some("military"));
         assert_eq!(npc.location, Some("Waterdeep"));
         assert_eq!(npc.faction, Some("City Watch"));

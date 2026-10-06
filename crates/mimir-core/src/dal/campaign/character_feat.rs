@@ -83,10 +83,8 @@ pub fn delete_character_feats(
     conn: &mut SqliteConnection,
     character_id: &str,
 ) -> QueryResult<usize> {
-    diesel::delete(
-        character_feats::table.filter(character_feats::character_id.eq(character_id)),
-    )
-    .execute(conn)
+    diesel::delete(character_feats::table.filter(character_feats::character_id.eq(character_id)))
+        .execute(conn)
 }
 
 /// Check if a character feat exists.
@@ -108,8 +106,8 @@ pub fn count_character_feats(conn: &mut SqliteConnection, character_id: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_character};
+    use crate::db::test_connection;
     use crate::models::campaign::{FeatSourceType, NewCampaign, NewCharacter};
 
     fn setup_test_data(conn: &mut SqliteConnection) {
@@ -194,20 +192,9 @@ mod tests {
         let mut conn = test_connection();
         setup_test_data(&mut conn);
 
-        let asi = NewCharacterFeat::new(
-            "feat-1",
-            "char-1",
-            "Sentinel",
-            "PHB",
-            FeatSourceType::Asi,
-        );
-        let race = NewCharacterFeat::new(
-            "feat-2",
-            "char-1",
-            "Prodigy",
-            "XGE",
-            FeatSourceType::Race,
-        );
+        let asi = NewCharacterFeat::new("feat-1", "char-1", "Sentinel", "PHB", FeatSourceType::Asi);
+        let race =
+            NewCharacterFeat::new("feat-2", "char-1", "Prodigy", "XGE", FeatSourceType::Race);
         let class = NewCharacterFeat::new(
             "feat-3",
             "char-1",
@@ -215,13 +202,8 @@ mod tests {
             "PHB",
             FeatSourceType::Class,
         );
-        let bonus = NewCharacterFeat::new(
-            "feat-4",
-            "char-1",
-            "Lucky",
-            "PHB",
-            FeatSourceType::Bonus,
-        );
+        let bonus =
+            NewCharacterFeat::new("feat-4", "char-1", "Lucky", "PHB", FeatSourceType::Bonus);
 
         insert_character_feat(&mut conn, &asi).expect("Failed to insert");
         insert_character_feat(&mut conn, &race).expect("Failed to insert");

@@ -403,9 +403,7 @@ mod tests {
             "srd": "Lightfoot Halfling"
         });
         let race: Race = serde_json::from_value(json).unwrap();
-        assert!(
-            matches!(race.srd, Some(SrdValue::Name(ref s)) if s == "Lightfoot Halfling")
-        );
+        assert!(matches!(race.srd, Some(SrdValue::Name(ref s)) if s == "Lightfoot Halfling"));
     }
 
     #[test]

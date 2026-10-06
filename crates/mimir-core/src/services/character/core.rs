@@ -263,8 +263,7 @@ impl<'a> CharacterService<'a> {
                 catalog_dal::get_class_by_name(self.conn, class_name, class_source)
             {
                 if let Ok(class_data) = serde_json::from_str::<serde_json::Value>(&class.data) {
-                    let class_profs =
-                        extract_class_proficiencies(&class_data, selected_skills);
+                    let class_profs = extract_class_proficiencies(&class_data, selected_skills);
                     insert_proficiencies(self.conn, &char_id, &class_profs)?;
                 }
             }
@@ -272,8 +271,7 @@ impl<'a> CharacterService<'a> {
 
         // Background proficiencies (skills, tools, languages)
         if let (Some(bg_name), Some(bg_source)) = (background_name, background_source) {
-            if let Ok(Some(bg)) =
-                catalog_dal::get_background_by_name(self.conn, bg_name, bg_source)
+            if let Ok(Some(bg)) = catalog_dal::get_background_by_name(self.conn, bg_name, bg_source)
             {
                 if let Ok(bg_data) = serde_json::from_str::<serde_json::Value>(&bg.data) {
                     let bg_profs = extract_background_proficiencies(&bg_data);
@@ -284,9 +282,7 @@ impl<'a> CharacterService<'a> {
 
         // Race proficiencies (skills, weapons, armor, tools, languages)
         if let (Some(r_name), Some(r_source)) = (race_name, race_source) {
-            if let Ok(Some(race)) =
-                catalog_dal::get_race_by_name(self.conn, r_name, r_source)
-            {
+            if let Ok(Some(race)) = catalog_dal::get_race_by_name(self.conn, r_name, r_source) {
                 if let Ok(race_data) = serde_json::from_str::<serde_json::Value>(&race.data) {
                     let race_profs = extract_race_proficiencies(&race_data);
                     insert_proficiencies(self.conn, &char_id, &race_profs)?;
@@ -318,8 +314,7 @@ impl<'a> CharacterService<'a> {
         campaign_id: &str,
         location: &str,
     ) -> ServiceResult<Vec<Character>> {
-        dal::list_npcs_by_location(self.conn, campaign_id, location)
-            .map_err(ServiceError::from)
+        dal::list_npcs_by_location(self.conn, campaign_id, location).map_err(ServiceError::from)
     }
 
     /// List NPCs by faction.
@@ -464,9 +459,9 @@ impl<'a> CharacterService<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::super::test_support::create_test_campaign;
     use super::*;
     use crate::test_utils::setup_test_db;
-    use super::super::test_support::create_test_campaign;
 
     #[test]
     fn test_create_pc() {
@@ -619,7 +614,8 @@ mod tests {
         let created = service.create(input).expect("Failed to create character");
         assert!(created.race_name.is_none());
 
-        let update = UpdateCharacterInput::set_race(Some("Dwarf".to_string()), Some("PHB".to_string()));
+        let update =
+            UpdateCharacterInput::set_race(Some("Dwarf".to_string()), Some("PHB".to_string()));
         let updated = service
             .update(&created.id, update)
             .expect("Failed to update");
@@ -694,10 +690,7 @@ mod tests {
                 .expect("Failed to count"),
             3
         );
-        assert_eq!(
-            service.count_pcs(&campaign_id).expect("Failed to count"),
-            1
-        );
+        assert_eq!(service.count_pcs(&campaign_id).expect("Failed to count"), 1);
         assert_eq!(
             service.count_npcs(&campaign_id).expect("Failed to count"),
             2

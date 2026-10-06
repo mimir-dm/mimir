@@ -6,7 +6,9 @@
 
 use serde_json::Value;
 
-use super::card_utils::{escape_typst, flatten_entries, split_text_natural, SMALL_CARD_DESC_BUDGET};
+use super::card_utils::{
+    escape_typst, flatten_entries, split_text_natural, SMALL_CARD_DESC_BUDGET,
+};
 use crate::builder::{RenderContext, Renderable};
 use crate::error::Result;
 
@@ -29,10 +31,7 @@ impl SpellCardsSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(spells: Value) -> Self {
-        let spell_vec = spells
-            .as_array()
-            .map(|arr| arr.clone())
-            .unwrap_or_default();
+        let spell_vec = spells.as_array().map(|arr| arr.clone()).unwrap_or_default();
         Self::new(spell_vec)
     }
 
@@ -90,14 +89,8 @@ impl SpellCardsSection {
             .and_then(|v| v.as_str())
             .unwrap_or("Unknown Spell");
         let level = spell.get("level").and_then(|v| v.as_i64()).unwrap_or(0);
-        let school = spell
-            .get("school")
-            .and_then(|v| v.as_str())
-            .unwrap_or("V");
-        let source = spell
-            .get("source")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let school = spell.get("school").and_then(|v| v.as_str()).unwrap_or("V");
+        let source = spell.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
         // Casting time - handle different formats
         let casting_time = if let Some(ct) = spell.get("casting_time").and_then(|v| v.as_str()) {
@@ -105,7 +98,10 @@ impl SpellCardsSection {
         } else if let Some(time_arr) = spell.get("time").and_then(|v| v.as_array()) {
             if let Some(first) = time_arr.first() {
                 let num = first.get("number").and_then(|v| v.as_i64()).unwrap_or(1);
-                let unit = first.get("unit").and_then(|v| v.as_str()).unwrap_or("action");
+                let unit = first
+                    .get("unit")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("action");
                 format!("{} {}", num, unit)
             } else {
                 "1 action".to_string()
@@ -144,18 +140,10 @@ impl SpellCardsSection {
             c.to_string()
         } else if let Some(comp_obj) = spell.get("components").and_then(|v| v.as_object()) {
             let mut parts = Vec::new();
-            if comp_obj
-                .get("v")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false)
-            {
+            if comp_obj.get("v").and_then(|v| v.as_bool()).unwrap_or(false) {
                 parts.push("V");
             }
-            if comp_obj
-                .get("s")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false)
-            {
+            if comp_obj.get("s").and_then(|v| v.as_bool()).unwrap_or(false) {
                 parts.push("S");
             }
             if comp_obj.get("m").is_some() {
@@ -188,12 +176,7 @@ impl SpellCardsSection {
                         .and_then(|d| d.get("type"))
                         .and_then(|v| v.as_str())
                         .unwrap_or("minute");
-                    format!(
-                        "{} {}{}",
-                        amount,
-                        unit,
-                        if amount > 1 { "s" } else { "" }
-                    )
+                    format!("{} {}{}", amount, unit, if amount > 1 { "s" } else { "" })
                 } else {
                     dur_type.to_string()
                 }
@@ -427,7 +410,6 @@ impl SpellCardsSection {
 
         (front, back)
     }
-
 }
 
 impl Renderable for SpellCardsSection {

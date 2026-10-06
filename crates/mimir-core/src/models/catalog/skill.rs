@@ -35,7 +35,12 @@ pub struct NewSkill<'a> {
 
 impl<'a> NewSkill<'a> {
     pub fn new(name: &'a str, source: &'a str, data: &'a str) -> Self {
-        Self { name, source, ability: None, data }
+        Self {
+            name,
+            source,
+            ability: None,
+            data,
+        }
     }
 
     pub fn with_ability(mut self, ability: &'a str) -> Self {
@@ -50,8 +55,8 @@ mod tests {
 
     #[test]
     fn test_new_skill() {
-        let skill = NewSkill::new("Athletics", "PHB", r#"{"name":"Athletics"}"#)
-            .with_ability("str");
+        let skill =
+            NewSkill::new("Athletics", "PHB", r#"{"name":"Athletics"}"#).with_ability("str");
         assert_eq!(skill.name, "Athletics");
         assert_eq!(skill.ability, Some("str"));
     }

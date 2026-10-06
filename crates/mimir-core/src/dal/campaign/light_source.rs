@@ -93,15 +93,23 @@ pub fn count_light_sources(conn: &mut SqliteConnection, map_id: &str) -> QueryRe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::test_connection;
     use crate::dal::campaign::{insert_campaign, insert_campaign_asset, insert_map};
-    use crate::models::campaign::{light_presets as presets, NewCampaign, NewCampaignAsset, NewMap};
+    use crate::db::test_connection;
+    use crate::models::campaign::{
+        light_presets as presets, NewCampaign, NewCampaignAsset, NewMap,
+    };
 
     fn setup_test_data(conn: &mut SqliteConnection) {
         let campaign = NewCampaign::new("camp-1", "Test Campaign");
         insert_campaign(conn, &campaign).expect("Failed to create campaign");
 
-        let asset = NewCampaignAsset::for_campaign("asset-1", "camp-1", "dungeon.uvtt", "application/octet-stream", "/blobs/dungeon.uvtt");
+        let asset = NewCampaignAsset::for_campaign(
+            "asset-1",
+            "camp-1",
+            "dungeon.uvtt",
+            "application/octet-stream",
+            "/blobs/dungeon.uvtt",
+        );
         insert_campaign_asset(conn, &asset).expect("Failed to create asset");
 
         let map = NewMap::for_campaign("map-1", "camp-1", "Dungeon", "asset-1");

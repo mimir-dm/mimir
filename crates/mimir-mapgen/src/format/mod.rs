@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_node_id_allocator() {
         let alloc = NodeIdAllocator::new(100);
-        assert_eq!(alloc.next(), "64");  // 100 decimal = 0x64
+        assert_eq!(alloc.next(), "64"); // 100 decimal = 0x64
         assert_eq!(alloc.next(), "65");
         assert_eq!(alloc.next(), "66");
         assert_eq!(alloc.current(), "67");

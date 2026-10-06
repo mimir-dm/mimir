@@ -131,47 +131,62 @@ impl<'a> NewCharacterFeature<'a> {
         source: &'a str,
         class: &'a str,
     ) -> Self {
-        Self::new(id, character_id, FeatureType::FightingStyle, name, source, class)
+        Self::new(
+            id,
+            character_id,
+            FeatureType::FightingStyle,
+            name,
+            source,
+            class,
+        )
     }
 
     /// Create a metamagic option.
-    pub fn metamagic(
-        id: &'a str,
-        character_id: &'a str,
-        name: &'a str,
-        source: &'a str,
-    ) -> Self {
-        Self::new(id, character_id, FeatureType::Metamagic, name, source, "Sorcerer")
+    pub fn metamagic(id: &'a str, character_id: &'a str, name: &'a str, source: &'a str) -> Self {
+        Self::new(
+            id,
+            character_id,
+            FeatureType::Metamagic,
+            name,
+            source,
+            "Sorcerer",
+        )
     }
 
     /// Create a battle master maneuver.
-    pub fn maneuver(
-        id: &'a str,
-        character_id: &'a str,
-        name: &'a str,
-        source: &'a str,
-    ) -> Self {
-        Self::new(id, character_id, FeatureType::Maneuver, name, source, "Fighter")
+    pub fn maneuver(id: &'a str, character_id: &'a str, name: &'a str, source: &'a str) -> Self {
+        Self::new(
+            id,
+            character_id,
+            FeatureType::Maneuver,
+            name,
+            source,
+            "Fighter",
+        )
     }
 
     /// Create a warlock invocation.
-    pub fn invocation(
-        id: &'a str,
-        character_id: &'a str,
-        name: &'a str,
-        source: &'a str,
-    ) -> Self {
-        Self::new(id, character_id, FeatureType::Invocation, name, source, "Warlock")
+    pub fn invocation(id: &'a str, character_id: &'a str, name: &'a str, source: &'a str) -> Self {
+        Self::new(
+            id,
+            character_id,
+            FeatureType::Invocation,
+            name,
+            source,
+            "Warlock",
+        )
     }
 
     /// Create a warlock pact boon.
-    pub fn pact_boon(
-        id: &'a str,
-        character_id: &'a str,
-        name: &'a str,
-        source: &'a str,
-    ) -> Self {
-        Self::new(id, character_id, FeatureType::PactBoon, name, source, "Warlock")
+    pub fn pact_boon(id: &'a str, character_id: &'a str, name: &'a str, source: &'a str) -> Self {
+        Self::new(
+            id,
+            character_id,
+            FeatureType::PactBoon,
+            name,
+            source,
+            "Warlock",
+        )
     }
 }
 
@@ -190,19 +205,33 @@ mod tests {
 
     #[test]
     fn test_feature_type_from_str() {
-        assert_eq!(FeatureType::from_str("fighting_style"), Some(FeatureType::FightingStyle));
-        assert_eq!(FeatureType::from_str("metamagic"), Some(FeatureType::Metamagic));
-        assert_eq!(FeatureType::from_str("maneuver"), Some(FeatureType::Maneuver));
-        assert_eq!(FeatureType::from_str("invocation"), Some(FeatureType::Invocation));
-        assert_eq!(FeatureType::from_str("pact_boon"), Some(FeatureType::PactBoon));
+        assert_eq!(
+            FeatureType::from_str("fighting_style"),
+            Some(FeatureType::FightingStyle)
+        );
+        assert_eq!(
+            FeatureType::from_str("metamagic"),
+            Some(FeatureType::Metamagic)
+        );
+        assert_eq!(
+            FeatureType::from_str("maneuver"),
+            Some(FeatureType::Maneuver)
+        );
+        assert_eq!(
+            FeatureType::from_str("invocation"),
+            Some(FeatureType::Invocation)
+        );
+        assert_eq!(
+            FeatureType::from_str("pact_boon"),
+            Some(FeatureType::PactBoon)
+        );
         assert_eq!(FeatureType::from_str("invalid"), None);
     }
 
     #[test]
     fn test_new_fighting_style() {
-        let feature = NewCharacterFeature::fighting_style(
-            "feat-1", "char-1", "Defense", "PHB", "Fighter"
-        );
+        let feature =
+            NewCharacterFeature::fighting_style("feat-1", "char-1", "Defense", "PHB", "Fighter");
         assert_eq!(feature.feature_type, "fighting_style");
         assert_eq!(feature.feature_name, "Defense");
         assert_eq!(feature.source_class, "Fighter");
@@ -210,36 +239,29 @@ mod tests {
 
     #[test]
     fn test_new_metamagic() {
-        let feature = NewCharacterFeature::metamagic(
-            "feat-1", "char-1", "Quickened Spell", "PHB"
-        );
+        let feature = NewCharacterFeature::metamagic("feat-1", "char-1", "Quickened Spell", "PHB");
         assert_eq!(feature.feature_type, "metamagic");
         assert_eq!(feature.source_class, "Sorcerer");
     }
 
     #[test]
     fn test_new_maneuver() {
-        let feature = NewCharacterFeature::maneuver(
-            "feat-1", "char-1", "Riposte", "PHB"
-        );
+        let feature = NewCharacterFeature::maneuver("feat-1", "char-1", "Riposte", "PHB");
         assert_eq!(feature.feature_type, "maneuver");
         assert_eq!(feature.source_class, "Fighter");
     }
 
     #[test]
     fn test_new_invocation() {
-        let feature = NewCharacterFeature::invocation(
-            "feat-1", "char-1", "Agonizing Blast", "PHB"
-        );
+        let feature = NewCharacterFeature::invocation("feat-1", "char-1", "Agonizing Blast", "PHB");
         assert_eq!(feature.feature_type, "invocation");
         assert_eq!(feature.source_class, "Warlock");
     }
 
     #[test]
     fn test_new_pact_boon() {
-        let feature = NewCharacterFeature::pact_boon(
-            "feat-1", "char-1", "Pact of the Blade", "PHB"
-        );
+        let feature =
+            NewCharacterFeature::pact_boon("feat-1", "char-1", "Pact of the Blade", "PHB");
         assert_eq!(feature.feature_type, "pact_boon");
         assert_eq!(feature.source_class, "Warlock");
     }

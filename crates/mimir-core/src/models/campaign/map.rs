@@ -310,8 +310,8 @@ mod tests {
 
     #[test]
     fn test_with_sort_order() {
-        let map = NewMap::for_module("map-1", "camp-1", "mod-1", "Floor 2", "asset-1")
-            .with_sort_order(2);
+        let map =
+            NewMap::for_module("map-1", "camp-1", "mod-1", "Floor 2", "asset-1").with_sort_order(2);
         assert_eq!(map.sort_order, 2);
     }
 

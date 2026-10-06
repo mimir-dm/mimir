@@ -92,11 +92,7 @@ impl<'a> NewModuleMonster<'a> {
     }
 
     /// Create a new module monster from a homebrew monster reference.
-    pub fn from_homebrew(
-        id: &'a str,
-        module_id: &'a str,
-        homebrew_monster_id: &'a str,
-    ) -> Self {
+    pub fn from_homebrew(id: &'a str, module_id: &'a str, homebrew_monster_id: &'a str) -> Self {
         Self {
             id,
             module_id,
@@ -199,8 +195,7 @@ mod tests {
 
     #[test]
     fn test_with_quantity() {
-        let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM")
-            .with_quantity(6);
+        let monster = NewModuleMonster::new("mm-1", "mod-1", "Goblin", "MM").with_quantity(6);
         assert_eq!(monster.quantity, 6);
     }
 
