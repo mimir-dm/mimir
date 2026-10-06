@@ -1,6 +1,0 @@
-[project]
-prefix = "MIMIR"
-
-[flight_levels]
-strategies_enabled = false
-initiatives_enabled = true
