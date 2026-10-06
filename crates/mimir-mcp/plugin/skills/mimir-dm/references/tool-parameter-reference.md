@@ -77,9 +77,9 @@ Example: `edit_character(character_id: "...", gp: 50)` (set 50 gold, other coins
 
 The MCP `level_up_character` tool likewise uses **individual parameters**, not an array:
 - `asi_ability1` — First ability to increase (e.g., "Constitution")
-- `asi_increase1` — Amount for first ability (1 or 2)
-- `asi_ability2` — Second ability to increase (optional)
-- `asi_increase2` — Amount for second ability
+- `asi_increase1` — Amount for first ability: 2 alone, or 1 with a second ability
+- `asi_ability2` — Second ability to increase. It must be different from the first. Use it only when `asi_increase1` is 1.
+- `asi_increase2` — Amount for second ability: 1
 
 Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi_ability2: "Charisma", asi_increase2: 1`
 

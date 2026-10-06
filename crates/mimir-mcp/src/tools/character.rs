@@ -80,7 +80,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         ),
         tool!(
             "level_up_character",
-            "Level up a character. Handles HP, multiclass validation, ASI/feats, spells, and feature choices.",
+            "Level up a character. Handles HP, multiclass validation, ASI/feats, spells, and feature choices. A character stops at total level 20. If any part fails, nothing is saved.",
             LevelUpArgs,
             level_up_character
         ),
@@ -297,11 +297,11 @@ tool_args! {
         pub asi_type: Option<String>,
         /// First ability to increase (for ASI)
         pub asi_ability1: Option<String>,
-        /// Amount for first ability: 1 or 2 (for ASI)
+        /// Amount for first ability: 2 alone, or 1 with a second ability (for ASI)
         pub asi_increase1: Option<i64>,
-        /// Second ability to increase (for ASI, optional)
+        /// Second ability to increase, different from the first (for ASI with asi_increase1 = 1)
         pub asi_ability2: Option<String>,
-        /// Amount for second ability (for ASI)
+        /// Amount for second ability: 1 (for ASI with asi_increase1 = 1)
         pub asi_increase2: Option<i64>,
         /// Feat name (if choosing feat)
         pub feat_name: Option<String>,
