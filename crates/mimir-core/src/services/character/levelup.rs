@@ -1,6 +1,6 @@
 //! Level-up: request/result types, multiclass prerequisites, HP and ability helpers, and the level-up engine.
 
-use diesel::SqliteConnection;
+use diesel::{Connection, SqliteConnection};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -248,6 +248,58 @@ fn check_multiclass_prerequisites(
     Ok(())
 }
 
+/// The highest total character level.
+const MAX_CHARACTER_LEVEL: i64 = 20;
+
+/// Position of an ability in STR, DEX, CON, INT, WIS, CHA order, from its
+/// full or short name (case-insensitive).
+fn ability_index(ability: &str) -> Option<usize> {
+    match ability.to_lowercase().as_str() {
+        "strength" | "str" => Some(0),
+        "dexterity" | "dex" => Some(1),
+        "constitution" | "con" => Some(2),
+        "intelligence" | "int" => Some(3),
+        "wisdom" | "wis" => Some(4),
+        "charisma" | "cha" => Some(5),
+        _ => None,
+    }
+}
+
+/// An ASI is +2 to one ability, or +1 to two different abilities.
+fn validate_asi(
+    ability1: &str,
+    increase1: i32,
+    ability2: Option<&str>,
+    increase2: Option<i32>,
+) -> ServiceResult<()> {
+    for ability in std::iter::once(ability1).chain(ability2) {
+        if ability_index(ability).is_none() {
+            return Err(ServiceError::validation(format!(
+                "Unknown ability '{}'",
+                ability
+            )));
+        }
+    }
+    let valid = match (increase1, ability2, increase2) {
+        (2, None, None) => true,
+        (1, Some(second), Some(1)) => ability_index(second) != ability_index(ability1),
+        _ => false,
+    };
+    if valid {
+        return Ok(());
+    }
+    let second = match (ability2, increase2) {
+        (Some(a), Some(i)) => format!(", {} {:+}", a, i),
+        (Some(a), None) => format!(", {} with no increase", a),
+        (None, Some(i)) => format!(", {:+} with no ability", i),
+        (None, None) => String::new(),
+    };
+    Err(ServiceError::validation(format!(
+        "ASI must be +2 to one ability or +1 to two different abilities (got {} {:+}{})",
+        ability1, increase1, second
+    )))
+}
+
 /// Get an ability score by name.
 fn get_ability_score(character: &Character, ability: &str) -> i32 {
     match ability.to_lowercase().as_str() {
@@ -322,8 +374,20 @@ impl<'a> CharacterService<'a> {
     /// Level up a character.
     ///
     /// Handles HP calculation, multiclass validation, and class level updates.
-    /// All updates occur in a single transaction.
+    /// All updates occur in a single transaction: on any error, nothing is
+    /// written.
     pub fn level_up(
+        &mut self,
+        character_id: &str,
+        request: LevelUpRequest,
+    ) -> ServiceResult<LevelUpResult> {
+        self.conn
+            .transaction(|conn| CharacterService::new(conn).apply_level_up(character_id, request))
+    }
+
+    /// The level-up steps. Callers go through `level_up`, which runs this in
+    /// a transaction.
+    fn apply_level_up(
         &mut self,
         character_id: &str,
         request: LevelUpRequest,
@@ -335,6 +399,15 @@ impl<'a> CharacterService<'a> {
         // 2. Get existing classes for this character
         let existing_classes = dal::list_character_classes(self.conn, character_id)?;
         let has_existing_class = !existing_classes.is_empty();
+
+        // A character cannot go past the maximum total level.
+        let current_total = dal::get_total_level(self.conn, character_id)?;
+        if current_total >= MAX_CHARACTER_LEVEL {
+            return Err(ServiceError::validation(format!(
+                "Character is already level {}; {} is the maximum total level",
+                current_total, MAX_CHARACTER_LEVEL
+            )));
+        }
 
         // 3. Check if character already has this class
         let existing_class_entry = dal::find_character_class_by_name(
@@ -383,14 +456,7 @@ impl<'a> CharacterService<'a> {
                     ability2,
                     increase2,
                 } => {
-                    // Validate total increase is exactly 2
-                    let total_increase = increase1 + increase2.unwrap_or(0);
-                    if total_increase != 2 {
-                        return Err(ServiceError::validation(format!(
-                            "ASI total increase must be exactly 2, got {}",
-                            total_increase
-                        )));
-                    }
+                    validate_asi(ability1, *increase1, ability2.as_deref(), *increase2)?;
 
                     // Apply first ability increase (cap at 20)
                     let current1 = get_ability_score(&updated_character, ability1);

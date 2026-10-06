@@ -387,14 +387,14 @@ fn cases() -> Vec<Case> {
             },
         },
         Case {
-            name: "ASI totalling other than 2 is rejected",
+            name: "ASI +1 to a single ability is rejected",
             scores: FIGHTER,
             classes: &[("Fighter", 3, None)],
             request: LevelUpRequest {
                 asi_or_feat: asi("strength", 1, None, None),
                 ..req("Fighter", Average)
             },
-            expect: Expect::Err("ASI total increase must be exactly 2, got 1"),
+            expect: Expect::Err("ASI must be +2 to one ability or +1 to two different abilities"),
         },
         Case {
             name: "feat instead of ASI is recorded with source type asi",
@@ -423,6 +423,94 @@ fn cases() -> Vec<Case> {
                     );
                 }),
             },
+        },
+        // ── ASI shape and level cap (MIMIR-T-0667) ─────────────────────
+        Case {
+            name: "ASI +3/-1 is rejected even though it totals 2",
+            scores: FIGHTER,
+            classes: &[("Fighter", 3, None)],
+            request: LevelUpRequest {
+                asi_or_feat: asi("strength", 3, Some("charisma"), Some(-1)),
+                ..req("Fighter", Average)
+            },
+            expect: Expect::Err("ASI must be +2 to one ability or +1 to two different abilities"),
+        },
+        Case {
+            name: "ASI +2 plus a second ability is rejected",
+            scores: FIGHTER,
+            classes: &[("Fighter", 3, None)],
+            request: LevelUpRequest {
+                asi_or_feat: asi("strength", 2, Some("constitution"), Some(1)),
+                ..req("Fighter", Average)
+            },
+            expect: Expect::Err("ASI must be +2 to one ability or +1 to two different abilities"),
+        },
+        Case {
+            name: "ASI second increase without a second ability is rejected",
+            scores: FIGHTER,
+            classes: &[("Fighter", 3, None)],
+            request: LevelUpRequest {
+                asi_or_feat: asi("strength", 1, None, Some(1)),
+                ..req("Fighter", Average)
+            },
+            expect: Expect::Err("ASI must be +2 to one ability or +1 to two different abilities"),
+        },
+        Case {
+            name: "ASI second ability without an increase is rejected",
+            scores: FIGHTER,
+            classes: &[("Fighter", 3, None)],
+            request: LevelUpRequest {
+                asi_or_feat: asi("strength", 2, Some("constitution"), None),
+                ..req("Fighter", Average)
+            },
+            expect: Expect::Err("ASI must be +2 to one ability or +1 to two different abilities"),
+        },
+        Case {
+            name: "ASI +1/+1 to the same ability (by any spelling) is rejected",
+            scores: FIGHTER,
+            classes: &[("Fighter", 3, None)],
+            request: LevelUpRequest {
+                asi_or_feat: asi("strength", 1, Some("STR"), Some(1)),
+                ..req("Fighter", Average)
+            },
+            expect: Expect::Err("ASI must be +2 to one ability or +1 to two different abilities"),
+        },
+        Case {
+            name: "ASI with an unknown ability name is rejected",
+            scores: FIGHTER,
+            classes: &[("Fighter", 3, None)],
+            request: LevelUpRequest {
+                asi_or_feat: asi("luck", 2, None, None),
+                ..req("Fighter", Average)
+            },
+            expect: Expect::Err("Unknown ability 'luck'"),
+        },
+        Case {
+            name: "level 19 can reach 20",
+            scores: FIGHTER,
+            classes: &[("Fighter", 19, None)],
+            request: req("Fighter", Average),
+            expect: Expect::Ok {
+                hp_gained: 8,
+                new_total_level: 20,
+                is_multiclass: false,
+                class_level: 20,
+                check: None,
+            },
+        },
+        Case {
+            name: "level 20 cannot level further",
+            scores: FIGHTER,
+            classes: &[("Fighter", 20, None)],
+            request: req("Fighter", Average),
+            expect: Expect::Err("already level 20"),
+        },
+        Case {
+            name: "total level 20 across classes cannot multiclass further",
+            scores: STRONG_SMART,
+            classes: &[("Fighter", 15, None), ("Wizard", 5, None)],
+            request: req("Rogue", Average),
+            expect: Expect::Err("already level 20"),
         },
         // ── Spells ─────────────────────────────────────────────────────
         Case {
@@ -636,4 +724,67 @@ fn missing_character_is_not_found() {
         .level_up("no-such-character", req("Fighter", HpGainMethod::Average))
         .unwrap_err();
     assert!(matches!(err, ServiceError::NotFound { .. }), "{err:?}");
+}
+
+#[test]
+fn a_failed_level_up_writes_nothing() {
+    // ASI and new spells are applied before the spell swap fails: all of it
+    // must roll back with the error.
+    let (mut conn, id) = setup(WIZARD, &[("Wizard", 3, None)]);
+    let request = LevelUpRequest {
+        asi_or_feat: asi("intelligence", 2, None, None),
+        spell_changes: Some(SpellChanges {
+            new_spells: vec![spell("Misty Step")],
+            new_cantrips: vec![spell("Light")],
+            swap_out: Some(spell("Fireball")),
+            swap_in: Some(spell("Shield")),
+        }),
+        ..req("Wizard", HpGainMethod::Average)
+    };
+    let err = CharacterService::new(&mut conn)
+        .level_up(&id, request)
+        .unwrap_err();
+    assert!(err.to_string().contains("Cannot swap out spell"), "{err}");
+
+    let character = dal::get_character(&mut conn, &id).unwrap();
+    assert_eq!(character.intelligence, 16, "ASI rolled back");
+    assert_eq!(dal::get_total_level(&mut conn, &id).unwrap(), 3);
+    assert!(
+        dal::list_character_spells(&mut conn, &id)
+            .unwrap()
+            .is_empty(),
+        "no spells kept from the failed level-up"
+    );
+
+    // A later feature-swap failure rolls back the feat recorded earlier.
+    let (mut conn, id) = setup([10, 14, 14, 10, 10, 16], &[("Warlock", 3, None)]);
+    let request = LevelUpRequest {
+        asi_or_feat: Some(AsiOrFeat::Feat {
+            name: "Alert".into(),
+            source: "PHB".into(),
+        }),
+        feature_choices: Some(FeatureChoices {
+            invocations: Some(InvocationChoices {
+                new_invocations: vec![feature("Agonizing Blast")],
+                swap_out: Some(feature("Mask of Many Faces")),
+                swap_in: Some(feature("Devil's Sight")),
+            }),
+            ..no_features()
+        }),
+        ..req("Warlock", HpGainMethod::Average)
+    };
+    let err = CharacterService::new(&mut conn)
+        .level_up(&id, request)
+        .unwrap_err();
+    assert!(
+        err.to_string().contains("Cannot swap out invocation"),
+        "{err}"
+    );
+    assert!(dal::list_character_feats(&mut conn, &id)
+        .unwrap()
+        .is_empty());
+    assert!(dal::list_character_features(&mut conn, &id)
+        .unwrap()
+        .is_empty());
+    assert_eq!(dal::get_total_level(&mut conn, &id).unwrap(), 3);
 }
