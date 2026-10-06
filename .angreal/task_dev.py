@@ -104,9 +104,9 @@ def launch():
 @dev()
 @angreal.command(
     name="screenshots",
-    about="Capture the UI design-review screenshot set (snapshot DB -> bridge -> Vite -> captures -> teardown)",
+    about="Capture the UI design-review screenshot set (fixture DB -> bridge -> Vite -> captures -> teardown)",
     when_to_use=[
-        "reviewing UI/UX changes with real campaign data",
+        "reviewing UI/UX changes with the seeded fixture campaign",
         "producing before/after screenshot sets during design work",
         "verifying every main screen still renders after a frontend change",
     ],
@@ -117,18 +117,22 @@ def launch():
     ],
 )
 def screenshots():
-    """Run the full Playwright capture set against a disposable snapshot of the production DB.
+    """Run the full Playwright capture set against the UI fixture campaign.
 
-    Playwright's webServer config orchestrates everything: scripts/ui-session.sh
-    snapshots the prod DB to a scratch dir and runs the ui-bridge against the
-    copy; the Vite dev server serves the frontend; captures land in a
-    timestamped directory under crates/mimir/frontend/playwright/screenshots/runs/;
-    the scratch DB copy is deleted on exit. The live campaign database is
-    never opened writable.
+    Development machines hold no real campaign data. Playwright's webServer
+    config orchestrates everything: scripts/ui-session.sh starts the ui-bridge
+    on an empty scratch dir, and the bridge seeds it with the SRD catalog and
+    "The Lost Mine of Phandelver" dev campaign; the Vite dev server serves the
+    frontend; captures land in a timestamped directory under
+    crates/mimir/frontend/playwright/screenshots/runs/; the scratch dir is
+    deleted on exit. Nothing under the production app dir is read.
     """
     if not (FRONTEND_DIR / "node_modules").exists():
         print("Installing frontend dependencies...")
         subprocess.run(["npm", "ci"], cwd=FRONTEND_DIR, check=True)
+
+    # npm ci does not download browsers; this is a no-op when Chromium is present.
+    subprocess.run(["npx", "playwright", "install", "chromium"], cwd=FRONTEND_DIR, check=True)
 
     result = subprocess.run(["npm", "run", "screenshots"], cwd=FRONTEND_DIR)
     if result.returncode == 0:

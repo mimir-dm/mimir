@@ -16,7 +16,7 @@
  * Known gaps (documented, harness-unsupported):
  * - plugin commands (dialog, shell, event) are stubbed: event listeners
  *   register but never fire; dialogs reject with a console warning
- * - convertFileSrc returns the raw path — asset-protocol images don't render
+ * - convertFileSrc maps file paths to the bridge's GET /file (scratch app dir only)
  */
 
 const BRIDGE_URL =
@@ -80,8 +80,10 @@ function installBridgeShim(): void {
       if (callback) callbacks.set(id, callback)
       return id
     },
+    // The app serves backend file paths through the asset protocol; in the
+    // browser the bridge serves them (only files inside its scratch app dir).
     convertFileSrc(filePath: string, _protocol = 'asset'): string {
-      return filePath
+      return `${BRIDGE_URL}/file?path=${encodeURIComponent(filePath)}`
     },
     metadata: {
       currentWindow: { label: 'main' },

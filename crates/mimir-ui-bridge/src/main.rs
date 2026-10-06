@@ -2,15 +2,22 @@
 //!
 //! Runs the full Mimir backend headlessly (Tauri MockRuntime, no window) and
 //! exposes the invoke pipeline over HTTP so a plain browser (Playwright,
-//! Chrome) can drive the real frontend against real data:
+//! Chrome) can drive the real frontend against the real backend:
 //!
 //! ```text
 //! POST /invoke/{command}   body: JSON args (camelCase, same as the frontend)
+//! GET  /file?path=<abs>    a file under the scratch app dir (map images);
+//!                          the browser shim's convertFileSrc points here
 //! GET  /health             liveness + resolved DB path
 //! ```
 //!
 //! Requests go through `tauri::test::get_ipc_response`, i.e. the exact same
 //! `generate_handler!` dispatch as the production app — zero per-command glue.
+//!
+//! Data: development machines hold no real campaign data. With
+//! `MIMIR_BRIDGE_SEED=fixture` the bridge seeds the UI fixture (SRD catalog +
+//! "The Lost Mine of Phandelver" dev campaign, see `mimir_core::seed`) into the
+//! scratch DB at startup. `scripts/ui-session.sh` always does this.
 //!
 //! Safety rails (see MIMIR-T-0659/0660):
 //! - lives in its own dev-only crate, outside the app crate, so the Tauri
@@ -21,7 +28,7 @@
 //!
 //! Usage:
 //! ```text
-//! MIMIR_BRIDGE_APP_DIR=/tmp/mimir-ui-session cargo run -p mimir-ui-bridge
+//! MIMIR_BRIDGE_APP_DIR=$(mktemp -d) MIMIR_BRIDGE_SEED=fixture cargo run -p mimir-ui-bridge
 //! ```
 
 use std::path::PathBuf;
@@ -33,6 +40,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use mimir_core::db::init_database;
+use mimir_core::seed::{seed_ui_fixture, FIXTURE_CAMPAIGN_NAME};
 use mimir_lib::{AppPaths, AppState};
 use mimir_print::PrintState;
 use tauri::ipc::{CallbackFn, InvokeBody, InvokeResponseBody};
@@ -51,10 +59,12 @@ struct BridgeRequest {
 struct BridgeState {
     tx: mpsc::Sender<BridgeRequest>,
     db_path: String,
+    /// Canonical scratch app dir: the only tree `GET /file` serves from.
+    files_root: PathBuf,
 }
 
 /// The production application-support directory. The bridge must never touch
-/// anything under it — sessions run against disposable scratch copies.
+/// anything under it — sessions run against a disposable scratch DB.
 fn production_app_dir() -> Option<PathBuf> {
     #[cfg(target_os = "macos")]
     return std::env::var("HOME")
@@ -93,7 +103,7 @@ fn build_paths(app_dir: PathBuf) -> AppPaths {
 fn main() {
     let app_dir = std::env::var("MIMIR_BRIDGE_APP_DIR").unwrap_or_else(|_| {
         eprintln!("ui-bridge: MIMIR_BRIDGE_APP_DIR must point at a scratch app dir");
-        eprintln!("ui-bridge: (containing data/mimir.db — a COPY, never the live database)");
+        eprintln!("ui-bridge: (an empty temp dir; set MIMIR_BRIDGE_SEED=fixture to seed it)");
         std::process::exit(1);
     });
     let app_dir = PathBuf::from(app_dir);
@@ -112,14 +122,43 @@ fn main() {
                 resolved.display(),
                 prod.display()
             );
-            eprintln!("ui-bridge: point MIMIR_BRIDGE_APP_DIR at a scratch copy instead");
+            eprintln!("ui-bridge: point MIMIR_BRIDGE_APP_DIR at a scratch dir instead");
             std::process::exit(1);
         }
     }
 
     let db_url = paths.database_url();
-    init_database(&db_url).expect("Failed to initialize bridge database");
+    let mut db = init_database(&db_url).expect("Failed to initialize bridge database");
     eprintln!("ui-bridge: database {}", db_url);
+
+    // MIMIR_BRIDGE_SEED=fixture: seed the UI fixture (SRD catalog + the dev
+    // campaign, map assets under the scratch app dir). Dev machines hold no
+    // real campaign data, so harness sessions start from this.
+    if std::env::var("MIMIR_BRIDGE_SEED").as_deref() == Ok("fixture") {
+        match seed_ui_fixture(&mut db, &paths.app_dir) {
+            Ok(report) => eprintln!(
+                "ui-bridge: fixture ready: campaign '{}' ({}), catalog {}",
+                FIXTURE_CAMPAIGN_NAME,
+                if report.campaign_created {
+                    "seeded"
+                } else {
+                    "already present"
+                },
+                match report.catalog {
+                    Some(c) => format!(
+                        "seeded ({} spells, {} monsters, {} items)",
+                        c.spells, c.monsters, c.items
+                    ),
+                    None => "already present".to_string(),
+                }
+            ),
+            Err(e) => {
+                eprintln!("ui-bridge: failed to seed the fixture: {}", e);
+                std::process::exit(1);
+            }
+        }
+    }
+    drop(db);
 
     // The MockRuntime app lives on its own thread; HTTP handlers forward
     // invokes through this channel and commands run serially.
@@ -132,7 +171,15 @@ fn main() {
         .and_then(|p| p.parse().ok())
         .unwrap_or(4175);
 
-    let state = BridgeState { tx, db_path: db_url };
+    let files_root = paths
+        .app_dir
+        .canonicalize()
+        .expect("Failed to resolve bridge app dir");
+    let state = BridgeState {
+        tx,
+        db_path: db_url,
+        files_root,
+    };
 
     let cors = CorsLayer::new()
         .allow_origin([
@@ -145,6 +192,7 @@ fn main() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/invoke/{cmd}", post(invoke))
+        .route("/file", get(file))
         .layer(cors)
         .with_state(state);
 
@@ -209,6 +257,56 @@ async fn health(State(state): State<BridgeState>) -> Response {
         .into_response()
 }
 
+#[derive(serde::Deserialize)]
+struct FileQuery {
+    path: String,
+}
+
+/// Serve a file the backend handed out as a path (e.g. `serve_map_image`).
+/// In the app the asset protocol does this; in a browser the shim's
+/// `convertFileSrc` points here. Only files inside the scratch app dir.
+async fn file(
+    State(state): State<BridgeState>,
+    axum::extract::Query(q): axum::extract::Query<FileQuery>,
+) -> Response {
+    let Some(path) = resolve_served_file(&state.files_root, &q.path) else {
+        return (StatusCode::NOT_FOUND, "not found under the bridge app dir").into_response();
+    };
+    match std::fs::read(&path) {
+        Ok(bytes) => (
+            StatusCode::OK,
+            [("content-type", content_type_for(&path))],
+            bytes,
+        )
+            .into_response(),
+        Err(_) => (StatusCode::NOT_FOUND, "not readable").into_response(),
+    }
+}
+
+/// The canonical path of `requested` if it is an existing file inside `root`
+/// (a canonical directory). `..` and symlinks are resolved before the check.
+fn resolve_served_file(root: &std::path::Path, requested: &str) -> Option<PathBuf> {
+    let path = PathBuf::from(requested).canonicalize().ok()?;
+    (path.starts_with(root) && path.is_file()).then_some(path)
+}
+
+fn content_type_for(path: &std::path::Path) -> &'static str {
+    match path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("webp") => "image/webp",
+        Some("gif") => "image/gif",
+        Some("svg") => "image/svg+xml",
+        Some("json") | Some("dd2vtt") | Some("uvtt") => "application/json",
+        _ => "application/octet-stream",
+    }
+}
+
 async fn invoke(
     State(state): State<BridgeState>,
     Path(cmd): Path<String>,
@@ -244,5 +342,66 @@ async fn invoke(
         )
             .into_response(),
         Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "dispatch dropped reply").into_response(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scratch() -> (tempfile::TempDir, PathBuf) {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().canonicalize().unwrap();
+        std::fs::create_dir_all(root.join("assets")).unwrap();
+        std::fs::write(root.join("assets/map.png"), b"png").unwrap();
+        (dir, root)
+    }
+
+    #[test]
+    fn serves_files_inside_the_app_dir() {
+        let (_dir, root) = scratch();
+        let file = root.join("assets/map.png");
+        assert_eq!(
+            resolve_served_file(&root, file.to_str().unwrap()),
+            Some(file.clone())
+        );
+        assert_eq!(content_type_for(&file), "image/png");
+    }
+
+    #[test]
+    fn refuses_paths_outside_the_app_dir() {
+        let (_dir, root) = scratch();
+        let outside = tempfile::NamedTempFile::new().unwrap();
+        assert_eq!(
+            resolve_served_file(&root, outside.path().to_str().unwrap()),
+            None
+        );
+
+        let traversal = format!("{}/assets/../../{}", root.display(), "etc/hosts");
+        assert_eq!(resolve_served_file(&root, &traversal), None);
+        assert_eq!(resolve_served_file(&root, "/etc/hosts"), None);
+    }
+
+    #[test]
+    fn refuses_directories_and_missing_files() {
+        let (_dir, root) = scratch();
+        assert_eq!(
+            resolve_served_file(&root, root.join("assets").to_str().unwrap()),
+            None
+        );
+        assert_eq!(
+            resolve_served_file(&root, root.join("assets/nope.png").to_str().unwrap()),
+            None
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_symlinks_that_leave_the_app_dir() {
+        let (_dir, root) = scratch();
+        let outside = tempfile::NamedTempFile::new().unwrap();
+        let link = root.join("assets/escape.png");
+        std::os::unix::fs::symlink(outside.path(), &link).unwrap();
+        assert_eq!(resolve_served_file(&root, link.to_str().unwrap()), None);
     }
 }

@@ -1,8 +1,8 @@
 # UI Harness (Playwright + invoke-over-HTTP bridge)
 
-Runs the Mimir frontend in a real browser against the **real Rust backend and
-real campaign data**, without Tauri. Used for screenshots, design review, and
-agent-driven UX work. (`tauri-driver` doesn't exist on macOS, so the real app
+Runs the Mimir frontend in a real browser against the **real Rust backend and a
+seeded fixture campaign**, without Tauri. Used for screenshots, design review,
+and agent-driven UX work. (`tauri-driver` doesn't exist on macOS, so the real app
 window can't be driven directly — this is the workaround, see MIMIR-I-0074.)
 
 ## How it fits together
@@ -16,14 +16,33 @@ Playwright/Chrome ──▶ Vite dev server (localhost:5173)
                              │  POST /invoke/{command} → the app's real
                              │  generate_handler! pipeline (tauri::test)
                              ▼
-                     scratch COPY of the production DB
+                     scratch DB seeded with the UI fixture
 ```
 
-**DB safety:** `scripts/ui-session.sh` snapshots the production database with
-sqlite's backup API into a throwaway scratch dir, runs the bridge against the
-copy, and deletes it on exit. The bridge refuses to start on any path under
-the production app dir. UI mutations during a session hit the copy, never the
-live campaign.
+## Data: the UI fixture
+
+Development machines hold **no real campaign data**; real campaigns live on a
+different computer. Every session starts from an empty scratch dir, and the
+bridge seeds it at startup (`MIMIR_BRIDGE_SEED=fixture`,
+`mimir_core::seed::seed_ui_fixture`):
+
+- **SRD catalog** from `crates/mimir-core/tests/fixtures/srd_*.json`: classes,
+  subclasses, features, backgrounds, races, 44 items, 43 spells with their class
+  lists, 17 monsters.
+- **"The Lost Mine of Phandelver"** dev campaign (`mimir-core/src/seed/dev.rs`):
+  the 11 template documents, PCs (Thorin, Elara, Finn, Sister Helena) with
+  classes, gear and spells, NPCs, homebrew items and the Cragmaw Mutant, the
+  Cragmaw Hideout module with its roster, and the Goblin Hideout map with
+  tokens, lights, traps and POIs. Map assets are copied from
+  `mimir-core/src/seed/assets` into the scratch dir.
+
+IDs are new every session. Specs name fixture entities in `fixture.ts`
+(`FIXTURE`) and resolve their IDs through the bridge (`resolveFixture()`).
+
+**Safety:** `scripts/ui-session.sh` reads nothing under the production app dir,
+and the bridge refuses to start on any path inside it. The scratch dir is
+deleted when the session ends (Playwright stops it with SIGTERM so the cleanup
+runs).
 
 ## Commands
 
@@ -56,9 +75,13 @@ npm run dev                        # terminal 2
 - Plugin IPC is stubbed by the shim: event listeners never fire; dialogs are
   unavailable except **save**, which becomes a browser download; shell-open is
   rejected. Flows depending on those are harness-unsupported.
-- Map images: the assets tree (~6 GB) is not copied. Maps render without
-  images unless you opt in: `MIMIR_UI_SESSION_ASSETS=link` symlinks the real
-  assets dir (read-only *by convention* — don't upload/delete assets during a
-  linked session).
+- Map images: the bridge serves backend file paths at `GET /file?path=…`
+  (only files inside the scratch dir); the shim's `convertFileSrc` points
+  there, so fixture maps render with their images.
+- Fixture coverage: monsters outside the SRD (Bugbear, Adult Amethyst Dragon)
+  are on the roster without a catalog statblock. The Spells tab lists the
+  class spell list in collapsed level groups.
+- Captures are viewport-tall: the app scrolls inside its own container, so
+  `fullPage` does not reach content below the fold.
 - The catalog/reference reader and DM map are separate window entries — load
   them as `/sources.html` and `/dm-map.html?moduleId=…&campaignId=…`.

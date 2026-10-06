@@ -4,8 +4,9 @@ import { defineConfig } from '@playwright/test'
  * UI harness config (MIMIR-I-0074).
  *
  * `webServer` starts the whole stack automatically:
- *   1. scripts/ui-session.sh — snapshots the production DB to a scratch dir,
- *      runs ui-bridge against the copy, tears the scratch down on exit
+ *   1. scripts/ui-session.sh — runs ui-bridge on an empty scratch dir that
+ *      the bridge seeds with the UI fixture (SRD catalog + the dev campaign;
+ *      see playwright/fixture.ts), and removes the scratch dir on exit
  *   2. the Vite dev server
  * Already-running servers are reused, so for local iteration you can keep
  * both up and re-run specs instantly.
@@ -33,6 +34,9 @@ export default defineConfig({
       url: 'http://127.0.0.1:4175/health',
       reuseExistingServer: true,
       timeout: 300_000, // first run may compile the bridge
+      // SIGTERM (not the default SIGKILL) so ui-session.sh's trap removes the
+      // scratch dir and stops the bridge.
+      gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
     },
     {
       command: 'npm run dev',
