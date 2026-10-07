@@ -14,6 +14,8 @@ export interface Screen {
   name: string
   path: (ids: FixtureIds) => string
   setup?: (page: Page, ids: FixtureIds) => Promise<void>
+  /** The window ignores the theme setting (DM map, player display). */
+  fixedTheme?: boolean
 }
 
 export const SCREENS: Screen[] = [
@@ -65,11 +67,16 @@ export const SCREENS: Screen[] = [
   },
   { name: 'settings', path: () => '/settings' },
   // Secondary window entries (multi-page Vite inputs, loadable directly)
-  { name: 'map-view', path: (ids) => `/dm-map.html?moduleId=${ids.module}&campaignId=${ids.campaign}` },
+  {
+    name: 'map-view',
+    path: (ids) => `/dm-map.html?moduleId=${ids.module}&campaignId=${ids.campaign}`,
+    fixedTheme: true,
+  },
   {
     // Initiative tracker drawer with a fight running (COLLIERY-I-0468).
     name: 'dm-map-combat',
     path: (ids) => `/dm-map.html?moduleId=${ids.module}&campaignId=${ids.campaign}`,
+    fixedTheme: true,
     setup: async (page) => {
       const start = page.getByTestId('start-combat')
       if (await start.isVisible().catch(() => false)) {
@@ -101,6 +108,7 @@ export const SCREENS: Screen[] = [
     // shows the order; the harness relays the event to this page.
     name: 'player-display-initiative',
     path: () => '/player-display.html',
+    fixedTheme: true,
     setup: async (page, ids) => {
       const dm = await page.context().newPage()
       try {
