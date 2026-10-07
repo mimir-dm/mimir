@@ -149,7 +149,8 @@ function handleDelete(doc: Document, event: Event) {
   margin-left: var(--spacing-xs);
 }
 
-.document-card:hover .doc-delete-btn {
+.document-card:hover .doc-delete-btn,
+.document-card:focus-within .doc-delete-btn {
   opacity: 1;
 }
 

@@ -167,7 +167,8 @@ defineEmits<{
   transition: all var(--transition-fast);
 }
 
-.map-card:hover .btn-delete {
+.map-card:hover .btn-delete,
+.map-card:focus-within .btn-delete {
   opacity: 1;
 }
 

@@ -276,7 +276,8 @@ function deselectAll() {
   transition: opacity 0.2s, color 0.2s;
 }
 
-.book-item:hover .remove-btn {
+.book-item:hover .remove-btn,
+.book-item:focus-within .remove-btn {
   opacity: 1;
 }
 
