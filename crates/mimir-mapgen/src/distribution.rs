@@ -169,8 +169,8 @@ mod tests {
         assert!(!points.is_empty());
         // All points within bounds
         for &(x, y) in &points {
-            assert!(x >= 0.0 && x < 100.0);
-            assert!(y >= 0.0 && y < 100.0);
+            assert!((0.0..100.0).contains(&x));
+            assert!((0.0..100.0).contains(&y));
         }
     }
 
@@ -233,7 +233,7 @@ mod tests {
         for &(x, y) in &points {
             let val = noise.sample(x, y);
             assert!(
-                val >= 0.3 && val <= 0.7,
+                (0.3..=0.7).contains(&val),
                 "Noise value out of range: {}",
                 val
             );

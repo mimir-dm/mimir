@@ -41,6 +41,26 @@ struct SeededNpcs {
     yeemik: String,
 }
 
+/// Seeded module monster: (id, name, source, quantity, display_name, notes).
+type MonsterRow<'a> = (
+    &'a str,
+    &'a str,
+    &'a str,
+    i32,
+    Option<&'a str>,
+    Option<&'a str>,
+);
+
+/// Seeded module NPC: (id, name, role, description, appearance, secrets).
+type NpcRow<'a> = (
+    &'a str,
+    &'a str,
+    &'a str,
+    &'a str,
+    Option<&'a str>,
+    Option<&'a str>,
+);
+
 /// Name of the test campaign for detection.
 pub const TEST_CAMPAIGN_NAME: &str = "The Lost Mine of Phandelver";
 
@@ -810,7 +830,7 @@ fn seed_monsters(
 
     // Monsters from Monster Manual (MM) and Fizban's Treasury of Dragons (FTD)
     // (id, name, source, quantity, display_name, notes)
-    let monsters: &[(&str, &str, &str, i32, Option<&str>, Option<&str>)] = &[
+    let monsters: &[MonsterRow] = &[
         (
             &entrance_guards_id,
             "Goblin",
@@ -916,7 +936,7 @@ fn seed_npcs(conn: &mut SqliteConnection, module_id: &str) -> ServiceResult<Seed
 
     // Custom NPCs for the module
     // (id, name, role, description, appearance, secrets)
-    let npcs: &[(&str, &str, &str, &str, Option<&str>, Option<&str>)] = &[
+    let npcs: &[NpcRow] = &[
         (
             &sildar_id,
             "Sildar Hallwinter",

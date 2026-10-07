@@ -573,11 +573,11 @@ pub fn collect_all_of_type(repo_path: &Path, entity_type: &str) -> Result<Vec<Va
                 if let Ok(entries) = std::fs::read_dir(&entity_dir) {
                     for entry in entries.flatten() {
                         let path = entry.path();
-                        if path.extension().map_or(false, |ext| ext == "json")
+                        if path.extension().is_some_and(|ext| ext == "json")
                             && path
                                 .file_name()
                                 .and_then(|n| n.to_str())
-                                .map_or(false, |n| n.starts_with(info.prefix))
+                                .is_some_and(|n| n.starts_with(info.prefix))
                         {
                             if let Ok(data) = discovery::load_json_file(&path) {
                                 if let Some(array) =
@@ -675,11 +675,11 @@ fn collect_srd_from_directory(
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file()
-                && path.extension().map_or(false, |ext| ext == "json")
+                && path.extension().is_some_and(|ext| ext == "json")
                 && path
                     .file_name()
                     .and_then(|n| n.to_str())
-                    .map_or(false, |n| n.starts_with(prefix))
+                    .is_some_and(|n| n.starts_with(prefix))
             {
                 if let Ok(data) = discovery::load_json_file(&path) {
                     let srd_content = crate::import::srd::extract_all_srd_content(&data);

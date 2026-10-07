@@ -27,7 +27,7 @@ impl TrapCardSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(traps: Value) -> Self {
-        let trap_vec = traps.as_array().map(|arr| arr.clone()).unwrap_or_default();
+        let trap_vec = traps.as_array().cloned().unwrap_or_default();
         Self::new(trap_vec)
     }
 

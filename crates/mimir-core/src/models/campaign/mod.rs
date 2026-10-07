@@ -2,6 +2,8 @@
 //!
 //! Models for campaign management including campaigns, modules, sources, assets, documents, characters, maps, module entities, and map overlays.
 
+// The `campaigns` table lives in `campaign::campaign`, beside the other campaign tables.
+#[allow(clippy::module_inception)]
 mod campaign;
 mod campaign_asset;
 mod campaign_homebrew_item;

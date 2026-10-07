@@ -655,7 +655,7 @@ fn point_on_segment(point: &[f64; 2], seg_start: &[f64; 2], seg_end: &[f64; 2]) 
 
     // Parametric position along segment.
     let t = (px * dx + py * dy) / len_sq;
-    if t >= -0.01 && t <= 1.01 {
+    if (-0.01..=1.01).contains(&t) {
         Some(t.clamp(0.0, 1.0))
     } else {
         None

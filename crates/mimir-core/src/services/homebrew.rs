@@ -149,7 +149,7 @@ impl<'a> HomebrewService<'a> {
                     .map_err(ServiceError::from)?
                     .map(|item| item.data)
                     .ok_or_else(|| {
-                        ServiceError::not_found("CatalogItem", &format!("{name} ({source})"))
+                        ServiceError::not_found("CatalogItem", format!("{name} ({source})"))
                     })
             },
         )?;
@@ -255,7 +255,7 @@ impl<'a> HomebrewService<'a> {
                     .map_err(ServiceError::from)?
                     .map(|m| m.data)
                     .ok_or_else(|| {
-                        ServiceError::not_found("CatalogMonster", &format!("{name} ({source})"))
+                        ServiceError::not_found("CatalogMonster", format!("{name} ({source})"))
                     })
             },
         )?;
@@ -379,7 +379,7 @@ impl<'a> HomebrewService<'a> {
                     .map_err(ServiceError::from)?
                     .map(|s| s.data)
                     .ok_or_else(|| {
-                        ServiceError::not_found("CatalogSpell", &format!("{name} ({source})"))
+                        ServiceError::not_found("CatalogSpell", format!("{name} ({source})"))
                     })
             },
         )?;

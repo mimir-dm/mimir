@@ -25,17 +25,13 @@ pub enum Edge {
 /// Path style: how the centerline is generated.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum PathStyle {
     /// Greedy walk following noise ridges/valleys — roughly straight with gentle bends.
+    #[default]
     Straight,
     /// Sinusoidal meander — wandering S-curves like a natural stream.
     Meandering,
-}
-
-impl Default for PathStyle {
-    fn default() -> Self {
-        PathStyle::Straight
-    }
 }
 
 /// Configuration for road generation.
@@ -399,9 +395,8 @@ pub fn generate_river_with_exclusions(
     let left_bank_full = offset_polyline(&smoothed_full, half_w);
     let right_bank_full = offset_polyline(&smoothed_full, -half_w);
 
-    let mut left_bank = clip_polyline_to_rect(&left_bank_full, 0.0, 0.0, pixel_width, pixel_height);
-    let mut right_bank =
-        clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
+    let left_bank = clip_polyline_to_rect(&left_bank_full, 0.0, 0.0, pixel_width, pixel_height);
+    let right_bank = clip_polyline_to_rect(&right_bank_full, 0.0, 0.0, pixel_width, pixel_height);
 
     let left_vectors: Vec<Vector2> = left_bank.iter().map(|&(x, y)| Vector2::new(x, y)).collect();
     let right_vectors: Vec<Vector2> = right_bank
@@ -889,30 +884,6 @@ fn greedy_walk(
     }
 
     path
-}
-
-/// Compute the centroid of a polygon.
-fn polygon_center(polygon: &[(f64, f64)]) -> (f64, f64) {
-    if polygon.is_empty() {
-        return (0.0, 0.0);
-    }
-    let n = polygon.len() as f64;
-    let sx: f64 = polygon.iter().map(|p| p.0).sum();
-    let sy: f64 = polygon.iter().map(|p| p.1).sum();
-    (sx / n, sy / n)
-}
-
-/// Find the nearest point on a polygon to a target point.
-fn nearest_point_on_polygon(polygon: &[(f64, f64)], target: (f64, f64)) -> (f64, f64) {
-    polygon
-        .iter()
-        .min_by(|a, b| {
-            let da = (a.0 - target.0).powi(2) + (a.1 - target.1).powi(2);
-            let db = (b.0 - target.0).powi(2) + (b.1 - target.1).powi(2);
-            da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
-        })
-        .cloned()
-        .unwrap_or(target)
 }
 
 /// Count how many distinct contour polylines a line from p0 to p1 crosses.

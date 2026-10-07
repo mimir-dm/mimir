@@ -31,7 +31,7 @@ impl SpellCardsSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(spells: Value) -> Self {
-        let spell_vec = spells.as_array().map(|arr| arr.clone()).unwrap_or_default();
+        let spell_vec = spells.as_array().cloned().unwrap_or_default();
         Self::new(spell_vec)
     }
 
@@ -452,7 +452,7 @@ impl Renderable for SpellCardsSection {
         }
 
         let cards_per_page = 9;
-        let total_pages = (all_cards.len() + cards_per_page - 1) / cards_per_page;
+        let total_pages = all_cards.len().div_ceil(cards_per_page);
         let has_foldable = all_cards.len() > self.spells.len();
 
         for page_num in 0..total_pages {

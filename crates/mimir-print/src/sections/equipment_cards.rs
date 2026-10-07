@@ -31,7 +31,7 @@ impl EquipmentCardsSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(items: Value) -> Self {
-        let item_vec = items.as_array().map(|arr| arr.clone()).unwrap_or_default();
+        let item_vec = items.as_array().cloned().unwrap_or_default();
         Self::new(item_vec)
     }
 
@@ -424,7 +424,7 @@ impl Renderable for EquipmentCardsSection {
         }
 
         let cards_per_page = 9;
-        let total_pages = (all_cards.len() + cards_per_page - 1) / cards_per_page;
+        let total_pages = all_cards.len().div_ceil(cards_per_page);
         let has_foldable = all_cards.len() > self.items.len();
 
         for page_num in 0..total_pages {

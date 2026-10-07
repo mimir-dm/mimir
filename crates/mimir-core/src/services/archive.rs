@@ -549,7 +549,7 @@ impl<'a> ArchiveService<'a> {
 
         archive
             .into_inner()
-            .map_err(|e| ServiceError::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?
+            .map_err(|e| ServiceError::Io(std::io::Error::other(e)))?
             .finish()
             .map_err(ServiceError::Io)?;
 
@@ -572,10 +572,10 @@ impl<'a> ArchiveService<'a> {
         header.set_mode(0o644);
         header.set_cksum();
         archive.append(&header, data).map_err(|e| {
-            ServiceError::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to add '{}' to archive: {}", path, e),
-            ))
+            ServiceError::Io(std::io::Error::other(format!(
+                "Failed to add '{}' to archive: {}",
+                path, e
+            )))
         })?;
         Ok(())
     }
@@ -793,7 +793,7 @@ impl<'a> ArchiveService<'a> {
                 let new_feat = NewCharacterFeature::new(
                     &feat_id,
                     &new_id,
-                    crate::models::campaign::FeatureType::from_str(&feat.feature_type)
+                    crate::models::campaign::FeatureType::parse(&feat.feature_type)
                         .unwrap_or(crate::models::campaign::FeatureType::FightingStyle),
                     &feat.feature_name,
                     &feat.feature_source,

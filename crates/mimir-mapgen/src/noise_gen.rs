@@ -51,13 +51,13 @@ impl NoiseMap {
 
         let mut data = vec![vec![0.0; width]; height];
 
-        for y in 0..height {
-            for x in 0..width {
+        for (y, row) in data.iter_mut().enumerate() {
+            for (x, cell) in row.iter_mut().enumerate() {
                 let nx = x as f64 * config.scale;
                 let ny = y as f64 * config.scale;
                 // Fbm output is roughly in [-1, 1], normalize to [0, 1]
                 let raw = fbm.get([nx, ny]);
-                data[y][x] = (raw + 1.0) * 0.5;
+                *cell = (raw + 1.0) * 0.5;
             }
         }
 

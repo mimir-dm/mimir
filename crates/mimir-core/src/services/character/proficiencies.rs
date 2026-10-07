@@ -38,7 +38,7 @@ fn extract_keyed_proficiencies(
                     // Clean up key: remove source suffix (e.g., "longsword|phb" -> "longsword")
                     let name = key.split('|').next().unwrap_or(key);
                     result.push(ProficiencyEntry {
-                        prof_type: prof_type.clone(),
+                        prof_type,
                         name: capitalize_proficiency(name),
                     });
                 }
@@ -46,7 +46,7 @@ fn extract_keyed_proficiencies(
         } else if let Some(s) = item.as_str() {
             // Simple string proficiency (e.g., armor types: "light", "medium", "heavy")
             result.push(ProficiencyEntry {
-                prof_type: prof_type.clone(),
+                prof_type,
                 name: capitalize_proficiency(s),
             });
         }
@@ -246,18 +246,14 @@ pub(super) fn insert_proficiencies(
         if dal::character_has_proficiency(
             conn,
             character_id,
-            &entry.prof_type.as_str(),
+            entry.prof_type.as_str(),
             &entry.name,
         )? {
             continue;
         }
         let prof_id = Uuid::new_v4().to_string();
-        let new_prof = NewCharacterProficiency::new(
-            &prof_id,
-            character_id,
-            entry.prof_type.clone(),
-            &entry.name,
-        );
+        let new_prof =
+            NewCharacterProficiency::new(&prof_id, character_id, entry.prof_type, &entry.name);
         dal::insert_character_proficiency(conn, &new_prof)?;
     }
     Ok(())

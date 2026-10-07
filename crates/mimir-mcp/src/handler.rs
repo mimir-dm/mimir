@@ -78,7 +78,7 @@ impl ServerHandler for MimirHandler {
 
         let args = params
             .arguments
-            .map(|m| Value::Object(m))
+            .map(Value::Object)
             .unwrap_or(Value::Object(Default::default()));
 
         match self.execute_tool(&params.name, args).await {

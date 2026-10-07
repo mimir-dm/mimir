@@ -26,12 +26,12 @@ impl VariantRule {
 
     /// Check if this is an optional rule.
     pub fn is_optional(&self) -> bool {
-        self.rule_type.as_ref().map_or(false, |t| t == "O")
+        self.rule_type.as_ref().is_some_and(|t| t == "O")
     }
 
     /// Check if this is a variant rule.
     pub fn is_variant(&self) -> bool {
-        self.rule_type.as_ref().map_or(false, |t| t == "V")
+        self.rule_type.as_ref().is_some_and(|t| t == "V")
     }
 }
 

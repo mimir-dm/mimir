@@ -59,7 +59,7 @@ impl MaterialEntry {
         let cell_w = map_width * 2 + 3;
         let cell_h = map_height * 2 + 3;
         let total_bits = (cell_w * cell_h) as usize;
-        let total_bytes = (total_bits + 7) / 8;
+        let total_bytes = total_bits.div_ceil(8);
         Self {
             bitmap: PoolByteArray::from_vec(vec![0; total_bytes]),
             texture: texture.to_string(),

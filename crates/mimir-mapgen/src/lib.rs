@@ -7,6 +7,10 @@
 //! This crate is standalone — it has no dependency on `mimir-core` or any
 //! database layer.
 
+// Generation steps pass geometry, RNG and config pieces explicitly; bundling
+// them into parameter structs would not make the call sites clearer.
+#![allow(clippy::too_many_arguments)]
+
 pub mod assets;
 pub mod biomes;
 pub mod contour;

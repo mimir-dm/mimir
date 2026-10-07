@@ -294,14 +294,12 @@ pub fn extract_feat_prereqs(prereq: Option<&Value>) -> Vec<String> {
         for p in arr {
             if let Value::Object(obj) = p {
                 // Ability score requirements
-                if let Some(ability) = obj.get("ability") {
-                    if let Value::Array(abilities) = ability {
-                        for a in abilities {
-                            if let Value::Object(ab) = a {
-                                for (stat, val) in ab {
-                                    if let Some(v) = val.as_i64() {
-                                        prereqs.push(format!("{} {}", stat.to_uppercase(), v));
-                                    }
+                if let Some(Value::Array(abilities)) = obj.get("ability") {
+                    for a in abilities {
+                        if let Value::Object(ab) = a {
+                            for (stat, val) in ab {
+                                if let Some(v) = val.as_i64() {
+                                    prereqs.push(format!("{} {}", stat.to_uppercase(), v));
                                 }
                             }
                         }
@@ -309,12 +307,10 @@ pub fn extract_feat_prereqs(prereq: Option<&Value>) -> Vec<String> {
                 }
 
                 // Race requirements
-                if let Some(race) = obj.get("race") {
-                    if let Value::Array(races) = race {
-                        for r in races {
-                            if let Some(name) = r.get("name").and_then(|n| n.as_str()) {
-                                prereqs.push(format!("Race: {}", name));
-                            }
+                if let Some(Value::Array(races)) = obj.get("race") {
+                    for r in races {
+                        if let Some(name) = r.get("name").and_then(|n| n.as_str()) {
+                            prereqs.push(format!("Race: {}", name));
                         }
                     }
                 }
@@ -325,13 +321,11 @@ pub fn extract_feat_prereqs(prereq: Option<&Value>) -> Vec<String> {
                 }
 
                 // Proficiency requirements
-                if let Some(prof) = obj.get("proficiency") {
-                    if let Value::Array(profs) = prof {
-                        for pr in profs {
-                            if let Value::Object(po) = pr {
-                                for (key, _) in po {
-                                    prereqs.push(format!("Proficiency: {}", key));
-                                }
+                if let Some(Value::Array(profs)) = obj.get("proficiency") {
+                    for pr in profs {
+                        if let Value::Object(po) = pr {
+                            for (key, _) in po {
+                                prereqs.push(format!("Proficiency: {}", key));
                             }
                         }
                     }
