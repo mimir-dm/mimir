@@ -19,14 +19,17 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="pcs.length === 0" class="empty-state">
-      <div class="empty-icon">@</div>
-      <h3>No player characters yet</h3>
-      <p>Create a character for one of your players.</p>
-      <button @click="showCreateWizard = true" class="btn btn-primary">
-        Create PC
-      </button>
-    </div>
+    <EmptyState
+      v-else-if="pcs.length === 0"
+      class="empty-state"
+      variant="characters"
+      title="No player characters yet"
+      description="Create a character for one of your players."
+    >
+      <template #action>
+        <button @click="showCreateWizard = true" class="btn btn-primary">Create PC</button>
+      </template>
+    </EmptyState>
 
     <!-- Character Grid -->
     <div v-else class="character-grid">
@@ -72,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharacterStore } from '@/stores/characters'
@@ -186,31 +190,7 @@ onMounted(() => {
 /* Loading/Empty states */
 .loading-state,
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   flex: 1;
-  gap: var(--spacing-md);
-  text-align: center;
-  color: var(--color-text-secondary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 0.875rem;
 }
 
 /* Character Grid */

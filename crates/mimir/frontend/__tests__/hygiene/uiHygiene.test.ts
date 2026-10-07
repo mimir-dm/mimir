@@ -68,7 +68,12 @@ describe('UI hygiene', () => {
   it('draws UI icons with @lucide/vue, not inline SVG (MIMIR-T-0682)', () => {
     // Map layers draw their own SVG with a computed viewBox (:viewBox), so
     // only a static icon viewBox is flagged.
-    const hits = matches(/<svg\b[^>]*\sviewBox="0 0 (24 24|20 20|16 16|12 12)"/, (f) => !f.endsWith('.vue') || f.endsWith('EmptyState.vue'))
+    const hits = matches(/<svg\b[^>]*\sviewBox="0 0 (24 24|20 20|16 16|12 12)"/, (f) => !f.endsWith('.vue'))
     expect(hits, 'import the icon from @lucide/vue').toEqual([])
+  })
+
+  it('renders empty states with EmptyState (MIMIR-T-0683)', () => {
+    // EmptyState gives the icon, title, description and action slot.
+    expect(matches(/empty-icon/), 'use <EmptyState variant=… title=…>').toEqual([])
   })
 })

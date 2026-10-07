@@ -14,12 +14,16 @@
     <div v-if="loading" class="homebrew-loading-state">Loading homebrew spells...</div>
 
     <!-- Empty state -->
-    <div v-else-if="spells.length === 0" class="homebrew-empty-state">
-      <div class="homebrew-empty-icon">&#10024;</div>
-      <h3>No homebrew spells yet</h3>
-      <p>Clone a spell from the catalog and customize it.</p>
-      <button @click="openCloneFromCatalog" class="btn btn-primary">Clone from Catalog</button>
-    </div>
+    <EmptyState
+      v-else-if="spells.length === 0"
+      variant="spells"
+      title="No homebrew spells yet"
+      description="Clone a spell from the catalog and customize it."
+    >
+      <template #action>
+        <button @click="openCloneFromCatalog" class="btn btn-primary">Clone from Catalog</button>
+      </template>
+    </EmptyState>
 
     <!-- Spell list + detail -->
     <div v-else class="homebrew-layout">
@@ -154,6 +158,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { HomebrewSpellService, type HomebrewSpell } from '@/services/HomebrewSpellService'

@@ -85,11 +85,13 @@
       </div>
 
       <!-- Empty state -->
-      <div v-else class="empty-state">
-        <div class="empty-icon">📄</div>
-        <h3>No Document Selected</h3>
-        <p>Select a document or map from the sidebar.</p>
-      </div>
+      <EmptyState
+        v-else
+        class="empty-state"
+        variant="documents"
+        title="No Document Selected"
+        description="Select a document or map from the sidebar."
+      />
     </div>
 
     <!-- Upload Modal -->
@@ -114,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, watch, onMounted } from 'vue'
 import { confirmDialog } from '@/composables/useDialog'
 import { invoke } from '@tauri-apps/api/core'
@@ -559,31 +562,7 @@ onMounted(() => {
 
 /* Empty state */
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   height: 100%;
-  text-align: center;
-  padding: var(--spacing-xl, 24px);
-  color: var(--legacy-text-muted);
 }
 
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-md, 12px);
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin: 0 0 var(--spacing-sm, 8px) 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 0.875rem;
-}
 </style>

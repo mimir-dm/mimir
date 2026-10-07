@@ -19,14 +19,17 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="npcs.length === 0" class="empty-state">
-      <div class="empty-icon">@</div>
-      <h3>No NPCs yet</h3>
-      <p>Create NPCs to populate your campaign world.</p>
-      <button @click="showCreateWizard = true" class="btn btn-primary">
-        Create NPC
-      </button>
-    </div>
+    <EmptyState
+      v-else-if="npcs.length === 0"
+      class="empty-state"
+      variant="users"
+      title="No NPCs yet"
+      description="Create NPCs to populate your campaign world."
+    >
+      <template #action>
+        <button @click="showCreateWizard = true" class="btn btn-primary">Create NPC</button>
+      </template>
+    </EmptyState>
 
     <!-- Character Grid -->
     <div v-else class="character-grid">
@@ -73,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharacterStore } from '@/stores/characters'
@@ -187,31 +191,7 @@ onMounted(() => {
 /* Loading/Empty states */
 .loading-state,
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   flex: 1;
-  gap: var(--spacing-md);
-  text-align: center;
-  color: var(--color-text-secondary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 0.875rem;
 }
 
 /* Character Grid */
