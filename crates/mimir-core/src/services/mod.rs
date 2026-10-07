@@ -33,7 +33,8 @@ pub use catalog::{
     SubclassFeatureService, SubclassService, TrapService, VariantRuleService, VehicleService,
 };
 pub use catalog_search::{
-    parse_cr, CampaignContext, CatalogCategory, CatalogHit, CatalogQuery, CatalogSearch,
+    parse_cr, school_code, CampaignContext, CatalogCategory, CatalogHit, CatalogQuery,
+    CatalogSearch,
 };
 pub use character::{
     AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput, FeatureChoices,

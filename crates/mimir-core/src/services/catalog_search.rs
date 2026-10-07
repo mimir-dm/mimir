@@ -82,7 +82,7 @@ pub struct CatalogQuery {
     pub rarity: Option<String>,
     /// Spells: spell level (0 = cantrip).
     pub spell_level: Option<i32>,
-    /// Spells: school code (e.g. "V" for evocation).
+    /// Spells: school, by name ("evocation") or catalog code ("V").
     pub school: Option<String>,
     /// Spells: on this class's spell list (case-insensitive).
     pub class_name: Option<String>,
@@ -158,6 +158,23 @@ pub fn parse_cr(cr: &str) -> Option<f64> {
         }
         None => cr.trim().parse().ok(),
     }
+}
+
+/// The catalog's one-letter code for a school of magic, from its name or code
+/// (case-insensitive). Unknown values pass through unchanged.
+pub fn school_code(school: &str) -> String {
+    let code = match school.trim().to_lowercase().as_str() {
+        "abjuration" | "a" => "A",
+        "conjuration" | "c" => "C",
+        "divination" | "d" => "D",
+        "enchantment" | "e" => "E",
+        "evocation" | "v" => "V",
+        "illusion" | "i" => "I",
+        "necromancy" | "n" => "N",
+        "transmutation" | "t" => "T",
+        _ => return school.to_string(),
+    };
+    code.to_string()
 }
 
 fn has_cr_range(q: &CatalogQuery) -> bool {
@@ -372,7 +389,7 @@ impl<'a> CatalogSearch<'a> {
             f = f.with_level(l);
         }
         if let Some(s) = &query.school {
-            f = f.with_school(s);
+            f = f.with_school(school_code(s));
         }
         if let Some(s) = sources {
             f = f.with_sources(s);
@@ -824,6 +841,28 @@ mod tests {
             )
             .unwrap();
         assert_eq!(names(&hits), ["Fireball"]);
+    }
+
+    #[test]
+    fn school_accepts_names_and_codes() {
+        assert_eq!(school_code("evocation"), "V");
+        assert_eq!(school_code("Necromancy"), "N");
+        assert_eq!(school_code("v"), "V");
+        assert_eq!(school_code("psionics"), "psionics");
+
+        let (mut conn, _) = setup(&[]);
+        let q = CatalogQuery {
+            school: Some("evocation".into()),
+            spell_level: Some(3),
+            ..query()
+        };
+        let mut got = names(
+            &CatalogSearch::new(&mut conn)
+                .search(CatalogCategory::Spell, &q, None)
+                .unwrap(),
+        );
+        got.sort();
+        assert_eq!(got, ["Fireball", "Lightning Bolt"]);
     }
 
     #[test]
