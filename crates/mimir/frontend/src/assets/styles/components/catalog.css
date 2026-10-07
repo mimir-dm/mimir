@@ -68,7 +68,7 @@
   padding: 1rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border);
 }
 
 .property-item {
@@ -100,12 +100,12 @@
 }
 
 .spell-combat-section h4 {
-  color: var(--color-accent);
+  color: var(--legacy-accent);
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .combat-mechanics-grid {
@@ -121,7 +121,7 @@
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 4px;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border);
 }
 
 .combat-label {
@@ -162,7 +162,7 @@
 .search-input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-500-alpha);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 25%, transparent);
 }
 
 .search-type-select {

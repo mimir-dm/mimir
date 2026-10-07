@@ -79,7 +79,7 @@ const truncatedDescription = computed(() => {
 
 .feature-card.selected {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50, rgba(var(--color-primary-rgb), 0.1));
+  background: var(--color-primary-50);
 }
 
 .feature-card.disabled {
@@ -99,7 +99,7 @@ const truncatedDescription = computed(() => {
 
 .feature-source {
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

@@ -181,7 +181,7 @@ function deselectAll() {
 }
 
 .select-all-btn:hover:not(:disabled) {
-  background: var(--color-surface-hover, rgba(255, 255, 255, 0.05));
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
@@ -224,11 +224,11 @@ function deselectAll() {
 }
 
 .book-item:hover {
-  background: var(--color-surface-hover, rgba(255, 255, 255, 0.05));
+  background: var(--color-surface-hover);
 }
 
 .book-item.active {
-  background: var(--color-primary-alpha, rgba(74, 158, 255, 0.1));
+  background: color-mix(in srgb, var(--legacy-primary) 10%, transparent);
   border-left: 3px solid var(--legacy-primary);
 }
 
@@ -282,7 +282,7 @@ function deselectAll() {
 
 .remove-btn:hover {
   color: var(--legacy-danger);
-  background: var(--color-danger-alpha, rgba(255, 68, 68, 0.1));
+  background: color-mix(in srgb, var(--legacy-danger) 10%, transparent);
 }
 
 /* Catalog checkbox mode styles */
@@ -292,7 +292,7 @@ function deselectAll() {
 }
 
 .book-item-checkbox:hover {
-  background: var(--color-surface-hover, rgba(255, 255, 255, 0.05));
+  background: var(--color-surface-hover);
 }
 
 .book-checkbox-label {

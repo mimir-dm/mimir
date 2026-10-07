@@ -138,6 +138,9 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
+  /* Border of chromatic stat blocks (dnd-content.css). */
+  --color-chromatic-border: rgba(147, 51, 234, 0.4);
+
   /* Tints (COLLIERY-I-0465, MIMIR-T-0685): a colored surface and the text on it.
      -tint: background; -tint-subtle: lighter background (selected rows);
      -tint-strong: hover background; -tint-border: border of a tint;

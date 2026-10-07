@@ -548,12 +548,12 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-background);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
 .clear-btn:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 /* Module Monsters Quick Select */
@@ -566,7 +566,7 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 .section-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   margin-bottom: var(--spacing-xs);
 }
@@ -617,14 +617,14 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 .mm-tag {
   font-size: 0.625rem;
   padding: 1px 4px;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .mm-qty {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .type-grid {
@@ -729,7 +729,7 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
   display: block;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xs);
 }
 
@@ -761,7 +761,7 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 .color-value {
   font-size: 0.75rem;
   font-family: monospace;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .search-input-wrapper {
@@ -794,13 +794,13 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 }
 
 .search-result-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .monster-cr,
 .trap-type {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .selected-entity {
@@ -822,7 +822,7 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
   justify-content: center;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 1rem;
 }

@@ -212,7 +212,7 @@ function getPoiIcon(iconName: string): string {
 .section-loading,
 .section-empty {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   padding: var(--spacing-md);
   text-align: center;
 }
@@ -422,7 +422,7 @@ function getPoiIcon(iconName: string): string {
 
 .poi-row.active {
   background: var(--color-primary-100);
-  border-left: 3px solid var(--color-primary);
+  border-left: 3px solid var(--color-primary-500);
   padding-left: calc(var(--spacing-sm) - 3px);
 }
 
@@ -447,6 +447,6 @@ function getPoiIcon(iconName: string): string {
 
 .poi-qty {
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 </style>

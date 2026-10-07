@@ -305,7 +305,7 @@ function handleAdd() {
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   margin-bottom: var(--spacing-xs);
 }
@@ -328,7 +328,7 @@ function handleAdd() {
 .loading-state {
   text-align: center;
   padding: var(--spacing-lg);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -357,7 +357,7 @@ function handleAdd() {
 }
 
 .result-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .result-item.selected {
@@ -379,15 +379,15 @@ function handleAdd() {
 
 .result-cr {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
-  background: var(--color-base-200);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
 }
 
 .result-meta {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .result-size {
@@ -458,7 +458,7 @@ function handleAdd() {
 .toggle-slider {
   position: absolute;
   inset: 0;
-  background: var(--color-base-300);
+  background: var(--color-surface-variant);
   border-radius: 12px;
   transition: background var(--transition-fast);
 }
@@ -498,19 +498,19 @@ function handleAdd() {
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
-  background: var(--color-base-100);
+  background: var(--color-background);
   cursor: pointer;
   text-align: left;
 }
 
 .vision-header:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .vision-title {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
@@ -522,7 +522,7 @@ function handleAdd() {
 
 .vision-toggle {
   font-size: 0.625rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .vision-details {
@@ -549,7 +549,7 @@ function handleAdd() {
 }
 
 .preset-btn:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-color: var(--color-primary-500);
 }
 

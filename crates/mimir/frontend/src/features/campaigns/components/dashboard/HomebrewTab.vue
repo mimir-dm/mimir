@@ -799,7 +799,7 @@ watch(() => props.campaign?.id, () => {
 }
 
 .sub-tab:hover {
-  color: var(--color-text-primary);
+  color: var(--color-text);
 }
 
 .sub-tab.active {

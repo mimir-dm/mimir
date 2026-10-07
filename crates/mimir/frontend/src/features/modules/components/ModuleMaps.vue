@@ -291,7 +291,7 @@ onMounted(() => {
 .loading-state {
   padding: var(--spacing-xl);
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .map-grid {
@@ -316,7 +316,7 @@ onMounted(() => {
 
 .map-thumbnail {
   aspect-ratio: 16/10;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -330,7 +330,7 @@ onMounted(() => {
 }
 
 .thumbnail-placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   opacity: 0.5;
 }
 
@@ -357,7 +357,7 @@ onMounted(() => {
   display: flex;
   gap: var(--spacing-sm);
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .map-grid-type {
@@ -379,13 +379,13 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .action-btn:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 

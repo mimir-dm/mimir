@@ -27,8 +27,8 @@
 }
 
 .toc-item.active {
-  background: var(--color-primary-alpha);
-  border-left-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary-500) 12%, transparent);
+  border-left-color: var(--color-primary-500);
 }
 
 /* Chevron Icons */
@@ -70,7 +70,7 @@
 
 /* Sub Entries */
 .toc-sub-entries {
-  background: var(--color-background-alpha);
+  background: color-mix(in srgb, var(--color-background) 50%, transparent);
 }
 
 .toc-sub-item {
@@ -95,13 +95,13 @@
 
 /* Nested Entries */
 .toc-nested-entries {
-  background: var(--color-background-alpha);
+  background: color-mix(in srgb, var(--color-background) 50%, transparent);
 }
 
 .toc-nested-item {
   padding: var(--spacing-xs) var(--spacing-md);
   cursor: pointer;
-  color: var(--color-text-dim);
+  color: var(--color-text-secondary);
   font-size: 0.8rem;
   transition: all 0.2s;
 }

@@ -317,7 +317,7 @@ loadClassSpells()
 .slot-unlimited {
   font-size: 0.85rem;
   font-style: italic;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-disabled);
 }
 
 .slot-boxes {
@@ -381,7 +381,7 @@ loadClassSpells()
 .spell-level-header .spell-count {
   font-weight: 400;
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-left: auto;
 }
 

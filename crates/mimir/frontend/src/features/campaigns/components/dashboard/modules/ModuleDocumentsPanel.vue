@@ -139,7 +139,7 @@ function handleDelete(doc: Document, event: Event) {
   height: 20px;
   padding: 0;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -154,7 +154,7 @@ function handleDelete(doc: Document, event: Event) {
 }
 
 .doc-delete-btn:hover {
-  background: var(--color-error-100, rgba(239, 68, 68, 0.1));
+  background: var(--color-error-100);
   color: var(--color-error);
 }
 

@@ -1491,7 +1491,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-sm);
-  background: var(--color-base-100);
+  background: var(--color-background);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
@@ -1523,7 +1523,7 @@ onUnmounted(() => {
 }
 
 .ctrl-btn:hover:not(:disabled) {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .ctrl-btn:disabled {
@@ -1538,7 +1538,7 @@ onUnmounted(() => {
 
 .token-count {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .map-viewport {
@@ -1570,7 +1570,7 @@ onUnmounted(() => {
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .grid-overlay {
@@ -1709,8 +1709,8 @@ onUnmounted(() => {
   font-weight: 600;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-base-200);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1723,7 +1723,7 @@ onUnmounted(() => {
 
 .empty-tokens {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-align: center;
   padding: var(--spacing-md);
 }
@@ -1744,7 +1744,7 @@ onUnmounted(() => {
 }
 
 .token-list-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .token-list-item.selected {
@@ -1775,7 +1775,7 @@ onUnmounted(() => {
 
 .token-list-type {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: capitalize;
 }
 
@@ -1795,7 +1795,7 @@ onUnmounted(() => {
 
 .token-list-visibility:hover,
 .token-list-delete:hover {
-  background: var(--color-base-300);
+  background: var(--color-surface-variant);
 }
 
 .token-list-visibility.hidden {
@@ -1803,7 +1803,7 @@ onUnmounted(() => {
 }
 
 .token-list-delete {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .token-list-delete:hover {
@@ -1833,7 +1833,7 @@ onUnmounted(() => {
 }
 
 .context-menu button:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .context-menu button.danger {
@@ -1913,8 +1913,8 @@ onUnmounted(() => {
   font-weight: 600;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-base-200);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1985,8 +1985,8 @@ onUnmounted(() => {
   font-weight: 600;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-base-200);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -2007,12 +2007,12 @@ onUnmounted(() => {
   background: transparent;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   padding: 0;
 }
 
 .poi-edit-btn:hover {
-  background: var(--color-base-300);
+  background: var(--color-surface-variant);
   color: var(--color-primary-500);
 }
 </style>

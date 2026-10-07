@@ -453,8 +453,8 @@ onMounted(() => {
 
 .monster-count {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
-  background: var(--color-base-200);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }
@@ -474,13 +474,13 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   font-size: 0.875rem;
-  background: var(--color-base-100);
+  background: var(--color-background);
   color: var(--color-text);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .clear-search {
@@ -490,7 +490,7 @@ onMounted(() => {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 1.25rem;
   line-height: 1;
@@ -522,7 +522,7 @@ onMounted(() => {
 }
 
 .search-result-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .monster-info {
@@ -537,12 +537,12 @@ onMounted(() => {
 
 .monster-meta {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .add-button {
   padding: 0.25rem 0.75rem;
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
   border: none;
   border-radius: 0.25rem;
@@ -551,19 +551,19 @@ onMounted(() => {
 }
 
 .add-button:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-600);
 }
 
 .add-button:disabled {
-  background: var(--color-base-300);
-  color: var(--color-text-muted);
+  background: var(--color-surface-variant);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
 }
 
 .search-loading {
   padding: 0.5rem;
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
   font-size: 0.875rem;
 }
@@ -573,7 +573,7 @@ onMounted(() => {
   margin: 0 0 0.75rem 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -583,7 +583,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
-  background: var(--color-base-100);
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   margin-bottom: 0.5rem;
@@ -601,7 +601,7 @@ onMounted(() => {
 
 .monster-source {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .monster-controls {
@@ -619,7 +619,7 @@ onMounted(() => {
 
 .quantity-control label {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .quantity-input {
@@ -629,13 +629,13 @@ onMounted(() => {
   border-radius: 0.25rem;
   font-size: 0.75rem;
   text-align: center;
-  background: var(--color-base-100);
+  background: var(--color-background);
   color: var(--color-text);
 }
 
 .quantity-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .tag-input {
@@ -644,17 +644,17 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: 0.25rem;
   font-size: 0.75rem;
-  background: var(--color-base-100);
+  background: var(--color-background);
   color: var(--color-text);
 }
 
 .tag-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .tag-input::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .remove-button {
@@ -678,11 +678,11 @@ onMounted(() => {
 }
 
 .tagged-monster-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .monster-name.clickable {
-  color: var(--color-primary);
+  color: var(--color-primary-500);
   text-decoration: underline;
   text-decoration-style: dotted;
 }
@@ -709,7 +709,7 @@ onMounted(() => {
 .loading-content {
   padding: 2rem;
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .dnd-content {
@@ -732,7 +732,7 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1rem;
-  background: var(--color-base-100);
+  background: var(--color-background);
 }
 
 .dnd-content :deep(.ability-scores) {
@@ -741,7 +741,7 @@ onMounted(() => {
   text-align: center;
   margin: 1rem 0;
   padding: 0.5rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-radius: 0.25rem;
 }
 

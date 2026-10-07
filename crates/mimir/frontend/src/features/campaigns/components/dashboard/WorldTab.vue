@@ -378,23 +378,23 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: 4px;
   background: var(--color-surface);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
 }
 
 .btn-add:hover {
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .maps-loading,
 .maps-empty {
   padding: var(--spacing-sm, 8px);
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .maps-list {
@@ -456,9 +456,9 @@ onMounted(() => {
 }
 
 .btn-action:hover {
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .btn-action.btn-danger:hover {
@@ -471,7 +471,7 @@ onMounted(() => {
   font-size: 0.75rem;
   border: none;
   background: none;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -496,7 +496,7 @@ onMounted(() => {
 }
 
 .map-loading {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .map-info {
@@ -504,7 +504,7 @@ onMounted(() => {
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -547,7 +547,7 @@ onMounted(() => {
 }
 
 .asset-loading {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .asset-info {
@@ -555,7 +555,7 @@ onMounted(() => {
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
 }
