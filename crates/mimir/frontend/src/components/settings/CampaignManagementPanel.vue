@@ -1,12 +1,7 @@
 <template>
-  <AppModal
-    :visible="visible"
-    title="Manage Campaigns"
-    size="lg"
-    @close="closeModal"
-  >
-    <template #header>
-      <h2>Manage Campaigns</h2>
+  <section class="settings-panel" aria-labelledby="manage-campaigns-title" data-testid="manage-campaigns-panel">
+    <header class="panel-header">
+      <h2 id="manage-campaigns-title" class="content-title">Manage Campaigns</h2>
       <div class="modal-tabs">
         <button
           class="btn-tab"
@@ -23,7 +18,7 @@
           Archived Campaigns
         </button>
       </div>
-    </template>
+    </header>
 
     <!-- Active Campaigns Tab -->
     <div v-if="activeTab === 'active'">
@@ -103,61 +98,53 @@
         </div>
       </div>
     </div>
-  </AppModal>
+    <!-- Delete Confirmation Modal -->
+    <AppModal
+      :visible="showDeleteModal"
+      title="Delete Campaign"
+      size="sm"
+      :stack-index="1"
+      @close="cancelDelete"
+    >
+      <p>Are you sure you want to permanently delete "<strong>{{ campaignToDelete?.name }}</strong>"?</p>
+      <p class="warning-text">This action cannot be undone.</p>
 
-  <!-- Delete Confirmation Modal -->
-  <AppModal
-    :visible="showDeleteModal"
-    title="Delete Campaign"
-    size="sm"
-    :stack-index="1"
-    @close="cancelDelete"
-  >
-    <p>Are you sure you want to permanently delete "<strong>{{ campaignToDelete?.name }}</strong>"?</p>
-    <p class="warning-text">This action cannot be undone.</p>
+      <div v-if="deleteError" class="error-message">
+        {{ deleteError }}
+      </div>
 
-    <div v-if="deleteError" class="error-message">
-      {{ deleteError }}
-    </div>
+      <div class="delete-options">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            v-model="deleteFiles"
+          />
+          Also delete all campaign files and directories
+        </label>
+      </div>
 
-    <div class="delete-options">
-      <label class="checkbox-label">
-        <input
-          type="checkbox"
-          v-model="deleteFiles"
-        />
-        Also delete all campaign files and directories
-      </label>
-    </div>
-
-    <template #footer>
-      <button @click="cancelDelete" class="btn btn-secondary">
-        Cancel
-      </button>
-      <button @click="confirmDelete" class="btn btn-danger">
-        Delete Campaign
-      </button>
-    </template>
-  </AppModal>
+      <template #footer>
+        <button @click="cancelDelete" class="btn btn-secondary">
+          Cancel
+        </button>
+        <button @click="confirmDelete" class="btn btn-danger">
+          Delete Campaign
+        </button>
+      </template>
+    </AppModal>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useCampaignStore } from '@/stores/campaigns'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { Campaign } from '@/types/api'
 
-interface Props {
-  visible: boolean
-}
-
-interface Emits {
-  (e: 'close'): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+/**
+ * Manage Campaigns, a section of Settings (MIMIR-T-0692; it was a modal).
+ */
 
 const campaignStore = useCampaignStore()
 const activeTab = ref<'active' | 'archived'>('active')
@@ -170,19 +157,10 @@ const activeCampaigns = computed(() => campaignStore.campaigns)
 const archivedCampaigns = computed(() => campaignStore.archivedCampaigns)
 const isLoading = computed(() => campaignStore.loading)
 
-// Load campaigns when modal becomes visible
-watch(() => props.visible, async (newVisible) => {
-  if (newVisible) {
-    await loadCampaigns()
-  }
-})
+onMounted(loadCampaigns)
 
 // Load campaigns when switching tabs
-watch(activeTab, async () => {
-  if (props.visible) {
-    await loadCampaigns()
-  }
-})
+watch(activeTab, loadCampaigns)
 
 async function loadCampaigns() {
   if (activeTab.value === 'active') {
@@ -251,9 +229,6 @@ function cancelDelete() {
   deleteError.value = null
 }
 
-function closeModal() {
-  emit('close')
-}
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString()
@@ -261,6 +236,24 @@ function formatDate(dateString: string): string {
 </script>
 
 <style scoped>
+/* Section header and footer inside the Settings pane (MIMIR-T-0692). */
+.panel-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.panel-header .content-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.panel-header .content-description {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* Domain-specific styles */
 .modal-tabs {
   display: flex;

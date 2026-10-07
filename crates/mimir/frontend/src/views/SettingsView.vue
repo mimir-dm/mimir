@@ -76,8 +76,12 @@
         
         <!-- Content Area -->
         <main class="settings-content">
+          <!-- Admin tools: panels, not modals (MIMIR-T-0692) -->
+          <CampaignManagementPanel v-if="activeSection === 'manage-campaigns'" class="content-section" />
+          <BookManagementPanel v-else-if="activeSection === 'import-books'" class="content-section" />
+
           <!-- Theme -->
-          <div v-if="activeSection === 'theme'" class="content-section">
+          <div v-else-if="activeSection === 'theme'" class="content-section">
             <h2 class="content-title">Theme</h2>
             <p class="content-description">Customize the application appearance</p>
             <div class="form-group">
@@ -227,18 +231,7 @@
         </main>
       </div>
     </div>
-    
-    <!-- Book Management Modal -->
-    <BookManagementModal 
-      :visible="showBookManagementModal"
-      @close="handleBookModalClose"
-    />
-    
-    <!-- Campaign Management Modal -->
-    <CampaignManagementModal 
-      :visible="showCampaignManagementModal"
-      @close="handleCampaignModalClose"
-    />
+
   </MainLayout>
 </template>
 
@@ -248,14 +241,29 @@ import { invoke } from '@tauri-apps/api/core'
 import { getVersion } from '@tauri-apps/api/app'
 import MainLayout from '../shared/components/layout/MainLayout.vue'
 import ThemeSelector from '../shared/components/ui/ThemeSelector.vue'
-import BookManagementModal from '@/components/dialogs/BookManagementModal.vue'
-import CampaignManagementModal from '@/components/dialogs/CampaignManagementModal.vue'
+import { useRoute, useRouter } from 'vue-router'
+import BookManagementPanel from '@/components/settings/BookManagementPanel.vue'
+import CampaignManagementPanel from '@/components/settings/CampaignManagementPanel.vue'
 import { useClipboard } from '@/composables/useClipboard'
 import { useDevTools } from '@/composables/useDevTools'
 
-const showBookManagementModal = ref(false)
-const showCampaignManagementModal = ref(false)
-const activeSection = ref('theme')
+const SECTIONS = ['manage-campaigns', 'import-books', 'theme', 'integrations', 'about', 'dev-tools']
+const route = useRoute()
+const router = useRouter()
+
+// The section is in the URL (/settings?section=import-books), so other views
+// can link to it and the sidebar and the pane always agree.
+const sectionFromRoute = () => {
+  const q = route.query.section
+  return typeof q === 'string' && SECTIONS.includes(q) ? q : 'theme'
+}
+const activeSection = ref(sectionFromRoute())
+watch(() => route.query.section, () => {
+  activeSection.value = sectionFromRoute()
+})
+watch(activeSection, (section) => {
+  if (route.query.section !== section) router.replace({ query: { ...route.query, section } })
+})
 const appVersion = ref('')
 const databasePath = ref('')
 
@@ -315,26 +323,6 @@ onMounted(async () => {
     appVersion.value = 'Unknown'
   }
 })
-
-// Open modals based on section selection
-watch(activeSection, (newSection) => {
-  if (newSection === 'import-books') {
-    showBookManagementModal.value = true
-  } else if (newSection === 'manage-campaigns') {
-    showCampaignManagementModal.value = true
-  }
-})
-
-// When modals close, switch to a different section (theme)
-const handleBookModalClose = () => {
-  showBookManagementModal.value = false
-  activeSection.value = 'theme'
-}
-
-const handleCampaignModalClose = () => {
-  showCampaignManagementModal.value = false
-  activeSection.value = 'theme'
-}
 
 </script>
 
