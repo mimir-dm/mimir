@@ -12,7 +12,7 @@ import type { LightSourceSummary } from '@/composables/map/useLightSources'
 import type { Light, Wall, Portal } from '@/composables/map/useVisibilityPolygon'
 import { useVisionCalculation, type AmbientLight } from '@/composables/map/useVisionCalculation'
 import { usePlayerViewport } from '@/composables/map/usePlayerViewport'
-import { usePlayerDisplayEvents, type MapUpdatePayload, type TokensUpdatePayload, type FogUpdatePayload, type LightSourcesUpdatePayload, type MarkersUpdatePayload } from '@/composables/map/usePlayerDisplayEvents'
+import { usePlayerDisplayEvents, type MapUpdatePayload, type TokensUpdatePayload, type FogUpdatePayload, type LightSourcesUpdatePayload, type MarkersUpdatePayload, type InitiativeUpdatePayload } from '@/composables/map/usePlayerDisplayEvents'
 
 // Types for map display
 interface MapState {
@@ -257,6 +257,9 @@ const isHexGrid = computed(() => gridPattern.value?.type === 'hex')
 const squarePattern = computed(() => gridPattern.value?.type === 'square' ? gridPattern.value : null)
 const hexPattern = computed(() => gridPattern.value?.type === 'hex' ? gridPattern.value : null)
 
+// Initiative order shown by the DM from the combat tracker (null: hidden)
+const initiativeOrder = ref<InitiativeUpdatePayload | null>(null)
+
 // IPC event handlers (composable handles setup/cleanup)
 usePlayerDisplayEvents({
   onMapUpdate: async (payload: MapUpdatePayload) => {
@@ -326,6 +329,10 @@ usePlayerDisplayEvents({
       visiblePois.value = payload.pois || []
       markerGridSize.value = payload.gridSizePx || 70
     }
+  },
+
+  onInitiativeUpdate: (payload: InitiativeUpdatePayload) => {
+    initiativeOrder.value = payload.visible ? payload : null
   }
 })
 
@@ -690,6 +697,26 @@ function handleResize() {
       <div class="instruction"><kbd>R</kbd> to reset</div>
     </div>
 
+    <!-- Initiative order (upper right), when the DM shows it -->
+    <aside
+      v-if="initiativeOrder && !mapState.isBlackout"
+      class="initiative-overlay"
+      data-testid="player-initiative"
+      aria-label="Turn order"
+    >
+      <div class="initiative-round">Round {{ initiativeOrder.round }}</div>
+      <ol>
+        <li
+          v-for="(entry, i) in initiativeOrder.entries"
+          :key="i"
+          :class="{ current: entry.current }"
+          :aria-current="entry.current ? 'step' : undefined"
+        >
+          {{ entry.name }}
+        </li>
+      </ol>
+    </aside>
+
     <!-- Minimal status bar - hidden by default, shows on hover -->
     <div class="status-bar">
       <span v-if="mapState.mapId">Map loaded</span>
@@ -713,6 +740,46 @@ function handleResize() {
 }
 
 /* Blackout mode */
+.initiative-overlay {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  font-family: system-ui, sans-serif;
+  z-index: 50;
+  min-width: 160px;
+  max-width: 240px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  color: #f3f4f6;
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.initiative-round {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.initiative-overlay ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.initiative-overlay li {
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.initiative-overlay li.current {
+  background: rgba(245, 158, 11, 0.35);
+  font-weight: 600;
+}
+
 .blackout-overlay {
   position: absolute;
   inset: 0;

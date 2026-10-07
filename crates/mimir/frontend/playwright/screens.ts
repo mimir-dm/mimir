@@ -13,7 +13,7 @@ import { FIXTURE, type FixtureIds } from './fixture'
 export interface Screen {
   name: string
   path: (ids: FixtureIds) => string
-  setup?: (page: Page) => Promise<void>
+  setup?: (page: Page, ids: FixtureIds) => Promise<void>
 }
 
 export const SCREENS: Screen[] = [
@@ -93,6 +93,30 @@ export const SCREENS: Screen[] = [
         await page.getByTestId('hp-amount').fill('3')
         await page.getByTestId('hp-damage').click()
         await page.getByTestId('concentration-prompt').waitFor()
+      }
+    },
+  },
+  {
+    // The players' turn order (MIMIR-T-0680): a DM page in the same browser
+    // shows the order; the harness relays the event to this page.
+    name: 'player-display-initiative',
+    path: () => '/player-display.html',
+    setup: async (page, ids) => {
+      const dm = await page.context().newPage()
+      try {
+        await dm.goto(`/dm-map.html?moduleId=${ids.module}&campaignId=${ids.campaign}`)
+        const start = dm.getByTestId('start-combat')
+        await dm.getByTestId('combat-entry').or(start).first().waitFor()
+        if (await start.isVisible()) {
+          await start.click()
+          await dm.getByTestId('add-monster-select').selectOption({ index: 4 })
+          await dm.getByTestId('add-monster').click()
+          await dm.getByTestId('combat-entry').first().waitFor()
+        }
+        await dm.getByTestId('show-order-to-players').check()
+        await page.getByTestId('player-initiative').waitFor()
+      } finally {
+        await dm.close()
       }
     },
   },

@@ -13,7 +13,7 @@ use uuid::Uuid;
 use crate::dal::campaign as dal;
 use crate::dal::catalog as catalog_dal;
 use crate::models::campaign::{
-    Character, CombatEntry, CombatSession, NewCombatEntry, NewCombatSession,
+    Character, CombatEntry, CombatSession, NewCombatEntry, NewCombatSession, TokenPlacement,
 };
 use crate::services::{ServiceError, ServiceResult};
 use crate::utils::now_rfc3339;
@@ -440,6 +440,63 @@ impl<'a> CombatService<'a> {
         })
     }
 
+    /// Link the fight's unlinked monster and NPC entries to their tokens on
+    /// a map. An entry takes a free token of its source: first one whose label
+    /// is the entry's name, then one whose label ends in the same number, then
+    /// the first free one in label order. Tokens linked already stay linked.
+    pub fn link_tokens(&mut self, session_id: &str, map_id: &str) -> ServiceResult<CombatState> {
+        self.active_session(session_id)?;
+        let mut tokens = dal::list_token_placements(self.conn, map_id)?;
+        tokens.sort_by(|a, b| {
+            let (la, lb) = (a.label.as_deref(), b.label.as_deref());
+            (la.and_then(trailing_number), la, &a.id).cmp(&(
+                lb.and_then(trailing_number),
+                lb,
+                &b.id,
+            ))
+        });
+        let entries = self.ordered_entries(session_id)?;
+        let mut taken: Vec<String> = entries.iter().filter_map(|e| e.token_id.clone()).collect();
+        let mut changed = Vec::new();
+        for mut entry in entries.into_iter().filter(|e| e.token_id.is_none()) {
+            let Some(source) = entry.source_id.clone() else {
+                continue;
+            };
+            let candidates: Vec<&TokenPlacement> = tokens
+                .iter()
+                .filter(|t| !taken.contains(&t.id))
+                .filter(|t| match entry.source_kind.as_str() {
+                    "module_monster" => t.module_monster_id.as_deref() == Some(&source),
+                    "module_npc" => t.module_npc_id.as_deref() == Some(&source),
+                    _ => false,
+                })
+                .collect();
+            let number = trailing_number(&entry.display_name);
+            let pick = candidates
+                .iter()
+                .find(|t| t.label.as_deref() == Some(entry.display_name.as_str()))
+                .or_else(|| {
+                    candidates.iter().find(|t| {
+                        number.is_some() && t.label.as_deref().and_then(trailing_number) == number
+                    })
+                })
+                .or_else(|| candidates.first());
+            if let Some(token) = pick {
+                taken.push(token.id.clone());
+                entry.token_id = Some(token.id.clone());
+                entry.updated_at = now_rfc3339();
+                changed.push(entry);
+            }
+        }
+        self.conn.transaction::<_, ServiceError, _>(|conn| {
+            for entry in &changed {
+                dal::save_combat_entry(conn, entry)?;
+            }
+            Ok(())
+        })?;
+        self.state(session_id)
+    }
+
     /// Damage: temporary HP absorbs it first; HP never drops below 0. When
     /// the entry concentrates, the result carries the save DC.
     pub fn damage(&mut self, entry_id: &str, amount: i32) -> ServiceResult<DamageResult> {
@@ -627,6 +684,11 @@ impl<'a> CombatService<'a> {
         )?;
         self.view(&id)
     }
+}
+
+/// The number a label ends in: "Goblin 3" is 3.
+fn trailing_number(label: &str) -> Option<u32> {
+    label.rsplit(' ').next()?.parse().ok()
 }
 
 fn push_log(e: &mut CombatEntry, kind: &str, amount: i32, round: i32) {
@@ -1007,5 +1069,66 @@ mod tests {
             svc.next_turn(&s),
             Err(ServiceError::Validation(_))
         ));
+    }
+
+    #[test]
+    fn link_tokens_matches_name_then_number_then_first_free() {
+        use crate::models::campaign::{NewCampaignAsset, NewMap, NewTokenPlacement};
+        let mut conn = setup();
+        dal::insert_campaign_asset(
+            &mut conn,
+            &NewCampaignAsset::for_campaign(
+                "asset-1",
+                "camp-1",
+                "cave.uvtt",
+                "application/octet-stream",
+                "/b/cave",
+            ),
+        )
+        .unwrap();
+        dal::insert_map(
+            &mut conn,
+            &NewMap::for_module("map-1", "camp-1", MODULE, "Cave", "asset-1"),
+        )
+        .unwrap();
+        let tokens = [
+            NewTokenPlacement::for_monster("tp-g3", "map-1", "mm-goblin", 0, 0)
+                .with_label("Goblin 3"),
+            NewTokenPlacement::for_monster("tp-boss", "map-1", "mm-goblin", 0, 0)
+                .with_label("Boss"),
+            NewTokenPlacement::for_monster("tp-a1", "map-1", "mm-goblin", 0, 0)
+                .with_label("Archer 1"),
+            NewTokenPlacement::for_monster("tp-wolf", "map-1", "mm-wolf", 0, 0),
+            NewTokenPlacement::for_npc("tp-sildar", "map-1", "npc-1", 0, 0)
+                .with_label("Sildar (captive)"),
+        ];
+        for t in &tokens {
+            dal::insert_token_placement(&mut conn, t).unwrap();
+        }
+        let mut svc = CombatService::new(&mut conn);
+        let s = svc.start(MODULE).unwrap().session.id;
+        svc.add_module_monster(&s, "mm-goblin", None).unwrap(); // Goblin 1..3
+        svc.add_module_monster(&s, "mm-ogre", None).unwrap();
+        svc.add_module_npc(&s, "npc-1").unwrap();
+        svc.add_custom(&s, "Trap", None, None).unwrap();
+
+        let st = svc.link_tokens(&s, "map-1").unwrap();
+        let token = |n: &str| entry(&st, n).token_id.clone();
+        // "Goblin 3" by label; "Goblin 1" by number ("Archer 1"); "Goblin 2"
+        // takes the first free goblin token, "Boss".
+        assert_eq!(token("Goblin 3").as_deref(), Some("tp-g3"));
+        assert_eq!(token("Goblin 1").as_deref(), Some("tp-a1"));
+        assert_eq!(token("Goblin 2").as_deref(), Some("tp-boss"));
+        assert_eq!(token("Sildar").as_deref(), Some("tp-sildar"));
+        assert_eq!(token("Big Grum"), None);
+        assert_eq!(token("Trap"), None);
+
+        // A later goblin finds no free goblin token; the wolf takes its own.
+        svc.add_module_monster(&s, "mm-goblin", Some(1)).unwrap();
+        svc.add_module_monster(&s, "mm-wolf", None).unwrap();
+        let st = svc.link_tokens(&s, "map-1").unwrap();
+        assert_eq!(entry(&st, "Goblin 4").token_id, None);
+        assert_eq!(entry(&st, "Wolf").token_id.as_deref(), Some("tp-wolf"));
+        assert_eq!(entry(&st, "Goblin 3").token_id.as_deref(), Some("tp-g3"));
     }
 }

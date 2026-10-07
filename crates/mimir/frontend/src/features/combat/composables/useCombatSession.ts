@@ -158,6 +158,14 @@ export function useCombatSession(moduleId: string) {
     if (r.ok && r.data) patchEntry(r.data)
   }
 
+  /** Link unlinked monster and NPC entries to their tokens on a map. */
+  async function linkTokens(mapId: string) {
+    const id = sessionId()
+    if (!id) return
+    const r = await call<CombatState>('link_combat_tokens', { sessionId: id, mapId })
+    if (r.ok && r.data) state.value = r.data
+  }
+
   async function removeEntry(entryId: string) {
     const r = await call<CombatState>('remove_combat_entry', { entryId })
     if (r.ok && r.data) state.value = r.data
@@ -187,5 +195,6 @@ export function useCombatSession(moduleId: string) {
     addCondition,
     removeCondition,
     setConcentration,
+    linkTokens,
   }
 }

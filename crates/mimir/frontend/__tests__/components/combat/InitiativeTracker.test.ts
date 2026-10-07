@@ -1,7 +1,19 @@
 /**
  * InitiativeTracker drawer in the DM Map window (MIMIR-T-0677).
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
+const eventMock = vi.hoisted(() => ({
+  emit: vi.fn(async () => {}),
+  listeners: new Map<string, (event: { payload: unknown }) => void>(),
+}))
+vi.mock('@tauri-apps/api/event', () => ({
+  emit: eventMock.emit,
+  listen: vi.fn(async (name: string, handler: (event: { payload: unknown }) => void) => {
+    eventMock.listeners.set(name, handler)
+    return () => eventMock.listeners.delete(name)
+  }),
+}))
 import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '@tests/helpers/mountHelpers'
 import {
@@ -10,6 +22,7 @@ import {
   mockCommand,
   mockCommandError,
   expectCommandCalledWith,
+  getInvokeMock,
 } from '@tests/helpers/mockInvoke'
 import InitiativeTracker from '@/features/combat/components/InitiativeTracker.vue'
 import type { CombatEntry, CombatState } from '@/features/combat/types'
@@ -38,9 +51,9 @@ const FIGHT: CombatState = {
   current_entry_id: 'g1',
 }
 
-async function mountTracker() {
+async function mountTracker(extraProps: Record<string, unknown> = {}) {
   const wrapper = mountWithPlugins(InitiativeTracker, {
-    props: { moduleId: 'm1', campaignId: 'c1' },
+    props: { moduleId: 'm1', campaignId: 'c1', ...extraProps },
     stubs: { AppModal: false },
   })
   await flushPromises()
@@ -391,6 +404,98 @@ describe('InitiativeTracker', () => {
       await wrapper.get('[data-testid="concentration-kept"]').trigger('click')
       expect(wrapper.find('[data-testid="concentration-prompt"]').exists()).toBe(false)
       expect(row(wrapper, 1).find('[data-testid="concentration-badge"]').exists()).toBe(true)
+    })
+  })
+
+  describe('map link (MIMIR-T-0680)', () => {
+    function monster(id: string, name: string, tokenId: string | null, hp: [number, number] = [7, 7]): CombatEntry {
+      return { ...entry(id, name, 10, hp), source_kind: 'module_monster', source_id: 'mm-1', token_id: tokenId }
+    }
+
+    const LINKED: CombatState = {
+      ...FIGHT,
+      entries: [entry('pc', 'Thorin', 18), monster('g1', 'Goblin 1', 'tok-1'), monster('g2', 'Goblin 2', 'tok-2', [0, 7])],
+      current_entry_id: 'g1',
+    }
+
+    beforeEach(() => {
+      eventMock.emit.mockClear()
+      eventMock.listeners.clear()
+    })
+
+    it('links unlinked monsters to tokens on the map, once per set of unlinked entries', async () => {
+      const unlinked = { ...LINKED, entries: [monster('g1', 'Goblin 1', null), monster('g2', 'Goblin 2', null)] }
+      mockCommand('get_active_combat', unlinked)
+      mockCommand('link_combat_tokens', { ...unlinked, entries: [monster('g1', 'Goblin 1', 'tok-1'), monster('g2', 'Goblin 2', null)] })
+      const wrapper = await mountTracker({ mapId: 'map-1' })
+      await flushPromises()
+      expectCommandCalledWith('link_combat_tokens', { sessionId: 's1', mapId: 'map-1' })
+      const calls = () => getInvokeMock().mock.calls.filter(([c]) => c === 'link_combat_tokens').length
+      // Goblin 2 has no token: one more try for the smaller set, then no more.
+      expect(calls()).toBe(2)
+      await wrapper.setProps({ visibleTokenIds: ['tok-1'] })
+      await flushPromises()
+      expect(calls()).toBe(2)
+      expect(wrapper.findAll('.linked')).toHaveLength(1)
+    })
+
+    it('does not link without a map', async () => {
+      mockCommand('get_active_combat', { ...LINKED, entries: [monster('g1', 'Goblin 1', null)] })
+      await mountTracker()
+      expect(getInvokeMock().mock.calls.some(([c]) => c === 'link_combat_tokens')).toBe(false)
+    })
+
+    it('reports the current-turn and down tokens to the map', async () => {
+      mockCommand('get_active_combat', LINKED)
+      const wrapper = await mountTracker({ mapId: 'map-1' })
+      const states = wrapper.emitted('map-state')!
+      expect(states[states.length - 1]).toEqual([{ currentTurnTokenId: 'tok-1', downTokenIds: ['tok-2'] }])
+    })
+
+    it('highlights the entry of the token selected on the map and selects the token of an opened entry', async () => {
+      mockCommand('get_active_combat', LINKED)
+      const wrapper = await mountTracker({ mapId: 'map-1', selectedTokenId: 'tok-2' })
+      const rows = wrapper.findAll('[data-testid="combat-entry"]')
+      expect(rows[2].classes()).toContain('selected')
+      expect(rows[1].classes()).not.toContain('selected')
+
+      await rows[1].get('.entry-name').trigger('click')
+      expect(wrapper.emitted('select-token')).toEqual([['tok-1']])
+      await rows[1].get('.entry-name').trigger('click')
+      expect(wrapper.emitted('select-token')).toEqual([['tok-1'], [null]])
+      // An entry with no token selects nothing.
+      await rows[0].get('.entry-name').trigger('click')
+      expect(wrapper.emitted('select-token')).toHaveLength(2)
+    })
+
+    it('shows the order to players on request: names only, visible tokens only', async () => {
+      mockCommand('get_active_combat', LINKED)
+      const wrapper = await mountTracker({ mapId: 'map-1', visibleTokenIds: ['tok-1'] })
+      expect(eventMock.emit).not.toHaveBeenCalled()
+
+      await wrapper.get('[data-testid="show-order-to-players"]').setValue(true)
+      await flushPromises()
+      expect(eventMock.emit).toHaveBeenLastCalledWith('player-display:initiative-update', {
+        visible: true,
+        round: 2,
+        entries: [
+          { name: 'Thorin', current: false },
+          { name: 'Goblin 1', current: true },
+        ],
+      })
+
+      // The player display asks again when it loads a map.
+      eventMock.emit.mockClear()
+      eventMock.listeners.get('player-display:request-state')!({ payload: { mapId: 'map-1' } })
+      expect(eventMock.emit).toHaveBeenCalledTimes(1)
+
+      await wrapper.get('[data-testid="show-order-to-players"]').setValue(false)
+      await flushPromises()
+      expect(eventMock.emit).toHaveBeenLastCalledWith('player-display:initiative-update', {
+        visible: false,
+        round: null,
+        entries: [],
+      })
     })
   })
 })
