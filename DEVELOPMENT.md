@@ -370,13 +370,14 @@ This uses a separate database at `com.mimir.app/dev/data/mimir.db` and enables d
 
 ```bash
 # Format code
-cargo fmt
+cargo fmt --all
 
-# Check formatting
-cargo fmt -- --check
+# Check formatting (CI runs this)
+cargo fmt --all --check
 
-# Run linter
-cargo clippy --all-targets --all-features
+# Run linter (CI runs this, warnings are errors; the app crate needs
+# frontend/dist and the mimir-mcp sidecar, see "Build the sidecar" above)
+cargo clippy --workspace --all-targets -- -D warnings
 
 # Fix auto-fixable clippy warnings
 cargo clippy --fix
