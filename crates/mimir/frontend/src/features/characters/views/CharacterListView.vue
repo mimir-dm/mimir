@@ -456,9 +456,4 @@ const confirmDelete = async () => {
   color: var(--color-warning-600);
   font-size: 0.875rem;
 }
-
-.theme-dark .warning-text,
-.theme-hyper .warning-text {
-  color: var(--color-warning-400);
-}
 </style>

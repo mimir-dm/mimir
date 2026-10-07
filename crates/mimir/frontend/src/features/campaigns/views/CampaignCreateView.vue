@@ -195,7 +195,7 @@ const handleCancel = () => {
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-neutral-tint-strong);
   border-color: var(--color-border-hover);
 }
 
@@ -207,9 +207,5 @@ const handleCancel = () => {
   border-radius: var(--radius-md);
   color: var(--color-error);
   font-size: 0.875rem;
-}
-
-.theme-dark .btn-secondary:hover {
-  background-color: var(--color-gray-700);
 }
 </style>

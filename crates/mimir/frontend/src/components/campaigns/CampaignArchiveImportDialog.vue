@@ -381,11 +381,7 @@ function formatDate(dateString: string): string {
 }
 
 .browse-button:hover {
-  background: var(--color-gray-100);
-}
-
-.theme-dark .browse-button:hover {
-  background: var(--color-gray-700);
+  background: var(--color-neutral-tint);
 }
 
 .preview-loading,
@@ -510,17 +506,12 @@ function formatDate(dateString: string): string {
 }
 
 .refs-count {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 600;
-}
-
-.theme-dark .refs-count {
-  background: var(--color-primary-900);
-  color: var(--color-primary-300);
 }
 
 .refs-note {
@@ -546,16 +537,12 @@ function formatDate(dateString: string): string {
 }
 
 .ref-type {
-  background: var(--color-gray-100);
+  background: var(--color-neutral-tint);
   color: var(--color-text-secondary);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   text-transform: capitalize;
-}
-
-.theme-dark .ref-type {
-  background: var(--color-gray-700);
 }
 
 .ref-name {
@@ -594,8 +581,8 @@ function formatDate(dateString: string): string {
 .success-icon {
   width: 64px;
   height: 64px;
-  background: var(--color-success-100);
-  color: var(--color-success-600);
+  background: var(--color-success-tint);
+  color: var(--color-success-text);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -604,19 +591,10 @@ function formatDate(dateString: string): string {
   font-weight: bold;
 }
 
-.theme-dark .success-icon {
-  background: var(--color-success-900);
-  color: var(--color-success-400);
-}
-
 .success-message {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-success-600);
-}
-
-.theme-dark .success-message {
-  color: var(--color-success-400);
+  color: var(--color-success-text);
 }
 
 .success-detail {
@@ -625,23 +603,14 @@ function formatDate(dateString: string): string {
 
 .import-error {
   padding: var(--spacing-lg);
-  background: var(--color-error-100);
-  border: 1px solid var(--color-error-200);
+  background: var(--color-error-tint);
+  border: 1px solid var(--color-error-tint-border);
   border-radius: var(--radius-md);
   text-align: center;
 }
 
-.theme-dark .import-error {
-  background: var(--color-error-900);
-  border-color: var(--color-error-800);
-}
-
 .import-error .error-message {
-  color: var(--color-error-600);
+  color: var(--color-error-text);
   font-weight: 500;
-}
-
-.theme-dark .import-error .error-message {
-  color: var(--color-error-400);
 }
 </style>

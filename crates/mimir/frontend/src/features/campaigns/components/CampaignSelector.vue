@@ -240,11 +240,7 @@ watch(() => router.currentRoute.value, (route) => {
 
 .selector-dropdown.is-open .selector-current {
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-100);
-}
-
-.theme-dark .selector-dropdown.is-open .selector-current {
-  box-shadow: 0 0 0 3px var(--color-primary-900);
+  box-shadow: 0 0 0 3px var(--color-primary-tint);
 }
 
 /* One line; very long names end in an ellipsis (full name in the tooltip). */
@@ -336,13 +332,8 @@ watch(() => router.currentRoute.value, (route) => {
 }
 
 .dropdown-option.is-selected {
-  background-color: var(--color-primary-50);
-  color: var(--color-primary-700);
-}
-
-.theme-dark .dropdown-option.is-selected {
-  background-color: var(--color-primary-900);
-  color: var(--color-primary-300);
+  background-color: var(--color-primary-tint-subtle);
+  color: var(--color-primary-on-tint);
 }
 
 .option-content {
@@ -388,10 +379,6 @@ watch(() => router.currentRoute.value, (route) => {
 }
 
 .dropdown-action:hover {
-  background-color: var(--color-primary-50);
-}
-
-.theme-dark .dropdown-action:hover {
-  background-color: var(--color-primary-900);
+  background-color: var(--color-primary-tint-subtle);
 }
 </style>

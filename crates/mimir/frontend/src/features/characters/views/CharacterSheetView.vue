@@ -1015,17 +1015,12 @@ onUnmounted(() => {
 }
 
 .subclass-badge {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-size: 0.7rem;
   font-weight: 600;
-}
-
-.theme-dark .subclass-badge {
-  background: var(--color-primary-900);
-  color: var(--color-primary-300);
 }
 
 .feature-details {

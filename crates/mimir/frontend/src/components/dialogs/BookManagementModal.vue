@@ -505,19 +505,13 @@ function closeModal() {
 }
 
 .error-message {
-  background: var(--color-error-100);
-  color: var(--color-error-700);
-  border: 1px solid var(--color-error-200);
+  background: var(--color-error-tint);
+  color: var(--color-error-on-tint);
+  border: 1px solid var(--color-error-tint-border);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   margin: var(--spacing-md) 0;
   font-size: 0.875rem;
-}
-
-.theme-dark .error-message {
-  background: var(--color-error-900);
-  color: var(--color-error-300);
-  border-color: var(--color-error-800);
 }
 
 /* Button styles */
@@ -552,11 +546,7 @@ function closeModal() {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-gray-200);
-}
-
-.theme-dark .btn-secondary:hover:not(:disabled) {
-  background: var(--color-gray-700);
+  background: var(--color-neutral-tint-strong);
 }
 
 .btn-danger {

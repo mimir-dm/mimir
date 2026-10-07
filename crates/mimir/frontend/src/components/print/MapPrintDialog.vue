@@ -300,12 +300,7 @@ async function handlePrint() {
 
 .mode-card.active {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
-}
-
-.theme-dark .mode-card.active,
-.theme-hyper .mode-card.active {
-  background: var(--color-primary-900);
+  background: var(--color-primary-tint-subtle);
 }
 
 .mode-header {
@@ -374,14 +369,9 @@ async function handlePrint() {
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-warning-50);
+  background: var(--color-warning-tint-subtle);
   border-radius: var(--radius-sm);
-  color: var(--color-warning-700);
-}
-
-.theme-dark .page-estimate {
-  background: var(--color-warning-900);
-  color: var(--color-warning-300);
+  color: var(--color-warning-on-tint);
 }
 
 .estimate-label {
@@ -394,15 +384,10 @@ async function handlePrint() {
 
 .error-message {
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-error-50);
+  background: var(--color-error-tint-subtle);
   border-radius: var(--radius-sm);
-  color: var(--color-error-700);
+  color: var(--color-error-on-tint);
   font-size: 0.875rem;
-}
-
-.theme-dark .error-message {
-  background: var(--color-error-900);
-  color: var(--color-error-300);
 }
 
 .spinner-sm {
