@@ -1,10 +1,5 @@
 <template>
-  <aside class="monster-panel" :class="{ collapsed: !panelOpen }">
-    <button class="monster-panel-toggle" @click="$emit('update:panelOpen', !panelOpen)">
-      <span>{{ panelOpen ? '›' : '‹' }}</span>
-    </button>
-
-    <div class="monster-panel-content" v-show="panelOpen">
+  <div class="monster-panel monster-panel-content">
       <!-- Monster Header -->
       <header class="monster-header">
         <div class="monster-title">
@@ -12,7 +7,6 @@
           <p v-if="monster.display_name" class="monster-alias">({{ monster.monster_name }})</p>
           <p class="monster-type">{{ formatCreatureType(monster.monster_data) }}</p>
         </div>
-        <button class="close-monster" @click="$emit('close')" title="Close" aria-label="Close"><X class="icon-em" aria-hidden="true" /></button>
       </header>
 
       <!-- DM Notes -->
@@ -143,12 +137,10 @@
       <footer class="monster-footer">
         <span class="source-tag">{{ monster.monster_source }}</span>
       </footer>
-    </div>
-  </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { X } from '@lucide/vue'
 import {
   type MonsterWithData,
   formatCreatureType,
@@ -168,56 +160,10 @@ import {
 
 defineProps<{
   monster: MonsterWithData
-  panelOpen: boolean
-}>()
-
-defineEmits<{
-  'update:panelOpen': [value: boolean]
-  close: []
 }>()
 </script>
 
 <style scoped>
-/* Monster Panel - Slides in from right */
-.monster-panel {
-  width: 380px;
-  background: var(--color-surface);
-  border-left: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: width 0.3s ease, opacity 0.3s ease;
-  overflow: hidden;
-}
-
-.monster-panel.collapsed {
-  width: 32px;
-}
-
-.monster-panel-toggle {
-  position: absolute;
-  left: -1px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 48px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-right: none;
-  border-radius: 6px 0 0 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  z-index: 10;
-}
-
-.monster-panel-toggle:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
 
 .monster-panel-content {
   flex: 1;
@@ -278,20 +224,6 @@ defineEmits<{
   color: var(--color-text);
   line-height: 1.4;
   white-space: pre-wrap;
-}
-
-.close-monster {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.close-monster:hover {
-  color: var(--color-text);
 }
 
 /* Monster Body */

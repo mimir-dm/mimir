@@ -1,17 +1,11 @@
 <template>
-  <aside class="trap-panel" :class="{ collapsed: !panelOpen }">
-    <button class="trap-panel-toggle" @click="$emit('update:panelOpen', !panelOpen)">
-      <span>{{ panelOpen ? '›' : '‹' }}</span>
-    </button>
-
-    <div class="trap-panel-content" v-show="panelOpen">
+  <div class="trap-panel trap-panel-content">
       <!-- Trap Header -->
       <header class="trap-header">
         <div class="trap-title">
           <h2>{{ trapData?.name || trap.name }}</h2>
           <p class="trap-type">{{ formatTrapType() }}</p>
         </div>
-        <button class="close-trap" @click="$emit('close')" title="Close" aria-label="Close"><X class="icon-em" aria-hidden="true" /></button>
       </header>
 
       <div class="trap-body" v-if="trapData">
@@ -75,22 +69,15 @@
       <footer class="trap-footer" v-if="trapData">
         <span class="source-tag">{{ trapData.source }}</span>
       </footer>
-    </div>
-  </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import { processFormattingTags } from '@/features/sources/utils/textFormatting'
 
-interface ModuleTrap {
-  id: string
-  name: string
-  source: string
-  count: number
-}
+import type { ModuleTrap } from '../types'
 
 interface TrapData {
   name: string
@@ -101,12 +88,6 @@ interface TrapData {
 
 const props = defineProps<{
   trap: ModuleTrap
-  panelOpen: boolean
-}>()
-
-defineEmits<{
-  'update:panelOpen': [value: boolean]
-  close: []
 }>()
 
 const trapData = ref<TrapData | null>(null)
@@ -181,46 +162,6 @@ watch(() => props.trap, () => {
 </script>
 
 <style scoped>
-/* Trap Panel - Slides in from right */
-.trap-panel {
-  width: 380px;
-  background: var(--color-surface);
-  border-left: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: width 0.3s ease, opacity 0.3s ease;
-  overflow: hidden;
-}
-
-.trap-panel.collapsed {
-  width: 32px;
-}
-
-.trap-panel-toggle {
-  position: absolute;
-  left: -1px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 48px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-right: none;
-  border-radius: 6px 0 0 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  z-index: 10;
-}
-
-.trap-panel-toggle:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
 
 .trap-panel-content {
   flex: 1;
@@ -252,20 +193,6 @@ watch(() => props.trap, () => {
   font-size: 0.75rem;
   font-style: italic;
   color: var(--color-text-secondary);
-}
-
-.close-trap {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.close-trap:hover {
-  color: var(--color-text);
 }
 
 /* Trap Body */

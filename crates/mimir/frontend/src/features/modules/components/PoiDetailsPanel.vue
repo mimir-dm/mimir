@@ -1,10 +1,5 @@
 <template>
-  <aside class="poi-panel" :class="{ collapsed: !panelOpen }">
-    <button class="poi-panel-toggle" @click="$emit('update:panelOpen', !panelOpen)">
-      <span>{{ panelOpen ? '›' : '‹' }}</span>
-    </button>
-
-    <div class="poi-panel-content" v-show="panelOpen">
+  <div class="poi-panel poi-panel-content">
       <!-- POI Header -->
       <header class="poi-header">
         <div class="poi-title">
@@ -13,7 +8,6 @@
           </span>
           <h2>{{ poi.name }}</h2>
         </div>
-        <button class="close-poi" @click="$emit('close')" title="Close" aria-label="Close"><X class="icon-em" aria-hidden="true" /></button>
       </header>
 
       <div class="poi-body">
@@ -46,32 +40,14 @@
       <footer class="poi-footer" v-if="poi.count > 1">
         <span class="count-tag">{{ poi.count }} instances on maps</span>
       </footer>
-    </div>
-  </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { X } from '@lucide/vue'
-interface ModulePoi {
-  id: string
-  name: string
-  description: string | null
-  icon: string
-  color: string | null
-  visible: number
-  grid_x: number
-  grid_y: number
-  count: number
-}
+import type { ModulePoi } from '../types'
 
 const props = defineProps<{
   poi: ModulePoi
-  panelOpen: boolean
-}>()
-
-defineEmits<{
-  'update:panelOpen': [value: boolean]
-  close: []
 }>()
 
 // Map icon names to emoji/symbols (matches PoiEditModal icons)
@@ -91,46 +67,6 @@ function getPoiIcon(iconName: string): string {
 </script>
 
 <style scoped>
-/* POI Panel - Slides in from right */
-.poi-panel {
-  width: 340px;
-  background: var(--color-surface);
-  border-left: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: width 0.3s ease, opacity 0.3s ease;
-  overflow: hidden;
-}
-
-.poi-panel.collapsed {
-  width: 32px;
-}
-
-.poi-panel-toggle {
-  position: absolute;
-  left: -1px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 48px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-right: none;
-  border-radius: 6px 0 0 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  z-index: 10;
-}
-
-.poi-panel-toggle:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
 
 .poi-panel-content {
   flex: 1;
@@ -173,20 +109,6 @@ function getPoiIcon(iconName: string): string {
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.2;
-}
-
-.close-poi {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.close-poi:hover {
-  color: var(--color-text);
 }
 
 /* POI Body */
