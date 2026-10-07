@@ -129,6 +129,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { alertDialog } from '@/composables/useDialog'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
@@ -246,14 +247,14 @@ async function handleImportBook() {
         isImporting.value = false
 
         if (response.success && response.data) {
-          alert(response.data.message)
+          await alertDialog({ title: 'Import complete', message: response.data.message })
         } else {
-          alert(`Import failed: ${response.error || 'Unknown error'}`)
+          await alertDialog({ title: 'Import failed', message: `Import failed: ${response.error || 'Unknown error'}` })
         }
       } catch (err) {
         isImporting.value = false
         const errorMsg = err instanceof Error ? err.message : String(err)
-        alert(`Import failed: ${errorMsg}`)
+        await alertDialog({ title: 'Import failed', message: `Import failed: ${errorMsg}` })
       }
 
       // Reload the source list
@@ -289,14 +290,14 @@ async function handleImportImages() {
         isImporting.value = false
 
         if (response.success && response.data) {
-          alert(response.data.message)
+          await alertDialog({ title: 'Images imported', message: response.data.message })
         } else {
-          alert(`Image import failed: ${response.error || 'Unknown error'}`)
+          await alertDialog({ title: 'Image import failed', message: `Image import failed: ${response.error || 'Unknown error'}` })
         }
       } catch (err) {
         isImporting.value = false
         const errorMsg = err instanceof Error ? err.message : String(err)
-        alert(`Image import failed: ${errorMsg}`)
+        await alertDialog({ title: 'Image import failed', message: `Image import failed: ${errorMsg}` })
       }
     }
   } catch (error) {

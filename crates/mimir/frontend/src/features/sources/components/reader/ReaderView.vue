@@ -95,11 +95,13 @@
     >
       <div class="dnd-content" v-html="modalContent.content"></div>
     </AppModal>
+    <DialogHost />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import DialogHost from '@/shared/components/ui/DialogHost.vue'
 import { useThemeStore } from '@/stores/theme'
 import { useBookLibrary } from '../../composables/useBookLibrary'
 import { useBookContent } from '../../composables/useBookContent'

@@ -146,7 +146,7 @@ def screenshots(themes: str = "light"):
     if result.returncode == 0:
         runs_dir = FRONTEND_DIR / "playwright" / "screenshots" / "runs"
         if runs_dir.exists():
-            latest = max(runs_dir.iterdir(), key=lambda p: p.name, default=None)
+            latest = max(runs_dir.iterdir(), key=lambda p: p.stat().st_mtime, default=None)
             if latest:
                 count = sum(1 for _ in latest.glob("*.png"))
                 print(f"\n{count} captures -> {latest}")
@@ -179,7 +179,7 @@ def screenshots_diff(before: str = None, after: str = None, fail: bool = False):
     if not before:
         print("Give --before <run>. Runs:", ", ".join(sorted(p.name for p in runs_dir.iterdir())))
         return 2
-    after_dir = resolve(after) if after else max(runs_dir.iterdir(), key=lambda p: p.name)
+    after_dir = resolve(after) if after else max(runs_dir.iterdir(), key=lambda p: p.stat().st_mtime)
     cmd = ["node", "playwright/diff.mjs", str(resolve(before)), str(after_dir)]
     if fail:
         cmd.append("--fail")

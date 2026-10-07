@@ -110,6 +110,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { alertDialog, confirmDialog } from '@/composables/useDialog'
 import { invoke } from '@tauri-apps/api/core'
 import MapUploadModal from '@/features/campaigns/components/StageLanding/MapUploadModal.vue'
 import MapTokenSetupModal from '@/components/tokens/MapTokenSetupModal.vue'
@@ -212,9 +213,13 @@ function closePrintDialog() {
 }
 
 async function confirmDeleteMap(map: Map) {
-  if (!confirm(`Delete map "${map.name}"? This cannot be undone.`)) {
-    return
-  }
+  const ok = await confirmDialog({
+    title: 'Delete map?',
+    message: `Delete "${map.name}"? Its tokens, lights, traps and points of interest go with it. This cannot be undone.`,
+    confirmLabel: 'Delete map',
+    danger: true,
+  })
+  if (!ok) return
 
   try {
     const response = await invoke<{ success: boolean; error?: string }>('delete_map', {
@@ -224,11 +229,11 @@ async function confirmDeleteMap(map: Map) {
     if (response.success) {
       loadMaps()
     } else {
-      alert(`Failed to delete map: ${response.error}`)
+      await alertDialog({ title: 'Delete failed', message: `Failed to delete map: ${response.error}` })
     }
   } catch (e) {
     console.error('Failed to delete map:', e)
-    alert('Failed to delete map')
+    await alertDialog({ title: 'Delete failed', message: 'Failed to delete map.' })
   }
 }
 

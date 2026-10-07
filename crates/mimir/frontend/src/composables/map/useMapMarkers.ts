@@ -1,6 +1,7 @@
 import { ref, type Ref, type ComputedRef } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
+import { confirmDialog } from '@/composables/useDialog'
 
 /**
  * Map trap data structure
@@ -196,8 +197,15 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
   async function deletePoiFromContext() {
     const poi = poiContextMenu.value.poi
     if (!poi) return
+    poiContextMenu.value.visible = false
 
-    if (confirm(`Delete POI "${poi.name}"?`)) {
+    const ok = await confirmDialog({
+      title: 'Delete point of interest?',
+      message: `Delete "${poi.name}" from this map?`,
+      confirmLabel: 'Delete',
+      danger: true,
+    })
+    if (ok) {
       try {
         await invoke('delete_map_poi', { id: poi.id })
         await loadMapPois()

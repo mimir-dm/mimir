@@ -397,6 +397,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { confirmDialog } from '@/composables/useDialog'
 import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import TokenPalette from './TokenPalette.vue'
@@ -1131,8 +1132,18 @@ async function handleDeleteFromContext() {
   contextMenu.value.visible = false
 }
 
+/** Ask before deleting a token, light, trap or point of interest. */
+function confirmDelete(kind: string, name: string): Promise<boolean> {
+  return confirmDialog({
+    title: `Delete ${kind}?`,
+    message: `Delete the ${kind} "${name}" from this map?`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+}
+
 async function confirmDeleteToken(token: Token) {
-  if (confirm(`Delete token "${token.name}"?`)) {
+  if (await confirmDelete('token', token.name)) {
     await deleteToken(token.id)
     if (selectedTokenId.value === token.id) {
       selectedTokenId.value = null
@@ -1141,7 +1152,7 @@ async function confirmDeleteToken(token: Token) {
 }
 
 async function confirmDeleteLight(light: LightSource) {
-  if (confirm(`Delete light source "${light.name}"?`)) {
+  if (await confirmDelete('light source', light.name)) {
     try {
       await invoke('delete_light_source', { id: light.id })
       await loadLightSources()
@@ -1198,10 +1209,11 @@ async function handleResetTrap() {
 }
 
 async function handleDeleteTrap() {
-  if (trapContextMenu.value.trap) {
-    if (confirm(`Delete trap "${trapContextMenu.value.trap.name}"?`)) {
+  const trap = trapContextMenu.value.trap
+  if (trap) {
+    if (await confirmDelete('trap', trap.name)) {
       try {
-        await invoke('delete_map_trap', { id: trapContextMenu.value.trap.id })
+        await invoke('delete_map_trap', { id: trap.id })
         await loadMapTraps()
       } catch (e) {
         console.error('Failed to delete trap:', e)
@@ -1222,7 +1234,7 @@ async function handleToggleTrapVisibilityDirect(trap: MapTrap) {
 }
 
 async function confirmDeleteTrapDirect(trap: MapTrap) {
-  if (confirm(`Delete trap "${trap.name}"?`)) {
+  if (await confirmDelete('trap', trap.name)) {
     try {
       await invoke('delete_map_trap', { id: trap.id })
       await loadMapTraps()
@@ -1255,10 +1267,11 @@ async function handleTogglePoiVisibility() {
 }
 
 async function handleDeletePoi() {
-  if (poiContextMenu.value.poi) {
-    if (confirm(`Delete POI "${poiContextMenu.value.poi.name}"?`)) {
+  const poi = poiContextMenu.value.poi
+  if (poi) {
+    if (await confirmDelete('point of interest', poi.name)) {
       try {
-        await invoke('delete_map_poi', { id: poiContextMenu.value.poi.id })
+        await invoke('delete_map_poi', { id: poi.id })
         await loadMapPois()
       } catch (e) {
         console.error('Failed to delete POI:', e)
@@ -1308,7 +1321,7 @@ async function handleTogglePoiVisibilityDirect(poi: MapPoi) {
 }
 
 async function confirmDeletePoiDirect(poi: MapPoi) {
-  if (confirm(`Delete POI "${poi.name}"?`)) {
+  if (await confirmDelete('point of interest', poi.name)) {
     try {
       await invoke('delete_map_poi', { id: poi.id })
       await loadMapPois()

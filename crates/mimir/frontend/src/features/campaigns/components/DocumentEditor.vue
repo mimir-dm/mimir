@@ -177,6 +177,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { confirmDialog } from '@/composables/useDialog'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -410,14 +411,18 @@ const markComplete = async () => {
 }
 
 // Show stage transition prompt
-const showTransitionPrompt = (status: any) => {
+const showTransitionPrompt = async (status: any) => {
   const metadata = status.stage_metadata
-  
-  // For now, just show an alert. In a real app, you'd use a modal
-  const message = metadata.transition_prompt || 
+  const message = metadata.transition_prompt ||
     `You can always edit this document later, but make sure your party has a chance to look at this and provide feedback before progressing.`
-  
-  if (confirm(message + '\n\nWould you like to progress to the next stage?')) {
+
+  const ok = await confirmDialog({
+    title: 'Move to the next stage?',
+    message: `${message}\n\nWould you like to progress to the next stage?`,
+    confirmLabel: 'Next stage',
+    cancelLabel: 'Not yet',
+  })
+  if (ok) {
     transitionToNextStage(status.next_stage)
   }
 }

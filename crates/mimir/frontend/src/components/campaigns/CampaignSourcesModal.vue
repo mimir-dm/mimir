@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { alertDialog } from '@/composables/useDialog'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 
@@ -174,11 +175,11 @@ async function save() {
       emit('saved')
       emit('close')
     } else {
-      alert(`Failed to save: ${result.error}`)
+      await alertDialog({ title: 'Save failed', message: `Failed to save: ${result.error}` })
     }
   } catch (err) {
     console.error('Failed to save sources:', err)
-    alert('Failed to save sources')
+    await alertDialog({ title: 'Save failed', message: 'Failed to save sources.' })
   } finally {
     saving.value = false
   }

@@ -115,6 +115,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { confirmDialog } from '@/composables/useDialog'
 import { invoke } from '@tauri-apps/api/core'
 import DocumentSidebar from '../DocumentSidebar.vue'
 import DocumentEditor from '../DocumentEditor.vue'
@@ -286,7 +287,13 @@ function printMap() {
 
 async function deleteMap() {
   if (!selectedMap.value) return
-  if (!confirm(`Delete map "${selectedMap.value.name}"?`)) return
+  const ok = await confirmDialog({
+    title: 'Delete map?',
+    message: `Delete "${selectedMap.value.name}"? Its tokens, lights, traps and points of interest go with it. This cannot be undone.`,
+    confirmLabel: 'Delete map',
+    danger: true,
+  })
+  if (!ok || !selectedMap.value) return
 
   try {
     const response = await invoke<{ success: boolean }>('delete_map', { id: selectedMap.value.id })

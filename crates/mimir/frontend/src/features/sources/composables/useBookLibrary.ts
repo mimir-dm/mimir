@@ -5,6 +5,7 @@ import type { Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import type { BookInfo } from '@/types/book'
+import { alertDialog, confirmDialog } from '@/composables/useDialog'
 
 // Catalog source info from backend
 interface CatalogSourceInfo {
@@ -115,25 +116,33 @@ export function useBookLibrary() {
 
         // Show summary if there were failures
         if (failures.length > 0) {
-          if (successCount > 0) {
-            alert(`Imported ${successCount} book(s).\n\nFailed:\n${failures.join('\n')}`)
-          } else {
-            alert(`Failed to import:\n${failures.join('\n')}`)
-          }
+          await alertDialog({
+            title: successCount > 0 ? 'Some books were not imported' : 'Import failed',
+            message:
+              successCount > 0
+                ? `Imported ${successCount} book(s).\n\nFailed:\n${failures.join('\n')}`
+                : `Failed to import:\n${failures.join('\n')}`,
+          })
         }
 
         return successCount > 0
       }
       return false
     } catch {
-      alert('Failed to add books. Please try again.')
+      await alertDialog({ title: 'Import failed', message: 'Failed to add books. Please try again.' })
       return false
     }
   }
 
   // Remove a book from the library
   async function removeBook(book: BookInfo): Promise<boolean> {
-    if (!confirm(`Are you sure you want to remove "${book.name}" from your library?`)) {
+    const ok = await confirmDialog({
+      title: 'Remove book?',
+      message: `Remove "${book.name}" from your library?`,
+      confirmLabel: 'Remove',
+      danger: true,
+    })
+    if (!ok) {
       return false
     }
 
@@ -153,11 +162,11 @@ export function useBookLibrary() {
         
         return true
       } else {
-        alert(`Failed to remove book: ${response.message}`)
+        await alertDialog({ title: 'Remove failed', message: `Failed to remove book: ${response.message}` })
         return false
       }
     } catch (error) {
-      alert('Failed to remove book. Please try again.')
+      await alertDialog({ title: 'Remove failed', message: 'Failed to remove book. Please try again.' })
       return false
     }
   }
