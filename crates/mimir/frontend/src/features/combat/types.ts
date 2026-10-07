@@ -54,3 +54,25 @@ export interface DamageResult {
   entry: CombatEntry
   concentration_dc: number | null
 }
+
+/**
+ * The SRD conditions the backend accepts (mirror of SRD_CONDITIONS in
+ * mimir-core services/combat.rs, which validates them).
+ */
+export const SRD_CONDITIONS = [
+  'blinded',
+  'charmed',
+  'deafened',
+  'exhaustion',
+  'frightened',
+  'grappled',
+  'incapacitated',
+  'invisible',
+  'paralyzed',
+  'petrified',
+  'poisoned',
+  'prone',
+  'restrained',
+  'stunned',
+  'unconscious',
+] as const

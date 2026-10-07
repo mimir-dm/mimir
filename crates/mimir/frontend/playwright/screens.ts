@@ -84,10 +84,15 @@ export const SCREENS: Screen[] = [
         await first.fill('17')
         await first.press('Tab')
         await page.getByTestId('next-turn').click()
-        // Open Goblin 2's HP panel and hit it for 3 (MIMIR-T-0678).
+        // Goblin 2: concentrating and prone, then hit for 3 -> save prompt
+        // (MIMIR-T-0678, MIMIR-T-0679).
         await page.getByTestId('combat-entry').nth(2).locator('.entry-name').click()
+        await page.getByTestId('concentration-toggle').check()
+        await page.getByTestId('condition-select').selectOption('prone')
+        await page.getByTestId('add-condition').click()
         await page.getByTestId('hp-amount').fill('3')
         await page.getByTestId('hp-damage').click()
+        await page.getByTestId('concentration-prompt').waitFor()
       }
     },
   },

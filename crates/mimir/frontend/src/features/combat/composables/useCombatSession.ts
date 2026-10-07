@@ -142,6 +142,22 @@ export function useCombatSession(moduleId: string) {
     if (r.ok && r.data) patchEntry(r.data)
   }
 
+  /** Add an SRD condition, optionally lasting `durationRounds` rounds. */
+  async function addCondition(entryId: string, name: string, durationRounds: number | null = null) {
+    const r = await call<CombatEntry>('add_combat_condition', { entryId, name, durationRounds })
+    if (r.ok && r.data) patchEntry(r.data)
+  }
+
+  async function removeCondition(entryId: string, name: string) {
+    const r = await call<CombatEntry>('remove_combat_condition', { entryId, name })
+    if (r.ok && r.data) patchEntry(r.data)
+  }
+
+  async function setConcentration(entryId: string, concentrating: boolean) {
+    const r = await call<CombatEntry>('set_combat_concentration', { entryId, concentrating })
+    if (r.ok && r.data) patchEntry(r.data)
+  }
+
   async function removeEntry(entryId: string) {
     const r = await call<CombatState>('remove_combat_entry', { entryId })
     if (r.ok && r.data) state.value = r.data
@@ -168,5 +184,8 @@ export function useCombatSession(moduleId: string) {
     heal,
     setTempHp,
     setMaxHp,
+    addCondition,
+    removeCondition,
+    setConcentration,
   }
 }
