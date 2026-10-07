@@ -106,7 +106,7 @@ const handleCreate = () => {
 
 .optional {
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .form-input,
@@ -137,7 +137,7 @@ const handleCreate = () => {
 
 .hint {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin: var(--spacing-xs) 0 0 0;
 }
 </style>

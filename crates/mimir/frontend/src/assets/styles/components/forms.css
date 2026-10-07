@@ -43,13 +43,13 @@
 .form-textarea:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-500-alpha);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 25%, transparent);
 }
 
 .form-input:disabled,
 .form-select:disabled,
 .form-textarea:disabled {
-  background: var(--color-surface-disabled);
+  background: var(--color-surface-variant);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -209,7 +209,7 @@
 .form-select.is-valid:focus,
 .form-textarea.is-valid:focus {
   border-color: var(--color-success);
-  box-shadow: 0 0 0 3px var(--color-success-alpha);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 25%, transparent);
 }
 
 .form-input.is-invalid,
@@ -222,7 +222,7 @@
 .form-select.is-invalid:focus,
 .form-textarea.is-invalid:focus {
   border-color: var(--color-error);
-  box-shadow: 0 0 0 3px var(--color-error-alpha);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 25%, transparent);
 }
 
 /* Help Text */

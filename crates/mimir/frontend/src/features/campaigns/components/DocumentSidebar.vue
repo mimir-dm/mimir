@@ -388,7 +388,7 @@ onMounted(() => {
   height: 24px;
   padding: 0;
   background: var(--color-surface);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   border-radius: 0.25rem;
   cursor: pointer;
@@ -401,9 +401,9 @@ onMounted(() => {
 }
 
 .add-btn:hover {
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 /* Document content area */
@@ -511,7 +511,7 @@ onMounted(() => {
   height: 16px;
   padding: 0;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -539,7 +539,7 @@ onMounted(() => {
   height: 20px;
   padding: 0;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -553,7 +553,7 @@ onMounted(() => {
 }
 
 .delete-btn:hover {
-  background: var(--color-error-100, rgba(239, 68, 68, 0.1));
+  background: var(--color-error-100);
   color: var(--color-error);
 }
 

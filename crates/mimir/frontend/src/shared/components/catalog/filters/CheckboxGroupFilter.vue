@@ -112,14 +112,14 @@ function toggleOption(value: string) {
   content: '\2715';
   font-size: 12px;
   font-weight: bold;
-  color: var(--color-primary);
+  color: var(--color-primary-500);
   opacity: 0;
   transform: scale(0);
   transition: all 0.15s ease;
 }
 
 .checkbox-group__input:checked + .checkbox-group__box {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .checkbox-group__input:checked + .checkbox-group__box::after {
@@ -128,7 +128,7 @@ function toggleOption(value: string) {
 }
 
 .checkbox-group__option:hover .checkbox-group__box {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .checkbox-group__text {

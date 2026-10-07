@@ -213,12 +213,12 @@ watch(() => props.trap, () => {
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   z-index: 10;
 }
 
 .trap-panel-toggle:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -235,7 +235,7 @@ watch(() => props.trap, () => {
   align-items: flex-start;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-bottom: 2px solid var(--color-warning);
 }
 
@@ -251,14 +251,14 @@ watch(() => props.trap, () => {
   margin: 0.15rem 0 0 0;
   font-size: 0.75rem;
   font-style: italic;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .close-trap {
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -341,7 +341,7 @@ watch(() => props.trap, () => {
 }
 
 .entry-table th {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   font-weight: 600;
 }
 
@@ -349,7 +349,7 @@ watch(() => props.trap, () => {
 .trap-loading {
   padding: 1rem;
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
 }
 
@@ -367,7 +367,7 @@ watch(() => props.trap, () => {
 
 .trap-not-found .hint {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -398,12 +398,12 @@ watch(() => props.trap, () => {
 .trap-footer {
   padding: 0.5rem 0.75rem;
   border-top: 1px solid var(--color-border);
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .source-tag {
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 </style>

@@ -208,8 +208,8 @@ defineExpose({
 
 .document-count {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
-  background: var(--color-base-200);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }
@@ -221,7 +221,7 @@ defineExpose({
   width: 28px;
   height: 28px;
   padding: 0;
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -235,14 +235,14 @@ defineExpose({
 }
 
 .add-btn:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-600);
   transform: translateY(-1px);
 }
 
 .loading-state {
   padding: 1rem;
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
   font-size: 0.875rem;
 }
@@ -258,7 +258,7 @@ defineExpose({
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 0.75rem;
-  background: var(--color-base-100);
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   cursor: pointer;
@@ -266,7 +266,7 @@ defineExpose({
 }
 
 .document-item:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-color: var(--color-primary-300);
 }
 
@@ -306,7 +306,7 @@ defineExpose({
 
 .document-type {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: capitalize;
 }
 
@@ -318,7 +318,7 @@ defineExpose({
   height: 28px;
   padding: 0;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;

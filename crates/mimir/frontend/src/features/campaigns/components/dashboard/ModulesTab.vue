@@ -1408,7 +1408,7 @@ onMounted(async () => {
 .npc-role-badge {
   display: inline-block;
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-warning-100, rgba(245, 158, 11, 0.1));
+  background: var(--color-warning-100);
   color: var(--color-warning);
   font-size: 0.75rem;
   font-weight: 600;
@@ -1442,7 +1442,7 @@ onMounted(async () => {
 
 .npc-secrets {
   padding: var(--spacing-sm);
-  background: var(--color-error-100, rgba(239, 68, 68, 0.05));
+  background: var(--color-error-100);
   border: 1px dashed var(--color-error);
   border-radius: var(--radius-sm);
 }
@@ -1467,7 +1467,7 @@ onMounted(async () => {
 .npc-empty {
   text-align: center;
   padding: var(--spacing-lg);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 

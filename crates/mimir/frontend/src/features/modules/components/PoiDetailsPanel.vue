@@ -123,12 +123,12 @@ function getPoiIcon(iconName: string): string {
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   z-index: 10;
 }
 
 .poi-panel-toggle:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -145,7 +145,7 @@ function getPoiIcon(iconName: string): string {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-bottom: 2px solid var(--legacy-primary);
 }
 
@@ -179,7 +179,7 @@ function getPoiIcon(iconName: string): string {
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -209,7 +209,7 @@ function getPoiIcon(iconName: string): string {
 .poi-empty p {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -224,7 +224,7 @@ function getPoiIcon(iconName: string): string {
 
 .location-label,
 .visibility-label {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -242,19 +242,19 @@ function getPoiIcon(iconName: string): string {
 }
 
 .visibility-value.hidden {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* POI Footer */
 .poi-footer {
   padding: 0.5rem 0.75rem;
   border-top: 1px solid var(--color-border);
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .count-tag {
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 </style>

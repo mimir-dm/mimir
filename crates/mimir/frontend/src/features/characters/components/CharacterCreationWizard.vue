@@ -1169,7 +1169,7 @@ const createCharacter = async () => {
 }
 
 .step-description {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   margin: 0 0 var(--spacing-md) 0;
 }
@@ -1190,7 +1190,7 @@ const createCharacter = async () => {
   border-radius: var(--radius-md);
   font-size: 0.75rem;
   white-space: nowrap;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .progress-step.active {
@@ -1293,7 +1293,7 @@ const createCharacter = async () => {
 /* Source selection */
 .field-hint {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -1311,7 +1311,7 @@ const createCharacter = async () => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full, 999px);
   background: var(--color-surface);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1360,7 +1360,7 @@ const createCharacter = async () => {
   font-size: 0.55rem;
   font-weight: 700;
   background: var(--color-surface-variant);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .source-chip.selected .source-tag {
@@ -1386,7 +1386,7 @@ const createCharacter = async () => {
   display: flex;
   gap: var(--spacing-sm);
   font-size: 0.65rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .source-legend-item {
@@ -1406,7 +1406,7 @@ const createCharacter = async () => {
   background: var(--color-surface-variant);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* Ability scores table */
@@ -1422,7 +1422,7 @@ const createCharacter = async () => {
   border-bottom: 2px solid var(--color-border);
   font-size: 0.8rem;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .ability-scores-table td {
@@ -1435,7 +1435,7 @@ const createCharacter = async () => {
 }
 
 .ability-modifier {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .ability-incrementer {
@@ -1500,7 +1500,7 @@ const createCharacter = async () => {
 .review-label {
   font-weight: 600;
   min-width: 100px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -1535,7 +1535,7 @@ const createCharacter = async () => {
 
 .skills-counter {
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-left: var(--spacing-xs);
 }
 
@@ -1546,7 +1546,7 @@ const createCharacter = async () => {
 .ability-group-header {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   margin: 0 0 var(--spacing-xs) 0;
 }
@@ -1570,7 +1570,7 @@ const createCharacter = async () => {
 
 .skill-chip.locked {
   background: var(--color-surface-variant);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -1580,7 +1580,7 @@ const createCharacter = async () => {
 
 .skill-chip.selectable:hover:not(.disabled):not(.from-background) {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50, rgba(99, 102, 241, 0.05));
+  background: var(--color-primary-50);
 }
 
 .skill-chip.selected {
@@ -1617,7 +1617,7 @@ const createCharacter = async () => {
 }
 
 .empty-skills {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
   padding: var(--spacing-md);
   text-align: center;
@@ -1625,6 +1625,6 @@ const createCharacter = async () => {
 
 .review-skill-source {
   font-weight: 500;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 </style>

@@ -346,7 +346,7 @@
 }
 
 .theme-dark .chat-session-item--active {
-  background-color: var(--color-surface-elevated);
+  background-color: var(--color-surface);
 }
 
 .chat-session-title {

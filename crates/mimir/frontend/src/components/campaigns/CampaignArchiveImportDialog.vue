@@ -399,7 +399,7 @@ function formatDate(dateString: string): string {
   width: 40px;
   height: 40px;
   border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
+  border-top-color: var(--color-primary-500);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -455,7 +455,7 @@ function formatDate(dateString: string): string {
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-primary-500);
 }
 
 .stat-label {
@@ -558,7 +558,7 @@ function formatDate(dateString: string): string {
 .show-more-btn {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-primary-500);
   cursor: pointer;
   font-size: 0.875rem;
   padding: var(--spacing-xs);

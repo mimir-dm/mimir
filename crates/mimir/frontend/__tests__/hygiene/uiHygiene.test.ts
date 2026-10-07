@@ -44,9 +44,9 @@ describe('UI hygiene', () => {
     expect(hits, 'use useDialog().confirm / .alert instead').toEqual([])
   })
 
-  it('has no hard-coded hex fallbacks in var() (MIMIR-T-0686)', () => {
+  it('has no hard-coded color fallbacks in var() (MIMIR-T-0686)', () => {
     // A fallback hides a token that no theme defines. Define the token instead.
-    expect(matches(/var\(--[\w-]+\s*,\s*#[0-9a-fA-F]{3,8}\s*\)/)).toEqual([])
+    expect(matches(/var\(--[\w-]+\s*,\s*(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\()/)).toEqual([])
   })
 
   it('defines every legacy color it uses in the shared root (MIMIR-T-0686)', () => {
@@ -75,5 +75,29 @@ describe('UI hygiene', () => {
   it('renders empty states with EmptyState (MIMIR-T-0683)', () => {
     // EmptyState gives the icon, title, description and action slot.
     expect(matches(/empty-icon/), 'use <EmptyState variant=… title=…>').toEqual([])
+  })
+
+  it('uses only color tokens that the shared root or every theme defines (MIMIR-T-0687)', () => {
+    // var() of an undefined token makes the declaration invalid: the text
+    // inherits its color, the background goes transparent.
+    const read = (f: string) => fs.readFileSync(path.join(SRC, 'assets/styles', f), 'utf8')
+    const defs = (css: string) => new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]))
+    const main = read('main.css')
+    const root = defs(main.slice(main.indexOf(':root {'), main.indexOf('\n}', main.indexOf(':root {'))))
+    const themes = Object.fromEntries(
+      ['light', 'dark', 'hyper'].map((t) => [t, defs(read(`themes/${t}.css`))]),
+    ) as Record<string, Set<string>>
+    const everyTheme = (t: string) => Object.values(themes).every((d) => d.has(t))
+    const undefinedUses: string[] = []
+    for (const [file, text] of sources()) {
+      // Inside a theme file, its own tokens count.
+      const own = /themes[\\/](\w+)\.css$/.exec(file)?.[1]
+      for (const m of text.matchAll(/var\((--color-[\w-]+)\s*[,)]/g)) {
+        const t = m[1]
+        if (root.has(t) || everyTheme(t) || (own && themes[own]?.has(t))) continue
+        undefinedUses.push(`${file}: ${t}`)
+      }
+    }
+    expect(undefinedUses).toEqual([])
   })
 })

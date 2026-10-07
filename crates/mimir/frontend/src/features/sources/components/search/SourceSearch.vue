@@ -254,7 +254,7 @@ watch(() => props.selectedSources, () => {
 
 .search-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .results-info {

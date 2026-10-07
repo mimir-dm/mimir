@@ -210,12 +210,12 @@ defineEmits<{
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   z-index: 10;
 }
 
 .monster-panel-toggle:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -232,7 +232,7 @@ defineEmits<{
   align-items: flex-start;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-bottom: 2px solid var(--color-dnd-creature);
 }
 
@@ -254,7 +254,7 @@ defineEmits<{
   margin: 0.15rem 0 0 0;
   font-size: 0.75rem;
   font-style: italic;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* DM Notes Section */
@@ -284,7 +284,7 @@ defineEmits<{
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -312,7 +312,7 @@ defineEmits<{
   flex: 1;
   text-align: left;
   padding: 0.5rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-radius: 0.375rem;
   border: 1px solid var(--color-border);
 }
@@ -323,7 +323,7 @@ defineEmits<{
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: 0.15rem;
 }
 
@@ -340,7 +340,7 @@ defineEmits<{
   gap: 0.25rem;
   margin-bottom: 0.75rem;
   padding: 0.5rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-radius: 0.375rem;
 }
 
@@ -353,7 +353,7 @@ defineEmits<{
   display: block;
   font-size: 0.6rem;
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
@@ -382,7 +382,7 @@ defineEmits<{
 
 .stat-section summary {
   padding: 0.5rem 0.75rem;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -394,7 +394,7 @@ defineEmits<{
 }
 
 .stat-section summary:hover {
-  background: var(--color-base-300);
+  background: var(--color-surface-variant);
 }
 
 .stat-section.actions summary {
@@ -425,7 +425,7 @@ defineEmits<{
 
 .prop-name {
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   min-width: 5rem;
   flex-shrink: 0;
 }
@@ -457,7 +457,7 @@ defineEmits<{
 .legendary-intro {
   font-size: 0.75rem;
   font-style: italic;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin: 0 0.75rem 0.5rem;
   padding-top: 0.5rem;
 }
@@ -489,12 +489,12 @@ defineEmits<{
 .monster-footer {
   padding: 0.5rem 0.75rem;
   border-top: 1px solid var(--color-border);
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .source-tag {
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 </style>

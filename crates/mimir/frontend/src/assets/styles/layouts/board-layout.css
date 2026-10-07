@@ -151,6 +151,6 @@
   background-color: var(--color-surface);
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 2px 8px var(--color-shadow);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
   overflow-y: auto;
 }

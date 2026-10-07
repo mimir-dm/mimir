@@ -306,7 +306,7 @@ async function save() {
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
 }
 

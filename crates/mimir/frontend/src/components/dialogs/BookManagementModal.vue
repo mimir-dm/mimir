@@ -531,7 +531,7 @@ function closeModal() {
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-500);
   color: white;
 }
 

@@ -322,7 +322,7 @@ watch(() => props.visible, (visible) => {
 .upload-icon {
   width: 48px;
   height: 48px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .drop-text {
@@ -333,7 +333,7 @@ watch(() => props.visible, (visible) => {
 
 .drop-hint {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -457,7 +457,7 @@ watch(() => props.visible, (visible) => {
 
 .dimensions-info {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--spacing-md);
 }
 

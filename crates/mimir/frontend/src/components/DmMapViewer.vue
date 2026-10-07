@@ -1938,7 +1938,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -1961,7 +1961,7 @@ onUnmounted(() => {
 
 .toolbar-label {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -1981,7 +1981,7 @@ onUnmounted(() => {
 }
 
 .toolbar-btn:hover:not(:disabled) {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-color: var(--color-primary-500);
 }
 
@@ -2066,12 +2066,12 @@ onUnmounted(() => {
 }
 
 .print-btn {
-  background: var(--color-base-100);
+  background: var(--color-background);
   border-color: var(--color-border);
 }
 
 .print-btn:hover:not(:disabled) {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   border-color: var(--color-primary-400);
 }
 
@@ -2138,7 +2138,7 @@ onUnmounted(() => {
   padding: 4px 10px;
   border: none;
   background: var(--color-background);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -2150,7 +2150,7 @@ onUnmounted(() => {
 }
 
 .btn-group-item:hover:not(:disabled):not(.active) {
-  background: var(--color-base-200);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -2184,7 +2184,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -2232,7 +2232,7 @@ onUnmounted(() => {
 }
 
 .status-bar .dim {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .status-indicator {
@@ -2250,8 +2250,8 @@ onUnmounted(() => {
 }
 
 .status-indicator.disconnected {
-  background: var(--color-base-200);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
 }
 
 /* Context Menu */
@@ -2287,7 +2287,7 @@ onUnmounted(() => {
 }
 
 .context-menu button:hover {
-  background: var(--color-base-200);
+  background: var(--color-surface);
 }
 
 .context-menu button.danger {
@@ -2300,9 +2300,9 @@ onUnmounted(() => {
 
 .context-menu .shortcut {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-family: monospace;
-  background: var(--color-base-200);
+  background: var(--color-surface);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
 }

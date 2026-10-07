@@ -269,7 +269,7 @@ watch(() => props.visible, (newVisible) => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
+  border-top-color: var(--color-primary-500);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

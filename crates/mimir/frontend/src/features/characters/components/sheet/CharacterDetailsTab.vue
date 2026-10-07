@@ -655,13 +655,13 @@ const formatOrdinal = (n: number): string => {
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-md);
-  border-left: 3px solid var(--color-secondary-500);
+  border-left: 3px solid var(--color-secondary);
 }
 
 .subclass-header {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-secondary-600);
+  color: var(--color-secondary-dark);
   margin-bottom: var(--spacing-sm);
 }
 

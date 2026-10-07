@@ -392,12 +392,12 @@
 }
 
 .catalog-table__page-size-select:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .catalog-table__page-size-select:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
   box-shadow: 0 0 0 2px var(--color-primary-100);
 }
 
@@ -425,7 +425,7 @@
 
 .catalog-table__pagination-btn:hover:not(:disabled) {
   background: var(--color-surface-variant);
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-500);
 }
 
 .catalog-table__pagination-btn:disabled {

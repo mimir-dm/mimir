@@ -271,7 +271,7 @@ onUnmounted(() => {
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0;
   line-height: 1;
