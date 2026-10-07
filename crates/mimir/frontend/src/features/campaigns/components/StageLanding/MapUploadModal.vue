@@ -27,25 +27,19 @@
 
       <div v-if="selectedFile" class="preview-container">
         <div class="file-info">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="file-icon">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-          </svg>
+          <MapIcon class="file-icon" :stroke-width="1.5" aria-hidden="true" />
           <div class="file-details">
             <span class="file-name">{{ selectedFile.name }}</span>
             <span class="file-size">{{ formatFileSize(selectedFile.size) }}</span>
           </div>
           <button class="clear-btn" @click.stop="clearFile">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X :stroke-width="1.5" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       <div v-else class="drop-prompt">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
+        <Upload class="upload-icon" :stroke-width="1.5" aria-hidden="true" />
         <p class="drop-text">Drop map here or click to browse</p>
         <p class="drop-hint">Supports UVTT (.dd2vtt), PNG, JPG, WebP</p>
       </div>
@@ -96,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { Map as MapIcon, Upload, X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { dataEvents } from '@/utils/dataEvents'

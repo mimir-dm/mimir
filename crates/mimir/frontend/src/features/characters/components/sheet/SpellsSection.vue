@@ -90,7 +90,7 @@
               :class="{ collapsed: isSpellLevelCollapsed(level) }"
               @click="toggleSpellLevel(level)"
             >
-              <span class="collapse-icon">{{ isSpellLevelCollapsed(level) ? '▶' : '▼' }}</span>
+              <component :is="isSpellLevelCollapsed(level) ? ChevronRight : ChevronDown" class="icon-em collapse-icon" aria-hidden="true" />
               {{ getLevelDisplay(level) }}
               <span class="spell-count">({{ spellsByLevel[level].length }})</span>
             </h3>
@@ -153,6 +153,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { ChevronDown, ChevronRight } from '@lucide/vue'
 import type { Character } from '@/types/character'
 import { useSpellManagement } from '../../composables/useSpellManagement'
 

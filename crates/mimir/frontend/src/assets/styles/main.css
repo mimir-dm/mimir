@@ -172,6 +172,15 @@
 */
 
 /* Base styles */
+/* An icon in a line of text or a text-sized button: as big as the font
+   (COLLIERY-I-0465). Use :size for a fixed pixel size instead. */
+svg.icon-em {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
 * {
   box-sizing: border-box;
 }

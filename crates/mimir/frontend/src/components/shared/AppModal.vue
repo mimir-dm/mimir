@@ -30,7 +30,7 @@
               aria-label="Close modal"
               @click="close"
             >
-              &times;
+              <X class="icon-em" aria-hidden="true" />
             </button>
           </div>
 
@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { X } from '@lucide/vue'
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full'
 

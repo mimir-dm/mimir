@@ -37,7 +37,7 @@
         :style="{ '--type-color': type.color }"
         @click="selectType(type.value)"
       >
-        <span class="type-icon">{{ type.icon }}</span>
+        <component :is="type.icon" class="icon-em type-icon" aria-hidden="true" />
         <span class="type-label">{{ type.label }}</span>
       </button>
     </div>
@@ -53,7 +53,7 @@
           :class="{ active: selectedLightType === light.value }"
           @click="selectLightType(light.value)"
         >
-          <span class="light-icon">{{ light.icon }}</span>
+          <component :is="light.icon" class="icon-em light-icon" aria-hidden="true" />
           <span class="light-label">{{ light.label }}</span>
         </button>
       </div>
@@ -123,7 +123,7 @@
         </div>
         <div v-if="selectedMonster" class="selected-entity">
           <span>{{ selectedMonster.name }}</span>
-          <button class="remove-entity-btn" @click="clearMonster">×</button>
+          <button class="remove-entity-btn" aria-label="Clear monster" @click="clearMonster"><X class="icon-em" aria-hidden="true" /></button>
         </div>
       </div>
 
@@ -152,7 +152,7 @@
         </div>
         <div v-if="selectedTrap" class="selected-entity">
           <span>{{ selectedTrap.name }}</span>
-          <button class="remove-entity-btn" @click="clearTrap">×</button>
+          <button class="remove-entity-btn" aria-label="Clear trap" @click="clearTrap"><X class="icon-em" aria-hidden="true" /></button>
         </div>
       </div>
 
@@ -174,6 +174,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { Flame, FlameKindling, Lamp, MapPin, Skull, TriangleAlert, User, X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { TokenType, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_TYPE_COLORS } from '@/types/api'
@@ -266,17 +267,17 @@ const selectedModuleMonster = ref<ModuleMonsterWithData | null>(null)
 
 // Token type options (PC tokens are added at play time, not during map setup)
 const tokenTypes = [
-  { value: 'monster' as TokenType, label: 'Monster', icon: '👹', color: TOKEN_TYPE_COLORS.monster },
-  { value: 'npc' as TokenType, label: 'NPC', icon: '👤', color: TOKEN_TYPE_COLORS.npc },
-  { value: 'trap' as TokenType, label: 'Trap', icon: '⚠️', color: TOKEN_TYPE_COLORS.trap },
-  { value: 'marker' as TokenType, label: 'Marker', icon: '📍', color: TOKEN_TYPE_COLORS.marker }
+  { value: 'monster' as TokenType, label: 'Monster', icon: Skull, color: TOKEN_TYPE_COLORS.monster },
+  { value: 'npc' as TokenType, label: 'NPC', icon: User, color: TOKEN_TYPE_COLORS.npc },
+  { value: 'trap' as TokenType, label: 'Trap', icon: TriangleAlert, color: TOKEN_TYPE_COLORS.trap },
+  { value: 'marker' as TokenType, label: 'Marker', icon: MapPin, color: TOKEN_TYPE_COLORS.marker }
 ]
 
 // Light source options
 const lightTypes = [
-  { value: 'torch' as LightType, label: 'Torch', icon: '🔥' },
-  { value: 'lantern' as LightType, label: 'Lantern', icon: '🏮' },
-  { value: 'candle' as LightType, label: 'Candle', icon: '🕯️' }
+  { value: 'torch' as LightType, label: 'Torch', icon: FlameKindling },
+  { value: 'lantern' as LightType, label: 'Lantern', icon: Lamp },
+  { value: 'candle' as LightType, label: 'Candle', icon: Flame }
 ]
 
 // Size options

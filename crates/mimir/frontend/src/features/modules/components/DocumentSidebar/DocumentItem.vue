@@ -42,12 +42,13 @@
       @click.stop="$emit('toggleCompletion', doc)"
       :title="doc.instance?.completed_at ? 'Mark as incomplete' : 'Mark as complete'"
     >
-      <span v-if="doc.instance?.completed_at">✓</span>
+      <Check class="icon-em" v-if="doc.instance?.completed_at" aria-hidden="true" />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Check } from '@lucide/vue'
 defineProps<{
   doc: any
   isSelected: boolean

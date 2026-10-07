@@ -8,7 +8,7 @@
         :aria-expanded="!collapsed"
         @click="toggleCollapsed"
       >
-        {{ collapsed ? '‹' : '›' }}
+        <component :is="collapsed ? ChevronLeft : ChevronRight" :size="16" aria-hidden="true" />
       </button>
       <template v-if="!collapsed">
         <h2 class="title">Initiative</h2>
@@ -70,7 +70,7 @@
                 title="Remove from combat"
                 @click="combat.removeEntry(e.id)"
               >
-                ×
+                <X class="icon-em" aria-hidden="true" />
               </button>
             </div>
 
@@ -81,7 +81,7 @@
                 data-testid="concentration-badge"
                 title="Concentrating"
               >
-                ◎ Conc.
+                <CircleDot class="icon-em" aria-hidden="true" /> Conc.
               </span>
               <button
                 v-for="c in e.conditions"
@@ -267,6 +267,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { ChevronLeft, ChevronRight, CircleDot, X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import { emit as emitEvent, listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
@@ -756,6 +757,9 @@ onUnmounted(() => {
 
 .condition-pill,
 .concentration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   font-size: 0.7rem;
   line-height: 1.4;
   padding: 0 6px;

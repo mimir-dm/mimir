@@ -8,9 +8,7 @@
         <span v-else class="no-selection">
           Select a campaign...
         </span>
-        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
+        <ChevronDown class="dropdown-icon" :size="20" aria-hidden="true" />
       </div>
 
       <div v-if="isOpen" class="dropdown-menu" @click.stop>
@@ -31,11 +29,7 @@
             class="dropdown-action empty-import-action"
             @click="openImportDialog"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
+            <Download :size="16" aria-hidden="true" />
             Import Campaign
           </button>
         </div>
@@ -52,9 +46,7 @@
               <div class="option-name">{{ campaign.name }}</div>
               <div class="option-status">{{ getCampaignStatus(campaign) }}</div>
             </div>
-            <svg v-if="campaign.id === selectedCampaignId" class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            <Check v-if="campaign.id === selectedCampaignId" class="check-icon" :size="16" :stroke-width="3" aria-hidden="true" />
           </div>
 
           <div class="dropdown-divider"></div>
@@ -64,10 +56,7 @@
             class="dropdown-action"
             @click="closeDropdown"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
+            <Plus :size="16" aria-hidden="true" />
             Create New Campaign
           </router-link>
 
@@ -75,11 +64,7 @@
             class="dropdown-action"
             @click="openImportDialog"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
+            <Download :size="16" aria-hidden="true" />
             Import Campaign
           </button>
         </div>
@@ -97,6 +82,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { Check, ChevronDown, Download, Plus } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { useCampaignStore } from '@/stores/campaigns'
 import { storeToRefs } from 'pinia'

@@ -92,7 +92,7 @@
               :class="{ selected: selectedSources.includes(source.id) }"
               @click="toggleSource(source.id)"
             >
-              <span class="source-chip-check">{{ selectedSources.includes(source.id) ? '✓' : '' }}</span>
+              <span class="source-chip-check"><Check class="icon-em" v-if="selectedSources.includes(source.id)" aria-hidden="true" /></span>
               <span class="source-chip-text">
                 <span class="source-chip-name">{{ source.name }}</span>
                 <span class="source-chip-tags">
@@ -458,6 +458,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { Check } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { useCharacterStore } from '@/stores/characters'

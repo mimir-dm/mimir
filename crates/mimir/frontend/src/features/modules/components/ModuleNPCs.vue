@@ -32,7 +32,7 @@
             title="Remove from module"
             @click.stop="removeNpc(npc)"
           >
-            &times;
+            <X class="icon-em" aria-hidden="true" />
           </button>
         </div>
         <div class="npc-details">
@@ -71,6 +71,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { X } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import NpcSelectorModal from './NpcSelectorModal.vue'

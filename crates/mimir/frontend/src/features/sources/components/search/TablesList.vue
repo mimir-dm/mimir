@@ -6,20 +6,20 @@
           <th @click="emit('sort', 'name')" class="sortable">
             Name
             <span class="sort-indicator" v-if="sortColumn === 'name'">
-              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              <component class="icon-em" :is="sortDirection === 'asc' ? ChevronUp : ChevronDown" aria-hidden="true" />
             </span>
           </th>
           <th>Caption</th>
           <th @click="emit('sort', 'size')" class="sortable">
             Size
             <span class="sort-indicator" v-if="sortColumn === 'size'">
-              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              <component class="icon-em" :is="sortDirection === 'asc' ? ChevronUp : ChevronDown" aria-hidden="true" />
             </span>
           </th>
           <th @click="emit('sort', 'source')" class="sortable">
             Source
             <span class="sort-indicator" v-if="sortColumn === 'source'">
-              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              <component class="icon-em" :is="sortDirection === 'asc' ? ChevronUp : ChevronDown" aria-hidden="true" />
             </span>
           </th>
         </tr>
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import type { TableSummary } from '../../composables/catalog'
+import { ChevronDown, ChevronUp } from '@lucide/vue'
 
 defineProps<{
   tables: TableSummary[]

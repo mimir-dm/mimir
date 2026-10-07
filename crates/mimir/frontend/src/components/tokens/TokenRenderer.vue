@@ -35,9 +35,7 @@
         :class="{ 'light-active': hasActiveLight(token.id) }"
         :title="hasActiveLight(token.id) ? 'Light source (active)' : 'Light source (inactive)'"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 1a1 1 0 011 1v1a1 1 0 11-2 0V2a1 1 0 011-1zM5.05 3.636a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM16.95 3.636a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 6a4 4 0 100 8 4 4 0 000-8zM2 11a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zM16 11a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM5.05 18.364a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM16.95 18.364a1 1 0 01-1.414 0l-.707-.707a1 1 0 111.414-1.414l.707.707a1 1 0 010 1.414zM10 15a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z"/>
-        </svg>
+        <Sun aria-hidden="true" />
       </span>
       <!-- Dead indicator (skull) -->
       <span
@@ -45,9 +43,7 @@
         class="dead-badge"
         title="Dead"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12c0 3.69 2.47 6.86 6 8.25V22h8v-1.75c3.53-1.39 6-4.56 6-8.25 0-5.52-4.48-10-10-10zM8.5 14c-.83 0-1.5-.67-1.5-1.5S7.67 11 8.5 11s1.5.67 1.5 1.5S9.33 14 8.5 14zm3.5 4h-2v-2h2v2zm2 0h-2v-2h2v2zm1-4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-        </svg>
+        <Skull aria-hidden="true" />
       </span>
       <!-- Visibility badge -->
       <span
@@ -55,10 +51,7 @@
         class="visibility-badge"
         title="Hidden from players"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clip-rule="evenodd" />
-          <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
-        </svg>
+        <EyeOff aria-hidden="true" />
       </span>
     </div>
   </div>
@@ -66,6 +59,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { EyeOff, Skull, Sun } from '@lucide/vue'
 import type { Token, TokenSize, TokenType } from '@/types/api'
 import { TOKEN_SIZE_GRID_SQUARES, TOKEN_TYPE_COLORS } from '@/types/api'
 

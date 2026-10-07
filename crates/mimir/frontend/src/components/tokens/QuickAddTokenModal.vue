@@ -60,7 +60,7 @@
           <div v-if="selectedMonster" class="token-options">
             <div class="selected-monster">
               <span class="selected-name">{{ selectedMonster.name }}</span>
-              <button class="clear-btn" @click="clearSelection">×</button>
+              <button class="clear-btn" aria-label="Clear selection" @click="clearSelection"><X class="icon-em" aria-hidden="true" /></button>
             </div>
 
             <div class="options-row">
@@ -93,7 +93,7 @@
                 <span class="vision-summary">
                   {{ visionType === 'normal' ? 'Normal' : `${VISION_PRESETS.find(p => p.type === visionType && p.range === visionRangeFt)?.label || visionType}` }}
                 </span>
-                <span class="vision-toggle">{{ showVisionDetails ? '▼' : '▶' }}</span>
+                <component :is="showVisionDetails ? ChevronDown : ChevronRight" class="icon-em vision-toggle" aria-hidden="true" />
               </button>
 
               <div v-if="showVisionDetails" class="vision-details">
@@ -141,6 +141,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
+import { ChevronDown, ChevronRight, X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { TokenSize, CreateTokenRequest, VisionType } from '@/types/api'
 import { VISION_PRESETS } from '@/types/api'

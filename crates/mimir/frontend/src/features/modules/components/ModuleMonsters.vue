@@ -20,9 +20,10 @@
         <button
           v-if="searchQuery"
           class="clear-search"
+          aria-label="Clear search"
           @click="clearSearch"
         >
-          &times;
+          <X class="icon-em" aria-hidden="true" />
         </button>
       </div>
 
@@ -105,7 +106,7 @@
             @click="removeMonster(monster)"
             title="Remove monster"
           >
-            &times;
+            <X class="icon-em" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -140,6 +141,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMonsters, type MonsterSummary } from '@/features/sources/composables/catalog/useMonsters'
 import { formatMonsterDetails } from '@/features/sources/formatters/monsterFormatterEnhanced'

@@ -11,7 +11,7 @@
           <h2>{{ trapData?.name || trap.name }}</h2>
           <p class="trap-type">{{ formatTrapType() }}</p>
         </div>
-        <button class="close-trap" @click="$emit('close')" title="Close">×</button>
+        <button class="close-trap" @click="$emit('close')" title="Close" aria-label="Close"><X class="icon-em" aria-hidden="true" /></button>
       </header>
 
       <div class="trap-body" v-if="trapData">
@@ -81,6 +81,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import { processFormattingTags } from '@/features/sources/utils/textFormatting'
 

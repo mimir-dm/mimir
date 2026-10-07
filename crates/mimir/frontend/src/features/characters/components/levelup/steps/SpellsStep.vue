@@ -57,7 +57,7 @@
         <span class="selected-label">Selected:</span>
         <span v-for="c in selectedCantrips" :key="c.name" class="selected-tag">
           {{ c.name }}
-          <button type="button" class="remove-btn" @click="removeCantrip(c)">&times;</button>
+          <button type="button" class="remove-btn" aria-label="Remove" @click="removeCantrip(c)"><X class="icon-em" aria-hidden="true" /></button>
         </span>
       </div>
     </div>
@@ -114,7 +114,7 @@
         <span class="selected-label">Selected:</span>
         <span v-for="s in selectedSpells" :key="s.name" class="selected-tag">
           {{ s.name }} ({{ s.level }})
-          <button type="button" class="remove-btn" @click="removeSpell(s)">&times;</button>
+          <button type="button" class="remove-btn" aria-label="Remove" @click="removeSpell(s)"><X class="icon-em" aria-hidden="true" /></button>
         </span>
       </div>
     </div>
@@ -176,6 +176,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { X } from '@lucide/vue'
 import type { Character } from '@/types/character'
 import type { SpellReference } from '@/types/character'
 import type { LevelUpComposable } from '@/features/characters/composables/useLevelUp'
