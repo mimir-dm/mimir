@@ -5,20 +5,14 @@
       <div class="toolbar-group">
         <span class="toolbar-label">Zoom:</span>
         <button class="toolbar-btn" @click="zoomOut" :disabled="!mapImageUrl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" />
-          </svg>
+          <Minus aria-hidden="true" />
         </button>
         <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
         <button class="toolbar-btn" @click="zoomIn" :disabled="!mapImageUrl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
+          <Plus aria-hidden="true" />
         </button>
         <button class="toolbar-btn" @click="resetView" :disabled="!mapImageUrl" title="Reset view">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0V5.36l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clip-rule="evenodd" />
-          </svg>
+          <RotateCcw aria-hidden="true" />
         </button>
       </div>
 
@@ -29,9 +23,7 @@
           :disabled="!mapImageUrl || !props.campaignId || addingPCs"
           title="Add all player characters to map"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.357-.442 3 3 0 00-4.308-3.517 6.484 6.484 0 011.907 3.96 2.32 2.32 0 01-.026.654zM18 8a2 2 0 11-4 0 2 2 0 014 0zM5.304 16.19a.844.844 0 01-.277-.71 5 5 0 019.947 0 .843.843 0 01-.277.71A6.975 6.975 0 0110 18a6.974 6.974 0 01-4.696-1.81z" />
-          </svg>
+          <Users aria-hidden="true" />
           <span>{{ addingPCs ? 'Adding...' : 'Add PCs' }}</span>
         </button>
       </div>
@@ -45,10 +37,7 @@
           :disabled="!mapImageUrl"
           :title="revealMap ? 'Hide map (restore fog)' : 'Reveal entire map to players'"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-            <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-          </svg>
+          <Eye aria-hidden="true" />
         </button>
       </div>
 
@@ -62,9 +51,7 @@
           :disabled="!mapImageUrl || revealMap"
           title="Fog: Hide map outside party vision"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon">
-            <path fill-rule="evenodd" d="M5.5 17a4.5 4.5 0 01-1.44-8.765 4.5 4.5 0 018.302-3.046 3.5 3.5 0 014.504 4.272A4 4 0 0115 17H5.5zm3.75-2.75a.75.75 0 001.5 0V9.66l1.95 2.1a.75.75 0 101.1-1.02l-3.25-3.5a.75.75 0 00-1.1 0l-3.25 3.5a.75.75 0 101.1 1.02l1.95-2.1v4.59z" clip-rule="evenodd" />
-          </svg>
+          <Cloud class="toggle-icon" aria-hidden="true" />
           <span class="toggle-label">Fog</span>
         </button>
 
@@ -76,10 +63,7 @@
           :disabled="!mapImageUrl || revealMap || fogEnabled"
           title="Token LOS: Only show tokens within party line of sight"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toggle-icon">
-            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-            <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-          </svg>
+          <Eye class="toggle-icon" aria-hidden="true" />
           <span class="toggle-label">LOS</span>
         </button>
 
@@ -94,9 +78,9 @@
           :disabled="!mapImageUrl"
           title="Ambient light level"
         >
-          <option value="bright">☀️ Bright</option>
-          <option value="dim">🌙 Dim</option>
-          <option value="darkness">🌑 Dark</option>
+          <option value="bright">Bright</option>
+          <option value="dim">Dim</option>
+          <option value="darkness">Dark</option>
         </select>
 
         <!-- Debug Overlays Toggle (vision boundaries + LOS walls) -->
@@ -107,9 +91,7 @@
           :disabled="!mapImageUrl"
           title="Toggle debug overlays (vision ranges, walls)"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" />
-          </svg>
+          <FileIcon aria-hidden="true" />
         </button>
       </div>
 
@@ -121,9 +103,7 @@
           :disabled="!mapImageUrl"
           title="Print map to PDF"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
-          </svg>
+          <Printer aria-hidden="true" />
           <span>Print</span>
         </button>
       </div>
@@ -643,6 +623,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, toRef, type Ref } from 'vue'
+import { Cloud, Eye, File as FileIcon, Minus, Plus, Printer, RotateCcw, Users } from '@lucide/vue'
 import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'

@@ -1,12 +1,13 @@
 <template>
   <div class="back-button-container" v-if="campaignId">
     <router-link :to="`/campaigns/${campaignId}/dashboard`" class="back-to-campaign">
-      ← Back to Campaign
+      <ArrowLeft class="icon-em" aria-hidden="true" /> Back to Campaign
     </router-link>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ArrowLeft } from '@lucide/vue'
 defineProps<{
   campaignId?: string
 }>()

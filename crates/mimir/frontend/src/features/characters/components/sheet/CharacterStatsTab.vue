@@ -136,7 +136,7 @@
           >
             <div class="feature-header" @click="toggleFeatureExpansion(feature)">
               <span class="feature-name">
-                <span class="expand-icon">{{ isFeatureExpanded(feature) ? '▼' : '▶' }}</span>
+                <component :is="isFeatureExpanded(feature) ? ChevronDown : ChevronRight" class="icon-em expand-icon" aria-hidden="true" />
                 {{ feature.name }}
               </span>
               <span class="feature-meta">
@@ -197,6 +197,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { ChevronDown, ChevronRight } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { Character, CharacterInventory } from '@/types/character'
 import {

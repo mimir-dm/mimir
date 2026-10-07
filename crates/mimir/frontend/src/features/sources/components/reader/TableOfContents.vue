@@ -14,7 +14,7 @@
               :class="{ expanded: expandedSections.has(index) }"
               @click.stop="toggleSection(index)"
             >
-              ▶
+              <ChevronRight class="icon-em" aria-hidden="true" />
             </span>
             <span 
               v-else
@@ -39,7 +39,7 @@
                   :class="{ expanded: expandedSections.has(`${index}-${subIndex}`) }"
                   @click.stop="toggleSection(`${index}-${subIndex}`)"
                 >
-                  ▶
+                  <ChevronRight class="icon-em" aria-hidden="true" />
                 </span>
                 <span 
                   v-else
@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import Panel from '@/shared/components/layout/Panel.vue'
+import { ChevronRight } from '@lucide/vue'
 import { ref } from 'vue'
 import { useBookNavigation } from '../../composables/useBookNavigation'
 import { useBookContent } from '../../composables/useBookContent'

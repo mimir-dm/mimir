@@ -107,7 +107,7 @@
                     v-if="!token.visible_to_players"
                     class="visibility-indicator"
                     title="Hidden from players"
-                  >👁️‍🗨️</span>
+                  ><EyeOff class="icon-em" aria-hidden="true" /></span>
                 </div>
 
                 <!-- Light Sources -->
@@ -198,7 +198,7 @@
                   @click.stop="handleToggleVisibility(token)"
                   :title="token.visible_to_players ? 'Visible to players' : 'Hidden from players'"
                 >
-                  {{ token.visible_to_players ? '👁️' : '👁️‍🗨️' }}
+                  <component class="icon-em" :is="token.visible_to_players ? Eye : EyeOff" aria-hidden="true" />
                 </button>
                 <button
                   class="token-list-delete"
@@ -258,7 +258,7 @@
                 }"
               >
                 <div class="token-list-color trap-color">
-                  <span>⚠️</span>
+                  <TriangleAlert class="icon-em" aria-hidden="true" />
                 </div>
                 <div class="token-list-info">
                   <span class="token-list-name">{{ trap.name }}</span>
@@ -309,9 +309,7 @@
                   @click.stop="openPoiEditModalDirect(poi)"
                   title="Edit POI"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                  </svg>
+                  <SquarePen :size="14" :stroke-width="1.5" aria-hidden="true" />
                 </button>
                 <button
                   class="poi-toggle-btn"
@@ -397,6 +395,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { Eye, EyeOff, SquarePen, TriangleAlert } from '@lucide/vue'
 import { confirmDialog } from '@/composables/useDialog'
 import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'

@@ -7,39 +7,7 @@
         :class="['tab-button', { active: activeTab === tab.id }]"
         @click="onTabClick(tab.id)"
       >
-        <svg
-          class="tab-icon"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <template v-if="tab.icon === 'globe'">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          </template>
-          <template v-else-if="tab.icon === 'folder'">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </template>
-          <template v-else-if="tab.icon === 'users'">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </template>
-          <template v-else-if="tab.icon === 'user'">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </template>
-          <template v-else-if="tab.icon === 'flask'">
-            <path d="M10 2v6L4.5 18.5A2 2 0 0 0 6.24 21.5h11.52a2 2 0 0 0 1.74-3L14 8V2" />
-            <line x1="8.5" y1="2" x2="15.5" y2="2" />
-            <line x1="7" y1="14" x2="17" y2="14" />
-          </template>
-        </svg>
+        <component :is="TAB_ICONS[tab.icon] ?? Circle" class="tab-icon" :size="16" aria-hidden="true" />
         <span class="tab-label">{{ tab.label }}</span>
       </button>
     </div>
@@ -47,9 +15,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
+import { Circle, FlaskConical, Folder, Globe, User, Users } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 import { useDashboardState, dashboardTabs, type DashboardTab } from '../../composables/useDashboardState'
+
+/** Icon of each tab (the `icon` names in useDashboardState). */
+const TAB_ICONS: Record<string, Component> = {
+  globe: Globe,
+  folder: Folder,
+  users: Users,
+  user: User,
+  flask: FlaskConical,
+}
 
 const props = defineProps<{
   campaignId: string | number

@@ -16,9 +16,7 @@
         @click="mode = 'create'"
         :disabled="uploading"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
+        <Plus class="tab-icon" :stroke-width="1.5" aria-hidden="true" />
         New Document
       </button>
       <button
@@ -27,9 +25,7 @@
         @click="mode = 'upload'"
         :disabled="uploading"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
+        <Upload class="tab-icon" :stroke-width="1.5" aria-hidden="true" />
         Upload File
       </button>
     </div>
@@ -72,28 +68,20 @@
         <div v-if="previewUrl" class="preview-container">
           <img :src="previewUrl" :alt="docTitle" class="preview-image" />
           <button class="clear-btn" @click.stop="clearFile">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X :stroke-width="1.5" aria-hidden="true" />
           </button>
         </div>
 
         <div v-else-if="selectedFile && !isImageFile" class="file-preview">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="file-icon">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
+          <FileText class="file-icon" :stroke-width="1.5" aria-hidden="true" />
           <span class="file-name">{{ selectedFile.name }}</span>
           <button class="clear-btn-inline" @click.stop="clearFile">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X :stroke-width="1.5" aria-hidden="true" />
           </button>
         </div>
 
         <div v-else class="drop-prompt">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
+          <Upload class="upload-icon" :stroke-width="1.5" aria-hidden="true" />
           <p class="drop-text">Drop file here or click to browse</p>
           <p class="drop-hint">Supports .md, .png, .jpg, .webp, .gif, .svg</p>
         </div>
@@ -141,6 +129,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { FileText, Plus, Upload, X } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { DocumentService } from '@/services/DocumentService'

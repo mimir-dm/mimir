@@ -11,17 +11,11 @@
 
       <nav class="header-nav">
         <router-link to="/characters" class="nav-link" title="Manage Characters">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
+          <User :size="16" aria-hidden="true" />
           <span>Characters</span>
         </router-link>
         <button @click="handleOpenRules" class="nav-link" title="Open Reference Library">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
+          <Book :size="16" aria-hidden="true" />
           <span>Reference</span>
         </button>
       </nav>
@@ -37,6 +31,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Book, User } from '@lucide/vue'
 import { useThemeStore } from '../stores/theme'
 import CampaignSelector from '../features/campaigns/components/CampaignSelector.vue'
 import { openSourcesReference } from '@/utils/windows'

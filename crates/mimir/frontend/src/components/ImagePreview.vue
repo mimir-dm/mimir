@@ -6,9 +6,7 @@
     </div>
 
     <div v-else-if="error" class="error-state">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="error-icon">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-      </svg>
+      <CircleAlert class="error-icon" :stroke-width="1.5" aria-hidden="true" />
       <span>{{ error }}</span>
     </div>
 
@@ -30,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { CircleAlert } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 
 interface Document {

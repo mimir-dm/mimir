@@ -13,7 +13,7 @@
           </span>
           <h2>{{ poi.name }}</h2>
         </div>
-        <button class="close-poi" @click="$emit('close')" title="Close">×</button>
+        <button class="close-poi" @click="$emit('close')" title="Close" aria-label="Close"><X class="icon-em" aria-hidden="true" /></button>
       </header>
 
       <div class="poi-body">
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { X } from '@lucide/vue'
 interface ModulePoi {
   id: string
   name: string

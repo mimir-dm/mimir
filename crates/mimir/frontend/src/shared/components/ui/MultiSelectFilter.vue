@@ -7,9 +7,7 @@
     >
       {{ label }}
       <span v-if="activeCount > 0" class="btn-filter__count">{{ activeCount }}</span>
-      <svg class="form-select-custom__chevron" :class="{ rotated: isOpen }" width="12" height="12" viewBox="0 0 12 12">
-        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-      </svg>
+      <ChevronDown class="form-select-custom__chevron" :class="{ rotated: isOpen }" :size="12" :stroke-width="1.5" aria-hidden="true" />
     </button>
     
     <div v-if="isOpen" class="form-select-custom__dropdown">
@@ -48,6 +46,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ChevronDown } from '@lucide/vue'
 
 interface Props {
   label: string

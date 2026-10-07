@@ -12,7 +12,7 @@
           <p v-if="monster.display_name" class="monster-alias">({{ monster.monster_name }})</p>
           <p class="monster-type">{{ formatCreatureType(monster.monster_data) }}</p>
         </div>
-        <button class="close-monster" @click="$emit('close')" title="Close">×</button>
+        <button class="close-monster" @click="$emit('close')" title="Close" aria-label="Close"><X class="icon-em" aria-hidden="true" /></button>
       </header>
 
       <!-- DM Notes -->
@@ -148,6 +148,7 @@
 </template>
 
 <script setup lang="ts">
+import { X } from '@lucide/vue'
 import {
   type MonsterWithData,
   formatCreatureType,

@@ -7,7 +7,7 @@
   >
     <div class="menu-header">
       <span class="token-name">{{ token.name }}</span>
-      <button class="close-btn" @click="$emit('close')">&times;</button>
+      <button class="close-btn" aria-label="Close" @click="$emit('close')"><X class="icon-em" aria-hidden="true" /></button>
     </div>
 
     <!-- Presets -->
@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { X } from '@lucide/vue'
 import type { Token } from '@/types/api'
 import { useTokenVision, VISION_PRESETS, type VisionPresetKey } from '@/composables/map/useTokenVision'
 

@@ -37,10 +37,7 @@
                 <span v-if="monster.display_name && monster.monster_name" class="monster-original">({{ monster.monster_name }})</span>
                 <span v-if="monster.homebrew_monster_id" class="homebrew-badge">HB</span>
                 <span v-if="monster.notes" class="monster-has-notes" title="Has DM notes">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M8 13h8M8 17h5" />
-                  </svg>
+                  <FileText :size="12" aria-hidden="true" />
                 </span>
               </div>
               <button
@@ -49,9 +46,7 @@
                 @click.stop="$emit('edit-monster', monster)"
                 title="Customize monster"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
+                <SquarePen :stroke-width="1.5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -100,6 +95,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { FileText, SquarePen } from '@lucide/vue'
 
 /**
  * Module trap data

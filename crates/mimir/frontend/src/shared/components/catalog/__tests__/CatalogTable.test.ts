@@ -189,7 +189,8 @@ describe('CatalogTable', () => {
       })
 
       const sortIcon = wrapper.find('.catalog-table__sort-icon')
-      expect(sortIcon.text()).toBe('▲')
+      expect(sortIcon.attributes('data-sort')).toBe('asc')
+      expect(sortIcon.find('svg.lucide-chevron-up').exists()).toBe(true)
     })
 
     it('displays descending sort indicator', () => {
@@ -204,7 +205,8 @@ describe('CatalogTable', () => {
       })
 
       const sortIcon = wrapper.find('.catalog-table__sort-icon')
-      expect(sortIcon.text()).toBe('▼')
+      expect(sortIcon.attributes('data-sort')).toBe('desc')
+      expect(sortIcon.find('svg.lucide-chevron-down').exists()).toBe(true)
     })
 
     it('sorts data by string column ascending', () => {

@@ -3,8 +3,8 @@
     <!-- Editor Header -->
     <div class="editor-header">
       <div class="header-left">
-        <button class="btn-icon" @click="$emit('close')" title="Back to overview">
-          ← Back
+        <button class="btn-icon back-button" @click="$emit('close')" title="Back to overview">
+          <ArrowLeft class="icon-em" aria-hidden="true" /> Back
         </button>
         <h2>{{ document?.title || 'Untitled Document' }}</h2>
       </div>
@@ -159,14 +159,14 @@
             :disabled="!editor?.can().undo()"
             class="btn-toolbar"
           >
-            ↶ Undo
+            <Undo2 class="icon-em" aria-hidden="true" /> Undo
           </button>
           <button
             @click="editor?.chain().focus().redo().run()"
             :disabled="!editor?.can().redo()"
             class="btn-toolbar"
           >
-            ↷ Redo
+            <Redo2 class="icon-em" aria-hidden="true" /> Redo
           </button>
         </div>
         <EditorContent :editor="editor" class="editor-area" />
@@ -177,6 +177,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { ArrowLeft, Redo2, Undo2 } from '@lucide/vue'
 import { confirmDialog } from '@/composables/useDialog'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'

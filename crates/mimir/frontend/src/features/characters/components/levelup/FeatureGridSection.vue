@@ -54,8 +54,9 @@
           v-if="allowRemove"
           type="button"
           class="remove-tag"
+          aria-label="Remove"
           @click="$emit('remove', item)"
-        >&times;</button>
+        ><X class="icon-em" aria-hidden="true" /></button>
       </span>
     </div>
   </div>
@@ -63,6 +64,7 @@
 
 <script setup lang="ts">
 import FeatureCard from './FeatureCard.vue'
+import { X } from '@lucide/vue'
 import type { FeatureItem } from '@/features/characters/composables/useFeatureSelection'
 
 const props = withDefaults(defineProps<{

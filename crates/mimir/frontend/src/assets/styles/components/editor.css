@@ -24,6 +24,14 @@
   gap: var(--spacing-md);
 }
 
+/* Arrow and label on one line (the icon-button size is too small for both). */
+.header-left .back-button {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .header-left h2 {
   margin: 0;
   font-size: 1.25rem;

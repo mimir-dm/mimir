@@ -70,7 +70,7 @@
                   @click="$emit('sort', column.key)"
                 >
                   {{ column.label }}
-                  <span class="catalog-table__sort-icon">{{ getSortIndicator(column.key) }}</span>
+                  <span class="catalog-table__sort-icon" :data-sort="sortColumn === column.key ? sortDirection : undefined"><component class="icon-em" :is="getSortIndicator(column.key)" v-if="getSortIndicator(column.key)" aria-hidden="true" /></span>
                 </div>
                 <span v-else>{{ column.label }}</span>
               </th>
@@ -120,7 +120,7 @@
                 </template>
                 <template v-else-if="column.type === 'prerequisites'">
                   <span v-if="getCellValue(item, column).hasPrerequisites" class="prereq-icon" title="Has prerequisites">
-                    ✓
+                    <Check class="icon-em" aria-hidden="true" />
                   </span>
                   <span v-else class="catalog-table__empty">—</span>
                 </template>
@@ -193,7 +193,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, type Component } from 'vue'
+import { Check, ChevronDown, ChevronUp } from '@lucide/vue'
 import type { CatalogConfig, FilterValues } from './config/types'
 import MultiSelectFilter from '../ui/MultiSelectFilter.vue'
 import SelectFilter from './filters/SelectFilter.vue'
@@ -392,9 +393,9 @@ function getItemKey(item: any): string {
   return JSON.stringify(item)
 }
 
-function getSortIndicator(columnKey: string): string {
-  if (props.sortColumn !== columnKey) return ''
-  return props.sortDirection === 'asc' ? '▲' : '▼'
+function getSortIndicator(columnKey: string): Component | null {
+  if (props.sortColumn !== columnKey) return null
+  return props.sortDirection === 'asc' ? ChevronUp : ChevronDown
 }
 
 // Watch for filter changes and emit events if needed
