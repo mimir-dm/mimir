@@ -142,7 +142,7 @@ function getCultBoonStyles(): string {
     <style>
       .cult-details, .boon-details {
         padding: var(--spacing-md, 12px);
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .detail-header {
@@ -151,7 +151,7 @@ function getCultBoonStyles(): string {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .header-tags {
@@ -189,14 +189,14 @@ function getCultBoonStyles(): string {
       .info-section {
         margin: var(--spacing-md, 12px) 0;
         padding: var(--spacing-sm, 8px);
-        background: var(--color-surface, #1a1a1a);
+        background: var(--color-surface);
         border-radius: 4px;
-        border: 1px solid var(--color-border-light, #262626);
+        border: 1px solid var(--legacy-border-light);
       }
       
       .info-section h4 {
         margin: 0 0 var(--spacing-xs, 4px) 0;
-        color: var(--color-accent, #ff6b6b);
+        color: var(--legacy-accent);
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -212,12 +212,12 @@ function getCultBoonStyles(): string {
       }
       
       .content-section h3 {
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
       .content-section h4 {
-        color: var(--color-accent, #ff6b6b);
+        color: var(--legacy-accent);
         margin-top: var(--spacing-md, 12px);
         margin-bottom: var(--spacing-xs, 4px);
       }
@@ -235,14 +235,14 @@ function getCultBoonStyles(): string {
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--color-border-light, #262626);
+        border-left: 2px solid var(--legacy-border-light);
       }
       
       .source-info {
         margin-top: var(--spacing-lg, 16px);
         padding-top: var(--spacing-md, 12px);
-        border-top: 1px solid var(--color-border, #333);
-        color: var(--color-text-secondary, #999);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
         font-size: 0.9rem;
       }
       

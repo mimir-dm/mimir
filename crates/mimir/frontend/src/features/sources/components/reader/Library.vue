@@ -165,24 +165,24 @@ function deselectAll() {
   align-items: center;
   gap: var(--spacing-xs, 4px);
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  border-bottom: 1px solid var(--color-border, #333);
-  background: var(--color-surface, #1a1a1a);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .select-all-btn {
   padding: 2px 8px;
   font-size: 0.75rem;
-  background: var(--color-background, #0d0d0d);
-  border: 1px solid var(--color-border, #333);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 3px;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .select-all-btn:hover:not(:disabled) {
   background: var(--color-surface-hover, rgba(255, 255, 255, 0.05));
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .select-all-btn:disabled {
@@ -193,20 +193,20 @@ function deselectAll() {
 .selection-count {
   margin-left: auto;
   font-size: 0.75rem;
-  color: var(--color-text-tertiary, #666);
+  color: var(--legacy-text-tertiary);
 }
 
 .loading-message,
 .empty-message {
   padding: var(--spacing-lg, 16px);
   text-align: center;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
 }
 
 .dev-note {
   margin-top: var(--spacing-sm, 8px);
   font-size: 0.75rem;
-  color: var(--color-text-tertiary, #666);
+  color: var(--legacy-text-tertiary);
 }
 
 .book-list {
@@ -229,7 +229,7 @@ function deselectAll() {
 
 .book-item.active {
   background: var(--color-primary-alpha, rgba(74, 158, 255, 0.1));
-  border-left: 3px solid var(--color-primary, #4a9eff);
+  border-left: 3px solid var(--legacy-primary);
 }
 
 .book-info {
@@ -240,21 +240,21 @@ function deselectAll() {
 }
 
 .book-name {
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
 .book-meta {
   font-size: 0.75rem;
-  color: var(--color-text-tertiary, #666);
+  color: var(--legacy-text-tertiary);
   display: flex;
   align-items: center;
   gap: var(--spacing-xs, 4px);
 }
 
 .dev-badge {
-  background: var(--color-warning, #ffaa00);
-  color: var(--color-background, #0d0d0d);
+  background: var(--color-warning);
+  color: var(--color-background);
   padding: 1px 4px;
   border-radius: 3px;
   font-weight: 600;
@@ -266,7 +266,7 @@ function deselectAll() {
   height: 20px;
   padding: 0;
   background: transparent;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   border: none;
   border-radius: 3px;
   cursor: pointer;
@@ -281,7 +281,7 @@ function deselectAll() {
 }
 
 .remove-btn:hover {
-  color: var(--color-danger, #ff4444);
+  color: var(--legacy-danger);
   background: var(--color-danger-alpha, rgba(255, 68, 68, 0.1));
 }
 

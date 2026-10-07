@@ -87,9 +87,9 @@ function getRowCount(table: any): number {
 .tables-list th {
   text-align: left;
   padding: var(--spacing-sm, 8px);
-  border-bottom: 2px solid var(--color-border, #333);
-  background: var(--color-surface, #1a1a1a);
-  color: var(--color-text-secondary, #999);
+  border-bottom: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
@@ -99,7 +99,7 @@ function getRowCount(table: any): number {
 }
 
 .tables-list th.sortable:hover {
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .sort-indicator {
@@ -109,12 +109,12 @@ function getRowCount(table: any): number {
 }
 
 .tables-list tbody tr {
-  border-bottom: 1px solid var(--color-border-light, #262626);
+  border-bottom: 1px solid var(--legacy-border-light);
   transition: background-color 0.15s ease;
 }
 
 .tables-list tbody tr:hover {
-  background: var(--color-surface-hover, #262626);
+  background: var(--color-surface-hover);
 }
 
 .clickable-row {
@@ -123,19 +123,19 @@ function getRowCount(table: any): number {
 
 .tables-list td {
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 /* Cell-specific styles */
 .name-cell {
   font-weight: 500;
-  color: var(--color-primary, #4a9eff);
+  color: var(--legacy-primary);
 }
 
 .caption-cell {
   max-width: 300px;
   font-size: 0.85rem;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -150,11 +150,11 @@ function getRowCount(table: any): number {
 .size-info {
   font-family: monospace;
   font-size: 0.85rem;
-  color: var(--color-accent, #ff6b6b);
+  color: var(--legacy-accent);
 }
 
 .source-cell {
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
   white-space: nowrap;
 }

@@ -18,11 +18,11 @@ export async function formatBackgroundDetails(background: any): Promise<string> 
     .characteristic-table th,
     .characteristic-table td {
       padding: 0.5em;
-      border: 1px solid var(--color-border, #333);
+      border: 1px solid var(--color-border);
       text-align: left;
     }
     .characteristic-table th {
-      background: var(--color-background-tertiary, #262626);
+      background: var(--legacy-background-tertiary);
       font-weight: bold;
     }
     .characteristic-table .dice-column {

@@ -1199,7 +1199,7 @@ const createCharacter = async () => {
 }
 
 .progress-step.completed {
-  color: var(--color-success, #16a34a);
+  color: var(--color-success);
 }
 
 .step-number {
@@ -1216,9 +1216,9 @@ const createCharacter = async () => {
 }
 
 .progress-step.completed .step-number {
-  background: var(--color-success, #16a34a);
+  background: var(--color-success);
   color: white;
-  border-color: var(--color-success, #16a34a);
+  border-color: var(--color-success);
 }
 
 .progress-step.active .step-number {
@@ -1376,7 +1376,7 @@ const createCharacter = async () => {
 }
 
 .source-warning {
-  color: var(--color-warning, #c47a00);
+  color: var(--color-warning);
   font-size: 0.75rem;
   margin: 0;
 }
@@ -1515,8 +1515,8 @@ const createCharacter = async () => {
 /* Error */
 .error-message {
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-error-bg, #fef2f2);
-  color: var(--color-error, #dc2626);
+  background: var(--color-error-bg);
+  color: var(--color-error);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
 }

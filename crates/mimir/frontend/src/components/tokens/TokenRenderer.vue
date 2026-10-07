@@ -251,12 +251,12 @@ function getTokenLabel(token: Token): string {
 }
 
 .token-selected {
-  box-shadow: 0 0 0 3px white, 0 0 0 6px var(--color-primary-500, #3b82f6);
+  box-shadow: 0 0 0 3px white, 0 0 0 6px var(--color-primary-500);
   z-index: 20;
 }
 
 .token-current-turn {
-  outline: 3px dashed var(--color-warning, #f59e0b);
+  outline: 3px dashed var(--color-warning);
   outline-offset: 5px;
   z-index: 15;
 }
@@ -357,7 +357,7 @@ function getTokenLabel(token: Token): string {
 .token-has-light.token-selected {
   box-shadow:
     0 0 0 3px white,
-    0 0 0 6px var(--color-primary-500, #3b82f6),
+    0 0 0 6px var(--color-primary-500),
     0 0 16px 8px rgba(251, 191, 36, 0.4);
 }
 

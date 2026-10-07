@@ -173,7 +173,7 @@ defineEmits<{
 }
 
 .btn-delete:hover {
-  background: var(--color-error, #ef4444);
+  background: var(--color-error);
   color: white;
 }
 </style>

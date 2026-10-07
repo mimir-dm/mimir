@@ -243,7 +243,7 @@ watch(
 }
 
 .progress-step.completed .step-indicator {
-  background: var(--color-success, #22c55e);
+  background: var(--color-success);
   color: white;
 }
 
@@ -274,8 +274,8 @@ watch(
 .wizard-error {
   margin: 0 var(--spacing-lg);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-error-bg, #fef2f2);
-  color: var(--color-error, #dc2626);
+  background: var(--color-error-bg);
+  color: var(--color-error);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
 }

@@ -60,62 +60,62 @@ watch([renderedContent, () => props.selectedBook], () => {
 
 /* Game element styles */
 .content-renderer :deep(.dice-roll) {
-  color: var(--color-warning, #ffaa00);
+  color: var(--color-warning);
   font-weight: 600;
   font-family: 'Courier New', monospace;
 }
 
 .content-renderer :deep(.damage-roll) {
-  color: var(--color-danger, #ff4444);
+  color: var(--legacy-danger);
   font-weight: 600;
 }
 
 .content-renderer :deep(.d20-check) {
-  color: var(--color-info, #00aaff);
+  color: var(--color-info);
   font-weight: 600;
 }
 
 .content-renderer :deep(.dc-check) {
-  color: var(--color-primary, #4a9eff);
+  color: var(--legacy-primary);
   font-weight: 600;
   text-transform: uppercase;
 }
 
 .content-renderer :deep(.skill-check) {
-  color: var(--color-success, #44ff44);
+  color: var(--color-success);
   font-style: italic;
 }
 
 .content-renderer :deep(.action-name) {
-  color: var(--color-warning, #ffaa00);
+  color: var(--color-warning);
   font-weight: 600;
   font-style: italic;
 }
 
 .content-renderer :deep(.condition) {
-  color: var(--color-condition, #ff88ff);
+  color: var(--legacy-condition);
   font-style: italic;
   cursor: help;
 }
 
 .content-renderer :deep(.status) {
-  color: var(--color-status, #88ff88);
+  color: var(--legacy-status);
   font-style: italic;
   cursor: help;
 }
 
 .content-renderer :deep(.note) {
-  color: var(--color-note, #ffff88);
+  color: var(--legacy-note);
   font-style: italic;
 }
 
 .content-renderer :deep(.recharge) {
-  color: var(--color-recharge, #ff8888);
+  color: var(--legacy-recharge);
   font-weight: 600;
 }
 
 .content-renderer :deep(.hit-bonus) {
-  color: var(--color-success, #44ff44);
+  color: var(--color-success);
   font-weight: 600;
 }
 
@@ -133,16 +133,16 @@ watch([renderedContent, () => props.selectedBook], () => {
 }
 
 .content-renderer :deep(.image-placeholder) {
-  background: var(--color-surface, #1a1a1a);
-  border: 1px dashed var(--color-border, #333);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
   padding: var(--spacing-lg, 16px);
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
 }
 
 .content-renderer :deep(.image-caption) {
   margin-top: var(--spacing-sm, 8px);
   font-size: 0.9rem;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 </style>

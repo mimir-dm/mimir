@@ -278,8 +278,8 @@ const hasFeatureChoices = computed(() => {
 }
 
 .review-badge.multiclass {
-  background: var(--color-warning-bg, #fef9c3);
-  color: var(--color-warning, #ca8a04);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .confirmation-note {

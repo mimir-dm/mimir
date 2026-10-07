@@ -453,7 +453,7 @@ onMounted(() => {
 .class-next {
   margin-top: var(--spacing-xs);
   font-size: 0.875rem;
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
 }
 
 .arrow {
@@ -469,13 +469,13 @@ onMounted(() => {
 }
 
 .prereq-section.met {
-  background: var(--color-success-bg, #f0fdf4);
-  color: var(--color-success, #22c55e);
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .prereq-section.unmet {
-  background: var(--color-error-bg, #fef2f2);
-  color: var(--color-error, #dc2626);
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .prereq-label {

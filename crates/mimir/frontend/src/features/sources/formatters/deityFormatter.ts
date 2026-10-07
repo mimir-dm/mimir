@@ -127,7 +127,7 @@ export function formatDeityContent(deity: Deity): string {
     <style>
       .deity-content {
         padding: 20px;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
         max-width: 900px;
         margin: 0 auto;
       }
@@ -135,7 +135,7 @@ export function formatDeityContent(deity: Deity): string {
       .deity-header {
         margin-bottom: 24px;
         padding-bottom: 20px;
-        border-bottom: 2px solid var(--color-border, #333);
+        border-bottom: 2px solid var(--color-border);
       }
       
       .deity-title-section {
@@ -145,7 +145,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .deity-name {
         font-size: 2rem;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin: 0 0 8px 0;
         font-weight: 700;
         letter-spacing: 0.5px;
@@ -153,7 +153,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .deity-title {
         font-size: 1.1rem;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-style: italic;
         margin: 0;
       }
@@ -166,23 +166,23 @@ export function formatDeityContent(deity: Deity): string {
       }
       
       .attribute-card {
-        background: var(--color-surface, #1a1a1a);
-        border: 1px solid var(--color-border, #333);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: 8px;
         padding: 12px;
         transition: all 0.2s ease;
       }
       
       .attribute-card:hover {
-        background: var(--color-surface-hover, #252525);
-        border-color: var(--color-primary, #4a9eff);
+        background: var(--color-surface-hover);
+        border-color: var(--legacy-primary);
       }
       
       .attribute-label {
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         margin-bottom: 6px;
         font-weight: 600;
       }
@@ -221,7 +221,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .section-title {
         font-size: 1.1rem;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin: 0 0 12px 0;
         font-weight: 600;
         letter-spacing: 0.5px;
@@ -237,8 +237,8 @@ export function formatDeityContent(deity: Deity): string {
       
       .domain-tag {
         padding: 6px 12px;
-        background: var(--color-surface, #1a1a1a);
-        border: 1px solid var(--color-border, #333);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: 20px;
         font-size: 0.9rem;
         font-weight: 500;
@@ -246,7 +246,7 @@ export function formatDeityContent(deity: Deity): string {
       }
       
       .domain-tag:hover {
-        background: var(--color-surface-hover, #252525);
+        background: var(--color-surface-hover);
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       }
@@ -271,7 +271,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .description-content {
         background: rgba(255, 255, 255, 0.02);
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        border-left: 3px solid var(--legacy-primary);
         padding: 16px 20px;
         border-radius: 4px;
         line-height: 1.8;
@@ -295,16 +295,16 @@ export function formatDeityContent(deity: Deity): string {
       .description-content blockquote {
         margin: 16px 0;
         padding: 12px 16px;
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        border-left: 3px solid var(--legacy-primary);
         background: rgba(74, 158, 255, 0.1);
         font-style: italic;
       }
       
       .description-content.no-description {
         background: rgba(255, 255, 255, 0.01);
-        border-left-color: var(--color-text-secondary, #999);
+        border-left-color: var(--color-text-secondary);
         font-style: italic;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
       }
       
       .no-description-message {
@@ -319,20 +319,20 @@ export function formatDeityContent(deity: Deity): string {
       
       .description-reference {
         font-size: 0.9rem;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin-top: 12px;
       }
       
       .additional-sources {
         margin: 20px 0;
         padding: 12px;
-        background: var(--color-surface, #1a1a1a);
+        background: var(--color-surface);
         border-radius: 6px;
       }
       
       .subsection-title {
         font-size: 0.9rem;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         margin: 0 0 8px 0;
         font-weight: 600;
       }
@@ -350,7 +350,7 @@ export function formatDeityContent(deity: Deity): string {
       .deity-footer {
         margin-top: 24px;
         padding-top: 16px;
-        border-top: 1px solid var(--color-border, #333);
+        border-top: 1px solid var(--color-border);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -366,22 +366,22 @@ export function formatDeityContent(deity: Deity): string {
       
       .source-badge {
         padding: 4px 8px;
-        background: var(--color-surface, #1a1a1a);
-        border: 1px solid var(--color-border, #333);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: 4px;
         font-family: monospace;
         font-weight: 600;
       }
       
       .page-reference {
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-style: italic;
       }
       
       .srd-indicator {
         padding: 4px 8px;
-        background: var(--color-primary, #4a9eff);
-        color: var(--color-background, #0d0d0d);
+        background: var(--legacy-primary);
+        color: var(--color-background);
         border-radius: 4px;
         font-weight: 600;
         font-size: 0.8rem;

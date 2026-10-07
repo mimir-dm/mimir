@@ -696,7 +696,7 @@ onMounted(() => {
   text-transform: uppercase;
   padding: 0.1rem 0.35rem;
   border-radius: 0.2rem;
-  background: var(--color-warning, #f59e0b);
+  background: var(--color-warning);
   color: #000;
   vertical-align: middle;
   margin-left: 0.35rem;
@@ -747,12 +747,12 @@ onMounted(() => {
 .dnd-content :deep(.damage-roll) {
   font-family: monospace;
   font-weight: 700;
-  color: var(--color-dnd-damage, #ff6b6b);
+  color: var(--color-dnd-damage);
 }
 
 .dnd-content :deep(.hit-bonus) {
   font-weight: 700;
-  color: var(--color-success, #34d399);
+  color: var(--color-success);
 }
 
 </style>

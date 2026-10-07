@@ -62,7 +62,7 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
     <style>
       .reward-details {
         padding: var(--spacing-md, 12px);
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .detail-header {
@@ -71,7 +71,7 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .header-tags {
@@ -135,8 +135,8 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       }
       
       .content-section h3 {
-        color: var(--color-text, #e0e0e0);
-        border-bottom: 1px solid var(--color-border, #333);
+        color: var(--color-text);
+        border-bottom: 1px solid var(--color-border);
         padding-bottom: var(--spacing-xs, 4px);
         margin-bottom: var(--spacing-sm, 8px);
       }
@@ -158,31 +158,31 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       
       .spell-frequency {
         font-weight: bold;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .spell-name {
-        color: var(--color-accent, #ff6b6b);
+        color: var(--legacy-accent);
         cursor: pointer;
         text-decoration: underline;
       }
       
       .spell-name:hover {
-        color: var(--color-accent-hover, #ff8787);
+        color: var(--legacy-accent-hover);
       }
       
       .source-info {
         margin-top: var(--spacing-lg, 16px);
         padding-top: var(--spacing-md, 12px);
-        border-top: 1px solid var(--color-border, #333);
-        color: var(--color-text-secondary, #999);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
         font-size: 0.9rem;
       }
       
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--color-border-light, #262626);
+        border-left: 2px solid var(--legacy-border-light);
       }
       
       ul, ol {

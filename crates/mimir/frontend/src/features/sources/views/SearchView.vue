@@ -212,12 +212,12 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--color-background, #0d0d0d);
+  background: var(--color-background);
 }
 
 .catalog-header {
-  background: var(--color-surface, #1a1a1a);
-  border-bottom: 1px solid var(--color-border, #333);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-controls {
@@ -236,20 +236,20 @@ onMounted(() => {
 .search-input {
   width: 100%;
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-background, #0d0d0d);
-  border: 1px solid var(--color-border, #333);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--color-primary, #4a9eff);
+  border-color: var(--legacy-primary);
 }
 
 .results-count {
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 

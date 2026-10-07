@@ -646,7 +646,7 @@ onUnmounted(() => {
 }
 
 .entry.selected {
-  box-shadow: inset 0 0 0 2px var(--color-primary-500, #3b82f6);
+  box-shadow: inset 0 0 0 2px var(--color-primary-500);
 }
 
 .linked {

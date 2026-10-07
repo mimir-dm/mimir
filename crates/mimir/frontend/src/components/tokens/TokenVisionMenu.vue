@@ -194,8 +194,8 @@ async function handleReset() {
 <style scoped>
 .vision-menu {
   position: fixed;
-  background: var(--color-bg-secondary, #1e1e1e);
-  border: 1px solid var(--color-border, #333);
+  background: var(--legacy-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 12px;
   min-width: 200px;
@@ -210,25 +210,25 @@ async function handleReset() {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border, #333);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .token-name {
   font-weight: 600;
-  color: var(--color-text-primary, #fff);
+  color: var(--legacy-text-primary);
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: var(--color-text-secondary, #888);
+  color: var(--color-text-secondary);
   font-size: 18px;
   cursor: pointer;
   padding: 0 4px;
 }
 
 .close-btn:hover {
-  color: var(--color-text-primary, #fff);
+  color: var(--legacy-text-primary);
 }
 
 .menu-section {
@@ -239,17 +239,17 @@ async function handleReset() {
   display: block;
   font-size: 11px;
   text-transform: uppercase;
-  color: var(--color-text-secondary, #888);
+  color: var(--color-text-secondary);
   margin-bottom: 6px;
 }
 
 .preset-select {
   width: 100%;
   padding: 6px 8px;
-  background: var(--color-bg-tertiary, #2a2a2a);
-  border: 1px solid var(--color-border, #333);
+  background: var(--legacy-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text-primary, #fff);
+  color: var(--legacy-text-primary);
   font-size: 13px;
 }
 
@@ -262,22 +262,22 @@ async function handleReset() {
 
 .input-row label {
   width: 50px;
-  color: var(--color-text-secondary, #aaa);
+  color: var(--color-text-secondary);
 }
 
 .input-row input {
   flex: 1;
   padding: 4px 8px;
-  background: var(--color-bg-tertiary, #2a2a2a);
-  border: 1px solid var(--color-border, #333);
+  background: var(--legacy-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text-primary, #fff);
+  color: var(--legacy-text-primary);
   font-size: 13px;
   width: 60px;
 }
 
 .input-row input::placeholder {
-  color: var(--color-text-secondary, #666);
+  color: var(--color-text-secondary);
 }
 
 .light-presets {
@@ -289,39 +289,39 @@ async function handleReset() {
 .light-btn {
   flex: 1;
   padding: 4px 8px;
-  background: var(--color-bg-tertiary, #2a2a2a);
-  border: 1px solid var(--color-border, #333);
+  background: var(--legacy-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text-secondary, #aaa);
+  color: var(--color-text-secondary);
   font-size: 11px;
   cursor: pointer;
 }
 
 .light-btn:hover {
-  background: var(--color-bg-hover, #3a3a3a);
-  color: var(--color-text-primary, #fff);
+  background: var(--legacy-bg-hover);
+  color: var(--legacy-text-primary);
 }
 
 .menu-footer {
   margin-top: 12px;
   padding-top: 8px;
-  border-top: 1px solid var(--color-border, #333);
+  border-top: 1px solid var(--color-border);
 }
 
 .reset-btn {
   width: 100%;
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid var(--color-border, #444);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text-secondary, #888);
+  color: var(--color-text-secondary);
   font-size: 12px;
   cursor: pointer;
 }
 
 .reset-btn:hover:not(:disabled) {
-  background: var(--color-bg-hover, #3a3a3a);
-  color: var(--color-text-primary, #fff);
+  background: var(--legacy-bg-hover);
+  color: var(--legacy-text-primary);
 }
 
 .reset-btn:disabled {

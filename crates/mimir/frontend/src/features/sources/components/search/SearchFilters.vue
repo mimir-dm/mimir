@@ -113,24 +113,24 @@ function emitUpdate() {
 
 .search-filters select {
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: var(--color-background, #0d0d0d);
-  border: 1px solid var(--color-border, #333);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   font-size: 0.85rem;
   cursor: pointer;
 }
 
 .search-filters select:focus {
   outline: none;
-  border-color: var(--color-primary, #4a9eff);
+  border-color: var(--legacy-primary);
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
   cursor: pointer;
 }

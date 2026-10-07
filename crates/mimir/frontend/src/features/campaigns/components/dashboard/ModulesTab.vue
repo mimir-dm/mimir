@@ -1306,7 +1306,7 @@ onMounted(async () => {
 }
 
 .btn-danger:hover {
-  background: var(--color-error-dark, #dc2626);
+  background: var(--color-error-dark);
 }
 
 /* Empty state */
@@ -1432,7 +1432,7 @@ onMounted(async () => {
   display: inline-block;
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-warning-100, rgba(245, 158, 11, 0.1));
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1466,12 +1466,12 @@ onMounted(async () => {
 .npc-secrets {
   padding: var(--spacing-sm);
   background: var(--color-error-100, rgba(239, 68, 68, 0.05));
-  border: 1px dashed var(--color-error, #ef4444);
+  border: 1px dashed var(--color-error);
   border-radius: var(--radius-sm);
 }
 
 .npc-secrets h4 {
-  color: var(--color-error, #ef4444);
+  color: var(--color-error);
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -1480,7 +1480,7 @@ onMounted(async () => {
 .dm-only-badge {
   font-size: 0.6rem;
   padding: 2px 6px;
-  background: var(--color-error, #ef4444);
+  background: var(--color-error);
   color: white;
   border-radius: 2px;
   text-transform: uppercase;

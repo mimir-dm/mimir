@@ -61,12 +61,12 @@ const props = defineProps<Props>()
 }
 
 .error-message h2 {
-  color: var(--color-danger, #ff4444);
+  color: var(--legacy-danger);
   margin-bottom: var(--spacing-md, 12px);
 }
 
 .error-message p {
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
 }
 
 .book-content {
@@ -83,41 +83,41 @@ const props = defineProps<Props>()
   font-size: 2rem;
   margin-top: 0;
   margin-bottom: var(--spacing-lg, 16px);
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .book-content :deep(h2) {
   font-size: 1.5rem;
   margin-top: var(--spacing-xl, 24px);
   margin-bottom: var(--spacing-md, 12px);
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .book-content :deep(h3) {
   font-size: 1.25rem;
   margin-top: var(--spacing-lg, 16px);
   margin-bottom: var(--spacing-sm, 8px);
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .book-content :deep(h4) {
   font-size: 1.1rem;
   margin-top: var(--spacing-md, 12px);
   margin-bottom: var(--spacing-sm, 8px);
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 .book-content :deep(p) {
   margin-bottom: var(--spacing-md, 12px);
   line-height: 1.6;
-  color: var(--color-text-secondary, #ccc);
+  color: var(--color-text-secondary);
 }
 
 .book-content :deep(ul),
 .book-content :deep(ol) {
   margin-bottom: var(--spacing-md, 12px);
   padding-left: var(--spacing-xl, 24px);
-  color: var(--color-text-secondary, #ccc);
+  color: var(--color-text-secondary);
 }
 
 .book-content :deep(li) {
@@ -126,17 +126,17 @@ const props = defineProps<Props>()
 }
 
 .book-content :deep(strong) {
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   font-weight: 600;
 }
 
 .book-content :deep(em) {
   font-style: italic;
-  color: var(--color-text-emphasis, #f0f0f0);
+  color: var(--legacy-text-emphasis);
 }
 
 .book-content :deep(code) {
-  background: var(--color-surface, #1a1a1a);
+  background: var(--color-surface);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
@@ -144,10 +144,10 @@ const props = defineProps<Props>()
 }
 
 .book-content :deep(blockquote) {
-  border-left: 4px solid var(--color-primary, #4a9eff);
+  border-left: 4px solid var(--legacy-primary);
   padding-left: var(--spacing-md, 12px);
   margin: var(--spacing-md, 12px) 0;
   font-style: italic;
-  color: var(--color-text-secondary, #ccc);
+  color: var(--color-text-secondary);
 }
 </style>

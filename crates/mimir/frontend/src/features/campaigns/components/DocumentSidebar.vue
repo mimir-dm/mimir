@@ -447,7 +447,7 @@ onMounted(() => {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--color-border, #333);
+  background: var(--color-border);
 }
 
 .document-divider span {
@@ -455,7 +455,7 @@ onMounted(() => {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted, #888);
+  color: var(--legacy-text-muted);
   white-space: nowrap;
 }
 
@@ -470,11 +470,11 @@ onMounted(() => {
 }
 
 .document-item:hover {
-  background: var(--color-surface-variant, #252525);
+  background: var(--color-surface-variant);
 }
 
 .document-item.selected {
-  background: var(--color-primary-100, #e0f2fe);
+  background: var(--color-primary-100);
 }
 
 .document-icon-svg {
@@ -482,17 +482,17 @@ onMounted(() => {
   height: 16px;
   opacity: 0.7;
   flex-shrink: 0;
-  color: var(--color-text-muted, #888);
+  color: var(--legacy-text-muted);
 }
 
 .document-icon-svg.asset-icon {
-  color: var(--color-primary-400, #60a5fa);
+  color: var(--color-primary-400);
 }
 
 .document-title {
   flex: 1;
   font-size: 0.875rem;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
 }
 
 /* Loading/Empty states */
@@ -500,7 +500,7 @@ onMounted(() => {
 .empty-state {
   padding: var(--spacing-lg, 16px);
   text-align: center;
-  color: var(--color-text-muted, #888);
+  color: var(--legacy-text-muted);
   font-size: 0.875rem;
 }
 
@@ -567,7 +567,7 @@ onMounted(() => {
 
 .delete-btn:hover {
   background: var(--color-error-100, rgba(239, 68, 68, 0.1));
-  color: var(--color-error, #ef4444);
+  color: var(--color-error);
 }
 
 .delete-btn svg {
@@ -578,7 +578,7 @@ onMounted(() => {
 /* Delete modal styles */
 .delete-warning {
   font-size: 0.875rem;
-  color: var(--color-error, #ef4444);
+  color: var(--color-error);
   margin-top: 0.5rem;
 }
 
@@ -602,12 +602,12 @@ onMounted(() => {
 }
 
 .btn-danger {
-  background: var(--color-error, #ef4444);
+  background: var(--color-error);
   color: white;
   border: none;
 }
 
 .btn-danger:hover {
-  background: var(--color-error-dark, #dc2626);
+  background: var(--color-error-dark);
 }
 </style>

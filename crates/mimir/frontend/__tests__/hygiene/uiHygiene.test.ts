@@ -8,7 +8,7 @@ import path from 'node:path'
 
 const SRC = path.resolve(__dirname, '../../src')
 
-/** Every .vue and .ts file under src (tests excluded), as [relative path, text]. */
+/** Every .vue, .ts and .css file under src (tests excluded), as [relative path, text]. */
 function sources(): [string, string][] {
   const out: [string, string][] = []
   const walk = (dir: string) => {
@@ -16,7 +16,7 @@ function sources(): [string, string][] {
       const full = path.join(dir, entry.name)
       if (entry.isDirectory()) {
         if (entry.name !== '__tests__') walk(full)
-      } else if (/\.(vue|ts)$/.test(entry.name) && !entry.name.endsWith('.d.ts')) {
+      } else if (/\.(vue|ts|css)$/.test(entry.name) && !entry.name.endsWith('.d.ts')) {
         out.push([path.relative(SRC, full), fs.readFileSync(full, 'utf8')])
       }
     }
@@ -42,5 +42,19 @@ describe('UI hygiene', () => {
     // useDialog.ts falls back to the native dialogs only when a window has no DialogHost.
     const hits = matches(/(^|[^.\w])(window\.)?(confirm|alert)\(/, (f) => f === path.join('composables', 'useDialog.ts'))
     expect(hits, 'use useDialog().confirm / .alert instead').toEqual([])
+  })
+
+  it('has no hard-coded hex fallbacks in var() (MIMIR-T-0686)', () => {
+    // A fallback hides a token that no theme defines. Define the token instead.
+    expect(matches(/var\(--[\w-]+\s*,\s*#[0-9a-fA-F]{3,8}\s*\)/)).toEqual([])
+  })
+
+  it('defines every legacy color it uses in the shared root (MIMIR-T-0686)', () => {
+    const main = fs.readFileSync(path.join(SRC, 'assets/styles/main.css'), 'utf8')
+    const defined = new Set([...main.matchAll(/(--legacy-[\w-]+)\s*:/g)].map((m) => m[1]))
+    const used = new Set(sources().flatMap(([, text]) => [...text.matchAll(/var\((--legacy-[\w-]+)\)/g)].map((m) => m[1])))
+    expect([...used].filter((t) => !defined.has(t))).toEqual([])
+    // A legacy color that nothing uses any more is deleted.
+    expect([...defined].filter((t) => !used.has(t))).toEqual([])
   })
 })

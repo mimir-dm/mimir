@@ -232,7 +232,7 @@ defineEmits<{
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: var(--color-base-200);
-  border-bottom: 2px solid var(--color-dnd-creature, #ff9f43);
+  border-bottom: 2px solid var(--color-dnd-creature);
 }
 
 .monster-title h2 {
@@ -366,7 +366,7 @@ defineEmits<{
 .ability-item .ability-mod {
   display: block;
   font-size: 0.7rem;
-  color: var(--color-dnd-creature, #ff9f43);
+  color: var(--color-dnd-creature);
   font-weight: 600;
 }
 
@@ -397,7 +397,7 @@ defineEmits<{
 }
 
 .stat-section.actions summary {
-  color: var(--color-dnd-damage, #ff6b6b);
+  color: var(--color-dnd-damage);
 }
 
 .stat-section.legendary summary {
@@ -466,7 +466,7 @@ defineEmits<{
 .monster-panel :deep(.spell-ref),
 .monster-panel :deep(.item-ref),
 .monster-panel :deep(.condition-ref) {
-  color: var(--color-primary, #4a9eff);
+  color: var(--legacy-primary);
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;
@@ -476,12 +476,12 @@ defineEmits<{
 .monster-panel :deep(.damage-roll) {
   font-family: monospace;
   font-weight: 700;
-  color: var(--color-dnd-damage, #ff6b6b);
+  color: var(--color-dnd-damage);
 }
 
 .monster-panel :deep(.hit-bonus) {
   font-weight: 700;
-  color: var(--color-success, #34d399);
+  color: var(--color-success);
 }
 
 /* Monster Footer */

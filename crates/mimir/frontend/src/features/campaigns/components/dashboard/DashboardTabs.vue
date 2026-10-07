@@ -71,8 +71,8 @@ function onTabClick(tabId: DashboardTab) {
 <style scoped>
 .dashboard-tabs {
   display: flex;
-  background: var(--color-surface, #1a1a1a);
-  border-bottom: 1px solid var(--color-border, #333);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   padding: 0 var(--spacing-lg, 16px);
 }
 
@@ -89,7 +89,7 @@ function onTabClick(tabId: DashboardTab) {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: var(--color-text-muted, #888);
+  color: var(--legacy-text-muted);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -98,13 +98,13 @@ function onTabClick(tabId: DashboardTab) {
 }
 
 .tab-button:hover {
-  color: var(--color-text, #e0e0e0);
-  background: var(--color-base-200, #242424);
+  color: var(--color-text);
+  background: var(--legacy-base-200);
 }
 
 .tab-button.active {
-  color: var(--color-primary, #4a9eff);
-  border-bottom-color: var(--color-primary, #4a9eff);
+  color: var(--legacy-primary);
+  border-bottom-color: var(--legacy-primary);
 }
 
 .tab-icon {

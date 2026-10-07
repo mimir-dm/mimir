@@ -656,8 +656,8 @@ onUnmounted(() => {
 
 .npc-badge {
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-warning-bg, #fef3c7);
-  color: var(--color-warning, #d97706);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
@@ -893,7 +893,7 @@ onUnmounted(() => {
 }
 
 .skill-proficient.expertise {
-  color: var(--color-success, #059669);
+  color: var(--color-success);
 }
 
 .skill-name {
@@ -1524,12 +1524,12 @@ onUnmounted(() => {
 }
 
 .feature-links a.subclass-feature {
-  color: var(--color-secondary-500, #9c27b0);
+  color: var(--legacy-secondary-500);
   font-style: italic;
 }
 
 .feature-links a.subclass-feature:hover {
-  color: var(--color-secondary-600, #7b1fa2);
+  color: var(--legacy-secondary-600);
 }
 
 /* Classes */

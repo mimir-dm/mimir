@@ -26,15 +26,15 @@ defineProps<Props>()
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--color-surface, #1a1a1a);
-  border-top-color: var(--color-primary, #4a9eff);
+  border: 4px solid var(--color-surface);
+  border-top-color: var(--legacy-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .loading-message {
   margin-top: var(--spacing-md, 12px);
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-size: var(--font-size-base, 1rem);
 }
 
