@@ -9,6 +9,7 @@ mod campaign;
 pub mod catalog;
 mod catalog_search;
 mod character;
+mod combat;
 mod document;
 mod homebrew;
 mod map;
@@ -40,6 +41,10 @@ pub use character::{
     AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput, FeatureChoices,
     FeatureReference, HpGainMethod, InvocationChoices, LevelUpRequest, LevelUpResult,
     ManeuverChoices, SpellChanges, SpellReference, SubclassChoice, UpdateCharacterInput,
+};
+pub use combat::{
+    ActiveCondition, CombatEntryView, CombatService, CombatState, DamageResult, HpChange,
+    SRD_CONDITIONS,
 };
 pub use document::{CreateDocumentInput, DocumentService, UpdateDocumentInput};
 pub use homebrew::{

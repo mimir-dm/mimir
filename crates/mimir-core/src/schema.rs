@@ -274,6 +274,39 @@ diesel::table! {
 }
 
 diesel::table! {
+    combat_entries (id) {
+        id -> Text,
+        session_id -> Text,
+        source_kind -> Text,
+        source_id -> Nullable<Text>,
+        token_id -> Nullable<Text>,
+        display_name -> Text,
+        initiative -> Nullable<Integer>,
+        dex_modifier -> Nullable<Integer>,
+        max_hp -> Nullable<Integer>,
+        current_hp -> Nullable<Integer>,
+        temp_hp -> Integer,
+        is_concentrating -> Integer,
+        conditions -> Text,
+        damage_log -> Text,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    combat_sessions (id) {
+        id -> Text,
+        module_id -> Text,
+        round -> Integer,
+        turn_index -> Integer,
+        status -> Text,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
     conditions (id) {
         id -> Nullable<Integer>,
         name -> Text,
@@ -701,6 +734,8 @@ diesel::joinable!(character_sources -> catalog_sources (source_code));
 diesel::joinable!(character_spells -> characters (character_id));
 diesel::joinable!(characters -> campaigns (campaign_id));
 diesel::joinable!(classes -> catalog_sources (source));
+diesel::joinable!(combat_entries -> combat_sessions (session_id));
+diesel::joinable!(combat_sessions -> modules (module_id));
 diesel::joinable!(conditions -> catalog_sources (source));
 diesel::joinable!(cults -> catalog_sources (source));
 diesel::joinable!(deities -> catalog_sources (source));
@@ -766,6 +801,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     character_spells,
     characters,
     classes,
+    combat_entries,
+    combat_sessions,
     conditions,
     cults,
     deities,

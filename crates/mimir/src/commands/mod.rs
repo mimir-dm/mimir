@@ -8,6 +8,7 @@ pub mod asset;
 pub mod campaign;
 pub mod catalog;
 pub mod character;
+pub mod combat;
 pub mod dev;
 pub mod dm_map;
 pub mod document;
