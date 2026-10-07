@@ -139,4 +139,53 @@ describe('useCombatSession', () => {
     expect(combat.error.value).toContain('this combat has ended')
     expect(combat.round.value).toBe(3)
   })
+
+  describe('HP (MIMIR-T-0678)', () => {
+    function withHp(): CombatState {
+      const g = entry('g', 'Goblin', 12)
+      g.max_hp = 7
+      g.current_hp = 7
+      return state(1, [entry('a', 'A', 15), g], 'a')
+    }
+
+    it('applies damage and patches only that entry', async () => {
+      mockCommand('start_combat', withHp())
+      mockCommand('combat_damage', { entry: { ...withHp().entries[1], current_hp: 3 }, concentration_dc: null })
+      const combat = useCombatSession('m1')
+      await combat.start()
+      const result = await combat.damage('g', 4)
+      expectCommandCalledWith('combat_damage', { entryId: 'g', amount: 4 })
+      expect(result?.concentration_dc).toBeNull()
+      expect(combat.state.value?.entries.map((e) => e.current_hp)).toEqual([null, 3])
+      expect(combat.state.value?.entries.map((e) => e.display_name)).toEqual(['A', 'Goblin'])
+    })
+
+    it('heals, sets temp HP and max HP', async () => {
+      mockCommand('start_combat', withHp())
+      mockCommand('combat_heal', { ...withHp().entries[1], current_hp: 7 })
+      mockCommand('set_combat_temp_hp', { ...withHp().entries[1], temp_hp: 5 })
+      mockCommand('set_combat_max_hp', { ...withHp().entries[0], max_hp: 30, current_hp: 30 })
+      const combat = useCombatSession('m1')
+      await combat.start()
+
+      await combat.heal('g', 2)
+      expectCommandCalledWith('combat_heal', { entryId: 'g', amount: 2 })
+      await combat.setTempHp('g', 5)
+      expectCommandCalledWith('set_combat_temp_hp', { entryId: 'g', amount: 5 })
+      expect(combat.state.value?.entries[1].temp_hp).toBe(5)
+      await combat.setMaxHp('a', 30)
+      expectCommandCalledWith('set_combat_max_hp', { entryId: 'a', maxHp: 30 })
+      expect(combat.state.value?.entries[0].current_hp).toBe(30)
+    })
+
+    it('leaves HP unchanged when the backend refuses', async () => {
+      mockCommand('start_combat', withHp())
+      mockCommandError('combat_damage', 'damage must not be negative')
+      const combat = useCombatSession('m1')
+      await combat.start()
+      expect(await combat.damage('g', -1)).toBeNull()
+      expect(combat.state.value?.entries[1].current_hp).toBe(7)
+      expect(combat.error.value).toContain('negative')
+    })
+  })
 })

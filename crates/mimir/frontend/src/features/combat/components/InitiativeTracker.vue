@@ -39,25 +39,93 @@
             :class="{ current: e.id === combat.state.value.current_entry_id, down: e.current_hp === 0 }"
             data-testid="combat-entry"
           >
-            <input
-              class="entry-initiative"
-              type="number"
-              :value="e.initiative ?? ''"
-              :aria-label="`Initiative for ${e.display_name}`"
-              placeholder="–"
-              @change="onInitiativeChange(e.id, $event)"
-            />
-            <span class="entry-name">{{ e.display_name }}</span>
-            <span class="entry-hp" :title="hpTitle(e)">{{ hpText(e) }}</span>
-            <button
-              class="remove"
-              data-testid="remove-entry"
-              :aria-label="`Remove ${e.display_name}`"
-              title="Remove from combat"
-              @click="combat.removeEntry(e.id)"
-            >
-              ×
-            </button>
+            <div class="entry-row">
+              <input
+                class="entry-initiative"
+                type="number"
+                :value="e.initiative ?? ''"
+                :aria-label="`Initiative for ${e.display_name}`"
+                placeholder="–"
+                @change="onInitiativeChange(e.id, $event)"
+              />
+              <button
+                class="entry-name"
+                :aria-expanded="expandedId === e.id"
+                :title="`Show HP controls for ${e.display_name}`"
+                @click="toggleExpanded(e.id)"
+              >
+                {{ e.display_name }}
+              </button>
+              <span class="entry-hp" :title="hpTitle(e)">{{ hpText(e) }}</span>
+              <button
+                class="remove"
+                data-testid="remove-entry"
+                :aria-label="`Remove ${e.display_name}`"
+                title="Remove from combat"
+                @click="combat.removeEntry(e.id)"
+              >
+                ×
+              </button>
+            </div>
+
+            <div v-if="expandedId === e.id" class="entry-details" data-testid="entry-details">
+              <template v-if="e.current_hp !== null">
+                <div class="hp-bar" :title="hpTitle(e)">
+                  <div
+                    class="hp-bar-fill"
+                    data-testid="hp-bar-fill"
+                    :class="hpBand(e)"
+                    :style="{ width: `${hpPercent(e)}%` }"
+                  />
+                </div>
+                <div class="hp-actions">
+                  <input
+                    v-model="hpAmount"
+                    class="hp-amount"
+                    data-testid="hp-amount"
+                    type="number"
+                    min="0"
+                    placeholder="HP"
+                    :aria-label="`HP amount for ${e.display_name}`"
+                    @keydown.enter="applyDamage(e.id)"
+                  />
+                  <button class="btn btn-danger" data-testid="hp-damage" :disabled="!validAmount" @click="applyDamage(e.id)">
+                    Damage
+                  </button>
+                  <button class="btn btn-success" data-testid="hp-heal" :disabled="!validAmount" @click="applyHeal(e.id)">
+                    Heal
+                  </button>
+                </div>
+                <label class="temp-hp">
+                  Temp HP
+                  <input
+                    data-testid="temp-hp"
+                    type="number"
+                    min="0"
+                    :value="e.temp_hp"
+                    @change="onTempHpChange(e.id, $event)"
+                  />
+                </label>
+              </template>
+              <div v-else class="set-hp">
+                <input
+                  v-model="maxHpInput"
+                  data-testid="set-max-hp"
+                  type="number"
+                  min="1"
+                  placeholder="Max HP"
+                  :aria-label="`Max HP for ${e.display_name}`"
+                />
+                <button class="btn" data-testid="save-max-hp" :disabled="!validMaxHp" @click="saveMaxHp(e.id)">
+                  Set HP
+                </button>
+              </div>
+              <ul v-if="e.damage_log.length" class="hp-log" data-testid="hp-log" aria-label="Recent HP changes">
+                <li v-for="(change, i) in [...e.damage_log].reverse()" :key="i" :class="change.kind">
+                  {{ change.kind === 'damage' ? '−' : '+' }}{{ change.amount }} (round {{ change.round }})
+                </li>
+              </ul>
+            </div>
           </li>
           <li v-if="combat.state.value.entries.length === 0" class="empty">
             Add creatures below.
@@ -124,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { getMonsterDisplayName, type MonsterWithData } from '@/features/modules/composables/useModuleMonsters'
@@ -154,7 +222,65 @@ function toggleCollapsed() {
 }
 
 function hpText(e: CombatEntry): string {
-  return e.current_hp === null ? '—' : `${e.current_hp}/${e.max_hp ?? '?'}`
+  if (e.current_hp === null) return '—'
+  const temp = e.temp_hp > 0 ? ` +${e.temp_hp}` : ''
+  return `${e.current_hp}/${e.max_hp ?? '?'}${temp}`
+}
+
+// --- HP panel (one entry expanded at a time) ---------------------------------
+
+const expandedId = ref<string | null>(null)
+const hpAmount = ref<number | string>('')
+const maxHpInput = ref<number | string>('')
+
+function toggleExpanded(entryId: string) {
+  expandedId.value = expandedId.value === entryId ? null : entryId
+  hpAmount.value = ''
+  maxHpInput.value = ''
+}
+
+function positiveInt(value: number | string, min: number): number | null {
+  const n = typeof value === 'number' ? value : Number.parseInt(String(value).trim(), 10)
+  return Number.isInteger(n) && n >= min ? n : null
+}
+
+const validAmount = computed(() => positiveInt(hpAmount.value, 0) !== null)
+const validMaxHp = computed(() => positiveInt(maxHpInput.value, 1) !== null)
+
+function hpPercent(e: CombatEntry): number {
+  if (e.current_hp === null || !e.max_hp) return 0
+  return Math.round((Math.max(0, e.current_hp) / e.max_hp) * 100)
+}
+
+function hpBand(e: CombatEntry): string {
+  const pct = hpPercent(e)
+  return pct > 50 ? 'healthy' : pct > 0 ? 'bloodied' : 'down'
+}
+
+async function applyDamage(entryId: string) {
+  const amount = positiveInt(hpAmount.value, 0)
+  if (amount === null) return
+  const result = await combat.damage(entryId, amount)
+  if (result) hpAmount.value = ''
+}
+
+async function applyHeal(entryId: string) {
+  const amount = positiveInt(hpAmount.value, 0)
+  if (amount === null) return
+  await combat.heal(entryId, amount)
+  hpAmount.value = ''
+}
+
+function onTempHpChange(entryId: string, event: Event) {
+  const amount = positiveInt((event.target as HTMLInputElement).value, 0)
+  combat.setTempHp(entryId, amount ?? 0)
+}
+
+async function saveMaxHp(entryId: string) {
+  const maxHp = positiveInt(maxHpInput.value, 1)
+  if (maxHp === null) return
+  await combat.setMaxHp(entryId, maxHp)
+  maxHpInput.value = ''
 }
 
 function hpTitle(e: CombatEntry): string {
@@ -297,13 +423,16 @@ onMounted(() => {
 }
 
 .entry {
+  padding: 4px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+}
+
+.entry-row {
   display: grid;
   grid-template-columns: 44px 1fr auto 20px;
   align-items: center;
   gap: var(--spacing-xs);
-  padding: 4px var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  border-left: 3px solid transparent;
 }
 
 .entry.current {
@@ -331,6 +460,93 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
+.entry-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: var(--spacing-xs) 0 var(--spacing-xs) 48px;
+  font-weight: normal;
+}
+
+.hp-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  transition: width var(--transition-fast, 0.15s);
+}
+
+.hp-bar-fill.healthy {
+  background: var(--color-success);
+}
+
+.hp-bar-fill.bloodied {
+  background: var(--color-warning);
+}
+
+.hp-bar-fill.down {
+  background: var(--color-error);
+}
+
+.hp-actions,
+.set-hp {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.hp-amount,
+.set-hp input,
+.temp-hp input {
+  width: 64px;
+  min-width: 0;
+  padding: 2px 4px;
+  background: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.hp-actions .btn,
+.set-hp .btn {
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+
+.temp-hp {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.hp-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.hp-log .damage {
+  color: var(--color-error);
+}
+
+.hp-log .heal {
+  color: var(--color-success);
 }
 
 .entry-hp {

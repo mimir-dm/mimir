@@ -180,4 +180,102 @@ describe('InitiativeTracker', () => {
     await flushPromises()
     expect(wrapper.get('[data-testid="combat-error"]').text()).toContain('this combat has ended')
   })
+
+  describe('HP panel (MIMIR-T-0678)', () => {
+    async function expandGoblin2() {
+      mockCommand('get_active_combat', FIGHT)
+      const wrapper = await mountTracker()
+      await wrapper.findAll('[data-testid="combat-entry"]')[2].get('.entry-name').trigger('click')
+      return wrapper
+    }
+
+    it('expands one entry at a time', async () => {
+      const wrapper = await expandGoblin2()
+      expect(wrapper.findAll('[data-testid="entry-details"]')).toHaveLength(1)
+      await wrapper.findAll('[data-testid="combat-entry"]')[1].get('.entry-name').trigger('click')
+      const details = wrapper.findAll('[data-testid="entry-details"]')
+      expect(details).toHaveLength(1)
+      expect(wrapper.findAll('[data-testid="combat-entry"]')[1].find('[data-testid="entry-details"]').exists()).toBe(true)
+      // Clicking the open entry closes it.
+      await wrapper.findAll('[data-testid="combat-entry"]')[1].get('.entry-name').trigger('click')
+      expect(wrapper.find('[data-testid="entry-details"]').exists()).toBe(false)
+    })
+
+    it('shows an HP bar sized to current/max', async () => {
+      const wrapper = await expandGoblin2()
+      const bar = wrapper.get('[data-testid="hp-bar-fill"]')
+      expect(bar.attributes('style')).toContain('width: 43%') // 3 of 7
+    })
+
+    it('applies damage from the button and from Enter, and heals', async () => {
+      mockCommand('combat_damage', { entry: { ...FIGHT.entries[2], current_hp: 1 }, concentration_dc: null })
+      mockCommand('combat_heal', { ...FIGHT.entries[2], current_hp: 5 })
+      const wrapper = await expandGoblin2()
+      const amount = wrapper.get('[data-testid="hp-amount"]')
+
+      await amount.setValue('2')
+      await wrapper.get('[data-testid="hp-damage"]').trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('combat_damage', { entryId: 'g2', amount: 2 })
+      expect(wrapper.findAll('[data-testid="combat-entry"]')[2].get('.entry-hp').text()).toBe('1/7')
+      expect((amount.element as HTMLInputElement).value).toBe('')
+
+      await amount.setValue('3')
+      await amount.trigger('keydown', { key: 'Enter' })
+      await flushPromises()
+      expectCommandCalledWith('combat_damage', { entryId: 'g2', amount: 3 })
+
+      await amount.setValue('4')
+      await wrapper.get('[data-testid="hp-heal"]').trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('combat_heal', { entryId: 'g2', amount: 4 })
+    })
+
+    it('ignores empty or invalid amounts', async () => {
+      const wrapper = await expandGoblin2()
+      await wrapper.get('[data-testid="hp-amount"]').setValue('')
+      expect(wrapper.get('[data-testid="hp-damage"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-testid="hp-heal"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('sets temporary HP', async () => {
+      mockCommand('set_combat_temp_hp', { ...FIGHT.entries[2], temp_hp: 5 })
+      const wrapper = await expandGoblin2()
+      const temp = wrapper.get('[data-testid="temp-hp"]')
+      await temp.setValue('5')
+      await temp.trigger('change')
+      await flushPromises()
+      expectCommandCalledWith('set_combat_temp_hp', { entryId: 'g2', amount: 5 })
+      expect(wrapper.findAll('[data-testid="combat-entry"]')[2].get('.entry-hp').text()).toBe('3/7 +5')
+    })
+
+    it('lets an entry without HP get max HP', async () => {
+      mockCommand('get_active_combat', FIGHT)
+      mockCommand('set_combat_max_hp', { ...FIGHT.entries[0], max_hp: 44, current_hp: 44 })
+      const wrapper = await mountTracker()
+      await wrapper.findAll('[data-testid="combat-entry"]')[0].get('.entry-name').trigger('click')
+      expect(wrapper.find('[data-testid="hp-damage"]').exists()).toBe(false)
+      await wrapper.get('[data-testid="set-max-hp"]').setValue('44')
+      await wrapper.get('[data-testid="save-max-hp"]').trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('set_combat_max_hp', { entryId: 'pc', maxHp: 44 })
+      expect(wrapper.findAll('[data-testid="combat-entry"]')[0].get('.entry-hp').text()).toBe('44/44')
+    })
+
+    it('lists the recent HP changes, newest first', async () => {
+      const hurt: CombatState = {
+        ...FIGHT,
+        entries: FIGHT.entries.map((e) =>
+          e.id === 'g2'
+            ? { ...e, damage_log: [{ kind: 'damage', amount: 6, round: 1 }, { kind: 'heal', amount: 2, round: 2 }] }
+            : e,
+        ),
+      }
+      mockCommand('get_active_combat', hurt)
+      const wrapper = await mountTracker()
+      await wrapper.findAll('[data-testid="combat-entry"]')[2].get('.entry-name').trigger('click')
+      const items = wrapper.findAll('[data-testid="hp-log"] li').map((li) => li.text())
+      expect(items).toEqual(['+2 (round 2)', '−6 (round 1)'])
+    })
+  })
 })
