@@ -235,7 +235,7 @@ watch(() => props.trap, () => {
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: var(--color-base-200);
-  border-bottom: 2px solid var(--color-warning, #f59e0b);
+  border-bottom: 2px solid var(--color-warning);
 }
 
 .trap-title h2 {
@@ -302,7 +302,7 @@ watch(() => props.trap, () => {
   margin: 0 0 0.25rem 0;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
 }
 
 /* Lists */
@@ -375,7 +375,7 @@ watch(() => props.trap, () => {
 .trap-panel :deep(.spell-ref),
 .trap-panel :deep(.item-ref),
 .trap-panel :deep(.condition-ref) {
-  color: var(--color-primary, #4a9eff);
+  color: var(--legacy-primary);
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;
@@ -385,12 +385,12 @@ watch(() => props.trap, () => {
 .trap-panel :deep(.damage-roll) {
   font-family: monospace;
   font-weight: 700;
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
 }
 
 .trap-panel :deep(.hit-bonus) {
   font-weight: 700;
-  color: var(--color-success, #34d399);
+  color: var(--color-success);
 }
 
 /* Trap Footer */

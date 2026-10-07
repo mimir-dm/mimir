@@ -808,7 +808,7 @@ watch(() => props.visible, async (visible) => {
 }
 
 .homebrew-badge {
-  background: var(--color-warning, #f59e0b);
+  background: var(--color-warning);
   color: #fff;
 }
 

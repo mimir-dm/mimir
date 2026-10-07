@@ -602,7 +602,7 @@ const isFeatureLoading = (feature: ClassFeature): boolean => {
 }
 
 .skill-proficient.expertise {
-  color: var(--color-success, #059669);
+  color: var(--color-success);
 }
 
 .skill-name {

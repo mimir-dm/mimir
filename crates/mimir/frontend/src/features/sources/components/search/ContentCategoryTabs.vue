@@ -189,7 +189,7 @@ watch(activeTab, (newTab) => {
 .tabs-header {
   display: flex;
   gap: var(--spacing-xs, 4px);
-  border-bottom: 2px solid var(--color-border, #333);
+  border-bottom: 2px solid var(--color-border);
   padding-bottom: 0;
 }
 
@@ -198,7 +198,7 @@ watch(activeTab, (newTab) => {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -207,14 +207,14 @@ watch(activeTab, (newTab) => {
 }
 
 .tab-button:hover {
-  color: var(--color-text, #e0e0e0);
-  background: var(--color-surface-hover, #242424);
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
 .tab-button.active {
-  color: var(--color-primary, #4a9eff);
-  border-bottom-color: var(--color-primary, #4a9eff);
-  background: var(--color-surface, #1a1a1a);
+  color: var(--legacy-primary);
+  border-bottom-color: var(--legacy-primary);
+  background: var(--color-surface);
 }
 
 .tabs-content {
@@ -229,10 +229,10 @@ watch(activeTab, (newTab) => {
 
 .category-button {
   padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
-  background: var(--color-surface, #1a1a1a);
-  border: 1px solid var(--color-border, #333);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -240,14 +240,14 @@ watch(activeTab, (newTab) => {
 }
 
 .category-button:hover {
-  background: var(--color-surface-hover, #242424);
-  border-color: var(--color-primary, #4a9eff);
+  background: var(--color-surface-hover);
+  border-color: var(--legacy-primary);
 }
 
 .category-button.selected {
-  background: var(--color-primary, #4a9eff);
+  background: var(--legacy-primary);
   color: white;
-  border-color: var(--color-primary, #4a9eff);
+  border-color: var(--legacy-primary);
 }
 
 /* Mobile responsive */

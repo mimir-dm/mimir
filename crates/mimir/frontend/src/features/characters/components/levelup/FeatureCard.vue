@@ -112,7 +112,7 @@ const truncatedDescription = computed(() => {
 
 .feature-prereq {
   font-size: 0.7rem;
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
   font-style: italic;
 }
 

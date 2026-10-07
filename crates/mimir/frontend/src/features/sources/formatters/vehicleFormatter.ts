@@ -168,7 +168,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
     <style>
       .vehicle-details {
         padding: var(--spacing-md, 12px);
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .detail-header {
@@ -177,12 +177,12 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .srd-name {
         font-style: italic;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
@@ -227,15 +227,15 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       }
       
       .stat-block {
-        background: var(--color-surface, #1a1a1a);
+        background: var(--color-surface);
         padding: var(--spacing-md, 12px);
         border-radius: 6px;
-        border: 1px solid var(--color-border-light, #262626);
+        border: 1px solid var(--legacy-border-light);
       }
       
       .stat-block h4 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--color-accent, #ff6b6b);
+        color: var(--legacy-accent);
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -253,7 +253,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       
       .stat-line.note {
         font-style: italic;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-size: 0.85rem;
       }
       
@@ -273,7 +273,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       }
       
       .content-section h3 {
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
@@ -293,8 +293,8 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       .source-info {
         margin-top: var(--spacing-lg, 16px);
         padding-top: var(--spacing-md, 12px);
-        border-top: 1px solid var(--color-border, #333);
-        color: var(--color-text-secondary, #999);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
         font-size: 0.9rem;
       }
       
@@ -306,17 +306,17 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       }
       
       table th {
-        background: var(--color-surface, #1a1a1a);
-        color: var(--color-primary, #4a9eff);
+        background: var(--color-surface);
+        color: var(--legacy-primary);
         padding: var(--spacing-sm, 8px);
         text-align: left;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
         font-weight: 600;
       }
       
       table td {
         padding: var(--spacing-sm, 8px);
-        border: 1px solid var(--color-border-light, #262626);
+        border: 1px solid var(--legacy-border-light);
       }
       
       table tbody tr:nth-child(even) {
@@ -324,7 +324,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       }
       
       table tbody tr:hover {
-        background: var(--color-surface-hover, #262626);
+        background: var(--color-surface-hover);
       }
     </style>
   `

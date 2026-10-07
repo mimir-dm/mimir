@@ -373,6 +373,6 @@ defineExpose({
 }
 
 .btn-danger:hover {
-  background: var(--color-error-dark, #dc2626);
+  background: var(--color-error-dark);
 }
 </style>

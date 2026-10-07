@@ -335,13 +335,13 @@ watch(
 
 .input-error {
   font-size: 0.75rem;
-  color: var(--color-error, #dc2626);
+  color: var(--color-error);
 }
 
 .hp-summary {
   padding: var(--spacing-md);
-  background: var(--color-success-bg, #f0fdf4);
-  border: 1px solid var(--color-success, #22c55e);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius-md);
 }
 
@@ -359,7 +359,7 @@ watch(
 .summary-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
 }
 
 .summary-breakdown {

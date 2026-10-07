@@ -205,7 +205,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   }
   
   // Source with page - styled to bottom right
-  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border-light, #222);">'
+  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--legacy-border-light);">'
   html += `<span class="source-info">Source: ${fullMonster.source}`
   if (fullMonster.page) {
     html += `, p. ${fullMonster.page}`
@@ -251,7 +251,7 @@ function formatMonsterSummary(monster: MonsterSummary): string {
   }
   
   // Source with page - styled to bottom right
-  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border-light, #222);">'
+  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--legacy-border-light);">'
   html += `<span class="source-info">Source: ${monster.source}</span>`
   html += '</div>'
   html += '</div>'

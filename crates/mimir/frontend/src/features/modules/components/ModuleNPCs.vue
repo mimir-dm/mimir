@@ -239,7 +239,7 @@ onUnmounted(() => {
 .npc-card {
   background: var(--color-background);
   border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-warning, #f59e0b);
+  border-left: 3px solid var(--color-warning);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   cursor: pointer;
@@ -283,7 +283,7 @@ onUnmounted(() => {
 }
 
 .remove-npc:hover {
-  color: var(--color-error, #ef4444);
+  color: var(--color-error);
 }
 
 .npc-details {

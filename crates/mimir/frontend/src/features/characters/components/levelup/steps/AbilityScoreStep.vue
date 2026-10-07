@@ -631,7 +631,7 @@ onMounted(() => {
 }
 
 .feat-prereq.unmet {
-  color: var(--color-error, #dc2626);
+  color: var(--color-error);
 }
 
 .no-results {
@@ -701,8 +701,8 @@ onMounted(() => {
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: var(--color-success-bg, #f0fdf4);
-  border: 1px solid var(--color-success, #22c55e);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius-md);
 }
 
@@ -713,6 +713,6 @@ onMounted(() => {
 
 .selection-value {
   font-weight: 600;
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
 }
 </style>

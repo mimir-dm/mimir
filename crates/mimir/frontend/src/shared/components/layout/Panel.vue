@@ -40,14 +40,14 @@ const panelClass = computed(() => `panel-${props.variant}`)
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
-  border-bottom: 1px solid var(--color-border, #333);
-  background: var(--color-surface, #1a1a1a);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .panel-title {
   font-size: var(--font-size-lg, 1.125rem);
   font-weight: 600;
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -64,15 +64,15 @@ const panelClass = computed(() => `panel-${props.variant}`)
 
 /* Variants */
 .panel-default {
-  background: var(--color-background, #0d0d0d);
+  background: var(--color-background);
 }
 
 .panel-surface {
-  background: var(--color-surface, #1a1a1a);
+  background: var(--color-surface);
 }
 
 .panel-elevated {
-  background: var(--color-surface-elevated, #242424);
+  background: var(--legacy-surface-elevated);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

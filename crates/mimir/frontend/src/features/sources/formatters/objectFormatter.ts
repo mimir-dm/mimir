@@ -151,7 +151,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
     <style>
       .object-details {
         padding: 20px;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
         max-width: 900px;
         margin: 0 auto;
       }
@@ -159,20 +159,20 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       .object-header {
         margin-bottom: 24px;
         padding-bottom: 16px;
-        border-bottom: 2px solid var(--color-border, #333);
+        border-bottom: 2px solid var(--color-border);
         text-align: center;
       }
       
       .object-name {
         font-size: 2rem;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin: 0 0 8px 0;
         font-weight: 700;
       }
       
       .object-type {
         font-size: 1.1rem;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-style: italic;
       }
       
@@ -184,8 +184,8 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .stat-card {
-        background: var(--color-surface, #1a1a1a);
-        border: 1px solid var(--color-border, #333);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: 8px;
         padding: 12px;
         text-align: center;
@@ -193,8 +193,8 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .stat-card:hover {
-        background: var(--color-surface-hover, #252525);
-        border-color: var(--color-primary, #4a9eff);
+        background: var(--color-surface-hover);
+        border-color: var(--legacy-primary);
         transform: translateY(-2px);
       }
       
@@ -202,7 +202,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         margin-bottom: 8px;
         font-weight: 600;
       }
@@ -210,7 +210,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .ac-value {
@@ -225,7 +225,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
         margin: 24px 0;
         padding: 16px;
         background: rgba(255, 255, 255, 0.02);
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        border-left: 3px solid var(--legacy-primary);
         border-radius: 4px;
       }
       
@@ -235,7 +235,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .defense-row strong {
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin-right: 8px;
       }
       
@@ -245,7 +245,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .section-title {
         font-size: 1.3rem;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin: 0 0 16px 0;
         font-weight: 600;
         border-bottom: 1px solid rgba(74, 158, 255, 0.3);
@@ -255,14 +255,14 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       .action-block {
         margin: 20px 0;
         padding: 16px;
-        background: var(--color-surface, #1a1a1a);
+        background: var(--color-surface);
         border-radius: 6px;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
       }
       
       .action-name {
         font-size: 1.1rem;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin: 0 0 12px 0;
         font-weight: 600;
       }
@@ -271,7 +271,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
         margin: 12px 0;
         padding: 12px;
         background: rgba(74, 158, 255, 0.05);
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        border-left: 3px solid var(--legacy-primary);
         border-radius: 4px;
       }
       
@@ -291,7 +291,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .description-content {
         background: rgba(255, 255, 255, 0.02);
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        border-left: 3px solid var(--legacy-primary);
         padding: 16px 20px;
         border-radius: 4px;
         line-height: 1.8;
@@ -319,22 +319,22 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .description-content th {
-        background: var(--color-surface, #1a1a1a);
+        background: var(--color-surface);
         padding: 8px;
         text-align: left;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
         font-weight: 600;
       }
       
       .description-content td {
         padding: 8px;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
       }
       
       .object-footer {
         margin-top: 24px;
         padding-top: 16px;
-        border-top: 1px solid var(--color-border, #333);
+        border-top: 1px solid var(--color-border);
         display: flex;
         gap: 16px;
         align-items: center;
@@ -343,21 +343,21 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .source-badge {
         padding: 4px 8px;
-        background: var(--color-surface, #1a1a1a);
-        border: 1px solid var(--color-border, #333);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: 4px;
         font-family: monospace;
       }
       
       .page-ref {
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-style: italic;
       }
       
       .srd-badge {
         padding: 4px 8px;
-        background: var(--color-primary, #4a9eff);
-        color: var(--color-background, #0d0d0d);
+        background: var(--legacy-primary);
+        color: var(--color-background);
         border-radius: 4px;
         font-weight: 600;
       }

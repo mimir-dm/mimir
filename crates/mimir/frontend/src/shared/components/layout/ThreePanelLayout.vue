@@ -28,8 +28,8 @@
 .panel-left {
   width: 250px;
   min-width: 200px;
-  background: var(--color-surface, #1a1a1a);
-  border-right: 1px solid var(--color-border, #333);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -38,8 +38,8 @@
 .panel-center {
   width: 300px;
   min-width: 250px;
-  background: var(--color-background, #0d0d0d);
-  border-right: 1px solid var(--color-border, #333);
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -47,7 +47,7 @@
 
 .panel-right {
   flex: 1;
-  background: var(--color-background, #0d0d0d);
+  background: var(--color-background);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -76,7 +76,7 @@
     width: 100%;
     max-height: 30vh;
     border-right: none;
-    border-bottom: 1px solid var(--color-border, #333);
+    border-bottom: 1px solid var(--color-border);
   }
 }
 </style>

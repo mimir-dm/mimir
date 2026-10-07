@@ -10,7 +10,7 @@ export async function formatActionDetails(action: any): Promise<string> {
   // Add styles for better formatting
   content += `<style>
     .action-header {
-      border-bottom: 2px solid var(--color-border, #333);
+      border-bottom: 2px solid var(--color-border);
       padding-bottom: 1em;
       margin-bottom: 1em;
     }
@@ -19,17 +19,17 @@ export async function formatActionDetails(action: any): Promise<string> {
     }
     .source-info {
       font-size: 0.9em;
-      color: var(--color-text-secondary, #999);
+      color: var(--color-text-secondary);
     }
     .time-section {
-      background: var(--color-background-secondary, #1a1a1a);
+      background: var(--legacy-background-secondary);
       padding: 0.75em 1em;
       border-radius: 4px;
       margin: 1em 0;
-      border-left: 3px solid var(--color-primary, #4a9eff);
+      border-left: 3px solid var(--legacy-primary);
     }
     .time-section strong {
-      color: var(--color-primary, #4a9eff);
+      color: var(--legacy-primary);
     }
     .description-section {
       margin: 1.5em 0;
@@ -39,14 +39,14 @@ export async function formatActionDetails(action: any): Promise<string> {
       margin: 0.75em 0;
     }
     .see-also-section {
-      background: var(--color-background-secondary, #1a1a1a);
+      background: var(--legacy-background-secondary);
       padding: 1em;
       border-radius: 4px;
       margin-top: 1.5em;
     }
     .see-also-section h3 {
       margin-top: 0;
-      color: var(--color-primary, #4a9eff);
+      color: var(--legacy-primary);
       font-size: 1.1em;
     }
     .see-also-section ul {
@@ -59,18 +59,18 @@ export async function formatActionDetails(action: any): Promise<string> {
     .tags-section {
       margin-top: 1.5em;
       padding-top: 1em;
-      border-top: 1px solid var(--color-border, #333);
+      border-top: 1px solid var(--color-border);
     }
     .tags {
       display: flex;
       gap: 0.5em;
     }
     .tag {
-      background: var(--color-background-tertiary, #262626);
+      background: var(--legacy-background-tertiary);
       padding: 0.25em 0.75em;
       border-radius: 12px;
       font-size: 0.85em;
-      color: var(--color-text-secondary, #999);
+      color: var(--color-text-secondary);
     }
   </style>`
   

@@ -145,7 +145,7 @@ function getPoiIcon(iconName: string): string {
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: var(--color-base-200);
-  border-bottom: 2px solid var(--color-primary, #3b82f6);
+  border-bottom: 2px solid var(--legacy-primary);
 }
 
 .poi-title {
@@ -237,7 +237,7 @@ function getPoiIcon(iconName: string): string {
 }
 
 .visibility-value.visible {
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
 }
 
 .visibility-value.hidden {

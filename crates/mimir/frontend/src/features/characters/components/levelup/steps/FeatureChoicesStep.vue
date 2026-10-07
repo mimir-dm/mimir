@@ -684,8 +684,8 @@ onMounted(async () => {
   gap: var(--spacing-sm);
   flex-wrap: wrap;
   padding: var(--spacing-md);
-  background: var(--color-success-bg, #f0fdf4);
-  border: 1px solid var(--color-success, #22c55e);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius-md);
 }
 
@@ -696,7 +696,7 @@ onMounted(async () => {
 
 .selection-value {
   font-weight: 600;
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
 }
 
 .btn {

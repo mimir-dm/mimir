@@ -319,7 +319,7 @@ function getPoiIcon(iconName: string): string {
   font-weight: 700;
   padding: 0.05rem 0.3rem;
   border-radius: 0.2rem;
-  background: var(--color-warning, #f59e0b);
+  background: var(--color-warning);
   color: #000;
   vertical-align: middle;
   margin-left: 0.25rem;

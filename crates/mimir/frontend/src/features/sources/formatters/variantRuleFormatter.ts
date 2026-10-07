@@ -47,7 +47,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
     <style>
       .variant-rule-details {
         padding: var(--spacing-md, 12px);
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .detail-header {
@@ -56,7 +56,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .header-tags {
@@ -80,9 +80,9 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       }
       
       .tag-type.type-general {
-        background: var(--color-surface, #1a1a1a);
-        color: var(--color-text-secondary, #999);
-        border: 1px solid var(--color-border, #333);
+        background: var(--color-surface);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
       }
       
       .tag-type.type-action-options {
@@ -109,13 +109,13 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       }
       
       .content-section h3 {
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         margin-top: var(--spacing-lg, 16px);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
       .content-section h4 {
-        color: var(--color-accent, #ff6b6b);
+        color: var(--legacy-accent);
         margin-top: var(--spacing-md, 12px);
         margin-bottom: var(--spacing-xs, 4px);
       }
@@ -123,14 +123,14 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--color-border-light, #262626);
+        border-left: 2px solid var(--legacy-border-light);
       }
       
       .source-info {
         margin-top: var(--spacing-lg, 16px);
         padding-top: var(--spacing-md, 12px);
-        border-top: 1px solid var(--color-border, #333);
-        color: var(--color-text-secondary, #999);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
         font-size: 0.9rem;
       }
       
@@ -142,17 +142,17 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       }
       
       table th {
-        background: var(--color-surface, #1a1a1a);
-        color: var(--color-primary, #4a9eff);
+        background: var(--color-surface);
+        color: var(--legacy-primary);
         padding: var(--spacing-sm, 8px);
         text-align: left;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
         font-weight: 600;
       }
       
       table td {
         padding: var(--spacing-sm, 8px);
-        border: 1px solid var(--color-border-light, #262626);
+        border: 1px solid var(--legacy-border-light);
       }
       
       table tbody tr:nth-child(even) {
@@ -160,7 +160,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       }
       
       table tbody tr:hover {
-        background: var(--color-surface-hover, #262626);
+        background: var(--color-surface-hover);
       }
       
       ul, ol {
@@ -175,7 +175,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       blockquote {
         margin: var(--spacing-md, 12px) 0;
         padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
-        border-left: 3px solid var(--color-accent, #ff6b6b);
+        border-left: 3px solid var(--legacy-accent);
         background: rgba(255, 107, 107, 0.05);
         font-style: italic;
       }

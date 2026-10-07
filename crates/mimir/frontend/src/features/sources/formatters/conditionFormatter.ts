@@ -217,12 +217,12 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
         gap: 12px;
         margin-bottom: 16px;
         padding-bottom: 12px;
-        border-bottom: 2px solid var(--color-border, #333);
+        border-bottom: 2px solid var(--color-border);
       }
       
       .condition-header h1 {
         margin: 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .type-badge {
@@ -236,7 +236,7 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .type-badge.condition {
         background: rgba(74, 158, 255, 0.2);
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .type-badge.disease {
@@ -246,17 +246,17 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .source-info {
         margin-bottom: 20px;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-size: 0.9em;
       }
       
       .srd-badge {
         margin-left: 8px;
         padding: 2px 6px;
-        background: var(--color-background-tertiary, #262626);
+        background: var(--legacy-background-tertiary);
         border-radius: 3px;
         font-size: 0.85em;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .condition-description {
@@ -274,30 +274,30 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .condition-description li {
         margin: 6px 0;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .sub-section {
         margin: 20px 0;
         padding-left: 16px;
-        border-left: 3px solid var(--color-border, #333);
+        border-left: 3px solid var(--color-border);
       }
       
       .sub-section h3 {
         margin: 0 0 12px 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         font-size: 1.1em;
       }
       
       .condition-fluff {
         margin-top: 32px;
         padding-top: 20px;
-        border-top: 1px solid var(--color-border, #333);
+        border-top: 1px solid var(--color-border);
       }
       
       .condition-fluff h3 {
         margin: 0 0 12px 0;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-size: 1em;
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -305,7 +305,7 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .lore-text {
         font-style: italic;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
       }
       
       .hanging-list {
@@ -326,16 +326,16 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       }
       
       .condition-table th {
-        background: var(--color-background-secondary, #1a1a1a);
+        background: var(--legacy-background-secondary);
         padding: 8px;
         text-align: left;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
         font-weight: 600;
       }
       
       .condition-table td {
         padding: 8px;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
       }
       
       .condition-table tbody tr:hover {

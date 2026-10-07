@@ -681,8 +681,8 @@ onMounted(() => {
 }
 
 .spell-tag.conc {
-  background: var(--color-warning-bg, #fef9c3);
-  color: var(--color-warning, #ca8a04);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .spell-tag.ritual {
@@ -731,7 +731,7 @@ onMounted(() => {
 }
 
 .remove-btn:hover {
-  color: var(--color-error, #dc2626);
+  color: var(--color-error);
 }
 
 .swap-section {
@@ -776,12 +776,12 @@ onMounted(() => {
 }
 
 .swap-out {
-  color: var(--color-error, #dc2626);
+  color: var(--color-error);
   text-decoration: line-through;
 }
 
 .swap-in {
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
   font-weight: 500;
 }
 
@@ -795,8 +795,8 @@ onMounted(() => {
   gap: var(--spacing-sm);
   flex-wrap: wrap;
   padding: var(--spacing-md);
-  background: var(--color-success-bg, #f0fdf4);
-  border: 1px solid var(--color-success, #22c55e);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius-md);
 }
 
@@ -807,6 +807,6 @@ onMounted(() => {
 
 .selection-value {
   font-weight: 600;
-  color: var(--color-success, #22c55e);
+  color: var(--color-success);
 }
 </style>

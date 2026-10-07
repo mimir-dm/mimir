@@ -141,7 +141,7 @@ onBeforeUnmount(cleanup)
   align-items: center;
   gap: var(--spacing-md, 12px);
   padding: var(--spacing-md, 12px);
-  background: var(--color-surface-variant, #e5e5e5);
+  background: var(--color-surface-variant);
 }
 
 .pdf-page {

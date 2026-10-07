@@ -92,12 +92,12 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .feature-header {
         margin-bottom: 16px;
         padding-bottom: 12px;
-        border-bottom: 2px solid var(--color-border, #333);
+        border-bottom: 2px solid var(--color-border);
       }
       
       .feature-header h1 {
         margin: 0 0 8px 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .feature-types {
@@ -109,7 +109,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .type-badge {
         padding: 4px 10px;
         background: rgba(74, 158, 255, 0.2);
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         border-radius: 4px;
         font-size: 0.85em;
         font-weight: 500;
@@ -117,29 +117,29 @@ export function formatOptionalFeatureDetails(feature: any): string {
       
       .source-info {
         margin-bottom: 20px;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-size: 0.9em;
       }
       
       .srd-badge {
         margin-left: 8px;
         padding: 2px 6px;
-        background: var(--color-background-tertiary, #262626);
+        background: var(--legacy-background-tertiary);
         border-radius: 3px;
         font-size: 0.85em;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .prerequisites {
         margin: 20px 0;
         padding: 16px;
-        background: var(--color-background-secondary, #1a1a1a);
+        background: var(--legacy-background-secondary);
         border-radius: 6px;
       }
       
       .prerequisites h3 {
         margin: 0 0 12px 0;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
         font-size: 0.9em;
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -152,7 +152,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       
       .prerequisites li {
         margin: 4px 0;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .feature-description {
@@ -175,25 +175,25 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .feature-description .subsection {
         margin: 20px 0;
         padding-left: 16px;
-        border-left: 3px solid var(--color-border, #333);
+        border-left: 3px solid var(--color-border);
       }
       
       .feature-description .subsection h4 {
         margin: 0 0 12px 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         font-size: 1.1em;
       }
       
       .additional-spells {
         margin: 20px 0;
         padding: 16px;
-        background: var(--color-background-secondary, #1a1a1a);
+        background: var(--legacy-background-secondary);
         border-radius: 6px;
       }
       
       .additional-spells h3 {
         margin: 0 0 12px 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
       }
       
       .spell-level {
@@ -201,12 +201,12 @@ export function formatOptionalFeatureDetails(feature: any): string {
       }
       
       .spell-level strong {
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
       }
       
       .spell-list {
         margin: 4px 0 4px 20px;
-        color: var(--color-text, #e0e0e0);
+        color: var(--color-text);
       }
       
       .consumes {
@@ -243,20 +243,20 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .feature-table caption {
         padding: 8px;
         font-style: italic;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
       }
       
       .feature-table th {
-        background: var(--color-background-secondary, #1a1a1a);
+        background: var(--legacy-background-secondary);
         padding: 8px;
         text-align: left;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
         font-weight: 600;
       }
       
       .feature-table td {
         padding: 8px;
-        border: 1px solid var(--color-border, #333);
+        border: 1px solid var(--color-border);
       }
       
       .feature-table tbody tr:hover {
@@ -266,41 +266,41 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .options-section {
         margin: 20px 0;
         padding: 16px;
-        background: var(--color-background-secondary, #1a1a1a);
+        background: var(--legacy-background-secondary);
         border-radius: 6px;
       }
       
       .option-count {
         margin: 0 0 16px 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         font-weight: 600;
       }
       
       .option-item {
         margin: 12px 0;
         padding: 12px;
-        background: var(--color-background, #0d0d0d);
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        background: var(--color-background);
+        border-left: 3px solid var(--legacy-primary);
         border-radius: 3px;
       }
       
       .inset-box {
         margin: 20px 0;
         padding: 16px;
-        background: var(--color-background-tertiary, #262626);
-        border: 1px solid var(--color-border, #333);
+        background: var(--legacy-background-tertiary);
+        border: 1px solid var(--color-border);
         border-radius: 6px;
       }
       
       .inset-box.insetReadaloud {
         background: rgba(74, 158, 255, 0.05);
-        border-color: var(--color-primary, #4a9eff);
+        border-color: var(--legacy-primary);
         font-style: italic;
       }
       
       .inset-title {
         margin: 0 0 12px 0;
-        color: var(--color-primary, #4a9eff);
+        color: var(--legacy-primary);
         font-size: 1.1em;
       }
       
@@ -308,7 +308,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
         margin: 16px 0;
         padding: 12px;
         background: rgba(74, 158, 255, 0.1);
-        border-left: 3px solid var(--color-primary, #4a9eff);
+        border-left: 3px solid var(--legacy-primary);
         border-radius: 3px;
       }
       
@@ -319,8 +319,8 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .feature-quote {
         margin: 20px 0;
         padding: 16px 20px;
-        border-left: 4px solid var(--color-primary, #4a9eff);
-        background: var(--color-background-secondary, #1a1a1a);
+        border-left: 4px solid var(--legacy-primary);
+        background: var(--legacy-background-secondary);
         font-style: italic;
       }
       
@@ -329,7 +329,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
         margin-top: 8px;
         text-align: right;
         font-style: normal;
-        color: var(--color-text-secondary, #999);
+        color: var(--color-text-secondary);
       }
       
       .generic-entry {

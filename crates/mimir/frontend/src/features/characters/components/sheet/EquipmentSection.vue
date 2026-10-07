@@ -380,7 +380,7 @@ const getItemDetail = (name: string, source: string): ItemDetail | null => {
 }
 
 .homebrew-badge {
-  background: var(--color-warning, #f59e0b);
+  background: var(--color-warning);
   color: #fff;
   padding: 2px 6px;
   border-radius: var(--radius-sm);

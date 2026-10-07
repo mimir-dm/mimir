@@ -22,13 +22,13 @@ defineProps<Props>()
 }
 
 .welcome-message h2 {
-  color: var(--color-text, #e0e0e0);
+  color: var(--color-text);
   margin-bottom: var(--spacing-md, 12px);
   font-size: var(--font-size-2xl, 1.5rem);
 }
 
 .welcome-message p {
-  color: var(--color-text-secondary, #999);
+  color: var(--color-text-secondary);
   font-size: var(--font-size-lg, 1.125rem);
   margin-bottom: var(--spacing-sm, 8px);
 }
