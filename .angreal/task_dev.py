@@ -116,7 +116,14 @@ def launch():
         "capturing a single screen (run npx playwright test in crates/mimir/frontend directly)",
     ],
 )
-def screenshots():
+@angreal.argument(
+    name="themes",
+    long="themes",
+    short="t",
+    default="light",
+    help="Comma-separated themes to capture: light, dark, hyper (default: light)",
+)
+def screenshots(themes: str = "light"):
     """Run the full Playwright capture set against the UI fixture campaign.
 
     Development machines hold no real campaign data. Playwright's webServer
@@ -134,7 +141,8 @@ def screenshots():
     # npm ci does not download browsers; this is a no-op when Chromium is present.
     subprocess.run(["npx", "playwright", "install", "chromium"], cwd=FRONTEND_DIR, check=True)
 
-    result = subprocess.run(["npm", "run", "screenshots"], cwd=FRONTEND_DIR)
+    env = {**os.environ, "THEMES": themes}
+    result = subprocess.run(["npm", "run", "screenshots"], cwd=FRONTEND_DIR, env=env)
     if result.returncode == 0:
         runs_dir = FRONTEND_DIR / "playwright" / "screenshots" / "runs"
         if runs_dir.exists():
@@ -143,3 +151,37 @@ def screenshots():
                 count = sum(1 for _ in latest.glob("*.png"))
                 print(f"\n{count} captures -> {latest}")
     return result.returncode
+
+
+@dev()
+@angreal.command(
+    name="screenshots-diff",
+    about="Compare two screenshot runs pixel by pixel and write diff images",
+    when_to_use=[
+        "checking that a refactor of the UI changed nothing visible",
+        "finding which screens a frontend change touched",
+    ],
+    when_not_to_use=[
+        "capturing screenshots (use angreal dev screenshots)",
+    ],
+)
+@angreal.argument(name="before", long="before", short="b", help="Run directory to compare from (a dir under playwright/screenshots/runs, or a path)")
+@angreal.argument(name="after", long="after", short="a", help="Run directory to compare to (default: the latest run)")
+@angreal.argument(name="fail", long="fail", takes_value=False, is_flag=True, help="Exit 1 when an image changed, is new or is missing")
+def screenshots_diff(before: str = None, after: str = None, fail: bool = False):
+    """Diff two capture runs; diff images go to <after>/diff."""
+    runs_dir = FRONTEND_DIR / "playwright" / "screenshots" / "runs"
+
+    def resolve(name):
+        path = Path(name)
+        return path if path.is_absolute() or path.exists() else runs_dir / name
+
+    if not before:
+        print("Give --before <run>. Runs:", ", ".join(sorted(p.name for p in runs_dir.iterdir())))
+        return 2
+    after_dir = resolve(after) if after else max(runs_dir.iterdir(), key=lambda p: p.name)
+    cmd = ["node", "playwright/diff.mjs", str(resolve(before)), str(after_dir)]
+    if fail:
+        cmd.append("--fail")
+    return subprocess.run(cmd, cwd=FRONTEND_DIR).returncode
+

@@ -48,7 +48,9 @@ runs).
 
 ```sh
 angreal dev screenshots      # full capture set, fully orchestrated, one command
-npm run screenshots          # same, from this directory (timestamped run dir)
+angreal dev screenshots --themes light,dark,hyper   # the same, in each theme
+angreal dev screenshots-diff --before <run>         # diff the latest run against <run>
+npm run screenshots          # same as the first, from this directory (timestamped run dir)
 npm run test:e2e             # all Playwright specs (smoke + captures + repros)
 npx playwright test playwright/smoke.spec.ts   # quick boot check
 ```
@@ -65,14 +67,38 @@ npm run dev                        # terminal 2
 
 - Screen catalog + viewport matrix live in `playwright/screens.ts`
   (desktop 1400×900 = app default, narrow 768).
-- `npm run screenshots` writes `screens.ts × viewports` to
-  `playwright/screenshots/runs/<timestamp>/` as `<screen>--<viewport>.png` —
-  compare directories for before/after during UX work.
+- `npm run screenshots` writes `screens.ts × viewports × themes` to
+  `playwright/screenshots/runs/<timestamp>/` as
+  `<screen>--<viewport>--<theme>.png`. The `THEMES` environment variable
+  selects the themes (comma-separated, default `light`). The harness sets the
+  theme in `localStorage` before the app starts.
+- The DM map and the player display always use the dark theme. Their screens
+  have `fixedTheme: true` and are captured once, as `<screen>--<viewport>.png`.
 - Screenshot output is gitignored.
+
+## Visual diff
+
+To show that a change has no visible effect, capture a baseline before the
+change and a second run after it, in the same themes. Then compare them:
+
+```sh
+angreal dev screenshots --themes light,dark,hyper          # before: note the run dir
+# ...make the change...
+angreal dev screenshots --themes light,dark,hyper          # after
+angreal dev screenshots-diff --before <before-run>         # after = the latest run
+```
+
+The diff (`playwright/diff.mjs`) prints the changed-pixel count of each image
+and writes a diff image of each changed one to `<after-run>/diff/`. Images that
+are new, missing or of a different size are also reported. Add `--fail` to
+exit 1 when something changed. The fixture database is seeded fresh for each
+run, so two runs of the same code give the same images.
 
 ## Known harness limits
 
-- Plugin IPC is stubbed by the shim: event listeners never fire; dialogs are
+- Plugin IPC is stubbed by the shim. Events are relayed between the harness
+  pages of one browser (a DM page and a player-display page talk as the app's
+  windows do), but events emitted by the Rust side never arrive. Dialogs are
   unavailable except **save**, which becomes a browser download; shell-open is
   rejected. Flows depending on those are harness-unsupported.
 - Map images: the bridge serves backend file paths at `GET /file?path=…`
