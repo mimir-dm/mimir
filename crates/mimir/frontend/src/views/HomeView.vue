@@ -18,13 +18,50 @@
           <span class="title-sub">Campaign Assistant</span>
         </h1>
         <p class="hero-tagline">Your arcane companion for D&D 5e campaign management</p>
+
+        <nav class="hero-actions" aria-label="Get started">
+          <router-link
+            v-if="lastCampaign"
+            :to="`/campaigns/${lastCampaign.id}/dashboard`"
+            class="btn btn-primary btn-lg hero-action"
+            data-testid="home-continue"
+            @click="rememberCampaign(lastCampaign.id)"
+          >
+            <Play class="icon-em" aria-hidden="true" />
+            <span class="hero-action-label" :title="lastCampaign.name">Continue {{ lastCampaign.name }}</span>
+          </router-link>
+          <router-link
+            to="/campaigns/new"
+            :class="['btn', 'btn-lg', 'hero-action', lastCampaign ? 'btn-secondary' : 'btn-primary']"
+            data-testid="home-create"
+          >
+            <Plus class="icon-em" aria-hidden="true" />
+            Create campaign
+          </router-link>
+          <button type="button" class="btn btn-secondary btn-lg hero-action" data-testid="home-import" @click="showImportDialog = true">
+            <Download class="icon-em" aria-hidden="true" />
+            Import campaign
+          </button>
+        </nav>
       </section>
+
+      <CampaignArchiveImportDialog
+        :visible="showImportDialog"
+        @close="showImportDialog = false"
+        @imported="openImported"
+      />
     </div>
   </MainLayout>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { Download, Play, Plus } from '@lucide/vue'
+import CampaignArchiveImportDialog from '@/components/campaigns/CampaignArchiveImportDialog.vue'
+import { useCampaignStore } from '@/stores/campaigns'
+import type { Campaign } from '@/types/api'
 import MainLayout from '../shared/components/layout/MainLayout.vue'
 import { useThemeStore } from '../stores/theme'
 import lightMimir from '../assets/images/themes/light/mimir.png'
@@ -32,6 +69,32 @@ import darkMimir from '../assets/images/themes/dark/mimir.png'
 import hyperMimir from '../assets/images/themes/hyper/mimir.png'
 
 const themeStore = useThemeStore()
+const router = useRouter()
+const campaignStore = useCampaignStore()
+const { campaigns } = storeToRefs(campaignStore)
+const showImportDialog = ref(false)
+
+// The campaign selected last (CampaignSelector stores it), if it still exists
+// and is not archived.
+const lastCampaign = computed<Campaign | null>(() => {
+  const id = localStorage.getItem('selectedCampaignId')
+  return campaigns.value.find((c) => c.id === id && !c.archived_at) ?? null
+})
+
+function rememberCampaign(id: string) {
+  localStorage.setItem('selectedCampaignId', id)
+}
+
+async function openImported(campaign: Campaign) {
+  showImportDialog.value = false
+  rememberCampaign(campaign.id)
+  await campaignStore.fetchCampaigns()
+  router.push(`/campaigns/${campaign.id}/dashboard`)
+}
+
+onMounted(() => {
+  campaignStore.fetchCampaigns()
+})
 
 // Dynamically select skull image based on current theme
 const skullImage = computed(() => {
@@ -165,6 +228,29 @@ const skullImage = computed(() => {
 .title-sub {
   font-weight: 400;
   opacity: 0.85;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  animation: title-fade-in 1s ease-out 0.7s both;
+}
+
+.hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  max-width: 28rem;
+}
+
+.hero-action-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .hero-tagline {
