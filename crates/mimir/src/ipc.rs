@@ -7,7 +7,7 @@
 //! picks it up.
 
 use crate::commands::{
-    archive, asset, campaign, catalog, character, dev, dm_map, document, homebrew,
+    archive, asset, campaign, catalog, character, combat, dev, dm_map, document, homebrew,
     homebrew_monster, homebrew_spell, map, module, player_display, print, source,
 };
 
@@ -153,6 +153,27 @@ pub fn invoke_handler<R: tauri::Runtime>(
         map::delete_revealed_area,
         map::reset_fog,
         // Map commands - traps
+        // Combat tracker (COLLIERY-I-0468)
+        combat::get_active_combat,
+        combat::start_combat,
+        combat::end_combat,
+        combat::get_combat,
+        combat::combat_next_turn,
+        combat::combat_previous_turn,
+        combat::add_combat_module_monster,
+        combat::add_combat_module_npc,
+        combat::add_combat_character,
+        combat::add_combat_custom,
+        combat::remove_combat_entry,
+        combat::set_combat_initiative,
+        combat::set_combat_max_hp,
+        combat::link_combat_token,
+        combat::combat_damage,
+        combat::combat_heal,
+        combat::set_combat_temp_hp,
+        combat::add_combat_condition,
+        combat::remove_combat_condition,
+        combat::set_combat_concentration,
         map::list_map_traps,
         map::get_map_trap,
         map::create_map_trap,

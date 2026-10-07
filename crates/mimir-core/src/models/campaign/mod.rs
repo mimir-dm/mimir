@@ -18,6 +18,7 @@ mod character_inventory;
 mod character_proficiency;
 mod character_source;
 mod character_spell;
+mod combat;
 mod document;
 mod fog;
 mod light_source;
@@ -56,6 +57,7 @@ pub use character_proficiency::{
 };
 pub use character_source::{CharacterSource, NewCharacterSource};
 pub use character_spell::{CharacterSpell, NewCharacterSpell, UpdateCharacterSpell};
+pub use combat::{CombatEntry, CombatSession, NewCombatEntry, NewCombatSession};
 pub use document::{Document, NewDocument, UpdateDocument};
 pub use fog::{FogRevealedArea, FogState, NewFogRevealedArea};
 pub use light_source::{presets as light_presets, LightSource, NewLightSource, UpdateLightSource};
