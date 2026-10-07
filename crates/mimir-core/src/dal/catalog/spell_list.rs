@@ -44,6 +44,17 @@ pub fn get_spell_classes(
         .load(conn)
 }
 
+diesel::define_sql_function!(fn lower(x: diesel::sql_types::Text) -> diesel::sql_types::Text);
+
+/// IDs of the spells on a class's spell list (class name case-insensitive).
+pub fn spell_ids_for_class(conn: &mut SqliteConnection, class_name: &str) -> QueryResult<Vec<i32>> {
+    spell_classes::table
+        .filter(lower(spell_classes::class_name).eq(class_name.to_lowercase()))
+        .select(spell_classes::spell_id)
+        .distinct()
+        .load(conn)
+}
+
 /// Get all spell associations for a class.
 pub fn get_class_spells(
     conn: &mut SqliteConnection,

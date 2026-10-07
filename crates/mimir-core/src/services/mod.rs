@@ -7,6 +7,7 @@ mod archive;
 mod asset;
 mod campaign;
 pub mod catalog;
+mod catalog_search;
 mod character;
 mod document;
 mod homebrew;
@@ -30,6 +31,9 @@ pub use catalog::{
     HazardService, ItemService, LanguageService, MonsterService, ObjectService,
     OptionalFeatureService, PsionicService, RaceService, RewardService, SpellService,
     SubclassFeatureService, SubclassService, TrapService, VariantRuleService, VehicleService,
+};
+pub use catalog_search::{
+    parse_cr, CampaignContext, CatalogCategory, CatalogHit, CatalogQuery, CatalogSearch,
 };
 pub use character::{
     AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput, FeatureChoices,
