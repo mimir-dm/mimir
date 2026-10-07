@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import type { CombatEntry, CombatState } from '../types'
+import type { CombatEntry, CombatState, DamageResult } from '../types'
 
 interface ApiResponse<T> {
   success: boolean
@@ -110,6 +110,38 @@ export function useCombatSession(moduleId: string) {
     if (r.ok) await refresh()
   }
 
+  /** Replace one entry in the current state with the backend's version. */
+  function patchEntry(updated: CombatEntry) {
+    const s = state.value
+    if (!s) return
+    // A new state object: never mutate a response the caller may still hold.
+    state.value = { ...s, entries: s.entries.map((e) => (e.id === updated.id ? updated : e)) }
+  }
+
+  /** Apply damage; returns the result (with a concentration DC) or null on error. */
+  async function damage(entryId: string, amount: number): Promise<DamageResult | null> {
+    const r = await call<DamageResult>('combat_damage', { entryId, amount })
+    if (!r.ok || !r.data) return null
+    patchEntry(r.data.entry)
+    return r.data
+  }
+
+  async function heal(entryId: string, amount: number) {
+    const r = await call<CombatEntry>('combat_heal', { entryId, amount })
+    if (r.ok && r.data) patchEntry(r.data)
+  }
+
+  async function setTempHp(entryId: string, amount: number) {
+    const r = await call<CombatEntry>('set_combat_temp_hp', { entryId, amount })
+    if (r.ok && r.data) patchEntry(r.data)
+  }
+
+  /** Set (or clear) max HP — for entries without a stat block, like PCs. */
+  async function setMaxHp(entryId: string, maxHp: number | null) {
+    const r = await call<CombatEntry>('set_combat_max_hp', { entryId, maxHp })
+    if (r.ok && r.data) patchEntry(r.data)
+  }
+
   async function removeEntry(entryId: string) {
     const r = await call<CombatState>('remove_combat_entry', { entryId })
     if (r.ok && r.data) state.value = r.data
@@ -132,5 +164,9 @@ export function useCombatSession(moduleId: string) {
     addCustom,
     setInitiative,
     removeEntry,
+    damage,
+    heal,
+    setTempHp,
+    setMaxHp,
   }
 }

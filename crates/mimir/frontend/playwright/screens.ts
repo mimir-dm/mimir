@@ -84,6 +84,10 @@ export const SCREENS: Screen[] = [
         await first.fill('17')
         await first.press('Tab')
         await page.getByTestId('next-turn').click()
+        // Open Goblin 2's HP panel and hit it for 3 (MIMIR-T-0678).
+        await page.getByTestId('combat-entry').nth(2).locator('.entry-name').click()
+        await page.getByTestId('hp-amount').fill('3')
+        await page.getByTestId('hp-damage').click()
       }
     },
   },
