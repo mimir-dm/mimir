@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useCampaignStore } from '@/stores/campaigns'
+import { explicitSources, currentCampaignId } from './campaignScope'
 
 export interface ItemSummary {
   name: string
@@ -41,22 +41,6 @@ export function useItems() {
   const error: Ref<string | null> = ref(null)
   const items = ref<ItemSummary[]>([])
 
-  // Get effective sources: explicit filter sources, or campaign sources if configured
-  // Note: Store access is lazy to avoid Pinia initialization issues
-  const getEffectiveSources = (filterSources?: string[]): string[] | null => {
-    if (filterSources && filterSources.length > 0) {
-      return filterSources
-    }
-    try {
-      const campaignStore = useCampaignStore()
-      if (campaignStore.currentCampaignSources.length > 0) {
-        return campaignStore.currentCampaignSources
-      }
-    } catch {
-      // Store not available yet, use no filter
-    }
-    return null
-  }
 
   async function initializeItemCatalog() {
     // No initialization needed for DB-backed catalog
@@ -72,8 +56,9 @@ export function useItems() {
           name_contains: filters.query || null,
           item_type: filters.types?.length ? filters.types[0] : null,  // Backend expects single type
           rarity: filters.rarities?.length ? filters.rarities[0] : null,  // Backend expects single rarity
-          sources: getEffectiveSources(filters.sources),
+          sources: explicitSources(filters.sources),
         },
+        campaignId: currentCampaignId(),
         limit: 10000,
         offset: 0
       })

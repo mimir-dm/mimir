@@ -215,13 +215,7 @@ impl<'a> CatalogSearch<'a> {
         query: &CatalogQuery,
         campaign: Option<&CampaignContext>,
     ) -> ServiceResult<Vec<CatalogHit>> {
-        let sources = match campaign {
-            Some(c) => {
-                let codes = campaign_dal::list_campaign_source_codes(self.conn, &c.campaign_id)?;
-                (!codes.is_empty()).then_some(codes)
-            }
-            None => None,
-        };
+        let sources = self.effective_sources(None, campaign.map(|c| c.campaign_id.as_str()))?;
         let limit = query.limit.max(0);
 
         let mut hits = match category {
@@ -301,6 +295,26 @@ impl<'a> CatalogSearch<'a> {
             }
         }
         Ok(hits)
+    }
+
+    /// The sources a catalog search should be limited to: the explicit ones if
+    /// any are given, else the campaign's (if it has any configured), else
+    /// `None`, meaning every source. The one rule for every frontend.
+    pub fn effective_sources(
+        &mut self,
+        explicit: Option<Vec<String>>,
+        campaign_id: Option<&str>,
+    ) -> ServiceResult<Option<Vec<String>>> {
+        if let Some(sources) = explicit.filter(|s| !s.is_empty()) {
+            return Ok(Some(sources));
+        }
+        match campaign_id {
+            Some(id) => {
+                let codes = campaign_dal::list_campaign_source_codes(self.conn, id)?;
+                Ok((!codes.is_empty()).then_some(codes))
+            }
+            None => Ok(None),
+        }
     }
 
     fn monsters(
@@ -841,6 +855,37 @@ mod tests {
             )
             .unwrap();
         assert_eq!(names(&hits), ["Fireball"]);
+    }
+
+    #[test]
+    fn effective_sources_prefers_explicit_then_campaign_then_all() {
+        let (mut conn, campaign_id) = setup(&["MM", "PHB"]);
+        let (mut bare, bare_id) = setup(&[]);
+        let mut search = CatalogSearch::new(&mut conn);
+        let explicit = Some(vec!["DMG".to_string()]);
+
+        assert_eq!(
+            search
+                .effective_sources(explicit.clone(), Some(&campaign_id))
+                .unwrap(),
+            explicit,
+            "explicit sources win"
+        );
+        assert_eq!(
+            search
+                .effective_sources(Some(vec![]), Some(&campaign_id))
+                .unwrap(),
+            Some(vec!["MM".to_string(), "PHB".to_string()]),
+            "an empty explicit list counts as none"
+        );
+        assert_eq!(search.effective_sources(None, None).unwrap(), None);
+        assert_eq!(
+            CatalogSearch::new(&mut bare)
+                .effective_sources(None, Some(&bare_id))
+                .unwrap(),
+            None,
+            "a campaign without sources does not filter"
+        );
     }
 
     #[test]

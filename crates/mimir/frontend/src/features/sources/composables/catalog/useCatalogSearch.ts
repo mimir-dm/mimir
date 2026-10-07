@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useCampaignStore } from '@/stores/campaigns'
+import { explicitSources, currentCampaignId } from './campaignScope'
 
 export interface CatalogConfig<TSummary, TDetails, TFilters extends object> {
   /** Name of the catalog (for error messages) */
@@ -83,6 +83,9 @@ export function useCatalogSearch<
         config.searchCommand,
         {
           filter: transformedFilters,
+          // The backend limits results to this campaign's sources unless
+          // the filter names sources explicitly.
+          campaignId: currentCampaignId(),
           limit: 10000,
           offset: 0
         }
@@ -131,35 +134,8 @@ export function useCatalogSearch<
 }
 
 /**
- * Get effective sources for filtering:
- * - If explicit sources provided, use those
- * - If campaign has sources configured, use those
- * - Otherwise return null (no filtering)
- */
-function getEffectiveSources(filterSources: unknown): string[] | null {
-  // If explicit sources provided in filter, use those
-  if (Array.isArray(filterSources) && filterSources.length > 0) {
-    return filterSources as string[]
-  }
-
-  // If campaign has sources configured, use those
-  // Note: Store access is lazy to avoid Pinia initialization issues
-  try {
-    const campaignStore = useCampaignStore()
-    if (campaignStore.currentCampaignSources.length > 0) {
-      return campaignStore.currentCampaignSources
-    }
-  } catch {
-    // Store not available yet, use no filter
-  }
-
-  // No filtering - return null to show all
-  return null
-}
-
-/**
  * Default filter transformation:
- * - Applies campaign source filtering when no explicit sources provided
+ * - Keeps only explicitly chosen sources (the backend applies the campaign's)
  * - Converts other empty arrays to null
  * - Converts empty strings to null
  * - Passes undefined values as null
@@ -173,8 +149,7 @@ function transformDefaultFilters(filters: Record<string, unknown>): Record<strin
     const outputKey = (key === 'query' || key === 'name') ? 'name_contains' : key
 
     if (key === 'sources') {
-      // Apply campaign source filtering
-      result[outputKey] = getEffectiveSources(value)
+      result[outputKey] = explicitSources(value)
     } else if (Array.isArray(value)) {
       // For other arrays, convert empty to null (no filter)
       result[outputKey] = value.length > 0 ? value : null
@@ -185,9 +160,8 @@ function transformDefaultFilters(filters: Record<string, unknown>): Record<strin
     }
   }
 
-  // If sources wasn't in filters at all, still apply campaign filtering
   if (!('sources' in filters)) {
-    result['sources'] = getEffectiveSources(undefined)
+    result['sources'] = null
   }
 
   return result

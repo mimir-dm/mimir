@@ -14,6 +14,8 @@ export interface DebouncedSearchOptions<TResult, TRaw = unknown> {
   buildFilter: (query: string) => Record<string, unknown>
   /** Transform raw backend results to the desired format */
   mapResult: (raw: TRaw) => TResult
+  /** More invoke arguments (e.g. campaignId), read at search time */
+  extraArgs?: () => Record<string, unknown>
 }
 
 export interface DebouncedSearchReturn<TResult> {
@@ -44,7 +46,8 @@ export interface DebouncedSearchReturn<TResult> {
  * ```ts
  * const monsterSearch = useDebouncedSearch<Monster>({
  *   command: 'search_monsters',
- *   buildFilter: (q) => ({ name_contains: q, sources: campaignSources }),
+ *   buildFilter: (q) => ({ name_contains: q, sources: null }),
+ *   extraArgs: () => ({ campaignId: currentCampaignId() }),
  *   mapResult: (m) => ({ id: m.id, name: m.name, source: m.source, size: m.size, cr: m.cr })
  * })
  *
@@ -62,7 +65,8 @@ export function useDebouncedSearch<TResult, TRaw = unknown>(
     debounceMs = 300,
     limit = 10,
     buildFilter,
-    mapResult
+    mapResult,
+    extraArgs
   } = options
 
   const query = ref('')
@@ -86,7 +90,7 @@ export function useDebouncedSearch<TResult, TRaw = unknown>(
 
         const response = await invoke<{ success: boolean; data?: TRaw[] }>(
           command,
-          { filter, limit, offset: 0 }
+          { filter, ...(extraArgs ? extraArgs() : {}), limit, offset: 0 }
         )
 
         if (response.success && response.data && Array.isArray(response.data)) {

@@ -146,7 +146,7 @@ import type { TokenSize, CreateTokenRequest, VisionType } from '@/types/api'
 import { VISION_PRESETS } from '@/types/api'
 import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
-import { useCampaignStore } from '@/stores/campaigns'
+import { currentCampaignId } from '@/features/sources/composables/catalog/campaignScope'
 
 interface MonsterResult {
   id: string
@@ -169,7 +169,6 @@ const emit = defineEmits<{
   'add-token': [request: CreateTokenRequest]
 }>()
 
-const campaignStore = useCampaignStore()
 const searchInput = ref<HTMLInputElement | null>(null)
 const searchQuery = ref('')
 const searchResults = ref<MonsterResult[]>([])
@@ -214,16 +213,13 @@ function handleSearch() {
 
   searchTimeout = setTimeout(async () => {
     try {
-      // Get campaign sources for filtering (null means no filter)
-      const sources = campaignStore.currentCampaignSources.length > 0
-        ? campaignStore.currentCampaignSources
-        : null
-
+      // The backend limits results to the campaign's sources (MIMIR-T-0675).
       const response = await invoke<{ success: boolean; data?: any[] }>('search_monsters', {
         filter: {
           name_contains: searchQuery.value,
-          sources: sources,
+          sources: null,
         },
+        campaignId: currentCampaignId(),
         limit: 15,
         offset: 0
       })

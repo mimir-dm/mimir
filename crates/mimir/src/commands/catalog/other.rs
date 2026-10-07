@@ -26,6 +26,7 @@ use crate::state::AppState;
 pub fn search_optional_features(
     state: State<'_, AppState>,
     filter: Option<OptionalFeatureFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -34,7 +35,15 @@ pub fn search_optional_features(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = OptionalFeatureService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -115,6 +124,7 @@ pub fn count_optional_features(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_tables(
     state: State<'_, AppState>,
     filter: Option<CatalogTableFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -123,7 +133,15 @@ pub fn search_tables(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = CatalogTableService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -204,6 +222,7 @@ pub fn count_tables(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_variant_rules(
     state: State<'_, AppState>,
     filter: Option<VariantRuleFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -212,7 +231,15 @@ pub fn search_variant_rules(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = VariantRuleService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -293,6 +320,7 @@ pub fn count_variant_rules(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_vehicles(
     state: State<'_, AppState>,
     filter: Option<VehicleFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -301,7 +329,15 @@ pub fn search_vehicles(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = VehicleService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -382,6 +418,7 @@ pub fn count_vehicles(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_cults(
     state: State<'_, AppState>,
     filter: Option<CultFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -390,7 +427,15 @@ pub fn search_cults(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = CultService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -528,6 +573,7 @@ pub fn count_cults(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_psionics(
     state: State<'_, AppState>,
     filter: Option<PsionicFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -536,7 +582,15 @@ pub fn search_psionics(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = PsionicService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -617,6 +671,7 @@ pub fn count_psionics(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_rewards(
     state: State<'_, AppState>,
     filter: Option<RewardFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -625,7 +680,15 @@ pub fn search_rewards(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = RewardService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -706,6 +769,7 @@ pub fn count_rewards(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_objects(
     state: State<'_, AppState>,
     filter: Option<ObjectFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -714,7 +778,15 @@ pub fn search_objects(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = ObjectService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),

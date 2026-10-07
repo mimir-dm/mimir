@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { useCatalogSearch } from './useCatalogSearch'
-import { useCampaignStore } from '@/stores/campaigns'
+import { explicitSources } from './campaignScope'
 
 export interface TrapSummary {
   name: string
@@ -28,22 +28,6 @@ export interface TrapOrHazard {
 }
 
 export function useTraps() {
-  // Get effective sources: explicit filter sources, or campaign sources if configured
-  // Note: Store access is lazy to avoid Pinia initialization issues
-  const getEffectiveSources = (filterSources?: string[]): string[] | null => {
-    if (filterSources && filterSources.length > 0) {
-      return filterSources
-    }
-    try {
-      const campaignStore = useCampaignStore()
-      if (campaignStore.currentCampaignSources.length > 0) {
-        return campaignStore.currentCampaignSources
-      }
-    } catch {
-      // Store not available yet, use no filter
-    }
-    return null
-  }
 
   const catalog = useCatalogSearch<TrapSummary, TrapOrHazard, TrapFilters>({
     name: 'trap',
@@ -52,7 +36,7 @@ export function useTraps() {
     detailsCommand: 'get_trap_by_name',
     transformFilters: (filters) => ({
       name_contains: filters.query || null,
-      sources: getEffectiveSources(filters.sources),
+      sources: explicitSources(filters.sources),
     }),
   })
 
