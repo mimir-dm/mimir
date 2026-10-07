@@ -66,6 +66,27 @@ export const SCREENS: Screen[] = [
   { name: 'settings', path: () => '/settings' },
   // Secondary window entries (multi-page Vite inputs, loadable directly)
   { name: 'map-view', path: (ids) => `/dm-map.html?moduleId=${ids.module}&campaignId=${ids.campaign}` },
+  {
+    // Initiative tracker drawer with a fight running (COLLIERY-I-0468).
+    name: 'dm-map-combat',
+    path: (ids) => `/dm-map.html?moduleId=${ids.module}&campaignId=${ids.campaign}`,
+    setup: async (page) => {
+      const start = page.getByTestId('start-combat')
+      if (await start.isVisible().catch(() => false)) {
+        await start.click()
+        await page.getByTestId('add-monster-select').selectOption({ index: 4 })
+        await page.getByTestId('add-monster').click()
+        await page.getByTestId('add-pc-select').selectOption({ index: 1 })
+        await page.getByTestId('add-pc').click()
+        // Wait for the six goblins and the PC before editing.
+        await page.getByTestId('combat-entry').nth(6).waitFor()
+        const first = page.getByTestId('combat-entry').first().locator('input.entry-initiative')
+        await first.fill('17')
+        await first.press('Tab')
+        await page.getByTestId('next-turn').click()
+      }
+    },
+  },
   { name: 'reference-reader', path: () => '/sources.html' },
 ]
 
