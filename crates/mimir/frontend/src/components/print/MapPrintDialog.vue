@@ -20,7 +20,7 @@
         <div class="mode-card" :class="{ active: options.include_preview }">
           <label class="mode-header" @click.prevent="options.include_preview = !options.include_preview">
             <input type="checkbox" v-model="options.include_preview" @click.stop />
-            <span class="mode-icon">&#128196;</span>
+            <FileText class="mode-icon icon-em" aria-hidden="true" />
             <div class="mode-info">
               <span class="mode-label">Preview</span>
               <span class="mode-desc">Fit to single page</span>
@@ -46,7 +46,7 @@
         <div class="mode-card" :class="{ active: options.include_play }">
           <label class="mode-header" @click.prevent="options.include_play = !options.include_play">
             <input type="checkbox" v-model="options.include_play" @click.stop />
-            <span class="mode-icon">&#127922;</span>
+            <Dices class="mode-icon icon-em" aria-hidden="true" />
             <div class="mode-info">
               <span class="mode-label">Play</span>
               <span class="mode-desc">1" = 5ft scale (tiled)</span>
@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { Dices, FileText } from '@lucide/vue'
 import AppModal from '@/components/shared/AppModal.vue'
 import PdfPreviewModal from './PdfPreviewModal.vue'
 import { PrintService, type MapPrintOptions } from '../../services/PrintService'

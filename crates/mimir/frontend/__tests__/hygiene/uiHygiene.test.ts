@@ -119,4 +119,10 @@ describe('UI hygiene', () => {
     }
     expect(hits, 'add the :focus-within selector').toEqual([])
   })
+
+  it('has no emoji or symbol entities used as icons in templates (MIMIR-T-0682)', () => {
+    // &#9650; (▲), &#10003; (✓), &#128196; (📄) and the like: use the Lucide icon.
+    const hits = matches(/&#(9[6-9]\d\d|1\d{4,5});/, (f) => !f.endsWith('.vue'))
+    expect(hits, 'import the icon from @lucide/vue').toEqual([])
+  })
 })

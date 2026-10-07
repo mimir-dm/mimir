@@ -35,7 +35,7 @@
       <!-- Archive Preview -->
       <div v-if="importState === 'previewed' && archivePreview" class="archive-preview">
         <div class="preview-header">
-          <div class="preview-icon">&#128230;</div>
+          <Package class="preview-icon icon-em" aria-hidden="true" />
           <div class="preview-title">Archive Contents</div>
         </div>
 
@@ -119,7 +119,7 @@
 
       <!-- Success State -->
       <div v-if="importState === 'success'" class="import-success">
-        <div class="success-icon">&#10003;</div>
+        <div class="success-icon"><Check :size="32" :stroke-width="3" aria-hidden="true" /></div>
         <p class="success-message">Campaign imported successfully!</p>
         <p class="success-detail">{{ importedCampaign?.name }} is now ready to use.</p>
       </div>
@@ -182,6 +182,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { Check, Package } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { open } from '@tauri-apps/plugin-dialog'
 import AppModal from '@/components/shared/AppModal.vue'

@@ -22,7 +22,7 @@
           @click="handleStepClick(index)"
         >
           <div class="step-indicator">
-            <span v-if="index < levelUp.currentStepIndex.value" class="step-check">&#10003;</span>
+            <Check v-if="index < levelUp.currentStepIndex.value" class="step-check icon-em" aria-hidden="true" />
             <span v-else>{{ index + 1 }}</span>
           </div>
           <span class="step-title">{{ step.title }}</span>
@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, type Component } from 'vue'
+import { Check } from '@lucide/vue'
 import AppModal from '@/components/shared/AppModal.vue'
 import type { Character } from '@/types/character'
 import { useLevelUp } from '../../composables/useLevelUp'

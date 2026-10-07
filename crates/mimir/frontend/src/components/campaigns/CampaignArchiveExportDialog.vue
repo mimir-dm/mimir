@@ -29,7 +29,7 @@
       </div>
 
       <div v-if="exportState === 'success'" class="export-success">
-        <div class="success-icon">&#10003;</div>
+        <div class="success-icon"><Check :size="24" :stroke-width="3" aria-hidden="true" /></div>
         <p class="success-message">Campaign exported successfully!</p>
         <div class="archive-path">
           <span class="path-label">Saved to:</span>
@@ -89,6 +89,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { Check } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import AppModal from '@/components/shared/AppModal.vue'
