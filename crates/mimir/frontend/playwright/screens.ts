@@ -36,6 +36,17 @@ export const SCREENS: Screen[] = [
       await page.getByText(FIXTURE.module).first().click()
     },
   },
+  {
+    // App dialog instead of a native confirm() (MIMIR-T-0684). The dialog
+    // stays open for the capture, so nothing is deleted.
+    name: 'dialog-delete-map',
+    path: (ids) => `/campaigns/${ids.campaign}/dashboard/modules`,
+    setup: async (page) => {
+      await page.getByText(FIXTURE.module).first().click()
+      await page.getByTitle('Delete Map').first().click({ force: true })
+      await page.getByTestId('dialog-confirm').waitFor()
+    },
+  },
   { name: 'dashboard-npcs', path: (ids) => `/campaigns/${ids.campaign}/dashboard/npcs` },
   { name: 'dashboard-pcs', path: (ids) => `/campaigns/${ids.campaign}/dashboard/pcs` },
   { name: 'dashboard-homebrew', path: (ids) => `/campaigns/${ids.campaign}/dashboard/homebrew` },

@@ -332,6 +332,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { alertDialog, confirmDialog } from '@/composables/useDialog'
 import { useRouter, useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { ModuleService } from '@/services/ModuleService'
@@ -703,15 +704,19 @@ function selectMap(map: MapData) {
 
 // Delete a map from the module
 async function confirmDeleteMap(map: MapData) {
-  if (!confirm(`Delete map "${map.name}"? This cannot be undone.`)) {
-    return
-  }
+  const ok = await confirmDialog({
+    title: 'Delete map?',
+    message: `Delete "${map.name}"? Its tokens, lights, traps and points of interest go with it. This cannot be undone.`,
+    confirmLabel: 'Delete map',
+    danger: true,
+  })
+  if (!ok) return
   try {
     await invoke('delete_map', { id: map.id })
     loadModuleMaps()
   } catch (e) {
     console.error('Failed to delete map:', e)
-    alert('Failed to delete map')
+    await alertDialog({ title: 'Delete failed', message: 'Failed to delete map.' })
   }
 }
 

@@ -102,11 +102,13 @@
         @map-state="combatMap = $event"
       />
     </main>
+    <DialogHost />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import DialogHost from '@/shared/components/ui/DialogHost.vue'
 import { invoke } from '@tauri-apps/api/core'
 import DmMapViewer from '@/components/DmMapViewer.vue'
 import InitiativeTracker from '@/features/combat/components/InitiativeTracker.vue'

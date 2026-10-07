@@ -5,11 +5,13 @@
         <component :is="Component" />
       </transition>
     </router-view>
+    <DialogHost />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import DialogHost from '@/shared/components/ui/DialogHost.vue'
 import { useThemeStore } from '../stores/theme'
 import { useRoute } from 'vue-router'
 
