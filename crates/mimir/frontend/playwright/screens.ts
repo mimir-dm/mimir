@@ -47,6 +47,26 @@ export const SCREENS: Screen[] = [
       await page.getByTestId('dialog-confirm').waitFor()
     },
   },
+  {
+    // The module's More actions menu, open (MIMIR-T-0690).
+    name: 'module-more-menu',
+    path: (ids) => `/campaigns/${ids.campaign}/dashboard/modules`,
+    setup: async (page) => {
+      await page.getByText(FIXTURE.module).first().click()
+      await page.getByTestId('action-menu-trigger').click()
+      await page.getByRole('menu').waitFor()
+    },
+  },
+  {
+    // The details inspector with a monster selected (MIMIR-T-0693).
+    name: 'module-inspector',
+    path: (ids) => `/campaigns/${ids.campaign}/dashboard/modules`,
+    setup: async (page) => {
+      await page.getByText(FIXTURE.module).first().click()
+      await page.locator('.monster-row').first().click()
+      await page.getByTestId('module-inspector').waitFor()
+    },
+  },
   { name: 'dashboard-npcs', path: (ids) => `/campaigns/${ids.campaign}/dashboard/npcs` },
   { name: 'dashboard-pcs', path: (ids) => `/campaigns/${ids.campaign}/dashboard/pcs` },
   { name: 'dashboard-homebrew', path: (ids) => `/campaigns/${ids.campaign}/dashboard/homebrew` },
@@ -77,6 +97,9 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: 'settings', path: () => '/settings' },
+  // Admin tools as Settings panels (MIMIR-T-0692).
+  { name: 'settings-manage-campaigns', path: () => '/settings?section=manage-campaigns' },
+  { name: 'settings-import-books', path: () => '/settings?section=import-books' },
   // Secondary window entries (multi-page Vite inputs, loadable directly)
   {
     name: 'map-view',
