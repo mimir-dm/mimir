@@ -106,31 +106,11 @@
                 @select-poi="selectPoiForDetails"
               />
 
-              <!-- Monster Stats Panel -->
-              <MonsterStatsPanel
-                v-if="selectedMonster"
-                :monster="selectedMonster"
-                v-model:panelOpen="monsterPanelOpen"
-                @close="clearSelectedMonster"
-                class="module-monster-panel"
-              />
-
-              <!-- Trap Details Panel -->
-              <TrapDetailsPanel
-                v-if="selectedTrap"
-                :trap="selectedTrap"
-                v-model:panelOpen="trapPanelOpen"
-                @close="clearSelectedTrap"
-                class="module-trap-panel"
-              />
-
-              <!-- POI Details Panel -->
-              <PoiDetailsPanel
-                v-if="selectedPoi"
-                :poi="selectedPoi"
-                v-model:panelOpen="poiPanelOpen"
-                @close="clearSelectedPoi"
-                class="module-poi-panel"
+              <!-- One details panel for monsters, traps and POIs (MIMIR-T-0693) -->
+              <ModuleInspector
+                :selection="inspected"
+                class="module-inspector-slot"
+                @close="closeInspector"
               />
             </div>
           </div>
@@ -354,9 +334,8 @@ import MapUploadModal from '../StageLanding/MapUploadModal.vue'
 import MapTokenSetupModal from '@/components/tokens/MapTokenSetupModal.vue'
 import DocumentEditor from '../DocumentEditor.vue'
 import NpcSelectorModal from '@/features/modules/components/NpcSelectorModal.vue'
-import MonsterStatsPanel from '@/features/modules/components/MonsterStatsPanel.vue'
-import TrapDetailsPanel from '@/features/modules/components/TrapDetailsPanel.vue'
-import PoiDetailsPanel from '@/features/modules/components/PoiDetailsPanel.vue'
+import ModuleInspector, { type InspectorSelection } from '@/features/modules/components/ModuleInspector.vue'
+import type { ModulePoi, ModuleTrap } from '@/features/modules/types'
 import DangersList from './DangersList.vue'
 import ModuleExportDialog from '@/components/print/ModuleExportDialog.vue'
 import CreateDocumentModal from '@/components/dialogs/CreateDocumentModal.vue'
@@ -418,36 +397,31 @@ const {
 } = useModuleMonsters(selectedModuleId)
 
 // Monster panel state
-const monsterPanelOpen = ref(true)
 
 // Trap state - references catalog traps
-interface ModuleTrap {
-  id: string
-  name: string
-  source: string  // Catalog source (e.g., "DMG")
-  count: number   // How many of this trap type across all maps
-}
 const moduleTraps = ref<ModuleTrap[]>([])
 const loadingTraps = ref(false)
-const selectedTrap = ref<ModuleTrap | null>(null)
-const trapPanelOpen = ref(true)
+
+// The entity in the details inspector: one at a time (MIMIR-T-0693). The
+// monster selection lives in useModuleMonsters (encounter groups set it too).
+const inspected = ref<InspectorSelection | null>(null)
+const selectedTrap = computed(() => (inspected.value?.kind === 'trap' ? inspected.value.data : null))
+const selectedPoi = computed(() => (inspected.value?.kind === 'poi' ? inspected.value.data : null))
+watch(selectedMonster, (monster) => {
+  if (monster) inspected.value = { kind: 'monster', data: monster }
+  else if (inspected.value?.kind === 'monster') inspected.value = null
+})
+watch(inspected, (now) => {
+  if (now?.kind !== 'monster' && selectedMonster.value) clearSelectedMonster()
+})
+
+function closeInspector() {
+  inspected.value = null
+}
 
 // POI state - points of interest on maps
-interface ModulePoi {
-  id: string
-  name: string
-  description: string | null
-  icon: string
-  color: string | null
-  visible: number
-  grid_x: number
-  grid_y: number
-  count: number   // How many of this POI type across all maps
-}
 const modulePois = ref<ModulePoi[]>([])
 const loadingPois = ref(false)
-const selectedPoi = ref<ModulePoi | null>(null)
-const poiPanelOpen = ref(true)
 
 // Document state
 const moduleDocuments = ref<Document[]>([])
@@ -513,8 +487,7 @@ async function moveModule(moduleId: string, newPosition: number) {
 async function selectModule(mod: Module) {
   selectedModule.value = mod
   selectedDocument.value = null
-  selectedTrap.value = null
-  selectedPoi.value = null
+  inspected.value = null
 
   await Promise.all([
     loadModuleDocuments(),
@@ -639,36 +612,15 @@ async function loadModulePois() {
 
 // Select trap for details view
 function selectTrapForDetails(trap: ModuleTrap) {
-  // Clear other selections when selecting a trap
-  clearSelectedMonster()
-  clearSelectedPoi()
-  selectedTrap.value = trap
-  trapPanelOpen.value = true
-}
-
-// Clear selected trap
-function clearSelectedTrap() {
-  selectedTrap.value = null
+  inspected.value = { kind: 'trap', data: trap }
 }
 
 // Select POI for details view
 function selectPoiForDetails(poi: ModulePoi) {
-  // Clear other selections when selecting a POI
-  clearSelectedMonster()
-  clearSelectedTrap()
-  selectedPoi.value = poi
-  poiPanelOpen.value = true
+  inspected.value = { kind: 'poi', data: poi }
 }
 
-// Clear selected POI
-function clearSelectedPoi() {
-  selectedPoi.value = null
-}
-
-// Wrapper to clear trap/POI when selecting monster
 function handleSelectMonster(monster: any) {
-  clearSelectedTrap()
-  clearSelectedPoi()
   selectMonster(monster)
 }
 
@@ -1259,6 +1211,16 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+/* The details inspector overlays the right column. */
+.module-inspector-slot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+}
+
 /* Section accents by content type (MIMIR-T-0690): the eye finds each
    section by color. The panels' roots carry these classes. */
 .documents-section {
@@ -1283,26 +1245,6 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
-}
-
-/* Monster Stats Panel in Module Dashboard */
-.module-monster-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Trap Details Panel in Module Dashboard */
-.module-trap-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Delete modal styles */
