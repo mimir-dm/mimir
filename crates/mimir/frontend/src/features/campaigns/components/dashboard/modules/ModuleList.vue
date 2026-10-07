@@ -22,14 +22,16 @@
             class="btn-reorder"
             :disabled="index === 0"
             title="Move up"
+            :aria-label="`Move ${mod.name} up`"
             @click.stop="$emit('reorder', mod.id, mod.module_number - 1)"
-          >&#9650;</button>
+          ><ChevronUp :size="12" aria-hidden="true" /></button>
           <button
             class="btn-reorder"
             :disabled="index === modules.length - 1"
             title="Move down"
+            :aria-label="`Move ${mod.name} down`"
             @click.stop="$emit('reorder', mod.id, mod.module_number + 1)"
-          >&#9660;</button>
+          ><ChevronDown :size="12" aria-hidden="true" /></button>
         </span>
       </div>
     </div>
@@ -38,6 +40,7 @@
 
 <script setup lang="ts">
 import type { Module } from '@/types'
+import { ChevronDown, ChevronUp } from '@lucide/vue'
 
 defineProps<{
   modules: Module[]
@@ -142,11 +145,13 @@ defineEmits<{
   flex-direction: column;
   gap: 1px;
   margin-left: auto;
-  opacity: 0;
+  /* Always visible (MIMIR-T-0691); subdued until the row is in use. */
+  opacity: 0.45;
   transition: opacity 0.15s;
 }
 
-.module-item:hover .module-reorder-buttons {
+.module-item:hover .module-reorder-buttons,
+.module-item:focus-within .module-reorder-buttons {
   opacity: 1;
 }
 

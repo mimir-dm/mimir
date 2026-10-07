@@ -100,4 +100,23 @@ describe('UI hygiene', () => {
     }
     expect(undefinedUses).toEqual([])
   })
+
+  it('reveals hover-only controls on keyboard focus too (MIMIR-T-0691)', () => {
+    // A control that appears only when the pointer is over its row is out of
+    // reach for the keyboard. Pair `.row:hover .ctl` with `.row:focus-within .ctl`.
+    // Not controls: the player display's overlays, the header's icon tint.
+    const exempt = new Set([path.join('components', 'PlayerDisplayWindow.vue'), path.join('app', 'AppHeader.vue')])
+    const hits: string[] = []
+    for (const [file, text] of sources()) {
+      if (!file.endsWith('.vue') || exempt.has(file)) continue
+      for (const m of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        const selectors = m[1].split(',').map((x) => x.trim())
+        const reveals = /opacity:\s*1\b|display:\s*(flex|block|inline-flex|inline-block)/.test(m[2])
+        if (reveals && selectors.some((x) => /:hover\s+\S/.test(x)) && !selectors.some((x) => x.includes(':focus-within'))) {
+          hits.push(`${file}: ${selectors.join(', ')}`)
+        }
+      }
+    }
+    expect(hits, 'add the :focus-within selector').toEqual([])
+  })
 })

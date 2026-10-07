@@ -353,7 +353,8 @@ function getPoiIcon(iconName: string): string {
   color: var(--color-primary-500);
 }
 
-.monster-row:hover .monster-edit-btn {
+.monster-row:hover .monster-edit-btn,
+.monster-row:focus-within .monster-edit-btn {
   opacity: 1;
 }
 

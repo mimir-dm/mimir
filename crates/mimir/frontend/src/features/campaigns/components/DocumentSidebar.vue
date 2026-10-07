@@ -63,14 +63,16 @@
               class="btn-reorder"
               :disabled="index === 0"
               title="Move up"
+              :aria-label="`Move ${doc.title} up`"
               @click.stop="moveDocument(doc.id, userDocuments[index - 1].id)"
-            >&#9650;</button>
+            ><ChevronUp :size="12" aria-hidden="true" /></button>
             <button
               class="btn-reorder"
               :disabled="index === userDocuments.length - 1"
               title="Move down"
+              :aria-label="`Move ${doc.title} down`"
               @click.stop="moveDocument(doc.id, userDocuments[index + 1].id)"
-            >&#9660;</button>
+            ><ChevronDown :size="12" aria-hidden="true" /></button>
           </span>
           <button
             class="delete-btn"
@@ -149,7 +151,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { FileText, Image as ImageIcon, Plus, Trash2 } from '@lucide/vue'
+import { ChevronDown, ChevronUp, FileText, Image as ImageIcon, Plus, Trash2 } from '@lucide/vue'
 import { invoke } from '@tauri-apps/api/core'
 import { DocumentService } from '@/services/DocumentService'
 import type { Document, ApiResponse } from '@/types/api'
@@ -493,14 +495,18 @@ onMounted(() => {
 
 /* Reorder buttons */
 .document-reorder-buttons {
-  display: none;
+  /* Always visible (MIMIR-T-0691); subdued until the row is in use. */
+  display: flex;
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+  opacity: 0.45;
+  transition: opacity 0.15s;
 }
 
-.document-item:hover .document-reorder-buttons {
-  display: flex;
+.document-item:hover .document-reorder-buttons,
+.document-item:focus-within .document-reorder-buttons {
+  opacity: 1;
 }
 
 .btn-reorder {
@@ -548,7 +554,8 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.document-item:hover .delete-btn {
+.document-item:hover .delete-btn,
+.document-item:focus-within .delete-btn {
   opacity: 1;
 }
 

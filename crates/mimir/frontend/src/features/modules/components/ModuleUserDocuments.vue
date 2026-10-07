@@ -326,7 +326,8 @@ defineExpose({
   transition: all 0.15s;
 }
 
-.document-item:hover .delete-btn {
+.document-item:hover .delete-btn,
+.document-item:focus-within .delete-btn {
   opacity: 1;
 }
 

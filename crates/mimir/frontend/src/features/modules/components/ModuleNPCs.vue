@@ -279,7 +279,8 @@ onUnmounted(() => {
   transition: opacity var(--transition-fast), color var(--transition-fast);
 }
 
-.npc-card:hover .remove-npc {
+.npc-card:hover .remove-npc,
+.npc-card:focus-within .remove-npc {
   opacity: 1;
 }
 
