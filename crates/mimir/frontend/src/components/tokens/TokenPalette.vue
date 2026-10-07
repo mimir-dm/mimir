@@ -177,7 +177,7 @@ import { ref, watch, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { TokenType, TokenSize, TokenConfigWithMonster } from '@/types/api'
 import { TOKEN_TYPE_COLORS } from '@/types/api'
-import { useCampaignStore } from '@/stores/campaigns'
+import { currentCampaignId } from '@/features/sources/composables/catalog/campaignScope'
 import { useDebouncedSearch } from '@/composables/useDebouncedSearch'
 import { sizeToTokenSize, normalizeSize } from '@/constants/tokenSizes'
 
@@ -232,17 +232,13 @@ const emit = defineEmits<{
   'light-config-change': [lightType: LightType | null]
 }>()
 
-const campaignStore = useCampaignStore()
 
 // Monster search using debounced composable
 const monsterSearch = useDebouncedSearch<Monster>({
   command: 'search_monsters',
-  buildFilter: (query) => ({
-    name_contains: query,
-    sources: campaignStore.currentCampaignSources.length > 0
-      ? campaignStore.currentCampaignSources
-      : null
-  }),
+  // The backend limits results to the campaign's sources (MIMIR-T-0675).
+  buildFilter: (query) => ({ name_contains: query, sources: null }),
+  extraArgs: () => ({ campaignId: currentCampaignId() }),
   mapResult: (m: any) => ({
     id: m.id || 0,
     name: m.name,

@@ -24,6 +24,7 @@ use crate::state::AppState;
 pub fn search_races(
     state: State<'_, AppState>,
     filter: Option<RaceFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -32,7 +33,15 @@ pub fn search_races(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = RaceService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -113,6 +122,7 @@ pub fn count_races(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_backgrounds(
     state: State<'_, AppState>,
     filter: Option<BackgroundFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -121,7 +131,15 @@ pub fn search_backgrounds(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = BackgroundService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -202,6 +220,7 @@ pub fn count_backgrounds(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_classes(
     state: State<'_, AppState>,
     filter: Option<ClassFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -210,7 +229,15 @@ pub fn search_classes(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = ClassService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -462,6 +489,7 @@ pub fn list_subclass_features(
 pub fn search_feats(
     state: State<'_, AppState>,
     filter: Option<FeatFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -470,7 +498,15 @@ pub fn search_feats(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = FeatService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),

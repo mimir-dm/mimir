@@ -13,6 +13,7 @@ use crate::state::AppState;
 pub fn search_monsters(
     state: State<'_, AppState>,
     filter: Option<MonsterFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -26,7 +27,15 @@ pub fn search_monsters(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     println!("[search_monsters] resolved filter: {:?}", filter);
 
     let result = MonsterService::new(&mut db).search_paginated(

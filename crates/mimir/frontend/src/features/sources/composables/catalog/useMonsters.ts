@@ -1,6 +1,6 @@
 import { ref, type Ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useCampaignStore } from '@/stores/campaigns'
+import { explicitSources, currentCampaignId } from './campaignScope'
 
 export interface MonsterSummary {
   name: string
@@ -74,25 +74,6 @@ export function useMonsters() {
   const error: Ref<string | null> = ref(null)
   const monsters = ref<MonsterSummary[]>([])
 
-  // Get effective sources: explicit filter sources, or campaign sources if configured
-  // Note: Store access is lazy to avoid Pinia initialization issues
-  const getEffectiveSources = (filterSources?: string[]): string[] | null => {
-    // If explicit sources provided in filter, use those
-    if (filterSources && filterSources.length > 0) {
-      return filterSources
-    }
-    // If campaign has sources configured, use those
-    try {
-      const campaignStore = useCampaignStore()
-      if (campaignStore.currentCampaignSources.length > 0) {
-        return campaignStore.currentCampaignSources
-      }
-    } catch {
-      // Store not available yet, use no filter
-    }
-    // No filtering - return null to show all
-    return null
-  }
 
   async function initializeMonsterCatalog() {
     // No initialization needed for DB-backed catalog
@@ -106,7 +87,7 @@ export function useMonsters() {
       // Transform to backend MonsterFilter format
       const backendFilter = {
         name_contains: filters.query || null,
-        sources: getEffectiveSources(filters.sources),
+        sources: explicitSources(filters.sources),
         creature_type: filters.types?.length ? filters.types[0] : null,  // Backend expects single type
         size: filters.sizes?.length ? filters.sizes[0] : null,  // Backend expects single size
         cr: null,  // Using cr directly instead of min/max for now
@@ -114,6 +95,7 @@ export function useMonsters() {
 
       const response = await invoke<{ success: boolean; data?: MonsterSummary[]; error?: string }>('search_monsters', {
         filter: backendFilter,
+        campaignId: currentCampaignId(),
         limit: 10000,
         offset: 0
       })

@@ -50,5 +50,7 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
+# SRD catalog fixture for catalog search tests.
+mimir-core = { path = "../mimir-core", features = ["fixtures"] }
 tempfile = { workspace = true }
 diesel_migrations = { workspace = true }

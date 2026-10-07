@@ -10,6 +10,7 @@ import {
   setupInvokeMock,
   resetInvokeMock,
   mockCommand,
+  expectCommandCalledWith,
 } from '@tests/helpers/mockInvoke'
 import { useDebouncedSearch } from '@/composables/useDebouncedSearch'
 
@@ -171,6 +172,31 @@ describe('useDebouncedSearch', () => {
       expect(search.query.value).toBe('dragon')
       await vi.advanceTimersByTimeAsync(400)
       expect(search.results.value).toHaveLength(1)
+    })
+  })
+
+  describe('extra invoke arguments', () => {
+    it('adds extraArgs to the invoke call, evaluated at search time', async () => {
+      mockCommand('search_monsters', [])
+      let campaignId = 'camp-1'
+      const search = useDebouncedSearch({
+        command: 'search_monsters',
+        buildFilter: (q) => ({ name_contains: q, sources: null }),
+        mapResult: (m: any) => m,
+        extraArgs: () => ({ campaignId }),
+      })
+
+      campaignId = 'camp-2'
+      search.query.value = 'gob'
+      search.search()
+      await vi.runAllTimersAsync()
+
+      expectCommandCalledWith('search_monsters', {
+        filter: { name_contains: 'gob', sources: null },
+        campaignId: 'camp-2',
+        limit: 10,
+        offset: 0,
+      })
     })
   })
 })

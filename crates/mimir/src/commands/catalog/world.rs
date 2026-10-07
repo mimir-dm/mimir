@@ -25,6 +25,7 @@ use crate::state::AppState;
 pub fn search_conditions(
     state: State<'_, AppState>,
     filter: Option<ConditionFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -33,7 +34,15 @@ pub fn search_conditions(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let limit = limit.unwrap_or(DEFAULT_QUERY_LIMIT);
     let offset = offset.unwrap_or(0);
 
@@ -172,6 +181,7 @@ pub fn count_conditions(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_languages(
     state: State<'_, AppState>,
     filter: Option<LanguageFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -180,7 +190,15 @@ pub fn search_languages(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = LanguageService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -279,6 +297,7 @@ fn format_trap_type(type_code: Option<&str>) -> String {
 pub fn search_traps(
     state: State<'_, AppState>,
     filter: Option<TrapFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -287,7 +306,15 @@ pub fn search_traps(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let limit = limit.unwrap_or(DEFAULT_QUERY_LIMIT);
     let offset = offset.unwrap_or(0);
 
@@ -415,6 +442,7 @@ pub fn count_traps(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_hazards(
     state: State<'_, AppState>,
     filter: Option<HazardFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -423,7 +451,15 @@ pub fn search_hazards(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = HazardService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -504,6 +540,7 @@ pub fn count_hazards(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_actions(
     state: State<'_, AppState>,
     filter: Option<ActionFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -512,7 +549,15 @@ pub fn search_actions(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = ActionService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),
@@ -593,6 +638,7 @@ pub fn count_actions(state: State<'_, AppState>) -> ApiResponse<i64> {
 pub fn search_deities(
     state: State<'_, AppState>,
     filter: Option<DeityFilter>,
+    campaign_id: Option<String>,
     limit: Option<i64>,
     offset: Option<i64>,
 ) -> ApiResponse<Vec<Value>> {
@@ -601,7 +647,15 @@ pub fn search_deities(
         Err(e) => return ApiResponse::err(e),
     };
 
-    let filter = filter.unwrap_or_default();
+    let mut filter = filter.unwrap_or_default();
+    filter.sources = match super::helpers::effective_sources(
+        &mut db,
+        filter.sources.take(),
+        campaign_id.as_deref(),
+    ) {
+        Ok(sources) => sources,
+        Err(e) => return ApiResponse::err(e),
+    };
     let result = DeityService::new(&mut db).search_paginated(
         &filter,
         limit.unwrap_or(DEFAULT_QUERY_LIMIT),

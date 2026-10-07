@@ -2,7 +2,22 @@
 //!
 //! Shared utilities for parsing and processing catalog data.
 
+use diesel::SqliteConnection;
+use mimir_core::services::CatalogSearch;
 use serde_json::Value;
+
+/// The sources a catalog search should use: explicit filter sources if any,
+/// else the campaign's configured sources, else all (`None`). The same rule
+/// MCP uses, from `CatalogSearch::effective_sources`.
+pub fn effective_sources(
+    db: &mut SqliteConnection,
+    explicit: Option<Vec<String>>,
+    campaign_id: Option<&str>,
+) -> Result<Option<Vec<String>>, String> {
+    CatalogSearch::new(db)
+        .effective_sources(explicit, campaign_id)
+        .map_err(|e| e.to_string())
+}
 
 /// Find the level at which a class gains its subclass.
 pub fn find_subclass_level(data: &Value) -> i32 {

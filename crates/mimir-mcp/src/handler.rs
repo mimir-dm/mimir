@@ -701,6 +701,167 @@ mod tests {
         }
     }
 
+    // -- Catalog search over the SRD fixture (MIMIR-T-0674) -------------------
+
+    fn srd_handler() -> MimirHandler {
+        let ctx = test_ctx();
+        let mut db = ctx.connect().expect("test db");
+        mimir_core::seed::srd::seed_srd_catalog(&mut db).expect("SRD catalog");
+        MimirHandler::with_context(ctx)
+    }
+
+    fn names_of(res: &Value, key: &str) -> Vec<String> {
+        let mut names: Vec<String> = res[key]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|r| r["name"].as_str().unwrap().to_string())
+            .collect();
+        names.sort();
+        names
+    }
+
+    #[tokio::test]
+    async fn search_catalog_cr_range_is_applied() {
+        let handler = srd_handler();
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "monster", "cr_max": 0.25}),
+        )
+        .await;
+        assert_eq!(
+            names_of(&res, "monsters"),
+            ["Goblin", "Kobold", "Rat", "Skeleton", "Wolf", "Zombie"]
+        );
+
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "monster", "cr_min": 10, "cr_max": 20}),
+        )
+        .await;
+        assert_eq!(
+            names_of(&res, "monsters"),
+            ["Adult Red Dragon", "Vampire", "Young Red Dragon"]
+        );
+    }
+
+    #[tokio::test]
+    async fn search_catalog_spell_class_and_school_are_applied() {
+        let handler = srd_handler();
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "spell", "class_name": "Cleric", "level": 0}),
+        )
+        .await;
+        assert_eq!(
+            names_of(&res, "spells"),
+            ["Guidance", "Light", "Sacred Flame"]
+        );
+
+        // School by name (as the argument doc says) and by catalog code.
+        for school in ["evocation", "V"] {
+            let res = call_ok(
+                &handler,
+                "search_catalog",
+                json!({"category": "spell", "class_name": "wizard", "level": 3, "school": school}),
+            )
+            .await;
+            assert_eq!(
+                names_of(&res, "spells"),
+                ["Fireball", "Lightning Bolt"],
+                "school {school}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn search_catalog_response_shapes_are_unchanged() {
+        let ctx = test_ctx();
+        {
+            let mut db = ctx.connect().unwrap();
+            mimir_core::seed::srd::seed_srd_catalog(&mut db).unwrap();
+        }
+        let handler = MimirHandler::with_context(ctx);
+        setup_campaign(&handler).await;
+        call_ok(
+            &handler,
+            "create_homebrew",
+            json!({
+                "content_type": "monster",
+                "name": "Frost Goblin",
+                "data": "{}",
+                "cr": "1/2",
+                "creature_type": "humanoid",
+                "size": "Small"
+            }),
+        )
+        .await;
+
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "monster", "name": "goblin"}),
+        )
+        .await;
+        assert_eq!(res["count"], 2);
+        let rows = res["monsters"].as_array().unwrap();
+        let catalog = &rows[0];
+        assert_eq!(catalog["name"], "Goblin");
+        assert_eq!(catalog["source"], "MM");
+        assert_eq!(catalog["cr"], "1/4");
+        assert_eq!(catalog["is_homebrew"], false);
+        for key in ["creature_type", "size"] {
+            assert!(catalog.get(key).is_some(), "catalog row has {key}");
+        }
+        assert!(catalog.get("homebrew_id").is_none());
+        let hb = &rows[1];
+        assert_eq!(hb["name"], "Frost Goblin");
+        assert_eq!(hb["source"], "Homebrew");
+        assert_eq!(hb["is_homebrew"], true);
+        assert!(hb["homebrew_id"].is_string());
+
+        // include_homebrew: false drops the homebrew row.
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "monster", "name": "goblin", "include_homebrew": false}),
+        )
+        .await;
+        assert_eq!(names_of(&res, "monsters"), ["Goblin"]);
+
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "item", "name": "longsword", "limit": 1}),
+        )
+        .await;
+        let item = &res["items"][0];
+        for key in ["name", "source", "rarity", "item_type"] {
+            assert!(item.get(key).is_some(), "item row has {key}");
+        }
+
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "spell", "name": "fireball"}),
+        )
+        .await;
+        assert_eq!(res["spells"][0]["level"], 3);
+        assert_eq!(res["spells"][0]["school"], "V");
+
+        let res = call_ok(
+            &handler,
+            "search_catalog",
+            json!({"category": "race", "limit": 1}),
+        )
+        .await;
+        let race = res["races"][0].as_object().unwrap();
+        assert_eq!(race.keys().collect::<Vec<_>>(), ["name", "source"]);
+    }
+
     // -- Error cases ----------------------------------------------------------
 
     #[tokio::test]
