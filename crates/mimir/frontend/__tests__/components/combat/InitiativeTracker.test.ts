@@ -278,4 +278,119 @@ describe('InitiativeTracker', () => {
       expect(items).toEqual(['+2 (round 2)', '−6 (round 1)'])
     })
   })
+
+  describe('conditions and concentration (MIMIR-T-0679)', () => {
+    const AFFECTED: CombatState = {
+      ...FIGHT,
+      session: { ...FIGHT.session, round: 2 },
+      entries: FIGHT.entries.map((e) =>
+        e.id === 'g1'
+          ? {
+              ...e,
+              is_concentrating: true,
+              conditions: [
+                { name: 'prone', expires_round: null },
+                { name: 'frightened', expires_round: 3 },
+              ],
+            }
+          : e,
+      ),
+    }
+
+    async function mountAffected() {
+      mockCommand('get_active_combat', AFFECTED)
+      return mountTracker()
+    }
+
+    function row(wrapper: Awaited<ReturnType<typeof mountTracker>>, i: number) {
+      return wrapper.findAll('[data-testid="combat-entry"]')[i]
+    }
+
+    it('shows condition pills and a concentration badge on the row', async () => {
+      const wrapper = await mountAffected()
+      const pills = row(wrapper, 1).findAll('[data-testid="condition-pill"]')
+      expect(pills.map((p) => p.text())).toEqual(['prone', 'frightened'])
+      expect(pills[1].attributes('title')).toContain('until the end of round 3')
+      expect(row(wrapper, 1).find('[data-testid="concentration-badge"]').exists()).toBe(true)
+      expect(row(wrapper, 0).find('[data-testid="concentration-badge"]').exists()).toBe(false)
+    })
+
+    it('removes a condition by clicking its pill', async () => {
+      mockCommand('remove_combat_condition', { ...AFFECTED.entries[1], conditions: [{ name: 'frightened', expires_round: 3 }] })
+      const wrapper = await mountAffected()
+      await row(wrapper, 1).findAll('[data-testid="condition-pill"]')[0].trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('remove_combat_condition', { entryId: 'g1', name: 'prone' })
+      expect(row(wrapper, 1).findAll('[data-testid="condition-pill"]')).toHaveLength(1)
+    })
+
+    it('adds a condition with an optional duration', async () => {
+      mockCommand('add_combat_condition', { ...FIGHT.entries[2], conditions: [{ name: 'poisoned', expires_round: 3 }] })
+      mockCommand('get_active_combat', FIGHT)
+      const wrapper = await mountTracker()
+      await row(wrapper, 2).get('.entry-name').trigger('click')
+      expect(wrapper.get('[data-testid="condition-select"]').findAll('option').length).toBe(16) // placeholder + 15
+      await wrapper.get('[data-testid="condition-select"]').setValue('poisoned')
+      await wrapper.get('[data-testid="condition-duration"]').setValue('2')
+      await wrapper.get('[data-testid="add-condition"]').trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('add_combat_condition', { entryId: 'g2', name: 'poisoned', durationRounds: 2 })
+
+      await wrapper.get('[data-testid="condition-select"]').setValue('prone')
+      await wrapper.get('[data-testid="condition-duration"]').setValue('')
+      await wrapper.get('[data-testid="add-condition"]').trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('add_combat_condition', { entryId: 'g2', name: 'prone', durationRounds: null })
+    })
+
+    it('conditions work on entries without HP', async () => {
+      mockCommand('get_active_combat', FIGHT)
+      const wrapper = await mountTracker()
+      await row(wrapper, 0).get('.entry-name').trigger('click')
+      expect(wrapper.find('[data-testid="condition-select"]').exists()).toBe(true)
+    })
+
+    it('toggles concentration', async () => {
+      mockCommand('set_combat_concentration', { ...FIGHT.entries[2], is_concentrating: true })
+      mockCommand('get_active_combat', FIGHT)
+      const wrapper = await mountTracker()
+      await row(wrapper, 2).get('.entry-name').trigger('click')
+      await wrapper.get('[data-testid="concentration-toggle"]').setValue(true)
+      await flushPromises()
+      expectCommandCalledWith('set_combat_concentration', { entryId: 'g2', concentrating: true })
+      expect(row(wrapper, 2).find('[data-testid="concentration-badge"]').exists()).toBe(true)
+    })
+
+    it('asks for a concentration save after damage; Lost ends concentration', async () => {
+      mockCommand('combat_damage', {
+        entry: { ...AFFECTED.entries[1], current_hp: 2 },
+        concentration_dc: 12,
+      })
+      mockCommand('set_combat_concentration', { ...AFFECTED.entries[1], current_hp: 2, is_concentrating: false })
+      const wrapper = await mountAffected()
+      await row(wrapper, 1).get('.entry-name').trigger('click')
+      await wrapper.get('[data-testid="hp-amount"]').setValue('5')
+      await wrapper.get('[data-testid="hp-damage"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.get('[data-testid="concentration-prompt"]').text()).toContain('Concentration save DC 12')
+
+      await wrapper.get('[data-testid="concentration-lost"]').trigger('click')
+      await flushPromises()
+      expectCommandCalledWith('set_combat_concentration', { entryId: 'g1', concentrating: false })
+      expect(wrapper.find('[data-testid="concentration-prompt"]').exists()).toBe(false)
+      expect(row(wrapper, 1).find('[data-testid="concentration-badge"]').exists()).toBe(false)
+    })
+
+    it('Kept closes the prompt and keeps concentration', async () => {
+      mockCommand('combat_damage', { entry: { ...AFFECTED.entries[1], current_hp: 2 }, concentration_dc: 10 })
+      const wrapper = await mountAffected()
+      await row(wrapper, 1).get('.entry-name').trigger('click')
+      await wrapper.get('[data-testid="hp-amount"]').setValue('2')
+      await wrapper.get('[data-testid="hp-damage"]').trigger('click')
+      await flushPromises()
+      await wrapper.get('[data-testid="concentration-kept"]').trigger('click')
+      expect(wrapper.find('[data-testid="concentration-prompt"]').exists()).toBe(false)
+      expect(row(wrapper, 1).find('[data-testid="concentration-badge"]').exists()).toBe(true)
+    })
+  })
 })

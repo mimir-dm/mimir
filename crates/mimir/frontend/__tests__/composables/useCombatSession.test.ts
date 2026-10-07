@@ -188,4 +188,28 @@ describe('useCombatSession', () => {
       expect(combat.error.value).toContain('negative')
     })
   })
+
+  describe('conditions and concentration (MIMIR-T-0679)', () => {
+    it('adds and removes conditions, and toggles concentration', async () => {
+      const base = state(1, [entry('a', 'A', 15)], 'a')
+      mockCommand('start_combat', base)
+      mockCommand('add_combat_condition', { ...base.entries[0], conditions: [{ name: 'prone', expires_round: null }] })
+      mockCommand('remove_combat_condition', { ...base.entries[0], conditions: [] })
+      mockCommand('set_combat_concentration', { ...base.entries[0], is_concentrating: true })
+      const combat = useCombatSession('m1')
+      await combat.start()
+
+      await combat.addCondition('a', 'prone', null)
+      expectCommandCalledWith('add_combat_condition', { entryId: 'a', name: 'prone', durationRounds: null })
+      expect(combat.state.value?.entries[0].conditions.map((c) => c.name)).toEqual(['prone'])
+
+      await combat.removeCondition('a', 'prone')
+      expectCommandCalledWith('remove_combat_condition', { entryId: 'a', name: 'prone' })
+      expect(combat.state.value?.entries[0].conditions).toEqual([])
+
+      await combat.setConcentration('a', true)
+      expectCommandCalledWith('set_combat_concentration', { entryId: 'a', concentrating: true })
+      expect(combat.state.value?.entries[0].is_concentrating).toBe(true)
+    })
+  })
 })

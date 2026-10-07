@@ -68,7 +68,40 @@
               </button>
             </div>
 
+            <div v-if="e.conditions.length || e.is_concentrating" class="entry-badges">
+              <span
+                v-if="e.is_concentrating"
+                class="concentration-badge"
+                data-testid="concentration-badge"
+                title="Concentrating"
+              >
+                ◎ Conc.
+              </span>
+              <button
+                v-for="c in e.conditions"
+                :key="c.name"
+                class="condition-pill"
+                data-testid="condition-pill"
+                :title="conditionTitle(c)"
+                @click="combat.removeCondition(e.id, c.name)"
+              >
+                {{ c.name }}
+              </button>
+            </div>
+
             <div v-if="expandedId === e.id" class="entry-details" data-testid="entry-details">
+              <div
+                v-if="concentrationPrompt?.entryId === e.id"
+                class="concentration-prompt"
+                data-testid="concentration-prompt"
+                role="alert"
+              >
+                <span>Concentration save DC {{ concentrationPrompt.dc }}</span>
+                <button class="btn" data-testid="concentration-kept" @click="concentrationPrompt = null">Kept</button>
+                <button class="btn btn-danger" data-testid="concentration-lost" @click="loseConcentration(e.id)">
+                  Lost
+                </button>
+              </div>
               <template v-if="e.current_hp !== null">
                 <div class="hp-bar" :title="hpTitle(e)">
                   <div
@@ -120,6 +153,33 @@
                   Set HP
                 </button>
               </div>
+              <div class="conditions-editor">
+                <select v-model="conditionToAdd" data-testid="condition-select" aria-label="Condition">
+                  <option value="">Condition…</option>
+                  <option v-for="c in SRD_CONDITIONS" :key="c" :value="c">{{ c }}</option>
+                </select>
+                <input
+                  v-model="conditionRounds"
+                  data-testid="condition-duration"
+                  type="number"
+                  min="1"
+                  placeholder="Rnds"
+                  aria-label="Duration in rounds (empty: until removed)"
+                  title="Duration in rounds, including this one (empty: until removed)"
+                />
+                <button class="btn" data-testid="add-condition" :disabled="!conditionToAdd" @click="addCondition(e.id)">
+                  Add
+                </button>
+              </div>
+              <label class="concentration">
+                <input
+                  type="checkbox"
+                  data-testid="concentration-toggle"
+                  :checked="e.is_concentrating"
+                  @change="combat.setConcentration(e.id, ($event.target as HTMLInputElement).checked)"
+                />
+                Concentrating
+              </label>
               <ul v-if="e.damage_log.length" class="hp-log" data-testid="hp-log" aria-label="Recent HP changes">
                 <li v-for="(change, i) in [...e.damage_log].reverse()" :key="i" :class="change.kind">
                   {{ change.kind === 'damage' ? '−' : '+' }}{{ change.amount }} (round {{ change.round }})
@@ -197,7 +257,7 @@ import { invoke } from '@tauri-apps/api/core'
 import AppModal from '@/components/shared/AppModal.vue'
 import { getMonsterDisplayName, type MonsterWithData } from '@/features/modules/composables/useModuleMonsters'
 import { useCombatSession } from '../composables/useCombatSession'
-import type { CombatEntry } from '../types'
+import { SRD_CONDITIONS, type ActiveCondition, type CombatEntry } from '../types'
 
 const props = defineProps<{
   moduleId: string
@@ -237,6 +297,32 @@ function toggleExpanded(entryId: string) {
   expandedId.value = expandedId.value === entryId ? null : entryId
   hpAmount.value = ''
   maxHpInput.value = ''
+  conditionToAdd.value = ''
+  conditionRounds.value = ''
+}
+
+// --- Conditions and concentration -------------------------------------------
+
+const conditionToAdd = ref('')
+const conditionRounds = ref<number | string>('')
+const concentrationPrompt = ref<{ entryId: string; dc: number } | null>(null)
+
+function conditionTitle(c: ActiveCondition): string {
+  const until = c.expires_round === null ? '' : ` until the end of round ${c.expires_round}`
+  return `${c.name}${until} — click to remove`
+}
+
+async function addCondition(entryId: string) {
+  if (!conditionToAdd.value) return
+  const rounds = positiveInt(conditionRounds.value, 1)
+  await combat.addCondition(entryId, conditionToAdd.value, rounds)
+  conditionToAdd.value = ''
+  conditionRounds.value = ''
+}
+
+async function loseConcentration(entryId: string) {
+  concentrationPrompt.value = null
+  await combat.setConcentration(entryId, false)
 }
 
 function positiveInt(value: number | string, min: number): number | null {
@@ -261,7 +347,10 @@ async function applyDamage(entryId: string) {
   const amount = positiveInt(hpAmount.value, 0)
   if (amount === null) return
   const result = await combat.damage(entryId, amount)
-  if (result) hpAmount.value = ''
+  if (!result) return
+  hpAmount.value = ''
+  concentrationPrompt.value =
+    result.concentration_dc !== null ? { entryId, dc: result.concentration_dc } : null
 }
 
 async function applyHeal(entryId: string) {
@@ -531,6 +620,92 @@ onMounted(() => {
   gap: var(--spacing-xs);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
+}
+
+.entry-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 2px 0 0 48px;
+}
+
+.condition-pill,
+.concentration-badge {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.condition-pill {
+  cursor: pointer;
+}
+
+.condition-pill:hover {
+  text-decoration: line-through;
+}
+
+.concentration-badge {
+  border-color: var(--color-info, var(--color-border));
+  color: var(--color-info, var(--color-text));
+}
+
+.conditions-editor {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.conditions-editor select {
+  flex: 1;
+  min-width: 0;
+}
+
+.conditions-editor select,
+.conditions-editor input {
+  padding: 2px 4px;
+  background: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.conditions-editor input {
+  width: 60px;
+}
+
+.conditions-editor .btn {
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+
+.concentration {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.8rem;
+}
+
+.concentration-prompt {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 4px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.concentration-prompt span {
+  flex: 1;
+}
+
+.concentration-prompt .btn {
+  padding: 2px 8px;
+  font-size: 0.75rem;
 }
 
 .hp-log {
