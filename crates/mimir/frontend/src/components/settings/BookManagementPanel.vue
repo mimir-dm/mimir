@@ -1,13 +1,10 @@
 <template>
-  <AppModal
-    :visible="visible"
-    title="Manage Catalog Sources"
-    size="lg"
-    :closable="!isImporting && !isDeleting"
-    :close-on-overlay="!isImporting && !isDeleting"
-    :close-on-escape="!isImporting && !isDeleting"
-    @close="closeModal"
-  >
+  <section class="settings-panel" aria-labelledby="import-books-title" data-testid="import-books-panel">
+    <header class="panel-header">
+      <h2 id="import-books-title" class="content-title">Catalog Sources</h2>
+      <p class="content-description">Import 5etools archives into the reference library, or remove sources.</p>
+    </header>
+
     <div v-if="isLoadingBooks" class="loading-message">
       Loading sources...
     </div>
@@ -59,7 +56,7 @@
       </table>
     </div>
 
-    <template #footer>
+    <footer class="panel-footer">
       <div class="footer-left">
         <span v-if="selectedIds.size > 0" class="selection-count">
           {{ selectedIds.size }} selected
@@ -83,52 +80,48 @@
         <button @click="handleImportBook" class="btn btn-primary" :disabled="isImporting || isDeleting">
           {{ isImporting ? 'Importing...' : 'Import 5etools Data' }}
         </button>
-        <button @click="closeModal" class="btn btn-secondary" :disabled="isImporting || isDeleting">
-          Close
+      </div>
+    </footer>
+    <!-- Delete Confirmation Modal -->
+    <AppModal
+      :visible="showDeleteModal"
+      title="Remove Sources"
+      size="sm"
+      :stack-index="1"
+      @close="cancelDelete"
+    >
+      <p v-if="sourcesToDelete.length === 1">
+        Are you sure you want to remove "<strong>{{ sourcesToDelete[0]?.name }}</strong>" from the catalog?
+      </p>
+      <p v-else>
+        Are you sure you want to remove <strong>{{ sourcesToDelete.length }} sources</strong> from the catalog?
+      </p>
+      <p class="warning-text">This will remove all entities from {{ sourcesToDelete.length === 1 ? 'this source' : 'these sources' }}.</p>
+
+      <div v-if="sourcesToDelete.length > 1 && sourcesToDelete.length <= 10" class="sources-list">
+        <div v-for="source in sourcesToDelete" :key="source.id" class="source-item">
+          {{ source.name }} ({{ source.id }})
+        </div>
+      </div>
+
+      <div v-if="deleteError" class="error-message">
+        {{ deleteError }}
+      </div>
+
+      <template #footer>
+        <button @click="cancelDelete" class="btn btn-secondary">
+          Cancel
         </button>
-      </div>
-    </template>
-  </AppModal>
-
-  <!-- Delete Confirmation Modal -->
-  <AppModal
-    :visible="showDeleteModal"
-    title="Remove Sources"
-    size="sm"
-    :stack-index="1"
-    @close="cancelDelete"
-  >
-    <p v-if="sourcesToDelete.length === 1">
-      Are you sure you want to remove "<strong>{{ sourcesToDelete[0]?.name }}</strong>" from the catalog?
-    </p>
-    <p v-else>
-      Are you sure you want to remove <strong>{{ sourcesToDelete.length }} sources</strong> from the catalog?
-    </p>
-    <p class="warning-text">This will remove all entities from {{ sourcesToDelete.length === 1 ? 'this source' : 'these sources' }}.</p>
-
-    <div v-if="sourcesToDelete.length > 1 && sourcesToDelete.length <= 10" class="sources-list">
-      <div v-for="source in sourcesToDelete" :key="source.id" class="source-item">
-        {{ source.name }} ({{ source.id }})
-      </div>
-    </div>
-
-    <div v-if="deleteError" class="error-message">
-      {{ deleteError }}
-    </div>
-
-    <template #footer>
-      <button @click="cancelDelete" class="btn btn-secondary">
-        Cancel
-      </button>
-      <button @click="confirmDelete" class="btn btn-danger" :disabled="isDeleting">
-        {{ isDeleting ? 'Deleting...' : `Remove ${sourcesToDelete.length === 1 ? 'Source' : 'Sources'}` }}
-      </button>
-    </template>
-  </AppModal>
+        <button @click="confirmDelete" class="btn btn-danger" :disabled="isDeleting">
+          {{ isDeleting ? 'Deleting...' : `Remove ${sourcesToDelete.length === 1 ? 'Source' : 'Sources'}` }}
+        </button>
+      </template>
+    </AppModal>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { alertDialog } from '@/composables/useDialog'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
@@ -136,16 +129,10 @@ import AppModal from '@/components/shared/AppModal.vue'
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import type { BookInfo, ImportResponse } from '@/types/book'
 
-interface Props {
-  visible: boolean
-}
-
-interface Emits {
-  (e: 'close'): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+/**
+ * Catalog sources (Import Books), a section of Settings (MIMIR-T-0692; it
+ * was a modal).
+ */
 
 const books = ref<BookInfo[]>([])
 const selectedIds = ref<Set<string>>(new Set())
@@ -166,13 +153,7 @@ const isIndeterminate = computed(() => {
   return selectedIds.value.size > 0 && selectedIds.value.size < books.value.length
 })
 
-// Load books when modal becomes visible
-watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    loadBooks()
-    selectedIds.value.clear()
-  }
-})
+onMounted(loadBooks)
 
 function formatDate(isoDate: string): string {
   try {
@@ -356,12 +337,37 @@ function cancelDelete() {
   deleteError.value = null
 }
 
-function closeModal() {
-  emit('close')
-}
 </script>
 
 <style scoped>
+/* Section header and footer inside the Settings pane (MIMIR-T-0692). */
+.panel-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.panel-header .content-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.panel-header .content-description {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.panel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
 .loading-message {
   text-align: center;
   color: var(--color-text-secondary);
