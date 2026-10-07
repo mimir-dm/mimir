@@ -28,12 +28,12 @@ impl Psionic {
 
     /// Check if this is a discipline.
     pub fn is_discipline(&self) -> bool {
-        self.psionic_type.as_ref().map_or(false, |t| t == "D")
+        self.psionic_type.as_ref().is_some_and(|t| t == "D")
     }
 
     /// Check if this is a talent.
     pub fn is_talent(&self) -> bool {
-        self.psionic_type.as_ref().map_or(false, |t| t == "T")
+        self.psionic_type.as_ref().is_some_and(|t| t == "T")
     }
 }
 

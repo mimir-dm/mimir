@@ -429,7 +429,7 @@ mod tests {
 
         let objects = place_trees(&noise, &config, 2560.0, 2560.0, &alloc, &mut rng);
         // Should have 2 objects per tree (shadow + tree)
-        assert!(objects.len() > 0);
+        assert!(!objects.is_empty());
         assert_eq!(objects.len() % 2, 0);
 
         // First object of each pair should be shadow

@@ -588,9 +588,8 @@ pub fn export_campaign_documents(
                             for poi in &map_pois {
                                 total_pois += 1;
                                 poi_content.push_str(&format!(
-                                    "**{}** ({})\n",
-                                    poi.name,
-                                    format!("{},{}", poi.grid_x, poi.grid_y)
+                                    "**{}** ({},{})\n",
+                                    poi.name, poi.grid_x, poi.grid_y
                                 ));
                                 if let Some(ref desc) = poi.description {
                                     poi_content.push_str(&format!("{}\n", desc));
@@ -719,7 +718,6 @@ pub fn export_campaign_documents(
 
             // Compute HP and hit dice for NPC
             let con_mod = (npc.constitution - 10).div_euclid(2);
-            let mut char_data = char_data;
             char_data.hit_points_max = compute_hp_max(&char_data.classes, con_mod);
             char_data.hit_die = compute_hit_die_string(&char_data.classes);
 
@@ -1291,9 +1289,8 @@ pub fn export_module_documents(
                         for poi in &map_pois {
                             total_pois += 1;
                             poi_content.push_str(&format!(
-                                "### {} ({})\n",
-                                poi.name,
-                                format!("{},{}", poi.grid_x, poi.grid_y)
+                                "### {} ({},{})\n",
+                                poi.name, poi.grid_x, poi.grid_y
                             ));
                             if let Some(ref desc) = poi.description {
                                 poi_content.push_str(&format!("{}\n", desc));

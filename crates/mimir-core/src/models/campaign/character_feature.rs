@@ -78,8 +78,8 @@ impl FeatureType {
         }
     }
 
-    /// Parse from string.
-    pub fn from_str(s: &str) -> Option<Self> {
+    /// Parse from the stored string form.
+    pub fn parse(s: &str) -> Option<Self> {
         match s {
             "fighting_style" => Some(FeatureType::FightingStyle),
             "metamagic" => Some(FeatureType::Metamagic),
@@ -206,26 +206,20 @@ mod tests {
     #[test]
     fn test_feature_type_from_str() {
         assert_eq!(
-            FeatureType::from_str("fighting_style"),
+            FeatureType::parse("fighting_style"),
             Some(FeatureType::FightingStyle)
         );
         assert_eq!(
-            FeatureType::from_str("metamagic"),
+            FeatureType::parse("metamagic"),
             Some(FeatureType::Metamagic)
         );
+        assert_eq!(FeatureType::parse("maneuver"), Some(FeatureType::Maneuver));
         assert_eq!(
-            FeatureType::from_str("maneuver"),
-            Some(FeatureType::Maneuver)
-        );
-        assert_eq!(
-            FeatureType::from_str("invocation"),
+            FeatureType::parse("invocation"),
             Some(FeatureType::Invocation)
         );
-        assert_eq!(
-            FeatureType::from_str("pact_boon"),
-            Some(FeatureType::PactBoon)
-        );
-        assert_eq!(FeatureType::from_str("invalid"), None);
+        assert_eq!(FeatureType::parse("pact_boon"), Some(FeatureType::PactBoon));
+        assert_eq!(FeatureType::parse("invalid"), None);
     }
 
     #[test]

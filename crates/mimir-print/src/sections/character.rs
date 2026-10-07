@@ -315,7 +315,7 @@ impl Renderable for CharacterSection {
                     .iter()
                     .find(|p| &p.name == skill_name);
                 let is_prof = prof_entry.is_some();
-                let is_expert = prof_entry.map_or(false, |p| p.expertise);
+                let is_expert = prof_entry.is_some_and(|p| p.expertise);
                 let bonus = ability_mod
                     + if is_expert {
                         prof * 2
@@ -406,7 +406,7 @@ impl Renderable for CharacterSection {
                 .iter()
                 .find(|s| s.name == "Perception");
             let perc_bonus = wis_mod
-                + if perc_prof.map_or(false, |p| p.expertise) {
+                + if perc_prof.is_some_and(|p| p.expertise) {
                     prof * 2
                 } else if perc_prof.is_some() {
                     prof
@@ -664,7 +664,7 @@ impl Renderable for CharacterSection {
 
             // Slot grid: header row, total row, then checkbox rows for tracking
             spell_content.push_str("    #grid(columns: (");
-            spell_content.push_str(&vec!["1fr"; 9].join(", "));
+            spell_content.push_str(&["1fr"; 9].join(", "));
             spell_content.push_str("), column-gutter: 2pt, row-gutter: 2pt,\n");
 
             // Row 1: level headers

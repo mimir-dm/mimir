@@ -1078,8 +1078,8 @@ mod tests {
 
         assert!(!service.exists(&map.id).expect("Failed to check"));
         // Asset should also be deleted
-        let asset = dal::get_campaign_asset_optional(&mut service.conn, &asset_id)
-            .expect("Failed to query");
+        let asset =
+            dal::get_campaign_asset_optional(service.conn, &asset_id).expect("Failed to query");
         assert!(asset.is_none());
     }
 

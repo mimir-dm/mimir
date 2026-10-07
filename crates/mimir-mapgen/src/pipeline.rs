@@ -291,7 +291,7 @@ fn validate_rooms(config: &MapConfig, errors: &mut Vec<ValidationError>) {
 
             if overlaps {
                 errors.push(ValidationError {
-                    field: format!("{}", field_prefix),
+                    field: field_prefix.to_string(),
                     message: format!("Room \"{}\" overlaps with room \"{}\"", room.id, other.id),
                 });
             }
@@ -899,12 +899,10 @@ pub fn generate(config: &MapConfig, seed_override: Option<u64>) -> GenerateResul
             // Add river water as child of root tree (matching DD's structure).
             let river_water = water::water_from_river(&result.water_polygon, river_config, &alloc);
             let level = map.ground_level_mut();
-            let water = level
-                .water
-                .get_or_insert_with(|| crate::format::world::Water {
-                    disable_border: false,
-                    tree: None,
-                });
+            let water = level.water.get_or_insert(crate::format::world::Water {
+                disable_border: false,
+                tree: None,
+            });
             let tree = water
                 .tree
                 .get_or_insert_with(|| crate::format::world::WaterTree {

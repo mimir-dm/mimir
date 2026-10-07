@@ -282,10 +282,10 @@ pub fn render_map(
     let mut grid_bytes: Vec<u8> = Vec::new();
     let encoder = image::codecs::png::PngEncoder::new(&mut grid_bytes);
     img_with_grid.write_with_encoder(encoder).map_err(|e| {
-        PrintError::IoError(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("Failed to encode map image: {}", e),
-        ))
+        PrintError::IoError(std::io::Error::other(format!(
+            "Failed to encode map image: {}",
+            e
+        )))
     })?;
 
     // If tokens exist, render version with tokens
@@ -296,10 +296,10 @@ pub fn render_map(
         let mut token_bytes: Vec<u8> = Vec::new();
         let encoder = image::codecs::png::PngEncoder::new(&mut token_bytes);
         img_with_tokens.write_with_encoder(encoder).map_err(|e| {
-            PrintError::IoError(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to encode map image with tokens: {}", e),
-            ))
+            PrintError::IoError(std::io::Error::other(format!(
+                "Failed to encode map image with tokens: {}",
+                e
+            )))
         })?;
 
         Some(token_bytes)
@@ -407,10 +407,10 @@ pub fn render_map_for_print(
     let mut output_bytes: Vec<u8> = Vec::new();
     let encoder = image::codecs::png::PngEncoder::new(&mut output_bytes);
     img.write_with_encoder(encoder).map_err(|e| {
-        PrintError::IoError(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("Failed to encode map image: {}", e),
-        ))
+        PrintError::IoError(std::io::Error::other(format!(
+            "Failed to encode map image: {}",
+            e
+        )))
     })?;
 
     Ok(RenderedMapForPrint {
@@ -536,7 +536,7 @@ mod tests {
         let image_base64 = create_test_image_base64(540, 324);
         let options = MapPrintOptions::default();
 
-        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+        let result = render_map_for_print(&map, &[], Path::new(""), &image_base64, &options);
 
         assert!(result.is_ok());
         let rendered = result.unwrap();
@@ -554,7 +554,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+        let result = render_map_for_print(&map, &[], Path::new(""), &image_base64, &options);
         assert!(result.is_ok());
     }
 
@@ -572,7 +572,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = render_map_for_print(&map, &[], &Path::new(""), &image_base64, &options);
+        let result = render_map_for_print(&map, &[], Path::new(""), &image_base64, &options);
         assert!(result.is_ok());
     }
 }

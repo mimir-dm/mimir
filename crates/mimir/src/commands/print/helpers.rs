@@ -135,7 +135,7 @@ pub fn enrich_inventory_item(
         let fin = data
             .get("property")
             .and_then(|v| v.as_array())
-            .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("F")));
+            .is_some_and(|arr| arr.iter().any(|p| p.as_str() == Some("F")));
         (it, dmg, dt, ac, fin)
     };
 

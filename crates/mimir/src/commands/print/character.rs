@@ -40,7 +40,7 @@ pub(super) fn homebrew_item_type_to_code(
             let has_ammo_prop = data
                 .get("property")
                 .and_then(|v| v.as_array())
-                .map_or(false, |arr| arr.iter().any(|p| p.as_str() == Some("A")));
+                .is_some_and(|arr| arr.iter().any(|p| p.as_str() == Some("A")));
             if has_range && !has_ammo_prop {
                 // Has range but not just "thrown" (ammunition property = ranged weapon)
                 // Actually: range + no melee damage indicator = ranged
@@ -598,29 +598,26 @@ pub fn export_character(
                     }
                 };
 
-                match item_json {
-                    Some(mut data) => {
-                        // Add inventory-specific fields
-                        if let Some(obj) = data.as_object_mut() {
-                            obj.insert(
-                                "quantity".to_string(),
-                                Value::Number(inv_item.quantity.into()),
-                            );
-                            obj.insert("equipped".to_string(), Value::Bool(inv_item.is_equipped()));
-                            obj.insert("attuned".to_string(), Value::Bool(inv_item.is_attuned()));
-                            if let Some(ref notes) = inv_item.notes {
-                                obj.insert("notes".to_string(), Value::String(notes.clone()));
-                            }
-                        }
-                        // Only include card-worthy items
-                        if is_card_worthy(&data) {
-                            info!("    -> Card-worthy item added");
-                            item_data.push(data);
-                        } else {
-                            info!("    -> Item not card-worthy, skipping");
+                if let Some(mut data) = item_json {
+                    // Add inventory-specific fields
+                    if let Some(obj) = data.as_object_mut() {
+                        obj.insert(
+                            "quantity".to_string(),
+                            Value::Number(inv_item.quantity.into()),
+                        );
+                        obj.insert("equipped".to_string(), Value::Bool(inv_item.is_equipped()));
+                        obj.insert("attuned".to_string(), Value::Bool(inv_item.is_attuned()));
+                        if let Some(ref notes) = inv_item.notes {
+                            obj.insert("notes".to_string(), Value::String(notes.clone()));
                         }
                     }
-                    None => {}
+                    // Only include card-worthy items
+                    if is_card_worthy(&data) {
+                        info!("    -> Card-worthy item added");
+                        item_data.push(data);
+                    } else {
+                        info!("    -> Item not card-worthy, skipping");
+                    }
                 }
             }
 

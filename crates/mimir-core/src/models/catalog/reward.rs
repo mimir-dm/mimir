@@ -28,21 +28,21 @@ impl Reward {
     pub fn is_blessing(&self) -> bool {
         self.reward_type
             .as_ref()
-            .map_or(false, |t| t.eq_ignore_ascii_case("blessing"))
+            .is_some_and(|t| t.eq_ignore_ascii_case("blessing"))
     }
 
     /// Check if this is a boon.
     pub fn is_boon(&self) -> bool {
         self.reward_type
             .as_ref()
-            .map_or(false, |t| t.eq_ignore_ascii_case("boon"))
+            .is_some_and(|t| t.eq_ignore_ascii_case("boon"))
     }
 
     /// Check if this is a charm.
     pub fn is_charm(&self) -> bool {
         self.reward_type
             .as_ref()
-            .map_or(false, |t| t.eq_ignore_ascii_case("charm"))
+            .is_some_and(|t| t.eq_ignore_ascii_case("charm"))
     }
 }
 

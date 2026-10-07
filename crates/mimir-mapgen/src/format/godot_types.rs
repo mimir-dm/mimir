@@ -185,7 +185,7 @@ fn parse_pool_vector2_array(s: &str) -> Result<PoolVector2Array, String> {
                 .map_err(|e| format!("Bad float '{}': {}", s.trim(), e))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    if nums.len() % 2 != 0 {
+    if !nums.len().is_multiple_of(2) {
         return Err(format!(
             "PoolVector2Array has odd number of floats: {}",
             nums.len()

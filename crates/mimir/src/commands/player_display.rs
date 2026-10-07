@@ -99,6 +99,7 @@ pub fn toggle_player_display_fullscreen<R: Runtime>(app: AppHandle<R>) -> Result
 
 /// Send a map to the player display window.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // one argument per field of the frontend's invoke payload
 pub fn send_map_to_display<R: Runtime>(
     app: AppHandle<R>,
     map_id: String,

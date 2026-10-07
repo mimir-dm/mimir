@@ -660,8 +660,7 @@ impl<'a> CatalogImportService<'a> {
         // Look up fluff data for this entity
         let fluff = collected
             .get_fluff(entity_type, name, source)
-            .map(|v| serde_json::to_string(v).ok())
-            .flatten();
+            .and_then(|v| serde_json::to_string(v).ok());
         let fluff_ref = fluff.as_deref();
 
         match entity_type {
@@ -1672,7 +1671,7 @@ impl<'a> CatalogImportService<'a> {
         let toc_str = collected
             .book_contents_toc
             .as_ref()
-            .map(|toc| serde_json::to_string(toc))
+            .map(serde_json::to_string)
             .transpose()?;
 
         // Get cover path - books use pattern: book/{source}/cover.webp
@@ -2174,13 +2173,13 @@ fn base_item_matches_field(base_item: &Value, key: &str, expected: &Value) -> bo
 
     match expected {
         // Boolean requirement: check if the base item has a truthy value for this key
-        Value::Bool(true) => actual.map_or(false, |v| {
-            v.as_bool().unwrap_or(false) || v == &Value::Bool(true)
-        }),
-        Value::Bool(false) => actual.map_or(true, |v| v.as_bool() == Some(false)),
+        Value::Bool(true) => {
+            actual.is_some_and(|v| v.as_bool().unwrap_or(false) || v == &Value::Bool(true))
+        }
+        Value::Bool(false) => actual.is_none_or(|v| v.as_bool() == Some(false)),
         // String requirement: exact match against base item field
         Value::String(s) => {
-            actual.map_or(false, |v| {
+            actual.is_some_and(|v| {
                 if let Some(actual_str) = v.as_str() {
                     actual_str == s.as_str()
                 } else if let Some(arr) = v.as_array() {
@@ -2192,7 +2191,7 @@ fn base_item_matches_field(base_item: &Value, key: &str, expected: &Value) -> bo
             })
         }
         // Number: exact match
-        Value::Number(_) => actual.map_or(false, |v| v == expected),
+        Value::Number(_) => actual == Some(expected),
         _ => false,
     }
 }
@@ -2216,7 +2215,7 @@ fn base_item_excluded(base_item: &Value, excludes: &Value) -> bool {
                     return true;
                 }
                 // Also check name match for string-like excludes
-                if key == "name" || key.chars().next().map_or(false, |c| c.is_uppercase()) {
+                if key == "name" || key.chars().next().is_some_and(|c| c.is_uppercase()) {
                     // Skip — this is a boolean flag check, not a name check
                 }
             }

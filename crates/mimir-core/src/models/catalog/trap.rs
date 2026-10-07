@@ -26,12 +26,12 @@ impl Trap {
 
     /// Check if this is a simple trap.
     pub fn is_simple(&self) -> bool {
-        self.trap_tier.as_ref().map_or(false, |t| t == "simple")
+        self.trap_tier.as_ref().is_some_and(|t| t == "simple")
     }
 
     /// Check if this is a complex trap.
     pub fn is_complex(&self) -> bool {
-        self.trap_tier.as_ref().map_or(false, |t| t == "complex")
+        self.trap_tier.as_ref().is_some_and(|t| t == "complex")
     }
 }
 

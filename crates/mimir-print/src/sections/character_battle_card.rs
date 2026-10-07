@@ -370,7 +370,7 @@ impl Renderable for CharacterBattleCardSection {
 
         let mut typst = String::new();
         let cards_per_page = 4; // 2x2 grid of half-page cards
-        let total_pages = (self.characters.len() + cards_per_page - 1) / cards_per_page;
+        let total_pages = self.characters.len().div_ceil(cards_per_page);
 
         // Set page margins for half-page cards (centered with gutters for cutting)
         typst.push_str("#set page(paper: \"us-letter\", margin: 0.25in)\n");

@@ -79,7 +79,7 @@ impl Item {
 
     /// Check if this is a magic item.
     pub fn is_magic(&self) -> bool {
-        self.rarity.is_some() && self.rarity.as_ref().map_or(false, |r| r != "none")
+        self.rarity.is_some() && self.rarity.as_ref().is_some_and(|r| r != "none")
     }
 }
 

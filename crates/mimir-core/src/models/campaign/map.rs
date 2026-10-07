@@ -73,9 +73,10 @@ impl Map {
 }
 
 /// Lighting mode for initial play state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum LightingMode {
     /// Full visibility
+    #[default]
     Bright,
     /// Partial visibility
     Dim,
@@ -93,20 +94,14 @@ impl LightingMode {
         }
     }
 
-    /// Parse from string.
-    pub fn from_str(s: &str) -> Option<Self> {
+    /// Parse from the stored string form.
+    pub fn parse(s: &str) -> Option<Self> {
         match s {
             "bright" => Some(LightingMode::Bright),
             "dim" => Some(LightingMode::Dim),
             "dark" => Some(LightingMode::Dark),
             _ => None,
         }
-    }
-}
-
-impl Default for LightingMode {
-    fn default() -> Self {
-        LightingMode::Bright
     }
 }
 
@@ -324,10 +319,10 @@ mod tests {
 
     #[test]
     fn test_lighting_mode_from_str() {
-        assert_eq!(LightingMode::from_str("bright"), Some(LightingMode::Bright));
-        assert_eq!(LightingMode::from_str("dim"), Some(LightingMode::Dim));
-        assert_eq!(LightingMode::from_str("dark"), Some(LightingMode::Dark));
-        assert_eq!(LightingMode::from_str("invalid"), None);
+        assert_eq!(LightingMode::parse("bright"), Some(LightingMode::Bright));
+        assert_eq!(LightingMode::parse("dim"), Some(LightingMode::Dim));
+        assert_eq!(LightingMode::parse("dark"), Some(LightingMode::Dark));
+        assert_eq!(LightingMode::parse("invalid"), None);
     }
 
     #[test]

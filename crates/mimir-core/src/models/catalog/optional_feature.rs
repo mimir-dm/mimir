@@ -27,22 +27,22 @@ impl OptionalFeature {
 
     /// Check if this is an Eldritch Invocation.
     pub fn is_eldritch_invocation(&self) -> bool {
-        self.feature_type.as_ref().map_or(false, |t| t == "EI")
+        self.feature_type.as_ref().is_some_and(|t| t == "EI")
     }
 
     /// Check if this is a Metamagic option.
     pub fn is_metamagic(&self) -> bool {
-        self.feature_type.as_ref().map_or(false, |t| t == "MM")
+        self.feature_type.as_ref().is_some_and(|t| t == "MM")
     }
 
     /// Check if this is a Fighting Style.
     pub fn is_fighting_style(&self) -> bool {
-        self.feature_type.as_ref().map_or(false, |t| t == "FS")
+        self.feature_type.as_ref().is_some_and(|t| t == "FS")
     }
 
     /// Check if this is a Battle Master Maneuver.
     pub fn is_maneuver(&self) -> bool {
-        self.feature_type.as_ref().map_or(false, |t| t == "MV")
+        self.feature_type.as_ref().is_some_and(|t| t == "MV")
     }
 }
 

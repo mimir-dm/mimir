@@ -1129,7 +1129,7 @@ to_wall: "north"
         assert_eq!(splat[idx + 3], 255); // slot 3
 
         // Check a cell outside the override region
-        let idx_outside = (0 * map_cells_x + 0) * 4;
+        let idx_outside = 0; // cell (0, 0)
         assert_eq!(splat[idx_outside], 0);
         assert_eq!(splat[idx_outside + 3], 0);
     }
@@ -1342,7 +1342,7 @@ to_wall: "north"
             .iter()
             .filter(|t| t.slot == 2)
             .collect();
-        assert!(corridor_terrains.len() >= 1);
+        assert!(!corridor_terrains.is_empty());
     }
 
     #[test]

@@ -27,10 +27,7 @@ impl MonsterCardSection {
 
     /// Create from a JSON value (expects array)
     pub fn from_json(monsters: Value) -> Self {
-        let monster_vec = monsters
-            .as_array()
-            .map(|arr| arr.clone())
-            .unwrap_or_default();
+        let monster_vec = monsters.as_array().cloned().unwrap_or_default();
         Self::new(monster_vec)
     }
 
@@ -1535,7 +1532,7 @@ mod tests {
         let typst = section.to_typst(&ctx).unwrap();
 
         // 3 goblins on one page, 1 empty slot
-        assert_eq!(typst.matches("Goblin").count() >= 3, true);
+        assert!(typst.matches("Goblin").count() >= 3);
         assert_eq!(
             typst
                 .matches("box(width: 3.875in, height: 5.125in)")

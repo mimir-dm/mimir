@@ -355,11 +355,11 @@ fn island_shoreline(noise_map: &NoiseMap, config: &WaterConfig) -> Vec<(f64, f64
 
     // Convert smoothed radii to pixel coordinates
     let mut shore: Vec<(f64, f64)> = Vec::with_capacity(num_rays + 1);
-    for i in 0..num_rays {
+    for (i, &radius) in radii.iter().enumerate().take(num_rays) {
         let angle = 2.0 * std::f64::consts::PI * (i as f64) / (num_rays as f64);
         let dx = angle.cos();
         let dy = angle.sin();
-        shore.push(((ncx + dx * radii[i]) * ppc, (ncy + dy * radii[i]) * ppc));
+        shore.push(((ncx + dx * radius) * ppc, (ncy + dy * radius) * ppc));
     }
 
     // Close the polygon

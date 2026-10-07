@@ -53,6 +53,7 @@ pub struct NewSubclassFeature<'a> {
 }
 
 impl<'a> NewSubclassFeature<'a> {
+    #[allow(clippy::too_many_arguments)] // one argument per column of the row
     /// Create a new subclass feature entry.
     pub fn new(
         name: &'a str,

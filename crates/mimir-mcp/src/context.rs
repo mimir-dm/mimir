@@ -34,7 +34,7 @@ impl McpContext {
         let db_path = std::env::var("MIMIR_DATABASE_PATH")
             .ok()
             .filter(|p| !p.is_empty() && !p.starts_with("${"))
-            .or_else(|| Self::default_db_path())
+            .or_else(Self::default_db_path)
             .map(|p| Self::expand_path(&p))
             .ok_or_else(|| {
                 McpError::Initialization(
@@ -71,13 +71,13 @@ impl McpContext {
     /// Expand `~` and `$HOME` in a path string.
     fn expand_path(path: &str) -> PathBuf {
         let home = std::env::var("HOME").ok();
-        if path.starts_with("~/") {
+        if let Some(rest) = path.strip_prefix("~/") {
             if let Some(h) = &home {
-                return PathBuf::from(h).join(&path[2..]);
+                return PathBuf::from(h).join(rest);
             }
-        } else if path.starts_with("$HOME/") {
+        } else if let Some(rest) = path.strip_prefix("$HOME/") {
             if let Some(h) = &home {
-                return PathBuf::from(h).join(&path[6..]);
+                return PathBuf::from(h).join(rest);
             }
         }
         PathBuf::from(path)
