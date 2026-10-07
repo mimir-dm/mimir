@@ -63,6 +63,16 @@ export interface MarkersUpdatePayload {
 }
 
 /**
+ * Initiative order from the DM's combat tracker (names only, no HP).
+ * `visible: false` hides the order on the player display.
+ */
+export interface InitiativeUpdatePayload {
+  visible: boolean
+  round: number | null
+  entries: { name: string; current: boolean }[]
+}
+
+/**
  * Event handlers for player display IPC events
  */
 export interface PlayerDisplayEventHandlers {
@@ -72,6 +82,7 @@ export interface PlayerDisplayEventHandlers {
   onFogUpdate: (payload: FogUpdatePayload) => void
   onLightSourcesUpdate: (payload: LightSourcesUpdatePayload) => void
   onMarkersUpdate: (payload: MarkersUpdatePayload) => void
+  onInitiativeUpdate?: (payload: InitiativeUpdatePayload) => void
 }
 
 /**
@@ -145,6 +156,16 @@ export function usePlayerDisplayEvents(handlers: PlayerDisplayEventHandlers): vo
         handlers.onMarkersUpdate(event.payload)
       })
     )
+
+    // Initiative order listener (optional: the combat tracker's "show order to players")
+    if (handlers.onInitiativeUpdate) {
+      const onInitiativeUpdate = handlers.onInitiativeUpdate
+      unlisteners.push(
+        await listen<InitiativeUpdatePayload>('player-display:initiative-update', (event) => {
+          onInitiativeUpdate(event.payload)
+        })
+      )
+    }
   })
 
   onUnmounted(() => {

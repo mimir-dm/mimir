@@ -90,6 +90,23 @@ describe('usePlayerDisplayEvents', () => {
     })
   })
 
+  describe('initiative order (MIMIR-T-0680)', () => {
+    it('listens for the order only when a handler is given and passes it on', async () => {
+      const handlers = createHandlerSpies()
+      mountWithHandlers(handlers)
+      await flushPromises()
+      expect(mockListeners.has('player-display:initiative-update')).toBe(false)
+
+      const onInitiativeUpdate = vi.fn()
+      mockListeners.clear()
+      mountWithHandlers({ ...createHandlerSpies(), onInitiativeUpdate })
+      await flushPromises()
+      const payload = { visible: true, round: 2, entries: [{ name: 'Thorin', current: true }] }
+      await mockListeners.get('player-display:initiative-update')!({ payload })
+      expect(onInitiativeUpdate).toHaveBeenCalledWith(payload)
+    })
+  })
+
   describe('event dispatching', () => {
     it('dispatches map update to handler', async () => {
       const handlers = createHandlerSpies()

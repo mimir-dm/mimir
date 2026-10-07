@@ -24,7 +24,7 @@ for (const viewport of VIEWPORTS) {
       await page.goto(screen.path(ids))
       await page.waitForLoadState('networkidle')
       if (screen.setup) {
-        await screen.setup(page)
+        await screen.setup(page, ids)
         await page.waitForLoadState('networkidle')
       }
       await page.waitForTimeout(500)

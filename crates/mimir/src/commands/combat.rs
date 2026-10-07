@@ -155,6 +155,16 @@ pub fn link_combat_token(
     run(&state, |s| s.link_token(&entry_id, token_id.as_deref()))
 }
 
+/// Link the fight's unlinked monster and NPC entries to their tokens on a map.
+#[tauri::command]
+pub fn link_combat_tokens(
+    state: State<'_, AppState>,
+    session_id: String,
+    map_id: String,
+) -> ApiResponse<CombatState> {
+    run(&state, |s| s.link_tokens(&session_id, &map_id))
+}
+
 /// Damage an entry; reports a concentration save DC when it concentrates.
 #[tauri::command]
 pub fn combat_damage(

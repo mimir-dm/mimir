@@ -82,11 +82,25 @@
         :campaign-id="campaignId"
         :module-id="activeMap?.module_id"
         :uvtt-file-path="activeMap?.image_path"
+        :selected-token-id="selectedTokenId"
+        :current-turn-token-id="combatMap.currentTurnTokenId"
+        :down-token-ids="combatMap.downTokenIds"
+        @token-selected="selectedTokenId = $event"
+        @visible-tokens="visibleTokenIds = $event"
       />
       <div v-else class="no-map-selected">
         <p>Select a map from the dropdown above</p>
       </div>
-      <InitiativeTracker v-if="moduleId" :module-id="moduleId" :campaign-id="campaignId" />
+      <InitiativeTracker
+        v-if="moduleId"
+        :module-id="moduleId"
+        :campaign-id="campaignId"
+        :map-id="activeMapId"
+        :selected-token-id="selectedTokenId"
+        :visible-token-ids="visibleTokenIds"
+        @select-token="selectedTokenId = $event"
+        @map-state="combatMap = $event"
+      />
     </main>
   </div>
 </template>
@@ -96,6 +110,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import DmMapViewer from '@/components/DmMapViewer.vue'
 import InitiativeTracker from '@/features/combat/components/InitiativeTracker.vue'
+import type { CombatMapState } from '@/features/combat/mapLink'
 import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
 import { useDmMapWindow } from '@/composables/windows/useDmMapWindow'
 
@@ -139,6 +154,11 @@ const { toggleFullscreen } = useDmMapWindow()
 
 // Module data
 const module = ref<Module | null>(null)
+
+// Combat tracker <-> map (MIMIR-T-0680)
+const selectedTokenId = ref<string | null>(null)
+const visibleTokenIds = ref<string[]>([])
+const combatMap = ref<CombatMapState>({ currentTurnTokenId: null, downTokenIds: [] })
 
 // Map state
 const allMaps = ref<MapSummary[]>([])

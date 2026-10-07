@@ -413,11 +413,12 @@
           :base-scale="1"
           :show-hidden="true"
           :selected-token-id="selectedTokenId"
+          :current-turn-token-id="currentTurnTokenId"
           :dragging-token-id="draggingTokenId"
           :drag-offset="dragOffset"
           :interactive="true"
           :token-lights="tokenLightInfo"
-          :dead-token-ids="deadTokenIds"
+          :dead-token-ids="shownDeadTokenIds"
           :token-images="tokenImages"
           @token-click="handleTokenClick"
           @token-dblclick="handleTokenDblClick"
@@ -677,6 +678,12 @@ interface Props {
   moduleId?: string | null
   /** UVTT file path (e.g., "abc123.dd2vtt") */
   uvttFilePath?: string | null
+  /** Token selected outside the map (the initiative tracker) */
+  selectedTokenId?: string | null
+  /** Token of the creature whose turn it is */
+  currentTurnTokenId?: string | null
+  /** Tokens of creatures at 0 HP in the tracker (shown as down on the DM map only) */
+  downTokenIds?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -687,8 +694,18 @@ const props = withDefaults(defineProps<Props>(), {
   showGrid: true,
   campaignId: null,
   moduleId: null,
-  uvttFilePath: null
+  uvttFilePath: null,
+  selectedTokenId: null,
+  currentTurnTokenId: null,
+  downTokenIds: () => []
 })
+
+const vueEmit = defineEmits<{
+  /** The selected token changed (null: nothing selected) */
+  'token-selected': [tokenId: string | null]
+  /** The tokens the players can see changed */
+  'visible-tokens': [tokenIds: string[]]
+}>()
 
 // Computed grid values (with defaults for null)
 const effectiveGridSize = computed(() => props.gridSizePx ?? 70)
@@ -699,13 +716,26 @@ const { isDisplayOpen } = usePlayerDisplay()
 
 // Token state - will be initialized when mapId is available
 const tokens = ref<Token[]>([])
-const selectedTokenId = ref<string | null>(null)
+const visibleTokenIds = computed(() => tokens.value.filter(t => t.visible_to_players).map(t => t.id))
+// Emit only when the set changes, not on every move of a token
+watch(() => visibleTokenIds.value.join(','), () => vueEmit('visible-tokens', visibleTokenIds.value), { immediate: true })
+const selectedTokenId = ref<string | null>(props.selectedTokenId)
+watch(() => props.selectedTokenId, id => { selectedTokenId.value = id })
+watch(selectedTokenId, id => {
+  if (id !== props.selectedTokenId) vueEmit('token-selected', id)
+})
 
 // Token images cache (token_id -> base64 data URL)
 const tokenImages = ref<Map<string, string>>(new Map())
 
 // Dead token state (frontend-only, not persisted)
 const deadTokenIds = ref<string[]>([])
+// What the DM map shows as dead: marked by hand, or down in the tracker
+const shownDeadTokenIds = computed(() =>
+  props.downTokenIds.length === 0
+    ? deadTokenIds.value
+    : [...new Set([...deadTokenIds.value, ...props.downTokenIds])]
+)
 
 // Token drag state
 const draggingTokenId = ref<string | null>(null)

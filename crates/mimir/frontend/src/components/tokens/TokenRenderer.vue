@@ -7,6 +7,7 @@
       :class="{
         'token-hidden': !token.visible_to_players && showHidden,
         'token-selected': selectedTokenId === token.id,
+        'token-current-turn': currentTurnTokenId === token.id,
         'token-dragging': draggingTokenId === token.id,
         'token-has-light': hasActiveLight(token.id),
         'token-dead': isDead(token.id)
@@ -80,6 +81,8 @@ interface Props {
   baseScale?: number
   showHidden?: boolean
   selectedTokenId?: string | null
+  /** Token whose turn it is in the combat tracker */
+  currentTurnTokenId?: string | null
   draggingTokenId?: string | null
   dragOffset?: { x: number; y: number } | null
   interactive?: boolean
@@ -95,6 +98,7 @@ const props = withDefaults(defineProps<Props>(), {
   baseScale: 1,
   showHidden: true,
   selectedTokenId: null,
+  currentTurnTokenId: null,
   draggingTokenId: null,
   dragOffset: null,
   interactive: true,
@@ -249,6 +253,12 @@ function getTokenLabel(token: Token): string {
 .token-selected {
   box-shadow: 0 0 0 3px white, 0 0 0 6px var(--color-primary-500, #3b82f6);
   z-index: 20;
+}
+
+.token-current-turn {
+  outline: 3px dashed var(--color-warning, #f59e0b);
+  outline-offset: 5px;
+  z-index: 15;
 }
 
 .token-dragging {

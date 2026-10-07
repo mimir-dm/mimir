@@ -1,5 +1,5 @@
 <template>
-  <aside class="initiative-tracker" :class="{ collapsed }" aria-label="Initiative tracker">
+  <aside ref="trackerEl" class="initiative-tracker" :class="{ collapsed }" aria-label="Initiative tracker">
     <header class="tracker-header">
       <button
         class="toggle"
@@ -36,7 +36,12 @@
             v-for="e in combat.state.value.entries"
             :key="e.id"
             class="entry"
-            :class="{ current: e.id === combat.state.value.current_entry_id, down: e.current_hp === 0 }"
+            :class="{
+              current: e.id === combat.state.value.current_entry_id,
+              down: e.current_hp === 0,
+              selected: e.token_id !== null && e.token_id === selectedTokenId,
+            }"
+            :data-token-id="e.token_id ?? undefined"
             data-testid="combat-entry"
           >
             <div class="entry-row">
@@ -52,9 +57,10 @@
                 class="entry-name"
                 :aria-expanded="expandedId === e.id"
                 :title="`Show HP controls for ${e.display_name}`"
-                @click="toggleExpanded(e.id)"
+                @click="onNameClick(e)"
               >
                 {{ e.display_name }}
+                <span v-if="e.token_id" class="linked" title="Linked to a map token" aria-label="linked to a map token">⌖</span>
               </button>
               <span class="entry-hp" :title="hpTitle(e)">{{ hpText(e) }}</span>
               <button
@@ -235,6 +241,14 @@
           </div>
         </section>
 
+        <label
+          class="show-order"
+          title="Show the turn order on the player display: names only, no HP. Monsters and NPCs show only when their token is visible to the players."
+        >
+          <input v-model="showOrderToPlayers" type="checkbox" data-testid="show-order-to-players" />
+          Show order to players
+        </label>
+
         <button class="btn btn-danger end" data-testid="end-combat" @click="confirmingEnd = true">
           End combat
         </button>
@@ -252,16 +266,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { emit as emitEvent, listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
+import { HIDDEN_ORDER, combatMapState, isMapCreature, playerInitiativeOrder, type CombatMapState } from '../mapLink'
 import AppModal from '@/components/shared/AppModal.vue'
 import { getMonsterDisplayName, type MonsterWithData } from '@/features/modules/composables/useModuleMonsters'
 import { useCombatSession } from '../composables/useCombatSession'
 import { SRD_CONDITIONS, type ActiveCondition, type CombatEntry } from '../types'
 
-const props = defineProps<{
-  moduleId: string
-  campaignId: string
+const props = withDefaults(
+  defineProps<{
+    moduleId: string
+    campaignId: string
+    /** Map on the DM screen; the tracker links its creatures to tokens there. */
+    mapId?: string | null
+    /** Token selected on the map; its entry is highlighted. */
+    selectedTokenId?: string | null
+    /** Tokens on the map the players can see. */
+    visibleTokenIds?: string[]
+  }>(),
+  { mapId: null, selectedTokenId: null, visibleTokenIds: () => [] },
+)
+
+const emit = defineEmits<{
+  /** An entry linked to a token was opened (token id) or closed (null). */
+  'select-token': [tokenId: string | null]
+  /** The current-turn and down tokens changed. */
+  'map-state': [state: CombatMapState]
 }>()
 
 const COLLAPSED_KEY = 'mimir.initiativeTracker.collapsed'
@@ -292,6 +325,11 @@ function hpText(e: CombatEntry): string {
 const expandedId = ref<string | null>(null)
 const hpAmount = ref<number | string>('')
 const maxHpInput = ref<number | string>('')
+
+function onNameClick(e: CombatEntry) {
+  toggleExpanded(e.id)
+  if (e.token_id) emit('select-token', expandedId.value === e.id ? e.token_id : null)
+}
 
 function toggleExpanded(entryId: string) {
   expandedId.value = expandedId.value === entryId ? null : entryId
@@ -423,9 +461,86 @@ async function loadAddOptions() {
   }
 }
 
-onMounted(() => {
+// --- Map link (MIMIR-T-0680) -------------------------------------------------
+
+// Link new monster and NPC entries to their tokens. The key holds the
+// unlinked entries, so a creature with no token is not asked for again.
+let lastLinkKey = ''
+watch(
+  () => {
+    const s = combat.state.value
+    if (!s || !props.mapId) return ''
+    const unlinked = s.entries.filter((e) => isMapCreature(e) && !e.token_id).map((e) => e.id)
+    return unlinked.length ? `${props.mapId}|${unlinked.join(',')}` : ''
+  },
+  (key) => {
+    if (key && key !== lastLinkKey && props.mapId) {
+      lastLinkKey = key
+      combat.linkTokens(props.mapId)
+    }
+  },
+  { immediate: true },
+)
+
+const mapState = computed(() => combatMapState(combat.state.value))
+watch(mapState, (s) => emit('map-state', s), { immediate: true, deep: true })
+
+// A token selected on the map: scroll its entry into view.
+const trackerEl = ref<HTMLElement | null>(null)
+watch(
+  () => props.selectedTokenId,
+  async (tokenId) => {
+    if (!tokenId) return
+    await nextTick()
+    const row = trackerEl.value?.querySelector<HTMLElement>(`[data-token-id="${CSS.escape(tokenId)}"]`)
+    row?.scrollIntoView?.({ block: 'nearest' })
+  },
+)
+
+// --- Turn order on the player display ----------------------------------------
+
+const showOrderToPlayers = ref(false)
+const { isDisplayOpen } = usePlayerDisplay()
+
+function sendOrder() {
+  const s = combat.state.value
+  const payload = showOrderToPlayers.value && s ? playerInitiativeOrder(s, props.visibleTokenIds) : HIDDEN_ORDER
+  emitEvent('player-display:initiative-update', payload).catch(() => {
+    // The player display is closed; it asks again when it opens.
+  })
+}
+
+watch(
+  () => [showOrderToPlayers.value, combat.state.value, props.visibleTokenIds] as const,
+  ([show], [wasShown]) => {
+    if (show || wasShown) sendOrder()
+  },
+  { deep: true },
+)
+watch(isDisplayOpen, (open) => {
+  if (open && showOrderToPlayers.value) sendOrder()
+})
+
+let unlistenRequest: UnlistenFn | null = null
+
+onMounted(async () => {
   combat.load()
   loadAddOptions()
+  // The player display asks for the state when it loads a map.
+  try {
+    unlistenRequest = await listen('player-display:request-state', () => {
+      if (showOrderToPlayers.value) sendOrder()
+    })
+  } catch {
+    // No event bus (tests, a browser without Tauri): nothing asks for the order.
+  }
+})
+
+onUnmounted(() => {
+  unlistenRequest?.()
+  if (showOrderToPlayers.value) {
+    emitEvent('player-display:initiative-update', HIDDEN_ORDER).catch(() => {})
+  }
 })
 </script>
 
@@ -528,6 +643,16 @@ onMounted(() => {
   background: var(--color-surface-variant);
   border-left-color: var(--color-warning);
   font-weight: 600;
+}
+
+.entry.selected {
+  box-shadow: inset 0 0 0 2px var(--color-primary-500, #3b82f6);
+}
+
+.linked {
+  margin-left: 4px;
+  font-size: 0.8em;
+  color: var(--color-text-secondary);
 }
 
 .entry.down .entry-name {
@@ -774,7 +899,16 @@ onMounted(() => {
   border-radius: var(--radius-sm);
 }
 
-.end {
+.show-order {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   margin-top: auto;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.end {
+  margin-top: var(--spacing-sm);
 }
 </style>

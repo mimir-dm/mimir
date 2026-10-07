@@ -168,6 +168,7 @@ pub fn invoke_handler<R: tauri::Runtime>(
         combat::set_combat_initiative,
         combat::set_combat_max_hp,
         combat::link_combat_token,
+        combat::link_combat_tokens,
         combat::combat_damage,
         combat::combat_heal,
         combat::set_combat_temp_hp,

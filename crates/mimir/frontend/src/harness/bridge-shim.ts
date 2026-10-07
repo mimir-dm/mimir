@@ -14,8 +14,11 @@
  * - the real Tauri app: `__TAURI_INTERNALS__` already exists → untouched
  *
  * Known gaps (documented, harness-unsupported):
- * - plugin commands (dialog, shell, event) are stubbed: event listeners
- *   register but never fire; dialogs reject with a console warning
+ * - plugin commands (dialog, shell) are stubbed: dialogs reject with a
+ *   console warning
+ * - events are relayed between the harness pages of one browser (a
+ *   BroadcastChannel), so a DM page and a player-display page talk as the
+ *   app's windows do; events the Rust side emits never arrive
  * - convertFileSrc maps file paths to the bridge's GET /file (scratch app dir only)
  */
 
@@ -26,10 +29,40 @@ function installBridgeShim(): void {
   let nextCallbackId = 1
   const callbacks = new Map<number, (payload: unknown) => void>()
 
+  // Events: listeners of this page, plus a channel to the other harness pages.
+  let nextEventId = 1
+  const listeners = new Map<number, { event: string; handler: number }>()
+  const channel = 'BroadcastChannel' in window ? new BroadcastChannel('mimir-harness-events') : null
+
+  function deliver(event: string, payload: unknown): void {
+    for (const [id, listener] of listeners) {
+      if (listener.event === event) callbacks.get(listener.handler)?.({ event, id, payload })
+    }
+  }
+  if (channel) {
+    channel.onmessage = (message: MessageEvent<{ event: string; payload: unknown }>) =>
+      deliver(message.data.event, message.data.payload)
+  }
+
   async function bridgeInvoke(cmd: string, args: Record<string, unknown> = {}): Promise<unknown> {
     if (cmd.startsWith('plugin:')) {
       // Core/plugin IPC has no HTTP equivalent; stub the common ones.
-      if (cmd === 'plugin:event|listen' || cmd === 'plugin:event|unlisten') {
+      if (cmd === 'plugin:event|listen') {
+        const { event, handler } = args as { event: string; handler: number }
+        const id = nextEventId++
+        listeners.set(id, { event, handler })
+        return id
+      }
+      if (cmd === 'plugin:event|unlisten') {
+        listeners.delete((args as { eventId: number }).eventId)
+        return null
+      }
+      if (cmd === 'plugin:event|emit' || cmd === 'plugin:event|emit_to') {
+        const { event, payload } = args as { event: string; payload: unknown }
+        // JSON round trip: what crosses a window boundary in the app.
+        const data = payload === undefined ? undefined : JSON.parse(JSON.stringify(payload))
+        deliver(event, data)
+        channel?.postMessage({ event, payload: data })
         return null
       }
       // Native save dialog: pretend the user accepted the suggested name;
@@ -90,6 +123,11 @@ function installBridgeShim(): void {
       currentWebview: { label: 'main', windowLabel: 'main' },
     },
     plugins: {},
+  }
+  ;(window as any).__TAURI_EVENT_PLUGIN_INTERNALS__ = {
+    unregisterListener(_event: string, eventId: number): void {
+      listeners.delete(eventId)
+    },
   }
 
   console.info(`[bridge-shim] Tauri IPC forwarded to ${BRIDGE_URL} (UI harness mode)`)
