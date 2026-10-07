@@ -261,8 +261,8 @@ function handleClose() {
 .success-icon {
   width: 48px;
   height: 48px;
-  background: var(--color-success-100);
-  color: var(--color-success-600);
+  background: var(--color-success-tint);
+  color: var(--color-success-text);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -271,19 +271,10 @@ function handleClose() {
   font-weight: bold;
 }
 
-.theme-dark .success-icon {
-  background: var(--color-success-900);
-  color: var(--color-success-400);
-}
-
 .success-message {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-success-600);
-}
-
-.theme-dark .success-message {
-  color: var(--color-success-400);
+  color: var(--color-success-text);
 }
 
 .archive-path {
@@ -313,24 +304,15 @@ function handleClose() {
 
 .export-error {
   padding: var(--spacing-lg);
-  background: var(--color-error-100);
-  border: 1px solid var(--color-error-200);
+  background: var(--color-error-tint);
+  border: 1px solid var(--color-error-tint-border);
   border-radius: var(--radius-md);
   text-align: center;
 }
 
-.theme-dark .export-error {
-  background: var(--color-error-900);
-  border-color: var(--color-error-800);
-}
-
 .export-error .error-message {
-  color: var(--color-error-600);
+  color: var(--color-error-text);
   font-weight: 500;
-}
-
-.theme-dark .export-error .error-message {
-  color: var(--color-error-400);
 }
 
 .form-group {
@@ -372,10 +354,6 @@ function handleClose() {
 }
 
 .browse-button:hover {
-  background: var(--color-gray-100);
-}
-
-.theme-dark .browse-button:hover {
-  background: var(--color-gray-700);
+  background: var(--color-neutral-tint);
 }
 </style>

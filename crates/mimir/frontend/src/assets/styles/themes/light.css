@@ -137,4 +137,37 @@
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Tints (COLLIERY-I-0465, MIMIR-T-0685): a colored surface and the text on it.
+     -tint: background; -tint-subtle: lighter background (selected rows);
+     -tint-strong: hover background; -tint-border: border of a tint;
+     -on-tint: text on a tint; -text: colored text on the page. */
+  --color-primary-tint: var(--color-primary-100);
+  --color-primary-tint-subtle: var(--color-primary-50);
+  --color-primary-tint-strong: var(--color-primary-200);
+  --color-primary-tint-border: var(--color-primary-200);
+  --color-primary-on-tint: var(--color-primary-700);
+  --color-primary-text: var(--color-primary-600);
+  --color-success-tint: var(--color-success-100);
+  --color-success-tint-subtle: var(--color-success-50);
+  --color-success-tint-strong: var(--color-success-200);
+  --color-success-tint-border: var(--color-success-200);
+  --color-success-on-tint: var(--color-success-700);
+  --color-success-text: var(--color-success-600);
+  --color-warning-tint: var(--color-warning-100);
+  --color-warning-tint-subtle: var(--color-warning-50);
+  --color-warning-tint-strong: var(--color-warning-200);
+  --color-warning-tint-border: var(--color-warning-200);
+  --color-warning-on-tint: var(--color-warning-700);
+  --color-warning-text: var(--color-warning-600);
+  --color-error-tint: var(--color-error-100);
+  --color-error-tint-subtle: var(--color-error-50);
+  --color-error-tint-strong: var(--color-error-200);
+  --color-error-tint-border: var(--color-error-200);
+  --color-error-on-tint: var(--color-error-700);
+  --color-error-text: var(--color-error-600);
+  --color-neutral-tint: var(--color-gray-100);
+  --color-neutral-tint-strong: var(--color-gray-200);
+  --color-neutral-tint-border: var(--color-gray-300);
+  --color-neutral-on-tint: var(--color-gray-600);
 }

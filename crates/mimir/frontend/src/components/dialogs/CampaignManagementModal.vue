@@ -295,15 +295,11 @@ function formatDate(dateString: string): string {
 }
 
 .campaign-item:hover {
-  background: var(--color-gray-100);
+  background: var(--color-neutral-tint);
 }
 
 .campaign-item.archived {
   opacity: 0.8;
-}
-
-.theme-dark .campaign-item:hover {
-  background: var(--color-gray-800);
 }
 
 .campaign-info {
@@ -338,9 +334,9 @@ function formatDate(dateString: string): string {
 }
 
 .archive-button {
-  background: var(--color-warning-100);
-  color: var(--color-warning-700);
-  border: 1px solid var(--color-warning-200);
+  background: var(--color-warning-tint);
+  color: var(--color-warning-on-tint);
+  border: 1px solid var(--color-warning-tint-border);
   border-radius: var(--radius-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
@@ -350,14 +346,14 @@ function formatDate(dateString: string): string {
 }
 
 .archive-button:hover {
-  background: var(--color-warning-200);
-  color: var(--color-warning-800);
+  background: var(--color-warning-tint-strong);
+  color: var(--color-warning-on-tint);
 }
 
 .unarchive-button {
-  background: var(--color-success-100);
-  color: var(--color-success-700);
-  border: 1px solid var(--color-success-200);
+  background: var(--color-success-tint);
+  color: var(--color-success-on-tint);
+  border: 1px solid var(--color-success-tint-border);
   border-radius: var(--radius-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
@@ -367,14 +363,14 @@ function formatDate(dateString: string): string {
 }
 
 .unarchive-button:hover {
-  background: var(--color-success-200);
-  color: var(--color-success-800);
+  background: var(--color-success-tint-strong);
+  color: var(--color-success-on-tint);
 }
 
 .delete-button {
-  background: var(--color-error-100);
-  color: var(--color-error-600);
-  border: 1px solid var(--color-error-200);
+  background: var(--color-error-tint);
+  color: var(--color-error-text);
+  border: 1px solid var(--color-error-tint-border);
   border-radius: var(--radius-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
@@ -384,41 +380,8 @@ function formatDate(dateString: string): string {
 }
 
 .delete-button:hover {
-  background: var(--color-error-200);
-  color: var(--color-error-700);
-}
-
-.theme-dark .archive-button {
-  background: var(--color-warning-900);
-  color: var(--color-warning-400);
-  border-color: var(--color-warning-800);
-}
-
-.theme-dark .archive-button:hover {
-  background: var(--color-warning-800);
-  color: var(--color-warning-300);
-}
-
-.theme-dark .unarchive-button {
-  background: var(--color-success-900);
-  color: var(--color-success-400);
-  border-color: var(--color-success-800);
-}
-
-.theme-dark .unarchive-button:hover {
-  background: var(--color-success-800);
-  color: var(--color-success-300);
-}
-
-.theme-dark .delete-button {
-  background: var(--color-error-900);
-  color: var(--color-error-400);
-  border-color: var(--color-error-800);
-}
-
-.theme-dark .delete-button:hover {
-  background: var(--color-error-800);
-  color: var(--color-error-300);
+  background: var(--color-error-tint-strong);
+  color: var(--color-error-on-tint);
 }
 
 .warning-text {
@@ -428,19 +391,13 @@ function formatDate(dateString: string): string {
 }
 
 .error-message {
-  background: var(--color-error-100);
-  color: var(--color-error-700);
-  border: 1px solid var(--color-error-200);
+  background: var(--color-error-tint);
+  color: var(--color-error-on-tint);
+  border: 1px solid var(--color-error-tint-border);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   margin: var(--spacing-md) 0;
   font-size: 0.875rem;
-}
-
-.theme-dark .error-message {
-  background: var(--color-error-900);
-  color: var(--color-error-300);
-  border-color: var(--color-error-800);
 }
 
 .delete-options {

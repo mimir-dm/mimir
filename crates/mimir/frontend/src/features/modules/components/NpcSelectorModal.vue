@@ -251,11 +251,7 @@ watch(() => props.visible, (newVisible) => {
 .search-input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-100);
-}
-
-.theme-dark .search-input:focus {
-  box-shadow: 0 0 0 3px var(--color-primary-900);
+  box-shadow: 0 0 0 3px var(--color-primary-tint);
 }
 
 .loading-state {
@@ -322,11 +318,7 @@ watch(() => props.visible, (newVisible) => {
 
 .npc-item.selected {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
-}
-
-.theme-dark .npc-item.selected {
-  background: var(--color-primary-900);
+  background: var(--color-primary-tint-subtle);
 }
 
 .npc-item.already-added {
@@ -372,28 +364,19 @@ watch(() => props.visible, (newVisible) => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 2px 6px;
-  background: var(--color-gray-100);
+  background: var(--color-neutral-tint);
   color: var(--color-text-secondary);
   border-radius: var(--radius-sm);
 }
 
-.theme-dark .already-badge {
-  background: var(--color-gray-700);
-}
-
 .selection-summary {
   padding: var(--spacing-sm);
-  background: var(--color-primary-50);
+  background: var(--color-primary-tint-subtle);
   border-radius: var(--radius-md);
   text-align: center;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-primary-700);
-}
-
-.theme-dark .selection-summary {
-  background: var(--color-primary-900);
-  color: var(--color-primary-300);
+  color: var(--color-primary-on-tint);
 }
 
 .footer-spacer {
@@ -403,7 +386,7 @@ watch(() => props.visible, (newVisible) => {
 .btn-tertiary {
   background: none;
   border: none;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   font-weight: 500;
   cursor: pointer;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -412,14 +395,6 @@ watch(() => props.visible, (newVisible) => {
 }
 
 .btn-tertiary:hover {
-  background: var(--color-primary-50);
-}
-
-.theme-dark .btn-tertiary {
-  color: var(--color-primary-400);
-}
-
-.theme-dark .btn-tertiary:hover {
-  background: var(--color-primary-900);
+  background: var(--color-primary-tint-subtle);
 }
 </style>

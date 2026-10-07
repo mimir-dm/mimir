@@ -236,12 +236,8 @@ defineExpose({
 
 .error-title {
   font-weight: 600;
-  color: var(--color-error-600);
+  color: var(--color-error-text);
   margin: 0 0 var(--spacing-sm);
-}
-
-.theme-dark .error-title {
-  color: var(--color-error-400);
 }
 
 .error-message {

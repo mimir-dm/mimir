@@ -412,22 +412,13 @@ const handleCampaignModalClose = () => {
 }
 
 .nav-item:hover {
-  background: var(--color-gray-100);
+  background: var(--color-neutral-tint);
   color: var(--color-text);
 }
 
 .nav-item.active {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
-}
-
-.theme-dark .nav-item:hover {
-  background: var(--color-gray-700);
-}
-
-.theme-dark .nav-item.active {
-  background: var(--color-primary-900);
-  color: var(--color-primary-300);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
 }
 
 /* Content Area */
@@ -526,12 +517,8 @@ const handleCampaignModalClose = () => {
 }
 
 .button-secondary:hover {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-neutral-tint-strong);
   border-color: var(--color-border-hover);
-}
-
-.theme-dark .button-secondary:hover {
-  background-color: var(--color-gray-700);
 }
 
 .input-help {
@@ -542,15 +529,11 @@ const handleCampaignModalClose = () => {
 }
 
 .input-help code {
-  background-color: var(--color-gray-100);
+  background-color: var(--color-neutral-tint);
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.8125rem;
-}
-
-.theme-dark .input-help code {
-  background-color: var(--color-gray-700);
 }
 
 .input-help a {
@@ -577,27 +560,15 @@ const handleCampaignModalClose = () => {
 }
 
 .settings-message.success {
-  background-color: var(--color-success-100);
-  color: var(--color-success-700);
-  border: 1px solid var(--color-success-300);
+  background-color: var(--color-success-tint);
+  color: var(--color-success-on-tint);
+  border: 1px solid var(--color-success-tint-border);
 }
 
 .settings-message.error {
-  background-color: var(--color-error-100);
-  color: var(--color-error-700);
-  border: 1px solid var(--color-error-300);
-}
-
-.theme-dark .settings-message.success {
-  background-color: var(--color-success-900);
-  color: var(--color-success-300);
-  border-color: var(--color-success-700);
-}
-
-.theme-dark .settings-message.error {
-  background-color: var(--color-error-900);
-  color: var(--color-error-300);
-  border-color: var(--color-error-700);
+  background-color: var(--color-error-tint);
+  color: var(--color-error-on-tint);
+  border: 1px solid var(--color-error-tint-border);
 }
 
 button:disabled {
@@ -730,15 +701,11 @@ select.form-input {
 }
 
 .method-description code {
-  background-color: var(--color-gray-100);
+  background-color: var(--color-neutral-tint);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.8125rem;
-}
-
-.theme-dark .method-description code {
-  background-color: var(--color-gray-700);
 }
 
 .code-block {
@@ -844,27 +811,15 @@ select.form-input {
 }
 
 .seed-status .status-badge.seeded {
-  background-color: var(--color-success-100);
-  color: var(--color-success-700);
-  border: 1px solid var(--color-success-300);
+  background-color: var(--color-success-tint);
+  color: var(--color-success-on-tint);
+  border: 1px solid var(--color-success-tint-border);
 }
 
 .seed-status .status-badge.not-seeded {
-  background-color: var(--color-gray-100);
-  color: var(--color-gray-600);
-  border: 1px solid var(--color-gray-300);
-}
-
-.theme-dark .seed-status .status-badge.seeded {
-  background-color: var(--color-success-900);
-  color: var(--color-success-300);
-  border-color: var(--color-success-700);
-}
-
-.theme-dark .seed-status .status-badge.not-seeded {
-  background-color: var(--color-gray-800);
-  color: var(--color-gray-400);
-  border-color: var(--color-gray-600);
+  background-color: var(--color-neutral-tint);
+  color: var(--color-neutral-on-tint);
+  border: 1px solid var(--color-neutral-tint-border);
 }
 
 .seed-actions {
@@ -901,27 +856,15 @@ select.form-input {
 }
 
 .seed-message.success {
-  background-color: var(--color-success-100);
-  color: var(--color-success-700);
-  border: 1px solid var(--color-success-300);
+  background-color: var(--color-success-tint);
+  color: var(--color-success-on-tint);
+  border: 1px solid var(--color-success-tint-border);
 }
 
 .seed-message.error {
-  background-color: var(--color-error-100);
-  color: var(--color-error-700);
-  border: 1px solid var(--color-error-300);
-}
-
-.theme-dark .seed-message.success {
-  background-color: var(--color-success-900);
-  color: var(--color-success-300);
-  border-color: var(--color-success-700);
-}
-
-.theme-dark .seed-message.error {
-  background-color: var(--color-error-900);
-  color: var(--color-error-300);
-  border-color: var(--color-error-700);
+  background-color: var(--color-error-tint);
+  color: var(--color-error-on-tint);
+  border: 1px solid var(--color-error-tint-border);
 }
 
 .prereq-list {

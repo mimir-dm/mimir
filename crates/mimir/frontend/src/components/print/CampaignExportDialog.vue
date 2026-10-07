@@ -360,28 +360,18 @@ async function handleExport() {
 
 .warning-message {
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-warning-50);
+  background: var(--color-warning-tint-subtle);
   border-radius: var(--radius-sm);
-  color: var(--color-warning-700);
+  color: var(--color-warning-on-tint);
   font-size: 0.875rem;
-}
-
-.theme-dark .warning-message {
-  background: var(--color-warning-900);
-  color: var(--color-warning-300);
 }
 
 .error-message {
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-error-50);
+  background: var(--color-error-tint-subtle);
   border-radius: var(--radius-sm);
-  color: var(--color-error-700);
+  color: var(--color-error-on-tint);
   font-size: 0.875rem;
-}
-
-.theme-dark .error-message {
-  background: var(--color-error-900);
-  color: var(--color-error-300);
 }
 
 .spinner-sm {

@@ -57,4 +57,11 @@ describe('UI hygiene', () => {
     // A legacy color that nothing uses any more is deleted.
     expect([...defined].filter((t) => !used.has(t))).toEqual([])
   })
+
+  it('keeps theme differences in the theme files, not in components (MIMIR-T-0685)', () => {
+    // A component that needs a different color per theme uses a token, for
+    // example --color-primary-tint, that each theme file defines.
+    const hits = matches(/\.theme-(light|dark|hyper)\b/, (f) => !f.endsWith('.vue'))
+    expect(hits, 'use a themed token instead of a .theme-* selector').toEqual([])
+  })
 })

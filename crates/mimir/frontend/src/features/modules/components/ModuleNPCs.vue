@@ -298,13 +298,8 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background-color: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   border-radius: var(--radius-sm);
-}
-
-.theme-dark .npc-role {
-  background-color: var(--color-primary-900);
-  color: var(--color-primary-300);
 }
 </style>

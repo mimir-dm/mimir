@@ -321,10 +321,6 @@ async function save() {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-gray-200);
-}
-
-.theme-dark .btn-secondary:hover:not(:disabled) {
-  background: var(--color-gray-700);
+  background: var(--color-neutral-tint-strong);
 }
 </style>
