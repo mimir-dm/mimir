@@ -15,11 +15,10 @@
 
       <!-- Main dashboard -->
       <template v-else-if="campaign">
-        <!-- Campaign Header -->
+        <!-- One row: campaign name, tabs, actions (MIMIR-T-0689) -->
         <header class="dashboard-header">
-          <div class="header-info">
-            <h1>{{ campaign.name }}</h1>
-          </div>
+          <h1 class="dashboard-title" :title="campaign.name">{{ campaign.name }}</h1>
+          <DashboardTabs :campaign-id="id" class="dashboard-header-tabs" />
           <div class="header-actions">
             <button @click="showSourcesDialog = true" class="btn btn-secondary btn-sm">
               Sources
@@ -32,9 +31,6 @@
             </button>
           </div>
         </header>
-
-        <!-- Tab Navigation -->
-        <DashboardTabs :campaign-id="id" />
 
         <!-- Tab Content (nested router-view) -->
         <main class="dashboard-content">
@@ -196,29 +192,52 @@ onMounted(() => {
 
 .dashboard-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
+  align-items: stretch;
+  column-gap: var(--spacing-md);
+  padding: 0 var(--spacing-md);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
 
-.header-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.header-info h1 {
+.dashboard-title {
+  align-self: center;
+  /* The only part that gives way: a long name ends in an ellipsis. */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 32ch;
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dashboard-header-tabs {
+  flex: 0 0 auto;
 }
 
 .header-actions {
+  align-self: center;
+  flex: 0 0 auto;
   display: flex;
   gap: var(--spacing-sm);
+  margin-left: auto;
+  padding: var(--spacing-sm) 0;
+}
+
+/* Narrow windows: the row wraps (actions on their own line) instead of
+   squeezing the tabs. */
+@media (max-width: 1024px) {
+  .dashboard-header {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-header-tabs {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .btn-sm {

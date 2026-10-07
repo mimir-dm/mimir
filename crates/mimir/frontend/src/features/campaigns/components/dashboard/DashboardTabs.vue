@@ -48,10 +48,8 @@ function onTabClick(tabId: DashboardTab) {
 
 <style scoped>
 .dashboard-tabs {
+  /* Sits in the dashboard header row, which draws the surface and border. */
   display: flex;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: 0 var(--spacing-lg, 16px);
 }
 
 .tabs-container {
@@ -63,7 +61,7 @@ function onTabClick(tabId: DashboardTab) {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+  padding: var(--spacing-md, 12px) var(--spacing-md, 12px);
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
