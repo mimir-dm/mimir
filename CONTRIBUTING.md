@@ -57,8 +57,8 @@ cd ../.. && angreal dev launch
 ## Code Style Guidelines
 
 ### Rust
-- Follow standard Rust formatting: `cargo fmt`
-- Run clippy and fix warnings: `cargo clippy --all-targets --all-features`
+- Follow standard Rust formatting: `cargo fmt --all`. CI fails when `cargo fmt --all --check` finds a difference.
+- Clippy must be clean: `cargo clippy --workspace --all-targets -- -D warnings`. CI runs it with Rust 1.93.0 (pinned in `.github/workflows/ci.yml`). If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
 - Write doc comments for public APIs
 - Use meaningful variable and function names
 - Keep functions focused and reasonably sized
