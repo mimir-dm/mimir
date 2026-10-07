@@ -50,12 +50,16 @@
     <div v-if="loading" class="homebrew-loading-state">Loading homebrew items...</div>
 
     <!-- Empty state -->
-    <div v-else-if="items.length === 0" class="homebrew-empty-state">
-      <div class="homebrew-empty-icon">&#9881;</div>
-      <h3>No homebrew items yet</h3>
-      <p>Create custom items for your campaign.</p>
-      <button @click="showCreateForm = true" class="btn btn-primary">Create Item</button>
-    </div>
+    <EmptyState
+      v-else-if="items.length === 0"
+      variant="homebrew"
+      title="No homebrew items yet"
+      description="Create custom items for your campaign."
+    >
+      <template #action>
+        <button @click="showCreateForm = true" class="btn btn-primary">Create Item</button>
+      </template>
+    </EmptyState>
 
     <!-- Item list + detail -->
     <div v-else class="homebrew-layout">
@@ -354,6 +358,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { HomebrewService, type HomebrewItem } from '@/services/HomebrewService'

@@ -18,20 +18,10 @@
 }
 
 /* Loading and empty states */
-.homebrew-loading-state,
-.homebrew-empty-state {
+.homebrew-loading-state {
   text-align: center;
   padding: var(--spacing-xl);
   color: var(--color-text-secondary);
-}
-
-.homebrew-empty-state h3 {
-  margin: var(--spacing-sm) 0;
-}
-
-.homebrew-empty-icon {
-  font-size: 2.5rem;
-  opacity: 0.5;
 }
 
 /* Main layout: list + detail split */

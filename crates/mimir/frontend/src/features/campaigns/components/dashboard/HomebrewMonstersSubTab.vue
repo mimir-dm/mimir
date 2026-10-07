@@ -14,12 +14,16 @@
     <div v-if="loading" class="homebrew-loading-state">Loading homebrew monsters...</div>
 
     <!-- Empty state -->
-    <div v-else-if="monsters.length === 0" class="homebrew-empty-state">
-      <div class="homebrew-empty-icon">&#128009;</div>
-      <h3>No homebrew monsters yet</h3>
-      <p>Clone a monster from the catalog and customize it.</p>
-      <button @click="openCloneFromCatalog" class="btn btn-primary">Clone from Catalog</button>
-    </div>
+    <EmptyState
+      v-else-if="monsters.length === 0"
+      variant="monsters"
+      title="No homebrew monsters yet"
+      description="Clone a monster from the catalog and customize it."
+    >
+      <template #action>
+        <button @click="openCloneFromCatalog" class="btn btn-primary">Clone from Catalog</button>
+      </template>
+    </EmptyState>
 
     <!-- Monster list + detail -->
     <div v-else class="homebrew-layout">
@@ -163,6 +167,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { HomebrewMonsterService, type HomebrewMonster } from '@/services/HomebrewMonsterService'

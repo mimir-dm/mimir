@@ -137,14 +137,17 @@
       </template>
 
       <!-- No Module Selected -->
-      <div v-else class="empty-state">
-        <div class="empty-icon">+</div>
-        <h3>No Module Selected</h3>
-        <p>Select a module from the sidebar or create a new one.</p>
-        <button v-if="modules.length === 0" class="btn btn-primary" @click="showCreateModal = true">
-          Create First Module
-        </button>
-      </div>
+      <EmptyState
+        v-else
+        class="empty-state"
+        variant="modules"
+        title="No Module Selected"
+        description="Select a module from the sidebar or create a new one."
+      >
+        <template v-if="modules.length === 0" #action>
+          <button class="btn btn-primary" @click="showCreateModal = true">Create First Module</button>
+        </template>
+      </EmptyState>
     </div>
 
     <!-- Create Module Modal -->
@@ -329,6 +332,7 @@
 </template>
 
 <script setup lang="ts">
+import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { SquarePen } from '@lucide/vue'
 import { alertDialog, confirmDialog } from '@/composables/useDialog'
@@ -1057,7 +1061,6 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-
 /* Map preview */
 .map-preview {
   display: flex;
@@ -1310,32 +1313,7 @@ onMounted(async () => {
 
 /* Empty state */
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   height: 100%;
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-secondary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-md);
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin: 0 0 var(--spacing-sm) 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.empty-state p {
-  margin: 0 0 var(--spacing-md) 0;
-  font-size: 0.875rem;
 }
 
 /* Monster Edit Form */
