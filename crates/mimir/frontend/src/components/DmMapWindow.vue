@@ -72,6 +72,7 @@
     <main class="map-container">
       <DmMapViewer
         v-if="activeMapId"
+        class="map-viewer"
         :map-id="activeMapId"
         :grid-type="activeMap?.grid_type"
         :grid-size-px="activeMap?.grid_size_px"
@@ -85,6 +86,7 @@
       <div v-else class="no-map-selected">
         <p>Select a map from the dropdown above</p>
       </div>
+      <InitiativeTracker v-if="moduleId" :module-id="moduleId" :campaign-id="campaignId" />
     </main>
   </div>
 </template>
@@ -93,6 +95,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import DmMapViewer from '@/components/DmMapViewer.vue'
+import InitiativeTracker from '@/features/combat/components/InitiativeTracker.vue'
 import { usePlayerDisplay } from '@/composables/windows/usePlayerDisplay'
 import { useDmMapWindow } from '@/composables/windows/useDmMapWindow'
 
@@ -410,6 +413,12 @@ onMounted(async () => {
   flex: 1;
   overflow: hidden;
   display: flex;
+}
+
+/* The map takes the width the initiative tracker leaves. */
+.map-viewer {
+  flex: 1;
+  min-width: 0;
 }
 
 .no-map-selected {
