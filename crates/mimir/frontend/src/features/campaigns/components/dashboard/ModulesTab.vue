@@ -47,15 +47,17 @@
               </template>
             </div>
             <div class="module-actions">
-              <button class="btn btn-primary" @click="handlePlayModule">
+              <button class="btn btn-primary btn-lg btn-play" data-testid="play-module" @click="handlePlayModule">
+                <Play class="icon-em" aria-hidden="true" />
                 Play
               </button>
               <button class="btn btn-secondary" @click="showExportDialog = true">
                 PDF
               </button>
-              <button class="btn btn-danger" @click="confirmDeleteModule" title="Delete module">
-                Delete
-              </button>
+              <ActionMenu
+                label="More module actions"
+                :items="[{ label: 'Delete module…', danger: true, onSelect: confirmDeleteModule }]"
+              />
             </div>
           </div>
 
@@ -334,7 +336,8 @@
 <script setup lang="ts">
 import EmptyState from '@/shared/components/ui/EmptyState.vue'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { SquarePen } from '@lucide/vue'
+import { Play, SquarePen } from '@lucide/vue'
+import ActionMenu from '@/shared/components/ui/ActionMenu.vue'
 import { alertDialog, confirmDialog } from '@/composables/useDialog'
 import { useRouter, useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
@@ -1221,6 +1224,7 @@ onMounted(async () => {
 
 .module-actions {
   display: flex;
+  align-items: center;
   gap: var(--spacing-sm);
 }
 
@@ -1253,6 +1257,32 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Section accents by content type (MIMIR-T-0690): the eye finds each
+   section by color. The panels' roots carry these classes. */
+.documents-section {
+  border-left: 3px solid var(--color-dnd-spell);
+}
+
+.npcs-section {
+  border-left: 3px solid var(--color-warning);
+}
+
+.maps-section {
+  border-left: 3px solid var(--color-info);
+}
+
+.dangers-section {
+  border-left: 3px solid var(--color-dnd-damage);
+  /* Not a card like the others: keep the text off the accent. */
+  padding-left: var(--spacing-md);
+}
+
+.btn-play {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 /* Monster Stats Panel in Module Dashboard */
