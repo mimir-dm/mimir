@@ -10,7 +10,9 @@ dist = "dist"
 public_url = "/"
 
 [watch]
-ignore = ["dist"]
+# web-e2e writes screenshots and holds node_modules: watching it would
+# rebuild (and reload the page under test) on each screenshot.
+ignore = ["dist", "web-e2e"]
 
 [serve]
 # Not the dev flow: the app needs the same-origin /api of mimir-server.

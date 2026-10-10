@@ -183,6 +183,31 @@ jobs:
         working-directory: crates/mimir-web
         run: trunk build --release
 
+      # Smoke suite: Playwright starts mimir-server (web-e2e/session.sh) on a
+      # scratch data dir with the fixture and the bundle built above.
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install the e2e harness
+        working-directory: crates/mimir-web/web-e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Web smoke suite (Playwright)
+        working-directory: crates/mimir-web/web-e2e
+        run: npx playwright test specs/smoke.spec.ts
+
+      - name: Upload Playwright results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-e2e-results
+          path: crates/mimir-web/web-e2e/results
+          if-no-files-found: ignore
+
   test-integration:
     name: Integration Tests (Heavy)
     runs-on: ubuntu-latest

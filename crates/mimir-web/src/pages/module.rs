@@ -5,11 +5,28 @@ use aurora_leptos::components::*;
 use aurora_leptos::data::SectionLabel;
 use aurora_leptos::frame::{PageHeader, TabItem, TabPanel, Tabs};
 use leptos::prelude::*;
-use leptos_router::hooks::use_params_map;
+use leptos_router::hooks::{use_params_map, use_query_map};
 use mimir_wire::{MapSummary, ModuleMonsterSummary, ModuleNpcSummary};
 
 use crate::api;
 use crate::components::{loaded, or_dash, DocumentBrowser, ListResource};
+
+/// The sections of the module page: (value, label).
+const SECTIONS: [(&str, &str); 4] = [
+    ("documents", "Documents"),
+    ("npcs", "NPCs"),
+    ("maps", "Maps"),
+    ("dangers", "Dangers"),
+];
+
+/// The section of a `?section=` value; documents when absent or unknown.
+pub fn section_of(value: Option<&str>) -> &'static str {
+    SECTIONS
+        .iter()
+        .map(|(v, _)| *v)
+        .find(|v| Some(*v) == value)
+        .unwrap_or("documents")
+}
 
 #[component]
 pub fn ModulePage() -> impl IntoView {
@@ -36,14 +53,16 @@ pub fn ModulePage() -> impl IntoView {
     });
 
     // One section at a time: a long document would push the others far
-    // down on a tablet.
-    let section = RwSignal::new("documents".to_string());
-    let tabs = vec![
-        TabItem::new("documents", "Documents"),
-        TabItem::new("npcs", "NPCs"),
-        TabItem::new("maps", "Maps"),
-        TabItem::new("dangers", "Dangers"),
-    ];
+    // down on a tablet. The section is in the address (`?section=`), so a
+    // link or the back button opens it.
+    let query = use_query_map();
+    let current = move || section_of(query.get().get("section").as_deref()).to_string();
+    let section = RwSignal::new(current());
+    Effect::new(move |_| section.set(current()));
+    let tabs = SECTIONS
+        .iter()
+        .map(|(value, label)| TabItem::new(*value, *label).href(format!("?section={value}")))
+        .collect::<Vec<_>>();
     view! {
         {header}
         <Tabs tabs=tabs value=section label="Module sections">
@@ -120,5 +139,18 @@ fn danger_view(list: Vec<ModuleMonsterSummary>) -> impl IntoView {
                 }}
             </tbody>
         </Table>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::section_of;
+
+    #[test]
+    fn the_section_comes_from_the_address() {
+        assert_eq!(section_of(None), "documents");
+        assert_eq!(section_of(Some("maps")), "maps");
+        assert_eq!(section_of(Some("dangers")), "dangers");
+        assert_eq!(section_of(Some("nonsense")), "documents");
     }
 }
