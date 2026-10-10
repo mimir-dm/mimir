@@ -4014,6 +4014,7 @@ dependencies = [
  "leptos",
  "leptos_router",
  "mimir-wire",
+ "pulldown-cmark",
  "serde",
  "serde_json",
  "wasm-bindgen",

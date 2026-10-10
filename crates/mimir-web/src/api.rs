@@ -5,7 +5,7 @@
 
 use aurora_leptos::tokens::ApiError;
 use gloo_net::http::{Request, RequestBuilder};
-use mimir_wire::{ErrorBody, Session, WebConfig};
+use mimir_wire::{self as wire, ErrorBody, Session, WebConfig};
 use serde::de::DeserializeOwned;
 
 use crate::auth;
@@ -37,6 +37,41 @@ pub async fn check_token(token: &str) -> Result<Session, ApiError> {
 pub async fn get<T: DeserializeOwned>(path: &str) -> Result<T, ApiError> {
     let url = format!("/api/v1{path}");
     get_json(with_token(Request::get(&url), auth::stored_token())).await
+}
+
+/// The campaigns (`archived`: with the archived ones).
+pub async fn campaigns(archived: bool) -> Result<Vec<wire::CampaignSummary>, ApiError> {
+    get(if archived {
+        "/campaigns?archived=true"
+    } else {
+        "/campaigns"
+    })
+    .await
+}
+
+pub async fn campaign(id: String) -> Result<wire::CampaignSummary, ApiError> {
+    get(&format!("/campaigns/{id}")).await
+}
+
+/// A list under a campaign: "documents", "modules", "pcs", "npcs", "maps".
+pub async fn campaign_list<T: DeserializeOwned>(
+    id: String,
+    what: &str,
+) -> Result<Vec<T>, ApiError> {
+    get(&format!("/campaigns/{id}/{what}")).await
+}
+
+pub async fn module(id: String) -> Result<wire::ModuleSummary, ApiError> {
+    get(&format!("/modules/{id}")).await
+}
+
+/// A list under a module: "documents", "monsters", "npcs", "maps".
+pub async fn module_list<T: DeserializeOwned>(id: String, what: &str) -> Result<Vec<T>, ApiError> {
+    get(&format!("/modules/{id}/{what}")).await
+}
+
+pub async fn document(id: String) -> Result<wire::Document, ApiError> {
+    get(&format!("/documents/{id}")).await
 }
 
 fn with_token(req: RequestBuilder, token: Option<String>) -> RequestBuilder {

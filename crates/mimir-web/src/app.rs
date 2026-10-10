@@ -9,14 +9,15 @@ use aurora_leptos::tokens::ApiError;
 use aurora_leptos::AuroraStyles;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use leptos_router::components::{Route, Router, Routes};
+use leptos_router::components::{ParentRoute, Route, Router, Routes};
 use leptos_router::hooks::use_location;
 use leptos_router::path;
 use mimir_wire::AuthMode;
 
 use crate::api;
 use crate::auth::{self, Gate};
-use crate::pages::{home::Home, not_found::NotFound, sign_in::SignIn};
+use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
+use crate::pages::{home::Home, module::ModulePage, not_found::NotFound, sign_in::SignIn};
 
 /// Where the app is before the shell.
 #[derive(Clone)]
@@ -120,6 +121,13 @@ fn Shell(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
             >
                 <Routes fallback=|| view! { <NotFound /> }>
                     <Route path=path!("/") view=Home />
+                    <ParentRoute path=path!("/campaigns/:id") view=CampaignDashboard>
+                        <Route path=path!("") view=CampaignTab />
+                        <Route path=path!("modules") view=ModulesTab />
+                        <Route path=path!("npcs") view=NpcsTab />
+                        <Route path=path!("pcs") view=PcsTab />
+                    </ParentRoute>
+                    <Route path=path!("/modules/:id") view=ModulePage />
                 </Routes>
             </AppShell>
         </Router>
@@ -133,7 +141,9 @@ fn Nav(version: String) -> impl IntoView {
     let at = move |prefix: &'static str| {
         Signal::derive(move || {
             let path = location.pathname.get();
-            path == prefix || (prefix != "/" && path.starts_with(&format!("{prefix}/")))
+            campaigns_section(&path) && prefix == "/"
+                || path == prefix
+                || (prefix != "/" && path.starts_with(&format!("{prefix}/")))
         })
     };
     view! {
@@ -146,5 +156,23 @@ fn Nav(version: String) -> impl IntoView {
                 </SideNavLink>
             </SideNavGroup>
         </SideNav>
+    }
+}
+
+/// The pages under the Campaigns link of the side navigation.
+pub fn campaigns_section(path: &str) -> bool {
+    path == "/" || path.starts_with("/campaigns/") || path.starts_with("/modules/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::campaigns_section;
+
+    #[test]
+    fn campaign_pages_light_the_campaigns_link() {
+        assert!(campaigns_section("/"));
+        assert!(campaigns_section("/campaigns/c1/npcs"));
+        assert!(campaigns_section("/modules/m1"));
+        assert!(!campaigns_section("/settings"));
     }
 }

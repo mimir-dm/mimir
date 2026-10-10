@@ -5,7 +5,8 @@
 //! - [`auth`]: the DM token in browser storage and the gate decision.
 //! - [`api`]: a thin client over the same-origin `/api`, with the types of
 //!   `mimir-wire`.
-//! - [`pages`]: one module per route.
+//! - [`pages`]: one module per route; [`components`]: pieces they share;
+//!   [`markdown`]: safe markdown rendering.
 //!
 //! Styling: Aurora components and tokens only; `style/mimir.css` holds the
 //! few classes Aurora does not have.
@@ -13,6 +14,8 @@
 pub mod api;
 pub mod app;
 pub mod auth;
+pub mod components;
+pub mod markdown;
 pub mod pages;
 
 pub use app::App;

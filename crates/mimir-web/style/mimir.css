@@ -14,3 +14,108 @@
   gap: var(--space-md);
   width: 100%;
 }
+
+/* Campaign list */
+.mimir-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+/* Dashboard: one header row with the name and the tabs */
+.mimir-dash__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm) var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+.mimir-dash__header .cl-tabs {
+  flex: 1 1 auto;
+}
+.mimir-dash__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  color: var(--fg-bright);
+}
+
+/* A list on the side and the selected item */
+.mimir-split {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .mimir-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.mimir-doclist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mimir-doc__title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-lg);
+  color: var(--fg-bright);
+}
+
+/* Rendered markdown */
+.mimir-prose {
+  line-height: 1.6;
+  color: var(--fg);
+  max-width: 72ch;
+}
+.mimir-prose h1,
+.mimir-prose h2,
+.mimir-prose h3,
+.mimir-prose h4 {
+  color: var(--fg-bright);
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+.mimir-prose h1 { font-size: var(--fs-xl); }
+.mimir-prose h2 { font-size: var(--fs-lg); }
+.mimir-prose h3 { font-size: var(--fs-md); }
+.mimir-prose > :first-child { margin-top: 0; }
+.mimir-prose a { color: var(--ice); }
+.mimir-prose code {
+  font-family: var(--font-mono);
+  background: var(--inset);
+  border-radius: var(--radius-xs);
+  padding: 0 0.25em;
+}
+.mimir-prose pre {
+  background: var(--inset);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow-x: auto;
+}
+.mimir-prose pre code { background: none; padding: 0; }
+.mimir-prose blockquote {
+  margin: 1em 0;
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--border);
+  color: var(--fg-2);
+}
+.mimir-prose table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.mimir-prose th,
+.mimir-prose td {
+  border: 1px solid var(--border-soft);
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+}
+.mimir-prose hr {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  margin: 1.5em 0;
+}
+
+.mimir-cards { margin-top: var(--space-md); }
+.cl-tabs__panel { padding-top: var(--space-md); }
