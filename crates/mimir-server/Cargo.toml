@@ -1,0 +1,40 @@
+[package]
+name = "mimir-server"
+version = "0.7.3"
+edition = "2021"
+description = "Mimir web server: the API over mimir-core and the Leptos app (COLLIERY-I-0612)."
+license = "MIT"
+
+[[bin]]
+name = "mimir-server"
+path = "src/main.rs"
+
+[features]
+# Bake the built web app (crates/mimir-web/dist, built by trunk) into the
+# binary: the release path, one artifact (MIMIR-A-0009). Off by default so
+# `cargo build --workspace` needs no wasm tools.
+embed-web = ["dep:rust-embed"]
+# MIMIR_SEED=fixture (SRD catalog + the fixture campaign): development and
+# tests only, never in a release image (mirrors mimir-core's `fixtures`).
+fixtures = ["mimir-core/fixtures"]
+
+[dependencies]
+mimir-core = { path = "../mimir-core" }
+axum = "0.8"
+tokio = { workspace = true }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+diesel = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+subtle = "2"
+mime_guess = "2"
+rust-embed = { version = "8", optional = true }
+
+[dev-dependencies]
+mimir-core = { path = "../mimir-core", features = ["fixtures"] }
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+tempfile = { workspace = true }
