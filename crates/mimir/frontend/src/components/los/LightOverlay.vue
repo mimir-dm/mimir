@@ -223,7 +223,7 @@ function getLightColor(light: Light, baseOpacity: number): string {
 .debug-label {
   fill: yellow;
   font-size: 12px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }

@@ -744,7 +744,7 @@ function handleResize() {
   position: fixed;
   top: 12px;
   right: 12px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   z-index: 50;
   min-width: 160px;
   max-width: 240px;
@@ -757,6 +757,7 @@ function handleResize() {
 }
 
 .initiative-round {
+  font-family: var(--font-display);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -793,7 +794,7 @@ function handleResize() {
 .blackout-text {
   color: #333;
   font-size: 1.5rem;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-display);
 }
 
 /* Map viewport */
@@ -873,7 +874,7 @@ function handleResize() {
 
 .loading-text {
   font-size: 1rem;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Error state */
@@ -899,7 +900,7 @@ function handleResize() {
 
 .error-text {
   font-size: 1rem;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   max-width: 400px;
   text-align: center;
 }
@@ -912,7 +913,7 @@ function handleResize() {
   background: rgba(0, 0, 0, 0.7);
   border-radius: 6px;
   padding: 8px 12px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   color: rgba(255, 255, 255, 0.8);
   display: flex;
@@ -938,7 +939,7 @@ function handleResize() {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 3px;
   padding: 1px 5px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   min-width: 36px;
   text-align: center;
@@ -954,7 +955,7 @@ function handleResize() {
   background: rgba(0, 0, 0, 0.8);
   color: #666;
   font-size: 0.75rem;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   display: flex;
   gap: 1rem;
   opacity: 0;

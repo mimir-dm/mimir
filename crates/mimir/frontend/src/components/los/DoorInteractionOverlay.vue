@@ -197,7 +197,7 @@ function handleDoorClick(portal: Portal) {
 .door-label {
   fill: white;
   font-size: 11px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 500;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
   pointer-events: none;

@@ -174,6 +174,6 @@ const openPortalCount = computed(() =>
 .legend-text {
   fill: white;
   font-size: 10px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 </style>
