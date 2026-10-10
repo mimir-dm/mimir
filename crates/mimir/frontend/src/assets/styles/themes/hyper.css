@@ -11,18 +11,17 @@
   --color-primary-700: #86198f;
   --color-primary-800: #701a75;
   --color-primary-900: #581c87;
-
-  /* Neutral colors - very dark with purple tint */
-  --color-gray-50: #0a0a0f;
-  --color-gray-100: #18181b;
-  --color-gray-200: #27272a;
-  --color-gray-300: #3f3f46;
-  --color-gray-400: #52525b;
+  /* Neutral grays, light to dark like the other themes (MIMIR-T-0702). */
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
   --color-gray-500: #71717a;
-  --color-gray-600: #a1a1aa;
-  --color-gray-700: #d4d4d8;
-  --color-gray-800: #e4e4e7;
-  --color-gray-900: #f4f4f5;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-gray-800: #27272a;
+  --color-gray-900: #18181b;
 
   /* Semantic colors - neon variants */
   --color-success: #4ade80;
@@ -184,9 +183,9 @@
   --color-error-on-tint: var(--color-error-300);
   --color-error-text: var(--color-error-400);
   --color-neutral-tint: var(--color-gray-700);
-  --color-neutral-tint-strong: var(--color-gray-700);
-  --color-neutral-tint-border: var(--color-gray-600);
-  --color-neutral-on-tint: var(--color-gray-400);
+  --color-neutral-tint-strong: var(--color-gray-600);
+  --color-neutral-tint-border: var(--color-gray-500);
+  --color-neutral-on-tint: var(--color-gray-300);
 }
 
 /* Special hyper theme overrides for neon effects */
