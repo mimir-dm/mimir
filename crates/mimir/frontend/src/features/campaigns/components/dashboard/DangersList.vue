@@ -279,11 +279,11 @@ function getPoiIcon(iconName: string): string {
 }
 
 .monster-row:hover {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .monster-row.active {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-left: 3px solid var(--color-error);
   padding-left: calc(var(--spacing-sm) - 3px);
 }
@@ -377,11 +377,11 @@ function getPoiIcon(iconName: string): string {
 }
 
 .trap-row:hover {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .trap-row.active {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-left: 3px solid var(--color-warning);
   padding-left: calc(var(--spacing-sm) - 3px);
 }
@@ -418,11 +418,11 @@ function getPoiIcon(iconName: string): string {
 }
 
 .poi-row:hover {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .poi-row.active {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-left: 3px solid var(--color-primary-500);
   padding-left: calc(var(--spacing-sm) - 3px);
 }

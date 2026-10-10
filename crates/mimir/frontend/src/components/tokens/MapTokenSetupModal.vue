@@ -1748,7 +1748,7 @@ onUnmounted(() => {
 }
 
 .token-list-item.selected {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .token-list-color {

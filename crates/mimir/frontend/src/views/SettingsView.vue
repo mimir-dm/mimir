@@ -445,7 +445,7 @@ onMounted(async () => {
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border: none;
   border-radius: var(--radius-md);
   font-weight: 500;
@@ -454,7 +454,7 @@ onMounted(async () => {
 }
 
 .action-button:hover {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
 }
 
 /* Form Elements */
@@ -530,7 +530,7 @@ onMounted(async () => {
 }
 
 .input-help a:hover {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
 }
 
 .form-actions {
@@ -818,12 +818,12 @@ select.form-input {
 
 .button-primary {
   background-color: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border: none;
 }
 
 .button-primary:hover {
-  background-color: var(--color-primary-600);
+  background-color: var(--color-primary-hover);
 }
 
 .button-danger {

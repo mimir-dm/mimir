@@ -178,7 +178,7 @@ async function addCharacter() {
 
 .character-option.selected {
   border-color: var(--legacy-primary);
-  background: var(--color-primary-900);
+  background: var(--color-primary-tint);
 }
 
 .character-info {

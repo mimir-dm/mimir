@@ -362,8 +362,8 @@ const getItemDetail = (name: string, source: string): ItemDetail | null => {
 }
 
 .item-equipped-badge {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;

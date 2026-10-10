@@ -187,7 +187,7 @@ onMounted(() => {
 }
 
 .btn-retry:hover {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
 }
 
 .dashboard-header {

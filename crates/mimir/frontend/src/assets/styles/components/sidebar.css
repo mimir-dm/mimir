@@ -218,7 +218,7 @@
 
 .completion-checkbox:hover {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
+  background: var(--color-primary-tint-subtle);
 }
 
 .completion-checkbox.checked {

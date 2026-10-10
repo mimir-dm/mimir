@@ -1194,8 +1194,8 @@ const createCharacter = async () => {
 }
 
 .progress-step.active {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   font-weight: 600;
 }
 
@@ -1224,7 +1224,7 @@ const createCharacter = async () => {
 
 .progress-step.active .step-number {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary-500);
 }
 
@@ -1286,7 +1286,7 @@ const createCharacter = async () => {
 
 .type-button.active {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary-500);
 }
 
@@ -1326,7 +1326,7 @@ const createCharacter = async () => {
 .source-chip.selected {
   background: var(--color-primary-500);
   border-color: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 .source-chip-check {
@@ -1580,12 +1580,12 @@ const createCharacter = async () => {
 
 .skill-chip.selectable:hover:not(.disabled):not(.from-background) {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
+  background: var(--color-primary-tint-subtle);
 }
 
 .skill-chip.selected {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary-500);
 }
 

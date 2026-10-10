@@ -52,8 +52,8 @@
 }
 
 .save-status.saving {
-  color: var(--color-primary-600);
-  background-color: var(--color-primary-50);
+  color: var(--color-primary-text);
+  background-color: var(--color-primary-tint-subtle);
 }
 
 .save-status.saved {
@@ -190,7 +190,7 @@
 }
 
 .editor-area .ProseMirror table .selectedCell {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .editor-area .ProseMirror table .column-resize-handle {

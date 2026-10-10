@@ -803,7 +803,7 @@ watch(() => props.campaign?.id, () => {
 }
 
 .sub-tab.active {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   border-bottom-color: var(--color-primary-600);
 }
 

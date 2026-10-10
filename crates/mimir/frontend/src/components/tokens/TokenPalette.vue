@@ -599,7 +599,7 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 
 .module-monster-btn.active {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .mm-name {
@@ -809,7 +809,7 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
   align-items: center;
   margin-top: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
 }
@@ -850,10 +850,10 @@ defineExpose({ currentConfig, clearSelection, loadModuleMonsters })
 .placement-hint {
   margin-top: var(--spacing-md);
   padding: var(--spacing-sm);
-  background: var(--color-primary-50);
+  background: var(--color-primary-tint-subtle);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   text-align: center;
-  color: var(--color-primary-700);
+  color: var(--color-primary-on-tint);
 }
 </style>

@@ -583,7 +583,7 @@ watch(() => props.visible, async (visible) => {
 .btn-add {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -591,7 +591,7 @@ watch(() => props.visible, async (visible) => {
 }
 
 .btn-add:hover {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
 }
 
 /* Inventory list */

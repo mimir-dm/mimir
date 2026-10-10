@@ -218,8 +218,8 @@ import { computed } from 'vue'
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-weight: 500;
@@ -235,7 +235,7 @@ import { computed } from 'vue'
   background: transparent;
   border: none;
   border-radius: 50%;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
@@ -243,7 +243,7 @@ import { computed } from 'vue'
 }
 
 .remove-tag:hover {
-  background: var(--color-primary-200);
-  color: var(--color-primary-800);
+  background: var(--color-primary-tint-strong);
+  color: var(--color-primary-on-tint);
 }
 </style>

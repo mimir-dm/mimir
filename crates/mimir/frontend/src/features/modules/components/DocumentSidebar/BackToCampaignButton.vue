@@ -35,8 +35,8 @@ defineProps<{
 }
 
 .back-to-campaign:hover {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-600);
+  background-color: var(--color-primary-tint);
+  color: var(--color-primary-text);
   transform: translateX(-2px);
 }
 </style>

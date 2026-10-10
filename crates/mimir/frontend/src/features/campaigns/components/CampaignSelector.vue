@@ -285,7 +285,7 @@ watch(() => router.currentRoute.value, (route) => {
 }
 
 .create-link {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   text-decoration: none;
   font-weight: 500;
 }
@@ -337,7 +337,7 @@ watch(() => router.currentRoute.value, (route) => {
 }
 
 .check-icon {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
 }
 
 .dropdown-divider {
@@ -352,7 +352,7 @@ watch(() => router.currentRoute.value, (route) => {
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-sm);
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   text-decoration: none;
   font-weight: 500;
   transition: background-color var(--transition-fast);

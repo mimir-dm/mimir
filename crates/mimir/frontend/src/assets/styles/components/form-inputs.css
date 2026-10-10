@@ -163,12 +163,9 @@
 
 .form-select-custom__trigger--active {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
-.theme-dark .form-select-custom__trigger--active {
-  background: var(--color-primary-900);
-}
 
 .form-select-custom__chevron {
   margin-left: auto;
@@ -230,14 +227,10 @@
 }
 
 .form-select-custom__option--selected {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
 }
 
-.theme-dark .form-select-custom__option--selected {
-  background: var(--color-primary-900);
-  color: var(--color-primary-300);
-}
 
 .form-select-custom__actions {
   padding: var(--spacing-sm);

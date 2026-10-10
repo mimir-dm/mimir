@@ -138,7 +138,7 @@ defineEmits<{
 
 .completion-checkbox:hover {
   border-color: var(--color-primary-400);
-  background-color: var(--color-primary-50);
+  background-color: var(--color-primary-tint-subtle);
 }
 
 .completion-checkbox.checked {

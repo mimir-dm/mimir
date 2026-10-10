@@ -206,7 +206,7 @@ defineProps<{
 /* DM Notes Section */
 .dm-notes {
   padding: 0.5rem 1rem;
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -215,7 +215,7 @@ defineProps<{
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   margin-bottom: 0.25rem;
 }
 

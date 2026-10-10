@@ -361,7 +361,7 @@ function handleAdd() {
 }
 
 .result-item.selected {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-color: var(--color-primary-500);
 }
 
@@ -404,7 +404,7 @@ function handleAdd() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border: 1px solid var(--color-primary-500);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -413,7 +413,7 @@ function handleAdd() {
 
 .selected-name {
   font-weight: 600;
-  color: var(--color-primary-700);
+  color: var(--color-primary-on-tint);
 }
 
 .clear-btn {
@@ -421,14 +421,14 @@ function handleAdd() {
   height: 20px;
   border: none;
   background: none;
-  color: var(--color-primary-700);
+  color: var(--color-primary-on-tint);
   font-size: 1rem;
   cursor: pointer;
   border-radius: var(--radius-sm);
 }
 
 .clear-btn:hover {
-  background: var(--color-primary-200);
+  background: var(--color-primary-tint-strong);
 }
 
 .options-row {
@@ -554,9 +554,9 @@ function handleAdd() {
 }
 
 .preset-btn.active {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-color: var(--color-primary-500);
-  color: var(--color-primary-700);
+  color: var(--color-primary-on-tint);
 }
 
 .vision-custom {

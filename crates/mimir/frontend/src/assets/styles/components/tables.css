@@ -100,12 +100,9 @@
 
 /* Table States */
 .table tr.selected {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
-.theme-dark .table tr.selected {
-  background: var(--color-primary-900);
-}
 
 .table tr.disabled {
   opacity: 0.5;
