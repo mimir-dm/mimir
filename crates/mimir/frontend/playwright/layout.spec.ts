@@ -35,3 +35,21 @@ for (const width of [1400, 768]) {
     if (width >= 1400) expect(h).toBeLessThan(60)
   })
 }
+
+test('Cinzel renders with no network to font hosts (MIMIR-T-0694)', async ({ page }) => {
+  // The desktop app may be offline: the display face must come from the bundle.
+  const external: string[] = []
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => {
+    external.push(route.request().url())
+    return route.abort()
+  })
+  await page.goto('/')
+  // Load the faces the home title uses; with the font hosts blocked, they
+  // can only come from the bundle.
+  const loaded = await page.evaluate(async () =>
+    (await document.fonts.load('700 24px Cinzel', 'Mimir')).map((f) => f.status),
+  )
+  expect(loaded.length).toBeGreaterThan(0)
+  expect(loaded.every((s) => s === 'loaded')).toBe(true)
+  expect(external).toEqual([])
+})

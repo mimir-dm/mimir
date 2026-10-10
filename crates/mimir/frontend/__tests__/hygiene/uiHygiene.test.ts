@@ -125,4 +125,9 @@ describe('UI hygiene', () => {
     const hits = matches(/&#(9[6-9]\d\d|1\d{4,5});/, (f) => !f.endsWith('.vue'))
     expect(hits, 'import the icon from @lucide/vue').toEqual([])
   })
+
+  it('loads no fonts from the network (MIMIR-T-0694)', () => {
+    // The desktop app can be offline; fonts are bundled (@fontsource).
+    expect(matches(/fonts\.(googleapis|gstatic)\.com/)).toEqual([])
+  })
 })
