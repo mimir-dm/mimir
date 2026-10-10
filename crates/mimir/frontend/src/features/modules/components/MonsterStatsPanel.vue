@@ -3,8 +3,8 @@
       <!-- Monster Header -->
       <header class="monster-header">
         <div class="monster-title">
-          <h2>{{ monster.display_name || monster.monster_name }}</h2>
-          <p v-if="monster.display_name" class="monster-alias">({{ monster.monster_name }})</p>
+          <h2>{{ getMonsterDisplayName(monster) }}</h2>
+          <p v-if="alias" class="monster-alias" data-testid="monster-alias">({{ alias }})</p>
           <p class="monster-type">{{ formatCreatureType(monster.monster_data) }}</p>
         </div>
       </header>
@@ -141,8 +141,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import {
   type MonsterWithData,
+  getMonsterDisplayName,
   formatCreatureType,
   formatSpeed,
   formatModifier,
@@ -158,9 +160,17 @@ import {
   formatActionEntries
 } from '../composables/useModuleMonsters'
 
-defineProps<{
+const props = defineProps<{
   monster: MonsterWithData
 }>()
+
+// The original name under a custom display name: the catalog name, or the
+// homebrew stat block's name. None when there is nothing to add (MIMIR-T-0700).
+const alias = computed(() => {
+  const m = props.monster
+  const original = m.monster_name || m.monster_data?.name || null
+  return m.display_name && original && original !== m.display_name ? original : null
+})
 </script>
 
 <style scoped>
