@@ -99,7 +99,7 @@
   
   /* Text colors */
   --color-text: #111827;
-  --color-text-secondary: #6b7280;
+  --color-text-secondary: #636b78; /* 4.89:1 on surface-variant (MIMIR-T-0701) */
   --color-text-disabled: #9ca3af;
   
   /* Border colors */
