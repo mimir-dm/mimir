@@ -1,5 +1,9 @@
-/* Google Fonts - Cinzel for display/headers */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
+/* Cinzel for display and headings, bundled with the app so it also works
+   offline (MIMIR-T-0694). */
+@import '@fontsource/cinzel/400.css';
+@import '@fontsource/cinzel/500.css';
+@import '@fontsource/cinzel/600.css';
+@import '@fontsource/cinzel/700.css';
 
 /* Import theme files first */
 @import './themes/light.css';
@@ -210,8 +214,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Display typography - Cinzel for headers and titles */
-h1, h2, h3,
+/* Display typography - Cinzel for headings and titles. Scoped rules that
+   set only size or weight keep it; only an explicit font-family changes it. */
+h1, h2, h3, h4,
 .font-display,
 .hero-title,
 .page-title,
