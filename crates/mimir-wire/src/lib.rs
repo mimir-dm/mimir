@@ -17,8 +17,10 @@
 //! This crate must build for `wasm32-unknown-unknown` (checked in CI): serde
 //! only. Conversions from `mimir-core` models live in the server.
 
+pub mod campaign;
 pub mod error;
 
+pub use campaign::*;
 pub use error::{ErrorBody, ErrorCode, ErrorDetail};
 
 use serde::{Deserialize, Serialize};

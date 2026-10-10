@@ -4,6 +4,7 @@
 //! bearer auth, open mode without a token), the web app's own endpoints, and
 //! the built Leptos app with SPA fallback.
 
+pub mod api;
 pub mod auth;
 pub mod config;
 pub mod error;
@@ -11,7 +12,6 @@ pub mod state;
 pub mod web;
 
 use axum::extract::{Extension, State};
-use axum::middleware;
 use axum::routing::get;
 use axum::{Json, Router};
 use mimir_wire::Session;
@@ -62,13 +62,7 @@ fn seed_fixture(_conn: &mut diesel::SqliteConnection, _config: &Config) -> Resul
 /// The whole router: open endpoints, the `/api/v1` API behind auth, and the
 /// SPA fallback.
 pub fn router(state: AppState) -> Router {
-    let api =
-        Router::new()
-            .route("/session", get(session))
-            .route_layer(middleware::from_fn_with_state(
-                state.clone(),
-                auth::require_dm,
-            ));
+    let api = api::router(state.clone());
 
     Router::new()
         .route("/healthz", get(healthz))
@@ -100,6 +94,6 @@ async fn readyz(State(state): State<AppState>) -> Result<&'static str, ApiError>
 
 /// `GET /api/v1/session`: who the token belongs to (the login page checks a
 /// token with it).
-async fn session(Extension(role): Extension<Role>) -> Json<Session> {
+pub(crate) async fn session(Extension(role): Extension<Role>) -> Json<Session> {
     Json(Session { role })
 }
