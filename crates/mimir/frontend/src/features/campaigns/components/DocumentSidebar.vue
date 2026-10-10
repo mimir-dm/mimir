@@ -444,7 +444,7 @@ onMounted(() => {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--legacy-text-muted);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
@@ -471,7 +471,7 @@ onMounted(() => {
   height: 16px;
   opacity: 0.7;
   flex-shrink: 0;
-  color: var(--legacy-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .document-icon-svg.asset-icon {
@@ -489,7 +489,7 @@ onMounted(() => {
 .empty-state {
   padding: var(--spacing-lg, 16px);
   text-align: center;
-  color: var(--legacy-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 

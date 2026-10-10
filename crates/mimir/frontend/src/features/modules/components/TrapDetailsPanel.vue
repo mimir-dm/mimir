@@ -303,7 +303,7 @@ watch(() => props.trap, () => {
 .trap-panel :deep(.spell-ref),
 .trap-panel :deep(.item-ref),
 .trap-panel :deep(.condition-ref) {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;

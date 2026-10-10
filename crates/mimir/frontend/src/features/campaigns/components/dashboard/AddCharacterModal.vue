@@ -144,7 +144,7 @@ async function addCharacter() {
   justify-content: center;
   padding: var(--spacing-xl, 24px);
   text-align: center;
-  color: var(--legacy-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .hint {
@@ -173,11 +173,11 @@ async function addCharacter() {
 }
 
 .character-option:hover {
-  border-color: var(--legacy-primary);
+  border-color: var(--color-primary-500);
 }
 
 .character-option.selected {
-  border-color: var(--legacy-primary);
+  border-color: var(--color-primary-500);
   background: var(--color-primary-tint);
 }
 
@@ -194,12 +194,12 @@ async function addCharacter() {
 
 .character-details {
   font-size: 0.75rem;
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
 }
 
 .current-campaign,
 .other-campaign {
   font-size: 0.75rem;
-  color: var(--legacy-text-muted);
+  color: var(--color-text-secondary);
 }
 </style>

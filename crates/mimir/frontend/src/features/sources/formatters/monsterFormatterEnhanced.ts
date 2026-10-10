@@ -85,7 +85,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   }
   
   // Header with type and CR
-  html += '<div class="monster-header" style="border-bottom: 2px solid #8b0000; padding-bottom: 0.5rem; margin-bottom: 1rem;">'
+  html += '<div class="monster-header" style="border-bottom: 2px solid var(--color-dnd-damage); padding-bottom: 0.5rem; margin-bottom: 1rem;">'
   // Use raw 'type' field if available (full monster), otherwise use formatted 'creature_type' (summary)
   const creatureType = fullMonster.type ? formatCreatureType(fullMonster.type) : formatCreatureType(fullMonster.creature_type)
   html += `<div class="monster-type" style="font-size: 1rem; font-style: italic;">${formatSize(fullMonster.size || 'M')} ${creatureType}, ${formatAlignment(fullMonster.alignment)}</div>`
@@ -105,7 +105,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   if (fullMonster.str) {
     html += '<div class="ability-scores" style="margin-bottom: 1rem;">'
     html += '<table style="width: 100%; text-align: left; border-collapse: collapse;">'
-    html += '<tr style="border-bottom: 1px solid #333;">'
+    html += '<tr style="border-bottom: 1px solid var(--color-text);">'
     html += '<th style="padding: 0.5rem; font-weight: bold;">STR</th>'
     html += '<th style="padding: 0.5rem; font-weight: bold;">DEX</th>'
     html += '<th style="padding: 0.5rem; font-weight: bold;">CON</th>'
@@ -143,7 +143,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   }
   
   if (details.length > 0) {
-    html += '<div class="monster-details-section" style="margin-bottom: 1rem; padding: 0.5rem 0; border-bottom: 1px solid #333;">'
+    html += '<div class="monster-details-section" style="margin-bottom: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--color-text);">'
     html += details.join('<br>')
     html += '</div>'
   }
@@ -151,7 +151,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   // Traits
   if (fullMonster.trait && fullMonster.trait.length > 0) {
     html += '<div class="monster-section" style="margin-bottom: 1rem;">'
-    html += '<h4 style="color: #8b0000; margin-bottom: 0.5rem; font-size: 1.1rem;">Traits</h4>'
+    html += '<h4 style="color: var(--color-dnd-damage); margin-bottom: 0.5rem; font-size: 1.1rem;">Traits</h4>'
     for (const trait of fullMonster.trait) {
       html += formatAction(trait)
     }
@@ -161,7 +161,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   // Actions
   if (fullMonster.action && fullMonster.action.length > 0) {
     html += '<div class="monster-section" style="margin-bottom: 1rem;">'
-    html += '<h4 style="color: #8b0000; margin-bottom: 0.5rem; font-size: 1.1rem;">Actions</h4>'
+    html += '<h4 style="color: var(--color-dnd-damage); margin-bottom: 0.5rem; font-size: 1.1rem;">Actions</h4>'
     for (const action of fullMonster.action) {
       html += formatAction(action)
     }
@@ -205,7 +205,7 @@ export async function formatMonsterDetails(monster: Monster | MonsterSummary): P
   }
   
   // Source with page - styled to bottom right
-  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--legacy-border-light);">'
+  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border);">'
   html += `<span class="source-info">Source: ${fullMonster.source}`
   if (fullMonster.page) {
     html += `, p. ${fullMonster.page}`
@@ -251,7 +251,7 @@ function formatMonsterSummary(monster: MonsterSummary): string {
   }
   
   // Source with page - styled to bottom right
-  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--legacy-border-light);">'
+  html += '<div style="text-align: right; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border);">'
   html += `<span class="source-info">Source: ${monster.source}</span>`
   html += '</div>'
   html += '</div>'

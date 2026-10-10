@@ -71,7 +71,7 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .header-tags {
@@ -90,43 +90,43 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       
       .tag-type.blessing {
         background: rgba(255, 215, 0, 0.2);
-        color: #ffd700;
+        color: var(--color-dnd-condition);
         border: 1px solid rgba(255, 215, 0, 0.4);
       }
       
       .tag-type.boon {
         background: rgba(147, 112, 219, 0.2);
-        color: #9370db;
+        color: var(--color-dnd-spell);
         border: 1px solid rgba(147, 112, 219, 0.4);
       }
       
       .tag-type.charm {
         background: rgba(255, 105, 180, 0.2);
-        color: #ff69b4;
+        color: var(--color-dnd-spell);
         border: 1px solid rgba(255, 105, 180, 0.4);
       }
       
       .tag-type.feat {
         background: rgba(70, 130, 180, 0.2);
-        color: #4682b4;
+        color: var(--color-dnd-action);
         border: 1px solid rgba(70, 130, 180, 0.4);
       }
       
       .tag-duration {
         background: rgba(255, 165, 0, 0.1);
-        color: #ffa500;
+        color: var(--color-dnd-resource);
         border: 1px solid rgba(255, 165, 0, 0.3);
       }
       
       .tag-srd {
         background: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
+        color: var(--color-dnd-healing);
         border: 1px solid rgba(76, 175, 80, 0.3);
       }
       
       .tag-basic {
         background: rgba(33, 150, 243, 0.1);
-        color: #2196f3;
+        color: var(--color-dnd-action);
         border: 1px solid rgba(33, 150, 243, 0.3);
       }
       
@@ -145,7 +145,7 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
         background: rgba(255, 193, 7, 0.05);
         padding: var(--spacing-sm, 8px);
         border-radius: 4px;
-        border-left: 3px solid #ffc107;
+        border-left: 3px solid var(--color-dnd-condition);
       }
       
       .spell-list {
@@ -158,17 +158,17 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       
       .spell-frequency {
         font-weight: bold;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .spell-name {
-        color: var(--legacy-accent);
+        color: var(--color-dnd-damage);
         cursor: pointer;
         text-decoration: underline;
       }
       
       .spell-name:hover {
-        color: var(--legacy-accent-hover);
+        color: var(--color-dnd-damage);
       }
       
       .source-info {
@@ -182,7 +182,7 @@ export async function formatRewardDetails(reward: Reward): Promise<string> {
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--legacy-border-light);
+        border-left: 2px solid var(--color-border);
       }
       
       ul, ol {

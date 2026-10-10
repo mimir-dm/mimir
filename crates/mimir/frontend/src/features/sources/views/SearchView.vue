@@ -245,7 +245,7 @@ onMounted(() => {
 
 .search-input:focus {
   outline: none;
-  border-color: var(--legacy-primary);
+  border-color: var(--color-primary-500);
 }
 
 .results-count {

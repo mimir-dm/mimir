@@ -118,7 +118,7 @@
 }
 
 .spell-ref {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   font-style: italic;
   cursor: help;
   text-decoration: underline;
@@ -411,7 +411,7 @@
 }
 
 .source-info {
-  color: var(--legacy-text-dim);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   font-style: italic;
 }
@@ -435,13 +435,13 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--legacy-primary);
+  border-bottom: 2px solid var(--color-primary-500);
 }
 
 .spell-level-school {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   text-transform: capitalize;
 }
 
@@ -465,7 +465,7 @@
 
 .spell-tag.concentration {
   background: rgba(74, 158, 255, 0.2);
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   border: 1px solid rgba(74, 158, 255, 0.3);
 }
 
@@ -476,7 +476,7 @@
   padding: 1rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
-  border: 1px solid var(--legacy-border-light);
+  border: 1px solid var(--color-border);
 }
 
 .property-item {
@@ -517,13 +517,13 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--legacy-primary);
+  border-bottom: 2px solid var(--color-primary-500);
 }
 
 .item-type-rarity {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   text-transform: capitalize;
 }
 
@@ -554,7 +554,7 @@
   padding: 1rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
-  border: 1px solid var(--legacy-border-light);
+  border: 1px solid var(--color-border);
 }
 
 /* ================================
@@ -574,7 +574,7 @@
 /* Enhanced class header styles */
 .class-header-section {
   padding-bottom: 1rem;
-  border-bottom: 2px solid var(--legacy-primary);
+  border-bottom: 2px solid var(--color-primary-500);
 }
 
 .class-header-section h2 {
@@ -592,7 +592,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: rgba(74, 158, 255, 0.2);
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   border: 1px solid rgba(74, 158, 255, 0.3);
 }
 
@@ -654,12 +654,12 @@
 }
 
 .fluff-content h5 {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   font-size: 1rem;
   font-weight: 600;
   margin: 1.5rem 0 0.75rem 0;
   padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--legacy-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .fluff-content ul {
@@ -676,7 +676,7 @@
   margin: 1rem 0;
   padding: 1rem;
   background: rgba(74, 158, 255, 0.05);
-  border-left: 3px solid var(--legacy-primary);
+  border-left: 3px solid var(--color-primary-500);
   font-style: italic;
   color: var(--color-text-secondary);
 }
@@ -685,7 +685,7 @@
   margin-top: 0.5rem;
   font-style: normal;
   font-size: 0.9rem;
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
 }
 
 /* Class core attributes section */
@@ -700,7 +700,7 @@
   margin: 0 0 1rem 0;
   font-size: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--legacy-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
 /* Properties grid for attributes */
@@ -717,7 +717,7 @@
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 4px;
-  border: 1px solid var(--legacy-border-light);
+  border: 1px solid var(--color-border);
 }
 
 .property-item.full-width {
@@ -730,11 +730,11 @@
 }
 
 .class-features-section h4 {
-  color: var(--legacy-accent-green);
+  color: var(--color-dnd-healing);
   margin: 0 0 1rem 0;
   font-size: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--legacy-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .features-grid {
@@ -747,14 +747,14 @@
   background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
   padding: 1rem;
-  border: 1px solid var(--legacy-border-light);
+  border: 1px solid var(--color-border);
 }
 
 .level-badge {
   display: inline-block;
   padding: 4px 10px;
-  background: var(--legacy-primary);
-  color: var(--color-background);
+  background: var(--color-primary-500);
+  color: var(--color-on-primary);
   border-radius: 4px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -772,11 +772,11 @@
 }
 
 .spells-section h4 {
-  color: var(--legacy-magic);
+  color: var(--color-dnd-spell);
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--legacy-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .spells-description {
@@ -802,7 +802,7 @@
 .spell-level-badge {
   display: inline-block;
   padding: 3px 8px;
-  background: var(--legacy-magic);
+  background: var(--color-dnd-spell);
   color: var(--color-background);
   border-radius: 4px;
   font-size: 0.8rem;
@@ -816,11 +816,11 @@
 }
 
 .spellcasting-section h4 {
-  color: var(--legacy-magic);
+  color: var(--color-dnd-spell);
   margin: 0 0 1rem 0;
   font-size: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--legacy-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .cantrip-level {
@@ -832,13 +832,13 @@
 }
 
 .cantrip-level strong {
-  color: var(--legacy-accent-green);
+  color: var(--color-dnd-healing);
 }
 
 /* Footer styles */
 .class-footer {
   padding-top: 1rem;
-  border-top: 1px solid var(--legacy-border-light);
+  border-top: 1px solid var(--color-border);
 }
 
 /* Legacy styles for backward compatibility */
@@ -863,11 +863,11 @@
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 4px;
-  border-left: 3px solid var(--legacy-primary-dim);
+  border-left: 3px solid var(--color-primary-tint-border);
 }
 
 .subclass-section h4 {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   margin-top: 0;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
@@ -892,7 +892,7 @@
   padding: 0.5rem;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 4px;
-  border-left: 3px solid var(--legacy-primary-dim);
+  border-left: 3px solid var(--color-primary-tint-border);
   transition: background 0.2s;
 }
 
@@ -906,7 +906,7 @@
 }
 
 .feature-level {
-  color: var(--legacy-text-dim);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   font-style: italic;
   margin-left: 0.5rem;
@@ -915,7 +915,7 @@
 .parent-class-info {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--legacy-border-light);
+  border-top: 1px solid var(--color-border);
 }
 
 .parent-class-info h4 {
@@ -934,7 +934,7 @@
 }
 
 .feature-header {
-  border-bottom: 2px solid var(--legacy-primary);
+  border-bottom: 2px solid var(--color-primary-500);
   padding-bottom: 0.75rem;
 }
 
@@ -950,7 +950,7 @@
 }
 
 .feature-class {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   font-weight: 500;
 }
 
@@ -985,7 +985,7 @@
 
 .feature-footer {
   padding-top: 1rem;
-  border-top: 1px solid var(--legacy-border-light);
+  border-top: 1px solid var(--color-border);
 }
 
 /* ================================
@@ -1058,11 +1058,11 @@
 }
 
 .feature-ref {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
 }
 
 .feature-ref:hover {
-  color: var(--legacy-primary-bright);
+  color: var(--color-primary-text);
   background: rgba(74, 158, 255, 0.1);
   text-decoration-style: solid;
   padding: 0 2px;

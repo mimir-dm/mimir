@@ -151,7 +151,7 @@ function getCultBoonStyles(): string {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .header-tags {
@@ -170,19 +170,19 @@ function getCultBoonStyles(): string {
       
       .tag-cult {
         background: rgba(156, 39, 176, 0.1);
-        color: #9c27b0;
+        color: var(--color-dnd-spell);
         border: 1px solid rgba(156, 39, 176, 0.3);
       }
       
       .tag-boon {
         background: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
+        color: var(--color-dnd-healing);
         border: 1px solid rgba(76, 175, 80, 0.3);
       }
       
       .tag-type {
         background: rgba(33, 150, 243, 0.1);
-        color: #2196f3;
+        color: var(--color-dnd-action);
         border: 1px solid rgba(33, 150, 243, 0.3);
       }
       
@@ -191,12 +191,12 @@ function getCultBoonStyles(): string {
         padding: var(--spacing-sm, 8px);
         background: var(--color-surface);
         border-radius: 4px;
-        border: 1px solid var(--legacy-border-light);
+        border: 1px solid var(--color-border);
       }
       
       .info-section h4 {
         margin: 0 0 var(--spacing-xs, 4px) 0;
-        color: var(--legacy-accent);
+        color: var(--color-dnd-damage);
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -212,12 +212,12 @@ function getCultBoonStyles(): string {
       }
       
       .content-section h3 {
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
       .content-section h4 {
-        color: var(--legacy-accent);
+        color: var(--color-dnd-damage);
         margin-top: var(--spacing-md, 12px);
         margin-bottom: var(--spacing-xs, 4px);
       }
@@ -228,14 +228,14 @@ function getCultBoonStyles(): string {
       }
       
       .entries > h4 {
-        color: #ffc107;
+        color: var(--color-dnd-condition);
         margin: var(--spacing-md, 12px) 0 var(--spacing-xs, 4px) 0;
       }
       
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--legacy-border-light);
+        border-left: 2px solid var(--color-border);
       }
       
       .source-info {
@@ -251,13 +251,13 @@ function getCultBoonStyles(): string {
         margin: var(--spacing-md, 12px) 0;
         padding: var(--spacing-sm, 8px);
         background: rgba(255, 87, 34, 0.05);
-        border-left: 3px solid #ff5722;
+        border-left: 3px solid var(--color-dnd-damage);
         border-radius: 4px;
       }
       
       .trait-block h4 {
         margin: 0 0 var(--spacing-xs, 4px) 0;
-        color: #ff5722;
+        color: var(--color-dnd-damage);
       }
       
       ul, ol {

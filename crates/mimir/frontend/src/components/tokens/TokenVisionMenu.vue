@@ -195,7 +195,7 @@ async function handleReset() {
 <style scoped>
 .vision-menu {
   position: fixed;
-  background: var(--legacy-bg-secondary);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 12px;
@@ -216,7 +216,7 @@ async function handleReset() {
 
 .token-name {
   font-weight: 600;
-  color: var(--legacy-text-primary);
+  color: var(--color-text);
 }
 
 .close-btn {
@@ -229,7 +229,7 @@ async function handleReset() {
 }
 
 .close-btn:hover {
-  color: var(--legacy-text-primary);
+  color: var(--color-text);
 }
 
 .menu-section {
@@ -247,10 +247,10 @@ async function handleReset() {
 .preset-select {
   width: 100%;
   padding: 6px 8px;
-  background: var(--legacy-bg-tertiary);
+  background: var(--color-surface-variant);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--legacy-text-primary);
+  color: var(--color-text);
   font-size: 13px;
 }
 
@@ -269,10 +269,10 @@ async function handleReset() {
 .input-row input {
   flex: 1;
   padding: 4px 8px;
-  background: var(--legacy-bg-tertiary);
+  background: var(--color-surface-variant);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--legacy-text-primary);
+  color: var(--color-text);
   font-size: 13px;
   width: 60px;
 }
@@ -290,7 +290,7 @@ async function handleReset() {
 .light-btn {
   flex: 1;
   padding: 4px 8px;
-  background: var(--legacy-bg-tertiary);
+  background: var(--color-surface-variant);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text-secondary);
@@ -299,8 +299,8 @@ async function handleReset() {
 }
 
 .light-btn:hover {
-  background: var(--legacy-bg-hover);
-  color: var(--legacy-text-primary);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .menu-footer {
@@ -321,8 +321,8 @@ async function handleReset() {
 }
 
 .reset-btn:hover:not(:disabled) {
-  background: var(--legacy-bg-hover);
-  color: var(--legacy-text-primary);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .reset-btn:disabled {

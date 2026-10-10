@@ -61,7 +61,7 @@ const props = defineProps<Props>()
 }
 
 .error-message h2 {
-  color: var(--legacy-danger);
+  color: var(--color-error);
   margin-bottom: var(--spacing-md, 12px);
 }
 
@@ -132,7 +132,7 @@ const props = defineProps<Props>()
 
 .book-content :deep(em) {
   font-style: italic;
-  color: var(--legacy-text-emphasis);
+  color: var(--color-text);
 }
 
 .book-content :deep(code) {
@@ -144,7 +144,7 @@ const props = defineProps<Props>()
 }
 
 .book-content :deep(blockquote) {
-  border-left: 4px solid var(--legacy-primary);
+  border-left: 4px solid var(--color-primary-500);
   padding-left: var(--spacing-md, 12px);
   margin: var(--spacing-md, 12px) 0;
   font-style: italic;

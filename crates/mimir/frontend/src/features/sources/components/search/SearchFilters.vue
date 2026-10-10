@@ -123,7 +123,7 @@ function emitUpdate() {
 
 .search-filters select:focus {
   outline: none;
-  border-color: var(--legacy-primary);
+  border-color: var(--color-primary-500);
 }
 
 .checkbox-label {

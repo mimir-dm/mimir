@@ -66,7 +66,7 @@ watch([renderedContent, () => props.selectedBook], () => {
 }
 
 .content-renderer :deep(.damage-roll) {
-  color: var(--legacy-danger);
+  color: var(--color-error);
   font-weight: 600;
 }
 
@@ -76,7 +76,7 @@ watch([renderedContent, () => props.selectedBook], () => {
 }
 
 .content-renderer :deep(.dc-check) {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -93,24 +93,24 @@ watch([renderedContent, () => props.selectedBook], () => {
 }
 
 .content-renderer :deep(.condition) {
-  color: var(--legacy-condition);
+  color: var(--color-dnd-condition);
   font-style: italic;
   cursor: help;
 }
 
 .content-renderer :deep(.status) {
-  color: var(--legacy-status);
+  color: var(--color-dnd-healing);
   font-style: italic;
   cursor: help;
 }
 
 .content-renderer :deep(.note) {
-  color: var(--legacy-note);
+  color: var(--color-warning-text);
   font-style: italic;
 }
 
 .content-renderer :deep(.recharge) {
-  color: var(--legacy-recharge);
+  color: var(--color-dnd-resource);
   font-weight: 600;
 }
 

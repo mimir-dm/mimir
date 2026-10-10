@@ -172,6 +172,17 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: 'reference-reader', path: () => '/sources.html' },
+  // Catalog details: the reader content colors (MIMIR-T-0697).
+  ...(['Spells', 'Bestiary'] as const).map((category) => ({
+    name: `catalog-${category.toLowerCase()}-detail`,
+    path: () => '/sources.html',
+    setup: async (page: Page) => {
+      await page.getByText('Catalog', { exact: true }).click()
+      await page.getByRole('button', { name: category, exact: true }).click()
+      await page.locator('tbody tr').first().click()
+      await page.getByRole('dialog').waitFor()
+    },
+  })),
 ]
 
 export const VIEWPORTS = [

@@ -110,7 +110,7 @@ function getRowCount(table: any): number {
 }
 
 .tables-list tbody tr {
-  border-bottom: 1px solid var(--legacy-border-light);
+  border-bottom: 1px solid var(--color-border);
   transition: background-color 0.15s ease;
 }
 
@@ -130,7 +130,7 @@ function getRowCount(table: any): number {
 /* Cell-specific styles */
 .name-cell {
   font-weight: 500;
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
 }
 
 .caption-cell {
@@ -151,7 +151,7 @@ function getRowCount(table: any): number {
 .size-info {
   font-family: monospace;
   font-size: 0.85rem;
-  color: var(--legacy-accent);
+  color: var(--color-dnd-damage);
 }
 
 .source-cell {

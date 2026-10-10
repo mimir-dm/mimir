@@ -97,7 +97,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       
       .feature-header h1 {
         margin: 0 0 8px 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .feature-types {
@@ -109,7 +109,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .type-badge {
         padding: 4px 10px;
         background: rgba(74, 158, 255, 0.2);
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         border-radius: 4px;
         font-size: 0.85em;
         font-weight: 500;
@@ -124,7 +124,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .srd-badge {
         margin-left: 8px;
         padding: 2px 6px;
-        background: var(--legacy-background-tertiary);
+        background: var(--color-surface-variant);
         border-radius: 3px;
         font-size: 0.85em;
         color: var(--color-text);
@@ -133,7 +133,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .prerequisites {
         margin: 20px 0;
         padding: 16px;
-        background: var(--legacy-background-secondary);
+        background: var(--color-surface);
         border-radius: 6px;
       }
       
@@ -180,20 +180,20 @@ export function formatOptionalFeatureDetails(feature: any): string {
       
       .feature-description .subsection h4 {
         margin: 0 0 12px 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         font-size: 1.1em;
       }
       
       .additional-spells {
         margin: 20px 0;
         padding: 16px;
-        background: var(--legacy-background-secondary);
+        background: var(--color-surface);
         border-radius: 6px;
       }
       
       .additional-spells h3 {
         margin: 0 0 12px 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .spell-level {
@@ -213,13 +213,13 @@ export function formatOptionalFeatureDetails(feature: any): string {
         margin-top: 16px;
         padding: 8px 12px;
         background: rgba(255, 193, 7, 0.1);
-        border-left: 3px solid #ffc107;
+        border-left: 3px solid var(--color-dnd-condition);
         border-radius: 3px;
       }
       
       .consumes-text {
         margin: 0;
-        color: #ffc107;
+        color: var(--color-dnd-condition);
         font-size: 0.9em;
       }
       
@@ -247,7 +247,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
       }
       
       .feature-table th {
-        background: var(--legacy-background-secondary);
+        background: var(--color-surface);
         padding: 8px;
         text-align: left;
         border: 1px solid var(--color-border);
@@ -266,13 +266,13 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .options-section {
         margin: 20px 0;
         padding: 16px;
-        background: var(--legacy-background-secondary);
+        background: var(--color-surface);
         border-radius: 6px;
       }
       
       .option-count {
         margin: 0 0 16px 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         font-weight: 600;
       }
       
@@ -280,27 +280,27 @@ export function formatOptionalFeatureDetails(feature: any): string {
         margin: 12px 0;
         padding: 12px;
         background: var(--color-background);
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         border-radius: 3px;
       }
       
       .inset-box {
         margin: 20px 0;
         padding: 16px;
-        background: var(--legacy-background-tertiary);
+        background: var(--color-surface-variant);
         border: 1px solid var(--color-border);
         border-radius: 6px;
       }
       
       .inset-box.insetReadaloud {
         background: rgba(74, 158, 255, 0.05);
-        border-color: var(--legacy-primary);
+        border-color: var(--color-primary-500);
         font-style: italic;
       }
       
       .inset-title {
         margin: 0 0 12px 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         font-size: 1.1em;
       }
       
@@ -308,7 +308,7 @@ export function formatOptionalFeatureDetails(feature: any): string {
         margin: 16px 0;
         padding: 12px;
         background: rgba(74, 158, 255, 0.1);
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         border-radius: 3px;
       }
       
@@ -319,8 +319,8 @@ export function formatOptionalFeatureDetails(feature: any): string {
       .feature-quote {
         margin: 20px 0;
         padding: 16px 20px;
-        border-left: 4px solid var(--legacy-primary);
-        background: var(--legacy-background-secondary);
+        border-left: 4px solid var(--color-primary-500);
+        background: var(--color-surface);
         font-style: italic;
       }
       

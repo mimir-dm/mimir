@@ -56,7 +56,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .header-tags {
@@ -75,7 +75,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       
       .tag-type {
         background: rgba(156, 39, 176, 0.1);
-        color: #9c27b0;
+        color: var(--color-dnd-spell);
         border: 1px solid rgba(156, 39, 176, 0.3);
       }
       
@@ -87,19 +87,19 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       
       .tag-type.type-action-options {
         background: rgba(255, 87, 34, 0.1);
-        color: #ff5722;
+        color: var(--color-dnd-damage);
         border: 1px solid rgba(255, 87, 34, 0.3);
       }
       
       .tag-type.type-v {
         background: rgba(156, 39, 176, 0.1);
-        color: #9c27b0;
+        color: var(--color-dnd-spell);
         border: 1px solid rgba(156, 39, 176, 0.3);
       }
       
       .tag-type.type-o {
         background: rgba(33, 150, 243, 0.1);
-        color: #2196f3;
+        color: var(--color-dnd-action);
         border: 1px solid rgba(33, 150, 243, 0.3);
       }
       
@@ -109,13 +109,13 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       }
       
       .content-section h3 {
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin-top: var(--spacing-lg, 16px);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
       .content-section h4 {
-        color: var(--legacy-accent);
+        color: var(--color-dnd-damage);
         margin-top: var(--spacing-md, 12px);
         margin-bottom: var(--spacing-xs, 4px);
       }
@@ -123,7 +123,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--legacy-border-light);
+        border-left: 2px solid var(--color-border);
       }
       
       .source-info {
@@ -143,7 +143,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       
       table th {
         background: var(--color-surface);
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         padding: var(--spacing-sm, 8px);
         text-align: left;
         border: 1px solid var(--color-border);
@@ -152,7 +152,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       
       table td {
         padding: var(--spacing-sm, 8px);
-        border: 1px solid var(--legacy-border-light);
+        border: 1px solid var(--color-border);
       }
       
       table tbody tr:nth-child(even) {
@@ -175,7 +175,7 @@ export function formatVariantRuleDetails(rule: VariantRule): string {
       blockquote {
         margin: var(--spacing-md, 12px) 0;
         padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
-        border-left: 3px solid var(--legacy-accent);
+        border-left: 3px solid var(--color-dnd-damage);
         background: rgba(255, 107, 107, 0.05);
         font-style: italic;
       }

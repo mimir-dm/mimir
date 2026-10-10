@@ -212,8 +212,8 @@ watch(activeTab, (newTab) => {
 }
 
 .tab-button.active {
-  color: var(--legacy-primary);
-  border-bottom-color: var(--legacy-primary);
+  color: var(--color-primary-text);
+  border-bottom-color: var(--color-primary-500);
   background: var(--color-surface);
 }
 
@@ -241,13 +241,13 @@ watch(activeTab, (newTab) => {
 
 .category-button:hover {
   background: var(--color-surface-hover);
-  border-color: var(--legacy-primary);
+  border-color: var(--color-primary-500);
 }
 
 .category-button.selected {
-  background: var(--legacy-primary);
-  color: white;
-  border-color: var(--legacy-primary);
+  background: var(--color-primary-500);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary-500);
 }
 
 /* Mobile responsive */

@@ -72,7 +72,7 @@ const panelClass = computed(() => `panel-${props.variant}`)
 }
 
 .panel-elevated {
-  background: var(--legacy-surface-elevated);
+  background: var(--color-surface);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

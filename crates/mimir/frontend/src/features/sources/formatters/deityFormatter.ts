@@ -145,7 +145,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .deity-name {
         font-size: 2rem;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin: 0 0 8px 0;
         font-weight: 700;
         letter-spacing: 0.5px;
@@ -175,7 +175,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .attribute-card:hover {
         background: var(--color-surface-hover);
-        border-color: var(--legacy-primary);
+        border-color: var(--color-primary-500);
       }
       
       .attribute-label {
@@ -193,25 +193,25 @@ export function formatDeityContent(deity: Deity): string {
       }
       
       .pantheon-value {
-        color: #9b59b6;
+        color: var(--color-dnd-spell);
       }
       
       .alignment-value {
         font-weight: 600;
       }
       
-      .alignment-value.good { color: #3498db; }
-      .alignment-value.evil { color: #e74c3c; }
-      .alignment-value.lawful { color: #f39c12; }
-      .alignment-value.chaotic { color: #9b59b6; }
-      .alignment-value.neutral { color: #95a5a6; }
+      .alignment-value.good { color: var(--color-dnd-action); }
+      .alignment-value.evil { color: var(--color-dnd-damage); }
+      .alignment-value.lawful { color: var(--color-dnd-resource); }
+      .alignment-value.chaotic { color: var(--color-dnd-spell); }
+      .alignment-value.neutral { color: var(--color-text-secondary); }
       
       .symbol-card {
         grid-column: span 2;
       }
       
       .symbol-value {
-        color: #f1c40f;
+        color: var(--color-dnd-condition);
         font-style: italic;
       }
       
@@ -221,7 +221,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .section-title {
         font-size: 1.1rem;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin: 0 0 12px 0;
         font-weight: 600;
         letter-spacing: 0.5px;
@@ -251,19 +251,19 @@ export function formatDeityContent(deity: Deity): string {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       }
       
-      .domain-tag.knowledge { border-color: #3498db; color: #3498db; }
-      .domain-tag.war { border-color: #e74c3c; color: #e74c3c; }
-      .domain-tag.death { border-color: #8e44ad; color: #8e44ad; }
-      .domain-tag.life { border-color: #2ecc71; color: #2ecc71; }
-      .domain-tag.light { border-color: #f1c40f; color: #f1c40f; }
-      .domain-tag.nature { border-color: #27ae60; color: #27ae60; }
-      .domain-tag.tempest { border-color: #34495e; color: #34495e; }
-      .domain-tag.trickery { border-color: #9b59b6; color: #9b59b6; }
-      .domain-tag.forge { border-color: #e67e22; color: #e67e22; }
-      .domain-tag.grave { border-color: #7f8c8d; color: #7f8c8d; }
-      .domain-tag.order { border-color: #d35400; color: #d35400; }
-      .domain-tag.peace { border-color: #16a085; color: #16a085; }
-      .domain-tag.twilight { border-color: #2c3e50; color: #2c3e50; }
+      .domain-tag.knowledge { border-color: var(--color-dnd-action); color: var(--color-dnd-action); }
+      .domain-tag.war { border-color: var(--color-dnd-damage); color: var(--color-dnd-damage); }
+      .domain-tag.death { border-color: var(--color-dnd-spell); color: var(--color-dnd-spell); }
+      .domain-tag.life { border-color: var(--color-dnd-healing); color: var(--color-dnd-healing); }
+      .domain-tag.light { border-color: var(--color-dnd-condition); color: var(--color-dnd-condition); }
+      .domain-tag.nature { border-color: var(--color-dnd-healing); color: var(--color-dnd-healing); }
+      .domain-tag.tempest { border-color: var(--color-dnd-action); color: var(--color-dnd-action); }
+      .domain-tag.trickery { border-color: var(--color-dnd-spell); color: var(--color-dnd-spell); }
+      .domain-tag.forge { border-color: var(--color-dnd-resource); color: var(--color-dnd-resource); }
+      .domain-tag.grave { border-color: var(--color-text-secondary); color: var(--color-text-secondary); }
+      .domain-tag.order { border-color: var(--color-dnd-resource); color: var(--color-dnd-resource); }
+      .domain-tag.peace { border-color: var(--color-dnd-healing); color: var(--color-dnd-healing); }
+      .domain-tag.twilight { border-color: var(--color-dnd-action); color: var(--color-dnd-action); }
       
       .deity-description {
         margin: 24px 0;
@@ -271,7 +271,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .description-content {
         background: rgba(255, 255, 255, 0.02);
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         padding: 16px 20px;
         border-radius: 4px;
         line-height: 1.8;
@@ -295,7 +295,7 @@ export function formatDeityContent(deity: Deity): string {
       .description-content blockquote {
         margin: 16px 0;
         padding: 12px 16px;
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         background: rgba(74, 158, 255, 0.1);
         font-style: italic;
       }
@@ -319,7 +319,7 @@ export function formatDeityContent(deity: Deity): string {
       
       .description-reference {
         font-size: 0.9rem;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin-top: 12px;
       }
       
@@ -380,8 +380,8 @@ export function formatDeityContent(deity: Deity): string {
       
       .srd-indicator {
         padding: 4px 8px;
-        background: var(--legacy-primary);
-        color: var(--color-background);
+        background: var(--color-primary-500);
+        color: var(--color-on-primary);
         border-radius: 4px;
         font-weight: 600;
         font-size: 0.8rem;
