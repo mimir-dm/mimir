@@ -15,9 +15,10 @@ use mimir_core::services::{
     MapStateService, ServiceError, TokenResponse, TokenService, UpdateLightInput, UpdatePoiInput,
     UpdateTokenInput, UpdateTrapInput,
 };
-use mimir_wire as wire;
+use mimir_wire::{self as wire, MapPart};
 
 use crate::error::{ApiError, JsonBody};
+use crate::live::{Change, Hub};
 use crate::state::AppState;
 
 type ApiResult<T> = Result<Json<T>, ApiError>;
@@ -154,6 +155,17 @@ fn ppg_of(conn: &mut SqliteConnection, app_dir: &FsPath, map_id: &str) -> f64 {
     }
 }
 
+/// Tell the live sockets that a part of a map changed.
+fn notify(live: &Hub, conn: &mut SqliteConnection, app_dir: &FsPath, map_id: &str, part: MapPart) {
+    if let Ok(Some(map)) = MapService::new(conn, app_dir).get(map_id) {
+        live.publish(Change::Map {
+            campaign_id: map.campaign_id,
+            map_id: map_id.to_string(),
+            part,
+        });
+    }
+}
+
 /// An image file as a response: its bytes, its type, and a cache header
 /// (`private`: the API needs a token).
 fn image_response(path: PathBuf) -> Result<Response, ApiError> {
@@ -253,6 +265,87 @@ pub async fn get_map_image(
         .await
 }
 
+/// The player view of a map: what the player display may show.
+pub fn build_player_view(
+    conn: &mut SqliteConnection,
+    app_dir: &FsPath,
+    map_id: &str,
+) -> Result<wire::PlayerView, ApiError> {
+    let map = require_map(conn, app_dir, map_id)?;
+    let map = detail(conn, app_dir, map);
+    let ppg = map.grid_size_px;
+    let fog = fog(conn, map_id)?;
+    let tokens = TokenService::new(conn, app_dir)
+        .list_visible(map_id)?
+        .into_iter()
+        .map(|t| wire::PlayerToken {
+            id: t.id,
+            name: t.name,
+            token_type: t.token_type,
+            size: t.size,
+            grid_x: t.grid_x,
+            grid_y: t.grid_y,
+            x: t.x,
+            y: t.y,
+            color: t.color,
+            vision_bright_ft: t.vision_bright_ft,
+            vision_dim_ft: t.vision_dim_ft,
+            vision_dark_ft: t.vision_dark_ft,
+            light_radius_ft: t.light_radius_ft,
+        })
+        .collect();
+    let mut map_state = MapStateService::new(conn);
+    let lights = map_state
+        .list_lights(map_id)?
+        .into_iter()
+        .filter(|l| l.active != 0)
+        .map(|l| wire::PlayerLight {
+            x: centre(l.grid_x, ppg),
+            y: centre(l.grid_y, ppg),
+            id: l.id,
+            grid_x: l.grid_x,
+            grid_y: l.grid_y,
+            bright_radius_ft: l.bright_radius,
+            dim_radius_ft: l.dim_radius,
+            color: l.color,
+        })
+        .collect();
+    let mut markers: Vec<wire::PlayerMarker> = map_state
+        .list_visible_traps(map_id)?
+        .into_iter()
+        .map(|t| wire::PlayerMarker {
+            id: t.id,
+            kind: "trap".into(),
+            grid_x: t.grid_x,
+            grid_y: t.grid_y,
+            name: t.name,
+            icon: "trap".into(),
+            color: None,
+        })
+        .collect();
+    markers.extend(
+        map_state
+            .list_visible_pois(map_id)?
+            .into_iter()
+            .map(|p| wire::PlayerMarker {
+                id: p.id,
+                kind: "poi".into(),
+                grid_x: p.grid_x,
+                grid_y: p.grid_y,
+                name: p.name,
+                icon: p.icon,
+                color: p.color,
+            }),
+    );
+    Ok(wire::PlayerView {
+        map,
+        fog,
+        tokens,
+        lights,
+        markers,
+    })
+}
+
 /// `GET /maps/{id}/player-view`
 pub async fn player_view(
     State(state): State<AppState>,
@@ -260,78 +353,7 @@ pub async fn player_view(
 ) -> ApiResult<wire::PlayerView> {
     let app_dir = state.config.data_dir.clone();
     state
-        .with_db(move |conn| {
-            let map = require_map(conn, &app_dir, &id)?;
-            let map = detail(conn, &app_dir, map);
-            let ppg = map.grid_size_px;
-            let fog = fog(conn, &id)?;
-            let tokens = TokenService::new(conn, &app_dir)
-                .list_visible(&id)?
-                .into_iter()
-                .map(|t| wire::PlayerToken {
-                    id: t.id,
-                    name: t.name,
-                    token_type: t.token_type,
-                    size: t.size,
-                    grid_x: t.grid_x,
-                    grid_y: t.grid_y,
-                    x: t.x,
-                    y: t.y,
-                    color: t.color,
-                    vision_bright_ft: t.vision_bright_ft,
-                    vision_dim_ft: t.vision_dim_ft,
-                    vision_dark_ft: t.vision_dark_ft,
-                    light_radius_ft: t.light_radius_ft,
-                })
-                .collect();
-            let mut map_state = MapStateService::new(conn);
-            let lights = map_state
-                .list_lights(&id)?
-                .into_iter()
-                .filter(|l| l.active != 0)
-                .map(|l| wire::PlayerLight {
-                    x: centre(l.grid_x, ppg),
-                    y: centre(l.grid_y, ppg),
-                    id: l.id,
-                    grid_x: l.grid_x,
-                    grid_y: l.grid_y,
-                    bright_radius_ft: l.bright_radius,
-                    dim_radius_ft: l.dim_radius,
-                    color: l.color,
-                })
-                .collect();
-            let mut markers: Vec<wire::PlayerMarker> = map_state
-                .list_visible_traps(&id)?
-                .into_iter()
-                .map(|t| wire::PlayerMarker {
-                    id: t.id,
-                    kind: "trap".into(),
-                    grid_x: t.grid_x,
-                    grid_y: t.grid_y,
-                    name: t.name,
-                    icon: "trap".into(),
-                    color: None,
-                })
-                .collect();
-            markers.extend(map_state.list_visible_pois(&id)?.into_iter().map(|p| {
-                wire::PlayerMarker {
-                    id: p.id,
-                    kind: "poi".into(),
-                    grid_x: p.grid_x,
-                    grid_y: p.grid_y,
-                    name: p.name,
-                    icon: p.icon,
-                    color: p.color,
-                }
-            }));
-            Ok(wire::PlayerView {
-                map,
-                fog,
-                tokens,
-                lights,
-                markers,
-            })
-        })
+        .with_db(move |conn| build_player_view(conn, &app_dir, &id))
         .await
         .map(Json)
 }
@@ -360,6 +382,7 @@ pub async fn create_token(
     Path(id): Path<String>,
     JsonBody(body): JsonBody<wire::NewToken>,
 ) -> Result<(StatusCode, Json<wire::Token>), ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -374,6 +397,7 @@ pub async fn create_token(
                 faction_color: body.color,
                 hidden: body.hidden,
             })?;
+            notify(&live, conn, &app_dir, &created.map_id, MapPart::Tokens);
             Ok((StatusCode::CREATED, Json(token(created))))
         })
         .await
@@ -385,6 +409,7 @@ pub async fn update_token(
     Path(id): Path<String>,
     JsonBody(patch): JsonBody<wire::TokenPatch>,
 ) -> ApiResult<wire::Token> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -402,6 +427,7 @@ pub async fn update_token(
                     light_radius_ft: patch.light_radius_ft,
                 },
             )?;
+            notify(&live, conn, &app_dir, &updated.map_id, MapPart::Tokens);
             Ok(token(updated))
         })
         .await
@@ -413,10 +439,17 @@ pub async fn delete_token(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
-            TokenService::new(conn, &app_dir).delete(&id)?;
+            let mut tokens = TokenService::new(conn, &app_dir);
+            let map_id = tokens
+                .get(&id)?
+                .ok_or_else(|| ServiceError::not_found("Token", &id))?
+                .map_id;
+            tokens.delete(&id)?;
+            notify(&live, conn, &app_dir, &map_id, MapPart::Tokens);
             Ok(StatusCode::NO_CONTENT)
         })
         .await
@@ -461,6 +494,7 @@ pub async fn set_fog(
     Path(id): Path<String>,
     JsonBody(setting): JsonBody<wire::FogSetting>,
 ) -> ApiResult<wire::Fog> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -471,6 +505,7 @@ pub async fn set_fog(
             } else {
                 service.disable_fog(&id)?;
             }
+            notify(&live, conn, &app_dir, &id, MapPart::Fog);
             fog(conn, &id)
         })
         .await
@@ -483,6 +518,7 @@ pub async fn reveal(
     Path(id): Path<String>,
     JsonBody(shape): JsonBody<wire::Reveal>,
 ) -> Result<(StatusCode, Json<wire::Fog>), ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -505,6 +541,7 @@ pub async fn reveal(
                     service.reveal_all(&id, f64::from(size.width_px), f64::from(size.height_px))?
                 }
             };
+            notify(&live, conn, &app_dir, &id, MapPart::Fog);
             Ok((StatusCode::CREATED, Json(fog(conn, &id)?)))
         })
         .await
@@ -515,25 +552,40 @@ pub async fn reset_fog(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> ApiResult<wire::Fog> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
             require_map(conn, &app_dir, &id)?;
             MapStateService::new(conn).reset_fog(&id)?;
+            notify(&live, conn, &app_dir, &id, MapPart::Fog);
             fog(conn, &id)
         })
         .await
         .map(Json)
 }
 
-/// `DELETE /fog-areas/{id}`
+/// `DELETE /maps/{id}/fog/revealed/{area_id}`: cover one revealed area again.
 pub async fn delete_fog_area(
     State(state): State<AppState>,
-    Path(id): Path<String>,
+    Path((map_id, area_id)): Path<(String, String)>,
 ) -> Result<StatusCode, ApiError> {
+    let live = state.live.clone();
+    let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
-            MapStateService::new(conn).delete_revealed_area(&id)?;
+            require_map(conn, &app_dir, &map_id)?;
+            let mut service = MapStateService::new(conn);
+            if !service
+                .fog_state(&map_id)?
+                .revealed_areas
+                .iter()
+                .any(|a| a.id == area_id)
+            {
+                return Err(ServiceError::not_found("FogArea", &area_id).into());
+            }
+            service.delete_revealed_area(&area_id)?;
+            notify(&live, conn, &app_dir, &map_id, MapPart::Fog);
             Ok(StatusCode::NO_CONTENT)
         })
         .await
@@ -564,6 +616,7 @@ pub async fn create_light(
     Path(id): Path<String>,
     JsonBody(body): JsonBody<wire::NewLight>,
 ) -> Result<(StatusCode, Json<wire::Light>), ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -590,6 +643,7 @@ pub async fn create_light(
                     is_active: body.active.unwrap_or(true),
                 })?,
             };
+            notify(&live, conn, &app_dir, &created.map_id, MapPart::Lights);
             Ok((StatusCode::CREATED, Json(light(created, ppg))))
         })
         .await
@@ -600,11 +654,13 @@ pub async fn delete_all_lights(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
             require_map(conn, &app_dir, &id)?;
             MapStateService::new(conn).delete_all_lights(&id)?;
+            notify(&live, conn, &app_dir, &id, MapPart::Lights);
             Ok(StatusCode::NO_CONTENT)
         })
         .await
@@ -616,6 +672,7 @@ pub async fn update_light(
     Path(id): Path<String>,
     JsonBody(patch): JsonBody<wire::LightPatch>,
 ) -> ApiResult<wire::Light> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -641,6 +698,7 @@ pub async fn update_light(
                 )?)
             })?;
             let ppg = ppg_of(conn, &app_dir, &updated.map_id);
+            notify(&live, conn, &app_dir, &updated.map_id, MapPart::Lights);
             Ok(light(updated, ppg))
         })
         .await
@@ -652,9 +710,14 @@ pub async fn delete_light(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, ApiError> {
+    let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
         .with_db(move |conn| {
-            MapStateService::new(conn).delete_light(&id)?;
+            let mut service = MapStateService::new(conn);
+            let map_id = service.get_light(&id)?.map_id;
+            service.delete_light(&id)?;
+            notify(&live, conn, &app_dir, &map_id, MapPart::Lights);
             Ok(StatusCode::NO_CONTENT)
         })
         .await
@@ -684,6 +747,7 @@ pub async fn create_trap(
     Path(id): Path<String>,
     JsonBody(body): JsonBody<wire::NewTrap>,
 ) -> Result<(StatusCode, Json<wire::Trap>), ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -699,6 +763,7 @@ pub async fn create_trap(
                 dc: body.dc,
                 visible: body.visible,
             })?;
+            notify(&live, conn, &app_dir, &created.map_id, MapPart::Markers);
             Ok((StatusCode::CREATED, Json(trap(created))))
         })
         .await
@@ -721,6 +786,8 @@ pub async fn update_trap(
     Path(id): Path<String>,
     JsonBody(patch): JsonBody<wire::TrapPatch>,
 ) -> ApiResult<wire::Trap> {
+    let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
         .with_db(move |conn| {
             conn.transaction::<_, ApiError, _>(|conn| {
@@ -762,6 +829,7 @@ pub async fn update_trap(
                 }
                 Ok(trap(service.get_trap(&id)?))
             })
+            .inspect(|t| notify(&live, conn, &app_dir, &t.map_id, MapPart::Markers))
         })
         .await
         .map(Json)
@@ -772,9 +840,14 @@ pub async fn delete_trap(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, ApiError> {
+    let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
         .with_db(move |conn| {
-            MapStateService::new(conn).delete_trap(&id)?;
+            let mut service = MapStateService::new(conn);
+            let map_id = service.get_trap(&id)?.map_id;
+            service.delete_trap(&id)?;
+            notify(&live, conn, &app_dir, &map_id, MapPart::Markers);
             Ok(StatusCode::NO_CONTENT)
         })
         .await
@@ -804,6 +877,7 @@ pub async fn create_poi(
     Path(id): Path<String>,
     JsonBody(body): JsonBody<wire::NewPoi>,
 ) -> Result<(StatusCode, Json<wire::Poi>), ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
@@ -818,6 +892,7 @@ pub async fn create_poi(
                 color: body.color,
                 visible: body.visible,
             })?;
+            notify(&live, conn, &app_dir, &created.map_id, MapPart::Markers);
             Ok((StatusCode::CREATED, Json(poi(created))))
         })
         .await
@@ -840,6 +915,8 @@ pub async fn update_poi(
     Path(id): Path<String>,
     JsonBody(patch): JsonBody<wire::PoiPatch>,
 ) -> ApiResult<wire::Poi> {
+    let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
         .with_db(move |conn| {
             conn.transaction::<_, ApiError, _>(|conn| {
@@ -870,6 +947,7 @@ pub async fn update_poi(
                 }
                 Ok(poi(service.get_poi(&id)?))
             })
+            .inspect(|p| notify(&live, conn, &app_dir, &p.map_id, MapPart::Markers))
         })
         .await
         .map(Json)
@@ -880,9 +958,14 @@ pub async fn delete_poi(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, ApiError> {
+    let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
         .with_db(move |conn| {
-            MapStateService::new(conn).delete_poi(&id)?;
+            let mut service = MapStateService::new(conn);
+            let map_id = service.get_poi(&id)?.map_id;
+            service.delete_poi(&id)?;
+            notify(&live, conn, &app_dir, &map_id, MapPart::Markers);
             Ok(StatusCode::NO_CONTENT)
         })
         .await

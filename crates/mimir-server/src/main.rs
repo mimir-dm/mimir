@@ -30,7 +30,14 @@ async fn main() {
     let bind = config.bind;
     tracing::info!(%bind, data_dir = %config.data_dir.display(), "mimir-server listening");
     let app = mimir_server::router(AppState::new(config))
-        .layer(tower_http::trace::TraceLayer::new_for_http());
+        .layer(
+            // The path only: the query of `/ws` can hold the token.
+            tower_http::trace::TraceLayer::new_for_http().make_span_with(
+                |req: &axum::http::Request<axum::body::Body>| {
+                    tracing::info_span!("request", method = %req.method(), path = %req.uri().path())
+                },
+            ),
+        );
     let listener = match tokio::net::TcpListener::bind(bind).await {
         Ok(l) => l,
         Err(e) => {

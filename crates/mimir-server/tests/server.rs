@@ -118,7 +118,7 @@ async fn the_fallback_serves_assets_and_the_shell_but_never_for_api_paths() {
         assert_eq!(body, "<html>shell</html>", "{route}");
     }
 
-    for reserved in ["/api/v1/nope", "/api/nope", "/ws", "/mcp/x"] {
+    for reserved in ["/api/v1/nope", "/api/nope", "/ws/other", "/mcp/x"] {
         let (status, ctype, body) = get(&s, reserved, None).await;
         assert_eq!(status, StatusCode::NOT_FOUND, "{reserved}");
         assert!(ctype.starts_with("application/json"), "{reserved}");

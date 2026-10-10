@@ -8,6 +8,7 @@ pub mod api;
 pub mod auth;
 pub mod config;
 pub mod error;
+pub mod live;
 pub mod state;
 pub mod web;
 
@@ -63,12 +64,22 @@ fn seed_fixture(_conn: &mut diesel::SqliteConnection, _config: &Config) -> Resul
 /// SPA fallback.
 pub fn router(state: AppState) -> Router {
     let api = api::router(state.clone());
+    // The live socket: the DM auth, with the browser's `?access_token=`
+    // copied into the header first.
+    let ws = Router::new()
+        .route("/ws", get(live::ws))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            auth::require_dm,
+        ))
+        .route_layer(axum::middleware::from_fn(live::promote_query_token));
 
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/api/config", get(web::api_config))
         .nest("/api/v1", api)
+        .merge(ws)
         .fallback(web::spa_fallback)
         .with_state(state)
 }

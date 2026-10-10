@@ -6,11 +6,14 @@ use diesel::SqliteConnection;
 
 use crate::config::Config;
 use crate::error::ApiError;
+use crate::live::Hub;
 
 /// State shared by every handler.
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<Config>,
+    /// Live events and the display states (MIMIR-T-0712).
+    pub live: Arc<Hub>,
     db_url: Arc<String>,
 }
 
@@ -19,6 +22,7 @@ impl AppState {
         let db_url = config.database_path().to_string_lossy().into_owned();
         Self {
             config: Arc::new(config),
+            live: Arc::new(Hub::new()),
             db_url: Arc::new(db_url),
         }
     }

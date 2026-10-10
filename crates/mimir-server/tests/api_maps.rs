@@ -306,13 +306,17 @@ async fn fog_on_reveal_and_reset() {
     let (status, _, _) = f
         .send(
             Method::DELETE,
-            &format!("/fog-areas/{}", fog.revealed[0].id),
+            &format!("{base}/revealed/{}", fog.revealed[0].id),
             None,
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
     let fog: wire::Fog = f.ok(Method::GET, &base, None).await;
     assert_eq!(fog.revealed.len(), 2);
+    let (status, _) = f
+        .status(Method::DELETE, &format!("{base}/revealed/nope"), None)
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
     let fog: wire::Fog = f
         .ok(Method::DELETE, &format!("{base}/revealed"), None)
         .await;

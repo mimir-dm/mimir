@@ -19,11 +19,13 @@
 
 pub mod campaign;
 pub mod error;
+pub mod live;
 pub mod map;
 pub mod patch;
 
 pub use campaign::*;
 pub use error::{ErrorBody, ErrorCode, ErrorDetail};
+pub use live::*;
 pub use map::*;
 
 use serde::{Deserialize, Serialize};
@@ -60,11 +62,12 @@ pub struct Session {
     pub role: Role,
 }
 
-/// The caller's role (player links join in MIMIR-T-0716).
+/// The caller's role. Player links (MIMIR-T-0716) give the player role.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Role {
     Dm,
+    Player,
 }
 
 #[cfg(test)]

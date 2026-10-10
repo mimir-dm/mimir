@@ -21,7 +21,7 @@ fixtures = ["mimir-core/fixtures"]
 [dependencies]
 mimir-wire = { path = "../mimir-wire" }
 mimir-core = { path = "../mimir-core" }
-axum = "0.8"
+axum = { version = "0.8", features = ["ws"] }
 tokio = { workspace = true }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace"] }
@@ -39,3 +39,5 @@ mimir-core = { path = "../mimir-core", features = ["fixtures"] }
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
 tempfile = { workspace = true }
+tokio-tungstenite = "0.29"
+futures-util = "0.3"

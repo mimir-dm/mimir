@@ -7,6 +7,7 @@
 
 pub mod campaigns;
 pub mod convert;
+pub mod display;
 pub mod maps;
 
 use axum::middleware;
@@ -68,6 +69,12 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/campaigns/{id}/pcs", Dm, G, get(c::campaign_pcs)),
         route("/campaigns/{id}/npcs", Dm, G, get(c::campaign_npcs)),
         route("/campaigns/{id}/maps", Dm, G, get(c::campaign_maps)),
+        route(
+            "/campaigns/{id}/display",
+            Dm,
+            &["GET", "PUT"],
+            get(display::get_display).put(display::set_display),
+        ),
         route("/modules/{id}", Dm, G, get(c::get_module)),
         route("/modules/{id}/documents", Dm, G, get(c::module_documents)),
         route("/modules/{id}/monsters", Dm, G, get(c::module_monsters)),
@@ -106,7 +113,7 @@ pub fn routes() -> Vec<ApiRoute> {
             delete(m::reset_fog),
         ),
         route(
-            "/fog-areas/{id}",
+            "/maps/{id}/fog/revealed/{area_id}",
             Dm,
             &["DELETE"],
             delete(m::delete_fog_area),
