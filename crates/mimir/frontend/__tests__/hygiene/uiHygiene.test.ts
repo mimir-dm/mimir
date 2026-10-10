@@ -140,4 +140,9 @@ describe('UI hygiene', () => {
     const hits = matches(/(color|border[\w-]*)\s*:[^;'"`]*#[0-9a-fA-F]{3,8}\b/, (f) => !f.startsWith(path.join('features', 'sources', 'formatters')))
     expect(hits, 'use a --color-dnd-* or text token').toEqual([])
   })
+
+  it('sets type with the app fonts, not a system stack (MIMIR-T-0703)', () => {
+    // --font-body (EB Garamond) and --font-display (Cinzel); monospace stays allowed.
+    expect(matches(/font-family:\s*(system-ui|-apple-system)/, (f) => f === path.join('assets', 'styles', 'main.css'))).toEqual([])
+  })
 })

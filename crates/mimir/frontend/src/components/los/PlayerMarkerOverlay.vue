@@ -130,7 +130,7 @@ function getPoiIcon(icon: string): string {
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 .trap-marker,
