@@ -107,7 +107,7 @@
 }
 
 .btn-outline.btn-primary {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   border-color: var(--color-primary-500);
 }
 
@@ -475,7 +475,7 @@
 }
 
 .btn-tab--active {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   border-bottom-color: var(--color-primary-500);
 }
 

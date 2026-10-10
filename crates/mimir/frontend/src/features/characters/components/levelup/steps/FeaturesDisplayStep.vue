@@ -590,7 +590,7 @@ onMounted(() => {
 
 .feature-description :deep(.filter-ref),
 .feature-entry :deep(.filter-ref) {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .feature-description :deep(.spell-ref),
@@ -599,7 +599,7 @@ onMounted(() => {
 .feature-entry :deep(.spell-ref),
 .feature-entry :deep(.condition-ref),
 .feature-entry :deep(.item-ref) {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   text-decoration: none;
 }
 

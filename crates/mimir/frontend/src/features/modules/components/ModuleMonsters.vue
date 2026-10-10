@@ -682,7 +682,7 @@ onMounted(() => {
 }
 
 .monster-name.clickable {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   text-decoration: underline;
   text-decoration-style: dotted;
 }

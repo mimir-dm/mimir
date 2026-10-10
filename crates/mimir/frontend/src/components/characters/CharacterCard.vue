@@ -118,7 +118,7 @@ const formattedDetails = computed(() => {
 
 .character-details {
   font-size: 0.875rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   margin-bottom: var(--spacing-xs);
 }
 

@@ -92,10 +92,10 @@
   --color-status-concluding: #facc15;
 
   /* Surface colors */
-  --color-background: #000000;
-  --color-surface: #0a0a0f;
-  --color-surface-variant: #18181b;
-  --color-surface-hover: #27272a;
+  --color-background: #080812;
+  --color-surface: #0d0d1a;
+  --color-surface-variant: #15152a;
+  --color-surface-hover: #1f1f3a;
   
   /* Text colors */
   --color-text: #fafafa;
@@ -103,8 +103,8 @@
   --color-text-disabled: #71717a;
   
   /* Border colors */
-  --color-border: #27272a;
-  --color-border-hover: #3f3f46;
+  --color-border: #2a1f4a;
+  --color-border-hover: #3d2d66;
   
   /* Neon accent colors from the skull */
   --color-accent-pink: #ec4899;
@@ -162,7 +162,8 @@
   --color-primary-tint-subtle: var(--color-primary-900);
   --color-primary-tint-strong: var(--color-primary-800);
   --color-primary-tint-border: var(--color-primary-800);
-  --color-primary-on-tint: var(--color-primary-300);
+  /* Hyper: one step lighter than dark, for 4.5:1 on the deep purple tint. */
+  --color-primary-on-tint: var(--color-primary-200);
   --color-primary-text: var(--color-primary-400);
   --color-success-tint: var(--color-success-900);
   --color-success-tint-subtle: var(--color-success-900);
@@ -190,7 +191,8 @@
 
 /* Special hyper theme overrides for neon effects */
 .theme-hyper .btn-primary {
-  background: linear-gradient(135deg, var(--color-accent-pink) 0%, var(--color-accent-purple) 100%);
+  /* White text reads at 4.7:1 or more over the whole gradient. */
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
   box-shadow: var(--glow-pink);
   transition: all 0.3s ease;
 }
@@ -209,4 +211,46 @@
   filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.7))
           drop-shadow(0 0 40px rgba(168, 85, 247, 0.5))
           drop-shadow(0 0 60px rgba(168, 85, 247, 0.2));
+}
+
+/* Hyper, committed (MIMIR-T-0698): a deep blue-black base with faint
+   scanlines, neon glow on cards and active items, a chromatic header rule
+   and a neon focus outline. */
+
+/* Scanlines over the whole window; they never take a click. */
+body.theme-hyper::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 3px);
+}
+
+.theme-hyper .dashboard-section,
+.theme-hyper .character-card,
+.theme-hyper .settings-sidebar {
+  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.22), 0 0 18px rgba(168, 85, 247, 0.16);
+  transition: box-shadow 0.2s ease;
+}
+
+.theme-hyper .dashboard-section:hover,
+.theme-hyper .character-card:hover {
+  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.5), 0 0 26px rgba(236, 72, 153, 0.28);
+}
+
+.theme-hyper .tab-button.active,
+.theme-hyper .nav-item.active,
+.theme-hyper .module-item.selected {
+  text-shadow: 0 0 8px rgba(236, 72, 153, 0.8);
+}
+
+.theme-hyper .dashboard-header {
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, var(--color-accent-pink), var(--color-accent-purple), var(--color-accent-cyan)) 1;
+}
+
+.theme-hyper :focus-visible {
+  outline: 2px solid var(--color-accent-pink);
+  outline-offset: 2px;
 }

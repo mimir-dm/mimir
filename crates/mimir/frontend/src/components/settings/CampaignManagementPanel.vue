@@ -318,7 +318,7 @@ function formatDate(dateString: string): string {
 
 .campaign-status {
   font-weight: 500;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .campaign-actions {

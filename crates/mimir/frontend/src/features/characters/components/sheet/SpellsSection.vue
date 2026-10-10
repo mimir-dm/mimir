@@ -255,7 +255,7 @@ loadClassSpells()
 .spell-class-label {
   font-weight: 600;
   font-size: 0.9rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   min-width: 80px;
   display: flex;
   align-items: center;

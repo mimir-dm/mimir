@@ -2013,6 +2013,6 @@ onUnmounted(() => {
 
 .poi-edit-btn:hover {
   background: var(--color-surface-variant);
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 </style>

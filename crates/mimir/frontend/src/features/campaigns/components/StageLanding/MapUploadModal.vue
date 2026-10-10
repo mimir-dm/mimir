@@ -355,7 +355,7 @@ watch(() => props.visible, (visible) => {
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .file-details {

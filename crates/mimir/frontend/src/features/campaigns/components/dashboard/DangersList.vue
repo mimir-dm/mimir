@@ -330,7 +330,7 @@ function getPoiIcon(iconName: string): string {
 .monster-has-notes {
   display: inline-flex;
   align-items: center;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .monster-edit-btn {
@@ -350,7 +350,7 @@ function getPoiIcon(iconName: string): string {
 }
 
 .monster-edit-btn:hover svg {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .monster-row:hover .monster-edit-btn,
