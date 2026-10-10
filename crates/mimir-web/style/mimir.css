@@ -234,3 +234,44 @@
 @media (pointer: coarse) {
   .mimir-map__door { stroke-width: 12; }
 }
+
+/* ---- Player display ------------------------------------------------------ */
+/* Fog is black on a table display in any theme: the one fixed colour. */
+.mimir-display {
+  --mimir-fog: #000;
+  position: fixed;
+  inset: 0;
+  background: var(--mimir-fog);
+  color: var(--fg);
+}
+.mimir-display__scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  background: var(--mimir-fog);
+}
+.mimir-display__svg { display: block; width: 100%; height: 100%; }
+.mimir-display__cover { fill: var(--mimir-fog); pointer-events: none; }
+.mimir-display__trap { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-display__message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+}
+.mimir-display__controls {
+  position: absolute;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--panel);
+  border-radius: var(--radius-pill);
+  opacity: 0.7;
+}
+.mimir-display__controls:focus-within,
+.mimir-display__controls:hover { opacity: 1; }

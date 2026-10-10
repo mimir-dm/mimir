@@ -16,6 +16,7 @@ use mimir_wire::AuthMode;
 
 use crate::api;
 use crate::auth::{self, Gate};
+use crate::map::display::DisplayPage;
 use crate::map::dm::DmMapPage;
 use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
 use crate::pages::{home::Home, module::ModulePage, not_found::NotFound, sign_in::SignIn};
@@ -97,9 +98,32 @@ pub fn App() -> impl IntoView {
 /// The signed-in app.
 #[component]
 fn Shell(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl IntoView {
-    let can_sign_out = mode == AuthMode::Token;
     view! {
         <Router>
+            <Frame mode=mode version=version on_sign_out=on_sign_out />
+        </Router>
+    }
+}
+
+/// The player display has no shell (a TV shows the map only); the other
+/// pages sit in the app shell. The memo changes only between the two, so a
+/// navigation inside the shell keeps it.
+#[component]
+fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl IntoView {
+    let location = use_location();
+    let bare = Memo::new(move |_| is_display_path(&location.pathname.get()));
+    let can_sign_out = mode == AuthMode::Token;
+    move || {
+        if bare.get() {
+            return view! {
+                <Routes fallback=|| view! { <NotFound /> }>
+                    <Route path=path!("/display/:campaign") view=DisplayPage />
+                </Routes>
+            }
+            .into_any();
+        }
+        let version = version.clone();
+        view! {
             <AppShell
                 brand=std::sync::Arc::new(|| view! { <span class="mimir-brand">"Mimir"</span> }.into_any())
                 header=Box::new(move || {
@@ -132,8 +156,14 @@ fn Shell(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                     <Route path=path!("/maps/:id") view=DmMapPage />
                 </Routes>
             </AppShell>
-        </Router>
+        }
+            .into_any()
     }
+}
+
+/// Pages shown without the app shell.
+pub fn is_display_path(path: &str) -> bool {
+    path.starts_with("/display/")
 }
 
 /// The side navigation. Screens join it as they arrive.
@@ -172,6 +202,13 @@ pub fn campaigns_section(path: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::campaigns_section;
+
+    #[test]
+    fn the_display_has_no_shell() {
+        assert!(super::is_display_path("/display/c1"));
+        assert!(!super::is_display_path("/maps/m1"));
+        assert!(!super::is_display_path("/displayed"));
+    }
 
     #[test]
     fn campaign_pages_light_the_campaigns_link() {

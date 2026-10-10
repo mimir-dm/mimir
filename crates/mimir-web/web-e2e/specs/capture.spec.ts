@@ -1,4 +1,4 @@
-import { CAMPAIGN, MODULE, campaignId, expect, mapId, moduleId, signIn, test } from './session'
+import { CAMPAIGN, MODULE, TOKEN, campaignId, expect, mapId, moduleId, signIn, test } from './session'
 
 // Captures for design review: each screen × desktop and tablet × the themes
 // in THEMES (default light,dark). Run with `angreal web screenshots`; it sets
@@ -104,6 +104,30 @@ for (const theme of themes) {
       await expect(page.getByRole('cell', { name: cell })).toBeVisible()
       await page.evaluate(() => document.fonts.ready)
       await page.screenshot({ path: `${outDir}/module-${tab.toLowerCase()}--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+}
+
+// The player display with the DM showing the module map: desktop and
+// tablet, in each theme (the display is dark by design; the controls
+// follow the theme).
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`player-display ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const campaign = await campaignId(page)
+      const map = await mapId(page)
+      await page.request.put(`/api/v1/campaigns/${campaign}/display`, {
+        headers: { Authorization: `Bearer ${TOKEN}` },
+        data: { map_id: map },
+      })
+      await signIn(page, theme)
+      await page.goto(`/display/${campaign}`)
+      await expect(page.locator('.mimir-display__svg image')).toBeAttached()
+      await expect(page.locator('.mimir-map__token[aria-label="Klarg"]')).toBeAttached()
+      await page.waitForTimeout(400)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/player-display--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
     })
   }
 }

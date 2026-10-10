@@ -18,70 +18,13 @@ use mimir_wire::{
     ModuleMonsterSummary, ModuleNpcSummary, Poi, ServerMsg, Token, Trap,
 };
 use serde_json::json;
-use wasm_bindgen::JsCast;
 
+use super::viewport::Viewport;
 use super::vision::{self, LightLevel, Point};
 use crate::api;
 use crate::live::Live;
 
 // ---- Pure helpers (host-tested) ------------------------------------------
-
-/// Pan and zoom: screen = map × scale + (tx, ty).
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct View {
-    pub scale: f64,
-    pub tx: f64,
-    pub ty: f64,
-}
-
-pub const MIN_SCALE: f64 = 0.05;
-pub const MAX_SCALE: f64 = 8.0;
-
-impl View {
-    pub const IDENTITY: View = View {
-        scale: 1.0,
-        tx: 0.0,
-        ty: 0.0,
-    };
-
-    /// The map point under a screen point (screen relative to the scene box).
-    pub fn to_map(self, sx: f64, sy: f64) -> (f64, f64) {
-        ((sx - self.tx) / self.scale, (sy - self.ty) / self.scale)
-    }
-
-    /// Zoom by `factor`, keeping the map point under (sx, sy) in place.
-    pub fn zoom_at(self, factor: f64, sx: f64, sy: f64) -> View {
-        let scale = (self.scale * factor).clamp(MIN_SCALE, MAX_SCALE);
-        let f = scale / self.scale;
-        View {
-            scale,
-            tx: sx - (sx - self.tx) * f,
-            ty: sy - (sy - self.ty) * f,
-        }
-    }
-
-    /// The whole map in a box, centred.
-    pub fn fit(map_w: f64, map_h: f64, box_w: f64, box_h: f64) -> View {
-        if map_w <= 0.0 || map_h <= 0.0 || box_w <= 0.0 || box_h <= 0.0 {
-            return View::IDENTITY;
-        }
-        let scale = (box_w / map_w)
-            .min(box_h / map_h)
-            .clamp(MIN_SCALE, MAX_SCALE);
-        View {
-            scale,
-            tx: (box_w - map_w * scale) / 2.0,
-            ty: (box_h - map_h * scale) / 2.0,
-        }
-    }
-
-    pub fn transform(self) -> String {
-        format!(
-            "translate({:.2} {:.2}) scale({:.4})",
-            self.tx, self.ty, self.scale
-        )
-    }
-}
 
 /// Grid cells a creature of this size covers (5e).
 pub fn cells_for_size(size: &str) -> f64 {
@@ -169,15 +112,6 @@ struct Drag {
     token_id: String,
     x: f64,
     y: f64,
-    moved: bool,
-}
-
-/// Pan or pinch in progress.
-#[derive(Debug, Clone, Default)]
-struct Gesture {
-    pointers: HashMap<i32, (f64, f64)>,
-    start_view: Option<View>,
-    start_points: Vec<(f64, f64)>,
     moved: bool,
 }
 
@@ -284,7 +218,8 @@ pub fn DmMapPage() -> impl IntoView {
     });
 
     // DM-side state.
-    let view = RwSignal::new(View::IDENTITY);
+    let vp = Viewport::new();
+    let view = vp.view;
     let fitted = RwSignal::new(false);
     let los = RwSignal::new(true);
     let ambient = RwSignal::new(String::from("bright"));
@@ -299,9 +234,8 @@ pub fn DmMapPage() -> impl IntoView {
     let place = RwSignal::new(None::<Place>);
     let place_menu = RwSignal::new(String::new());
     let drag = RwSignal::new(None::<Drag>);
-    let gesture = StoredValue::new(Gesture::default());
     let error = RwSignal::new(String::new());
-    let scene = NodeRef::<leptos::html::Div>::new();
+    let scene = vp.scene;
 
     // Token art, fetched once per token.
     let token_art = RwSignal::new(HashMap::<String, Option<String>>::new());
@@ -326,20 +260,13 @@ pub fn DmMapPage() -> impl IntoView {
 
     // Fit the map to the box once both are known.
     Effect::new(move |_| {
-        let (Some(m), Some(el)) = (map_now(), scene.get()) else {
+        let (Some(m), Some(_)) = (map_now(), scene.get()) else {
             return;
         };
-        if fitted.get_untracked() {
-            return;
+        if !fitted.get_untracked() {
+            vp.fit(f64::from(m.width_px), f64::from(m.height_px));
+            fitted.set(true);
         }
-        let rect = el.get_bounding_client_rect();
-        view.set(View::fit(
-            f64::from(m.width_px),
-            f64::from(m.height_px),
-            rect.width(),
-            rect.height(),
-        ));
-        fitted.set(true);
     });
 
     // A failed change shows in a banner; the next read puts the truth back.
@@ -359,13 +286,7 @@ pub fn DmMapPage() -> impl IntoView {
     let grid_px = move || map_now().map(|m| m.grid_size_px).unwrap_or(70.0);
 
     // Screen point (client) → map point.
-    let to_map = move |cx: f64, cy: f64| -> (f64, f64) {
-        let Some(el) = scene.get_untracked() else {
-            return (0.0, 0.0);
-        };
-        let r = el.get_bounding_client_rect();
-        view.get_untracked().to_map(cx - r.left(), cy - r.top())
-    };
+    let to_map = move |cx: f64, cy: f64| vp.to_map(cx, cy);
 
     let place_at = move |kind: Place, mx: f64, my: f64| {
         let g = grid_px();
@@ -419,25 +340,10 @@ pub fn DmMapPage() -> impl IntoView {
     };
 
     // ---- Pointer handling --------------------------------------------------
-    let on_down = move |ev: web_sys::PointerEvent| {
-        let (cx, cy) = (f64::from(ev.client_x()), f64::from(ev.client_y()));
-        if let Some(t) = ev
-            .current_target()
-            .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
-        {
-            let _ = t.set_pointer_capture(ev.pointer_id());
-        }
-        gesture.update_value(|g| {
-            g.pointers.insert(ev.pointer_id(), (cx, cy));
-            g.start_view = Some(view.get_untracked());
-            g.start_points = g.pointers.values().copied().collect();
-            g.moved = false;
-        });
-    };
+    let on_down = move |ev: web_sys::PointerEvent| vp.down(&ev);
     let on_move = move |ev: web_sys::PointerEvent| {
-        let (cx, cy) = (f64::from(ev.client_x()), f64::from(ev.client_y()));
         if drag.with_untracked(Option::is_some) {
-            let (mx, my) = to_map(cx, cy);
+            let (mx, my) = to_map(f64::from(ev.client_x()), f64::from(ev.client_y()));
             drag.update(|d| {
                 if let Some(d) = d {
                     d.x = mx;
@@ -447,48 +353,9 @@ pub fn DmMapPage() -> impl IntoView {
             });
             return;
         }
-        let mut next = None;
-        gesture.update_value(|g| {
-            if !g.pointers.contains_key(&ev.pointer_id()) {
-                return;
-            }
-            g.pointers.insert(ev.pointer_id(), (cx, cy));
-            let Some(start) = g.start_view else { return };
-            let now: Vec<(f64, f64)> = g.pointers.values().copied().collect();
-            if now.len() == 1 && g.start_points.len() == 1 {
-                let (dx, dy) = (
-                    now[0].0 - g.start_points[0].0,
-                    now[0].1 - g.start_points[0].1,
-                );
-                if dx.abs() + dy.abs() > 3.0 {
-                    g.moved = true;
-                }
-                next = Some(View {
-                    tx: start.tx + dx,
-                    ty: start.ty + dy,
-                    ..start
-                });
-            } else if now.len() >= 2 && g.start_points.len() >= 2 {
-                let d = |a: (f64, f64), b: (f64, f64)| {
-                    ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt()
-                };
-                let (d0, d1) = (d(g.start_points[0], g.start_points[1]), d(now[0], now[1]));
-                if d0 > 0.0 {
-                    g.moved = true;
-                    let mid = ((now[0].0 + now[1].0) / 2.0, (now[0].1 + now[1].1) / 2.0);
-                    if let Some(el) = scene.get_untracked() {
-                        let r = el.get_bounding_client_rect();
-                        next = Some(start.zoom_at(d1 / d0, mid.0 - r.left(), mid.1 - r.top()));
-                    }
-                }
-            }
-        });
-        if let Some(v) = next {
-            view.set(v);
-        }
+        vp.moved(&ev);
     };
     let on_up = move |ev: web_sys::PointerEvent| {
-        let (cx, cy) = (f64::from(ev.client_x()), f64::from(ev.client_y()));
         if let Some(d) = drag.get_untracked() {
             drag.set(None);
             if d.moved {
@@ -502,53 +369,20 @@ pub fn DmMapPage() -> impl IntoView {
                 }));
             }
         }
-        let mut tapped = false;
-        gesture.update_value(|g| {
-            tapped = g.pointers.len() == 1 && !g.moved;
-            g.pointers.remove(&ev.pointer_id());
-            g.start_view = Some(view.get_untracked());
-            g.start_points = g.pointers.values().copied().collect();
-        });
-        if tapped {
+        if vp.up(&ev) {
             if let Some(kind) = place.get_untracked() {
-                let (mx, my) = to_map(cx, cy);
+                let (mx, my) = to_map(f64::from(ev.client_x()), f64::from(ev.client_y()));
                 place_at(kind, mx, my);
             } else {
                 selected.set(None);
             }
         }
     };
-    let on_wheel = move |ev: web_sys::WheelEvent| {
-        ev.prevent_default();
-        let Some(el) = scene.get_untracked() else {
-            return;
-        };
-        let r = el.get_bounding_client_rect();
-        let factor = if ev.delta_y() < 0.0 { 1.15 } else { 1.0 / 1.15 };
-        view.update(|v| {
-            *v = v.zoom_at(
-                factor,
-                f64::from(ev.client_x()) - r.left(),
-                f64::from(ev.client_y()) - r.top(),
-            )
-        });
-    };
-    let zoom_button = move |factor: f64| {
-        let Some(el) = scene.get_untracked() else {
-            return;
-        };
-        let r = el.get_bounding_client_rect();
-        view.update(|v| *v = v.zoom_at(factor, r.width() / 2.0, r.height() / 2.0));
-    };
+    let on_wheel = move |ev: web_sys::WheelEvent| vp.wheel(&ev);
+    let zoom_button = move |factor: f64| vp.zoom(factor);
     let fit = move || {
-        if let (Some(m), Some(el)) = (map_now(), scene.get_untracked()) {
-            let r = el.get_bounding_client_rect();
-            view.set(View::fit(
-                f64::from(m.width_px),
-                f64::from(m.height_px),
-                r.width(),
-                r.height(),
-            ));
+        if let Some(m) = map_now() {
+            vp.fit(f64::from(m.width_px), f64::from(m.height_px));
         }
     };
 
@@ -748,6 +582,14 @@ pub fn DmMapPage() -> impl IntoView {
                     >
                         {move || if blackout() { "End blackout" } else { "Blackout" }}
                     </Button>
+                    <a
+                        class="cl-btn cl-btn--subtle"
+                        href=move || format!("/display/{}", campaign.get())
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        "Open player display"
+                    </a>
                     <ActionIcon title="Zoom in" on_click=Callback::new(move |_| zoom_button(1.25))>"+"</ActionIcon>
                     <ActionIcon title="Zoom out" on_click=Callback::new(move |_| zoom_button(0.8))>"−"</ActionIcon>
                     <ActionIcon title="Fit the map" on_click=Callback::new(move |_| fit())>"⤢"</ActionIcon>
@@ -779,6 +621,9 @@ pub fn DmMapPage() -> impl IntoView {
             >
                 <svg class="mimir-map__svg" aria-label=format!("Map: {}", m.name) role="img">
                     <defs>
+                        <clipPath id="mimir-map-clip">
+                            <rect x="0" y="0" width=w height=h />
+                        </clipPath>
                         <mask id="mimir-fog-mask" maskUnits="userSpaceOnUse" x="0" y="0" width=w height=h>
                             <rect x="0" y="0" width=w height=h fill="white" />
                             {move || {
@@ -814,8 +659,10 @@ pub fn DmMapPage() -> impl IntoView {
                                     let sel2 = sel.clone();
                                     view! {
                                         <g class="mimir-map__light" class:mimir-map__light--off=!l.active>
-                                            <circle cx=l.x cy=l.y r=dim fill=color.clone() opacity="0.10" />
-                                            <circle cx=l.x cy=l.y r=bright fill=color.clone() opacity="0.14" />
+                                            <g clip-path="url(#mimir-map-clip)">
+                                                <circle cx=l.x cy=l.y r=dim fill=color.clone() opacity="0.10" />
+                                                <circle cx=l.x cy=l.y r=bright fill=color.clone() opacity="0.14" />
+                                            </g>
                                             <circle
                                                 class="mimir-map__handle"
                                                 class:mimir-map__handle--selected=move || selected.get() == Some(sel2.clone())
@@ -1234,30 +1081,6 @@ fn poi_panel(p: Poi, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> impl I
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn zoom_keeps_the_point_under_the_cursor() {
-        let v = View {
-            scale: 1.0,
-            tx: 10.0,
-            ty: 20.0,
-        };
-        let before = v.to_map(110.0, 120.0);
-        let z = v.zoom_at(2.0, 110.0, 120.0);
-        assert_eq!(z.scale, 2.0);
-        let after = z.to_map(110.0, 120.0);
-        assert!((before.0 - after.0).abs() < 1e-9 && (before.1 - after.1).abs() < 1e-9);
-        assert_eq!(v.zoom_at(1000.0, 0.0, 0.0).scale, MAX_SCALE);
-        assert_eq!(v.zoom_at(0.0001, 0.0, 0.0).scale, MIN_SCALE);
-    }
-
-    #[test]
-    fn fit_centres_the_whole_map() {
-        let v = View::fit(2000.0, 1000.0, 1000.0, 1000.0);
-        assert_eq!(v.scale, 0.5);
-        assert_eq!((v.tx, v.ty), (0.0, 250.0));
-        assert_eq!(View::fit(0.0, 10.0, 100.0, 100.0), View::IDENTITY);
-    }
 
     #[test]
     fn cells_and_sizes() {

@@ -1,4 +1,4 @@
-import { CAMPAIGN, TOKEN, expect, mapId, signIn, test } from './session'
+import { CAMPAIGN, TOKEN, campaignId, expect, mapId, signIn, test } from './session'
 
 // The DM map: open it from the module page, select and drag a token, place
 // a PC, fog and line of sight, show to players. Runs in CI with the smoke
@@ -46,6 +46,10 @@ test('place a PC; fog and line of sight; show to players', async ({ page }) => {
   await signIn(page)
   const map = await mapId(page)
   await page.request.put(`/api/v1/maps/${map}/fog`, { headers: auth, data: { enabled: false } })
+  await page.request.put(`/api/v1/campaigns/${await campaignId(page)}/display`, {
+    headers: auth,
+    data: { map_id: null },
+  })
   page.on('dialog', (d) => d.accept('Sam'))
   await page.goto(`/maps/${map}`)
   await expect(page.locator('.mimir-map__svg image').first()).toBeAttached()
