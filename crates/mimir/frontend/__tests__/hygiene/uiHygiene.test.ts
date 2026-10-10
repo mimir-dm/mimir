@@ -132,4 +132,10 @@ describe('UI hygiene', () => {
     // The desktop app can be offline; fonts are bundled (@fontsource).
     expect(matches(/fonts\.(googleapis|gstatic)\.com/)).toEqual([])
   })
+
+  it('draws focus halos with --color-focus-ring (MIMIR-T-0696)', () => {
+    // A halo is box-shadow: 0 0 0 Npx <light or translucent primary>; each theme tunes the token.
+    const halo = /box-shadow\s*:\s*0 0 0 \d+px (var\(--color-primary-(50|100|200|tint)\)|color-mix\(in srgb, var\(--color-primary)/
+    expect(matches(halo, (f) => f.startsWith(path.join('assets', 'styles', 'themes')))).toEqual([])
+  })
 })

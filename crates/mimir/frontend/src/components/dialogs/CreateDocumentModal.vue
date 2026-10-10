@@ -600,7 +600,7 @@ watch(() => props.visible, (visible) => {
 .form-input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 2px var(--color-primary-100);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .form-input:disabled {

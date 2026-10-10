@@ -226,7 +226,7 @@ watch(() => router.currentRoute.value, (route) => {
 
 .selector-dropdown.is-open .selector-current {
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-tint);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 /* One line; very long names end in an ellipsis (full name in the tooltip). */
