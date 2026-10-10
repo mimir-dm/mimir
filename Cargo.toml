@@ -6,6 +6,7 @@ members = [
     "crates/mimir-mcp",
     "crates/mimir-print",
     "crates/mimir-server",
+    "crates/mimir-web",
     "crates/mimir-wire",
     "crates/mimir-ui-bridge",
 ]

@@ -156,7 +156,7 @@ jobs:
         run: angreal test unit --core
 
   test-web:
-    name: Web Server and Wire Types
+    name: Web Server, Wire Types and Web App
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -166,12 +166,22 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Test mimir-wire and mimir-server
-        run: cargo test -p mimir-wire -p mimir-server
+      - name: Test mimir-wire, mimir-server and mimir-web
+        run: cargo test -p mimir-wire -p mimir-server -p mimir-web
 
       # The web app compiles against mimir-wire, so it must build for wasm.
       - name: Build mimir-wire for wasm32
         run: cargo build -p mimir-wire --target wasm32-unknown-unknown
+
+      - name: Install trunk
+        run: |
+          curl -sSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz -C "$HOME/.cargo/bin"
+          trunk --version
+
+      - name: Build the web app bundle (trunk)
+        working-directory: crates/mimir-web
+        run: trunk build --release
 
   test-integration:
     name: Integration Tests (Heavy)

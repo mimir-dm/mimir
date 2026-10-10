@@ -1,0 +1,16 @@
+/* Mimir web app: the few classes Aurora does not have. Aurora tokens only,
+   no hard-coded colours. */
+
+.mimir-brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg-bright);
+}
+
+.mimir-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  width: 100%;
+}

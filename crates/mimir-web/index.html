@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Mimir</title>
+    <!-- Aurora THEME_INIT_SCRIPT: sets data-theme from the stored choice
+         before the first paint. A test (src/lib.rs) keeps it equal. -->
+    <script>(function(){try{var t=localStorage.getItem("aurora-theme");if(t==="light"||t==="dark"||t==="hyper"){var d=document.documentElement;d.setAttribute("data-theme",t);if(t!=="hyper")d.style.colorScheme=t;}}catch(e){}})();</script>
+    <!-- Aurora's CSS is injected at runtime by <AuroraStyles/> (app.rs).
+         Mimir's own classes, on Aurora tokens only: -->
+    <link data-trunk rel="css" href="style/mimir.css" />
+    <link data-trunk rel="rust" data-bin="mimir-web" data-wasm-opt="z" />
+  </head>
+  <body></body>
+</html>
