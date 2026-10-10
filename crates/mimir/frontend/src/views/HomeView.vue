@@ -71,13 +71,14 @@ import hyperMimir from '../assets/images/themes/hyper/mimir.png'
 const themeStore = useThemeStore()
 const router = useRouter()
 const campaignStore = useCampaignStore()
-const { campaigns } = storeToRefs(campaignStore)
+const { campaigns, currentCampaign } = storeToRefs(campaignStore)
 const showImportDialog = ref(false)
 
-// The campaign selected last (CampaignSelector stores it), if it still exists
-// and is not archived.
+// The campaign selected last, if it still exists and is not archived. The
+// header's CampaignSelector sets the store's current campaign (reactive) and
+// stores the id; on a first start it may do so after Home has loaded.
 const lastCampaign = computed<Campaign | null>(() => {
-  const id = localStorage.getItem('selectedCampaignId')
+  const id = currentCampaign.value?.id ?? localStorage.getItem('selectedCampaignId')
   return campaigns.value.find((c) => c.id === id && !c.archived_at) ?? null
 })
 
