@@ -15,10 +15,7 @@ use crate::error::ApiError;
 use crate::state::AppState;
 
 /// Who made the request.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Role {
-    Dm,
-}
+pub use mimir_wire::Role;
 
 /// Axum middleware: require the DM token unless in open mode.
 pub async fn require_dm(

@@ -14,7 +14,7 @@ use axum::extract::{Extension, State};
 use axum::middleware;
 use axum::routing::get;
 use axum::{Json, Router};
-use serde::Serialize;
+use mimir_wire::Session;
 
 use crate::auth::Role;
 use crate::config::Config;
@@ -98,17 +98,8 @@ async fn readyz(State(state): State<AppState>) -> Result<&'static str, ApiError>
     Ok("ready")
 }
 
-#[derive(Debug, Serialize)]
-struct Session {
-    role: &'static str,
-}
-
 /// `GET /api/v1/session`: who the token belongs to (the login page checks a
 /// token with it).
 async fn session(Extension(role): Extension<Role>) -> Json<Session> {
-    Json(Session {
-        role: match role {
-            Role::Dm => "dm",
-        },
-    })
+    Json(Session { role })
 }

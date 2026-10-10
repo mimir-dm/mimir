@@ -155,6 +155,24 @@ jobs:
       - name: Run core tests
         run: angreal test unit --core
 
+  test-web:
+    name: Web Server and Wire Types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install Rust stable (wasm32)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Test mimir-wire and mimir-server
+        run: cargo test -p mimir-wire -p mimir-server
+
+      # The web app compiles against mimir-wire, so it must build for wasm.
+      - name: Build mimir-wire for wasm32
+        run: cargo build -p mimir-wire --target wasm32-unknown-unknown
+
   test-integration:
     name: Integration Tests (Heavy)
     runs-on: ubuntu-latest

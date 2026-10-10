@@ -3478,6 +3478,7 @@ dependencies = [
  "http-body-util",
  "mime_guess",
  "mimir-core",
+ "mimir-wire",
  "rust-embed",
  "serde",
  "serde_json",
@@ -3504,6 +3505,14 @@ dependencies = [
  "tempfile",
  "tokio",
  "tower-http",
+]
+
+[[package]]
+name = "mimir-wire"
+version = "0.7.3"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

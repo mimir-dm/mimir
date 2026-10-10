@@ -14,7 +14,7 @@ use axum::extract::State;
 use axum::http::{header, StatusCode, Uri};
 use axum::response::{Html, IntoResponse, Response};
 use axum::Json;
-use serde::Serialize;
+use mimir_wire::{AuthMode, WebConfig};
 
 use crate::error::ApiError;
 use crate::state::AppState;
@@ -29,21 +29,13 @@ fn is_reserved(path: &str) -> bool {
 }
 
 /// `GET /api/config`
-#[derive(Debug, Serialize)]
-pub struct WebConfig {
-    /// Server version.
-    pub version: &'static str,
-    /// `"open"`: no token needed; `"token"`: send the DM bearer token.
-    pub auth: &'static str,
-}
-
 pub async fn api_config(State(state): State<AppState>) -> Json<WebConfig> {
     Json(WebConfig {
-        version: env!("CARGO_PKG_VERSION"),
+        version: env!("CARGO_PKG_VERSION").to_string(),
         auth: if state.config.open_mode() {
-            "open"
+            AuthMode::Open
         } else {
-            "token"
+            AuthMode::Token
         },
     })
 }

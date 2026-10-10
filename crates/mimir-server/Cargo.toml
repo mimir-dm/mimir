@@ -19,6 +19,7 @@ embed-web = ["dep:rust-embed"]
 fixtures = ["mimir-core/fixtures"]
 
 [dependencies]
+mimir-wire = { path = "../mimir-wire" }
 mimir-core = { path = "../mimir-core" }
 axum = "0.8"
 tokio = { workspace = true }
