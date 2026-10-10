@@ -58,3 +58,14 @@ export async function moduleId(page: Page, campaign: string): Promise<string> {
   if (!m) throw new Error('fixture module missing')
   return m.id
 }
+
+/** The id of the fixture module map ("Goblin Hideout"). */
+export async function mapId(page: Page): Promise<string> {
+  const campaign = await campaignId(page)
+  const module = await moduleId(page, campaign)
+  const res = await page.request.get(`/api/v1/modules/${module}/maps`, {
+    headers: { Authorization: `Bearer ${TOKEN}` },
+  })
+  const list = (await res.json()) as { id: string; name: string }[]
+  return list[0].id
+}

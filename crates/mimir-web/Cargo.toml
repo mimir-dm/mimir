@@ -27,4 +27,23 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1.7"
-web-sys = { version = "0.3", features = ["Storage", "Window"] }
+web-sys = { version = "0.3", features = [
+    "Storage",
+    "Window",
+    "Location",
+    # Map images as blobs (fetched with the token).
+    "Blob",
+    "BlobPropertyBag",
+    "Url",
+    # The live socket.
+    "WebSocket",
+    "MessageEvent",
+    "CloseEvent",
+    # The map: pan, zoom, drag.
+    "PointerEvent",
+    "WheelEvent",
+    "Element",
+    "DomRect",
+] }
+js-sys = "0.3"
+wasm-bindgen-futures = "0.4"

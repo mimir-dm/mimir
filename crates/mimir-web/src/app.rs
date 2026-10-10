@@ -16,6 +16,7 @@ use mimir_wire::AuthMode;
 
 use crate::api;
 use crate::auth::{self, Gate};
+use crate::map::dm::DmMapPage;
 use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
 use crate::pages::{home::Home, module::ModulePage, not_found::NotFound, sign_in::SignIn};
 
@@ -128,6 +129,7 @@ fn Shell(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                         <Route path=path!("pcs") view=PcsTab />
                     </ParentRoute>
                     <Route path=path!("/modules/:id") view=ModulePage />
+                    <Route path=path!("/maps/:id") view=DmMapPage />
                 </Routes>
             </AppShell>
         </Router>
@@ -161,7 +163,10 @@ fn Nav(version: String) -> impl IntoView {
 
 /// The pages under the Campaigns link of the side navigation.
 pub fn campaigns_section(path: &str) -> bool {
-    path == "/" || path.starts_with("/campaigns/") || path.starts_with("/modules/")
+    path == "/"
+        || path.starts_with("/campaigns/")
+        || path.starts_with("/modules/")
+        || path.starts_with("/maps/")
 }
 
 #[cfg(test)]

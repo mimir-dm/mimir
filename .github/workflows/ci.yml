@@ -198,7 +198,7 @@ jobs:
 
       - name: Web smoke suite (Playwright)
         working-directory: crates/mimir-web/web-e2e
-        run: npx playwright test specs/smoke.spec.ts
+        run: npx playwright test specs/smoke.spec.ts specs/map.spec.ts
 
       - name: Upload Playwright results on failure
         if: failure()

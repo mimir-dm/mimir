@@ -107,7 +107,7 @@ fn map_view(list: Vec<MapSummary>) -> impl IntoView {
                 } else {
                     list.into_iter().map(|m| view! {
                         <tr>
-                            <td>{m.name}</td>
+                            <td><a href=format!("/maps/{}", m.id)>{m.name}</a></td>
                             <td>{m.lighting_mode}</td>
                             <td>{if m.fog_enabled { "On" } else { "Off" }}</td>
                         </tr>

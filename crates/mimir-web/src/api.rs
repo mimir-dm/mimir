@@ -34,8 +34,8 @@ pub async fn check_token(token: &str) -> Result<Session, ApiError> {
 }
 
 /// `GET` a path under `/api/v1` with the stored token.
-pub async fn get<T: DeserializeOwned>(path: &str) -> Result<T, ApiError> {
-    let url = format!("/api/v1{path}");
+pub async fn get<T: DeserializeOwned>(path: impl AsRef<str>) -> Result<T, ApiError> {
+    let url = format!("/api/v1{}", path.as_ref());
     get_json(with_token(Request::get(&url), auth::stored_token())).await
 }
 
@@ -72,6 +72,86 @@ pub async fn module_list<T: DeserializeOwned>(id: String, what: &str) -> Result<
 
 pub async fn document(id: String) -> Result<wire::Document, ApiError> {
     get(&format!("/documents/{id}")).await
+}
+
+/// Send JSON with a method ("POST", "PATCH", "PUT") to a path under
+/// `/api/v1`, and read the JSON answer.
+pub async fn send<B: serde::Serialize, T: DeserializeOwned>(
+    method: &str,
+    path: &str,
+    body: &B,
+) -> Result<T, ApiError> {
+    let url = format!("/api/v1{path}");
+    let req = match method {
+        "POST" => Request::post(&url),
+        "PUT" => Request::put(&url),
+        "PATCH" => Request::patch(&url),
+        _ => return Err(ApiError::Unknown(format!("method {method}"))),
+    };
+    let req = with_token(req, auth::stored_token())
+        .json(body)
+        .map_err(|e| ApiError::Unknown(e.to_string()))?;
+    let resp = req.send().await.map_err(|_| ApiError::Network)?;
+    let status = resp.status();
+    if resp.ok() {
+        return resp
+            .json::<T>()
+            .await
+            .map_err(|e| ApiError::Unknown(format!("unexpected response: {e}")));
+    }
+    let text = resp.text().await.unwrap_or_default();
+    Err(decode_error(status, &text))
+}
+
+/// `DELETE` a path under `/api/v1`.
+pub async fn delete(path: &str) -> Result<(), ApiError> {
+    let url = format!("/api/v1{path}");
+    let resp = with_token(Request::delete(&url), auth::stored_token())
+        .send()
+        .await
+        .map_err(|_| ApiError::Network)?;
+    if resp.ok() {
+        return Ok(());
+    }
+    let status = resp.status();
+    let text = resp.text().await.unwrap_or_default();
+    Err(decode_error(status, &text))
+}
+
+/// An image under `/api/v1` as an object URL (`blob:`), for `<image href>`.
+/// Images need the token, which an `<img src>` cannot send. `Ok(None)`:
+/// there is no image (404).
+pub async fn image_url(path: impl AsRef<str>) -> Result<Option<String>, ApiError> {
+    let url = format!("/api/v1{}", path.as_ref());
+    let resp = with_token(Request::get(&url), auth::stored_token())
+        .send()
+        .await
+        .map_err(|_| ApiError::Network)?;
+    if resp.status() == 404 {
+        return Ok(None);
+    }
+    if !resp.ok() {
+        let status = resp.status();
+        let text = resp.text().await.unwrap_or_default();
+        return Err(decode_error(status, &text));
+    }
+    let mime = resp
+        .headers()
+        .get("content-type")
+        .unwrap_or_else(|| "application/octet-stream".into());
+    let bytes = resp
+        .binary()
+        .await
+        .map_err(|e| ApiError::Unknown(e.to_string()))?;
+    let array = js_sys::Uint8Array::from(bytes.as_slice());
+    let parts = js_sys::Array::of1(&array);
+    let options = web_sys::BlobPropertyBag::new();
+    options.set_type(&mime);
+    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&parts, &options)
+        .map_err(|_| ApiError::Unknown("blob".into()))?;
+    web_sys::Url::create_object_url_with_blob(&blob)
+        .map(Some)
+        .map_err(|_| ApiError::Unknown("object url".into()))
 }
 
 fn with_token(req: RequestBuilder, token: Option<String>) -> RequestBuilder {

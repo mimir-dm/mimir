@@ -119,3 +119,118 @@
 
 .mimir-cards { margin-top: var(--space-md); }
 .cl-tabs__panel { padding-top: var(--space-md); }
+
+/* ---- DM map ------------------------------------------------------------ */
+.mimir-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  height: calc(100vh - var(--cl-header-h) - 44px);
+  min-height: 420px;
+}
+.mimir-map__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-lg);
+}
+.mimir-map__tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.mimir-map__scene {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--inset);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.mimir-map__scene--placing { cursor: crosshair; }
+.mimir-map__svg { display: block; width: 100%; height: 100%; }
+.mimir-map__grid {
+  fill: none;
+  stroke: var(--fg);
+  stroke-opacity: 0.18;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.mimir-map__fog { fill: var(--scrim); pointer-events: none; }
+.mimir-map__door {
+  stroke: var(--gold);
+  stroke-width: 7;
+  stroke-linecap: round;
+  cursor: pointer;
+}
+.mimir-map__door--open { stroke-dasharray: 4 8; stroke-opacity: 0.7; }
+.mimir-map__light--off { opacity: 0.35; }
+.mimir-map__handle {
+  stroke: var(--bg);
+  stroke-width: 3;
+  cursor: pointer;
+}
+.mimir-map__handle--selected { stroke: var(--ice); stroke-width: 5; }
+.mimir-map__marker { cursor: pointer; }
+.mimir-map__marker--trap path { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-map__marker--poi circle { stroke: var(--bg); stroke-width: 3; }
+.mimir-map__marker--hidden { opacity: 0.5; }
+.mimir-map__marker--selected path,
+.mimir-map__marker--selected circle { stroke: var(--ice); stroke-width: 5; }
+.mimir-map__marker text,
+.mimir-map__token-name {
+  fill: var(--fg-bright);
+  stroke: var(--bg);
+  stroke-width: 4;
+  paint-order: stroke;
+  font-size: 18px;
+  font-family: var(--font-sans);
+}
+.mimir-map__token { cursor: grab; }
+.mimir-map__token-ring {
+  fill: var(--panel);
+  stroke-width: 5;
+}
+.mimir-map__token-initial {
+  fill: var(--fg-bright);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+.mimir-map__token--hidden { opacity: 0.5; }
+.mimir-map__token--dead { filter: grayscale(1); opacity: 0.45; }
+.mimir-map__token--selected .mimir-map__token-ring { stroke: var(--ice); stroke-width: 8; }
+.mimir-map__panel {
+  position: absolute;
+  top: 56px;
+  right: var(--space-sm);
+  width: min(320px, calc(100% - 2 * var(--space-sm)));
+  max-height: calc(100% - 64px);
+  overflow: auto;
+  z-index: 2;
+}
+.mimir-map__hint {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+  z-index: 3;
+}
+.mimir-map__error { position: absolute; bottom: var(--space-md); left: var(--space-md); z-index: 3; }
+/* Touch: larger targets on a tablet. */
+@media (pointer: coarse) {
+  .mimir-map__door { stroke-width: 12; }
+}

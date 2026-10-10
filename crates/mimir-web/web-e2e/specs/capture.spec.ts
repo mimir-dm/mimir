@@ -1,4 +1,4 @@
-import { CAMPAIGN, MODULE, campaignId, expect, moduleId, signIn, test } from './session'
+import { CAMPAIGN, MODULE, campaignId, expect, mapId, moduleId, signIn, test } from './session'
 
 // Captures for design review: each screen × desktop and tablet × the themes
 // in THEMES (default light,dark). Run with `angreal web screenshots`; it sets
@@ -16,7 +16,7 @@ const sizes = [
   { name: 'tablet', width: 820, height: 1100 },
 ]
 
-type Ids = { campaign: string; module: string }
+type Ids = { campaign: string; module: string; map: string }
 type Screen = { name: string; path: (ids: Ids) => string; ready: (page: import('@playwright/test').Page) => Promise<void>; signedOut?: boolean }
 
 const screens: Screen[] = [
@@ -52,6 +52,16 @@ const screens: Screen[] = [
     ready: async (p) => expect(p.getByRole('cell', { name: 'Wizard 5' })).toBeVisible(),
   },
   {
+    name: 'dm-map',
+    path: (i) => `/maps/${i.map}`,
+    ready: async (p) => {
+      await expect(p.locator('.mimir-map__svg image').first()).toBeAttached()
+      await expect(p.locator('.mimir-map__token[aria-label="Klarg"]')).toBeAttached()
+      // Let the fit and token art settle.
+      await p.waitForTimeout(400)
+    },
+  },
+  {
     name: 'module-documents',
     path: (i) => `/modules/${i.module}`,
     ready: async (p) => expect(p.locator('.mimir-doc__title')).toBeVisible(),
@@ -63,7 +73,7 @@ for (const theme of themes) {
     for (const screen of screens) {
       test(`${screen.name} ${size.name} ${theme}`, async ({ page }) => {
         await page.setViewportSize({ width: size.width, height: size.height })
-        const ids = { campaign: await campaignId(page), module: '' }
+        const ids = { campaign: await campaignId(page), module: '', map: await mapId(page) }
         ids.module = await moduleId(page, ids.campaign)
         if (screen.signedOut) {
           await page.addInitScript((t) => localStorage.setItem('aurora-theme', t), theme)

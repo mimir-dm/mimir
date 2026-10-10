@@ -4022,6 +4022,7 @@ dependencies = [
  "colliery-io-aurora",
  "console_error_panic_hook",
  "gloo-net",
+ "js-sys",
  "leptos",
  "leptos_router",
  "mimir-wire",
@@ -4029,6 +4030,7 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
 ]
 
