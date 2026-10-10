@@ -510,7 +510,7 @@ watch(() => props.visible, (visible) => {
 .file-icon {
   width: 32px;
   height: 32px;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   flex-shrink: 0;
 }
 

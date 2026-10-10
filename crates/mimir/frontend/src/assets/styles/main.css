@@ -198,7 +198,7 @@ h1, h2, h3, h4,
 
 /* Utility classes using CSS variables */
 @layer utilities {
-  .text-primary { color: var(--color-primary-500); }
+  .text-primary { color: var(--color-primary-text); }
   .bg-primary { background-color: var(--color-primary-500); }
   .border-primary { border-color: var(--color-primary-500); }
   

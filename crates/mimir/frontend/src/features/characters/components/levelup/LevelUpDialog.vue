@@ -260,7 +260,7 @@ watch(
 }
 
 .progress-step.active .step-title {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   font-weight: 500;
 }
 

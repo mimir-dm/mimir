@@ -184,7 +184,7 @@
 }
 
 .document-title:hover {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .document-title.optional {

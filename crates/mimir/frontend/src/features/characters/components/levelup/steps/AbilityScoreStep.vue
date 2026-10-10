@@ -547,7 +547,7 @@ onMounted(() => {
   min-width: 30px;
   text-align: center;
   font-weight: 600;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .ability-new {

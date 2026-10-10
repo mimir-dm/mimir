@@ -163,7 +163,7 @@
 .race-ref,
 .background-ref,
 .feat-ref {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   font-style: italic;
   cursor: help;
   text-decoration: underline;
@@ -290,7 +290,7 @@
 
 .creature-details .creature-traits h4,
 .creature-details .creature-actions h4 {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   margin-bottom: 10px;
   font-size: 1.1em;
 }
@@ -373,7 +373,7 @@
 .entry-table td:first-child {
   text-align: center;
   font-weight: 600;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   min-width: 3rem;
 }
 

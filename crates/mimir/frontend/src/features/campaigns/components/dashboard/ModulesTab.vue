@@ -1400,7 +1400,7 @@ onMounted(async () => {
   margin: 0;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

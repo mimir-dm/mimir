@@ -286,7 +286,7 @@ watch(
 .method-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .method-description {

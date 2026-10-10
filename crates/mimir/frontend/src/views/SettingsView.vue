@@ -525,7 +525,7 @@ onMounted(async () => {
 }
 
 .input-help a {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   text-decoration: underline;
 }
 

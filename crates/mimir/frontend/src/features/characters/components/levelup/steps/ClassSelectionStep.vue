@@ -441,12 +441,12 @@ onMounted(() => {
 .multiclass-hitdie {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .class-subclass {
   font-size: 0.75rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   font-style: italic;
 }
 
@@ -556,7 +556,7 @@ onMounted(() => {
 
 .preview-class {
   font-weight: 600;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .preview-level,
@@ -590,6 +590,6 @@ onMounted(() => {
 }
 
 .summary-value.highlight {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 </style>

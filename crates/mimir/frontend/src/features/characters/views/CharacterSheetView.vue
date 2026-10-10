@@ -1427,7 +1427,7 @@ onUnmounted(() => {
 }
 
 .class-stat-value.spellcaster {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .class-proficiencies {
@@ -1446,7 +1446,7 @@ onUnmounted(() => {
 
 /* Links in proficiencies */
 .class-proficiencies :deep(a) {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   text-decoration: none;
 }
 
@@ -1510,7 +1510,7 @@ onUnmounted(() => {
 }
 
 .feature-links a {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   text-decoration: none;
 }
 

@@ -112,7 +112,7 @@ function toggleOption(value: string) {
   content: '\2715';
   font-size: 12px;
   font-weight: bold;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   opacity: 0;
   transform: scale(0);
   transition: all 0.15s ease;

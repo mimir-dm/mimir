@@ -456,7 +456,7 @@ function formatDate(dateString: string): string {
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .stat-label {
@@ -559,7 +559,7 @@ function formatDate(dateString: string): string {
 .show-more-btn {
   background: none;
   border: none;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   cursor: pointer;
   font-size: 0.875rem;
   padding: var(--spacing-xs);

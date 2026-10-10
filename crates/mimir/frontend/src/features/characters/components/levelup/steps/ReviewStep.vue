@@ -262,7 +262,7 @@ const hasFeatureChoices = computed(() => {
 }
 
 .item-value.highlight {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 

@@ -668,7 +668,7 @@ onMounted(() => {
 
 .spell-level {
   font-weight: 500;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .spell-school {

@@ -167,7 +167,7 @@ defineEmits<{
 }
 
 .btn-reorder:hover:not(:disabled) {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   background: var(--color-surface-variant);
 }
 

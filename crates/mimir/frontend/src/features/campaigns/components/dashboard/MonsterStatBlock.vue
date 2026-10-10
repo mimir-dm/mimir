@@ -162,7 +162,7 @@ function formatEntries(entries: unknown[]): string {
 .stat-block-header h4 {
   margin: 0;
   font-size: 1.3rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .creature-meta {
@@ -190,7 +190,7 @@ function formatEntries(entries: unknown[]): string {
 
 .stat-label {
   font-weight: 700;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .ability-row {
@@ -209,7 +209,7 @@ function formatEntries(entries: unknown[]): string {
 .ability-name {
   font-weight: 700;
   font-size: 0.75rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .ability-value {
@@ -230,7 +230,7 @@ function formatEntries(entries: unknown[]): string {
 }
 
 .prop-line strong {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .action-section {
@@ -240,7 +240,7 @@ function formatEntries(entries: unknown[]): string {
 .action-section h5 {
   margin: 0 0 var(--spacing-xs);
   font-size: 1rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   border-bottom: 1px solid var(--color-primary-300);
   padding-bottom: 2px;
 }

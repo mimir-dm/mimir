@@ -558,7 +558,7 @@ watch(() => props.visible, async (visible) => {
 }
 
 .tab.active {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   background: var(--color-surface-variant);
 }
 

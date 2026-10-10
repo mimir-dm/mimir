@@ -179,7 +179,7 @@ const classes = computed(() => {
 .spell-name {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
 }
 
 .spell-level-school {
@@ -254,7 +254,7 @@ const classes = computed(() => {
 }
 
 :deep(.ref-link) {
-  color: var(--color-primary-500);
+  color: var(--color-primary-text);
   cursor: default;
 }
 
