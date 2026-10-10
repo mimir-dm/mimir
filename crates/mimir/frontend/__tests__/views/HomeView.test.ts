@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import { mountWithPlugins } from '@tests/helpers/mountHelpers'
+import { useCampaignStore } from '@/stores/campaigns'
 import { setupInvokeMock, resetInvokeMock, mockCommand } from '@tests/helpers/mockInvoke'
 
 const push = vi.fn()
@@ -63,6 +64,17 @@ describe('HomeView actions', () => {
     const wrapper = await mountHome()
     expect(wrapper.find('[data-testid="home-continue"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="home-create"]').classes()).toContain('btn-primary')
+  })
+
+  it('shows Continue when the header selects a campaign after Home loaded (first start)', async () => {
+    mockCommand('list_campaigns', [campaign('c1', 'Lost Mine')])
+    const wrapper = await mountHome()
+    expect(wrapper.find('[data-testid="home-continue"]').exists()).toBe(false)
+    // CampaignSelector: stores the id and loads the campaign into the store.
+    localStorage.setItem('selectedCampaignId', 'c1')
+    useCampaignStore().currentCampaign = campaign('c1', 'Lost Mine') as never
+    await flushPromises()
+    expect(wrapper.get('[data-testid="home-continue"]').text()).toContain('Continue Lost Mine')
   })
 
   it('opens an imported campaign and remembers it', async () => {
