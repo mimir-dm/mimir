@@ -176,14 +176,24 @@ async fn every_route_needs_the_dm_token() {
     for route in mimir_server::api::routes() {
         assert_eq!(route.access, mimir_server::api::Access::Dm);
         let path = format!("/api/v1{}", route.path.replace("{id}", "x"));
-        let (status, _) = call(&r, &path, None).await;
-        assert_eq!(status, StatusCode::UNAUTHORIZED, "{path} without a token");
-        let (status, _) = call(&r, &path, Some("wrong")).await;
-        assert_eq!(
-            status,
-            StatusCode::UNAUTHORIZED,
-            "{path} with a wrong token"
-        );
+        for method in route.methods {
+            for bearer in [None, Some("wrong")] {
+                let mut req = Request::builder().method(*method).uri(&path);
+                if let Some(t) = bearer {
+                    req = req.header(header::AUTHORIZATION, format!("Bearer {t}"));
+                }
+                let res = r
+                    .clone()
+                    .oneshot(req.body(Body::empty()).unwrap())
+                    .await
+                    .unwrap();
+                assert_eq!(
+                    res.status(),
+                    StatusCode::UNAUTHORIZED,
+                    "{method} {path} with {bearer:?}"
+                );
+            }
+        }
     }
     let (status, _) = call(&r, "/api/v1/campaigns", Some("dm-secret")).await;
     assert_eq!(status, StatusCode::OK);

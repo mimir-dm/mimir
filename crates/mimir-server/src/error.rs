@@ -92,6 +92,31 @@ impl From<ServiceError> for ApiError {
     }
 }
 
+impl From<DieselError> for ApiError {
+    fn from(err: DieselError) -> Self {
+        ServiceError::Database(err).into()
+    }
+}
+
+/// A JSON request body. A body that does not parse answers 400 with the
+/// error envelope (axum's own answer is plain text).
+pub struct JsonBody<T>(pub T);
+
+impl<S, T> axum::extract::FromRequest<S> for JsonBody<T>
+where
+    T: serde::de::DeserializeOwned,
+    S: Send + Sync,
+{
+    type Rejection = ApiError;
+
+    async fn from_request(req: axum::extract::Request, state: &S) -> Result<Self, ApiError> {
+        match Json::<T>::from_request(req, state).await {
+            Ok(Json(value)) => Ok(JsonBody(value)),
+            Err(rejection) => Err(ApiError::new(ErrorCode::BadRequest, rejection.body_text())),
+        }
+    }
+}
+
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         (self.status(), Json(self.body())).into_response()

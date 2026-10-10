@@ -17,6 +17,7 @@ mod map_state;
 mod module;
 mod source;
 mod token;
+mod uvtt;
 
 use thiserror::Error;
 
@@ -61,6 +62,7 @@ pub use module::{
 };
 pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
+pub use uvtt::{GridPoint, MapGeometry, UvttLight, UvttPortal};
 
 /// Default query limit to prevent memory issues on large result sets.
 pub const DEFAULT_QUERY_LIMIT: i64 = 1000;

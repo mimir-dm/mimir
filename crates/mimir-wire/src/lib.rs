@@ -19,9 +19,12 @@
 
 pub mod campaign;
 pub mod error;
+pub mod map;
+pub mod patch;
 
 pub use campaign::*;
 pub use error::{ErrorBody, ErrorCode, ErrorDetail};
+pub use map::*;
 
 use serde::{Deserialize, Serialize};
 

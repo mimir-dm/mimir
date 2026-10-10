@@ -638,6 +638,15 @@ impl<'a> MapService<'a> {
         }
     }
 
+    /// The walls, doors and lights of a map, in grid units, with the pixels
+    /// per grid of the served image.
+    pub fn geometry(&mut self, map: &Map) -> ServiceResult<crate::services::uvtt::MapGeometry> {
+        let meta = self.ensure_resolution_meta(map);
+        let bytes = self.read_uvtt_file(map)?;
+        crate::services::uvtt::parse_geometry(&bytes, meta.map(|m| m.pixels_per_grid))
+            .map_err(ServiceError::Validation)
+    }
+
     /// Read the cached resolution metadata sidecar for a map.
     ///
     /// Returns `None` if the sidecar doesn't exist yet (pre-existing maps that
