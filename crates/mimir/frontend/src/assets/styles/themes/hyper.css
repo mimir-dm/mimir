@@ -146,6 +146,9 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
 
+  /* Focus and open-state halo: box-shadow 0 0 0 2-3px (MIMIR-T-0696). */
+  --color-focus-ring: color-mix(in srgb, var(--color-primary-500) 40%, transparent);
+
   /* Text on a primary fill, and the fill on hover and press (MIMIR-T-0695). */
   --color-on-primary: #ffffff;
   --color-primary-hover: var(--color-primary-600);

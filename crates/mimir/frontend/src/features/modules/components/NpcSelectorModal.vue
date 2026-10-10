@@ -251,7 +251,7 @@ watch(() => props.visible, (newVisible) => {
 .search-input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-tint);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .loading-state {

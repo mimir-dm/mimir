@@ -20,6 +20,15 @@ export interface Screen {
 
 export const SCREENS: Screen[] = [
   { name: 'home', path: () => '/' },
+  {
+    // The campaign selector open: its focus halo (MIMIR-T-0696).
+    name: 'campaign-selector-open',
+    path: () => '/',
+    setup: async (page) => {
+      await page.locator('.selector-current').click()
+      await page.locator('.selector-dropdown.is-open').waitFor()
+    },
+  },
   { name: 'dashboard-campaign-docs', path: (ids) => `/campaigns/${ids.campaign}/dashboard/campaign` },
   {
     name: 'document-viewer',

@@ -25,7 +25,7 @@
 
 .btn:focus {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 /* Button Variants */
@@ -372,7 +372,7 @@
 
 .btn-close:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-primary-100);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 /* Pagination Buttons */
@@ -431,7 +431,7 @@
 .btn-status-select:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 2px var(--color-primary-100);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 /* Status-specific variants */

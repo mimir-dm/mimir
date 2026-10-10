@@ -141,6 +141,9 @@
   /* Border of chromatic stat blocks (dnd-content.css). */
   --color-chromatic-border: rgba(147, 51, 234, 0.4);
 
+  /* Focus and open-state halo: box-shadow 0 0 0 2-3px (MIMIR-T-0696). */
+  --color-focus-ring: color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+
   /* Text on a primary fill, and the fill on hover and press (MIMIR-T-0695). */
   --color-on-primary: #ffffff;
   --color-primary-hover: var(--color-primary-600);

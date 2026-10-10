@@ -447,7 +447,7 @@ const confirmDelete = async () => {
 .campaign-select:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 /* Delete dialog */
