@@ -61,7 +61,9 @@ describe('UI hygiene', () => {
   it('keeps theme differences in the theme files, not in components (MIMIR-T-0685)', () => {
     // A component that needs a different color per theme uses a token, for
     // example --color-primary-tint, that each theme file defines.
-    const hits = matches(/\.theme-(light|dark|hyper)\b/, (f) => !f.endsWith('.vue'))
+    // Only the theme files may select on a theme class (components and the
+    // shared stylesheets alike).
+    const hits = matches(/\.theme-(light|dark|hyper)\b/, (f) => f.startsWith(path.join('assets', 'styles', 'themes')))
     expect(hits, 'use a themed token instead of a .theme-* selector').toEqual([])
   })
 

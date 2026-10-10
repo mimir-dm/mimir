@@ -1,16 +1,18 @@
 /* Dark Theme - Based on dark-mimir.png color palette */
 .theme-dark {
-  /* Primary colors - deep blues from the dark skull */
-  --color-primary-50: #1e3a8a;
-  --color-primary-100: #1e40af;
-  --color-primary-200: #2563eb;
-  --color-primary-300: #3b82f6;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #93bbfd;
-  --color-primary-600: #a5c8fd;
-  --color-primary-700: #bfdbfe;
-  --color-primary-800: #dbeafe;
-  --color-primary-900: #eff6ff;
+  /* Primary colors - blues from the dark skull. Light to dark like the other
+     themes (MIMIR-T-0695); 500 is the accent, light enough to read on the
+     dark background, so text on a primary fill is dark (--color-on-primary). */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #79b3fb;
+  --color-primary-500: #60a5fa;
+  --color-primary-600: #3b82f6;
+  --color-primary-700: #2563eb;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 
   /* Neutral colors - dark grays */
   --color-gray-50: #0f172a;
@@ -138,6 +140,11 @@
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+  /* Text on a primary fill, and the fill on hover and press (MIMIR-T-0695). */
+  --color-on-primary: #0f172a;
+  --color-primary-hover: var(--color-primary-400);
+  --color-primary-active: var(--color-primary-300);
 
   /* Tints (COLLIERY-I-0465, MIMIR-T-0685): a colored surface and the text on it.
      -tint: background; -tint-subtle: lighter background (selected rows);

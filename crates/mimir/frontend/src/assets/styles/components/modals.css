@@ -275,7 +275,7 @@
 /* Add subtle enhancement to primary button in modals */
 .modal-actions .btn-primary {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
@@ -293,7 +293,7 @@
 }
 
 .modal-actions .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }

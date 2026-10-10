@@ -489,7 +489,7 @@ const isFeatureLoading = (feature: ClassFeature): boolean => {
 
 .ability-modifier {
   font-size: 0.9rem;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   font-weight: 500;
 }
 
@@ -551,7 +551,7 @@ const isFeatureLoading = (feature: ClassFeature): boolean => {
 }
 
 .save-proficient.active {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   opacity: 1;
 }
 
@@ -598,7 +598,7 @@ const isFeatureLoading = (feature: ClassFeature): boolean => {
 }
 
 .skill-proficient.active {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   opacity: 1;
 }
 
@@ -645,7 +645,7 @@ const isFeatureLoading = (feature: ClassFeature): boolean => {
 
 .attack-bonus {
   font-weight: 600;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
 }
 
 .attack-damage {

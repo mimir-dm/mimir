@@ -550,7 +550,7 @@ onMounted(() => {
   margin: 0 0 var(--spacing-md);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
 }
 
 .summary-section {

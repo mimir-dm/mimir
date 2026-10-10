@@ -100,7 +100,7 @@
 }
 
 .tip-card h4 {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   margin: 0 0 var(--spacing-lg) 0;
   font-size: 1.25rem;
 }
@@ -156,7 +156,7 @@
   display: block;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   margin-bottom: var(--spacing-xs);
 }
 
@@ -283,8 +283,8 @@
 }
 
 .status-badge.active {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background-color: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
 }
 
 .status-badge.completed {
@@ -383,7 +383,7 @@
   width: 1.75rem;
   height: 1.75rem;
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;

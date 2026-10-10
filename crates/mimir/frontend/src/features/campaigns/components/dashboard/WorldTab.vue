@@ -386,7 +386,7 @@ onMounted(() => {
 
 .btn-add:hover {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary-500);
 }
 
@@ -416,7 +416,7 @@ onMounted(() => {
 }
 
 .map-item.selected {
-  background: var(--color-primary-900);
+  background: var(--color-primary-tint);
 }
 
 /* Map preview */
@@ -457,7 +457,7 @@ onMounted(() => {
 
 .btn-action:hover {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary-500);
 }
 

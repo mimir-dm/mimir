@@ -65,10 +65,10 @@
 
 .mode-button.active {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .mode-button.active:hover {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
 }

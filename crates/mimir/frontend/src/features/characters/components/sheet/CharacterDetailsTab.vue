@@ -503,7 +503,7 @@ const formatOrdinal = (n: number): string => {
   font-size: 0.95rem;
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
 }
 
 .details-card.feature-card {
@@ -587,8 +587,8 @@ const formatOrdinal = (n: number): string => {
 .class-level-badge {
   font-size: 0.8rem;
   font-weight: 500;
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
 }

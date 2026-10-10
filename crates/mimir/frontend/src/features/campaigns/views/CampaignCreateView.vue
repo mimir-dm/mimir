@@ -175,11 +175,11 @@ const handleCancel = () => {
 
 .btn-primary {
   background-color: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-600);
+  background-color: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 

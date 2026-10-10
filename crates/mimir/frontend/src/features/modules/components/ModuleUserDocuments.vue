@@ -222,7 +222,7 @@ defineExpose({
   height: 28px;
   padding: 0;
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border: none;
   border-radius: 0.375rem;
   cursor: pointer;
@@ -235,7 +235,7 @@ defineExpose({
 }
 
 .add-btn:hover {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -277,9 +277,9 @@ defineExpose({
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
   border-radius: 0.25rem;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
 }
 
 .document-icon svg {

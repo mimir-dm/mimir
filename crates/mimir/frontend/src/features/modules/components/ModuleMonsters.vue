@@ -543,7 +543,7 @@ onMounted(() => {
 .add-button {
   padding: 0.25rem 0.75rem;
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border: none;
   border-radius: 0.25rem;
   font-size: 0.75rem;
@@ -551,7 +551,7 @@ onMounted(() => {
 }
 
 .add-button:hover:not(:disabled) {
-  background: var(--color-primary-600);
+  background: var(--color-primary-hover);
 }
 
 .add-button:disabled {

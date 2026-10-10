@@ -111,8 +111,8 @@
 }
 
 .catalog-table .catalog-table__badge--primary {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background-color: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
 }
 
 .catalog-table .catalog-table__badge--secondary {
@@ -121,8 +121,8 @@
 }
 
 .catalog-table .catalog-table__badge--srd {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background-color: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
   margin-left: 8px;
 }
 

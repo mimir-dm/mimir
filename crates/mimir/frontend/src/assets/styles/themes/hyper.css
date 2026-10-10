@@ -146,6 +146,11 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
 
+  /* Text on a primary fill, and the fill on hover and press (MIMIR-T-0695). */
+  --color-on-primary: #ffffff;
+  --color-primary-hover: var(--color-primary-600);
+  --color-primary-active: var(--color-primary-700);
+
   /* Tints (COLLIERY-I-0465, MIMIR-T-0685): a colored surface and the text on it.
      -tint: background; -tint-subtle: lighter background (selected rows);
      -tint-strong: hover background; -tint-border: border of a tint;

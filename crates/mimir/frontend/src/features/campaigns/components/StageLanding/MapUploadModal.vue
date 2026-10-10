@@ -300,7 +300,7 @@ watch(() => props.visible, (visible) => {
 .drop-zone:hover,
 .drop-zone.drag-over {
   border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
+  background: var(--color-primary-tint-subtle);
 }
 
 .drop-zone.has-file {
@@ -475,17 +475,17 @@ watch(() => props.visible, (visible) => {
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: var(--color-primary-50);
-  border: 1px solid var(--color-primary-200);
+  background: var(--color-primary-tint-subtle);
+  border: 1px solid var(--color-primary-tint-border);
   border-radius: var(--radius-md);
-  color: var(--color-primary-700);
+  color: var(--color-primary-on-tint);
   font-size: 0.875rem;
 }
 
 .progress-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid var(--color-primary-200);
+  border: 2px solid var(--color-primary-tint-border);
   border-top-color: var(--color-primary-500);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;

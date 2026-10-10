@@ -352,10 +352,10 @@ loadClassSpells()
 .spell-level-header {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   margin-bottom: var(--spacing-sm);
   padding-bottom: var(--spacing-xs);
-  border-bottom: 2px solid var(--color-primary-200);
+  border-bottom: 2px solid var(--color-primary-tint-border);
 }
 
 .spell-level-header.collapsible {
@@ -368,7 +368,7 @@ loadClassSpells()
 }
 
 .spell-level-header.collapsible:hover {
-  color: var(--color-primary-700);
+  color: var(--color-primary-on-tint);
 }
 
 .spell-level-header .collapse-icon {
@@ -447,8 +447,8 @@ loadClassSpells()
 }
 
 .spell-tag.homebrew {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-on-tint);
 }
 
 .spell-meta {

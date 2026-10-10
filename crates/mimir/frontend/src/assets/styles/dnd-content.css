@@ -127,7 +127,7 @@
 }
 
 .spell-ref:hover {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   text-decoration-style: solid;
 }
 
@@ -175,7 +175,7 @@
 .race-ref:hover,
 .background-ref:hover,
 .feat-ref:hover {
-  color: var(--color-primary-600);
+  color: var(--color-primary-text);
   text-decoration-style: solid;
 }
 

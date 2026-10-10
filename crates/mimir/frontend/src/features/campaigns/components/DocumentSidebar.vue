@@ -404,7 +404,7 @@ onMounted(() => {
 
 .add-btn:hover {
   background: var(--color-primary-500);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary-500);
 }
 
@@ -463,7 +463,7 @@ onMounted(() => {
 }
 
 .document-item.selected {
-  background: var(--color-primary-100);
+  background: var(--color-primary-tint);
 }
 
 .document-icon-svg {
