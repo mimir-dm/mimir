@@ -696,6 +696,8 @@ select.form-input {
   font-size: 0.8125rem;
 }
 
+/* A terminal-style block: dark in every theme, so it uses gray steps
+   (the same direction in every theme since MIMIR-T-0702). */
 .code-block {
   display: flex;
   align-items: center;

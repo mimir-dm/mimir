@@ -396,7 +396,8 @@
   left: 50%;
   transform: translateX(-50%);
   padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-gray-900);
+  /* Inverse of the page, in every theme. */
+  background-color: var(--color-text);
   color: var(--color-background);
   font-size: 0.75rem;
   border-radius: var(--radius-sm);

@@ -197,7 +197,7 @@
 */
 
 /* Spell Table Specific */
-.spell-level-0 { color: var(--color-gray-600); }
+.spell-level-0 { color: var(--color-text-secondary); }
 .spell-level-1 { color: var(--color-green-600); }
 .spell-level-2 { color: var(--color-blue-600); }
 .spell-level-3 { color: var(--color-purple-600); }
@@ -221,7 +221,7 @@
 }
 
 /* Item Rarity Colors */
-.rarity-common { color: var(--color-gray-600); }
+.rarity-common { color: var(--color-text-secondary); }
 .rarity-uncommon { color: var(--color-green-600); }
 .rarity-rare { color: var(--color-blue-600); }
 .rarity-veryrare { color: var(--color-purple-600); }

@@ -288,7 +288,7 @@
 }
 
 .status-badge.completed {
-  background-color: var(--color-gray-200);
+  background-color: var(--color-neutral-tint-strong);
   color: var(--color-text);
 }
 
