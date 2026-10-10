@@ -120,16 +120,18 @@
   --color-chromatic-border: rgba(168, 85, 247, 0.3);
 
   /* D&D Content Colors */
+  /* Light: the -700 shades, so content text reads at 4.5:1 or more on the
+     light surfaces (MIMIR-T-0697). */
   --color-dnd-damage: #dc2626;
-  --color-dnd-healing: #16a34a;
-  --color-dnd-condition: #ca8a04;
+  --color-dnd-healing: #15803d;
+  --color-dnd-condition: #a16207;
   --color-dnd-spell: #7c3aed;
-  --color-dnd-creature: #ea580c;
-  --color-dnd-item: #16a34a;
+  --color-dnd-creature: #c2410c;
+  --color-dnd-item: #15803d;
   --color-dnd-skill: #7c3aed;
   --color-dnd-action: #2563eb;
   --color-dnd-dc: #dc2626;
-  --color-dnd-resource: #ea580c;
+  --color-dnd-resource: #c2410c;
   --color-dnd-buff: #3b82f6;
 
   /* Shadow */
@@ -170,7 +172,7 @@
   --color-warning-tint-strong: var(--color-warning-200);
   --color-warning-tint-border: var(--color-warning-200);
   --color-warning-on-tint: var(--color-warning-700);
-  --color-warning-text: var(--color-warning-600);
+  --color-warning-text: var(--color-warning-700);
   --color-error-tint: var(--color-error-100);
   --color-error-tint-subtle: var(--color-error-50);
   --color-error-tint-strong: var(--color-error-200);

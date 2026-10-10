@@ -193,7 +193,7 @@ function deselectAll() {
 .selection-count {
   margin-left: auto;
   font-size: 0.75rem;
-  color: var(--legacy-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .loading-message,
@@ -206,7 +206,7 @@ function deselectAll() {
 .dev-note {
   margin-top: var(--spacing-sm, 8px);
   font-size: 0.75rem;
-  color: var(--legacy-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .book-list {
@@ -228,8 +228,8 @@ function deselectAll() {
 }
 
 .book-item.active {
-  background: color-mix(in srgb, var(--legacy-primary) 10%, transparent);
-  border-left: 3px solid var(--legacy-primary);
+  background: color-mix(in srgb, var(--color-primary-500) 10%, transparent);
+  border-left: 3px solid var(--color-primary-500);
 }
 
 .book-info {
@@ -246,7 +246,7 @@ function deselectAll() {
 
 .book-meta {
   font-size: 0.75rem;
-  color: var(--legacy-text-tertiary);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: var(--spacing-xs, 4px);
@@ -282,8 +282,8 @@ function deselectAll() {
 }
 
 .remove-btn:hover {
-  color: var(--legacy-danger);
-  background: color-mix(in srgb, var(--legacy-danger) 10%, transparent);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
 }
 
 /* Catalog checkbox mode styles */

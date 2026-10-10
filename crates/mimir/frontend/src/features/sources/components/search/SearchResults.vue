@@ -312,7 +312,7 @@ defineEmits<{
 .placeholder-message {
   padding: 2rem;
   text-align: center;
-  color: var(--legacy-text-tertiary);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 </style>

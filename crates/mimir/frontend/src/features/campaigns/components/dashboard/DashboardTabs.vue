@@ -65,7 +65,7 @@ function onTabClick(tabId: DashboardTab) {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: var(--legacy-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -75,12 +75,12 @@ function onTabClick(tabId: DashboardTab) {
 
 .tab-button:hover {
   color: var(--color-text);
-  background: var(--legacy-base-200);
+  background: var(--color-surface);
 }
 
 .tab-button.active {
-  color: var(--legacy-primary);
-  border-bottom-color: var(--legacy-primary);
+  color: var(--color-primary-text);
+  border-bottom-color: var(--color-primary-500);
 }
 
 .tab-icon {

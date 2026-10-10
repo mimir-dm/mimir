@@ -22,14 +22,14 @@ export async function formatActionDetails(action: any): Promise<string> {
       color: var(--color-text-secondary);
     }
     .time-section {
-      background: var(--legacy-background-secondary);
+      background: var(--color-surface);
       padding: 0.75em 1em;
       border-radius: 4px;
       margin: 1em 0;
-      border-left: 3px solid var(--legacy-primary);
+      border-left: 3px solid var(--color-primary-500);
     }
     .time-section strong {
-      color: var(--legacy-primary);
+      color: var(--color-primary-text);
     }
     .description-section {
       margin: 1.5em 0;
@@ -39,14 +39,14 @@ export async function formatActionDetails(action: any): Promise<string> {
       margin: 0.75em 0;
     }
     .see-also-section {
-      background: var(--legacy-background-secondary);
+      background: var(--color-surface);
       padding: 1em;
       border-radius: 4px;
       margin-top: 1.5em;
     }
     .see-also-section h3 {
       margin-top: 0;
-      color: var(--legacy-primary);
+      color: var(--color-primary-text);
       font-size: 1.1em;
     }
     .see-also-section ul {
@@ -66,7 +66,7 @@ export async function formatActionDetails(action: any): Promise<string> {
       gap: 0.5em;
     }
     .tag {
-      background: var(--legacy-background-tertiary);
+      background: var(--color-surface-variant);
       padding: 0.25em 0.75em;
       border-radius: 12px;
       font-size: 0.85em;

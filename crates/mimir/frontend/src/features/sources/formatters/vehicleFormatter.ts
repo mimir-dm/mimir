@@ -177,7 +177,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .srd-name {
@@ -202,19 +202,19 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       
       .tag-type {
         background: rgba(33, 150, 243, 0.1);
-        color: #2196f3;
+        color: var(--color-dnd-action);
         border: 1px solid rgba(33, 150, 243, 0.3);
       }
       
       .tag-size {
         background: rgba(156, 39, 176, 0.1);
-        color: #9c27b0;
+        color: var(--color-dnd-spell);
         border: 1px solid rgba(156, 39, 176, 0.3);
       }
       
       .tag-terrain {
         background: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
+        color: var(--color-dnd-healing);
         border: 1px solid rgba(76, 175, 80, 0.3);
         text-transform: capitalize;
       }
@@ -230,12 +230,12 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
         background: var(--color-surface);
         padding: var(--spacing-md, 12px);
         border-radius: 6px;
-        border: 1px solid var(--legacy-border-light);
+        border: 1px solid var(--color-border);
       }
       
       .stat-block h4 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--legacy-accent);
+        color: var(--color-dnd-damage);
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -261,7 +261,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
         margin: var(--spacing-md, 12px) 0;
         padding: var(--spacing-sm, 8px);
         background: rgba(255, 193, 7, 0.05);
-        border-left: 3px solid #ffc107;
+        border-left: 3px solid var(--color-dnd-condition);
       }
       
       .defense-line {
@@ -273,7 +273,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       }
       
       .content-section h3 {
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin-bottom: var(--spacing-sm, 8px);
       }
       
@@ -281,13 +281,13 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
         margin: var(--spacing-md, 12px) 0;
         padding: var(--spacing-sm, 8px);
         background: rgba(255, 87, 34, 0.05);
-        border-left: 3px solid #ff5722;
+        border-left: 3px solid var(--color-dnd-damage);
         border-radius: 4px;
       }
       
       .weapon-block h4 {
         margin: 0 0 var(--spacing-xs, 4px) 0;
-        color: #ff5722;
+        color: var(--color-dnd-damage);
       }
       
       .source-info {
@@ -307,7 +307,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       
       table th {
         background: var(--color-surface);
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         padding: var(--spacing-sm, 8px);
         text-align: left;
         border: 1px solid var(--color-border);
@@ -316,7 +316,7 @@ export function formatVehicleDetails(vehicle: Vehicle): string {
       
       table td {
         padding: var(--spacing-sm, 8px);
-        border: 1px solid var(--legacy-border-light);
+        border: 1px solid var(--color-border);
       }
       
       table tbody tr:nth-child(even) {

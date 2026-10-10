@@ -100,7 +100,7 @@
 }
 
 .spell-combat-section h4 {
-  color: var(--legacy-accent);
+  color: var(--color-dnd-damage);
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 1rem 0;

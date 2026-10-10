@@ -165,7 +165,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .object-name {
         font-size: 2rem;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin: 0 0 8px 0;
         font-weight: 700;
       }
@@ -194,7 +194,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .stat-card:hover {
         background: var(--color-surface-hover);
-        border-color: var(--legacy-primary);
+        border-color: var(--color-primary-500);
         transform: translateY(-2px);
       }
       
@@ -214,18 +214,18 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .ac-value {
-        color: #3498db;
+        color: var(--color-dnd-action);
       }
       
       .hp-value {
-        color: #e74c3c;
+        color: var(--color-dnd-damage);
       }
       
       .defenses-section {
         margin: 24px 0;
         padding: 16px;
         background: rgba(255, 255, 255, 0.02);
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         border-radius: 4px;
       }
       
@@ -235,7 +235,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .defense-row strong {
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin-right: 8px;
       }
       
@@ -245,7 +245,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .section-title {
         font-size: 1.3rem;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin: 0 0 16px 0;
         font-weight: 600;
         border-bottom: 1px solid rgba(74, 158, 255, 0.3);
@@ -262,7 +262,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .action-name {
         font-size: 1.1rem;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         margin: 0 0 12px 0;
         font-weight: 600;
       }
@@ -271,7 +271,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
         margin: 12px 0;
         padding: 12px;
         background: rgba(74, 158, 255, 0.05);
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         border-radius: 4px;
       }
       
@@ -282,7 +282,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       }
       
       .hit-line strong {
-        color: #e74c3c;
+        color: var(--color-dnd-damage);
       }
       
       .description-section {
@@ -291,7 +291,7 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .description-content {
         background: rgba(255, 255, 255, 0.02);
-        border-left: 3px solid var(--legacy-primary);
+        border-left: 3px solid var(--color-primary-500);
         padding: 16px 20px;
         border-radius: 4px;
         line-height: 1.8;
@@ -356,8 +356,8 @@ export async function formatObjectDetails(obj: any): Promise<string> {
       
       .srd-badge {
         padding: 4px 8px;
-        background: var(--legacy-primary);
-        color: var(--color-background);
+        background: var(--color-primary-500);
+        color: var(--color-on-primary);
         border-radius: 4px;
         font-weight: 600;
       }

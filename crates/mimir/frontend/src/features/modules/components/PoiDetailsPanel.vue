@@ -82,7 +82,7 @@ function getPoiIcon(iconName: string): string {
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: var(--color-surface);
-  border-bottom: 2px solid var(--legacy-primary);
+  border-bottom: 2px solid var(--color-primary-500);
 }
 
 .poi-title {

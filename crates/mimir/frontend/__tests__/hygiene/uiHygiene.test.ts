@@ -49,13 +49,9 @@ describe('UI hygiene', () => {
     expect(matches(/var\(--[\w-]+\s*,\s*(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\()/)).toEqual([])
   })
 
-  it('defines every legacy color it uses in the shared root (MIMIR-T-0686)', () => {
-    const main = fs.readFileSync(path.join(SRC, 'assets/styles/main.css'), 'utf8')
-    const defined = new Set([...main.matchAll(/(--legacy-[\w-]+)\s*:/g)].map((m) => m[1]))
-    const used = new Set(sources().flatMap(([, text]) => [...text.matchAll(/var\((--legacy-[\w-]+)\)/g)].map((m) => m[1])))
-    expect([...used].filter((t) => !defined.has(t))).toEqual([])
-    // A legacy color that nothing uses any more is deleted.
-    expect([...defined].filter((t) => !used.has(t))).toEqual([])
+  it('uses no legacy colors; reader content follows the theme (MIMIR-T-0697)', () => {
+    // The --legacy-* colors of MIMIR-T-0686 are mapped onto themed tokens.
+    expect(matches(/--legacy-/)).toEqual([])
   })
 
   it('keeps theme differences in the theme files, not in components (MIMIR-T-0685)', () => {
@@ -137,5 +133,11 @@ describe('UI hygiene', () => {
     // A halo is box-shadow: 0 0 0 Npx <light or translucent primary>; each theme tunes the token.
     const halo = /box-shadow\s*:\s*0 0 0 \d+px (var\(--color-primary-(50|100|200|tint)\)|color-mix\(in srgb, var\(--color-primary)/
     expect(matches(halo, (f) => f.startsWith(path.join('assets', 'styles', 'themes')))).toEqual([])
+  })
+
+  it('colors reader content with theme tokens, not hex (MIMIR-T-0697)', () => {
+    // The formatters write inline styles; a hex color there ignores the theme.
+    const hits = matches(/(color|border[\w-]*)\s*:[^;'"`]*#[0-9a-fA-F]{3,8}\b/, (f) => !f.startsWith(path.join('features', 'sources', 'formatters')))
+    expect(hits, 'use a --color-dnd-* or text token').toEqual([])
   })
 })

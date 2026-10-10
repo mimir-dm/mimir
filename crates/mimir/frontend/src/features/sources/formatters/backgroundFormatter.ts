@@ -22,7 +22,7 @@ export async function formatBackgroundDetails(background: any): Promise<string> 
       text-align: left;
     }
     .characteristic-table th {
-      background: var(--legacy-background-tertiary);
+      background: var(--color-surface-variant);
       font-weight: bold;
     }
     .characteristic-table .dice-column {

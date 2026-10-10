@@ -222,7 +222,7 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .condition-header h1 {
         margin: 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .type-badge {
@@ -236,12 +236,12 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .type-badge.condition {
         background: rgba(74, 158, 255, 0.2);
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .type-badge.disease {
         background: rgba(255, 107, 107, 0.2);
-        color: #ff6b6b;
+        color: var(--color-dnd-damage);
       }
       
       .source-info {
@@ -253,7 +253,7 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       .srd-badge {
         margin-left: 8px;
         padding: 2px 6px;
-        background: var(--legacy-background-tertiary);
+        background: var(--color-surface-variant);
         border-radius: 3px;
         font-size: 0.85em;
         color: var(--color-text);
@@ -285,7 +285,7 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       
       .sub-section h3 {
         margin: 0 0 12px 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         font-size: 1.1em;
       }
       
@@ -326,7 +326,7 @@ export function formatConditionDetails(details: ConditionWithDetails | Condition
       }
       
       .condition-table th {
-        background: var(--legacy-background-secondary);
+        background: var(--color-surface);
         padding: 8px;
         text-align: left;
         border: 1px solid var(--color-border);

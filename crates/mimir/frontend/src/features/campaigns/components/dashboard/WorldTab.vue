@@ -367,7 +367,7 @@ onMounted(() => {
   margin: 0;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--legacy-text-tertiary);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

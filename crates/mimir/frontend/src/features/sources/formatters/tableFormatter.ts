@@ -76,7 +76,7 @@ export async function formatTableDetails(table: Table): Promise<string> {
       
       .detail-header h2 {
         margin: 0 0 var(--spacing-sm, 8px) 0;
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
       }
       
       .table-caption {
@@ -101,13 +101,13 @@ export async function formatTableDetails(table: Table): Promise<string> {
       
       .tag-srd {
         background: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
+        color: var(--color-dnd-healing);
         border: 1px solid rgba(76, 175, 80, 0.3);
       }
       
       .tag-basic {
         background: rgba(33, 150, 243, 0.1);
-        color: #2196f3;
+        color: var(--color-dnd-action);
         border: 1px solid rgba(33, 150, 243, 0.3);
       }
       
@@ -124,12 +124,12 @@ export async function formatTableDetails(table: Table): Promise<string> {
       .footnotes {
         padding: var(--spacing-sm, 8px);
         background: rgba(255, 193, 7, 0.05);
-        border-left: 3px solid #ffc107;
+        border-left: 3px solid var(--color-dnd-condition);
       }
       
       .footnotes h4 {
         margin-top: 0;
-        color: #ffc107;
+        color: var(--color-dnd-condition);
       }
       
       .main-table {
@@ -140,7 +140,7 @@ export async function formatTableDetails(table: Table): Promise<string> {
       
       .main-table th {
         background: var(--color-surface);
-        color: var(--legacy-primary);
+        color: var(--color-primary-text);
         padding: var(--spacing-sm, 8px);
         text-align: left;
         border: 1px solid var(--color-border);
@@ -149,7 +149,7 @@ export async function formatTableDetails(table: Table): Promise<string> {
       
       .main-table td {
         padding: var(--spacing-sm, 8px);
-        border: 1px solid var(--legacy-border-light);
+        border: 1px solid var(--color-border);
       }
       
       .main-table tbody tr:nth-child(even) {
@@ -176,7 +176,7 @@ export async function formatTableDetails(table: Table): Promise<string> {
       .dice-column {
         text-align: center;
         font-weight: bold;
-        color: var(--legacy-accent);
+        color: var(--color-dnd-damage);
       }
       
       .source-info {
@@ -190,7 +190,7 @@ export async function formatTableDetails(table: Table): Promise<string> {
       .subsection {
         margin-left: var(--spacing-md, 12px);
         padding-left: var(--spacing-sm, 8px);
-        border-left: 2px solid var(--legacy-border-light);
+        border-left: 2px solid var(--color-border);
       }
       
       ul, ol {
@@ -382,55 +382,55 @@ function formatEntry(entry: any): string {
 const categoryStyles = `
   .category-madness {
     background: rgba(156, 39, 176, 0.2);
-    color: #9c27b0;
+    color: var(--color-dnd-spell);
     border: 1px solid rgba(156, 39, 176, 0.4);
   }
   
   .category-treasure {
     background: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
+    color: var(--color-dnd-condition);
     border: 1px solid rgba(255, 193, 7, 0.4);
   }
   
   .category-encounters {
     background: rgba(244, 67, 54, 0.2);
-    color: #f44336;
+    color: var(--color-dnd-damage);
     border: 1px solid rgba(244, 67, 54, 0.4);
   }
   
   .category-trinkets {
     background: rgba(0, 188, 212, 0.2);
-    color: #00bcd4;
+    color: var(--color-dnd-action);
     border: 1px solid rgba(0, 188, 212, 0.4);
   }
   
   .category-wild-magic {
     background: rgba(103, 58, 183, 0.2);
-    color: #673ab7;
+    color: var(--color-dnd-spell);
     border: 1px solid rgba(103, 58, 183, 0.4);
   }
   
   .category-combat {
     background: rgba(255, 87, 34, 0.2);
-    color: #ff5722;
+    color: var(--color-dnd-damage);
     border: 1px solid rgba(255, 87, 34, 0.4);
   }
   
   .category-npcs {
     background: rgba(76, 175, 80, 0.2);
-    color: #4caf50;
+    color: var(--color-dnd-healing);
     border: 1px solid rgba(76, 175, 80, 0.4);
   }
   
   .category-adventures {
     background: rgba(33, 150, 243, 0.2);
-    color: #2196f3;
+    color: var(--color-dnd-action);
     border: 1px solid rgba(33, 150, 243, 0.4);
   }
   
   .category-magic-items {
     background: rgba(255, 152, 0, 0.2);
-    color: #ff9800;
+    color: var(--color-dnd-resource);
     border: 1px solid rgba(255, 152, 0, 0.4);
   }
   

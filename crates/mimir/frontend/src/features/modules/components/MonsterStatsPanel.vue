@@ -399,7 +399,7 @@ defineProps<{
 .monster-panel :deep(.spell-ref),
 .monster-panel :deep(.item-ref),
 .monster-panel :deep(.condition-ref) {
-  color: var(--legacy-primary);
+  color: var(--color-primary-text);
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;

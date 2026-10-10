@@ -27,7 +27,7 @@ defineProps<Props>()
   width: 40px;
   height: 40px;
   border: 4px solid var(--color-surface);
-  border-top-color: var(--legacy-primary);
+  border-top-color: var(--color-primary-500);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

@@ -715,12 +715,12 @@ const formatOrdinal = (n: number): string => {
 }
 
 .feature-links a.subclass-feature {
-  color: var(--legacy-secondary-500);
+  color: var(--color-secondary);
   font-style: italic;
 }
 
 .feature-links a.subclass-feature:hover {
-  color: var(--legacy-secondary-600);
+  color: var(--color-secondary-dark);
 }
 
 /* Empty states */

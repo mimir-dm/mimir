@@ -147,37 +147,6 @@
   --color-indigo-600: #4f46e5;
   --color-yellow-600: #ca8a04;
   --color-red-800: #991b1b;
-
-  /* Legacy colors (COLLIERY-I-0465, MIMIR-T-0686). Components used these as
-     hex fallbacks of tokens that no theme defines, so these are the colors they
-     render today, in every theme. Map each onto a themed token, then delete it. */
-  --legacy-accent: #ff6b6b;
-  --legacy-accent-green: #6bcf7f;
-  --legacy-accent-hover: #ff8787;
-  --legacy-background-secondary: #1a1a1a;
-  --legacy-background-tertiary: #262626;
-  --legacy-base-200: #242424;
-  --legacy-bg-hover: #3a3a3a;
-  --legacy-bg-secondary: #1e1e1e;
-  --legacy-bg-tertiary: #2a2a2a;
-  --legacy-border-light: #262626;
-  --legacy-condition: #ff88ff;
-  --legacy-danger: #ff4444;
-  --legacy-magic: #a29bfe;
-  --legacy-note: #ffff88;
-  --legacy-primary: #4a9eff;
-  --legacy-primary-bright: #6ab7ff;
-  --legacy-primary-dim: #3a7fbf;
-  --legacy-recharge: #ff8888;
-  --legacy-secondary-500: #9c27b0;
-  --legacy-secondary-600: #7b1fa2;
-  --legacy-status: #88ff88;
-  --legacy-surface-elevated: #242424;
-  --legacy-text-dim: #888;
-  --legacy-text-emphasis: #f0f0f0;
-  --legacy-text-muted: #888;
-  --legacy-text-primary: #fff;
-  --legacy-text-tertiary: #666;
 }
 
 /* Theme classes are now in separate files:
