@@ -6,6 +6,7 @@
 //! and answer with `mimir-wire` types ([`convert`]).
 
 pub mod campaigns;
+pub mod combat;
 pub mod convert;
 pub mod display;
 pub mod maps;
@@ -81,6 +82,63 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/modules/{id}/npcs", Dm, G, get(c::module_npcs)),
         route("/modules/{id}/maps", Dm, G, get(c::module_maps)),
         route("/documents/{id}", Dm, G, get(c::get_document)),
+        // Combat.
+        route(
+            "/modules/{id}/combat",
+            Dm,
+            &["GET", "POST"],
+            get(combat::active).post(combat::start),
+        ),
+        route(
+            "/combat/{id}",
+            Dm,
+            &["GET", "DELETE"],
+            get(combat::get).delete(combat::end),
+        ),
+        route("/combat/{id}/next", Dm, &["POST"], post(combat::next)),
+        route(
+            "/combat/{id}/previous",
+            Dm,
+            &["POST"],
+            post(combat::previous),
+        ),
+        route("/combat/{id}/entries", Dm, &["POST"], post(combat::add)),
+        route(
+            "/combat/{id}/link-tokens",
+            Dm,
+            &["POST"],
+            post(combat::link_tokens),
+        ),
+        route(
+            "/combat-entries/{id}",
+            Dm,
+            &["PATCH", "DELETE"],
+            patch(combat::patch_entry).delete(combat::remove_entry),
+        ),
+        route(
+            "/combat-entries/{id}/damage",
+            Dm,
+            &["POST"],
+            post(combat::damage),
+        ),
+        route(
+            "/combat-entries/{id}/heal",
+            Dm,
+            &["POST"],
+            post(combat::heal),
+        ),
+        route(
+            "/combat-entries/{id}/conditions",
+            Dm,
+            &["POST"],
+            post(combat::add_condition),
+        ),
+        route(
+            "/combat-entries/{id}/conditions/{name}",
+            Dm,
+            &["DELETE"],
+            delete(combat::remove_condition),
+        ),
         // Maps.
         route("/maps/{id}", Dm, G, get(m::get_map)),
         route("/maps/{id}/geometry", Dm, G, get(m::get_geometry)),

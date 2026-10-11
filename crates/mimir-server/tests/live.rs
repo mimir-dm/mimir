@@ -284,3 +284,40 @@ async fn the_display_state_reaches_watchers_and_a_reconnect() {
     let got = http(&s, "GET", &format!("/campaigns/{campaign}/display"), None).await;
     assert_eq!(got["map_id"], map);
 }
+
+#[tokio::test]
+async fn combat_changes_reach_the_dm() {
+    let s = server().await;
+    let (campaign, module, _) = fixture_ids(&s).await;
+    let mut ws = connect(&s, Some(TOKEN)).await.unwrap();
+    next(&mut ws).await;
+    tell(
+        &mut ws,
+        &ClientMsg::Watch {
+            campaign_id: campaign.clone(),
+        },
+    )
+    .await;
+    next(&mut ws).await;
+    let combat = http(&s, "POST", &format!("/modules/{module}/combat"), None).await;
+    assert_eq!(
+        next(&mut ws).await,
+        ServerMsg::CombatChanged {
+            campaign_id: campaign.clone()
+        }
+    );
+    let id = combat["session"]["id"].as_str().unwrap();
+    http(
+        &s,
+        "POST",
+        &format!("/combat/{id}/entries"),
+        Some(json!({"kind": "custom", "name": "Ghost"})),
+    )
+    .await;
+    assert_eq!(
+        next(&mut ws).await,
+        ServerMsg::CombatChanged {
+            campaign_id: campaign
+        }
+    );
+}

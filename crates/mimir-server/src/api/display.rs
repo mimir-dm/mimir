@@ -55,6 +55,7 @@ pub async fn set_display(
         campaign_id: id,
         map_id: update.map_id,
         blackout: update.blackout,
+        show_initiative: update.show_initiative,
     };
     state.live.set_display(display.clone());
     Ok(Json(display))

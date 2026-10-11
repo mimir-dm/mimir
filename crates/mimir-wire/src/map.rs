@@ -427,6 +427,9 @@ pub struct PlayerView {
     pub tokens: Vec<PlayerToken>,
     pub lights: Vec<PlayerLight>,
     pub markers: Vec<PlayerMarker>,
+    /// The turn order, when the DM shows it and a combat runs.
+    #[serde(default)]
+    pub initiative: Option<crate::combat::PlayerInitiative>,
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ use axum::Json;
 use diesel::{Connection, SqliteConnection};
 use mimir_core::models::campaign::{LightSource, Map, MapPoi, MapTrap};
 use mimir_core::services::{
-    CreateLightInput, CreatePoiInput, CreateTokenInput, CreateTrapInput, MapService,
+    CombatService, CreateLightInput, CreatePoiInput, CreateTokenInput, CreateTrapInput, MapService,
     MapStateService, ServiceError, TokenResponse, TokenService, UpdateLightInput, UpdatePoiInput,
     UpdateTokenInput, UpdateTrapInput,
 };
@@ -155,6 +155,15 @@ fn ppg_of(conn: &mut SqliteConnection, app_dir: &FsPath, map_id: &str) -> f64 {
     }
 }
 
+/// The campaign of a map.
+pub fn campaign_of(
+    conn: &mut SqliteConnection,
+    app_dir: &FsPath,
+    map_id: &str,
+) -> Result<String, ApiError> {
+    Ok(require_map(conn, app_dir, map_id)?.campaign_id)
+}
+
 /// Tell the live sockets that a part of a map changed.
 fn notify(live: &Hub, conn: &mut SqliteConnection, app_dir: &FsPath, map_id: &str, part: MapPart) {
     if let Ok(Some(map)) = MapService::new(conn, app_dir).get(map_id) {
@@ -266,16 +275,18 @@ pub async fn get_map_image(
 }
 
 /// The player view of a map: what the player display may show.
+/// With `show_initiative`, it holds the turn order of the module's combat.
 pub fn build_player_view(
     conn: &mut SqliteConnection,
     app_dir: &FsPath,
     map_id: &str,
+    show_initiative: bool,
 ) -> Result<wire::PlayerView, ApiError> {
     let map = require_map(conn, app_dir, map_id)?;
     let map = detail(conn, app_dir, map);
     let ppg = map.grid_size_px;
     let fog = fog(conn, map_id)?;
-    let tokens = TokenService::new(conn, app_dir)
+    let tokens: Vec<wire::PlayerToken> = TokenService::new(conn, app_dir)
         .list_visible(map_id)?
         .into_iter()
         .map(|t| wire::PlayerToken {
@@ -337,12 +348,25 @@ pub fn build_player_view(
                 color: p.color,
             }),
     );
+    let initiative = match (&map.module_id, show_initiative) {
+        (Some(module), true) => {
+            let seen: Vec<&str> = tokens
+                .iter()
+                .map(|t: &wire::PlayerToken| t.id.as_str())
+                .collect();
+            CombatService::new(conn)
+                .active(module)?
+                .map(|state| crate::api::combat::player_initiative(&state, &seen))
+        }
+        _ => None,
+    };
     Ok(wire::PlayerView {
         map,
         fog,
         tokens,
         lights,
         markers,
+        initiative,
     })
 }
 
@@ -352,8 +376,13 @@ pub async fn player_view(
     Path(id): Path<String>,
 ) -> ApiResult<wire::PlayerView> {
     let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
-        .with_db(move |conn| build_player_view(conn, &app_dir, &id))
+        .with_db(move |conn| {
+            let campaign = require_map(conn, &app_dir, &id)?.campaign_id;
+            let show = live.display(&campaign).show_initiative;
+            build_player_view(conn, &app_dir, &id, show)
+        })
         .await
         .map(Json)
 }

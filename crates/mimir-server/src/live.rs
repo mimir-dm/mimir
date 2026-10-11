@@ -111,8 +111,11 @@ pub fn decide(
                 out.extend(shown_view(d).map(|m| Action::SendPlayerView(m.to_string())));
                 out
             }
-            // The player initiative arrives with the combat API (MIMIR-T-0715).
-            Change::Combat { .. } => Vec::new(),
+            // The turn order is part of the player view, when shown.
+            Change::Combat { .. } => match shown_view(display) {
+                Some(m) if display.show_initiative => vec![Action::SendPlayerView(m.to_string())],
+                _ => Vec::new(),
+            },
             Change::Character {
                 character_id: changed,
                 ..
@@ -298,8 +301,13 @@ async fn perform(socket: &mut WebSocket, state: &AppState, actions: Vec<Action>)
             Action::Send(msg) => msg,
             Action::SendPlayerView(map_id) => {
                 let app_dir = state.config.data_dir.clone();
+                let live = state.live.clone();
                 match state
-                    .with_db(move |conn| build_player_view(conn, &app_dir, &map_id))
+                    .with_db(move |conn| {
+                        let campaign = crate::api::maps::campaign_of(conn, &app_dir, &map_id)?;
+                        let show = live.display(&campaign).show_initiative;
+                        build_player_view(conn, &app_dir, &map_id, show)
+                    })
                     .await
                 {
                     Ok(view) => ServerMsg::PlayerView {
@@ -350,6 +358,7 @@ mod tests {
             campaign_id: "c1".into(),
             map_id: map.map(String::from),
             blackout,
+            show_initiative: false,
         }
     }
 

@@ -471,6 +471,7 @@ pub fn DmMapPage() -> impl IntoView {
                 &DisplayUpdate {
                     map_id,
                     blackout: black,
+                    show_initiative: display.get_untracked().show_initiative,
                 },
             )
             .await?;

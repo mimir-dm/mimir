@@ -447,6 +447,7 @@ mod tests {
             tokens,
             lights: vec![],
             markers: vec![] as Vec<PlayerMarker>,
+            initiative: None,
         }
     }
 

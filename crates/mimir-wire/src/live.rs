@@ -37,6 +37,9 @@ pub struct DisplayState {
     pub map_id: Option<String>,
     /// The display is paused (black).
     pub blackout: bool,
+    /// The display shows the turn order of the module's combat.
+    #[serde(default)]
+    pub show_initiative: bool,
 }
 
 /// `PUT /campaigns/{id}/display`
@@ -46,6 +49,8 @@ pub struct DisplayUpdate {
     pub map_id: Option<String>,
     #[serde(default)]
     pub blackout: bool,
+    #[serde(default)]
+    pub show_initiative: bool,
 }
 
 /// The part of a map that changed.
@@ -123,6 +128,7 @@ mod tests {
                 campaign_id: "c1".into(),
                 map_id: None,
                 blackout: true,
+                show_initiative: false,
             },
         };
         let back: ServerMsg = serde_json::from_str(&serde_json::to_string(&d).unwrap()).unwrap();
