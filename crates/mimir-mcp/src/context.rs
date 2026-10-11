@@ -19,7 +19,10 @@ use crate::McpError;
 pub struct McpContext {
     /// Database URL for creating connections.
     db_url: String,
-    /// Directory for asset files (images, etc.)
+    /// The app folder: it holds `data/` (the database) and `assets/`; the
+    /// assets' paths are relative to it ("assets/<id>.<ext>").
+    pub app_dir: PathBuf,
+    /// Its `assets` folder.
     pub assets_dir: PathBuf,
     /// Currently active campaign ID
     pub active_campaign_id: Mutex<Option<String>>,
@@ -45,10 +48,14 @@ impl McpContext {
                 )
             })?;
 
-        let assets_dir = db_path
+        // <app>/data/mimir.db: the app folder is two up. (The assets were
+        // taken as <app>/data/assets before, where no file is.)
+        let app_dir = db_path
             .parent()
-            .map(|p| p.join("assets"))
-            .unwrap_or_else(|| PathBuf::from("assets"));
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| PathBuf::from("."));
+        let assets_dir = app_dir.join("assets");
 
         let db_url = db_path.to_string_lossy().to_string();
 
@@ -63,9 +70,22 @@ impl McpContext {
 
         Ok(Self {
             db_url,
+            app_dir,
             assets_dir,
             active_campaign_id: Mutex::new(None),
         })
+    }
+
+    /// A context over a database already set up (the server's `/mcp`, one
+    /// per MCP session: the active campaign is the session's).
+    pub fn from_parts(db_url: impl Into<String>, app_dir: impl Into<PathBuf>) -> Self {
+        let app_dir = app_dir.into();
+        Self {
+            db_url: db_url.into(),
+            assets_dir: app_dir.join("assets"),
+            app_dir,
+            active_campaign_id: Mutex::new(None),
+        }
     }
 
     /// Expand `~` and `$HOME` in a path string.
@@ -146,7 +166,8 @@ impl McpContext {
 
         Self {
             db_url,
-            assets_dir: PathBuf::from("/tmp/mimir-test-assets"),
+            app_dir: PathBuf::from("/tmp/mimir-test-app"),
+            assets_dir: PathBuf::from("/tmp/mimir-test-app/assets"),
             active_campaign_id: Mutex::new(None),
         }
     }

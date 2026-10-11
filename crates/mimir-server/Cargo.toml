@@ -43,6 +43,10 @@ uuid = { workspace = true }
 # PDF export (MIMIR-T-0724): typst, server only (heavy; system fonts).
 mimir-print = { path = "../mimir-print" }
 base64 = "0.22"
+# MCP over streamable HTTP at /mcp (MIMIR-T-0725): rmcp as Kairos, over the
+# mimir-mcp tool registry.
+rmcp = { version = "2.2.0", features = ["server", "transport-streamable-http-server"] }
+mimir-mcp = { path = "../mimir-mcp" }
 rust-embed = { version = "8", optional = true }
 
 [dev-dependencies]

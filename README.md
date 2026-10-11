@@ -25,13 +25,17 @@ Mimir includes a [Claude Code](https://claude.ai/code) plugin for AI-assisted ca
 /plugin install mimir-dm@mimir
 ```
 
-**Or manually:**
+The plugin connects to the Mimir server's `/mcp` endpoint. Set the server's
+address and the DM token first:
 ```bash
-# Build the MCP server
-cargo build --release -p mimir-mcp
+export MIMIR_URL="http://127.0.0.1:8740"   # the server's address
+export MIMIR_API_TOKEN="…"                 # the DM token (empty in open mode)
+```
 
-# Set your database path
-export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db"
+**Or add the server directly:**
+```bash
+claude mcp add --transport http mimir "$MIMIR_URL/mcp" \
+  --header "Authorization: Bearer $MIMIR_API_TOKEN"
 ```
 
 Once installed, use natural language or slash commands:

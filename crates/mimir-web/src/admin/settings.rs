@@ -4,6 +4,7 @@
 //! address (`?section=`).
 
 use aurora_leptos::components::*;
+use aurora_leptos::data::CodeBlock;
 use aurora_leptos::frame::{ConfirmDialog, PageHeader, TabItem, Tabs};
 use aurora_leptos::tokens::token;
 use leptos::prelude::*;
@@ -14,9 +15,10 @@ use wasm_bindgen::JsCast;
 
 use crate::api;
 
-pub const SECTIONS: [(&str, &str); 3] = [
+pub const SECTIONS: [(&str, &str); 4] = [
     ("campaigns", "Campaigns"),
     ("books", "Books"),
+    ("integrations", "Integrations"),
     ("about", "About"),
 ];
 
@@ -63,6 +65,7 @@ pub fn SettingsPage() -> impl IntoView {
         {move || match section.get().as_str() {
             "books" => view! { <BooksSection /> }.into_any(),
             "about" => view! { <AboutSection /> }.into_any(),
+            "integrations" => view! { <IntegrationsSection /> }.into_any(),
             _ => view! { <CampaignsSection /> }.into_any(),
         }}
     }
@@ -428,6 +431,49 @@ fn BooksSection() -> impl IntoView {
     }
 }
 
+/// The command that adds Mimir's MCP endpoint to Claude Code.
+pub fn claude_command(origin: &str, open: bool) -> String {
+    let base = format!("claude mcp add --transport http mimir {origin}/mcp");
+    if open {
+        base
+    } else {
+        format!("{base} \\\n  --header \"Authorization: Bearer <your DM token>\"")
+    }
+}
+
+/// Claude and other MCP clients (MIMIR-T-0725): the endpoint and how to
+/// add it. The token is not shown: it is the server's `MIMIR_API_TOKEN`.
+#[component]
+fn IntegrationsSection() -> impl IntoView {
+    let config = LocalResource::new(api::config);
+    let origin = web_sys::window()
+        .and_then(|w| w.location().origin().ok())
+        .unwrap_or_default();
+    let endpoint = format!("{origin}/mcp");
+    view! {
+        <section class="mimir-settings__section" aria-label="Claude">
+            <SectionLabel label="Claude (MCP)" />
+            <Text size="sm">"Claude reaches your campaigns through the server's MCP endpoint. Only the DM token works there; a player link is refused."</Text>
+            <dl class="mimir-sheet__profs">
+                <dt>"Endpoint"</dt><dd><code>{endpoint}</code></dd>
+            </dl>
+            {move || config.get().and_then(Result::ok).map(|c| {
+                let open = c.auth == mimir_wire::AuthMode::Open;
+                let cmd = claude_command(&origin, open);
+                view! {
+                    <Text size="sm">"In a terminal, add Mimir to Claude Code:"</Text>
+                    <CodeBlock code=cmd label="Claude Code" wrap=true />
+                    <Text size="sm">"Or install the plugin (slash commands and skills too); set MIMIR_URL to this address and MIMIR_API_TOKEN to the DM token first:"</Text>
+                    <CodeBlock code="/plugin marketplace add mimir-dm/mimir\n/plugin install mimir-dm@mimir".to_string() label="Plugin" />
+                    {(!open).then(|| view! {
+                        <Text size="sm" dimmed=true>"The DM token is the server's MIMIR_API_TOKEN (the one you sign in with)."</Text>
+                    })}
+                }
+            })}
+        </section>
+    }
+}
+
 #[component]
 fn AboutSection() -> impl IntoView {
     let config = LocalResource::new(api::config);
@@ -449,6 +495,16 @@ fn AboutSection() -> impl IntoView {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn claude_commands() {
+        assert_eq!(
+            super::claude_command("http://x", true),
+            "claude mcp add --transport http mimir http://x/mcp"
+        );
+        assert!(super::claude_command("http://x", false)
+            .contains("Authorization: Bearer <your DM token>"));
+    }
+
     #[test]
     fn sections() {
         assert_eq!(super::section_of(None), "campaigns");

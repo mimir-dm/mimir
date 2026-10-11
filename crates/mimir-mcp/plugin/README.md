@@ -4,32 +4,27 @@ Mimir is a campaign management tool for Dungeon Masters running D&D 5e games. Th
 
 ## Installation
 
+The tools run on the Mimir server, at `/mcp` (MCP over streamable HTTP).
+The plugin connects to the server; it does not run a program of its own.
+
 ### Prerequisites
 
-1. **Mimir Desktop App**: Install from [mimir releases](https://github.com/mimir-dm/mimir/releases)
-2. **mimir-mcp binary**: Build from source or install via the Mimir installer
+1. **A running Mimir server.** On your own computer it is at
+   `http://127.0.0.1:8740`; on a server, use its address (for example
+   `https://mimir.example.ts.net`).
+2. **The DM token**, if the server has one (`MIMIR_API_TOKEN`). A server
+   with no token is in open mode and needs none.
 
-### Building from Source
+### Environment
 
-```bash
-cargo build --release -p mimir-mcp
-```
-
-The binary will be at `target/release/mimir-mcp`.
-
-### Environment Setup
-
-The MCP server automatically detects the default database location. You can optionally override it with the `MIMIR_DATABASE_PATH` environment variable:
+The plugin reads two environment variables:
 
 ```bash
-# macOS (production)
-export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db"
-
-# macOS (dev mode)
-export MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/dev/data/mimir.db"
+export MIMIR_URL="https://mimir.example.ts.net"   # default: http://127.0.0.1:8740
+export MIMIR_API_TOKEN="…"                        # the DM token; empty in open mode
 ```
 
-You can find your exact database path in Mimir's Settings > Integrations tab.
+Only the DM token works: a player link is refused.
 
 ### Claude Code Plugin Installation
 
@@ -40,40 +35,43 @@ Inside a Claude Code session, add the Mimir marketplace and install the plugin:
 /plugin install mimir-dm@mimir
 ```
 
-Or add the MCP server directly:
+Or add the server directly:
+
 ```bash
-claude mcp add mimir \
-  -e MIMIR_DATABASE_PATH="$HOME/Library/Application Support/com.mimir.app/data/mimir.db" \
-  -- mimir-mcp
+claude mcp add --transport http mimir "$MIMIR_URL/mcp" \
+  --header "Authorization: Bearer $MIMIR_API_TOKEN"
 ```
+
+Mimir's Settings page (Integrations) shows this command with the server's
+address.
 
 ### Claude Desktop Installation
 
-Claude Desktop is a first-class target for Mimir. Add the server to your
-`claude_desktop_config.json` (Settings → Developer → Edit Config):
+Claude Desktop's config file starts local programs. Connect it to the server
+with the `mcp-remote` bridge in `claude_desktop_config.json` (Settings →
+Developer → Edit Config):
 
 ```json
 {
   "mcpServers": {
     "mimir": {
-      "command": "/absolute/path/to/mimir-mcp",
-      "env": {
-        "MIMIR_DATABASE_PATH": "/Users/you/Library/Application Support/com.mimir.app/data/mimir.db"
-      }
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mimir.example.ts.net/mcp",
+               "--header", "Authorization: Bearer YOUR_DM_TOKEN"]
     }
   }
 }
 ```
 
-Use an **absolute path** for both `command` and `MIMIR_DATABASE_PATH` — Claude
-Desktop does not expand `~` or `$HOME`. Restart Claude Desktop after editing, then
-confirm the `mimir` tools appear under the tools (🔌) menu. A good first message is
-"Which Mimir campaign is active?", which calls `get_active_campaign` and orients
-the assistant.
+Restart Claude Desktop after the change, then make sure the `mimir` tools show
+in the tools (🔌) menu. A good first message is "Which Mimir campaign is
+active?", which calls `get_active_campaign`.
+
+Each MCP connection has its own active campaign.
 
 Note: tools that take a file path (`create_map`, `export_campaign`,
-`import_campaign`, `generate_map`) read and write on the machine running the
-server, using absolute paths on that host.
+`import_campaign`, `generate_map`) read and write on the computer that runs
+the server.
 
 ## Available Commands
 

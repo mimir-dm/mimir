@@ -10,6 +10,7 @@ pub mod config;
 pub mod error;
 pub mod jobs;
 pub mod live;
+pub mod mcp;
 pub mod print;
 pub mod state;
 pub mod web;
@@ -82,6 +83,8 @@ pub fn router(state: AppState) -> Router {
         .route("/api/config", get(web::api_config))
         .nest("/api/v1", api)
         .merge(ws)
+        // MCP for Claude (MIMIR-T-0725).
+        .merge(mcp::router(state.clone()))
         .fallback(web::spa_fallback)
         .with_state(state)
 }

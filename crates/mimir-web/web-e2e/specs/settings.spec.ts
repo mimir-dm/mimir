@@ -129,3 +129,26 @@ test('PDFs and source books', async ({ page }) => {
   await page.getByRole('button', { name: 'PDF…' }).click()
   await pdfFrom(page, () => page.getByRole('dialog').getByRole('button', { name: 'Download PDF' }).click())
 })
+
+test('Integrations: the MCP endpoint answers the DM', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/settings?section=integrations')
+  const section = page.getByRole('region', { name: 'Claude' })
+  await expect(section).toContainText('/mcp')
+  await expect(section).toContainText('claude mcp add --transport http mimir')
+  await expect(section).toContainText('<your DM token>')
+  // The endpoint itself: initialize with the DM token; refused without.
+  const init = {
+    jsonrpc: '2.0',
+    id: 0,
+    method: 'initialize',
+    params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'e2e', version: '0' } },
+  }
+  const headers = { accept: 'application/json, text/event-stream', 'content-type': 'application/json' }
+  const ok = await page.request.post('/mcp', { headers: { ...headers, ...auth }, data: init })
+  expect(ok.status()).toBe(200)
+  expect(ok.headers()['mcp-session-id']).toBeTruthy()
+  expect(await ok.text()).toContain('"name":"mimir"')
+  const refused = await page.request.post('/mcp', { headers, data: init })
+  expect(refused.status()).toBe(401)
+})
