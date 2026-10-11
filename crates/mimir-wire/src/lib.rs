@@ -62,6 +62,31 @@ pub enum AuthMode {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Session {
     pub role: Role,
+    /// A player: their character.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub character_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub character_name: Option<String>,
+    /// A player: the campaign of their character.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub campaign_id: Option<String>,
+}
+
+/// `GET /characters/{id}/link`: whether a player character has a link.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LinkStatus {
+    pub active: bool,
+    /// When the current link was made.
+    pub created_at: Option<String>,
+}
+
+/// `POST /characters/{id}/link`: a new link (it ends the old one). The
+/// token is shown this once; the server keeps only its hash.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NewLink {
+    pub token: String,
+    /// The path to open on the player's device: `/play/<token>`.
+    pub path: String,
 }
 
 /// The caller's role. Player links (MIMIR-T-0716) give the player role.
@@ -85,7 +110,12 @@ mod tests {
         let json = serde_json::to_string(&c).unwrap();
         assert_eq!(json, r#"{"version":"1.0.0","auth":"token"}"#);
         assert_eq!(serde_json::from_str::<WebConfig>(&json).unwrap(), c);
-        let s = Session { role: Role::Dm };
+        let s = Session {
+            role: Role::Dm,
+            character_id: None,
+            character_name: None,
+            campaign_id: None,
+        };
         assert_eq!(serde_json::to_string(&s).unwrap(), r#"{"role":"dm"}"#);
     }
 

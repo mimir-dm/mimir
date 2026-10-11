@@ -7,7 +7,7 @@ use std::path::{Path as FsPath, PathBuf};
 use axum::extract::{Path, State};
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{Extension, Json};
 use diesel::{Connection, SqliteConnection};
 use mimir_core::models::campaign::{LightSource, Map, MapPoi, MapTrap};
 use mimir_core::services::{
@@ -17,6 +17,8 @@ use mimir_core::services::{
 };
 use mimir_wire::{self as wire, MapPart};
 
+use super::scope;
+use crate::auth::Caller;
 use crate::error::{ApiError, JsonBody};
 use crate::live::{Change, Hub};
 use crate::state::AppState;
@@ -210,11 +212,14 @@ pub async fn get_map(
 /// `GET /maps/{id}/geometry`: walls, doors and lights from the map file.
 pub async fn get_geometry(
     State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
 ) -> ApiResult<wire::MapGeometry> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
+            scope::shown_map(&caller, &live, conn, &app_dir, &id)?;
             let map = require_map(conn, &app_dir, &id)?;
             let g = MapService::new(conn, &app_dir).geometry(&map)?;
             let point = |p: mimir_core::services::GridPoint| wire::GridPoint { x: p.x, y: p.y };
@@ -260,11 +265,14 @@ pub async fn get_geometry(
 /// `GET /maps/{id}/image`: the map image (JPEG, or PNG for old maps).
 pub async fn get_map_image(
     State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
 ) -> Result<Response, ApiError> {
+    let live = state.live.clone();
     let app_dir = state.config.data_dir.clone();
     state
         .with_db(move |conn| {
+            scope::shown_map(&caller, &live, conn, &app_dir, &id)?;
             let map = require_map(conn, &app_dir, &id)?;
             let path = MapService::new(conn, &app_dir)
                 .get_map_image_path(&map)?
@@ -373,12 +381,14 @@ pub fn build_player_view(
 /// `GET /maps/{id}/player-view`
 pub async fn player_view(
     State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
 ) -> ApiResult<wire::PlayerView> {
     let app_dir = state.config.data_dir.clone();
     let live = state.live.clone();
     state
         .with_db(move |conn| {
+            scope::shown_map(&caller, &live, conn, &app_dir, &id)?;
             let campaign = require_map(conn, &app_dir, &id)?.campaign_id;
             let show = live.display(&campaign).show_initiative;
             build_player_view(conn, &app_dir, &id, show)
@@ -487,11 +497,23 @@ pub async fn delete_token(
 /// `GET /tokens/{id}/image`: a monster token's art; 404 when it has none.
 pub async fn get_token_image(
     State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
 ) -> Result<Response, ApiError> {
     let app_dir = state.config.data_dir.clone();
+    let live = state.live.clone();
     state
         .with_db(move |conn| {
+            // A player: a token they see on the shown map.
+            if matches!(caller, Caller::Player(_)) {
+                let t = TokenService::new(conn, &app_dir)
+                    .get(&id)?
+                    .ok_or_else(|| ServiceError::not_found("Token", &id))?;
+                scope::shown_map(&caller, &live, conn, &app_dir, &t.map_id)?;
+                if !t.visible_to_players {
+                    return Err(ApiError::forbidden());
+                }
+            }
             let path = TokenService::new(conn, &app_dir)
                 .image_path(&id)?
                 .ok_or_else(|| ApiError::not_found(format!("no image for token {id}")))?;

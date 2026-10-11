@@ -15,6 +15,7 @@ mod homebrew;
 mod map;
 mod map_state;
 mod module;
+mod player_link;
 mod source;
 mod token;
 mod uvtt;
@@ -60,6 +61,7 @@ pub use map_state::{
 pub use module::{
     AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
 };
+pub use player_link::{hash_token, LinkHolder, PlayerLinkService};
 pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
 pub use uvtt::{GridPoint, MapGeometry, UvttLight, UvttPortal};

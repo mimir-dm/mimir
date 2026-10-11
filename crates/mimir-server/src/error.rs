@@ -36,6 +36,10 @@ impl ApiError {
         Self::new(ErrorCode::Unauthorized, "a valid bearer token is required")
     }
 
+    pub fn forbidden() -> Self {
+        Self::new(ErrorCode::Forbidden, "a player may not do this")
+    }
+
     pub fn internal(message: impl Into<String>) -> Self {
         Self::new(ErrorCode::Internal, message)
     }

@@ -171,10 +171,9 @@ async fn a_modules_contents_and_a_document() {
 }
 
 #[tokio::test]
-async fn every_route_needs_the_dm_token() {
+async fn every_route_needs_a_token() {
     let r = router(Some("dm-secret"));
     for route in mimir_server::api::routes() {
-        assert_eq!(route.access, mimir_server::api::Access::Dm);
         let path = format!("/api/v1{}", route.path.replace("{id}", "x"));
         for method in route.methods {
             for bearer in [None, Some("wrong")] {

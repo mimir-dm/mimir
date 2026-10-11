@@ -17,7 +17,7 @@ use axum::routing::get;
 use axum::{Json, Router};
 use mimir_wire::Session;
 
-use crate::auth::Role;
+use crate::auth::{Caller, Role};
 use crate::config::Config;
 use crate::error::ApiError;
 use crate::state::AppState;
@@ -64,13 +64,13 @@ fn seed_fixture(_conn: &mut diesel::SqliteConnection, _config: &Config) -> Resul
 /// SPA fallback.
 pub fn router(state: AppState) -> Router {
     let api = api::router(state.clone());
-    // The live socket: the DM auth, with the browser's `?access_token=`
-    // copied into the header first.
+    // The live socket: the API's auth (DM or player), with the browser's
+    // `?access_token=` copied into the header first.
     let ws = Router::new()
         .route("/ws", get(live::ws))
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
-            auth::require_dm,
+            auth::authenticate,
         ))
         .route_layer(axum::middleware::from_fn(live::promote_query_token));
 
@@ -105,6 +105,19 @@ async fn readyz(State(state): State<AppState>) -> Result<&'static str, ApiError>
 
 /// `GET /api/v1/session`: who the token belongs to (the login page checks a
 /// token with it).
-pub(crate) async fn session(Extension(role): Extension<Role>) -> Json<Session> {
-    Json(Session { role })
+pub(crate) async fn session(Extension(caller): Extension<Caller>) -> Json<Session> {
+    Json(match caller {
+        Caller::Dm => Session {
+            role: Role::Dm,
+            character_id: None,
+            character_name: None,
+            campaign_id: None,
+        },
+        Caller::Player(p) => Session {
+            role: Role::Player,
+            character_id: Some(p.character_id),
+            character_name: Some(p.name),
+            campaign_id: Some(p.campaign_id),
+        },
+    })
 }

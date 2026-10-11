@@ -14,13 +14,14 @@ use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Request, State};
 use axum::http::{header, HeaderValue};
 use axum::middleware::Next;
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use axum::Extension;
+
+use crate::auth::Caller;
 use mimir_wire::{ClientMsg, DisplayState, MapPart, Role, ServerMsg};
 use tokio::sync::broadcast;
 
 use crate::api::maps::build_player_view;
-use crate::error::ApiError;
 use crate::state::AppState;
 
 /// Something changed.
@@ -39,6 +40,10 @@ pub enum Change {
         campaign_id: Option<String>,
         character_id: String,
     },
+    /// The link of a player character was reissued or revoked.
+    SignedOut {
+        character_id: String,
+    },
 }
 
 impl Change {
@@ -47,6 +52,7 @@ impl Change {
             Change::Map { campaign_id, .. } | Change::Combat { campaign_id } => Some(campaign_id),
             Change::Display(d) => Some(&d.campaign_id),
             Change::Character { campaign_id, .. } => campaign_id.as_deref(),
+            Change::SignedOut { .. } => None,
         }
     }
 }
@@ -78,6 +84,8 @@ pub enum Action {
     Send(ServerMsg),
     /// Build the player view of this map and send it.
     SendPlayerView(String),
+    /// Tell the player their link ended, and close.
+    SignOut,
 }
 
 /// What to send to `viewer`, who watches `watched`, for `change`. `display`
@@ -88,6 +96,21 @@ pub fn decide(
     display: &DisplayState,
     change: &Change,
 ) -> Vec<Action> {
+    // A player whose link ended is signed out, whatever they watch.
+    if let (
+        Viewer::Player {
+            character_id: Some(mine),
+            ..
+        },
+        Change::SignedOut { character_id },
+    ) = (viewer, change)
+    {
+        return if mine == character_id {
+            vec![Action::SignOut]
+        } else {
+            Vec::new()
+        };
+    }
     let Some(watched) = watched else {
         return Vec::new();
     };
@@ -100,6 +123,7 @@ pub fn decide(
             Change::Display(display) => ServerMsg::Display { display },
             Change::Combat { campaign_id } => ServerMsg::CombatChanged { campaign_id },
             Change::Character { character_id, .. } => ServerMsg::CharacterChanged { character_id },
+            Change::SignedOut { .. } => return Vec::new(),
         })],
         Viewer::Player { character_id, .. } => match change {
             Change::Map { map_id, .. } => shown_view(display)
@@ -124,7 +148,7 @@ pub fn decide(
                     character_id: changed.clone(),
                 })]
             }
-            Change::Character { .. } => Vec::new(),
+            Change::Character { .. } | Change::SignedOut { .. } => Vec::new(),
         },
     }
 }
@@ -205,16 +229,15 @@ impl Hub {
 /// `GET /ws`: upgrade to the live socket (the DM auth layer runs first).
 pub async fn ws(
     State(state): State<AppState>,
-    Extension(role): Extension<Role>,
+    Extension(caller): Extension<Caller>,
     upgrade: WebSocketUpgrade,
 ) -> Response {
-    let viewer = match role {
-        Role::Dm => Viewer::Dm,
-        // Player links and their campaign arrive with MIMIR-T-0716.
-        Role::Player => {
-            return ApiError::new(mimir_wire::ErrorCode::Forbidden, "no player access yet")
-                .into_response()
-        }
+    let viewer = match caller {
+        Caller::Dm => Viewer::Dm,
+        Caller::Player(p) => Viewer::Player {
+            campaign_id: p.campaign_id,
+            character_id: Some(p.character_id),
+        },
     };
     upgrade.on_upgrade(move |socket| run(socket, state, viewer))
 }
@@ -299,6 +322,12 @@ async fn perform(socket: &mut WebSocket, state: &AppState, actions: Vec<Action>)
     for action in actions {
         let msg = match action {
             Action::Send(msg) => msg,
+            Action::SignOut => {
+                let _ = send(socket, &ServerMsg::SignedOut).await;
+                let _ = socket.send(Message::Close(None)).await;
+                // An error ends the socket loop.
+                return Err(());
+            }
             Action::SendPlayerView(map_id) => {
                 let app_dir = state.config.data_dir.clone();
                 let live = state.live.clone();

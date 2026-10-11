@@ -1,20 +1,25 @@
-//! The player display of a campaign (MIMIR-T-0712): which map it shows,
+//! The player display of a campaign (MIMIR-T-0712; a player reads their
+//! campaign's, MIMIR-T-0716): which map it shows,
 //! and blackout. The state lives in the live hub (memory); a change goes
 //! to the sockets of the campaign.
 
 use axum::extract::{Path, State};
-use axum::Json;
+use axum::{Extension, Json};
 use mimir_core::services::{CampaignService, MapService, ServiceError};
 use mimir_wire as wire;
 
+use super::scope;
+use crate::auth::Caller;
 use crate::error::{ApiError, JsonBody};
 use crate::state::AppState;
 
 /// `GET /campaigns/{id}/display`
 pub async fn get_display(
     State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
 ) -> Result<Json<wire::DisplayState>, ApiError> {
+    scope::campaign(&caller, &id)?;
     let campaign = id.clone();
     state
         .with_db(move |conn| {
@@ -30,9 +35,12 @@ pub async fn get_display(
 /// black or not.
 pub async fn set_display(
     State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
     JsonBody(update): JsonBody<wire::DisplayUpdate>,
 ) -> Result<Json<wire::DisplayState>, ApiError> {
+    // The path is a player route (GET); changing the display is the DM's.
+    scope::dm(&caller)?;
     let app_dir = state.config.data_dir.clone();
     let (campaign, map_id) = (id.clone(), update.map_id.clone());
     state

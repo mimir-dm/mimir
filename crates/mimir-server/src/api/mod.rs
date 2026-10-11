@@ -9,7 +9,9 @@ pub mod campaigns;
 pub mod combat;
 pub mod convert;
 pub mod display;
+pub mod links;
 pub mod maps;
+pub mod scope;
 
 use axum::middleware;
 use axum::routing::{delete, get, patch, post, MethodRouter};
@@ -21,8 +23,11 @@ use crate::state::AppState;
 /// Who may call a route.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Access {
-    /// The DM token (or open mode).
+    /// The DM only (the DM token, or open mode). A player gets 403.
     Dm,
+    /// The DM and players; the handler limits a player to their scope
+    /// (their campaign, the shown map, their character).
+    Player,
 }
 
 /// One path of the API, with its methods.
@@ -53,10 +58,17 @@ fn route(
 pub fn routes() -> Vec<ApiRoute> {
     use campaigns as c;
     use maps as m;
-    use Access::Dm;
+    use Access::{Dm, Player};
     const G: &[&str] = &["GET"];
     vec![
-        route("/session", Dm, G, get(crate::session)),
+        route("/session", Player, G, get(crate::session)),
+        // Player links (DM).
+        route(
+            "/characters/{id}/link",
+            Dm,
+            &["GET", "POST", "DELETE"],
+            get(links::status).post(links::issue).delete(links::revoke),
+        ),
         // Campaign content (read).
         route("/campaigns", Dm, G, get(c::list_campaigns)),
         route("/campaigns/{id}", Dm, G, get(c::get_campaign)),
@@ -72,7 +84,7 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/campaigns/{id}/maps", Dm, G, get(c::campaign_maps)),
         route(
             "/campaigns/{id}/display",
-            Dm,
+            Player,
             &["GET", "PUT"],
             get(display::get_display).put(display::set_display),
         ),
@@ -141,9 +153,9 @@ pub fn routes() -> Vec<ApiRoute> {
         ),
         // Maps.
         route("/maps/{id}", Dm, G, get(m::get_map)),
-        route("/maps/{id}/geometry", Dm, G, get(m::get_geometry)),
-        route("/maps/{id}/image", Dm, G, get(m::get_map_image)),
-        route("/maps/{id}/player-view", Dm, G, get(m::player_view)),
+        route("/maps/{id}/geometry", Player, G, get(m::get_geometry)),
+        route("/maps/{id}/image", Player, G, get(m::get_map_image)),
+        route("/maps/{id}/player-view", Player, G, get(m::player_view)),
         route(
             "/maps/{id}/tokens",
             Dm,
@@ -156,7 +168,7 @@ pub fn routes() -> Vec<ApiRoute> {
             &["PATCH", "DELETE"],
             patch(m::update_token).delete(m::delete_token),
         ),
-        route("/tokens/{id}/image", Dm, G, get(m::get_token_image)),
+        route("/tokens/{id}/image", Player, G, get(m::get_token_image)),
         route(
             "/maps/{id}/fog",
             Dm,
@@ -222,12 +234,16 @@ pub fn routes() -> Vec<ApiRoute> {
 /// The `/api/v1` router: each route behind the auth of its role.
 pub fn router(state: AppState) -> Router<AppState> {
     let mut dm = Router::new();
+    let mut player = Router::new();
     for r in routes() {
         match r.access {
             Access::Dm => dm = dm.route(r.path, r.handler),
+            Access::Player => player = player.route(r.path, r.handler),
         }
     }
-    dm.route_layer(middleware::from_fn_with_state(state, auth::require_dm))
+    dm.route_layer(middleware::from_fn(auth::dm_only))
+        .merge(player)
+        .route_layer(middleware::from_fn_with_state(state, auth::authenticate))
 }
 
 #[cfg(test)]

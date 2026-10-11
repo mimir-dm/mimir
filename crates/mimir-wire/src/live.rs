@@ -95,6 +95,9 @@ pub enum ServerMsg {
     },
     /// The client missed events; it gets the current state next.
     Resync,
+    /// The player's link was reissued or revoked: the token no longer
+    /// works. The server closes the socket.
+    SignedOut,
     Pong,
     /// A message the server could not take.
     Error {
