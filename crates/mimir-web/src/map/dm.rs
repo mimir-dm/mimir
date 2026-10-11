@@ -118,6 +118,8 @@ struct Drag {
 
 #[component]
 pub fn DmMapPage() -> impl IntoView {
+    // The map as a PDF (MIMIR-T-0724).
+    let printing = RwSignal::new(false);
     let params = use_params_map();
     let id = Memo::new(move |_| params.get().get("id").unwrap_or_default());
 
@@ -610,6 +612,14 @@ pub fn DmMapPage() -> impl IntoView {
                     >
                         "Open player display"
                     </a>
+                    <Button variant="subtle" on_click=Callback::new(move |_| printing.set(true))>"PDF…"</Button>
+                    <crate::admin::pdf::PdfDialog
+                        open=printing
+                        title="PDF of the map"
+                        path=Signal::derive(move || format!("/maps/{}/pdf", id.get()))
+                        options=crate::admin::pdf::MAP
+                        file="map.pdf"
+                    />
                     <ActionIcon title="Zoom in" on_click=Callback::new(move |_| zoom_button(1.25))>"+"</ActionIcon>
                     <ActionIcon title="Zoom out" on_click=Callback::new(move |_| zoom_button(0.8))>"−"</ActionIcon>
                     <ActionIcon title="Fit the map" on_click=Callback::new(move |_| fit())>"⤢"</ActionIcon>

@@ -10,6 +10,7 @@ use leptos_router::hooks::use_navigate;
 use mimir_wire::{ModulePatch, ModuleSummary, NewModule, MODULE_TYPES};
 
 use super::campaigns::optional;
+use crate::admin::pdf::{PdfDialog, MODULE};
 use crate::api;
 
 /// The module form: a new module of `campaign_id`, or an edit of
@@ -115,8 +116,10 @@ pub fn ModuleDialog(
 pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl IntoView {
     let editing = RwSignal::new(false);
     let deleting = RwSignal::new(false);
+    let printing = RwSignal::new(false);
     let error = RwSignal::new(String::new());
     let id = StoredValue::new(module.id.clone());
+    let file_name = StoredValue::new(module.name.clone());
     let campaign = StoredValue::new(module.campaign_id.clone());
     let name = module.name.clone();
     let navigate = use_navigate();
@@ -136,6 +139,15 @@ pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl In
         <Group>
             <Button variant="light" on_click=Callback::new(move |_| editing.set(true))>"Edit module"</Button>
             <Menu label="More" aria_label="More module actions" align="end">
+                <MenuItem on_click=Callback::new(move |_| printing.set(true))>"PDF…"</MenuItem>
+                <MenuItem on_click=Callback::new(move |_| {
+                    let (mid, n) = (id.get_value(), file_name.get_value());
+                    spawn_local(async move {
+                        if let Err(e) = api::download(&format!("/modules/{mid}/monster-cards?show_cut_lines=true"), &format!("{n} monsters.pdf")).await {
+                            error.set(api::message(e));
+                        }
+                    });
+                })>"Monster cards (PDF)"</MenuItem>
                 <MenuItem danger=true on_click=Callback::new(move |_| deleting.set(true))>"Delete module…"</MenuItem>
             </Menu>
         </Group>
@@ -143,6 +155,13 @@ pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl In
             let e = error.get();
             (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
         }}
+        <PdfDialog
+            open=printing
+            title=format!("PDF of {name}")
+            path=format!("/modules/{}/pdf", module.id)
+            options=MODULE
+            file=format!("{name}.pdf")
+        />
         <ModuleDialog open=editing existing=module.clone() on_saved=Callback::new(move |_| on_changed.run(())) />
         <ConfirmDialog
             open=deleting

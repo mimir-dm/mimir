@@ -9,6 +9,8 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_navigate;
 use mimir_wire::{CampaignPatch, CampaignSummary, NewCampaign};
 
+use crate::admin::pdf::{PdfDialog, CAMPAIGN};
+use crate::admin::sources::SourcesDialog;
 use crate::api;
 
 /// An empty text is no text.
@@ -112,10 +114,13 @@ pub fn CampaignDialog(
 pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> impl IntoView {
     let editing = RwSignal::new(false);
     let deleting = RwSignal::new(false);
+    let sources = RwSignal::new(false);
+    let printing = RwSignal::new(false);
     let error = RwSignal::new(String::new());
     let archived = campaign.archived_at.is_some();
     let id = StoredValue::new(campaign.id.clone());
     let name = campaign.name.clone();
+    let name_for_file = StoredValue::new(campaign.name.clone());
     let navigate = use_navigate();
 
     let set_archived = move |on: bool| {
@@ -149,6 +154,16 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
             {archived.then(|| view! { <Pill color=token::GOLD>"Archived"</Pill> })}
             <Button variant="light" on_click=Callback::new(move |_| editing.set(true))>"Edit campaign"</Button>
             <Menu label="More" aria_label="More campaign actions" align="end">
+                <MenuItem on_click=Callback::new(move |_| sources.set(true))>"Source books…"</MenuItem>
+                <MenuItem on_click=Callback::new(move |_| printing.set(true))>"PDF…"</MenuItem>
+                <MenuItem on_click=Callback::new(move |_| {
+                    let (cid, cname) = (id.get_value(), name_for_file.get_value());
+                    spawn_local(async move {
+                        if let Err(e) = api::download(&format!("/campaigns/{cid}/export"), &format!("{cname}.mimir-campaign.tar.gz")).await {
+                            error.set(api::message(e));
+                        }
+                    });
+                })>"Export to a file"</MenuItem>
                 {if archived {
                     view! {
                         <MenuItem on_click=Callback::new(move |_| set_archived(false))>"Restore"</MenuItem>
@@ -165,6 +180,18 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
             let e = error.get();
             (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
         }}
+        <SourcesDialog
+            open=sources
+            title=format!("Source books of {name}")
+            path=format!("/campaigns/{}/sources", campaign.id)
+        />
+        <PdfDialog
+            open=printing
+            title=format!("PDF of {name}")
+            path=format!("/campaigns/{}/pdf", campaign.id)
+            options=CAMPAIGN
+            file=format!("{name}.pdf")
+        />
         <CampaignDialog
             open=editing
             existing=campaign.clone()

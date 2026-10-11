@@ -96,6 +96,8 @@ pub fn CharacterSheetView(
     });
 
     let tab = RwSignal::new("character".to_string());
+    let printing = RwSignal::new(false);
+    let sources = RwSignal::new(false);
     // "Saved." on Details: held here, as a save reloads the sheet.
     let details_saved = RwSignal::new(false);
     // The sheet as it was when the level-up opened: the dialog lives
@@ -136,15 +138,21 @@ pub fn CharacterSheetView(
                             title=s.name.clone()
                             sub=sub
                             actions=Box::new(move || {
-                                can_level
-                                    .then(|| {
-                                        view! {
+                                view! {
+                                    <Group>
+                                        {can_level.then(|| view! {
                                             <Button on_click=Callback::new(move |_| leveling.set(Some(s5.get_value())))>
                                                 "Level up"
                                             </Button>
-                                        }
-                                    })
-                                    .into_any()
+                                        })}
+                                        // The DM: a PDF and the source books (MIMIR-T-0724).
+                                        {(access == SheetAccess::Dm).then(|| view! {
+                                            <Button variant="subtle" on_click=Callback::new(move |_| printing.set(true))>"PDF…"</Button>
+                                            <Button variant="subtle" on_click=Callback::new(move |_| sources.set(true))>"Source books…"</Button>
+                                        })}
+                                    </Group>
+                                }
+                                .into_any()
                             })
                         />
                         <Tabs tabs=tabs value=tab label="Character sections">
@@ -163,6 +171,20 @@ pub fn CharacterSheetView(
                     .into_any()
             }
         }}
+        {(access == SheetAccess::Dm).then(|| view! {
+            <crate::admin::pdf::PdfDialog
+                open=printing
+                title="PDF of the character"
+                path=Signal::derive(move || format!("/characters/{}/pdf", id.get()))
+                options=crate::admin::pdf::CHARACTER
+                file="character.pdf"
+            />
+            <crate::admin::sources::SourcesDialog
+                open=sources
+                title="Source books of the character"
+                path=Signal::derive(move || format!("/characters/{}/sources", id.get()))
+            />
+        })}
         {move || leveling.get().map(|s| view! {
             <LevelUpDialog
                 sheet=s

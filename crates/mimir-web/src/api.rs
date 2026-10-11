@@ -125,6 +125,127 @@ pub async fn upload<T: DeserializeOwned>(
     Err(decode_error(status, &text))
 }
 
+/// `POST` a form with upload progress (MIMIR-T-0724): `on_progress`
+/// gets 0.0–1.0 as the bytes go up. XHR, as fetch reports no upload
+/// progress.
+pub async fn upload_with_progress<T: DeserializeOwned>(
+    path: &str,
+    form: &web_sys::FormData,
+    on_progress: impl Fn(f64) + 'static,
+) -> Result<T, ApiError> {
+    use wasm_bindgen::closure::Closure;
+    use wasm_bindgen::JsCast;
+
+    let url = format!("/api/v1{path}");
+    let xhr = web_sys::XmlHttpRequest::new().map_err(|_| ApiError::Unknown("xhr".into()))?;
+    xhr.open("POST", &url)
+        .map_err(|_| ApiError::Unknown("xhr open".into()))?;
+    if let Some(t) = auth::stored_token() {
+        let _ = xhr.set_request_header("Authorization", &bearer(&t));
+    }
+    if let Ok(up) = xhr.upload() {
+        let cb =
+            Closure::<dyn Fn(web_sys::ProgressEvent)>::new(move |e: web_sys::ProgressEvent| {
+                if e.length_computable() && e.total() > 0.0 {
+                    on_progress(e.loaded() / e.total());
+                }
+            });
+        up.set_onprogress(Some(cb.as_ref().unchecked_ref()));
+        cb.forget();
+    }
+    let done = {
+        let xhr = xhr.clone();
+        js_sys::Promise::new(&mut move |resolve, reject| {
+            let ok = Closure::<dyn Fn()>::new(move || {
+                let _ = resolve.call0(&wasm_bindgen::JsValue::NULL);
+            });
+            let fail = Closure::<dyn Fn()>::new(move || {
+                let _ = reject.call0(&wasm_bindgen::JsValue::NULL);
+            });
+            xhr.set_onload(Some(ok.as_ref().unchecked_ref()));
+            xhr.set_onerror(Some(fail.as_ref().unchecked_ref()));
+            ok.forget();
+            fail.forget();
+        })
+    };
+    xhr.send_with_opt_form_data(Some(form))
+        .map_err(|_| ApiError::Network)?;
+    wasm_bindgen_futures::JsFuture::from(done)
+        .await
+        .map_err(|_| ApiError::Network)?;
+    let status = xhr.status().unwrap_or(0);
+    let text = xhr.response_text().ok().flatten().unwrap_or_default();
+    if (200..300).contains(&status) {
+        serde_json::from_str(&text)
+            .map_err(|e| ApiError::Unknown(format!("unexpected response: {e}")))
+    } else {
+        Err(decode_error(status, &text))
+    }
+}
+
+/// The file name in a `Content-Disposition` header.
+pub fn attachment_name(header: &str) -> Option<String> {
+    let i = header.find("filename=")?;
+    let rest = header[i + 9..].trim();
+    let name = rest.trim_start_matches('"');
+    let end = name.find('"').unwrap_or(name.len());
+    let name = name[..end].trim_end_matches(';').trim();
+    (!name.is_empty()).then(|| name.to_string())
+}
+
+/// `GET` a file under `/api/v1` (with the token) and save it as a
+/// download (MIMIR-T-0724: archives, PDFs).
+pub async fn download(path: &str, fallback_name: &str) -> Result<(), ApiError> {
+    use wasm_bindgen::JsCast;
+
+    let url = format!("/api/v1{path}");
+    let resp = with_token(Request::get(&url), auth::stored_token())
+        .send()
+        .await
+        .map_err(|_| ApiError::Network)?;
+    if !resp.ok() {
+        let status = resp.status();
+        let text = resp.text().await.unwrap_or_default();
+        return Err(decode_error(status, &text));
+    }
+    let name = resp
+        .headers()
+        .get("content-disposition")
+        .and_then(|h| attachment_name(&h))
+        .unwrap_or_else(|| fallback_name.to_string());
+    let mime = resp
+        .headers()
+        .get("content-type")
+        .unwrap_or_else(|| "application/octet-stream".into());
+    let bytes = resp
+        .binary()
+        .await
+        .map_err(|e| ApiError::Unknown(e.to_string()))?;
+    let array = js_sys::Uint8Array::from(bytes.as_slice());
+    let options = web_sys::BlobPropertyBag::new();
+    options.set_type(&mime);
+    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(
+        &js_sys::Array::of1(&array),
+        &options,
+    )
+    .map_err(|_| ApiError::Unknown("blob".into()))?;
+    let href = web_sys::Url::create_object_url_with_blob(&blob)
+        .map_err(|_| ApiError::Unknown("object url".into()))?;
+    let doc = web_sys::window()
+        .and_then(|w| w.document())
+        .ok_or_else(|| ApiError::Unknown("no document".into()))?;
+    let a = doc
+        .create_element("a")
+        .map_err(|_| ApiError::Unknown("anchor".into()))?
+        .dyn_into::<web_sys::HtmlAnchorElement>()
+        .map_err(|_| ApiError::Unknown("anchor".into()))?;
+    a.set_href(&href);
+    a.set_download(&name);
+    a.click();
+    let _ = web_sys::Url::revoke_object_url(&href);
+    Ok(())
+}
+
 /// `DELETE` a path under `/api/v1`.
 pub async fn delete(path: &str) -> Result<(), ApiError> {
     let url = format!("/api/v1{path}");

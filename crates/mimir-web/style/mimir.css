@@ -716,3 +716,9 @@
 }
 .mimir-homebrew__preview { border-left: 1px solid var(--border-fainter); padding-left: var(--space-lg); max-height: 70vh; overflow: auto; }
 .mimir-homebrew__picked { background: var(--border-fainter); }
+
+/* Settings (MIMIR-T-0724). */
+.mimir-settings__section { display: flex; flex-direction: column; gap: var(--space-sm); margin: var(--space-lg) 0; max-width: 56rem; }
+.mimir-progress { height: 6px; border-radius: 3px; background: var(--border-fainter); overflow: hidden; }
+.mimir-progress__bar { height: 100%; background: var(--ice); transition: width 0.2s; }
+.mimir-sources { max-height: 50vh; overflow: auto; }

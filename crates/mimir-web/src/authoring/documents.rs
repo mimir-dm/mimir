@@ -335,6 +335,14 @@ fn DocumentPane(id: String, on_changed: Callback<()>) -> impl IntoView {
                                     <Button variant="light" on_click=Callback::new(move |_| editing.set(true))>"Edit"</Button>
                                 }.into_any()
                             }}
+                            <Button variant="subtle" on_click=Callback::new(move |_| {
+                                let (doc, t) = (id.get_value(), title.get_untracked());
+                                spawn_local(async move {
+                                    if let Err(e) = api::download(&format!("/documents/{doc}/pdf"), &format!("{t}.pdf")).await {
+                                        state.set(Save::Failed(api::message(e)));
+                                    }
+                                });
+                            })>"PDF"</Button>
                             <ActionIcon title="Delete the document" on_click=Callback::new(move |_| deleting.set(true))>"×"</ActionIcon>
                         </Group>
                     </div>

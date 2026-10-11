@@ -14,6 +14,7 @@ use leptos_router::hooks::use_location;
 use leptos_router::path;
 use mimir_wire::{AuthMode, Role, Session};
 
+use crate::admin::settings::SettingsPage;
 use crate::api;
 use crate::auth::{self, Gate};
 use crate::authoring::homebrew::HomebrewTab;
@@ -207,6 +208,7 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                     <Route path=path!("/maps/:id") view=DmMapPage />
                     <Route path=path!("/characters") view=CharactersPage />
                     <Route path=path!("/reference") view=ReferencePage />
+                    <Route path=path!("/settings") view=SettingsPage />
                     <Route path=path!("/characters/:id") view=CharacterPage />
                 </Routes>
             </AppShell>
@@ -245,6 +247,9 @@ fn Nav(version: String) -> impl IntoView {
                 </SideNavLink>
                 <SideNavLink href="/reference" active=at("/reference")>
                     "Reference"
+                </SideNavLink>
+                <SideNavLink href="/settings" active=at("/settings")>
+                    "Settings"
                 </SideNavLink>
             </SideNavGroup>
         </SideNav>

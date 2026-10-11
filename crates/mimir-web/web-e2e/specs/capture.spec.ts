@@ -487,3 +487,16 @@ for (const theme of themes) {
     await page.screenshot({ path: `${outDir}/homebrew-editor--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
   })
 }
+
+// Settings (MIMIR-T-0724): campaigns, books.
+for (const theme of themes) {
+  for (const section of ['campaigns', 'books']) {
+    test(`settings-${section} desktop ${theme}`, async ({ page }) => {
+      await signIn(page, theme)
+      await page.goto(`/settings?section=${section}`)
+      await expect(page.getByRole('table').first()).toBeVisible()
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/settings-${section}--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+}

@@ -39,6 +39,8 @@ diff images to `<after>/diff`.
   the module inspector.
 - `specs/homebrew.spec.ts`: homebrew items (form and JSON), monsters
   (copied, used by a module, deleted), spells.
+- `specs/settings.spec.ts`: a campaign archive round trip, a catalog import
+  job and removing the source, PDFs, source books.
 - `specs/editor.spec.ts`: the rich editor. The fixture documents keep their
   structure and words through it; the toolbar; a numbered list continues.
 - `specs/capture.spec.ts`: the screens to capture.

@@ -61,6 +61,12 @@ web-sys = { version = "0.3", features = [
     "MouseEvent",
     "NodeList",
     "Document",
+    # Settings (MIMIR-T-0724): uploads with progress, downloads.
+    "XmlHttpRequest",
+    "XmlHttpRequestUpload",
+    "ProgressEvent",
+    "HtmlAnchorElement",
+    "EventTarget",
 ] }
 js-sys = "0.3"
 # QR codes of player links (MIMIR-T-0716), drawn as SVG.
