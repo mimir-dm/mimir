@@ -1,32 +1,53 @@
+# Builds the docs in docs/ (Astro Starlight with starlight-aurora, MIMIR-T-0735)
+# on each pull request that changes them. On a push to main it publishes the
+# site to the repository mimir-dm/mimir-dm.github.io, which serves it at
+# https://mimir-dm.github.io (the site is at the root, so DOCS_BASE is /).
+
 name: Deploy Docs
 
 on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs.yml'
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v2
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          mdbook-version: 'latest'
-
-      - name: Build docs
-        run: mdbook build docs
-
-      - name: Deploy to GitHub Pages
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      # On a pull request DOCS_SITE and DOCS_BASE are empty: the site builds at /.
+      - run: npm run build
+        env:
+          DOCS_SITE: ${{ github.event_name != 'pull_request' && 'https://mimir-dm.github.io' || '' }}
+          DOCS_BASE: ${{ github.event_name != 'pull_request' && '/' || '' }}
+      - name: Deploy to mimir-dm.github.io
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
           external_repository: mimir-dm/mimir-dm.github.io
           personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-          publish_dir: ./docs/book
+          publish_dir: ./docs/dist
           publish_branch: main

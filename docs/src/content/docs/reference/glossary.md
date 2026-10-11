@@ -1,0 +1,130 @@
+---
+title: "Glossary"
+---
+
+Definitions of terms used in Mimir.
+
+## A
+
+**Ambient Light**
+: The base lighting level for a map (bright, dim, or dark). Affects what characters can see before accounting for light sources.
+
+## B
+
+**Blackout**
+: A mode that hides everything from the player display. Used for dramatic reveals or setup.
+
+## C
+
+**Campaign**
+: A collection of modules, characters, and documents representing a D&D adventure series.
+
+**Campaign Dashboard**
+: The main interface for managing a campaign, with tabs for Campaign, Modules, NPCs, PCs, and Homebrew.
+
+**Clone from Catalog**
+: Creating a homebrew item, monster, or spell by copying an existing entry from the D&D 5e catalog as a starting point, then customizing it.
+
+## D
+
+**Darkvision**
+: A character trait allowing sight in darkness as if it were dim light. Common among elves, dwarves, and other races.
+
+**Document**
+: A text entry for notes, descriptions, or session prep. Can be attached to campaigns or modules.
+
+**Dynamic Lighting**
+: Per-token vision and light radii computed against walls and light sources on UVTT maps. See [Vision & Lighting](../vision-and-lighting/).
+
+## F
+
+**Fog of War**
+: System that hides map areas outside PC vision. Reveals as characters move.
+
+## G
+
+**Grid**
+: The square overlay on maps representing 5-foot spaces. Auto-detected from UVTT files; defaults to 70 pixels per square for image files.
+
+## H
+
+**Homebrew**
+: Custom content created by the DM — items, monsters, and spells that don't exist in the official D&D catalog. Managed from the Homebrew tab on the Campaign Dashboard.
+
+## L
+
+**Light Source**
+: An object that creates illumination on the map (torch, lantern, candle). Affects fog of war.
+
+**LOS (Line of Sight)**
+: Calculation determining what characters can see based on walls and obstructions.
+
+## M
+
+**Mapgen**
+: The procedural map generation system that creates Dungeondraft-format maps from YAML configuration or biome presets.
+
+**Marker**
+: A token type for points of interest on a map — landmarks, waypoints, or other notable locations.
+
+**MCP (Model Context Protocol)**
+: The protocol used by Mimir's AI assistant sidecar. Runs as a separate process and provides campaign management tools to AI clients like Claude.
+
+**Module**
+: A self-contained adventure within a campaign. Contains maps, monsters, NPCs, and documents.
+
+**Monster**
+: A creature from the D&D catalog added to encounters. Has stats, actions, and abilities.
+
+## N
+
+**NPC (Non-Player Character)**
+: A character controlled by the DM. Can be simple (name and description) or full stat block.
+
+## P
+
+**PC (Player Character)**
+: A character controlled by a player. Created with full stats using the character wizard.
+
+**Play Mode**
+: Running a session: clicking Play on a module opens the DM Map window for the battle map while the main window stays on the campaign dashboard for stats and documents.
+
+**Play Notes**
+: An auto-created module document for tracking HP, initiative, and events during a session. Opened from the Documents panel on the module dashboard; auto-saves as you type. Also called session notes.
+
+**Player Display**
+: A second window showing what players see. Applies fog of war and hides DM information.
+
+## R
+
+**Reveal Map**
+: A toggle that shows the entire map to players, bypassing fog of war.
+
+## S
+
+**Sidecar**
+: A companion process bundled with Mimir that provides the MCP server for AI assistant integration. Launches automatically when needed.
+
+## T
+
+**Token**
+: A visual representation of a creature or object on the map. Can be moved and configured.
+
+**Token Palette**
+: The panel showing available tokens to place on a map.
+
+**Token Setup**
+: The modal for placing and configuring tokens on a map before play.
+
+## U
+
+**UVTT**
+: Universal Virtual Tabletop format. Map files that include grid and wall data.
+
+## V
+
+**Vision Radius**
+: How far a character can see, affected by darkvision and light sources.
+
+**Viewport**
+: The visible area of the map. The DM and player display each have independent viewports.
