@@ -1,6 +1,6 @@
 [package]
 name = "mimir-web"
-version = "0.7.3"
+version = "1.0.0"
 edition = "2021"
 description = "Mimir web app: Leptos CSR on Aurora, served by mimir-server (COLLIERY-I-0612)."
 license = "MIT"

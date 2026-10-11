@@ -4,7 +4,7 @@
   <img src="assets/hyper-mimir.png" alt="Mimir" width="512" height="512">
 </p>
 
-Mimir is a D&D 5e campaign manager for Dungeon Masters. It is a web app that you run on your own server. Prepare campaigns, modules, characters and maps in the browser; run sessions from the DM map; show the map on a TV; and give each player a link to their own character. It has a searchable D&D 5e catalog and PDF export. All data stays on your server.
+Mimir is a D&D 5e campaign manager for Dungeon Masters. It is a web app that you run on your own server. Prepare campaigns, modules, characters and maps in the browser; run sessions from the DM map; show the map on a TV; and give each player a link to their own character. It has a searchable D&D 5e catalog, a reader for books and adventures, and PDF export. It turns a published or homebrew adventure into a campaign, and exports a campaign as a 5etools adventure, a Mimir adventure pack or one printed book. All data stays on your server.
 
 ## Run It
 
@@ -22,7 +22,7 @@ MIMIR_BIND=0.0.0.0:8740 \
 
 Open the server address in a browser and sign in with the DM token. Without `MIMIR_API_TOKEN` the server is in open mode: anyone who reaches it is the DM. Put the server on a private network.
 
-See [Run the Server](docs/src/how-to/run-server.md) and [Environment Variables](docs/src/reference/environment-variables.md).
+See [Run the Server](docs/src/how-to/run-server.md) and [Environment Variables](docs/src/reference/environment-variables.md). To run it with Docker on a tailnet, see [Deploy with Docker](docs/src/how-to/deploy-docker.md).
 
 ## Claude Code Plugin
 

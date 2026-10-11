@@ -1,6 +1,6 @@
 [package]
 name = "mimir-render"
-version = "0.7.3"
+version = "1.0.0"
 edition = "2021"
 description = "5etools JSON to HTML for the catalog and the book reader (MIMIR-T-0723): tags, entries, stat blocks; adventure entries to and from markdown (MIMIR-T-0738)."
 license = "MIT"

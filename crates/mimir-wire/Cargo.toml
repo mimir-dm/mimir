@@ -1,6 +1,6 @@
 [package]
 name = "mimir-wire"
-version = "0.7.3"
+version = "1.0.0"
 edition = "2021"
 description = "Request and response types shared by mimir-server and mimir-web (COLLIERY-I-0612)."
 license = "MIT"
