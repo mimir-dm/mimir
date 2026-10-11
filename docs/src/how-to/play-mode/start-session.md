@@ -19,7 +19,7 @@ The DM map opens. The address is `/maps/<map>`. Bookmark it to come back fast.
 
 ## The DM Map
 
-- **Toolbar**: the **Map** menu, **Fog**, **Line of sight**, the light control, **Place on the map**, **Show to players**, **Blackout**, **Open player display**, **PDF…**, zoom
+- **Toolbar**: the **Map** menu, **Fog**, **Line of sight**, **Reveal map**, **Walls**, the light control, **Place on the map**, **Show to players**, **Blackout**, **Open player display**, **PDF…**, zoom
 - **Map**: the map with every token, light and marker
 - **Initiative tracker**: at the side. Click its toggle (**Show or hide the tracker**) to make room for the map.
 

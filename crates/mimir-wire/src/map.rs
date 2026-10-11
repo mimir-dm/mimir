@@ -29,6 +29,16 @@ pub struct MapDetail {
     /// Size of the served image.
     pub width_px: i32,
     pub height_px: i32,
+    /// The players see the whole map: no fog, no sight limits.
+    #[serde(default)]
+    pub reveal_all: bool,
+    /// Walls and closed doors block sight.
+    #[serde(default = "yes")]
+    pub line_of_sight: bool,
+}
+
+fn yes() -> bool {
+    true
 }
 
 /// A point in grid units.
@@ -99,6 +109,9 @@ pub struct Token {
     pub vision_dim_ft: Option<i32>,
     pub vision_dark_ft: i32,
     pub light_radius_ft: i32,
+    /// The DM marked it dead.
+    #[serde(default)]
+    pub dead: bool,
 }
 
 /// `POST /maps/{id}/tokens`. A monster token names `monster_id`, an NPC
@@ -156,6 +169,24 @@ pub struct TokenPatch {
     pub vision_dark_ft: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub light_radius_ft: Option<i32>,
+    /// Mark dead or alive.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dead: Option<bool>,
+}
+
+/// A door of the map file that the DM opened or closed. `index` is the
+/// door's index in [`MapGeometry::portals`]; a door not listed is as the
+/// file has it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DoorState {
+    pub index: i32,
+    pub closed: bool,
+}
+
+/// `PUT /maps/{id}/doors/{index}`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DoorUpdate {
+    pub closed: bool,
 }
 
 /// A revealed area of the fog, in pixels of the served image.
@@ -388,6 +419,8 @@ pub struct PlayerToken {
     pub vision_dim_ft: Option<i32>,
     pub vision_dark_ft: i32,
     pub light_radius_ft: i32,
+    #[serde(default)]
+    pub dead: bool,
 }
 
 /// A lit light, as the players see it.
@@ -430,6 +463,9 @@ pub struct PlayerView {
     /// The turn order, when the DM shows it and a combat runs.
     #[serde(default)]
     pub initiative: Option<crate::combat::PlayerInitiative>,
+    /// The doors the DM opened or closed.
+    #[serde(default)]
+    pub doors: Vec<DoorState>,
 }
 
 #[cfg(test)]

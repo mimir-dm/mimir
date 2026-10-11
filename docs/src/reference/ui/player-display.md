@@ -22,7 +22,9 @@ The same view is the **Display** tab of the [player page](./player-page.md).
 - The map image and the grid
 - PC tokens always
 - Other tokens only where a PC can see them; never hidden tokens
-- Lit lights
+- Lit lights, and the lights drawn into the map file
+- The doors, open or closed as the DM set them
+- Dead tokens, in grey
 - Shown traps, with their name only
 - Shown points of interest, with their name
 - The turn order (round and names), when the DM turns on **Show order to players**
@@ -35,7 +37,7 @@ Tokens show their art from the imported images, or their first letter, and their
 - The DC, trigger and effect of a trap
 - Unlit lights
 - Hit points and conditions
-- The map under fog of war, or the dark parts of a dim or dark map, outside the sight of the party
+- The map under fog of war, or the dark parts of a dim or dark map, outside the sight of the party (unless the DM turns on **Reveal map**)
 
 The server sends the display only what the players may see.
 

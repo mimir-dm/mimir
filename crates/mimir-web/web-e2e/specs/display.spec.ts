@@ -65,6 +65,72 @@ test('the display follows the DM and shows only what players see', async ({ page
   await page.request.put(`/api/v1/maps/${map}/fog`, { headers: auth, data: { enabled: false } })
 })
 
+test("the display follows the DM's doors, dead marks, light level and reveal", async ({ page, context }) => {
+  await signIn(page)
+  const campaign = await campaignId(page)
+  const map = await mapId(page)
+  // A known start: fog off, the map not revealed, bright, the first door
+  // as the file has it.
+  await page.request.put(`/api/v1/maps/${map}/fog`, { headers: auth, data: { enabled: false } })
+  await page.request.patch(`/api/v1/maps/${map}`, {
+    headers: auth,
+    data: { reveal_all: false, line_of_sight: true, lighting_mode: 'bright' },
+  })
+  const geo = await (await page.request.get(`/api/v1/maps/${map}/geometry`, { headers: auth })).json()
+  const fileClosed: boolean = geo.portals[0].closed
+  await page.request.put(`/api/v1/maps/${map}/doors/0`, { headers: auth, data: { closed: fileClosed } })
+
+  const display = await context.newPage()
+  await signIn(display)
+  await display.goto(`/display/${campaign}`)
+  await page.goto(`/maps/${map}`)
+  await page.getByRole('button', { name: 'Show to players' }).click()
+  await expect(display.locator('.mimir-display__svg image')).toBeAttached()
+  // The map file's lights glow on both.
+  await expect(display.locator('.mimir-map__file-light')).toHaveCount(geo.lights.length)
+  await expect(page.locator('.mimir-map__file-light')).toHaveCount(geo.lights.length)
+
+  // A door: the DM opens or closes it; the display follows; a reload keeps it.
+  const openClass = /mimir-map__door--open/
+  const dmDoor = page.locator('.mimir-map__door').first()
+  const shownDoor = display.locator('.mimir-display__door').first()
+  if (fileClosed) await expect(shownDoor).not.toHaveClass(openClass)
+  else await expect(shownDoor).toHaveClass(openClass)
+  await dmDoor.dispatchEvent('pointerdown')
+  if (fileClosed) await expect(shownDoor).toHaveClass(openClass)
+  else await expect(shownDoor).not.toHaveClass(openClass)
+  await page.reload()
+  if (fileClosed) await expect(page.locator('.mimir-map__door').first()).toHaveClass(openClass)
+  else await expect(page.locator('.mimir-map__door').first()).not.toHaveClass(openClass)
+  await page.request.put(`/api/v1/maps/${map}/doors/0`, { headers: auth, data: { closed: fileClosed } })
+
+  // Dead: the DM marks Klarg; the display greys him out.
+  await page.locator('.mimir-map__token[aria-label="Klarg"]').click()
+  await expect(page.locator('.mimir-map__panel')).toContainText('Klarg')
+  await page.getByRole('switch', { name: 'Dead' }).click()
+  await expect(display.locator('.mimir-map__token[aria-label="Klarg"]')).toHaveClass(/mimir-map__token--dead/)
+  await page.getByRole('switch', { name: 'Dead' }).click()
+  await expect(display.locator('.mimir-map__token[aria-label="Klarg"]')).not.toHaveClass(/mimir-map__token--dead/)
+
+  // The light level reaches the display: dim covers what the party does not see.
+  await expect(display.locator('.mimir-display__cover')).toHaveCount(0)
+  await page.getByRole('button', { name: 'dim', exact: true }).click()
+  await expect(display.locator('.mimir-display__cover')).toBeAttached()
+
+  // Reveal map: the players see all of it, also under fog.
+  await page.getByText('Fog', { exact: true }).click()
+  await expect(display.locator('.mimir-display__cover')).toBeAttached()
+  await page.getByText('Reveal map', { exact: true }).click()
+  await expect(display.locator('.mimir-display__cover')).toHaveCount(0)
+  await page.getByText('Reveal map', { exact: true }).click()
+  await expect(display.locator('.mimir-display__cover')).toBeAttached()
+
+  // Clean up for the other tests.
+  await page.getByRole('button', { name: 'Stop showing' }).click()
+  await page.request.put(`/api/v1/maps/${map}/fog`, { headers: auth, data: { enabled: false } })
+  await page.request.patch(`/api/v1/maps/${map}`, { headers: auth, data: { lighting_mode: 'bright' } })
+})
+
 test('the display pans and zooms for the viewer', async ({ page, context }) => {
   await signIn(page)
   const campaign = await campaignId(page)

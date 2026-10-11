@@ -5,7 +5,7 @@
 //!
 //! Units: pixels of the served map image. 5 ft is one grid cell.
 
-use mimir_wire::{Light, MapGeometry, Token};
+use mimir_wire::{DoorState, Light, MapGeometry, Token};
 
 /// A point in pixels.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,32 +63,6 @@ impl LightLevel {
             LightLevel::Dim => "dim",
             LightLevel::Darkness => "darkness",
         }
-    }
-}
-
-/// The light level of a UVTT ambient colour (ARGB hex), by brightness.
-pub fn ambient_level(argb: Option<&str>) -> LightLevel {
-    let Some(argb) = argb else {
-        return LightLevel::Bright;
-    };
-    let hex = argb.trim_start_matches('#');
-    if hex.len() < 6 {
-        return LightLevel::Bright;
-    }
-    let byte = |i: usize| {
-        hex.get(i..i + 2)
-            .and_then(|s| u8::from_str_radix(s, 16).ok())
-            .map(f64::from)
-            .unwrap_or(0.0)
-    };
-    let (r, g, b) = (byte(2), byte(4), byte(6));
-    let brightness = (r * 299.0 + g * 587.0 + b * 114.0) / 1000.0;
-    if brightness > 170.0 {
-        LightLevel::Bright
-    } else if brightness > 85.0 {
-        LightLevel::Dim
-    } else {
-        LightLevel::Darkness
     }
 }
 
@@ -186,6 +160,36 @@ fn trim_float(v: f64) -> String {
     let s = format!("{v:.3}");
     let s = s.trim_end_matches('0').trim_end_matches('.');
     s.to_string()
+}
+
+/// The doors with the DM's changes (MIMIR-T-0728): a state names a door
+/// by its index in the file's portals.
+pub fn apply_door_states(doors: &mut [Door], states: &[DoorState]) {
+    for st in states {
+        if let Some(d) = usize::try_from(st.index)
+            .ok()
+            .and_then(|i| doors.get_mut(i))
+        {
+            d.closed = st.closed;
+        }
+    }
+}
+
+/// What blocks sight on a map: its walls and closed doors (with the DM's
+/// changes), or nothing when line of sight is off.
+pub fn blocking_for(
+    geometry: Option<&MapGeometry>,
+    doors: &[DoorState],
+    line_of_sight: bool,
+) -> Vec<Wall> {
+    match geometry {
+        Some(g) if line_of_sight => {
+            let mut d = doors_px(g);
+            apply_door_states(&mut d, doors);
+            blocking(&walls_px(g), &d)
+        }
+        _ => Vec::new(),
+    }
 }
 
 /// The walls that block sight: the file's walls and the closed doors.
@@ -397,6 +401,61 @@ pub fn light_zones(lights: &[Light], tokens: &[Token], grid_px: f64) -> Vec<Ligh
     placed.chain(carried).collect()
 }
 
+/// A light of the map file as a lit area: bright to half its range, dim
+/// to its range (as carried lights).
+pub fn file_light_zone(i: usize, l: &FileLight) -> LightZone {
+    LightZone {
+        source_id: format!("file-{i}"),
+        x: l.position.x,
+        y: l.position.y,
+        bright_px: l.range_px / 2.0,
+        dim_px: l.range_px,
+    }
+}
+
+/// A light of the map file and the area it lights past the walls.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Lit {
+    pub zone: LightZone,
+    pub area: Vec<Point>,
+    pub color: String,
+    pub intensity: f64,
+}
+
+/// The lights of the map file with their lit areas. Walls change rarely,
+/// so the pages keep this and pass it on.
+pub fn file_lit(g: &MapGeometry, blocking: &[Wall], w: f64, h: f64) -> Vec<Lit> {
+    file_lights_px(g)
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.range_px > 0.0)
+        .map(|(i, l)| {
+            let zone = file_light_zone(i, l);
+            let area = visibility_polygon(
+                Point {
+                    x: zone.x,
+                    y: zone.y,
+                },
+                blocking,
+                zone.dim_px,
+                w,
+                h,
+            );
+            Lit {
+                zone,
+                area,
+                color: l.color.clone(),
+                intensity: l.intensity,
+            }
+        })
+        .collect()
+}
+
+/// Does a party member see this point (walls only, no range)?
+pub fn party_has_line_to(p: Point, party_lines: &[Vec<Point>]) -> bool {
+    party_lines.iter().any(|poly| point_in_polygon(p, poly))
+}
+
 /// The light at a point: the best of the ambient light and the zones.
 pub fn light_at(x: f64, y: f64, zones: &[LightZone], ambient: LightLevel) -> LightLevel {
     let mut best = ambient;
@@ -524,6 +583,7 @@ mod tests {
             vision_dim_ft: Some(60),
             vision_dark_ft: 0,
             light_radius_ft: 0,
+            dead: false,
         }
     }
 
@@ -543,19 +603,7 @@ mod tests {
         }
     }
 
-    // ---- uvttAmbientToLevel
-    #[test]
-    fn ambient_levels() {
-        assert_eq!(ambient_level(None), LightLevel::Bright);
-        assert_eq!(ambient_level(Some("ffffffff")), LightLevel::Bright);
-        assert_eq!(ambient_level(Some("ff000000")), LightLevel::Darkness);
-        assert_eq!(ambient_level(Some("ff808080")), LightLevel::Dim);
-        assert_eq!(ambient_level(Some("fff")), LightLevel::Bright);
-        assert_eq!(ambient_level(Some("#ff000000")), LightLevel::Darkness);
-        assert_eq!(LightLevel::from_mode("dark"), LightLevel::Darkness);
-        assert_eq!(LightLevel::from_mode("bright"), LightLevel::Bright);
-    }
-
+    // (uvttAmbientToLevel: in mimir-core, LightingMode::from_ambient.)
     // ---- uvttWallsToPixels
     #[test]
     fn walls_to_pixels() {
@@ -848,5 +896,89 @@ mod tests {
         assert!(needs_vision_overlay(LightLevel::Bright, &limited));
         assert!(needs_vision_overlay(LightLevel::Dim, &unlimited));
         assert!(needs_vision_overlay(LightLevel::Darkness, &unlimited));
+    }
+
+    // ---- The play state of the map (MIMIR-T-0728)
+    #[test]
+    fn the_dms_door_states_win_over_the_file() {
+        let mut g = geometry(70.0);
+        let portal = |closed| Portal {
+            position: gp(5.0, 5.0),
+            bounds: [gp(4.0, 5.0), gp(6.0, 5.0)],
+            rotation: 0.0,
+            closed,
+            freestanding: false,
+        };
+        g.portals = vec![portal(true), portal(false)];
+        let states = [
+            DoorState {
+                index: 0,
+                closed: false,
+            },
+            DoorState {
+                index: 1,
+                closed: true,
+            },
+            DoorState {
+                index: 9,
+                closed: true,
+            },
+            DoorState {
+                index: -1,
+                closed: true,
+            },
+        ];
+        let mut d = doors_px(&g);
+        apply_door_states(&mut d, &states);
+        assert!(
+            !d[0].closed && d[1].closed,
+            "out-of-range states are skipped"
+        );
+        assert_eq!(blocking_for(Some(&g), &states, true), vec![d[1].wall]);
+        assert!(
+            blocking_for(Some(&g), &states, false).is_empty(),
+            "line of sight off"
+        );
+        assert!(blocking_for(None, &states, true).is_empty());
+    }
+
+    #[test]
+    fn the_files_lights_light_an_area_up_to_the_walls() {
+        let mut g = geometry(70.0);
+        g.lights = vec![
+            MapFileLight {
+                position: gp(2.0, 2.0),
+                range: 4.0,
+                intensity: 1.0,
+                color: "ffff0000".into(),
+                shadows: true,
+            },
+            MapFileLight {
+                position: gp(8.0, 8.0),
+                range: 0.0,
+                intensity: 1.0,
+                color: "ffffffff".into(),
+                shadows: true,
+            },
+        ];
+        let lit = file_lit(&g, &[], 700.0, 700.0);
+        assert_eq!(lit.len(), 1, "a light with no range lights nothing");
+        assert_eq!(lit[0].zone.dim_px, 280.0);
+        assert_eq!(lit[0].zone.bright_px, 140.0);
+        assert!(point_in_polygon(Point { x: 200.0, y: 140.0 }, &lit[0].area));
+        // A wall at x = 3 cells stops it.
+        let wall = Wall {
+            p1: Point { x: 210.0, y: 0.0 },
+            p2: Point { x: 210.0, y: 700.0 },
+        };
+        let walled = file_lit(&g, &[wall], 700.0, 700.0);
+        assert!(!point_in_polygon(
+            Point { x: 300.0, y: 140.0 },
+            &walled[0].area
+        ));
+        assert!(point_in_polygon(
+            Point { x: 180.0, y: 140.0 },
+            &walled[0].area
+        ));
     }
 }

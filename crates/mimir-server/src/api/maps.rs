@@ -48,6 +48,8 @@ fn detail(conn: &mut SqliteConnection, app_dir: &FsPath, map: Map) -> wire::MapD
         sort_order: map.sort_order,
         lighting_mode: map.lighting_mode,
         fog_enabled: map.fog_enabled != 0,
+        reveal_all: map.reveal_all != 0,
+        line_of_sight: map.line_of_sight != 0,
         grid_size_px: ppg,
         columns,
         rows,
@@ -79,6 +81,7 @@ fn token(t: TokenResponse) -> wire::Token {
         vision_dim_ft: t.vision_dim_ft,
         vision_dark_ft: t.vision_dark_ft,
         light_radius_ft: t.light_radius_ft,
+        dead: t.dead,
     }
 }
 
@@ -311,8 +314,10 @@ pub fn build_player_view(
             vision_dim_ft: t.vision_dim_ft,
             vision_dark_ft: t.vision_dark_ft,
             light_radius_ft: t.light_radius_ft,
+            dead: t.dead,
         })
         .collect();
+    let doors = door_states(conn, app_dir, map_id)?;
     let mut map_state = MapStateService::new(conn);
     let lights = map_state
         .list_lights(map_id)?
@@ -375,7 +380,69 @@ pub fn build_player_view(
         lights,
         markers,
         initiative,
+        doors,
     })
+}
+
+fn door_states(
+    conn: &mut SqliteConnection,
+    app_dir: &FsPath,
+    map_id: &str,
+) -> Result<Vec<wire::DoorState>, ApiError> {
+    Ok(MapService::new(conn, app_dir)
+        .door_states(map_id)?
+        .into_iter()
+        .map(|(index, closed)| wire::DoorState { index, closed })
+        .collect())
+}
+
+// ---- Doors (MIMIR-T-0728) ------------------------------------------------
+
+/// `GET /maps/{id}/doors`: the doors the DM opened or closed.
+pub async fn list_doors(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> ApiResult<Vec<wire::DoorState>> {
+    let app_dir = state.config.data_dir.clone();
+    state
+        .with_db(move |conn| {
+            require_map(conn, &app_dir, &id)?;
+            door_states(conn, &app_dir, &id)
+        })
+        .await
+        .map(Json)
+}
+
+/// `PUT /maps/{id}/doors/{index}`: open or close a door of the map file.
+pub async fn set_door(
+    State(state): State<AppState>,
+    Path((id, index)): Path<(String, i32)>,
+    JsonBody(update): JsonBody<wire::DoorUpdate>,
+) -> ApiResult<wire::DoorState> {
+    let live = state.live.clone();
+    let app_dir = state.config.data_dir.clone();
+    state
+        .with_db(move |conn| {
+            let map = require_map(conn, &app_dir, &id)?;
+            let doors = MapService::new(conn, &app_dir)
+                .geometry(&map)?
+                .portals
+                .len();
+            if index < 0 || index as usize >= doors {
+                return Err(ServiceError::validation(format!(
+                    "the map has {doors} doors; there is no door {index}"
+                ))
+                .into());
+            }
+            MapService::new(conn, &app_dir).set_door(&id, index, update.closed)?;
+            notify(&live, conn, &app_dir, &id, MapPart::Doors);
+            Ok(wire::DoorState {
+                index,
+                closed: update.closed,
+            })
+        })
+        .await
+        .map(Json)
 }
 
 /// `GET /maps/{id}/player-view`
@@ -464,6 +531,7 @@ pub async fn update_token(
                     vision_dim_ft: patch.vision_dim_ft,
                     vision_dark_ft: patch.vision_dark_ft,
                     light_radius_ft: patch.light_radius_ft,
+                    dead: patch.dead,
                 },
             )?;
             notify(&live, conn, &app_dir, &updated.map_id, MapPart::Tokens);

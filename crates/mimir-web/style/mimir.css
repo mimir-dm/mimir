@@ -170,6 +170,16 @@
   cursor: pointer;
 }
 .mimir-map__door--open { stroke-dasharray: 4 8; stroke-opacity: 0.7; }
+/* The map file's lights and walls (MIMIR-T-0728). */
+.mimir-map__file-light { pointer-events: none; }
+.mimir-map__walls {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .mimir-map__light--off { opacity: 0.35; }
 .mimir-map__handle {
   stroke: var(--bg);
@@ -255,6 +265,7 @@
 .mimir-display__svg { display: block; width: 100%; height: 100%; }
 .mimir-display__cover { fill: var(--mimir-fog); pointer-events: none; }
 .mimir-display__trap { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-display__door { stroke: var(--gold); stroke-width: 6; stroke-linecap: round; pointer-events: none; }
 .mimir-display__message {
   position: absolute;
   inset: 0;

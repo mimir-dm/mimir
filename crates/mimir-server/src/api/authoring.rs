@@ -661,6 +661,8 @@ pub async fn patch_map(
                 description: p.description.map(text),
                 lighting_mode: mode,
                 module_id: p.module_id,
+                reveal_all: p.reveal_all,
+                line_of_sight: p.line_of_sight,
                 ..UpdateMapInput::default()
             };
             let map = MapService::new(conn, &app_dir).update(&id, input)?;

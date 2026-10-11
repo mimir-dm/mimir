@@ -155,6 +155,9 @@ pub struct MapWithRelated {
     pub traps: Vec<MapTrap>,
     pub light_sources: Vec<LightSource>,
     pub fog_areas: Vec<FogRevealedArea>,
+    /// Doors the DM opened or closed (archives before MIMIR-T-0728 have none).
+    #[serde(default)]
+    pub door_states: Vec<crate::models::campaign::MapDoorState>,
 }
 
 // =============================================================================
@@ -415,6 +418,7 @@ impl<'a> ArchiveService<'a> {
                 traps: dal::list_map_traps(self.conn, &m.id)?,
                 light_sources: dal::list_light_sources(self.conn, &m.id)?,
                 fog_areas: dal::list_fog_revealed_areas(self.conn, &m.id)?,
+                door_states: dal::list_map_door_states(self.conn, &m.id)?,
                 map: m,
             });
         }
@@ -893,6 +897,29 @@ impl<'a> ArchiveService<'a> {
                 NewMap::for_campaign(&new_id, campaign_id, &m.name, &new_uvtt_asset_id)
             };
             dal::insert_map(self.conn, &new_map)?;
+            // The play state of the map (MIMIR-T-0728).
+            let now = Utc::now().to_rfc3339();
+            dal::update_map(
+                self.conn,
+                &new_id,
+                &crate::models::campaign::UpdateMap {
+                    lighting_mode: Some(&m.lighting_mode),
+                    fog_enabled: Some(m.fog_enabled),
+                    reveal_all: Some(m.reveal_all),
+                    line_of_sight: Some(m.line_of_sight),
+                    updated_at: Some(&now),
+                    ..Default::default()
+                },
+            )?;
+            for door in &map_data.door_states {
+                dal::set_map_door_state(
+                    self.conn,
+                    &crate::models::campaign::MapDoorState {
+                        map_id: new_id.clone(),
+                        ..door.clone()
+                    },
+                )?;
+            }
 
             // Import POIs
             for poi in &map_data.pois {
@@ -1408,6 +1435,56 @@ mod tests {
         let chars = dal::list_campaign_characters(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(chars.len(), 1);
         assert_eq!(chars[0].name, "Test Hero");
+    }
+
+    #[test]
+    fn a_maps_play_state_round_trips() {
+        use crate::models::campaign::LightingMode;
+        use crate::services::map::{CreateMapInput, MapService, UpdateMapInput};
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let app_dir = TempDir::new().unwrap();
+        let output_dir = TempDir::new().unwrap();
+        let map = {
+            let mut maps = MapService::new(&mut conn, app_dir.path());
+            let map = maps
+                .create(CreateMapInput::for_campaign(
+                    &campaign_id,
+                    "Crypt",
+                    "crypt.uvtt",
+                    br#"{"resolution":{"pixels_per_grid":70}}"#.to_vec(),
+                ))
+                .unwrap();
+            maps.set_door(&map.id, 1, false).unwrap();
+            maps.update(
+                &map.id,
+                UpdateMapInput {
+                    lighting_mode: Some(LightingMode::Dim),
+                    reveal_all: Some(true),
+                    line_of_sight: Some(false),
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+        };
+        assert_eq!(map.lighting_mode, "dim");
+        let archive = ArchiveService::new(&mut conn)
+            .export_campaign(&campaign_id, output_dir.path(), app_dir.path())
+            .unwrap();
+        let imported = ArchiveService::new(&mut conn)
+            .import_campaign(&archive, app_dir.path(), Some("Copy"))
+            .unwrap();
+        let maps = dal::list_campaign_maps(&mut conn, &imported.campaign_id).unwrap();
+        assert_eq!(maps.len(), 1);
+        let m = &maps[0];
+        assert_eq!(
+            (m.lighting_mode.as_str(), m.reveal_all, m.line_of_sight),
+            ("dim", 1, 0)
+        );
+        let doors = MapService::new(&mut conn, app_dir.path())
+            .door_states(&m.id)
+            .unwrap();
+        assert_eq!(doors, vec![(1, false)]);
     }
 
     #[test]

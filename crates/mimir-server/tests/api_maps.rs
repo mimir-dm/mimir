@@ -530,3 +530,87 @@ async fn the_player_view_holds_only_what_players_see() {
     assert!(!text.contains("monster_id"), "no monster links");
     assert_eq!(view.map.id, f.map);
 }
+
+/// The play state the player display follows (MIMIR-T-0728): doors the DM
+/// opens or closes, a dead mark, the whole map revealed, line of sight.
+#[tokio::test]
+async fn doors_dead_reveal_and_line_of_sight() {
+    let f = fixture().await;
+    let doors = format!("/maps/{}/doors", f.map);
+    let geo: wire::MapGeometry = f
+        .ok(Method::GET, &format!("/maps/{}/geometry", f.map), None)
+        .await;
+    assert!(geo.portals.len() > 1, "the fixture map has doors");
+    let list: Vec<wire::DoorState> = f.ok(Method::GET, &doors, None).await;
+    assert!(list.is_empty(), "every door as the file has it");
+
+    let flip = !geo.portals[1].closed;
+    let set: wire::DoorState = f
+        .ok(
+            Method::PUT,
+            &format!("{doors}/1"),
+            Some(json!({ "closed": flip })),
+        )
+        .await;
+    assert_eq!(
+        set,
+        wire::DoorState {
+            index: 1,
+            closed: flip
+        }
+    );
+    let list: Vec<wire::DoorState> = f.ok(Method::GET, &doors, None).await;
+    assert_eq!(list, vec![set]);
+    let n = geo.portals.len();
+    let (status, _) = f
+        .status(
+            Method::PUT,
+            &format!("{doors}/{n}"),
+            Some(json!({ "closed": true })),
+        )
+        .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "no such door");
+    let (status, _) = f
+        .status(
+            Method::PUT,
+            "/maps/nope/doors/0",
+            Some(json!({ "closed": true })),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+
+    let token: wire::Token = f
+        .ok(
+            Method::POST,
+            &format!("/maps/{}/tokens", f.map),
+            Some(json!({"grid_x": 1, "grid_y": 1, "label": "Robin"})),
+        )
+        .await;
+    assert!(!token.dead);
+    let token: wire::Token = f
+        .ok(
+            Method::PATCH,
+            &format!("/tokens/{}", token.id),
+            Some(json!({ "dead": true })),
+        )
+        .await;
+    assert!(token.dead);
+
+    let map: wire::MapDetail = f.ok(Method::GET, &format!("/maps/{}", f.map), None).await;
+    assert!(!map.reveal_all && map.line_of_sight, "the defaults");
+    let _: wire::MapSummary = f
+        .ok(
+            Method::PATCH,
+            &format!("/maps/{}", f.map),
+            Some(json!({ "reveal_all": true, "line_of_sight": false })),
+        )
+        .await;
+
+    let view: wire::PlayerView = f
+        .ok(Method::GET, &format!("/maps/{}/player-view", f.map), None)
+        .await;
+    assert_eq!(view.doors, vec![set], "the display gets the doors");
+    assert!(view.map.reveal_all && !view.map.line_of_sight);
+    let seen = view.tokens.iter().find(|t| t.id == token.id).unwrap();
+    assert!(seen.dead, "the display shows the dead mark");
+}

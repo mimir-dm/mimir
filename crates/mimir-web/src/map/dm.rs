@@ -5,7 +5,7 @@
 //! API; the live socket tells this page (and the other clients) what
 //! changed, and the page reads that part again.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use aurora_leptos::components::*;
 use aurora_leptos::frame::Card;
@@ -14,14 +14,15 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::{use_navigate, use_params_map};
 use mimir_wire::{
-    self as wire, DisplayState, DisplayUpdate, Fog, Light, MapDetail, MapGeometry, MapPart,
-    ModuleMonsterSummary, ModuleNpcSummary, Poi, ServerMsg, Token, Trap,
+    self as wire, DisplayState, DisplayUpdate, DoorState, Fog, Light, MapDetail, MapGeometry,
+    MapPart, ModuleMonsterSummary, ModuleNpcSummary, Poi, ServerMsg, Token, Trap,
 };
 use serde_json::json;
 
+use super::display::sight_for;
 use super::tracker::{self, CombatTracker};
 use super::viewport::Viewport;
-use super::vision::{self, LightLevel, Point};
+use super::vision::{self, LightLevel};
 use crate::api;
 use crate::live::Live;
 
@@ -128,12 +129,17 @@ pub fn DmMapPage() -> impl IntoView {
     let fog_v = RwSignal::new(0u32);
     let lights_v = RwSignal::new(0u32);
     let markers_v = RwSignal::new(0u32);
+    let doors_v = RwSignal::new(0u32);
+    let map_v = RwSignal::new(0u32);
     let bump = move |part: MapPart| match part {
         MapPart::Tokens => tokens_v.update(|v| *v += 1),
         MapPart::Fog => fog_v.update(|v| *v += 1),
         MapPart::Lights => lights_v.update(|v| *v += 1),
         MapPart::Markers => markers_v.update(|v| *v += 1),
+        MapPart::Doors => doors_v.update(|v| *v += 1),
         MapPart::Map => {
+            map_v.update(|v| *v += 1);
+            doors_v.update(|v| *v += 1);
             tokens_v.update(|v| *v += 1);
             fog_v.update(|v| *v += 1);
             lights_v.update(|v| *v += 1);
@@ -141,7 +147,10 @@ pub fn DmMapPage() -> impl IntoView {
         }
     };
 
-    let map: Res<MapDetail> = LocalResource::new(move || api::get(format!("/maps/{}", id.get())));
+    let map: Res<MapDetail> = LocalResource::new(move || {
+        map_v.track();
+        api::get(format!("/maps/{}", id.get()))
+    });
     let geometry: Res<MapGeometry> =
         LocalResource::new(move || api::get(format!("/maps/{}/geometry", id.get())));
     let image: Res<Option<String>> =
@@ -161,6 +170,10 @@ pub fn DmMapPage() -> impl IntoView {
     let pois: Res<Vec<Poi>> = LocalResource::new(move || {
         markers_v.track();
         api::get(format!("/maps/{}/pois", id.get()))
+    });
+    let door_states: Res<Vec<DoorState>> = LocalResource::new(move || {
+        doors_v.track();
+        api::get(format!("/maps/{}/doors", id.get()))
     });
     let fog: Res<Fog> = LocalResource::new(move || {
         fog_v.track();
@@ -229,15 +242,19 @@ pub fn DmMapPage() -> impl IntoView {
     vp.keep_fitted();
     let view = vp.view;
     let fitted = RwSignal::new(false);
+    // The map's play state (MIMIR-T-0728): saved with the map, so the
+    // player display follows it.
     let los = RwSignal::new(true);
+    let reveal = RwSignal::new(false);
     let ambient = RwSignal::new(String::from("bright"));
+    let show_walls = RwSignal::new(false);
     Effect::new(move |_| {
         if let Some(m) = map_now() {
             ambient.set(LightLevel::from_mode(&m.lighting_mode).as_str().to_string());
+            los.set(m.line_of_sight);
+            reveal.set(m.reveal_all);
         }
     });
-    let dead = RwSignal::new(HashSet::<String>::new());
-    let doors_flipped = RwSignal::new(HashSet::<usize>::new());
     let selected = RwSignal::new(None::<Selected>);
     // The token the tracker or the map selects.
     let selected_token = RwSignal::new(None::<String>);
@@ -303,6 +320,28 @@ pub fn DmMapPage() -> impl IntoView {
     let run = move |fut: Job| {
         spawn_local(async move { report(fut.await) });
     };
+    let patch_map = move |body: serde_json::Value| {
+        run(patch::<wire::MapSummary>(
+            format!("/maps/{}", id.get_untracked()),
+            body,
+        ))
+    };
+    // The light level control has no change event: send it when it differs
+    // from the map's.
+    Effect::new(move |_| {
+        let a = LightLevel::from_mode(&ambient.get());
+        let Some(m) = map.get_untracked().and_then(Result::ok) else {
+            return;
+        };
+        if a != LightLevel::from_mode(&m.lighting_mode) {
+            let mode = match a {
+                LightLevel::Bright => "bright",
+                LightLevel::Dim => "dim",
+                LightLevel::Darkness => "dark",
+            };
+            patch_map(json!({ "lighting_mode": mode }));
+        }
+    });
 
     let grid_px = move || map_now().map(|m| m.grid_size_px).unwrap_or(70.0);
 
@@ -410,76 +449,38 @@ pub fn DmMapPage() -> impl IntoView {
     // ---- Derived scene data ------------------------------------------------
     let token_list = move || tokens.get().and_then(Result::ok).unwrap_or_default();
     let light_list = move || lights.get().and_then(Result::ok).unwrap_or_default();
+    let door_list = move || door_states.get().and_then(Result::ok).unwrap_or_default();
+    // Walls, doors and the file's lights: worked out when they change.
+    let walls_and_lights = Memo::new(move |_| {
+        let g = geometry.get().and_then(Result::ok)?;
+        let m = map_now()?;
+        let states = door_list();
+        let blocking = vision::blocking_for(Some(&g), &states, m.line_of_sight);
+        let mut doors = vision::doors_px(&g);
+        vision::apply_door_states(&mut doors, &states);
+        let lit = vision::file_lit(&g, &blocking, f64::from(m.width_px), f64::from(m.height_px));
+        let walls = vision::walls_px(&g);
+        Some((blocking, lit, doors, walls))
+    });
     let doors = move || {
-        let mut d = geometry
-            .get()
-            .and_then(Result::ok)
-            .map(|g| vision::doors_px(&g))
-            .unwrap_or_default();
-        doors_flipped.with(|f| {
-            for i in f {
-                if let Some(door) = d.get_mut(*i) {
-                    door.closed = !door.closed;
-                }
-            }
-        });
-        d
-    };
-    let walls = move || {
-        geometry
-            .get()
-            .and_then(Result::ok)
-            .map(|g| vision::walls_px(&g))
+        walls_and_lights
+            .with(|w| w.as_ref().map(|w| w.2.clone()))
             .unwrap_or_default()
     };
-    let level = move || LightLevel::from_mode(&ambient.get());
 
-    // What the players do not see (DM view: a shade over it).
-    let fog_shapes =
-        Memo::new(move |_| {
-            let m = map_now()?;
-            let fog_on = fog
-                .get()
-                .and_then(Result::ok)
-                .map(|f| f.enabled)
-                .unwrap_or(false);
-            let g = m.grid_size_px;
-            let toks = token_list();
-            let zones = vision::light_zones(&light_list(), &toks, g);
-            let party = vision::party_vision(&toks, &zones, level(), g);
-            if !fog_on && !vision::needs_vision_overlay(level(), &party) {
-                return None;
-            }
-            let (w, h) = (f64::from(m.width_px), f64::from(m.height_px));
-            let blocking = if los.get() {
-                vision::blocking(&walls(), &doors())
-            } else {
-                Vec::new()
-            };
-            let cap = w.max(h) * 2.0;
-            let mut holes: Vec<String> = party
-                .iter()
-                .filter(|v| v.radius_px > 0.0)
-                .map(|v| {
-                    let poly = vision::visibility_polygon(
-                        Point { x: v.x, y: v.y },
-                        &blocking,
-                        v.radius_px.min(cap),
-                        w,
-                        h,
-                    );
-                    vision::svg_path(&poly)
-                })
-                .collect();
-            if fog_on {
-                if let Some(Ok(f)) = fog.get() {
-                    holes.extend(f.revealed.iter().map(|a| {
-                        format!("M{} {}h{}v{}h{}Z", a.x, a.y, a.width, a.height, -a.width)
-                    }));
-                }
-            }
-            Some((w, h, holes))
-        });
+    // What the players do not see (DM view: a shade over it). The same
+    // sight as the player display's.
+    let fog_shapes = Memo::new(move |_| {
+        let m = map_now()?;
+        let fog = fog.get().and_then(Result::ok)?;
+        let (blocking, lit, _, _) = walls_and_lights.get().unwrap_or_default();
+        let toks = token_list();
+        let s = sight_for(&m, &toks, &light_list(), &fog, &blocking, &lit);
+        if s.cover <= 0.0 {
+            return None;
+        }
+        Some((f64::from(m.width_px), f64::from(m.height_px), s.holes))
+    });
 
     let shown = move || display.with(|d| d.map_id.as_deref() == Some(id.get().as_str()));
     let blackout = move || display.with(|d| d.blackout);
@@ -561,7 +562,17 @@ pub fn DmMapPage() -> impl IntoView {
                 </div>
                 <div class="mimir-map__tool-group">
                     <Switch label="Fog" checked=fog_switch on_change=set_fog />
-                    <Switch label="Line of sight" checked=los />
+                    <Switch
+                        label="Line of sight"
+                        checked=los
+                        on_change=Callback::new(move |on: bool| patch_map(json!({ "line_of_sight": on })))
+                    />
+                    <Switch
+                        label="Reveal map"
+                        checked=reveal
+                        on_change=Callback::new(move |on: bool| patch_map(json!({ "reveal_all": on })))
+                    />
+                    <Switch label="Walls" checked=show_walls />
                     <SegmentedControl
                         options=vec!["bright".into(), "dim".into(), "darkness".into()]
                         value=ambient
@@ -677,6 +688,18 @@ pub fn DmMapPage() -> impl IntoView {
                                 .map(|href| view! { <image href=href x="0" y="0" width=w height=h /> })
                         }}
                         <path class="mimir-map__grid" d=grid />
+                        // The map file's lights: their glow stops at the walls.
+                        {move || {
+                            walls_and_lights.with(|w| {
+                                w.as_ref().map(|(_, lit, _, _)| {
+                                    lit.iter()
+                                        .map(|l| view! {
+                                            <path class="mimir-map__file-light" d=vision::svg_path(&l.area) style=format!("fill:{}", l.color) opacity=0.12 * l.intensity.clamp(0.2, 2.0) />
+                                        })
+                                        .collect_view()
+                                })
+                            })
+                        }}
                         // Lights: placed lights (the DM sees unlit ones faint).
                         {move || {
                             light_list()
@@ -728,12 +751,25 @@ pub fn DmMapPage() -> impl IntoView {
                                     }
                                 })
                         }}
-                        // Doors: a tap opens or closes one (this page only).
+                        // The walls of the map file, on request.
+                        {move || {
+                            show_walls.get().then(|| {
+                                let d: String = walls_and_lights
+                                    .with(|w| w.as_ref().map(|w| w.3.clone()))
+                                    .unwrap_or_default()
+                                    .iter()
+                                    .map(|w| format!("M{} {}L{} {}", w.p1.x, w.p1.y, w.p2.x, w.p2.y))
+                                    .collect();
+                                view! { <path class="mimir-map__walls" d=d /> }
+                            })
+                        }}
+                        // Doors: a tap opens or closes one; the players see it.
                         {move || {
                             doors()
                                 .into_iter()
                                 .enumerate()
                                 .map(|(i, d)| {
+                                    let closed = d.closed;
                                     view! {
                                         <line
                                             class="mimir-map__door"
@@ -742,13 +778,15 @@ pub fn DmMapPage() -> impl IntoView {
                                             y1=d.wall.p1.y
                                             x2=d.wall.p2.x
                                             y2=d.wall.p2.y
+                                            aria-label=if closed { "Closed door" } else { "Open door" }
                                             on:pointerdown=move |ev: web_sys::PointerEvent| {
                                                 ev.stop_propagation();
-                                                doors_flipped.update(|f| {
-                                                    if !f.remove(&i) {
-                                                        f.insert(i);
-                                                    }
-                                                });
+                                                let path = format!("/maps/{}/doors/{i}", id.get_untracked());
+                                                run(Box::pin(async move {
+                                                    api::send::<_, DoorState>("PUT", &path, &json!({ "closed": !closed }))
+                                                        .await
+                                                        .map(|_| ())
+                                                }));
                                             }
                                         />
                                     }
@@ -823,7 +861,7 @@ pub fn DmMapPage() -> impl IntoView {
                                     }
                                     let art = token_art.with(|m| m.get(&t.id).cloned().flatten());
                                     let (turn_token, down) = marks.get();
-                                    let is_dead = dead.with(|d| d.contains(&t.id)) || down.contains(&t.id);
+                                    let is_dead = t.dead || down.contains(&t.id);
                                     let is_turn = turn_token.as_deref() == Some(t.id.as_str());
                                     let tid = t.id.clone();
                                     let sel = Selected::Token(t.id.clone());
@@ -886,7 +924,7 @@ pub fn DmMapPage() -> impl IntoView {
         let body = match sel {
             Selected::Token(tid) => {
                 let t = token_list().into_iter().find(|t| t.id == tid)?;
-                token_panel(t, dead, run).into_any()
+                token_panel(t, run).into_any()
             }
             Selected::Light(lid) => {
                 let l = light_list().into_iter().find(|l| l.id == lid)?;
@@ -991,20 +1029,15 @@ fn feet(v: Option<i32>) -> String {
     v.map(|f| f.to_string()).unwrap_or_default()
 }
 
-fn token_panel(
-    t: Token,
-    dead: RwSignal<HashSet<String>>,
-    run: impl Fn(Job) + Copy + Send + Sync + 'static,
-) -> impl IntoView {
+fn token_panel(t: Token, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> impl IntoView {
     let path = format!("/tokens/{}", t.id);
     let visible = RwSignal::new(t.visible_to_players);
-    let is_dead = RwSignal::new(dead.with_untracked(|d| d.contains(&t.id)));
+    let is_dead = RwSignal::new(t.dead);
     let bright = RwSignal::new(feet(t.vision_bright_ft));
     let dim = RwSignal::new(feet(t.vision_dim_ft));
     let dark = RwSignal::new(t.vision_dark_ft.to_string());
     let light = RwSignal::new(t.light_radius_ft.to_string());
-    let tid = t.id.clone();
-    let (p1, p2, p3) = (path.clone(), path.clone(), path);
+    let (p1, p2, p3, p4) = (path.clone(), path.clone(), path.clone(), path);
     view! {
         <Text bold=true>{t.name.clone()}</Text>
         <Text size="xs" dimmed=true>{format!("{} · {}", t.token_type, t.size)}</Text>
@@ -1016,15 +1049,7 @@ fn token_panel(
         <Switch
             label="Dead"
             checked=is_dead
-            on_change=Callback::new(move |on: bool| {
-                dead.update(|d| {
-                    if on {
-                        d.insert(tid.clone());
-                    } else {
-                        d.remove(&tid);
-                    }
-                })
-            })
+            on_change=Callback::new(move |on: bool| run(patch::<Token>(p4.clone(), json!({ "dead": on }))))
         />
         <SectionLabel label="Vision (feet; empty: no limit)" />
         <TextInput label="In bright light" value=bright input_type="number" />

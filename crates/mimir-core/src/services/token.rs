@@ -130,6 +130,8 @@ pub struct UpdateTokenInput {
     pub vision_dark_ft: Option<i32>,
     /// Update light radius
     pub light_radius_ft: Option<i32>,
+    /// Mark dead or alive
+    pub dead: Option<bool>,
 }
 
 impl UpdateTokenInput {
@@ -187,6 +189,8 @@ pub struct TokenResponse {
     pub vision_dim_ft: Option<i32>,
     pub vision_dark_ft: i32,
     pub light_radius_ft: i32,
+    /// The DM marked it dead.
+    pub dead: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -319,6 +323,7 @@ impl<'a> TokenService<'a> {
             vision_dim_ft: input.vision_dim_ft,
             vision_dark_ft: input.vision_dark_ft,
             light_radius_ft: input.light_radius_ft,
+            dead: input.dead.map(i32::from),
         };
 
         let rows = dal::update_token_placement(self.conn, id, &update)?;
@@ -451,6 +456,7 @@ impl<'a> TokenService<'a> {
             vision_dim_ft: placement.vision_dim_ft,
             vision_dark_ft: placement.vision_dark_ft,
             light_radius_ft: placement.light_radius_ft,
+            dead: placement.dead != 0,
             created_at: placement.created_at.clone(),
             updated_at: placement.created_at, // Use created_at as updated_at since we don't track it
         })
@@ -989,6 +995,24 @@ mod tests {
             .toggle_visibility(&token.id)
             .expect("Failed to toggle");
         assert!(toggled_back.visible_to_players);
+    }
+
+    #[test]
+    fn a_token_is_marked_dead_and_alive() {
+        let (mut conn, temp_dir) = setup_test_env();
+        let (_campaign_id, _module_id, map_id) = create_prerequisites(&mut conn);
+        let mut service = TokenService::new(&mut conn, temp_dir.path());
+        let token = service
+            .create(CreateTokenInput::for_pc(&map_id, "Fighter", 0, 0))
+            .expect("create");
+        assert!(!token.dead);
+        let mark = |dead| UpdateTokenInput {
+            dead: Some(dead),
+            ..Default::default()
+        };
+        assert!(service.update(&token.id, mark(true)).unwrap().dead);
+        assert!(service.get(&token.id).unwrap().unwrap().dead, "saved");
+        assert!(!service.update(&token.id, mark(false)).unwrap().dead);
     }
 
     #[test]

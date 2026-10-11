@@ -446,6 +446,8 @@ pub fn routes() -> Vec<ApiRoute> {
             get(m::get_fog).put(m::set_fog),
         ),
         route("/maps/{id}/fog/reveal", Dm, &["POST"], post(m::reveal)),
+        route("/maps/{id}/doors", Dm, G, get(m::list_doors)),
+        route("/maps/{id}/doors/{index}", Dm, &["PUT"], put(m::set_door)),
         route(
             "/maps/{id}/fog/revealed",
             Dm,

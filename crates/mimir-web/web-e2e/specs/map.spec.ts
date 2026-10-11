@@ -73,6 +73,15 @@ test('place a PC; fog and line of sight; show to players', async ({ page }) => {
     .poll(async () => (await page.locator('#mimir-fog-mask path').getAttribute('d'))!.length)
     .toBeLessThan(withLos.length)
 
+  // Line of sight is saved with the map (MIMIR-T-0728).
+  await expect
+    .poll(async () => (await (await page.request.get(`/api/v1/maps/${map}`, { headers: auth })).json()).line_of_sight)
+    .toBe(false)
+  await page.getByText('Line of sight', { exact: true }).click()
+  await expect
+    .poll(async () => (await (await page.request.get(`/api/v1/maps/${map}`, { headers: auth })).json()).line_of_sight)
+    .toBe(true)
+
   await page.getByRole('button', { name: 'Show to players' }).click()
   await expect(page.getByRole('button', { name: 'Stop showing' })).toBeVisible()
   await page.getByRole('button', { name: 'Blackout' }).click()

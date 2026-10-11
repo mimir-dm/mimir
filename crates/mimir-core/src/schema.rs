@@ -488,6 +488,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    map_door_states (map_id, portal_index) {
+        map_id -> Text,
+        portal_index -> Integer,
+        closed -> Integer,
+    }
+}
+
+diesel::table! {
     maps (id) {
         id -> Text,
         campaign_id -> Text,
@@ -500,6 +508,8 @@ diesel::table! {
         fog_enabled -> Integer,
         created_at -> Text,
         updated_at -> Text,
+        reveal_all -> Integer,
+        line_of_sight -> Integer,
     }
 }
 
@@ -705,6 +715,7 @@ diesel::table! {
         vision_dark_ft -> Integer,
         light_radius_ft -> Integer,
         created_at -> Text,
+        dead -> Integer,
     }
 }
 
@@ -781,6 +792,7 @@ diesel::joinable!(items -> catalog_sources (source));
 diesel::joinable!(languages -> catalog_sources (source));
 diesel::joinable!(light_sources -> maps (map_id));
 diesel::joinable!(map_traps -> maps (map_id));
+diesel::joinable!(map_door_states -> maps (map_id));
 diesel::joinable!(map_pois -> maps (map_id));
 diesel::joinable!(maps -> campaign_assets (uvtt_asset_id));
 diesel::joinable!(maps -> campaigns (campaign_id));
@@ -846,6 +858,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     items,
     languages,
     light_sources,
+    map_door_states,
     map_traps,
     map_pois,
     maps,

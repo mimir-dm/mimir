@@ -27,7 +27,7 @@ Each token has four vision values. Set them in the token panel of the DM map.
 | Dim | Twilight | Dim vision |
 | Darkness | Night, underground | The larger of dark vision and the carried light |
 
-The player display uses the lighting of the map (chosen at upload). The **bright / dim / darkness** control on the DM map changes only the DM's view.
+A new map starts at the ambient light of its UVTT file (bright when the file has none). The **bright / dim / darkness** control on the DM map changes the light level of the map; the player display follows it.
 
 ## Light Source Presets
 
@@ -36,7 +36,7 @@ The player display uses the lighting of the map (chosen at upload). The **bright
 | Torch | 20 ft | 40 ft |
 | Lantern | 30 ft | 60 ft |
 
-A token's carried light uses its **Carried light** value as the dim radius and half of it as the bright radius.
+A token's carried light uses its **Carried light** value as the dim radius and half of it as the bright radius. A light drawn into a UVTT map file uses its range as the dim radius and half of it as the bright radius. Its glow stops at the walls.
 
 ## Light Level at a Point
 
@@ -47,6 +47,8 @@ The light level at a point is the best of:
 - The ambient level
 
 A token sees by the light where it stands. The light level at its own place picks which range applies.
+
+In dim light or darkness, the players also see the area of a lit light when a PC has a line to the light (walls only, no range limit).
 
 ## Which Tokens Reveal
 
@@ -70,13 +72,16 @@ A token sees by the light where it stands. The light level at its own place pick
 
 With no PC token on the map and fog off, all tokens with **Players see it** on are shown. With no PC token and fog on, the whole map is covered.
 
+With **Reveal map** on, the players see the whole map and every token with **Players see it** on, also under fog.
+
 ## Walls
 
 UVTT maps have walls and doors:
 
 - Sight is a visibility polygon cast against the walls.
 - Closed doors block sight; open doors do not.
-- The player display uses the doors as the map file has them. A door that the DM opens on the DM map is open on that view only.
+- The DM opens or closes a door on the DM map. The map keeps the door state, and the player display follows it.
+- With **Line of sight** off, walls and doors do not block sight.
 
 Image maps have no walls. Sight is a circle of its range.
 

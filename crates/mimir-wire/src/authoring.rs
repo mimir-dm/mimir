@@ -153,6 +153,12 @@ pub struct MapPatch {
         skip_serializing_if = "Option::is_none"
     )]
     pub module_id: Option<Option<String>>,
+    /// Show the whole map to the players (no fog, no sight limits).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reveal_all: Option<bool>,
+    /// Walls and closed doors block sight.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line_of_sight: Option<bool>,
 }
 
 #[cfg(test)]

@@ -10,8 +10,10 @@ Open it from the **Maps** tab of a module page, or from the campaign maps on the
 |---------|----------|
 | **Map** | Switch to another map of the module or campaign |
 | **Fog** | Fog of war on or off for this map. Saved; the players follow it. |
-| **Line of sight** | On your view only: cut the sight of the party at walls |
-| **bright / dim / darkness** | On your view only: the light for the sight of the party. Starts at the lighting of the map. |
+| **Line of sight** | Walls and closed doors cut the sight of the party. Saved; the players follow it. |
+| **Reveal map** | Show the whole map to the players: no fog, no sight limits. Saved. |
+| **Walls** | Draw the walls of the map file (UVTT maps). On your view only. |
+| **bright / dim / darkness** | The light level of the map. Saved; the players follow it. A new map starts at the ambient light of its file. |
 | **Place on the map** (**Place…**) | Place a PC, a monster, an NPC, a torch, a lantern, a trap or a point of interest |
 | **Show to players** / **Stop showing** | Show this map on the player display and the player pages, or stop |
 | **Blackout** / **End blackout** | Hide the display ("Paused"), or show it again |
@@ -21,7 +23,7 @@ Open it from the **Maps** tab of a module page, or from the campaign maps on the
 
 ## The Map
 
-The map shows, from bottom to top: the map image, the grid, the light of the lights, the fog shade, the markers, the doors and the tokens.
+The map shows, from bottom to top: the map image, the grid, the light of the map file's lights and of the placed lights, the fog shade, the walls (when **Walls** is on), the doors, the markers and the tokens. The light of a map file's light stops at the walls.
 
 | Action | How |
 |--------|-----|
@@ -30,7 +32,7 @@ The map shows, from bottom to top: the map image, the grid, the light of the lig
 | Select | Click a token, a light, a trap or a POI |
 | Move a token | Drag it. It snaps to the grid. |
 | Place | Choose an entry in **Place on the map**, then click squares. Click **Done** in the hint to stop. |
-| Open or close a door | Click the door (UVTT maps). On your view only. |
+| Open or close a door | Click the door (UVTT maps). Saved; the player display follows it. |
 
 The fog shade shows where the party cannot see when **Fog** is on, or in dim or dark light. The token of the creature whose turn it is in the combat is marked.
 
@@ -44,7 +46,7 @@ A click on an item opens a panel beside the map. **Close** closes it.
 |---------|----------|
 | Name, type and size | For example "monster · medium" |
 | **Players see it** | Off: the token is hidden from the players |
-| **Dead** | Marks the token on your view. Not saved. |
+| **Dead** | Mark the token dead. Saved; the player display shows it grey. |
 | **In bright light**, **In dim light** | Sight range in feet in that light. Empty: no limit. |
 | **Darkvision** | Sight range in feet in darkness |
 | **Carried light** | Radius in feet of a light that the token carries |

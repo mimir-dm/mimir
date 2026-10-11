@@ -198,6 +198,7 @@ pub fn update_map(
             .as_deref()
             .map(|s| parse_lighting_mode(Some(s))),
         module_id: None, // Don't allow moving maps via update
+        ..Default::default()
     };
 
     let result = MapService::new(&mut db, &state.paths.app_dir).update(&id, input);

@@ -62,6 +62,8 @@ pub enum MapPart {
     Fog,
     Lights,
     Markers,
+    /// Doors the DM opened or closed.
+    Doors,
 }
 
 /// From the server.
