@@ -9,6 +9,7 @@
 
 pub mod book;
 pub mod entries;
+pub mod summary;
 pub mod tags;
 
 /// Escape text for HTML content or a quoted attribute.

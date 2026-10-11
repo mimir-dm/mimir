@@ -25,6 +25,7 @@ pub mod error;
 pub mod live;
 pub mod map;
 pub mod patch;
+pub mod reference;
 
 pub use authoring::*;
 pub use campaign::*;
@@ -33,6 +34,7 @@ pub use combat::*;
 pub use error::{ErrorBody, ErrorCode, ErrorDetail};
 pub use live::*;
 pub use map::*;
+pub use reference::*;
 
 use serde::{Deserialize, Serialize};
 

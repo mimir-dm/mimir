@@ -3996,6 +3996,7 @@ dependencies = [
  "image",
  "mime_guess",
  "mimir-core",
+ "mimir-render",
  "mimir-wire",
  "rust-embed",
  "serde",

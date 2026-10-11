@@ -32,6 +32,8 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 subtle = "2"
 mime_guess = "2"
+# Catalog table columns (MIMIR-T-0723).
+mimir-render = { path = "../mimir-render" }
 rust-embed = { version = "8", optional = true }
 
 [dev-dependencies]

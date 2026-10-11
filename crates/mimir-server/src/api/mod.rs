@@ -15,6 +15,7 @@ pub mod display;
 pub mod links;
 pub mod maps;
 pub mod party;
+pub mod reference;
 pub mod scope;
 
 use axum::extract::DefaultBodyLimit;
@@ -66,6 +67,7 @@ pub fn routes() -> Vec<ApiRoute> {
     use catalog as cat;
     use characters as ch;
     use maps as m;
+    use reference as rf;
     use Access::{Dm, Player};
     const G: &[&str] = &["GET"];
     vec![
@@ -152,6 +154,17 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/catalog/spells", Player, G, get(cat::spells)),
         route("/catalog/items", Player, G, get(cat::items)),
         route("/catalog/monsters", Dm, G, get(cat::monsters)),
+        // The catalog browser and the book reader (MIMIR-T-0723).
+        route("/catalog/search/{category}", Dm, G, get(rf::search)),
+        route(
+            "/catalog/entry/{category}/{source}/{name}",
+            Dm,
+            G,
+            get(rf::entry),
+        ),
+        route("/catalog/sources", Dm, G, get(rf::sources)),
+        route("/books/{source}", Dm, G, get(rf::book)),
+        route("/book-images/{*path}", Dm, G, get(rf::book_image)),
         route("/catalog/races", Dm, G, get(cat::races)),
         route("/catalog/backgrounds", Dm, G, get(cat::backgrounds)),
         route(
