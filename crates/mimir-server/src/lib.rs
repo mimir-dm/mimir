@@ -10,6 +10,7 @@ pub mod config;
 pub mod error;
 pub mod jobs;
 pub mod live;
+pub mod print;
 pub mod state;
 pub mod web;
 

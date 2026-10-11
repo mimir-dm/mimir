@@ -40,6 +40,9 @@ tokio-util = { workspace = true, features = ["io"] }
 futures = { workspace = true }
 tempfile = "3"
 uuid = { workspace = true }
+# PDF export (MIMIR-T-0724): typst, server only (heavy; system fonts).
+mimir-print = { path = "../mimir-print" }
+base64 = "0.22"
 rust-embed = { version = "8", optional = true }
 
 [dev-dependencies]

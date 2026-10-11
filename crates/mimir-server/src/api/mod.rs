@@ -17,6 +17,7 @@ pub mod homebrew;
 pub mod links;
 pub mod maps;
 pub mod party;
+pub mod print;
 pub mod reference;
 pub mod scope;
 
@@ -71,6 +72,7 @@ pub fn routes() -> Vec<ApiRoute> {
     use characters as ch;
     use homebrew as hb;
     use maps as m;
+    use print as pdf;
     use reference as rf;
     use Access::{Dm, Player};
     const G: &[&str] = &["GET"];
@@ -187,6 +189,18 @@ pub fn routes() -> Vec<ApiRoute> {
             post(ad::import_images).layer(DefaultBodyLimit::max(ad::CATALOG_LIMIT)),
         ),
         route("/jobs/{id}", Dm, G, get(ad::job)),
+        // PDF export (MIMIR-T-0724).
+        route("/characters/{id}/pdf", Dm, G, get(pdf::character)),
+        route("/campaigns/{id}/pdf", Dm, G, get(pdf::campaign)),
+        route("/modules/{id}/pdf", Dm, G, get(pdf::module)),
+        route("/maps/{id}/pdf", Dm, G, get(pdf::map)),
+        route("/documents/{id}/pdf", Dm, G, get(pdf::document)),
+        route(
+            "/modules/{id}/monster-cards",
+            Dm,
+            G,
+            get(pdf::monster_cards),
+        ),
         route("/campaigns/{id}/export", Dm, G, get(ad::export_archive)),
         route(
             "/archives/preview",

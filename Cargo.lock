@@ -3990,6 +3990,7 @@ name = "mimir-server"
 version = "0.7.3"
 dependencies = [
  "axum",
+ "base64 0.22.1",
  "diesel",
  "flate2",
  "futures",
@@ -3998,6 +3999,7 @@ dependencies = [
  "image",
  "mime_guess",
  "mimir-core",
+ "mimir-print",
  "mimir-render",
  "mimir-wire",
  "rust-embed",
