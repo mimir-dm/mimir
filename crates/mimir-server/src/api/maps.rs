@@ -745,9 +745,10 @@ pub async fn create_light(
             let created = match body.preset.as_deref() {
                 Some("torch") => service.create_torch(&id, body.grid_x, body.grid_y)?,
                 Some("lantern") => service.create_lantern(&id, body.grid_x, body.grid_y)?,
+                Some("candle") => service.create_candle(&id, body.grid_x, body.grid_y)?,
                 Some(other) => {
                     return Err(ServiceError::validation(format!(
-                        "unknown light preset {other:?} (torch, lantern)"
+                        "unknown light preset {other:?} (torch, lantern, candle)"
                     ))
                     .into())
                 }

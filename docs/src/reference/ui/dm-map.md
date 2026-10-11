@@ -14,8 +14,9 @@ Open it from the **Maps** tab of a module page, or from the campaign maps on the
 | **Reveal map** | Show the whole map to the players: no fog, no sight limits. Saved. |
 | **Overlays** | On your view only: draw the walls of the map file (UVTT maps), and a dashed ring for how far each monster and NPC sees when its sight has a limit |
 | **bright / dim / darkness** | The light level of the map. Saved; the players follow it. A new map starts at the ambient light of its file. |
-| **Place on the map** (**Place…**) | Place a PC, a monster, an NPC, a torch, a lantern, a trap or a point of interest |
+| **Place on the map** (**Place…**) | Place a PC, a monster (of the module or from the catalog), an NPC, a torch, a lantern, a candle, a trap or a point of interest. The **Placement** panel takes the name, colour and **Players see it**. |
 | **Add PCs** | Place a token for each PC of the campaign that has no token on this map, in a row from the centre of the view |
+| **On the map** | List the tokens, lights, traps and points of interest: select, show or hide, remove |
 | **Show to players** / **Stop showing** | Show this map on the player display and the player pages, or stop |
 | **Blackout** / **End blackout** | Hide the display ("Paused"), or show it again |
 | **Open player display** | Open the player display in a new tab |
@@ -31,7 +32,8 @@ The map shows, from bottom to top: the map image, the grid, the light of the map
 | Pan | Drag the map |
 | Zoom | Mouse wheel, pinch, or the zoom buttons |
 | Select | Click a token, a light, a trap or a POI |
-| Move a token | Drag it. It snaps to the grid. |
+| Move a token, a light, a trap or a POI | Drag it. It snaps to the grid. |
+| Right-click | A menu for a token (**Edit**, **Hide**/**Show**, **Remove**), a trap (**Hide**/**Show**, **Trigger**/**Reset**, **Remove**) or a POI (**Edit**, **Hide**/**Show**, **Remove**). A light turns on or off. |
 | Place | Choose an entry in **Place on the map**, then click squares. Click **Done** in the hint to stop. |
 | Open or close a door | Click the door (UVTT maps). Saved; the player display follows it. |
 | Show the details | Double-click or double-tap a monster token: its stat block opens. Double-click a trap: the catalog trap of that name opens, if there is one. |
@@ -80,6 +82,7 @@ A click on an item opens a panel beside the map. **Close** closes it.
 |---------|----------|
 | Name and description | |
 | **Players see it** | Show the POI to the players |
+| **Edit** | Open the point of interest dialog: name, description, icon, colour |
 | **Remove** | Remove the POI, after a confirmation |
 
 ## Initiative Tracker

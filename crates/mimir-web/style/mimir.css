@@ -182,6 +182,81 @@
   vector-effect: non-scaling-stroke;
   pointer-events: none;
 }
+/* Token setup (MIMIR-T-0730): the placement form, the right-click menu,
+   the lists of what is on the map, and the point of interest dialog. */
+.mimir-map__placing {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  width: min(300px, calc(100% - 2 * var(--space-sm)));
+  max-height: calc(100% - 2 * var(--space-sm));
+  overflow: auto;
+  z-index: 2;
+}
+.mimir-place { display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-place__search { display: flex; gap: var(--space-xs); align-items: flex-end; }
+.mimir-place__results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.mimir-place__color { display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-map__poi-icon { pointer-events: none; }
+.mimir-map__menu {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: var(--space-xs);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-md);
+}
+.mimir-map__menu-item {
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+}
+.mimir-map__menu-item:hover, .mimir-map__menu-item:focus-visible { background: var(--hover, rgba(127, 127, 127, 0.15)); }
+.mimir-placed ul { list-style: none; margin: 0 0 var(--space-sm); padding: 0; }
+.mimir-placed__row { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-placed__name {
+  flex: 1 1 auto;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mimir-poi__icons, .mimir-poi__colors { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
+.mimir-poi__icon {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--panel);
+  cursor: pointer;
+}
+.mimir-poi__icon[aria-pressed="true"], .mimir-poi__swatch[aria-pressed="true"] { outline: 3px solid var(--fg); outline-offset: 1px; }
+.mimir-poi__swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer; }
+.mimir-poi__preview { display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-poi__badge {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
 /* The DM map in full screen fills it. */
 .mimir-map:fullscreen { background: var(--bg); padding: var(--space-md); overflow: auto; }
 .mimir-map__walls {

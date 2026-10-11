@@ -342,6 +342,24 @@ async fn lights_presets_patch_delete() {
         .await;
     assert_eq!((torch.bright_radius_ft, torch.dim_radius_ft), (20, 40));
     assert!(torch.active);
+    let candle: wire::Light = f
+        .ok(
+            Method::POST,
+            &base,
+            Some(json!({"grid_x": 5, "grid_y": 4, "preset": "candle"})),
+        )
+        .await;
+    assert_eq!(
+        (
+            candle.name.as_deref(),
+            candle.bright_radius_ft,
+            candle.dim_radius_ft
+        ),
+        (Some("Candle"), 5, 10)
+    );
+    let _ = f
+        .send(Method::DELETE, &format!("/lights/{}", candle.id), None)
+        .await;
     let (status, _) = f
         .status(
             Method::POST,

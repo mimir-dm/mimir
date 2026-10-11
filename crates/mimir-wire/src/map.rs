@@ -248,7 +248,8 @@ pub struct Light {
     pub active: bool,
 }
 
-/// `POST /maps/{id}/lights`. With a `preset` ("torch" or "lantern") the
+/// `POST /maps/{id}/lights`. With a `preset` ("torch", "lantern" or
+/// "candle") the
 /// preset sets the name, radii and colour.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct NewLight {

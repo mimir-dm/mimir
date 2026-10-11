@@ -20,6 +20,7 @@ use mimir_wire::{
 use serde_json::json;
 
 use super::display::sight_for;
+use super::setup::{poi_emoji, Place, PlaceForm, PlaceOptions, PlacedLists, PoiDialog, PoiEdit};
 use super::tracker::{self, CombatTracker};
 use super::viewport::Viewport;
 use super::vision::{self, LightLevel};
@@ -61,36 +62,6 @@ pub fn grid_path(columns: f64, rows: f64, grid_px: f64) -> String {
         d.push_str(&format!("M0 {y:.1}H{w:.1}"));
     }
     d
-}
-
-/// What a tap on the map places.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Place {
-    Pc,
-    Monster(String),
-    Npc(String),
-    Torch,
-    Lantern,
-    Trap,
-    Poi,
-}
-
-impl Place {
-    /// From the value of the place menu ("pc", "monster:<id>", …).
-    pub fn parse(value: &str) -> Option<Place> {
-        match value.split_once(':') {
-            Some(("monster", id)) => Some(Place::Monster(id.to_string())),
-            Some(("npc", id)) => Some(Place::Npc(id.to_string())),
-            _ => match value {
-                "pc" => Some(Place::Pc),
-                "torch" => Some(Place::Torch),
-                "lantern" => Some(Place::Lantern),
-                "trap" => Some(Place::Trap),
-                "poi" => Some(Place::Poi),
-                _ => None,
-            },
-        }
-    }
 }
 
 /// Vision presets (the desktop's): label, sight in bright light, in dim
@@ -216,13 +187,42 @@ type Res<T> = LocalResource<Result<T, ApiError>>;
 /// A change to send: a boxed future that reports its error.
 type Job = std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), ApiError>>>>;
 
-/// A drag of a token: its id and where it is now (map pixels).
+/// A drag of a token, a light, a trap or a POI: what, and where it is now
+/// (map pixels).
 #[derive(Debug, Clone, PartialEq)]
 struct Drag {
-    token_id: String,
+    what: Selected,
     x: f64,
     y: f64,
     moved: bool,
+}
+
+impl Drag {
+    /// Where the dragged thing is drawn, if it is this one.
+    fn at(drag: &Option<Drag>, what: &Selected) -> Option<(f64, f64)> {
+        drag.as_ref()
+            .filter(|d| &d.what == what && d.moved)
+            .map(|d| (d.x, d.y))
+    }
+}
+
+/// The path of a selected thing in the API.
+fn path_of(what: &Selected) -> String {
+    match what {
+        Selected::Token(id) => format!("/tokens/{id}"),
+        Selected::Light(id) => format!("/lights/{id}"),
+        Selected::Trap(id) => format!("/traps/{id}"),
+        Selected::Poi(id) => format!("/pois/{id}"),
+    }
+}
+
+/// An entry of a right-click menu.
+#[derive(Debug, Clone, PartialEq)]
+enum MenuAction {
+    Select(Selected),
+    Patch(String, serde_json::Value),
+    Remove(String, &'static str),
+    EditPoi(Poi),
 }
 
 #[component]
@@ -380,6 +380,13 @@ pub fn DmMapPage() -> impl IntoView {
     let marks = Memo::new(move |_| combat.with(|c| tracker::map_marks(c.as_ref())));
     let place = RwSignal::new(None::<Place>);
     let place_menu = RwSignal::new(String::new());
+    // The placement form, the POI dialog, the right-click menu (and where,
+    // in the stage), and the lists of what is on the map (MIMIR-T-0730).
+    let form = PlaceForm::new();
+    let poi_edit = RwSignal::new(None::<PoiEdit>);
+    let menu = RwSignal::new(None::<(Selected, f64, f64)>);
+    let lists_open = RwSignal::new(false);
+    let stage = NodeRef::<leptos::html::Div>::new();
     let drag = RwSignal::new(None::<Drag>);
     let error = RwSignal::new(String::new());
     let scene = vp.scene;
@@ -461,50 +468,83 @@ pub fn DmMapPage() -> impl IntoView {
         let g = grid_px();
         let (gx, gy) = (cell_of(mx, g), cell_of(my, g));
         let map_id = id.get_untracked();
-        let ask = |what: &str| -> Option<String> {
-            web_sys::window()?
-                .prompt_with_message(what)
-                .ok()
-                .flatten()
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
+        let cell = json!({ "grid_x": gx, "grid_y": gy });
+        let with = |extra: serde_json::Value| {
+            let mut b = cell.clone();
+            if let (Some(b), Some(e)) = (b.as_object_mut(), extra.as_object()) {
+                b.extend(e.clone());
+            }
+            b
         };
-        let body = match &kind {
-            Place::Pc => ask("Name of the player character").map(|label| {
-                (
-                    "tokens",
-                    json!({"grid_x": gx, "grid_y": gy, "label": label}),
-                )
-            }),
-            Place::Monster(m) => Some((
-                "tokens",
-                json!({"grid_x": gx, "grid_y": gy, "monster_id": m}),
-            )),
-            Place::Npc(n) => Some(("tokens", json!({"grid_x": gx, "grid_y": gy, "npc_id": n}))),
-            Place::Torch => Some((
-                "lights",
-                json!({"grid_x": gx, "grid_y": gy, "preset": "torch"}),
-            )),
-            Place::Lantern => Some((
-                "lights",
-                json!({"grid_x": gx, "grid_y": gy, "preset": "lantern"}),
-            )),
-            Place::Trap => ask("Name of the trap")
-                .map(|name| ("traps", json!({"grid_x": gx, "grid_y": gy, "name": name}))),
-            Place::Poi => ask("Name of the point of interest")
-                .map(|name| ("pois", json!({"grid_x": gx, "grid_y": gy, "name": name}))),
-        };
-        // Monsters and NPCs can go on the map more than once; the others once.
-        if !matches!(kind, Place::Monster(_) | Place::Npc(_)) {
-            place.set(None);
-            place_menu.set(String::new());
-        }
-        if let Some((what, body)) = body {
+        let name = form.name.get_untracked().trim().to_string();
+        let post = move |what: &'static str, body: serde_json::Value| {
+            let path = format!("/maps/{}/{what}", id.get_untracked());
             run(Box::pin(async move {
-                api::send::<_, serde_json::Value>("POST", &format!("/maps/{map_id}/{what}"), &body)
+                api::send::<_, serde_json::Value>("POST", &path, &body)
                     .await
                     .map(|_| ())
             }));
+        };
+        match &kind {
+            Place::Pc if name.is_empty() => {
+                error.set("Type the name of the player character first.".into());
+                return;
+            }
+            Place::Trap if name.is_empty() => {
+                error.set("Type the name of the trap first.".into());
+                return;
+            }
+            Place::CatalogMonster if form.monster.get_untracked().is_none() => {
+                error.set("Search for a monster and choose it first.".into());
+                return;
+            }
+            _ => {}
+        }
+        error.set(String::new());
+        match &kind {
+            Place::Pc => post("tokens", with(form.token_fields())),
+            Place::Monster(m) => {
+                let mut b = with(form.token_fields());
+                b["monster_id"] = json!(m);
+                post("tokens", b);
+            }
+            Place::Npc(n) => {
+                let mut b = with(form.token_fields());
+                b["npc_id"] = json!(n);
+                post("tokens", b);
+            }
+            Place::CatalogMonster => {
+                // The monster joins the module, then its token goes down.
+                let (Some(choice), Some(module)) =
+                    (form.monster.get_untracked(), module.get_untracked())
+                else {
+                    return;
+                };
+                let mut b = with(form.token_fields());
+                run(Box::pin(async move {
+                    let added: wire::ModuleMonsterSummary = api::send(
+                        "POST",
+                        &format!("/modules/{module}/monsters"),
+                        &json!({ "monster_name": choice.name, "monster_source": choice.source }),
+                    )
+                    .await?;
+                    b["monster_id"] = json!(added.id);
+                    api::send::<_, Token>("POST", &format!("/maps/{map_id}/tokens"), &b).await?;
+                    Ok(())
+                }));
+            }
+            Place::Torch => post("lights", with(json!({ "preset": "torch" }))),
+            Place::Lantern => post("lights", with(json!({ "preset": "lantern" }))),
+            Place::Candle => post("lights", with(json!({ "preset": "candle" }))),
+            Place::Trap => post(
+                "traps",
+                with(json!({ "name": name, "visible": form.visible.get_untracked() })),
+            ),
+            Place::Poi => poi_edit.set(Some(PoiEdit::new(map_id, gx, gy))),
+        }
+        if !kind.repeats() {
+            place.set(None);
+            place_menu.set(String::new());
         }
     };
 
@@ -558,7 +598,43 @@ pub fn DmMapPage() -> impl IntoView {
     };
 
     // ---- Pointer handling --------------------------------------------------
-    let on_down = move |ev: web_sys::PointerEvent| vp.down(&ev);
+    let on_down = move |ev: web_sys::PointerEvent| {
+        menu.set(None);
+        vp.down(&ev);
+    };
+    // Start dragging a thing on the map: the scene holds the pointer.
+    let start_drag = move |what: Selected, ev: &web_sys::PointerEvent| {
+        // Only the main button drags; the right one opens a menu (a drag
+        // would hold the pointer and take its contextmenu event).
+        if ev.button() != 0 {
+            return;
+        }
+        if let Some(el) = scene.get_untracked() {
+            let _ = el.set_pointer_capture(ev.pointer_id());
+        }
+        let (mx, my) = to_map(f64::from(ev.client_x()), f64::from(ev.client_y()));
+        menu.set(None);
+        drag.set(Some(Drag {
+            what,
+            x: mx,
+            y: my,
+            moved: false,
+        }));
+    };
+    // A right-click menu at the pointer (in the stage).
+    let open_menu = move |what: Selected, ev: &web_sys::MouseEvent| {
+        ev.prevent_default();
+        ev.stop_propagation();
+        let Some(el) = stage.get_untracked() else {
+            return;
+        };
+        let r = el.get_bounding_client_rect();
+        menu.set(Some((
+            what,
+            f64::from(ev.client_x()) - r.left(),
+            f64::from(ev.client_y()) - r.top(),
+        )));
+    };
     let on_move = move |ev: web_sys::PointerEvent| {
         if drag.with_untracked(Option::is_some) {
             let (mx, my) = to_map(f64::from(ev.client_x()), f64::from(ev.client_y()));
@@ -588,12 +664,10 @@ pub fn DmMapPage() -> impl IntoView {
             if d.moved {
                 let g = grid_px();
                 let (gx, gy) = (cell_of(d.x, g), cell_of(d.y, g));
-                let path = format!("/tokens/{}", d.token_id);
-                run(Box::pin(async move {
-                    api::send::<_, Token>("PATCH", &path, &json!({"grid_x": gx, "grid_y": gy}))
-                        .await
-                        .map(|_| ())
-                }));
+                run(patch::<serde_json::Value>(
+                    path_of(&d.what),
+                    json!({"grid_x": gx, "grid_y": gy}),
+                ));
             }
         }
         if vp.up(&ev) {
@@ -648,6 +722,8 @@ pub fn DmMapPage() -> impl IntoView {
             MapKey::ToggleHidden => key_token(|t| json!({ "hidden": t.visible_to_players })),
             MapKey::ToggleDead => key_token(|t| json!({ "dead": !t.dead })),
             MapKey::Deselect => {
+                menu.set(None);
+                poi_edit.set(None);
                 selected.set(None);
                 place.set(None);
                 place_menu.set(String::new());
@@ -780,9 +856,13 @@ pub fn DmMapPage() -> impl IntoView {
             ("pc".into(), "Player character".into()),
             ("torch".into(), "Torch".into()),
             ("lantern".into(), "Lantern".into()),
+            ("candle".into(), "Candle".into()),
             ("trap".into(), "Trap".into()),
             ("poi".into(), "Point of interest".into()),
         ];
+        if module.get().is_some() {
+            o.push(("catalog-monster".into(), "Monster from the catalog…".into()));
+        }
         if let Some(Ok(list)) = monsters.get() {
             o.extend(
                 list.into_iter()
@@ -797,7 +877,11 @@ pub fn DmMapPage() -> impl IntoView {
         }
         o
     };
-    let on_place = Callback::new(move |v: String| place.set(Place::parse(&v)));
+    let on_place = Callback::new(move |v: String| {
+        let kind = Place::parse(&v);
+        form.reset(kind.as_ref());
+        place.set(kind);
+    });
 
     // ---- View --------------------------------------------------------------
     let header = move || {
@@ -835,6 +919,10 @@ pub fn DmMapPage() -> impl IntoView {
                         on_change=on_place
                     />
                     <Button variant="light" on_click=Callback::new(move |_| add_pcs())>"Add PCs"</Button>
+                    <Button variant="light" on_click=Callback::new(move |_| {
+                        selected.set(None);
+                        lists_open.update(|o| *o = !*o);
+                    })>"On the map"</Button>
                 </div>
                 <div class="mimir-map__tool-group">
                     {move || {
@@ -952,14 +1040,20 @@ pub fn DmMapPage() -> impl IntoView {
                         }}
                         // Lights: placed lights (the DM sees unlit ones faint).
                         {move || {
+                            let dragging = drag.get();
                             light_list()
                                 .into_iter()
-                                .map(|l| {
+                                .map(|mut l| {
+                                    if let Some((dx, dy)) = Drag::at(&dragging, &Selected::Light(l.id.clone())) {
+                                        (l.x, l.y) = (dx, dy);
+                                    }
                                     let color = l.color.clone().unwrap_or_else(|| "#ffcc66".into());
                                     let dim = vision::feet_to_px(f64::from(l.dim_radius_ft), g);
                                     let bright = vision::feet_to_px(f64::from(l.bright_radius_ft), g);
                                     let sel = Selected::Light(l.id.clone());
                                     let sel2 = sel.clone();
+                                    let toggle_path = format!("/lights/{}", l.id);
+                                    let lit = l.active;
                                     view! {
                                         <g class="mimir-map__light" class:mimir-map__light--off=!l.active>
                                             <g clip-path="url(#mimir-map-clip)">
@@ -977,6 +1071,13 @@ pub fn DmMapPage() -> impl IntoView {
                                                 on:pointerdown=move |ev: web_sys::PointerEvent| {
                                                     ev.stop_propagation();
                                                     selected.set(Some(sel.clone()));
+                                                    start_drag(sel.clone(), &ev);
+                                                }
+                                                // Right-click turns the light on or off (the desktop's).
+                                                on:contextmenu=move |ev: web_sys::MouseEvent| {
+                                                    ev.prevent_default();
+                                                    ev.stop_propagation();
+                                                    run(patch::<Light>(toggle_path.clone(), json!({ "active": !lit })));
                                                 }
                                             />
                                         </g>
@@ -1070,14 +1171,17 @@ pub fn DmMapPage() -> impl IntoView {
                         }}
                         // Markers.
                         {move || {
+                            let dragging = drag.get();
                             let traps = traps.get().and_then(Result::ok).unwrap_or_default();
                             traps
                                 .into_iter()
                                 .map(|t| {
-                                    let (x, y) = ((f64::from(t.grid_x) + 0.5) * g, (f64::from(t.grid_y) + 0.5) * g);
-                                    let s = g * 0.3;
                                     let sel = Selected::Trap(t.id.clone());
+                                    let (x, y) = Drag::at(&dragging, &sel)
+                                        .unwrap_or(((f64::from(t.grid_x) + 0.5) * g, (f64::from(t.grid_y) + 0.5) * g));
+                                    let s = g * 0.3;
                                     let sel2 = sel.clone();
+                                    let sel3 = sel.clone();
                                     let trap_name = t.name.clone();
                                     view! {
                                         <g
@@ -1090,7 +1194,9 @@ pub fn DmMapPage() -> impl IntoView {
                                                     pending_detail.set_value(Some(Detail::Trap(trap_name.clone())));
                                                 }
                                                 selected.set(Some(sel.clone()));
+                                                start_drag(sel.clone(), &ev);
                                             }
+                                            on:contextmenu=move |ev: web_sys::MouseEvent| open_menu(sel3.clone(), &ev)
                                         >
                                             <path d=format!("M{x} {}L{} {}L{} {}Z", y - s, x + s, y + s, x - s, y + s) />
                                             <text x=x y=y + s + g * 0.3 text-anchor="middle">{t.name}</text>
@@ -1100,25 +1206,34 @@ pub fn DmMapPage() -> impl IntoView {
                                 .collect_view()
                         }}
                         {move || {
+                            let dragging = drag.get();
                             let pois = pois.get().and_then(Result::ok).unwrap_or_default();
                             pois
                                 .into_iter()
                                 .map(|p| {
-                                    let (x, y) = ((f64::from(p.grid_x) + 0.5) * g, (f64::from(p.grid_y) + 0.5) * g);
                                     let sel = Selected::Poi(p.id.clone());
+                                    let (x, y) = Drag::at(&dragging, &sel)
+                                        .unwrap_or(((f64::from(p.grid_x) + 0.5) * g, (f64::from(p.grid_y) + 0.5) * g));
                                     let sel2 = sel.clone();
+                                    let sel3 = sel.clone();
+                                    let emoji = poi_emoji(&p.icon);
+                                    let poi_label = p.name.clone();
                                     let color = p.color.clone().unwrap_or_else(|| token::ICE.to_string());
                                     view! {
                                         <g
                                             class="mimir-map__marker mimir-map__marker--poi"
                                             class:mimir-map__marker--hidden=!p.visible
                                             class:mimir-map__marker--selected=move || selected.get() == Some(sel2.clone())
+                                            aria-label=poi_label
                                             on:pointerdown=move |ev: web_sys::PointerEvent| {
                                                 ev.stop_propagation();
                                                 selected.set(Some(sel.clone()));
+                                                start_drag(sel.clone(), &ev);
                                             }
+                                            on:contextmenu=move |ev: web_sys::MouseEvent| open_menu(sel3.clone(), &ev)
                                         >
                                             <circle cx=x cy=y r=g * 0.25 style=format!("fill:{color}") />
+                                            <text class="mimir-map__poi-icon" x=x y=y text-anchor="middle" dominant-baseline="central" font-size=g * 0.28>{emoji}</text>
                                             <text x=x y=y + g * 0.6 text-anchor="middle">{p.name}</text>
                                         </g>
                                     }
@@ -1134,9 +1249,9 @@ pub fn DmMapPage() -> impl IntoView {
                                     let cells = cells_for_size(&t.size);
                                     let side = cells * g;
                                     let (mut x, mut y) = (f64::from(t.grid_x) * g, f64::from(t.grid_y) * g);
-                                    if let Some(d) = dragging.as_ref().filter(|d| d.token_id == t.id) {
-                                        x = d.x - side / 2.0;
-                                        y = d.y - side / 2.0;
+                                    if let Some((dx, dy)) = Drag::at(&dragging, &Selected::Token(t.id.clone())) {
+                                        x = dx - side / 2.0;
+                                        y = dy - side / 2.0;
                                     }
                                     let art = token_art.with(|m| m.get(&t.id).cloned().flatten());
                                     let (turn_token, down) = marks.get();
@@ -1146,6 +1261,7 @@ pub fn DmMapPage() -> impl IntoView {
                                     let monster_id = t.monster_id.clone();
                                     let sel = Selected::Token(t.id.clone());
                                     let sel2 = sel.clone();
+                                    let sel3 = sel.clone();
                                     let color = t.color.clone().unwrap_or_else(|| match t.token_type.as_str() {
                                         "pc" => token::OK.to_string(),
                                         "npc" => token::ICE.to_string(),
@@ -1166,14 +1282,11 @@ pub fn DmMapPage() -> impl IntoView {
                                                 if double_tap(&tid) {
                                                     pending_detail.set_value(Some(Detail::Monster(monster_id.clone())));
                                                 }
-                                                if let Some(el) = scene.get_untracked() {
-                                                    let _ = el.set_pointer_capture(ev.pointer_id());
-                                                }
                                                 selected.set(Some(sel.clone()));
-                                                let (mx, my) = to_map(f64::from(ev.client_x()), f64::from(ev.client_y()));
                                                 selected_token.set(Some(tid.clone()));
-                                                drag.set(Some(Drag { token_id: tid.clone(), x: mx, y: my, moved: false }));
+                                                start_drag(sel.clone(), &ev);
                                             }
+                                            on:contextmenu=move |ev: web_sys::MouseEvent| open_menu(sel3.clone(), &ev)
                                         >
                                             <clipPath id=clip.clone()>
                                                 <circle cx=x + side / 2.0 cy=y + side / 2.0 r=side * 0.45 />
@@ -1227,7 +1340,7 @@ pub fn DmMapPage() -> impl IntoView {
                     .and_then(Result::ok)?
                     .into_iter()
                     .find(|p| p.id == pid)?;
-                poi_panel(p, run).into_any()
+                poi_panel(p, run, poi_edit).into_any()
             }
         };
         Some(view! {
@@ -1242,9 +1355,124 @@ pub fn DmMapPage() -> impl IntoView {
         })
     };
 
+    // The lists of what is on the map, when nothing is selected.
+    let lists = move || {
+        (lists_open.get() && selected.with(Option::is_none)).then(|| {
+            let on_select = Callback::new(move |(kind, id): (String, String)| {
+                selected.set(match kind.as_str() {
+                    "token" => Some(Selected::Token(id)),
+                    "light" => Some(Selected::Light(id)),
+                    "trap" => Some(Selected::Trap(id)),
+                    _ => Some(Selected::Poi(id)),
+                })
+            });
+            view! {
+                <aside class="mimir-map__panel" aria-label="On the map">
+                    <Card>
+                        <Stack gap="sm">
+                            <PlacedLists
+                                tokens=Signal::derive(token_list)
+                                lights=Signal::derive(light_list)
+                                traps=Signal::derive(move || traps.get().and_then(Result::ok).unwrap_or_default())
+                                pois=Signal::derive(move || pois.get().and_then(Result::ok).unwrap_or_default())
+                                on_select=on_select
+                                error=error
+                            />
+                            <Button variant="subtle" on_click=Callback::new(move |_| lists_open.set(false))>"Close"</Button>
+                        </Stack>
+                    </Card>
+                </aside>
+            }
+        })
+    };
+
+    // The right-click menu of a token, a trap or a POI.
+    let context_menu = move || {
+        let (what, x, y) = menu.get()?;
+        let items: Vec<(&'static str, MenuAction)> = match &what {
+            Selected::Token(id) => {
+                let t = token_list().into_iter().find(|t| &t.id == id)?;
+                vec![
+                    ("Edit", MenuAction::Select(what.clone())),
+                    (
+                        if t.visible_to_players { "Hide" } else { "Show" },
+                        MenuAction::Patch(
+                            path_of(&what),
+                            json!({ "hidden": t.visible_to_players }),
+                        ),
+                    ),
+                    (
+                        "Remove",
+                        MenuAction::Remove(path_of(&what), "Remove this token from the map?"),
+                    ),
+                ]
+            }
+            Selected::Trap(id) => {
+                let t = traps
+                    .get()
+                    .and_then(Result::ok)?
+                    .into_iter()
+                    .find(|t| &t.id == id)?;
+                vec![
+                    (
+                        if t.visible { "Hide" } else { "Show" },
+                        MenuAction::Patch(path_of(&what), json!({ "visible": !t.visible })),
+                    ),
+                    (
+                        if t.triggered { "Reset" } else { "Trigger" },
+                        MenuAction::Patch(path_of(&what), json!({ "triggered": !t.triggered })),
+                    ),
+                    (
+                        "Remove",
+                        MenuAction::Remove(path_of(&what), "Remove this trap?"),
+                    ),
+                ]
+            }
+            Selected::Poi(id) => {
+                let p = pois
+                    .get()
+                    .and_then(Result::ok)?
+                    .into_iter()
+                    .find(|p| &p.id == id)?;
+                vec![
+                    ("Edit", MenuAction::EditPoi(p.clone())),
+                    (
+                        if p.visible { "Hide" } else { "Show" },
+                        MenuAction::Patch(path_of(&what), json!({ "visible": !p.visible })),
+                    ),
+                    (
+                        "Remove",
+                        MenuAction::Remove(path_of(&what), "Remove this point of interest?"),
+                    ),
+                ]
+            }
+            Selected::Light(_) => return None,
+        };
+        Some(view! {
+            <div class="mimir-map__menu" role="menu" style=format!("left:{x}px;top:{y}px")>
+                {items.into_iter().map(|(label, action)| view! {
+                    <button type="button" role="menuitem" class="mimir-map__menu-item" on:click=move |_| {
+                        menu.set(None);
+                        match action.clone() {
+                            MenuAction::Select(w) => selected.set(Some(w)),
+                            MenuAction::Patch(path, body) => run(patch::<serde_json::Value>(path, body)),
+                            MenuAction::Remove(path, question) => {
+                                if confirm(question) {
+                                    run(remove(path));
+                                }
+                            }
+                            MenuAction::EditPoi(p) => poi_edit.set(Some(PoiEdit::of(&p))),
+                        }
+                    }>{label}</button>
+                }).collect_view()}
+            </div>
+        })
+    };
+
     view! {
         <div class="mimir-map" node_ref=root>
             {header}
+            <PoiDialog edit=poi_edit />
             {move || {
                 place
                     .get()
@@ -1272,12 +1500,26 @@ pub fn DmMapPage() -> impl IntoView {
                     })
             }}
             <div class="mimir-map__body">
-                <div class="mimir-map__stage">
+                <div class="mimir-map__stage" node_ref=stage>
                     {move || match map.get() {
                         Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
                         _ => scene_view(),
                     }}
+                    {move || {
+                        place
+                            .get()
+                            .filter(|k| k.is_token() || matches!(k, Place::Trap | Place::Poi))
+                            .map(|_| view! {
+                                <aside class="mimir-map__placing" aria-label="Placement">
+                                    <Card>
+                                        <PlaceOptions kind=Signal::derive(move || place.get()) form=form campaign_id=campaign />
+                                    </Card>
+                                </aside>
+                            })
+                    }}
                     {panel}
+                    {lists}
+                    {context_menu}
                 </div>
                 <CombatTracker
                     module_id=module
@@ -1433,7 +1675,12 @@ fn trap_panel(t: Trap, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> impl
     }
 }
 
-fn poi_panel(p: Poi, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> impl IntoView {
+fn poi_panel(
+    p: Poi,
+    run: impl Fn(Job) + Copy + Send + Sync + 'static,
+    poi_edit: RwSignal<Option<PoiEdit>>,
+) -> impl IntoView {
+    let editing = p.clone();
     let path = format!("/pois/{}", p.id);
     let visible = RwSignal::new(p.visible);
     let (p1, p2) = (path.clone(), path);
@@ -1445,6 +1692,7 @@ fn poi_panel(p: Poi, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> impl I
             checked=visible
             on_change=Callback::new(move |on: bool| run(patch::<Poi>(p1.clone(), json!({ "visible": on }))))
         />
+        <Button variant="light" on_click=Callback::new(move |_| poi_edit.set(Some(PoiEdit::of(&editing))))>"Edit"</Button>
         <Button bad=true variant="light" on_click=Callback::new(move |_| {
             if confirm("Remove this point of interest?") {
                 run(remove(p2.clone()))
@@ -1475,18 +1723,6 @@ mod tests {
             d,
             "M0.0 0V10.0M10.0 0V10.0M20.0 0V10.0M0 0.0H20.0M0 10.0H20.0"
         );
-    }
-
-    #[test]
-    fn place_menu_values() {
-        assert_eq!(Place::parse("pc"), Some(Place::Pc));
-        assert_eq!(
-            Place::parse("monster:m1"),
-            Some(Place::Monster("m1".into()))
-        );
-        assert_eq!(Place::parse("npc:n1"), Some(Place::Npc("n1".into())));
-        assert_eq!(Place::parse("torch"), Some(Place::Torch));
-        assert_eq!(Place::parse(""), None);
     }
 
     fn tok(name: &str, kind: &str) -> Token {

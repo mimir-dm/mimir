@@ -50,12 +50,12 @@ test('place a PC; fog and line of sight; show to players', async ({ page }) => {
     headers: auth,
     data: { map_id: null },
   })
-  page.on('dialog', (d) => d.accept('Sam'))
   await page.goto(`/maps/${map}`)
   await expect(page.locator('.mimir-map__svg image').first()).toBeAttached()
 
   await page.getByLabel('Place on the map').selectOption('pc')
   await expect(page.getByText('Tap the map to place it.')).toBeVisible()
+  await page.getByRole('complementary', { name: 'Placement' }).getByLabel('Name').fill('Sam')
   const scene = (await page.locator('.mimir-map__scene').boundingBox())!
   await page.mouse.click(scene.x + 280, scene.y + 420)
   await expect(page.locator('.mimir-map__token[aria-label="Sam"]')).toBeAttached()
@@ -200,4 +200,111 @@ test('DM map controls: presets, keys, overlays, full screen, Add PCs, details', 
   const added = (await tokensOf()).filter((t) => !before.has(t.id))
   expect(added.map((t) => t.name).sort()).toEqual([...missing].sort())
   for (const t of added) await page.request.delete(`/api/v1/tokens/${t.id}`, { headers: auth })
+})
+
+test('token setup: placement form, catalog monster, candle, drag, POI dialog, menus, lists', async ({ page }) => {
+  await signIn(page)
+  const map = await mapId(page)
+  const get = async (part: string) =>
+    (await (await page.request.get(`/api/v1/maps/${map}/${part}`, { headers: auth })).json()) as any[]
+  await page.goto(`/maps/${map}`)
+  await expect(page.locator('.mimir-map__svg image').first()).toBeAttached()
+  const scene = (await page.locator('.mimir-map__scene').boundingBox())!
+  const tap = (dx: number, dy: number) => page.mouse.click(scene.x + dx, scene.y + dy)
+  const place = page.getByLabel('Place on the map')
+  const startTokens = new Set((await get('tokens')).map((t) => t.id))
+
+  // A PC with a name, a colour, hidden from the players: no prompt.
+  await place.selectOption('pc')
+  const placing = page.getByRole('complementary', { name: 'Placement' })
+  await placing.getByLabel('Name').fill('Jamie')
+  await placing.getByLabel('Token colour').fill('#00ff00')
+  await placing.getByRole('switch', { name: 'Players see it' }).click()
+  await tap(330, 380)
+  await expect(page.locator('.mimir-map__token[aria-label="Jamie"]')).toBeAttached()
+  const jamie = (await get('tokens')).find((t) => t.name === 'Jamie')
+  expect(jamie.color).toBe('#00ff00')
+  expect(jamie.visible_to_players).toBe(false)
+
+  // A monster from the catalog: it joins the module, and its token goes down.
+  const detail = await (await page.request.get(`/api/v1/maps/${map}`, { headers: auth })).json()
+  const before = (await (await page.request.get(`/api/v1/modules/${detail.module_id}/monsters`, { headers: auth })).json()) as any[]
+  await place.selectOption({ label: 'Monster from the catalog…' })
+  await placing.getByPlaceholder('Monster name').fill('Wolf')
+  await placing.getByRole('button', { name: 'Search' }).click()
+  await placing.getByRole('button', { name: /^Wolf \(/ }).first().click()
+  await expect(placing).toContainText('Placing: Wolf')
+  const tokensBefore = (await get('tokens')).length
+  await tap(360, 380)
+  await expect.poll(async () => (await get('tokens')).length).toBe(tokensBefore + 1)
+  const after = (await (await page.request.get(`/api/v1/modules/${detail.module_id}/monsters`, { headers: auth })).json()) as any[]
+  const wolves = (l: any[]) => l.filter((m) => m.monster_name === 'Wolf').reduce((n, m) => n + m.quantity, 0)
+  expect(wolves(after)).toBe(wolves(before) + 1)
+  await page.getByRole('button', { name: 'Done' }).click()
+
+  // A candle (5/10 ft), then drag it two cells.
+  await place.selectOption('candle')
+  await tap(300, 300)
+  await expect.poll(async () => (await get('lights')).filter((l) => l.name === 'Candle').length).toBe(1)
+  const candle = (await get('lights')).find((l) => l.name === 'Candle')
+  expect([candle.bright_radius_ft, candle.dim_radius_ft]).toEqual([5, 10])
+  const handle = (await page.locator('circle[aria-label="Light Candle"]').boundingBox())!
+  const step = handle.width / 0.44 // the handle is 0.44 of a cell
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(handle.x + handle.width / 2 + step, handle.y + handle.height / 2, { steps: 4 })
+  await page.mouse.move(handle.x + handle.width / 2 + step * 2, handle.y + handle.height / 2, { steps: 4 })
+  await page.mouse.up()
+  await expect.poll(async () => (await get('lights')).find((l) => l.id === candle.id).grid_x).toBe(candle.grid_x + 2)
+
+  // A point of interest through its dialog: name, icon, colour.
+  await place.selectOption('poi')
+  await tap(400, 300)
+  const dialog = page.getByRole('dialog', { name: 'New point of interest' })
+  await dialog.getByLabel('Name').fill('Old well')
+  await dialog.getByRole('button', { name: 'Skull' }).click()
+  await dialog.getByRole('button', { name: 'Red' }).click()
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(page.locator('.mimir-map__marker--poi[aria-label="Old well"]')).toContainText('💀')
+  const well = (await get('pois')).find((p) => p.name === 'Old well')
+  expect([well.icon, well.color]).toEqual(['skull', '#ef4444'])
+
+  // Right-click the POI: Edit opens the dialog with its values.
+  await page.locator('.mimir-map__marker--poi[aria-label="Old well"]').click({ button: 'right' })
+  await page.getByRole('menuitem', { name: 'Edit' }).click()
+  const edit = page.getByRole('dialog', { name: 'Edit the point of interest' })
+  await expect(edit.getByLabel('Name')).toHaveValue('Old well')
+  await edit.getByLabel('Name').fill('Dry well')
+  await edit.getByRole('button', { name: 'Save' }).click()
+  await expect(page.locator('.mimir-map__marker--poi[aria-label="Dry well"]')).toBeAttached()
+
+  // A trap; its right-click menu triggers and resets it.
+  await place.selectOption('trap')
+  await placing.getByLabel('Trap name').fill('Spikes')
+  await tap(430, 340)
+  await expect(page.locator('.mimir-map__marker--trap', { hasText: 'Spikes' })).toBeAttached()
+  const trapNow = async () => (await get('traps')).find((t) => t.name === 'Spikes')
+  await page.locator('.mimir-map__marker--trap', { hasText: 'Spikes' }).click({ button: 'right' })
+  await page.getByRole('menuitem', { name: 'Trigger' }).click()
+  await expect.poll(async () => (await trapNow()).triggered).toBe(true)
+  await page.locator('.mimir-map__marker--trap', { hasText: 'Spikes' }).click({ button: 'right' })
+  await page.getByRole('menuitem', { name: 'Reset' }).click()
+  await expect.poll(async () => (await trapNow()).triggered).toBe(false)
+
+  // The lists: show the well to the players, then remove it.
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'On the map' }).click()
+  const lists = page.getByRole('complementary', { name: 'On the map' })
+  const row = lists.locator('.mimir-placed__row', { hasText: 'Dry well' })
+  await row.getByRole('switch', { name: 'Shown' }).click()
+  await expect.poll(async () => (await get('pois')).find((p) => p.name === 'Dry well').visible).toBe(true)
+  await row.getByTitle('Remove Dry well').click()
+  await expect.poll(async () => (await get('pois')).some((p) => p.name === 'Dry well')).toBe(false)
+
+  // Clean up for the other tests.
+  for (const t of await get('tokens')) {
+    if (!startTokens.has(t.id)) await page.request.delete(`/api/v1/tokens/${t.id}`, { headers: auth })
+  }
+  await page.request.delete(`/api/v1/lights/${candle.id}`, { headers: auth })
+  await page.request.delete(`/api/v1/traps/${(await trapNow()).id}`, { headers: auth })
 })

@@ -80,7 +80,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         // Lights
         tool!(
             "add_light_to_map",
-            "Place a light source on a map. Use preset 'torch' (20ft bright/40ft dim) or 'lantern' (30ft bright/60ft dim), or omit preset and give name + bright_radius_ft + dim_radius_ft. Coordinates are grid units. Turning lights on/off during play is DM-only in the Mimir app.",
+            "Place a light source on a map. Use preset 'torch' (20ft bright/40ft dim), 'lantern' (30ft bright/60ft dim) or 'candle' (5ft bright/10ft dim), or omit preset and give name + bright_radius_ft + dim_radius_ft. Coordinates are grid units. Turning lights on/off during play is DM-only in the Mimir app.",
             AddLightArgs,
             add_light_to_map
         ),
@@ -218,7 +218,7 @@ tool_args! {
         pub grid_x: i64,
         /// Grid Y coordinate
         pub grid_y: i64,
-        /// Preset: torch (20/40ft) or lantern (30/60ft). Omit to specify radii manually.
+        /// Preset: torch (20/40ft), lantern (30/60ft) or candle (5/10ft). Omit to specify radii manually.
         pub preset: Option<String>,
         /// Display name (required when no preset)
         pub name: Option<String>,
@@ -502,9 +502,10 @@ pub async fn add_light_to_map(
     let light = match args.preset.as_deref() {
         Some("torch") => svc.create_torch(&args.map_id, x, y),
         Some("lantern") => svc.create_lantern(&args.map_id, x, y),
+        Some("candle") => svc.create_candle(&args.map_id, x, y),
         Some(other) => {
             return Err(McpError::InvalidArguments(format!(
-                "Unknown preset '{}'. Use torch or lantern, or omit preset and provide name + bright_radius_ft + dim_radius_ft.",
+                "Unknown preset '{}'. Use torch, lantern or candle, or omit preset and provide name + bright_radius_ft + dim_radius_ft.",
                 other
             )));
         }

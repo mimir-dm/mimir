@@ -8,19 +8,26 @@ Lights change what the party can see when the map is dim or dark. This guide sho
 |------|-------------|-----------|
 | Torch | 20 ft | 40 ft |
 | Lantern | 30 ft | 60 ft |
+| Candle | 5 ft | 10 ft |
 | Carried light (on a token) | Half of the radius | The radius you set |
 
 ## Place a Light
 
 1. Open the DM map.
 2. Open the **Place on the map** menu.
-3. Choose **Torch** or **Lantern**.
+3. Choose **Torch**, **Lantern** or **Candle**.
 4. Click a grid square.
+
+## Move a Light
+
+Drag the light's handle to a new square.
 
 ## Turn a Light On or Off
 
 1. Click the light on the map.
 2. Turn the **Lit** switch on or off.
+
+Or right-click the light: it turns on or off at once.
 
 An unlit light gives no light, and the player display does not show it.
 

@@ -21,7 +21,9 @@ On the DM map only:
 | Click or tap an item | Select it and open its panel |
 | Double-click or double-tap a monster token | Open its stat block |
 | Double-click a trap | Open the catalog trap of that name |
-| Drag a token | Move it |
+| Drag a token, a light, a trap or a POI | Move it |
+| Right-click a token, a trap or a POI | Its menu |
+| Right-click a light | Turn it on or off |
 | Click a square, after a choice in **Place on the map** | Place the item |
 | Click a door | Open or close it (the players see it) |
 | **⛶** button | Full screen |

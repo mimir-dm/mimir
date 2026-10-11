@@ -487,7 +487,11 @@ pub fn DisplayView(
                             view! { <path class="mimir-display__trap" d=format!("M{x} {}L{} {}L{} {}Z", y - s, x + s, y + s, x - s, y + s) /> }.into_any()
                         } else {
                             let color = mk.color.clone().unwrap_or_else(|| "var(--ice)".into());
-                            view! { <circle cx=x cy=y r=g * 0.25 style=format!("fill:{color}") /> }.into_any()
+                            let emoji = super::setup::poi_emoji(&mk.icon);
+                            view! {
+                                <circle cx=x cy=y r=g * 0.25 style=format!("fill:{color}") />
+                                <text class="mimir-map__poi-icon" x=x y=y text-anchor="middle" dominant-baseline="central" font-size=g * 0.28>{emoji}</text>
+                            }.into_any()
                         };
                         view! {
                             <g class="mimir-map__marker" aria-label=mk.name.clone()>

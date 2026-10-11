@@ -35,6 +35,7 @@ A new map starts at the ambient light of its UVTT file (bright when the file has
 |--------|-------------|-----------|
 | Torch | 20 ft | 40 ft |
 | Lantern | 30 ft | 60 ft |
+| Candle | 5 ft | 10 ft |
 
 A token's carried light uses its **Carried light** value as the dim radius and half of it as the bright radius. A light drawn into a UVTT map file uses its range as the dim radius and half of it as the bright radius. Its glow stops at the walls.
 
