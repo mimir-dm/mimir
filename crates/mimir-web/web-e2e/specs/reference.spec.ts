@@ -2,7 +2,8 @@ import { campaignId, expect, moduleId, signIn, test } from './session'
 
 // The reference (MIMIR-T-0723): the catalog (search, filters, detail),
 // cross-references opening over each other, the book reader (contents,
-// headings, images, tooltips), and the module page's inspector.
+// headings, images, tooltips), adventures in the reader and homebrew files
+// (MIMIR-T-0736), and the module page's inspector.
 
 test('the catalog: search, filter, detail, cross-references', async ({ page }) => {
   await signIn(page)
@@ -66,6 +67,45 @@ test('the reader: contents, headings, images, tooltips', async ({ page }) => {
   await expect(pageBody.getByRole('heading', { name: 'Random Encounters' })).toBeVisible()
   await expect(pageBody.locator('table')).toContainText('A lone wolf')
   await expect(pageBody.locator('.inset-readaloud')).toContainText('The road bends')
+})
+
+test('an adventure in the reader: levels, boxes, maps, area links, homebrew files', async ({ page }) => {
+  await signIn(page)
+  // The fixture adventure (MIMIR-T-0736) is listed under Adventures.
+  await page.goto('/reference?mode=reader')
+  const pick = page.getByLabel('Book')
+  await expect(pick.locator('optgroup[label="Adventures"] option', { hasText: 'The Lantern of Low Fen' })).toHaveCount(1)
+  await pick.selectOption('MFA')
+  await expect(page.locator('.mimir-reader__levels')).toHaveText('Levels 1–3 · Mimir fixtures')
+  await expect(page.getByRole('button', { name: 'Remove this adventure…' })).toBeVisible()
+  const contents = page.getByRole('navigation', { name: 'Contents' })
+  await expect(contents.getByRole('link', { name: 'The Old Causeway' })).toBeVisible()
+  const pageBody = page.locator('.mimir-book')
+  // The introduction: a sidebar, and an area link to the next-but-one chapter.
+  await expect(pageBody.locator('.inset')).toContainText('Running This Adventure')
+  await pageBody.locator('a.area-ref', { hasText: 'the gatehouse' }).click()
+  await expect(page).toHaveURL(/section=2&at=mfa-g1/)
+  await expect(pageBody.getByRole('heading', { name: '1. Gatehouse' })).toBeVisible()
+  await expect(pageBody.locator('.inset-readaloud')).toContainText('rusted portcullis')
+  // The map says it is a map, with its grid; the adventure's own monster links.
+  await expect(pageBody.locator('.image-caption')).toContainText('(map, square grid)')
+  await expect(pageBody.locator('a.creature-ref', { hasText: 'Lantern Wisp' }).first()).toBeVisible()
+
+  // A homebrew file from Settings: its adventure joins the reader.
+  const code = `E2E${Date.now() % 100000}`
+  const file = {
+    _meta: { sources: [{ json: code, abbreviation: code, full: `Homebrew ${code}` }] },
+    adventure: [{ name: `Bog Road ${code}`, id: code, source: code, level: { start: 2, end: 2 }, contents: [{ name: 'The Road' }] }],
+    adventureData: [{ id: code, source: code, data: [{ type: 'section', name: 'The Road', entries: ['Mud to the knees.'] }] }],
+  }
+  await page.goto('/settings?section=books')
+  const hb = page.getByRole('region', { name: 'Import a homebrew file' })
+  await hb.locator('input[type=file]').setInputFiles({ name: 'bog.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(file)) })
+  await hb.getByRole('button', { name: 'Import' }).click()
+  await expect(hb.getByRole('status')).toHaveText(`Imported ${code}: 1 adventure, 0 entries.`)
+  await page.goto(`/reference?mode=reader&book=${code}&section=0`)
+  await expect(page.locator('.mimir-reader__levels')).toHaveText('Level 2')
+  await expect(page.locator('.mimir-book')).toContainText('Mud to the knees.')
 })
 
 test('the module inspector opens a monster', async ({ page }) => {

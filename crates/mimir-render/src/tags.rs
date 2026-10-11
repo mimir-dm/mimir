@@ -160,6 +160,19 @@ fn render(tag: &str, args: &str, hash: bool) -> String {
             _ => span("tagged", &tags(first)),
         };
     }
+    // `{@area text|id|flags}`: a place in the same adventure (MIMIR-T-0736).
+    // The reader follows `data-area` to the chapter that holds it.
+    if tag == "area" {
+        return match arg(1) {
+            Some(id) => format!(
+                r##"<a href="#{}" class="area-ref" data-area="{}">{}</a>"##,
+                esc(id),
+                esc(id),
+                tags(first)
+            ),
+            None => tags(first),
+        };
+    }
     if let Some((kind, default_source)) = link_kind(tag) {
         let source = arg(1).unwrap_or(default_source).to_uppercase();
         let display = tags(arg(2).unwrap_or(first));

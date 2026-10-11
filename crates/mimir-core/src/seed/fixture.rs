@@ -12,7 +12,7 @@ use std::path::Path;
 use diesel::SqliteConnection;
 
 use crate::dal::catalog;
-use crate::services::ServiceResult;
+use crate::services::{ServiceError, ServiceResult};
 
 use super::dev::{seed_dev_data, TEST_CAMPAIGN_NAME};
 use super::srd::{seed_srd_catalog, SrdCatalogCounts};
@@ -40,6 +40,7 @@ pub fn seed_ui_fixture(
     let catalog = if catalog::list_sources(conn)?.is_empty() {
         let counts = seed_srd_catalog(conn)?;
         seed_fixture_book(conn, app_data_dir)?;
+        seed_fixture_adventure(conn, app_data_dir)?;
         Some(counts)
     } else {
         None
@@ -68,6 +69,34 @@ fn seed_fixture_book(conn: &mut SqliteConnection, app_data_dir: &Path) -> Servic
     std::fs::create_dir_all(&dir)?;
     std::fs::write(
         dir.join("fixture-hideout.png"),
+        include_bytes!("assets/GoblinHideout.png"),
+    )?;
+    Ok(())
+}
+
+/// The source of the fixture adventure.
+pub const FIXTURE_ADVENTURE_SOURCE: &str = "MFA";
+
+/// A short adventure for the reader and the adventure tasks
+/// (MIMIR-T-0736), imported as a homebrew file: fixture text (no official
+/// text), with chapters, read-aloud boxes, a sidebar, a roll table, stat
+/// blocks (an SRD monster and one of its own source), a square-grid map,
+/// keyed areas and an `{@area}` link across chapters.
+fn seed_fixture_adventure(conn: &mut SqliteConnection, app_data_dir: &Path) -> ServiceResult<()> {
+    let file: serde_json::Value =
+        serde_json::from_str(include_str!("assets/fixture-adventure.json"))
+            .map_err(|e| ServiceError::validation(format!("fixture adventure: {e}")))?;
+    crate::import::CatalogImportService::new(conn)
+        .import_homebrew(&file)
+        .map_err(|e| ServiceError::validation(format!("fixture adventure: {e}")))?;
+    let dir = app_data_dir
+        .join("assets")
+        .join("catalog")
+        .join("adventure")
+        .join(FIXTURE_ADVENTURE_SOURCE);
+    std::fs::create_dir_all(&dir)?;
+    std::fs::write(
+        dir.join("tower-map.png"),
         include_bytes!("assets/GoblinHideout.png"),
     )?;
     Ok(())

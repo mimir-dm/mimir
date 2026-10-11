@@ -37,6 +37,8 @@ pub fn upsert_book(conn: &mut SqliteConnection, book: &NewBook) -> QueryResult<i
             books::data.eq(book.data),
             books::contents.eq(book.contents),
             books::cover_path.eq(book.cover_path),
+            books::kind.eq(book.kind),
+            books::meta.eq(book.meta),
         ))
         .execute(conn)?;
 

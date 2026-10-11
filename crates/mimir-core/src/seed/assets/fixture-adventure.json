@@ -1,0 +1,215 @@
+{
+  "_meta": {
+    "sources": [
+      {
+        "json": "MFA",
+        "abbreviation": "MFA",
+        "full": "The Lantern of Low Fen",
+        "authors": ["Mimir fixtures"],
+        "version": "1.0.0",
+        "url": "https://example.com/mimir-fixture-adventure"
+      }
+    ],
+    "dateAdded": 1760140800,
+    "dateLastModified": 1760140800
+  },
+  "adventure": [
+    {
+      "name": "The Lantern of Low Fen",
+      "id": "MFA",
+      "source": "MFA",
+      "group": "homebrew",
+      "published": "2026-10-11",
+      "author": "Mimir fixtures",
+      "storyline": "Mimir fixtures",
+      "level": { "start": 1, "end": 3 },
+      "contents": [
+        { "name": "Introduction", "headers": ["Running This Adventure", "Background"] },
+        {
+          "name": "The Old Causeway",
+          "headers": ["Arrival", "Ambush at the Reeds", "Causeway Encounters"],
+          "ordinal": { "type": "chapter", "identifier": 1 }
+        },
+        {
+          "name": "The Lantern Tower",
+          "headers": ["Tower Map", "1. Gatehouse", "2. Stair", "3. Lantern Room"],
+          "ordinal": { "type": "chapter", "identifier": 2 }
+        },
+        { "name": "Creatures", "headers": [], "ordinal": { "type": "appendix", "identifier": "A" } }
+      ]
+    }
+  ],
+  "adventureData": [
+    {
+      "id": "MFA",
+      "source": "MFA",
+      "data": [
+        {
+          "type": "section",
+          "name": "Introduction",
+          "id": "mfa-intro",
+          "entries": [
+            "A lantern burns on a drowned tower in the marsh of Low Fen, and the villagers say it calls things up out of the water.",
+            {
+              "type": "inset",
+              "name": "Running This Adventure",
+              "entries": [
+                "This fixture adventure is for three to five characters of 1st level.",
+                {
+                  "type": "list",
+                  "items": ["Read the boxed text aloud.", "Use {@creature Goblin|MM} stat blocks for the reed raiders."]
+                }
+              ]
+            },
+            {
+              "type": "entries",
+              "name": "Background",
+              "entries": [
+                "The tower keeper, {@creature Lich|MM|a scholar who cheated death}, lit the lantern to find a sunken library. See {@area the gatehouse|mfa-g1|x} before the party arrives."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "name": "The Old Causeway",
+          "id": "mfa-ch1",
+          "entries": [
+            {
+              "type": "entries",
+              "name": "Arrival",
+              "id": "mfa-arrival",
+              "entries": [
+                {
+                  "type": "insetReadaloud",
+                  "entries": ["Fog lies thick on the causeway. Far ahead, a green light turns slowly in the top of a leaning tower."]
+                },
+                "The causeway is 10 feet wide and slick. A creature that runs on it must succeed on a {@dc 10} Dexterity check or fall {@condition prone}."
+              ]
+            },
+            {
+              "type": "entries",
+              "name": "Ambush at the Reeds",
+              "entries": [
+                "Four goblins hide in the reeds and attack when the party is halfway across.",
+                { "type": "statblock", "tag": "creature", "name": "Goblin", "source": "MM" }
+              ]
+            },
+            {
+              "type": "entries",
+              "name": "Causeway Encounters",
+              "entries": [
+                {
+                  "type": "table",
+                  "caption": "Causeway Encounters",
+                  "colLabels": ["{@dice d6}", "Encounter"],
+                  "colStyles": ["col-2 text-center", "col-10"],
+                  "rows": [
+                    [{ "type": "cell", "roll": { "min": 1, "max": 3 } }, "Nothing but fog"],
+                    [{ "type": "cell", "roll": { "exact": 4 } }, "{@dice 1d4} {@creature Rat|MM|rats}"],
+                    [{ "type": "cell", "roll": { "min": 5, "max": 6 } }, "A {@creature Lantern Wisp|MFA} drifts over the water"]
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "name": "The Lantern Tower",
+          "id": "mfa-ch2",
+          "entries": [
+            {
+              "type": "entries",
+              "name": "Tower Map",
+              "entries": [
+                {
+                  "type": "image",
+                  "href": { "type": "internal", "path": "adventure/MFA/tower-map.png" },
+                  "title": "The Lantern Tower",
+                  "imageType": "map",
+                  "grid": { "type": "square", "size": 32 }
+                }
+              ]
+            },
+            {
+              "type": "entries",
+              "name": "1. Gatehouse",
+              "id": "mfa-g1",
+              "entries": [
+                {
+                  "type": "insetReadaloud",
+                  "entries": ["A rusted portcullis hangs half open over black water."]
+                },
+                "Two {@creature Skeleton|MM|skeletons} stand guard. They attack anyone who passes the portcullis."
+              ]
+            },
+            {
+              "type": "entries",
+              "name": "2. Stair",
+              "id": "mfa-g2",
+              "entries": ["The stair climbs around the inside wall. Every third step is missing."]
+            },
+            {
+              "type": "entries",
+              "name": "3. Lantern Room",
+              "id": "mfa-g3",
+              "entries": [
+                "The lantern hangs from a chain. A {@creature Lantern Wisp|MFA} guards it.",
+                { "type": "statblock", "tag": "creature", "name": "Lantern Wisp", "source": "MFA" },
+                {
+                  "type": "quote",
+                  "entries": ["Light calls to light, and the drowned remember."],
+                  "by": "A note on the lantern chain"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "name": "Creatures",
+          "id": "mfa-creatures",
+          "entries": [
+            "The creatures of the tower.",
+            { "type": "statblock", "tag": "creature", "name": "Lantern Wisp", "source": "MFA" }
+          ]
+        }
+      ]
+    }
+  ],
+  "monster": [
+    {
+      "name": "Lantern Wisp",
+      "source": "MFA",
+      "size": ["T"],
+      "type": "undead",
+      "alignment": ["C", "E"],
+      "ac": [19],
+      "hp": { "average": 22, "formula": "9d4" },
+      "speed": { "walk": 0, "fly": { "number": 50, "condition": "(hover)" }, "canHover": true },
+      "str": 1,
+      "dex": 28,
+      "con": 10,
+      "int": 13,
+      "wis": 14,
+      "cha": 11,
+      "senses": ["darkvision 120 ft."],
+      "passive": 12,
+      "languages": ["the languages it knew in life"],
+      "cr": "1",
+      "trait": [
+        {
+          "name": "Lantern Light",
+          "entries": ["The wisp sheds bright light in a 10-foot radius and dim light for an additional 10 feet."]
+        }
+      ],
+      "action": [
+        {
+          "name": "Shock",
+          "entries": ["{@atk ms} {@hit 4} to hit, reach 5 ft., one creature. {@h}9 ({@damage 2d8}) lightning damage."]
+        }
+      ]
+    }
+  ]
+}

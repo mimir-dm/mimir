@@ -890,3 +890,17 @@
 .mimir-progress { height: 6px; border-radius: 3px; background: var(--border-fainter); overflow: hidden; }
 .mimir-progress__bar { height: 100%; background: var(--ice); transition: width 0.2s; }
 .mimir-sources { max-height: 50vh; overflow: auto; }
+
+/* Reader: an adventure's level range (MIMIR-T-0736). */
+.mimir-reader__levels {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+.mimir-book .image-kind {
+  font-style: normal;
+  opacity: 0.75;
+}
+.mimir-book a.area-ref {
+  text-decoration: underline dotted;
+}

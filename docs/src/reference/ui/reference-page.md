@@ -40,18 +40,21 @@ The same drawer opens from the **Dangers** tab of a module page.
 
 ## Books
 
-The reader shows the text of an imported book.
+The reader shows the text of an imported book or adventure.
 
 | Control | Function |
 |---------|----------|
-| **Book** | Choose the book |
-| **Remove this book…** | Remove the book from the library, after a confirmation: its catalog entries and text go, as **×** in Settings |
+| **Book** | Choose the book or adventure. The list has two groups: **Books** and **Adventures**. |
+| Levels line | For an adventure: its level range and its storyline, for example "Levels 1–5 · Starter Set" |
+| **Remove this book…** or **Remove this adventure…** | Remove it from the library, after a confirmation: its catalog entries and text go, as **×** in Settings |
 | **Contents** | The chapters and headings. Click one to go to it. |
 | **← Previous**, **Next →** | Go to the previous or next section |
 
-The text shows its tables, insets, read-aloud boxes and images. A cross-reference shows a short summary when you point at it. Click it to open the detail drawer.
+The text shows its tables, sidebars, read-aloud boxes and images. A map image says that it is a map, and its grid: for example "(map, square grid)". A cross-reference shows a short summary when you point at it. Click it to open the detail drawer.
 
-Only books that you imported with their text can be read. Without one, the reader says "No books to read. Import a book with its content (Settings)." The **Readable** column in **Settings**, **Books** shows which books have text.
+In an adventure, a link to a place, for example "the gatehouse", goes to the chapter and the heading of that place.
+
+Only books and adventures that you imported with their text can be read. Without one, the reader says "No books or adventures to read. Import the 5etools data or a homebrew file (Settings)." The **Readable** column in **Settings**, **Books** shows which sources have text.
 
 ## See Also
 

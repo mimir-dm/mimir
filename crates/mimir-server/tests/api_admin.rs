@@ -309,3 +309,74 @@ async fn catalog_and_image_imports_then_a_source_goes() {
     let (status, _) = call(&r, Method::DELETE, "/catalog/sources/TST", None).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn adventures_in_the_reader_and_homebrew_files() {
+    let (r, _dir) = fixture().await;
+    // The fixture adventure (a homebrew file seeded with the fixture) is
+    // listed after the books, with its level range.
+    let books = json(&r, Method::GET, "/books", None).await;
+    let list = books.as_array().unwrap();
+    let kinds: Vec<&str> = list.iter().map(|b| b["kind"].as_str().unwrap()).collect();
+    assert_eq!(kinds.first(), Some(&"book"));
+    let mfa = list.iter().find(|b| b["source"] == "MFA").expect("MFA");
+    assert_eq!(mfa["kind"], "adventure");
+    assert_eq!(mfa["name"], "The Lantern of Low Fen");
+    assert_eq!(
+        (mfa["level_start"].as_i64(), mfa["level_end"].as_i64()),
+        (Some(1), Some(3))
+    );
+    let text = json(&r, Method::GET, "/books/MFA", None).await;
+    assert_eq!(text["data"].as_array().unwrap().len(), 4);
+    // Its own monster is in the catalog.
+    let wisp = json(
+        &r,
+        Method::GET,
+        "/catalog/entry/monsters/MFA/Lantern%20Wisp",
+        None,
+    )
+    .await;
+    assert_eq!(wisp["cr"], "1");
+
+    // The same file again: its source is in the catalog.
+    let file = include_bytes!("../../mimir-core/src/seed/assets/fixture-adventure.json");
+    let (status, err) = upload(&r, "/catalog/import-homebrew", &[], ("mfa.json", file)).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{err}");
+    assert!(err.to_string().contains("already in the catalog"), "{err}");
+
+    // Another homebrew file: a monster and an adventure of a new source.
+    let other = serde_json::json!({
+        "_meta": {"sources": [{"json": "HBX", "abbreviation": "HBX", "full": "Homebrew Extra"}]},
+        "monster": [{"name": "Bog Hag", "source": "HBX", "size": ["M"], "type": "fey", "ac": [14],
+            "hp": {"average": 30, "formula": "5d8+5"}, "speed": {"walk": 30},
+            "str": 12, "dex": 12, "con": 12, "int": 12, "wis": 12, "cha": 12, "cr": "2"}],
+        "adventure": [{"name": "Hag Hollow", "id": "HBX", "source": "HBX", "level": {"start": 2, "end": 2},
+            "contents": [{"name": "The Hollow"}]}],
+        "adventureData": [{"id": "HBX", "source": "HBX",
+            "data": [{"type": "section", "name": "The Hollow", "entries": ["A {@creature Bog Hag|HBX} waits."]}]}]
+    });
+    let bytes = serde_json::to_vec(&other).unwrap();
+    let (status, done) = upload(&r, "/catalog/import-homebrew", &[], ("hbx.json", &bytes)).await;
+    assert_eq!(status, StatusCode::CREATED, "{done}");
+    assert_eq!(done["sources"], serde_json::json!(["HBX"]));
+    assert_eq!(done["adventures"], 1);
+    assert!(done["entries"].as_u64().unwrap() >= 1);
+    let books = json(&r, Method::GET, "/books", None).await;
+    assert!(books
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|b| b["source"] == "HBX" && b["kind"] == "adventure"));
+
+    // Not JSON, and JSON that is not homebrew.
+    let (status, _) = upload(&r, "/catalog/import-homebrew", &[], ("x.json", b"nope")).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    let (status, _) = upload(
+        &r,
+        "/catalog/import-homebrew",
+        &[],
+        ("x.json", b"{\"monster\": []}"),
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+}

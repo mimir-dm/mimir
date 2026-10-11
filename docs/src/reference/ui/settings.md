@@ -28,7 +28,11 @@ An import always makes a new campaign. **Import campaign** on the campaign list 
 
 ### Import 5etools data
 
-The 5etools data archive (`.tar.gz`): the core and supplement books, their entries and their text. Choose the file and click **Import**. The upload shows its progress, then the import runs on the server. A full import takes a few minutes.
+The 5etools data archive (`.tar.gz`): the core and supplement books and the adventures, their entries and their text. Choose the file and click **Import**. The upload shows its progress, then the import runs on the server. A full import takes a few minutes.
+
+### Import a homebrew file
+
+A drop zone for a 5etools homebrew file (`.json`) and **Import**. The file's monsters, items and spells go to the catalog, its adventures and books to the reader. The message names the sources and counts what came in. A file whose source is already in the catalog is refused: remove the source first.
 
 ### Import 5etools images
 

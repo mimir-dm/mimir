@@ -431,6 +431,41 @@ pub async fn book(
         .map(Json)
 }
 
+/// `GET /books`: the books and adventures the reader can open, books
+/// first, each by name (MIMIR-T-0736).
+pub async fn books(State(state): State<AppState>) -> ApiResult<Vec<wire::BookInfo>> {
+    state
+        .with_db(|conn| {
+            let mut list: Vec<wire::BookInfo> = catalog_dal::list_books(conn)
+                .map_err(ServiceError::from)?
+                .into_iter()
+                .map(|b| {
+                    let meta: Value = b
+                        .meta
+                        .as_deref()
+                        .and_then(|m| serde_json::from_str(m).ok())
+                        .unwrap_or(Value::Null);
+                    wire::BookInfo {
+                        level_start: meta.pointer("/level/start").and_then(Value::as_i64),
+                        level_end: meta.pointer("/level/end").and_then(Value::as_i64),
+                        storyline: meta["storyline"].as_str().map(str::to_string),
+                        source: b.source,
+                        name: b.name,
+                        kind: b.kind,
+                    }
+                })
+                .collect();
+            list.sort_by(|a, b| {
+                (a.kind != "book")
+                    .cmp(&(b.kind != "book"))
+                    .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+            });
+            Ok(list)
+        })
+        .await
+        .map(Json)
+}
+
 /// A book image path under the catalog assets, or none when it would
 /// leave them (`..`, a root, a drive).
 pub fn safe_image_path(path: &str) -> Option<&FsPath> {

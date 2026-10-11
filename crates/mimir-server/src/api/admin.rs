@@ -240,6 +240,41 @@ pub async fn import_catalog(
     Ok((StatusCode::ACCEPTED, Json(j)))
 }
 
+/// The largest homebrew file.
+pub const HOMEBREW_LIMIT: usize = 64 * 1024 * 1024;
+
+/// `POST /catalog/import-homebrew` (multipart `file`: a 5etools homebrew
+/// `.json`, MIMIR-T-0736): its sources and entries go to the catalog, its
+/// books and adventures to the reader. A source already in the catalog is
+/// refused.
+pub async fn import_homebrew(
+    State(state): State<AppState>,
+    form: Multipart,
+) -> Result<(StatusCode, Json<wire::HomebrewImport>), ApiError> {
+    let mut up = save_upload(form, &tmp_dir(&state)).await?;
+    let (_, path) = the_file(&mut up)?;
+    let bytes = tokio::fs::read(&path).await.map_err(ServiceError::Io)?;
+    let file: Value = serde_json::from_slice(&bytes)
+        .map_err(|e| ServiceError::validation(format!("not a JSON file: {e}")))?;
+    let r = state
+        .with_db(move |conn| {
+            CatalogImportService::new(conn)
+                .import_homebrew(&file)
+                .map_err(|e| ServiceError::validation(format!("{e:#}")).into())
+        })
+        .await?;
+    let count = |k: &str| r.entity_counts.get(k).copied().unwrap_or(0);
+    Ok((
+        StatusCode::CREATED,
+        Json(wire::HomebrewImport {
+            entries: r.total_entities,
+            adventures: count("adventure"),
+            books: count("book"),
+            sources: r.sources_imported,
+        }),
+    ))
+}
+
 /// `POST /catalog/import-images` (multipart `file`: a 5etools image
 /// `.tar.gz`): unpacks the images under the catalog assets, as a job.
 pub async fn import_images(

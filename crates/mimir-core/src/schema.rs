@@ -124,6 +124,8 @@ diesel::table! {
         data -> Text,
         contents -> Nullable<Text>,
         cover_path -> Nullable<Text>,
+        kind -> Text,
+        meta -> Nullable<Text>,
     }
 }
 

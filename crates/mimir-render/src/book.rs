@@ -101,6 +101,21 @@ fn collect(list: Option<&Value>, path: &[usize], depth: usize, out: &mut Vec<Hea
     }
 }
 
+/// The section (`data[i]`) that holds the entry with this 5etools id: the
+/// target of an `{@area}` link (MIMIR-T-0736).
+pub fn section_of(data: &Value, id: &str) -> Option<usize> {
+    fn holds(v: &Value, id: &str) -> bool {
+        match v {
+            Value::Object(o) => {
+                o.get("id").and_then(Value::as_str) == Some(id) || o.values().any(|x| holds(x, id))
+            }
+            Value::Array(l) => l.iter().any(|x| holds(x, id)),
+            _ => false,
+        }
+    }
+    data.as_array()?.iter().position(|s| holds(s, id))
+}
+
 /// Section `index` of a book's data, as HTML.
 pub fn section(data: &Value, index: usize) -> String {
     let Some(sec) = data.as_array().and_then(|l| l.get(index)) else {
@@ -218,10 +233,27 @@ fn render(e: &Value, path: &[usize], depth: usize) -> String {
                 .and_then(Value::as_str)
                 .unwrap_or("");
             let file = p.rsplit('/').next().unwrap_or("image");
+            // A map says so, with its grid (MIMIR-T-0736).
+            let map = match e.get("imageType").and_then(Value::as_str) {
+                Some("map") | Some("mapPlayer") => {
+                    let grid = match e.pointer("/grid/type").and_then(Value::as_str) {
+                        Some("square") => "map, square grid",
+                        Some(g) if g.starts_with("hex") => "map, hex grid",
+                        _ => "map",
+                    };
+                    let who = if e.get("imageType").and_then(Value::as_str) == Some("mapPlayer") {
+                        ", for the players"
+                    } else {
+                        ""
+                    };
+                    format!(r#" <span class="image-kind">({grid}{who})</span>"#)
+                }
+                _ => String::new(),
+            };
             let caption = e
                 .get("title")
                 .and_then(Value::as_str)
-                .map(|t| format!(r#"<p class="image-caption">{}</p>"#, tags(t)))
+                .map(|t| format!(r#"<p class="image-caption">{}{map}</p>"#, tags(t)))
                 .unwrap_or_default();
             format!(
                 r#"<div class="image-container"><div class="image-wrapper" data-image-path="{}"><p class="image-placeholder">Loading image: {}</p></div>{caption}</div>"#,
@@ -478,5 +510,44 @@ mod tests {
     fn unknown_types_are_escaped() {
         let r = one(json!({"type": "mystery", "x": "<b>"}));
         assert!(r.contains("<pre>") && r.contains("&lt;b&gt;"));
+    }
+}
+
+#[cfg(test)]
+mod adventure_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn area_links_find_their_chapter() {
+        let data = json!([
+            {"type": "section", "name": "One", "entries": ["See {@area the gate|g1|x}."]},
+            {"type": "section", "name": "Two", "entries": [
+                {"type": "entries", "name": "1. Gate", "id": "g1", "entries": ["x"]}
+            ]}
+        ]);
+        assert_eq!(section_of(&data, "g1"), Some(1));
+        assert_eq!(section_of(&data, "nope"), None);
+        let html = section(&data, 0);
+        assert!(
+            html.contains(r##"<a href="#g1" class="area-ref" data-area="g1">the gate</a>"##),
+            "{html}"
+        );
+    }
+
+    #[test]
+    fn maps_name_their_grid() {
+        let data = json!([{"type": "section", "name": "One", "entries": [
+            {"type": "image", "href": {"type": "internal", "path": "adventure/X/map.png"},
+             "title": "Tower", "imageType": "map", "grid": {"type": "square", "size": 32}},
+            {"type": "image", "href": {"type": "internal", "path": "adventure/X/region.png"},
+             "title": "Region", "imageType": "mapPlayer", "grid": {"type": "hexColsOdd"}}
+        ]}]);
+        let html = section(&data, 0);
+        assert!(
+            html.contains("Tower <span class=\"image-kind\">(map, square grid)</span>"),
+            "{html}"
+        );
+        assert!(html.contains("(map, hex grid, for the players)"), "{html}");
     }
 }

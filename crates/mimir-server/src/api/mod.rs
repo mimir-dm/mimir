@@ -189,6 +189,12 @@ pub fn routes() -> Vec<ApiRoute> {
             post(ad::import_catalog).layer(DefaultBodyLimit::max(ad::CATALOG_LIMIT)),
         ),
         route(
+            "/catalog/import-homebrew",
+            Dm,
+            &["POST"],
+            post(ad::import_homebrew).layer(DefaultBodyLimit::max(ad::HOMEBREW_LIMIT)),
+        ),
+        route(
             "/catalog/import-images",
             Dm,
             &["POST"],
@@ -254,6 +260,7 @@ pub fn routes() -> Vec<ApiRoute> {
             get(hb::get).patch(hb::patch).delete(hb::delete),
         ),
         route("/homebrew/{kind}/{id}/usage", Dm, G, get(hb::usage_of)),
+        route("/books", Dm, G, get(rf::books)),
         route("/books/{source}", Dm, G, get(rf::book)),
         route("/book-images/{*path}", Dm, G, get(rf::book_image)),
         route("/catalog/races", Dm, G, get(cat::races)),

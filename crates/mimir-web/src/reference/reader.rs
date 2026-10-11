@@ -1,6 +1,9 @@
 //! The book reader (MIMIR-T-0723): a book with readable content, its
 //! contents, one section at a time. The book, the section and the
 //! heading are in the address (`?mode=reader&book=PHB&section=3&at=id`).
+//! Adventures are listed apart from books, with their level range, and
+//! their `{@area}` links go to the chapter that holds the place
+//! (MIMIR-T-0736).
 
 use aurora_leptos::components::*;
 use aurora_leptos::frame::ConfirmDialog;
@@ -8,7 +11,7 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::{use_navigate, use_query_map};
 use mimir_render::book;
-use mimir_wire::{BookData, SourceInfo};
+use mimir_wire::{BookData, BookInfo};
 
 use super::detail::Rendered;
 use crate::api;
@@ -26,6 +29,24 @@ fn enc(s: &str) -> String {
     js_sys::encode_uri_component(s).into()
 }
 
+/// "Levels 1–3 · Starter Set" for an adventure; empty for a book.
+pub fn adventure_line(b: &BookInfo) -> String {
+    if b.kind != "adventure" {
+        return String::new();
+    }
+    let levels = match (b.level_start, b.level_end) {
+        (Some(a), Some(z)) if a == z => Some(format!("Level {a}")),
+        (Some(a), Some(z)) => Some(format!("Levels {a}–{z}")),
+        (Some(a), None) => Some(format!("Level {a}")),
+        _ => None,
+    };
+    levels
+        .into_iter()
+        .chain(b.storyline.clone().filter(|s| !s.is_empty()))
+        .collect::<Vec<_>>()
+        .join(" · ")
+}
+
 #[component]
 pub fn ReaderView() -> impl IntoView {
     let query = use_query_map();
@@ -34,22 +55,17 @@ pub fn ReaderView() -> impl IntoView {
     let sources_v = RwSignal::new(0u32);
     let sources = LocalResource::new(move || {
         sources_v.track();
-        api::get::<Vec<SourceInfo>>("/catalog/sources")
+        api::get::<Vec<BookInfo>>("/books")
     });
-    let books = move || {
-        sources
-            .get()
-            .and_then(Result::ok)
-            .map(|l| l.into_iter().filter(|s| s.book).collect::<Vec<_>>())
-            .unwrap_or_default()
-    };
+    let books = move || sources.get().and_then(Result::ok).unwrap_or_default();
     let chosen = Memo::new(move |_| {
         query
             .get()
             .get("book")
-            .or_else(|| books().first().map(|b| b.code.clone()))
+            .or_else(|| books().first().map(|b| b.source.clone()))
             .unwrap_or_default()
     });
+    let chosen_info = move || books().into_iter().find(|b| b.source == chosen.get());
     let section = Memo::new(move |_| {
         query
             .get()
@@ -120,8 +136,7 @@ pub fn ReaderView() -> impl IntoView {
         <ConfirmDialog
             open=removing
             title=Signal::derive(move || {
-                let code = chosen.get();
-                let name = books().into_iter().find(|b| b.code == code).map(|b| b.name).unwrap_or(code);
+                let name = chosen_info().map(|b| b.name).unwrap_or_else(|| chosen.get());
                 format!("Remove {name}?")
             })
             message="Its catalog entries and its book text go; characters and campaigns keep what they hold. Import it again to bring it back."
@@ -133,7 +148,7 @@ pub fn ReaderView() -> impl IntoView {
             None => view! { <Loading /> }.into_any(),
             Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
             Some(Ok(_)) if books().is_empty() => view! {
-                <Empty message="No books to read. Import a book with its content (Settings)." />
+                <Empty message="No books or adventures to read. Import the 5etools data or a homebrew file (Settings)." />
             }.into_any(),
             Some(Ok(_)) => {
                 let list = books();
@@ -150,12 +165,25 @@ pub fn ReaderView() -> impl IntoView {
                                         go.with_value(|g| g(href(&v, 0, None)));
                                     }
                                 >
-                                    {list.iter().map(|b| view! {
-                                        <option value=b.code.clone() selected=b.code == chosen.get_untracked()>{b.name.clone()}</option>
+                                    {[("book", "Books"), ("adventure", "Adventures")].into_iter().filter_map(|(kind, label)| {
+                                        let group: Vec<BookInfo> = list.iter().filter(|b| b.kind == kind).cloned().collect();
+                                        (!group.is_empty()).then(|| view! {
+                                            <optgroup label=label>
+                                                {group.into_iter().map(|b| view! {
+                                                    <option value=b.source.clone() selected=b.source == chosen.get_untracked()>{b.name.clone()}</option>
+                                                }).collect_view()}
+                                            </optgroup>
+                                        })
                                     }).collect_view()}
                                 </select>
                             </label>
-                            <Button variant="subtle" bad=true on_click=Callback::new(move |_| removing.set(true))>"Remove this book…"</Button>
+                            {move || {
+                                let line = chosen_info().map(|b| adventure_line(&b)).unwrap_or_default();
+                                (!line.is_empty()).then(|| view! { <p class="mimir-reader__levels">{line}</p> })
+                            }}
+                            <Button variant="subtle" bad=true on_click=Callback::new(move |_| removing.set(true))>
+                                {move || if chosen_info().is_some_and(|b| b.kind == "adventure") { "Remove this adventure…" } else { "Remove this book…" }}
+                            </Button>
                             {move || {
                                 let e = remove_error.get();
                                 (!e.is_empty()).then(|| view! { <Alert color=aurora_leptos::tokens::token::BAD>{e}</Alert> })
@@ -192,7 +220,25 @@ pub fn ReaderView() -> impl IntoView {
                                 }}
                             </ol>
                         </nav>
-                        <div class="mimir-split__main mimir-reader__page">
+                        <div
+                            class="mimir-split__main mimir-reader__page"
+                            on:click=move |ev: web_sys::MouseEvent| {
+                                // An `{@area}` link: the chapter that holds the place.
+                                use wasm_bindgen::JsCast;
+                                let Some(el) = ev.target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()) else { return };
+                                let Some(link) = el.closest(".area-ref").ok().flatten() else { return };
+                                let Some(id) = link.get_attribute("data-area") else { return };
+                                ev.prevent_default();
+                                let target = match data.get_untracked() {
+                                    Some(Ok(Some(d))) => book::section_of(&d.data, &id),
+                                    _ => None,
+                                };
+                                if let Some(sec) = target {
+                                    let b = chosen.get_untracked();
+                                    go.with_value(|g| g(href(&b, sec, Some(&id))));
+                                }
+                            }
+                        >
                             {move || match data.get() {
                                 None => view! { <Loading /> }.into_any(),
                                 Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
@@ -214,5 +260,38 @@ pub fn ReaderView() -> impl IntoView {
                 }.into_any()
             }
         }}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn info(kind: &str, start: Option<i64>, end: Option<i64>, story: Option<&str>) -> BookInfo {
+        BookInfo {
+            source: "X".into(),
+            name: "X".into(),
+            kind: kind.into(),
+            level_start: start,
+            level_end: end,
+            storyline: story.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn adventure_lines() {
+        assert_eq!(
+            adventure_line(&info("adventure", Some(1), Some(5), Some("Starter Set"))),
+            "Levels 1–5 · Starter Set"
+        );
+        assert_eq!(
+            adventure_line(&info("adventure", Some(2), Some(2), None)),
+            "Level 2"
+        );
+        assert_eq!(
+            adventure_line(&info("adventure", None, None, Some("Tales"))),
+            "Tales"
+        );
+        assert_eq!(adventure_line(&info("book", Some(1), Some(5), None)), "");
     }
 }

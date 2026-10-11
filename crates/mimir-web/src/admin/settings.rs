@@ -401,6 +401,79 @@ fn JobImport(
     }
 }
 
+/// Import a 5etools homebrew file (MIMIR-T-0736): its entries go to the
+/// catalog, its books and adventures to the reader.
+#[component]
+fn HomebrewImport(on_done: Callback<()>) -> impl IntoView {
+    let file = StoredValue::new_local(None::<web_sys::File>);
+    let file_name = RwSignal::new(String::new());
+    let busy = RwSignal::new(false);
+    let done = RwSignal::new(String::new());
+    let error = RwSignal::new(String::new());
+    let start = move |_| {
+        let Some(f) = file.get_value() else { return };
+        let Ok(form) = web_sys::FormData::new() else {
+            return;
+        };
+        let _ = form.append_with_blob_and_filename("file", &f, &f.name());
+        busy.set(true);
+        done.set(String::new());
+        error.set(String::new());
+        spawn_local(async move {
+            match api::upload::<mimir_wire::HomebrewImport>("/catalog/import-homebrew", &form).await
+            {
+                Ok(r) => {
+                    done.set(homebrew_summary(&r));
+                    on_done.run(());
+                }
+                Err(e) => error.set(api::message(e)),
+            }
+            busy.set(false);
+        });
+    };
+    view! {
+        <section class="mimir-settings__section" aria-label="Import a homebrew file">
+            <SectionLabel label="Import a homebrew file" />
+            <Text size="sm" dimmed=true>"A 5etools homebrew file (.json): its monsters, items and spells go to the catalog, its adventures and books to the reader. Remove a source before you import it again."</Text>
+            <DropZone
+                label="File"
+                accept=".json,application/json"
+                chosen=file_name
+                on_file=Callback::new(move |f: web_sys::File| {
+                    file_name.set(f.name());
+                    file.set_value(Some(f));
+                })
+            />
+            <Group>
+                <Button disabled=Signal::derive(move || file_name.get().is_empty() || busy.get()) on_click=Callback::new(start)>"Import"</Button>
+            </Group>
+            {move || {
+                let d = done.get();
+                (!d.is_empty()).then(|| view! { <Alert color=token::OK><span role="status">{d}</span></Alert> })
+            }}
+            {move || {
+                let e = error.get();
+                (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
+            }}
+        </section>
+    }
+}
+
+/// "Imported HBX: 1 adventure, 3 entries."
+pub fn homebrew_summary(r: &mimir_wire::HomebrewImport) -> String {
+    let plural =
+        |n: usize, one: &str, many: &str| format!("{n} {}", if n == 1 { one } else { many });
+    let mut parts = Vec::new();
+    if r.adventures > 0 {
+        parts.push(plural(r.adventures, "adventure", "adventures"));
+    }
+    if r.books > 0 {
+        parts.push(plural(r.books, "book", "books"));
+    }
+    parts.push(plural(r.entries, "entry", "entries"));
+    format!("Imported {}: {}.", r.sources.join(", "), parts.join(", "))
+}
+
 #[component]
 fn BooksSection() -> impl IntoView {
     let version = RwSignal::new(0u32);
@@ -437,10 +510,11 @@ fn BooksSection() -> impl IntoView {
     view! {
         <JobImport
             label="Import 5etools data"
-            hint="The 5etools data archive (.tar.gz): the core and supplement books, their entries and their text. A full import takes a few minutes."
+            hint="The 5etools data archive (.tar.gz): the core and supplement books and the adventures, their entries and their text. A full import takes a few minutes."
             path="/catalog/import"
             on_done=reload
         />
+        <HomebrewImport on_done=reload />
         <JobImport
             label="Import 5etools images"
             hint="The 5etools image archive (5etools-img-….tar.gz): pictures for the books, monsters and items."
@@ -643,6 +717,24 @@ const TEST_CAMPAIGN: &str = "The Lost Mine of Phandelver";
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn homebrew_summaries() {
+        let r = |sources: &[&str], entries, adventures, books| mimir_wire::HomebrewImport {
+            sources: sources.iter().map(|s| s.to_string()).collect(),
+            entries,
+            adventures,
+            books,
+        };
+        assert_eq!(
+            super::homebrew_summary(&r(&["HBX"], 3, 1, 0)),
+            "Imported HBX: 1 adventure, 3 entries."
+        );
+        assert_eq!(
+            super::homebrew_summary(&r(&["A", "B"], 1, 0, 2)),
+            "Imported A, B: 2 books, 1 entry."
+        );
+    }
+
     #[test]
     fn claude_commands() {
         assert_eq!(
