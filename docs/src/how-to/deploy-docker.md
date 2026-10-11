@@ -22,7 +22,7 @@ The files are in the `deploy/` folder of the repository.
 
 3. Edit `.env`:
    - `MIMIR_VERSION`: a release tag, for example `1.0.0`. Do not use `latest`.
-   - `TAILSCALE_AUTHKEY`: the auth key.
+   - `TAILSCALE_AUTHKEY`: the auth key. Without a key, the Tailscale node logs a login link instead: run `docker compose logs tailscale` and open the link within 15 minutes (`TAILSCALE_EXTRA_ARGS=--timeout=15m`). If your tailnet approves new devices, approve `mimir` in the admin console.
    - `TAILSCALE_HOSTNAME`: the node name. The default is `mimir`.
    - `MIMIR_API_TOKEN`: see [Set the DM Token](#set-the-dm-token).
 4. Start the stack:
