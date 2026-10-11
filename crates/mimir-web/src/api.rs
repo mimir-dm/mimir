@@ -118,6 +118,12 @@ pub async fn delete(path: &str) -> Result<(), ApiError> {
     Err(decode_error(status, &text))
 }
 
+/// `DELETE` a path under `/api/v1` that answers JSON.
+pub async fn delete_json<T: DeserializeOwned>(path: &str) -> Result<T, ApiError> {
+    let url = format!("/api/v1{path}");
+    get_json(with_token(Request::delete(&url), auth::stored_token())).await
+}
+
 /// An image under `/api/v1` as an object URL (`blob:`), for `<image href>`.
 /// Images need the token, which an `<img src>` cannot send. `Ok(None)`:
 /// there is no image (404).

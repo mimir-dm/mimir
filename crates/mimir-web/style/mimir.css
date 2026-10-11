@@ -275,3 +275,118 @@
 }
 .mimir-display__controls:focus-within,
 .mimir-display__controls:hover { opacity: 1; }
+
+/* ---- DM map body: the stage and the tracker ------------------------------ */
+.mimir-map__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: var(--space-sm);
+}
+.mimir-map__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mimir-map__stage .mimir-map__panel { top: var(--space-sm); }
+.mimir-map__token--turn .mimir-map__token-ring { stroke: var(--gold); stroke-width: 9; }
+
+/* ---- Initiative tracker ---------------------------------------------------- */
+.mimir-tracker {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+.mimir-tracker--collapsed { flex-basis: auto; }
+.mimir-tracker__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-soft);
+}
+.mimir-tracker__head > :last-child { margin-left: auto; }
+.mimir-tracker--collapsed .mimir-tracker__head { border-bottom: 0; }
+.mimir-tracker__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow: auto;
+}
+.mimir-tracker__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mimir-tracker__row {
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs);
+  border-left: 3px solid transparent;
+}
+.mimir-tracker__row--current { background: var(--ice-bg); border-left-color: var(--ice); }
+.mimir-tracker__row--selected { outline: 2px solid var(--ice); }
+.mimir-tracker__row--down .mimir-tracker__name { text-decoration: line-through; color: var(--fg-2); }
+.mimir-tracker__line { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-tracker__init {
+  width: 3.2em;
+  min-height: 36px;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  color: var(--fg);
+  font: inherit;
+}
+.mimir-tracker__name {
+  flex: 1 1 auto;
+  min-height: 36px;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: var(--fg-bright);
+  font: inherit;
+  cursor: pointer;
+}
+.mimir-tracker__hp { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--fg-2); }
+.mimir-tracker__linked { color: var(--fg-2); }
+.mimir-tracker__badges { display: flex; flex-wrap: wrap; gap: var(--space-xs); padding-left: 3.6em; }
+.mimir-tracker__condition {
+  border: 1px solid var(--gold);
+  background: var(--gold-bg);
+  color: var(--gold-fg);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-sm);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.mimir-tracker__details { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-xs) 0 var(--space-xs) 3.6em; }
+.mimir-tracker__bar { height: 8px; border-radius: var(--radius-pill); background: var(--inset); overflow: hidden; }
+.mimir-tracker__bar > span { display: block; height: 100%; }
+.mimir-tracker__bar--healthy > span { background: var(--ok); }
+.mimir-tracker__bar--bloodied > span { background: var(--gold); }
+.mimir-tracker__bar--down > span { background: var(--bad); }
+.mimir-tracker__add { display: flex; gap: var(--space-xs); align-items: flex-end; }
+.mimir-tracker__add > :first-child { flex: 1 1 auto; }
+.mimir-tracker__log { margin: 0; padding-left: 1.2em; font-size: var(--fs-sm); color: var(--fg-2); }
+@media (max-width: 900px) {
+  .mimir-map__body { flex-direction: column; }
+  .mimir-tracker { flex-basis: auto; max-height: 45%; }
+}
+
+/* ---- Turn order on the player display ------------------------------------ */
+.mimir-display__order {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  min-width: 180px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--panel);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  opacity: 0.92;
+}
+.mimir-display__order ol { margin: var(--space-xs) 0 0; padding-left: 1.4em; }
+.mimir-display__order li[aria-current="step"] { color: var(--fg-bright); font-weight: 600; }

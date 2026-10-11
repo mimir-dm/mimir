@@ -81,6 +81,9 @@ pub struct Viewport {
     /// The scene box: put `node_ref=viewport.scene` on it.
     pub scene: NodeRef<Div>,
     gesture: StoredValue<Gesture>,
+    /// The map size to keep fitted while the viewer has not panned or
+    /// zoomed (the box can change size: a panel loads, the window turns).
+    fit_size: StoredValue<Option<(f64, f64)>>,
 }
 
 impl Default for Viewport {
@@ -95,7 +98,50 @@ impl Viewport {
             view: RwSignal::new(View::IDENTITY),
             scene: NodeRef::new(),
             gesture: StoredValue::new(Gesture::default()),
+            fit_size: StoredValue::new(None),
         }
+    }
+
+    /// Refit the map whenever the scene box changes size, until the viewer
+    /// pans or zooms. Call once, in the component.
+    pub fn keep_fitted(&self) {
+        use wasm_bindgen::closure::Closure;
+        let vp = *self;
+        let observer =
+            StoredValue::new_local(None::<(web_sys::ResizeObserver, Closure<dyn FnMut()>)>);
+        Effect::new(move |_| {
+            let Some(el) = vp.scene.get() else { return };
+            let cb = Closure::<dyn FnMut()>::new(move || {
+                if let Some((w, h)) = vp.fit_size.get_value() {
+                    vp.fit_now(w, h);
+                }
+            });
+            if let Ok(obs) = web_sys::ResizeObserver::new(cb.as_ref().unchecked_ref()) {
+                obs.observe(&el);
+                observer.set_value(Some((obs, cb)));
+            }
+        });
+        on_cleanup(move || {
+            observer.try_update_value(|o| {
+                if let Some((obs, _)) = o.take() {
+                    obs.disconnect();
+                }
+            });
+        });
+    }
+
+    fn fit_now(&self, map_w: f64, map_h: f64) {
+        if let Some(r) = self.rect() {
+            if r.width() > 0.0 && r.height() > 0.0 {
+                self.view
+                    .set(View::fit(map_w, map_h, r.width(), r.height()));
+            }
+        }
+    }
+
+    /// The viewer moved the view: stop refitting.
+    fn hold(&self) {
+        self.fit_size.set_value(None);
     }
 
     fn rect(&self) -> Option<web_sys::DomRect> {
@@ -115,16 +161,15 @@ impl Viewport {
         }
     }
 
-    /// Fit a map of this size into the scene box.
+    /// Fit a map of this size into the scene box, and keep it fitted.
     pub fn fit(&self, map_w: f64, map_h: f64) {
-        if let Some(r) = self.rect() {
-            self.view
-                .set(View::fit(map_w, map_h, r.width(), r.height()));
-        }
+        self.fit_size.set_value(Some((map_w, map_h)));
+        self.fit_now(map_w, map_h);
     }
 
     /// Zoom about the centre of the box.
     pub fn zoom(&self, factor: f64) {
+        self.hold();
         if let Some(r) = self.rect() {
             self.view
                 .update(|v| *v = v.zoom_at(factor, r.width() / 2.0, r.height() / 2.0));
@@ -186,6 +231,7 @@ impl Viewport {
             }
         });
         if let Some(v) = next {
+            self.hold();
             self.view.set(v);
         }
     }
@@ -205,6 +251,7 @@ impl Viewport {
 
     pub fn wheel(&self, ev: &web_sys::WheelEvent) {
         ev.prevent_default();
+        self.hold();
         let Some(r) = self.rect() else { return };
         let factor = if ev.delta_y() < 0.0 { 1.15 } else { 1.0 / 1.15 };
         self.view.update(|v| {

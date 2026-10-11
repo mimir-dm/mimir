@@ -3,5 +3,6 @@
 
 pub mod display;
 pub mod dm;
+pub mod tracker;
 pub mod viewport;
 pub mod vision;

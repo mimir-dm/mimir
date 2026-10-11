@@ -181,7 +181,7 @@ def e2e():
     code = _build(False) or _npm_ready()
     if code != 0:
         return code
-    return subprocess.run(["npx", "playwright", "test", "specs/smoke.spec.ts", "specs/map.spec.ts", "specs/display.spec.ts"], cwd=str(E2E_DIR)).returncode
+    return subprocess.run(["npx", "playwright", "test", "specs/smoke.spec.ts", "specs/map.spec.ts", "specs/display.spec.ts", "specs/combat.spec.ts"], cwd=str(E2E_DIR)).returncode
 
 
 @web()

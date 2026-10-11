@@ -190,6 +190,11 @@ pub fn DisplayPage() -> impl IntoView {
                     fetch(map_id);
                 }
             }
+            ServerMsg::CombatChanged { .. } => {
+                if let Some(m) = shown.get_untracked() {
+                    fetch(m);
+                }
+            }
             ServerMsg::PlayerView { view: v } => view.set(Some(*v)),
             _ => {}
         })));
@@ -239,6 +244,7 @@ pub fn DisplayPage() -> impl IntoView {
     });
 
     let vp = Viewport::new();
+    vp.keep_fitted();
     let fitted_for = RwSignal::new(String::new());
     Effect::new(move |_| {
         let Some(v) = view.get() else { return };
@@ -382,6 +388,20 @@ pub fn DisplayPage() -> impl IntoView {
             >
                 {scene}
             </div>
+            {move || {
+                let blackout = display.with(|d| d.as_ref().is_some_and(|d| d.blackout));
+                let order = view.with(|v| v.as_ref().and_then(|v| v.initiative.clone()));
+                order.filter(|_| !blackout).map(|o| view! {
+                    <section class="mimir-display__order" aria-label="Turn order">
+                        <Text bold=true>{format!("Round {}", o.round)}</Text>
+                        <ol>
+                            {o.entries.into_iter().map(|e| view! {
+                                <li aria-current=e.current.then_some("step")>{e.name}</li>
+                            }).collect_view()}
+                        </ol>
+                    </section>
+                })
+            }}
             <div class="mimir-display__controls">
                 <ActionIcon title="Zoom in" on_click=Callback::new(move |_| vp.zoom(1.25))>"+"</ActionIcon>
                 <ActionIcon title="Zoom out" on_click=Callback::new(move |_| vp.zoom(0.8))>"−"</ActionIcon>

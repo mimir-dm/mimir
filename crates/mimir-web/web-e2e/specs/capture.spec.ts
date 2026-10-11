@@ -131,3 +131,62 @@ for (const theme of themes) {
     })
   }
 }
+
+// The DM map with a combat in the tracker, and the display with the order.
+async function combatUp(page: import('@playwright/test').Page) {
+  const auth = { Authorization: `Bearer ${TOKEN}` }
+  const map = await mapId(page)
+  const detail = await (await page.request.get(`/api/v1/maps/${map}`, { headers: auth })).json()
+  const combat = await (await page.request.post(`/api/v1/modules/${detail.module_id}/combat`, { headers: auth })).json()
+  if (combat.entries.length === 0) {
+    const monsters = (await (await page.request.get(`/api/v1/modules/${detail.module_id}/monsters`, { headers: auth })).json()) as {
+      id: string
+      name: string
+    }[]
+    const klarg = monsters.find((m) => m.name === 'Klarg')!
+    const id = combat.session.id
+    await page.request.post(`/api/v1/combat/${id}/entries`, { headers: auth, data: { kind: 'monster', module_monster_id: klarg.id } })
+    await page.request.post(`/api/v1/combat/${id}/entries`, { headers: auth, data: { kind: 'custom', name: 'Robin', max_hp: 24, initiative: 15 } })
+    await page.request.post(`/api/v1/combat/${id}/link-tokens`, { headers: auth, data: { map_id: map } })
+    const state = await (await page.request.get(`/api/v1/combat/${id}`, { headers: auth })).json()
+    const k = state.entries.find((e: { name: string }) => e.name === 'Klarg')
+    await page.request.patch(`/api/v1/combat-entries/${k.id}`, { headers: auth, data: { initiative: 12 } })
+    const robin = state.entries.find((e: { name: string }) => e.name === 'Robin')
+    await page.request.post(`/api/v1/combat-entries/${robin.id}/damage`, { headers: auth, data: { amount: 9 } })
+  }
+  return map
+}
+
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`dm-map-combat ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const map = await combatUp(page)
+      await signIn(page, theme)
+      await page.goto(`/maps/${map}`)
+      await expect(page.locator('.mimir-tracker__row', { hasText: 'Robin' })).toBeVisible()
+      await expect(page.locator('.mimir-map__token[aria-label="Klarg"]')).toBeAttached()
+      await page.waitForTimeout(400)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/dm-map-combat--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+  test(`player-display-order desktop ${theme}`, async ({ page }) => {
+    const map = await combatUp(page)
+    const campaign = await campaignId(page)
+    await page.request.put(`/api/v1/campaigns/${campaign}/display`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+      data: { map_id: map, show_initiative: true },
+    })
+    await signIn(page, theme)
+    await page.goto(`/display/${campaign}`)
+    await expect(page.locator('.mimir-display__order')).toContainText('Robin')
+    await page.waitForTimeout(400)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/player-display-order--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    await page.request.put(`/api/v1/campaigns/${campaign}/display`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+      data: { map_id: map, show_initiative: false },
+    })
+  })
+}

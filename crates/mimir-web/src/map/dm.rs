@@ -19,6 +19,7 @@ use mimir_wire::{
 };
 use serde_json::json;
 
+use super::tracker::{self, CombatTracker};
 use super::viewport::Viewport;
 use super::vision::{self, LightLevel, Point};
 use crate::api;
@@ -203,6 +204,9 @@ pub fn DmMapPage() -> impl IntoView {
 
     // The player display of the campaign, kept by the socket.
     let display = RwSignal::new(DisplayState::default());
+    // The module's combat (the tracker reads and changes it).
+    let combat = RwSignal::new(None::<wire::Combat>);
+    let combat_v = RwSignal::new(0u32);
     let live = StoredValue::new_local(None::<Live>);
     Effect::new(move |_| {
         let c = campaign.get();
@@ -212,6 +216,7 @@ pub fn DmMapPage() -> impl IntoView {
         let here = id.get_untracked();
         live.set_value(Some(Live::watch(c, move |msg| match msg {
             ServerMsg::MapChanged { map_id, part } if map_id == here => bump(part),
+            ServerMsg::CombatChanged { .. } => combat_v.update(|v| *v += 1),
             ServerMsg::Display { display: d } => display.set(d),
             _ => {}
         })));
@@ -219,6 +224,7 @@ pub fn DmMapPage() -> impl IntoView {
 
     // DM-side state.
     let vp = Viewport::new();
+    vp.keep_fitted();
     let view = vp.view;
     let fitted = RwSignal::new(false);
     let los = RwSignal::new(true);
@@ -231,6 +237,19 @@ pub fn DmMapPage() -> impl IntoView {
     let dead = RwSignal::new(HashSet::<String>::new());
     let doors_flipped = RwSignal::new(HashSet::<usize>::new());
     let selected = RwSignal::new(None::<Selected>);
+    // The token the tracker or the map selects.
+    let selected_token = RwSignal::new(None::<String>);
+    Effect::new(move |_| {
+        if let Some(t) = selected_token.get() {
+            selected.set(Some(Selected::Token(t)));
+        }
+    });
+    Effect::new(move |_| {
+        if !matches!(selected.get(), Some(Selected::Token(_))) {
+            selected_token.set(None);
+        }
+    });
+    let marks = Memo::new(move |_| combat.with(|c| tracker::map_marks(c.as_ref())));
     let place = RwSignal::new(None::<Place>);
     let place_menu = RwSignal::new(String::new());
     let drag = RwSignal::new(None::<Drag>);
@@ -793,7 +812,9 @@ pub fn DmMapPage() -> impl IntoView {
                                         y = d.y - side / 2.0;
                                     }
                                     let art = token_art.with(|m| m.get(&t.id).cloned().flatten());
-                                    let is_dead = dead.with(|d| d.contains(&t.id));
+                                    let (turn_token, down) = marks.get();
+                                    let is_dead = dead.with(|d| d.contains(&t.id)) || down.contains(&t.id);
+                                    let is_turn = turn_token.as_deref() == Some(t.id.as_str());
                                     let tid = t.id.clone();
                                     let sel = Selected::Token(t.id.clone());
                                     let sel2 = sel.clone();
@@ -809,6 +830,7 @@ pub fn DmMapPage() -> impl IntoView {
                                             class="mimir-map__token"
                                             class:mimir-map__token--hidden=!t.visible_to_players
                                             class:mimir-map__token--dead=is_dead
+                                            class:mimir-map__token--turn=is_turn
                                             class:mimir-map__token--selected=move || selected.get() == Some(sel2.clone())
                                             aria-label=t.name.clone()
                                             on:pointerdown=move |ev: web_sys::PointerEvent| {
@@ -818,6 +840,7 @@ pub fn DmMapPage() -> impl IntoView {
                                                 }
                                                 selected.set(Some(sel.clone()));
                                                 let (mx, my) = to_map(f64::from(ev.client_x()), f64::from(ev.client_y()));
+                                                selected_token.set(Some(tid.clone()));
                                                 drag.set(Some(Drag { token_id: tid.clone(), x: mx, y: my, moved: false }));
                                             }
                                         >
@@ -917,11 +940,24 @@ pub fn DmMapPage() -> impl IntoView {
                         }
                     })
             }}
-            {move || match map.get() {
-                Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
-                _ => scene_view(),
-            }}
-            {panel}
+            <div class="mimir-map__body">
+                <div class="mimir-map__stage">
+                    {move || match map.get() {
+                        Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
+                        _ => scene_view(),
+                    }}
+                    {panel}
+                </div>
+                <CombatTracker
+                    module_id=module
+                    campaign_id=campaign
+                    map_id=id
+                    combat=combat
+                    combat_v=combat_v
+                    display=display
+                    selected_token=selected_token
+                />
+            </div>
         </div>
     }
 }

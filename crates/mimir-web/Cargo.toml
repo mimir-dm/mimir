@@ -44,6 +44,8 @@ web-sys = { version = "0.3", features = [
     "WheelEvent",
     "Element",
     "DomRect",
+    # Keep the map fitted while its box changes size.
+    "ResizeObserver",
 ] }
 js-sys = "0.3"
 wasm-bindgen-futures = "0.4"
