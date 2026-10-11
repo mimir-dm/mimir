@@ -19,6 +19,7 @@
 
 - [Overview](./how-to/README.md)
 - [Run the Server](./how-to/run-server.md)
+- [Deploy with Docker](./how-to/deploy-docker.md)
 - [Campaigns](./how-to/campaigns/README.md)
   - [Create a Campaign](./how-to/campaigns/create-campaign.md)
   - [Manage Documents](./how-to/campaigns/manage-documents.md)

@@ -47,3 +47,7 @@ docs/book/
 
 # Trunk output of the web app
 /crates/mimir-web/dist/
+
+# The deployment: its secrets and its backups stay on the host.
+deploy/.env
+deploy/backups/

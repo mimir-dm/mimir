@@ -1,0 +1,119 @@
+# The Mimir deployment (MIMIR-T-0706): mimir-server on a tailnet, after the
+# Kairos stack (colliery-io/kairos deploy/docker-compose.yaml).
+#
+#   mimir                    the server; data on the `mimir_data` volume
+#   tailscale                the front door: https://<TAILSCALE_HOSTNAME>.<tailnet>.ts.net/
+#                            with NO host port. `serve`, never Funnel.
+#   tailscale-http-redirect  plain HTTP on the tailnet name → HTTPS
+#   backup                   a copy of the database and the assets, on a timer,
+#                            into BACKUP_DIR on the host
+#
+# Usage (see docs: Deploy Mimir with Docker):
+#   cp .env.example .env && chmod 600 .env    # then edit
+#   docker compose --env-file .env up -d
+
+name: mimir
+
+services:
+  mimir:
+    # Pin a release tag, never `latest`.
+    image: ghcr.io/mimir-dm/mimir:${MIMIR_VERSION:?pin MIMIR_VERSION to a release tag}
+    restart: unless-stopped
+    environment:
+      # Unset or empty: open mode, anyone on the tailnet is the DM. Set it to
+      # sign in with a token.
+      MIMIR_API_TOKEN: ${MIMIR_API_TOKEN:-}
+      RUST_LOG: ${MIMIR_LOG_LEVEL:-info}
+    volumes:
+      - mimir_data:/var/lib/mimir
+    # Only reachable through the tailscale sidecar, which shares this
+    # container's network namespace. No host port.
+    expose:
+      - "8740"
+    # The image's HEALTHCHECK calls /readyz (the database answers).
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    network_mode: "service:mimir"
+    depends_on:
+      mimir:
+        condition: service_started
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TS_AUTHKEY: ${TAILSCALE_AUTHKEY:-}
+      TS_HOSTNAME: ${TAILSCALE_HOSTNAME:-mimir}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: ${TAILSCALE_EXTRA_ARGS:-}
+      # The serve config: HTTPS on the tailnet name to 127.0.0.1:8740, and
+      # :80 to the redirect below. Declared here so a fresh deploy has it.
+      # It needs HTTPS Certificates on for the tailnet.
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - tailscale_state:/var/lib/tailscale
+      - ./tailscale:/config:ro
+    restart: unless-stopped
+
+  tailscale-http-redirect:
+    image: nginx:1.27-alpine
+    network_mode: "service:mimir"
+    depends_on:
+      mimir:
+        condition: service_started
+    volumes:
+      - ./tailscale/redirect.conf:/etc/nginx/conf.d/default.conf:ro
+    mem_limit: 32m
+    restart: unless-stopped
+
+  # A copy of the database (sqlite3 `.backup`, which is safe while the server
+  # writes) and of the assets, in one archive, into a HOST folder: a backup
+  # in the same volume set as the data is not a backup. Each archive is
+  # checked (`PRAGMA integrity_check`) before it is kept; old ones go only
+  # after a good one.
+  backup:
+    image: ghcr.io/mimir-dm/mimir:${MIMIR_VERSION:?pin MIMIR_VERSION to a release tag}
+    restart: unless-stopped
+    depends_on:
+      mimir:
+        condition: service_healthy
+    environment:
+      BACKUP_INTERVAL: ${MIMIR_BACKUP_INTERVAL:-21600}
+      BACKUP_KEEP: ${MIMIR_BACKUP_KEEP:-8}
+    volumes:
+      - mimir_data:/var/lib/mimir
+      - ${MIMIR_BACKUP_DIR:-./backups}:/backups
+    healthcheck:
+      disable: true
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        while :; do
+          stamp="$$(date -u +%Y%m%dT%H%M%SZ)"
+          work="$$(mktemp -d)"
+          out="/backups/mimir-$$stamp.tar.gz"
+          if sqlite3 /var/lib/mimir/data/mimir.db ".backup '$$work/mimir.db'" \
+             && [ "$$(sqlite3 "$$work/mimir.db" 'PRAGMA integrity_check;')" = "ok" ] \
+             && tar -czf "$$out.partial" -C "$$work" mimir.db -C /var/lib/mimir assets; then
+            mv "$$out.partial" "$$out"
+            echo "backup ok: $$out ($$(wc -c < "$$out") bytes)"
+            ls -1t /backups/mimir-*.tar.gz 2>/dev/null \
+              | tail -n +$$((BACKUP_KEEP + 1)) \
+              | while read -r old; do echo "pruning $$old"; rm -f "$$old"; done
+          else
+            echo "backup FAILED: $$out" >&2
+            rm -f "$$out.partial"
+          fi
+          rm -rf "$$work"
+          sleep "$$BACKUP_INTERVAL"
+        done
+
+volumes:
+  # The database, the assets and the upload temp folder. Back it up.
+  mimir_data:
+  # The tailnet node's identity. Losing it means a new node and a new auth key.
+  tailscale_state:

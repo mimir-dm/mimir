@@ -72,6 +72,7 @@ Everything is in the data directory: `data/mimir.db` and the `assets/` folder. S
 
 ## See Also
 
+- [Deploy with Docker](./deploy-docker.md)
 - [Environment Variables](../reference/environment-variables.md)
 - [Troubleshooting](../reference/troubleshooting.md)
 - [Architecture Overview](../explanation/architecture-overview.md)
