@@ -152,7 +152,7 @@ fn characters_table(list: Vec<CharacterSummary>, npc: bool) -> impl IntoView {
                             let name = c.name.clone();
                             view! {
                                 <tr>
-                                    <td>{c.name}</td>
+                                    <td><a href=format!("/characters/{}", c.id)>{c.name}</a></td>
                                     {cells.map(|t| view! { <td>{t}</td> }).collect_view()}
                                     {(!npc).then(|| view! {
                                         <td>

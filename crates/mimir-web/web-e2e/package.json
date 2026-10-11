@@ -4,7 +4,7 @@
   "description": "Playwright smoke suite and screenshot captures for mimir-web, against mimir-server on fixture data.",
   "type": "module",
   "scripts": {
-    "e2e": "playwright test specs/smoke.spec.ts specs/map.spec.ts specs/display.spec.ts specs/combat.spec.ts specs/players.spec.ts",
+    "e2e": "playwright test specs/smoke.spec.ts specs/map.spec.ts specs/display.spec.ts specs/combat.spec.ts specs/players.spec.ts specs/characters.spec.ts",
     "screenshots": "playwright test specs/capture.spec.ts",
     "screenshots:diff": "node diff.mjs"
   },

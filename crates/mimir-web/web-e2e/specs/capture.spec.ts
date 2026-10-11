@@ -218,3 +218,47 @@ for (const theme of themes) {
     })
   }
 }
+
+// The character sheet (Character tab at both sizes; Equipment and the
+// level-up dialog at desktop size).
+async function pcId(page: import('@playwright/test').Page, name: string) {
+  const campaign = await campaignId(page)
+  const pcs = (await (
+    await page.request.get(`/api/v1/campaigns/${campaign}/pcs`, { headers: { Authorization: `Bearer ${TOKEN}` } })
+  ).json()) as { id: string; name: string }[]
+  return pcs.find((p) => p.name === name)!.id
+}
+
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`character-sheet ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const id = await pcId(page, 'Thorin Ironforge')
+      await signIn(page, theme)
+      await page.goto(`/characters/${id}`)
+      await expect(page.locator('.mimir-sheet__ability')).toHaveCount(6)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/character-sheet--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+  test(`character-equipment desktop ${theme}`, async ({ page }) => {
+    const id = await pcId(page, 'Thorin Ironforge')
+    await signIn(page, theme)
+    await page.goto(`/characters/${id}`)
+    await page.getByRole('tab', { name: 'Equipment' }).click()
+    await expect(page.locator('.mimir-inv__list')).toBeVisible()
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/character-equipment--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+  test(`character-levelup desktop ${theme}`, async ({ page }) => {
+    const id = await pcId(page, 'Thorin Ironforge')
+    await signIn(page, theme)
+    await page.goto(`/characters/${id}`)
+    await page.getByRole('button', { name: 'Level up' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.locator('.mimir-levelup__steps')).toContainText('Hit points')
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/character-levelup--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+}

@@ -16,6 +16,7 @@ use mimir_wire::{AuthMode, Role, Session};
 
 use crate::api;
 use crate::auth::{self, Gate};
+use crate::character::sheet::CharacterPage;
 use crate::map::display::DisplayPage;
 use crate::map::dm::DmMapPage;
 use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
@@ -195,6 +196,7 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                     </ParentRoute>
                     <Route path=path!("/modules/:id") view=ModulePage />
                     <Route path=path!("/maps/:id") view=DmMapPage />
+                    <Route path=path!("/characters/:id") view=CharacterPage />
                 </Routes>
             </AppShell>
         }
@@ -238,6 +240,7 @@ pub fn campaigns_section(path: &str) -> bool {
         || path.starts_with("/campaigns/")
         || path.starts_with("/modules/")
         || path.starts_with("/maps/")
+        || path.starts_with("/characters/")
 }
 
 #[cfg(test)]
