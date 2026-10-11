@@ -167,3 +167,61 @@ test('Home: Import campaign opens the archive import', async ({ page }) => {
   await expect(dialog.locator('.mimir-drop')).toContainText('Archive')
   await expect(dialog.locator('input[type=file]')).toHaveAttribute('accept', /\.gz/)
 })
+
+test('the shell, the reference and settings: selector, continue, core only, sorting, books, dev tools', async ({ page }) => {
+  await signIn(page)
+  const campaign = await campaignId(page)
+
+  // The header's campaign selector opens a campaign; Home then offers it.
+  await page.goto('/settings')
+  await page.getByLabel('Campaign', { exact: true }).selectOption({ label: CAMPAIGN })
+  await expect(page).toHaveURL(new RegExp(`/campaigns/${campaign}`))
+  await page.goto('/')
+  await expect(page.getByRole('link', { name: `Continue ${CAMPAIGN}` })).toBeVisible()
+  await expect(page.getByLabel('Campaign', { exact: true })).toHaveValue(campaign)
+
+  // Source books: Core only ticks the core books the catalog has.
+  await page.goto(`/campaigns/${campaign}`)
+  await page.getByRole('button', { name: 'More campaign actions' }).click()
+  await page.getByRole('menuitem', { name: 'Source books…' }).click()
+  const books = page.getByRole('group', { name: 'Source books' })
+  await page.getByRole('button', { name: 'Core only' }).click()
+  const ticked = await books.locator('input:checked').count()
+  const core = await books.locator('label', { hasText: /\((PHB|MM|DMG|XPHB|XMM|XDMG)\)$/ }).count()
+  expect(ticked).toBe(core)
+  await page.getByRole('button', { name: 'Cancel' }).click()
+
+  // The catalog sorts by a column, and back.
+  await page.goto('/reference')
+  const results = page.getByRole('table', { name: 'Results' })
+  await expect(results.locator('tbody tr').first()).toBeVisible()
+  const names = async () => (await results.locator('tbody tr td:first-child').allInnerTexts()).map((n) => n.trim())
+  await results.getByRole('button', { name: 'Name' }).click()
+  const asc = await names()
+  expect(asc).toEqual([...asc].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())))
+  await results.getByRole('button', { name: 'Name' }).click()
+  const desc = await names()
+  expect(desc[0].toLowerCase() >= desc[desc.length - 1].toLowerCase()).toBe(true)
+
+  // Books: tick two, Remove selected asks first (cancelled here).
+  await page.goto('/settings?section=books')
+  const sources = page.getByRole('table', { name: 'Sources' })
+  await sources.getByRole('checkbox').nth(0).check()
+  await sources.getByRole('checkbox').nth(1).check()
+  await page.getByRole('button', { name: 'Remove selected (2)' }).click()
+  await expect(page.getByRole('dialog', { name: 'Remove 2 books?' })).toBeVisible()
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+
+  // The reader's library: Remove this book asks first (cancelled).
+  await page.goto('/reference?mode=reader')
+  await page.getByRole('button', { name: 'Remove this book…' }).click()
+  await expect(page.getByRole('dialog', { name: /^Remove .+\?$/ })).toBeVisible()
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+
+  // Dev tools: this e2e server runs the fixture, and it is in.
+  await page.goto('/settings?section=about')
+  const dev = page.getByRole('region', { name: 'Dev tools' })
+  await expect(dev).toContainText(`${CAMPAIGN} is in.`)
+  await expect(dev.getByRole('button', { name: 'Seed', exact: true })).toBeDisabled()
+  await expect(dev.getByRole('button', { name: 'Clear' })).toBeEnabled()
+})

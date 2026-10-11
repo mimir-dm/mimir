@@ -3,7 +3,9 @@
 //! heading are in the address (`?mode=reader&book=PHB&section=3&at=id`).
 
 use aurora_leptos::components::*;
+use aurora_leptos::frame::ConfirmDialog;
 use leptos::prelude::*;
+use leptos::task::spawn_local;
 use leptos_router::hooks::{use_navigate, use_query_map};
 use mimir_render::book;
 use mimir_wire::{BookData, SourceInfo};
@@ -29,7 +31,11 @@ pub fn ReaderView() -> impl IntoView {
     let query = use_query_map();
     let navigate = use_navigate();
     let go = StoredValue::new(move |to: String| navigate(&to, Default::default()));
-    let sources = LocalResource::new(|| api::get::<Vec<SourceInfo>>("/catalog/sources"));
+    let sources_v = RwSignal::new(0u32);
+    let sources = LocalResource::new(move || {
+        sources_v.track();
+        api::get::<Vec<SourceInfo>>("/catalog/sources")
+    });
     let books = move || {
         sources
             .get()
@@ -52,6 +58,26 @@ pub fn ReaderView() -> impl IntoView {
             .unwrap_or(0)
     });
     let at = Memo::new(move |_| query.get().get("at"));
+    // Remove the open book from the library (MIMIR-T-0734): its source
+    // goes from the catalog, as in Settings.
+    let removing = RwSignal::new(false);
+    let remove_error = RwSignal::new(String::new());
+    let remove_book = move |_| {
+        let code = chosen.get_untracked();
+        spawn_local(async move {
+            match api::delete(&format!("/catalog/sources/{}", enc(&code))).await {
+                Ok(()) => {
+                    removing.set(false);
+                    sources_v.update(|v| *v += 1);
+                    go.with_value(|g| g("/reference?mode=reader".to_string()));
+                }
+                Err(e) => {
+                    removing.set(false);
+                    remove_error.set(api::message(e));
+                }
+            }
+        });
+    };
     let data = LocalResource::new(move || {
         let b = chosen.get();
         async move {
@@ -91,6 +117,18 @@ pub fn ReaderView() -> impl IntoView {
     });
 
     view! {
+        <ConfirmDialog
+            open=removing
+            title=Signal::derive(move || {
+                let code = chosen.get();
+                let name = books().into_iter().find(|b| b.code == code).map(|b| b.name).unwrap_or(code);
+                format!("Remove {name}?")
+            })
+            message="Its catalog entries and its book text go; characters and campaigns keep what they hold. Import it again to bring it back."
+            confirm_label="Remove"
+            on_confirm=Callback::new(remove_book)
+            on_cancel=Callback::new(move |_| removing.set(false))
+        />
         {move || match sources.get() {
             None => view! { <Loading /> }.into_any(),
             Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
@@ -117,6 +155,11 @@ pub fn ReaderView() -> impl IntoView {
                                     }).collect_view()}
                                 </select>
                             </label>
+                            <Button variant="subtle" bad=true on_click=Callback::new(move |_| removing.set(true))>"Remove this book…"</Button>
+                            {move || {
+                                let e = remove_error.get();
+                                (!e.is_empty()).then(|| view! { <Alert color=aurora_leptos::tokens::token::BAD>{e}</Alert> })
+                            }}
                             <ol class="mimir-reader__toc">
                                 {move || {
                                     let b = chosen.get();

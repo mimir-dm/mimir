@@ -25,11 +25,21 @@ pub fn Home() -> impl IntoView {
         version.track();
         api::campaigns(show_archived.get())
     });
-    let list = loaded(campaigns, |list: Vec<CampaignSummary>| {
+    let current = crate::current::CurrentCampaign::get();
+    let list = loaded(campaigns, move |list: Vec<CampaignSummary>| {
         if list.is_empty() {
             return view! { <Empty message="No campaigns yet." /> }.into_any();
         }
+        // Continue the campaign the DM last opened (MIMIR-T-0734).
+        let last = current
+            .map(|c| c.0.get_untracked())
+            .and_then(|id| list.iter().find(|c| c.id == id).cloned());
         view! {
+            {last.map(|c| view! {
+                <div class="mimir-continue">
+                    <a class="cl-btn cl-btn--filled" href=format!("/campaigns/{}", c.id)>{format!("Continue {}", c.name)}</a>
+                </div>
+            })}
             <div class="mimir-cards">
                 {list
                     .into_iter()

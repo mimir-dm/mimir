@@ -38,6 +38,7 @@ The 5etools image archive (`5etools-img-….tar.gz`): pictures for the books, mo
 
 | Column | Contents |
 |--------|----------|
+| Checkbox | Select the source. **Remove selected (…)** removes the selected sources, after a confirmation. |
 | **Code** | The source code, for example PHB |
 | **Book** | The name of the book |
 | **Readable** | Yes when the book text can be read in the reference |
@@ -61,6 +62,18 @@ Only the DM token works at `/mcp`. A player link is refused. See [MCP Server](..
 |-------|----------|
 | **Mimir** | The version |
 | **Sign-in** | Token or Open |
+
+### Dev tools
+
+Only on a development server that runs the fixture (`MIMIR_SEED=fixture`). The status line says whether the fixture campaign is in.
+
+| Button | Function |
+|--------|----------|
+| **Seed** | Add the fixture campaign (when it is not in) |
+| **Reseed** | Remove the fixture campaign and add it again, fresh |
+| **Clear** | Remove the fixture campaign |
+
+The fixture is test data only. Never use real campaign data on a development server.
 
 ## See Also
 

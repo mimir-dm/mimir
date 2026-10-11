@@ -31,7 +31,7 @@ async function pick(select: Locator, text: string) {
 
 async function openTab(page: Page, tab: string) {
   await page.goto('/')
-  await page.getByText(CAMPAIGN).first().click()
+  await page.locator('main').getByText(CAMPAIGN).first().click()
   await page.getByRole('tab', { name: tab, exact: true }).click()
 }
 

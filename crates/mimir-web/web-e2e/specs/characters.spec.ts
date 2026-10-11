@@ -8,7 +8,7 @@ const auth = { Authorization: `Bearer ${TOKEN}` }
 test('the DM works a sheet: inventory, spells, level-up', async ({ page }) => {
   await signIn(page)
   await page.goto('/')
-  await page.getByText(CAMPAIGN).first().click()
+  await page.locator('main').getByText(CAMPAIGN).first().click()
   await page.getByRole('tab', { name: 'PCs', exact: true }).click()
   await page.getByRole('link', { name: 'Elara Moonwhisper', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Elara Moonwhisper' })).toBeVisible()
@@ -31,13 +31,16 @@ test('the DM works a sheet: inventory, spells, level-up', async ({ page }) => {
   await page.locator('.mimir-inv__item', { hasText: 'Shortsword' }).first().getByTitle('Remove Shortsword').click()
   await expect(page.locator('.mimir-inv__item', { hasText: 'Shortsword' })).toHaveCount(0)
 
-  // Coins.
-  await page.getByLabel('GP').fill('77')
-  await page.getByRole('button', { name: 'Save coins' }).click()
+  // Coins. The removal above reloads the sheet twice (its answer, then
+  // the live notice); a reload that lands after the fill rebuilds the
+  // fields, so fill and save again until the server has it.
   const id = new URL(page.url()).pathname.split('/').pop()
-  await expect
-    .poll(async () => (await (await page.request.get(`/api/v1/characters/${id}`, { headers: auth })).json()).currency.gp)
-    .toBe(77)
+  await expect(async () => {
+    await page.getByLabel('GP').fill('77')
+    await page.getByRole('button', { name: 'Save coins' }).click()
+    const gp = (await (await page.request.get(`/api/v1/characters/${id}`, { headers: auth })).json()).currency.gp
+    expect(gp).toBe(77)
+  }).toPass({ timeout: 10000 })
 
   // Spells: learn one from the list.
   await page.getByRole('tab', { name: 'Spells' }).click()

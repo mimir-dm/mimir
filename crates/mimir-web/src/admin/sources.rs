@@ -10,6 +10,18 @@ use mimir_wire::{SourceInfo, Sources};
 
 use crate::api;
 
+/// The core rule books, both editions (MIMIR-T-0734, the desktop's "Core
+/// Only").
+pub const CORE_BOOKS: &[&str] = &["PHB", "MM", "DMG", "XPHB", "XMM", "XDMG"];
+
+/// The core books among those the catalog has.
+pub fn core_only(all: &[String]) -> Vec<String> {
+    all.iter()
+        .filter(|c| CORE_BOOKS.contains(&c.as_str()))
+        .cloned()
+        .collect()
+}
+
 /// `path`: `/campaigns/<id>/sources` or `/characters/<id>/sources`.
 #[component]
 pub fn SourcesDialog(
@@ -61,6 +73,10 @@ pub fn SourcesDialog(
                         chosen.set(all.get().and_then(Result::ok).unwrap_or_default().into_iter().map(|s| s.code).collect())
                     })>"All"</Button>
                     <Button variant="subtle" on_click=Callback::new(move |_| chosen.set(Vec::new()))>"None"</Button>
+                    <Button variant="subtle" on_click=Callback::new(move |_| {
+                        let codes: Vec<String> = all.get().and_then(Result::ok).unwrap_or_default().into_iter().map(|s| s.code).collect();
+                        chosen.set(core_only(&codes))
+                    })>"Core only"</Button>
                 </Group>
                 {move || match all.get() {
                     None => view! { <Loading /> }.into_any(),
@@ -96,5 +112,19 @@ pub fn SourcesDialog(
                 </Group>
             </Stack>
         </Modal>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_core_books_the_catalog_has() {
+        let all: Vec<String> = ["PHB", "XGE", "MM", "XPHB", "TCE"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert_eq!(core_only(&all), vec!["PHB", "MM", "XPHB"]);
     }
 }

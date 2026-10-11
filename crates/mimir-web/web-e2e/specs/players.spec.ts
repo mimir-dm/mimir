@@ -14,7 +14,7 @@ test('a player link: make, open on another device, revoke', async ({ page, brows
 
   // The DM makes a link on the first PC.
   await page.goto('/')
-  await page.getByText(CAMPAIGN).first().click()
+  await page.locator('main').getByText(CAMPAIGN).first().click()
   await page.getByRole('tab', { name: 'PCs', exact: true }).click()
   const first = page.getByRole('list', { name: 'Player characters' }).getByRole('listitem').first()
   const name = (await first.getAttribute('aria-label'))!.trim()

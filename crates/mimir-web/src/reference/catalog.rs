@@ -5,10 +5,11 @@
 use std::time::Duration;
 
 use aurora_leptos::components::*;
+use aurora_leptos::data::SortState;
 use leptos::prelude::*;
 use leptos_router::hooks::{use_navigate, use_query_map};
 use mimir_render::summary::CATEGORIES;
-use mimir_wire::CatalogPage;
+use mimir_wire::{CatalogPage, CatalogRow};
 
 use super::detail::{Reference, Target};
 use crate::api;
@@ -205,6 +206,43 @@ pub fn category_of(value: Option<&str>) -> &'static str {
 const PAGE: usize = 100;
 const MOST: usize = 500;
 
+/// Compare two cells: as numbers when both are (a challenge rating "1/4"
+/// too), else as text without case.
+pub fn cell_order(a: &str, b: &str) -> std::cmp::Ordering {
+    fn num(s: &str) -> Option<f64> {
+        let t = s.trim();
+        if let Some((n, d)) = t.split_once('/') {
+            let (n, d) = (n.trim().parse::<f64>().ok()?, d.trim().parse::<f64>().ok()?);
+            return (d != 0.0).then(|| n / d);
+        }
+        t.parse::<f64>().ok()
+    }
+    match (num(a), num(b)) {
+        (Some(x), Some(y)) => x.partial_cmp(&y).unwrap_or(std::cmp::Ordering::Equal),
+        _ => a.to_lowercase().cmp(&b.to_lowercase()),
+    }
+}
+
+/// Sort the rows by a column key ("name", "source", or "c<i>" for the
+/// `i`th cell); no key: as the server sent them (MIMIR-T-0734).
+pub fn sort_rows(rows: &mut [CatalogRow], sort: &SortState) {
+    let Some(key) = sort.key.as_deref() else {
+        return;
+    };
+    let value = |r: &CatalogRow| -> String {
+        match key {
+            "name" => r.name.clone(),
+            "source" => r.source.clone(),
+            k => k
+                .strip_prefix('c')
+                .and_then(|i| i.parse::<usize>().ok())
+                .and_then(|i| r.cells.get(i).cloned())
+                .unwrap_or_default(),
+        }
+    };
+    rows.sort_by(|a, b| sort.order(cell_order(&value(a), &value(b))));
+}
+
 #[component]
 pub fn CatalogView() -> impl IntoView {
     let query = use_query_map();
@@ -230,6 +268,8 @@ pub fn CatalogView() -> impl IntoView {
     // One signal for each filter a kind can have (at most four).
     let chosen: [RwSignal<String>; 4] = std::array::from_fn(|_| RwSignal::new(String::new()));
     let limit = RwSignal::new(PAGE);
+    // The column the results sort by (client side, MIMIR-T-0734).
+    let sort = RwSignal::new(SortState::default());
     // A new kind: its filters start empty.
     Effect::new(move |_| {
         category.track();
@@ -301,17 +341,20 @@ pub fn CatalogView() -> impl IntoView {
                 {move || match page.get() {
                     None => view! { <Loading /> }.into_any(),
                     Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
-                    Some(Ok(p)) => {
+                    Some(Ok(mut p)) => {
                         let cat = category.get_untracked();
                         let n = p.rows.len();
                         let headers = p.headers.clone();
+                        sort_rows(&mut p.rows, &sort.get());
                         view! {
                             <Table label="Results" min_width="640px">
                                 <thead>
                                     <tr>
-                                        <th>"Name"</th>
-                                        {headers.iter().map(|h| view! { <th>{h.clone()}</th> }).collect_view()}
-                                        <th>"Source"</th>
+                                        <SortHeader label="Name" key="name" sort=sort />
+                                        {headers.iter().enumerate().map(|(i, h)| view! {
+                                            <SortHeader label=h.clone() key=format!("c{i}") sort=sort />
+                                        }).collect_view()}
+                                        <SortHeader label="Source" key="source" sort=sort />
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -371,5 +414,34 @@ mod tests {
         for (k, _, _) in CATEGORIES {
             assert!(filters(k).len() <= 4, "{k}");
         }
+    }
+
+    #[test]
+    fn rows_sort_by_column() {
+        use aurora_leptos::data::SortDir;
+        let row = |n: &str, cr: &str, src: &str| CatalogRow {
+            name: n.into(),
+            source: src.into(),
+            cells: vec![cr.into()],
+        };
+        let mut rows = vec![
+            row("Ogre", "2", "MM"),
+            row("Goblin", "1/4", "MM"),
+            row("ankheg", "2", "MM"),
+            row("Lich", "21", "MM"),
+        ];
+        sort_rows(&mut rows, &SortState::by("c0", SortDir::Asc));
+        assert_eq!(
+            rows.iter().map(|r| r.name.as_str()).collect::<Vec<_>>(),
+            vec!["Goblin", "Ogre", "ankheg", "Lich"]
+        );
+        sort_rows(&mut rows, &SortState::by("name", SortDir::Desc));
+        assert_eq!(rows[0].name, "Ogre");
+        assert_eq!(rows[3].name, "ankheg", "no case: a < g < l < o");
+        assert_eq!(
+            cell_order("10", "9"),
+            std::cmp::Ordering::Greater,
+            "numbers, not text"
+        );
     }
 }

@@ -20,7 +20,7 @@ The books appear in the **Sources** table. **Readable** shows whether you can re
 1. Open the campaign.
 2. Open **More** in the dashboard header.
 3. Click **Source books…**.
-4. Select the books that the campaign uses.
+4. Select the books that the campaign uses. **All** and **None** select every book or none; **Core only** selects the core rule books (PHB, MM, DMG, and their 2024 editions) that the catalog has.
 5. Click **Save**.
 
 The monster search of the campaign's modules (**Add a monster**, **Monster from the catalog…** on the DM map) now keeps to these books. With no book selected, it uses every book. The reference page always shows every book.

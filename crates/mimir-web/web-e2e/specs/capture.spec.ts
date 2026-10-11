@@ -29,7 +29,7 @@ const screens: Screen[] = [
   {
     name: 'campaigns',
     path: () => '/',
-    ready: async (p) => expect(p.getByText(CAMPAIGN).first()).toBeVisible(),
+    ready: async (p) => expect(p.locator('main').getByText(CAMPAIGN).first()).toBeVisible(),
   },
   {
     name: 'dashboard-campaign',

@@ -10,7 +10,7 @@ test('open a map from the module page and drag a token', async ({ page }) => {
   await signIn(page)
   const map = await mapId(page)
   await page.goto('/')
-  await page.getByText(CAMPAIGN).first().click()
+  await page.locator('main').getByText(CAMPAIGN).first().click()
   await page.getByRole('tab', { name: 'Modules', exact: true }).click()
   await page.getByRole('link', { name: 'Cragmaw Hideout' }).click()
   await page.getByRole('tab', { name: 'Maps' }).click()

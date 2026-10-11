@@ -727,6 +727,19 @@
   color: var(--fg);
   padding: 0 var(--space-xs);
 }
+/* The header's campaign selector and Home's "Continue" (MIMIR-T-0734). */
+.mimir-switcher { min-width: 12rem; max-width: 18rem; }
+.mimir-continue { margin-bottom: var(--space-md); }
+@media (max-width: 720px) { .mimir-switcher { min-width: 8rem; } }
+/* Read by screen readers only. */
+.mimir-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 /* Characters (MIMIR-T-0733): cards on the dashboard, class features that
    open to their text. */
 .mimir-char-card { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-md); }

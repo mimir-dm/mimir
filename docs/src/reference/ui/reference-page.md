@@ -23,7 +23,7 @@ The side list groups the kinds of entries:
 |---------|----------|
 | **Name** | Search by name as you type |
 | Filters | Depend on the kind, for example **Level** and **School** for spells, or **Type** and **Size** for monsters. **Any** turns a filter off. |
-| **Results** | A table of the entries, with columns for the kind |
+| **Results** | A table of the entries, with columns for the kind. Click a column heading to sort by it; click again to reverse. |
 | **Load more** | Show the next results |
 
 With more than 500 results, Mimir asks you to search by name or filter.
@@ -45,6 +45,7 @@ The reader shows the text of an imported book.
 | Control | Function |
 |---------|----------|
 | **Book** | Choose the book |
+| **Remove this book…** | Remove the book from the library, after a confirmation: its catalog entries and text go, as **×** in Settings |
 | **Contents** | The chapters and headings. Click one to go to it. |
 | **← Previous**, **Next →** | Go to the previous or next section |
 

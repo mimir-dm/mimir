@@ -25,7 +25,7 @@ test('sign in: a wrong token is refused, the right one opens the app', async ({ 
 test('campaign list to dashboard tabs', async ({ page }) => {
   await signIn(page)
   await page.goto('/')
-  await page.getByText(CAMPAIGN).first().click()
+  await page.locator('main').getByText(CAMPAIGN).first().click()
   await expect(page.getByRole('heading', { level: 1, name: CAMPAIGN })).toBeVisible()
   await expect(page.locator('.mimir-doc__title')).toHaveText('Campaign Bible')
 
@@ -45,7 +45,7 @@ test('campaign list to dashboard tabs', async ({ page }) => {
 test('module page sections', async ({ page }) => {
   await signIn(page)
   await page.goto('/')
-  await page.getByText(CAMPAIGN).first().click()
+  await page.locator('main').getByText(CAMPAIGN).first().click()
   await page.getByRole('tab', { name: 'Modules', exact: true }).click()
   await page.getByRole('link', { name: MODULE }).click()
   await expect(page.getByRole('heading', { name: MODULE })).toBeVisible()

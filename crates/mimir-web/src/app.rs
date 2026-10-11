@@ -173,6 +173,8 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
         // The detail drawer of catalog entries (MIMIR-T-0723), for every
         // page of the shell.
         Reference::provide();
+        // The campaign the DM works on (MIMIR-T-0734).
+        crate::current::CurrentCampaign::provide();
         view! {
             <DetailDrawer />
             <AppShell
@@ -180,6 +182,7 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                 header=Box::new(move || {
                     view! {
                         <div class="mimir-header">
+                            <crate::current::CampaignSwitcher />
                             <ThemeToggle hyper=true />
                             {can_sign_out
                                 .then(|| {

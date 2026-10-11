@@ -37,6 +37,7 @@ pub async fn api_config(State(state): State<AppState>) -> Json<WebConfig> {
         } else {
             AuthMode::Token
         },
+        dev_tools: state.config.seed_fixture,
     })
 }
 

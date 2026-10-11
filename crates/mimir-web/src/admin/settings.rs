@@ -10,7 +10,7 @@ use aurora_leptos::tokens::token;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_query_map;
-use mimir_wire::{ArchiveImported, ArchivePreview, CampaignSummary, Job, SourceInfo};
+use mimir_wire::{ArchiveImported, ArchivePreview, CampaignSummary, DevFixture, Job, SourceInfo};
 
 use crate::api;
 use crate::components::DropZone;
@@ -409,27 +409,29 @@ fn BooksSection() -> impl IntoView {
         api::get::<Vec<SourceInfo>>("/catalog/sources")
     });
     let reload = Callback::new(move |_| version.update(|v| *v += 1));
-    let removing = RwSignal::new(None::<SourceInfo>);
+    // The books to remove: one (×) or the ticked ones (MIMIR-T-0734).
+    let removing = RwSignal::new(Vec::<SourceInfo>::new());
+    let ticked = RwSignal::new(Vec::<String>::new());
     let confirm_open = RwSignal::new(false);
-    Effect::new(move |_| confirm_open.set(removing.get().is_some()));
+    Effect::new(move |_| confirm_open.set(!removing.with(Vec::is_empty)));
     let error = RwSignal::new(String::new());
     let remove = move |_| {
-        let Some(s) = removing.get_untracked() else {
-            return;
-        };
+        let list = removing.get_untracked();
         spawn_local(async move {
-            match api::delete(&format!(
-                "/catalog/sources/{}",
-                js_sys::encode_uri_component(&s.code)
-            ))
-            .await
-            {
-                Ok(()) => {
-                    removing.set(None);
-                    reload.run(());
+            for s in list {
+                if let Err(e) = api::delete(&format!(
+                    "/catalog/sources/{}",
+                    js_sys::encode_uri_component(&s.code)
+                ))
+                .await
+                {
+                    error.set(api::message(e));
+                    break;
                 }
-                Err(e) => error.set(api::message(e)),
             }
+            removing.set(Vec::new());
+            ticked.set(Vec::new());
+            reload.run(());
         });
     };
     view! {
@@ -454,37 +456,72 @@ fn BooksSection() -> impl IntoView {
             {move || match sources.get() {
                 None => view! { <Loading /> }.into_any(),
                 Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
-                Some(Ok(list)) => view! {
+                Some(Ok(list)) => {
+                    let all = StoredValue::new(list.clone());
+                    view! {
+                    <Group>
+                        <Button
+                            variant="light"
+                            bad=true
+                            disabled=Signal::derive(move || ticked.with(Vec::is_empty))
+                            on_click=Callback::new(move |_| {
+                                let t = ticked.get_untracked();
+                                removing.set(all.with_value(|l| l.iter().filter(|s| t.contains(&s.code)).cloned().collect()));
+                            })
+                        >
+                            {move || format!("Remove selected ({})", ticked.with(Vec::len))}
+                        </Button>
+                    </Group>
                     <Table label="Sources" min_width="480px">
-                        <thead><tr><th>"Code"</th><th>"Book"</th><th>"Readable"</th><th></th></tr></thead>
+                        <thead><tr><th><span class="mimir-visually-hidden">"Select"</span></th><th>"Code"</th><th>"Book"</th><th>"Readable"</th><th></th></tr></thead>
                         <tbody>
                             {list.into_iter().map(|s| {
                                 let del = s.clone();
                                 let code = s.code.clone();
+                                let (c1, c2) = (s.code.clone(), s.code.clone());
                                 view! {
                                     <tr>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                aria-label=format!("Select {}", s.code)
+                                                prop:checked=move || ticked.with(|t| t.contains(&c1))
+                                                on:change=move |_| ticked.update(|t| {
+                                                    if let Some(i) = t.iter().position(|x| *x == c2) { t.remove(i); } else { t.push(c2.clone()); }
+                                                })
+                                            />
+                                        </td>
                                         <td>{s.code.clone()}</td>
                                         <td>{s.name.clone()}</td>
                                         <td>{if s.book { "Yes" } else { "—" }}</td>
                                         <td class="mimir-row-actions">
-                                            <ActionIcon title=format!("Remove {code}") on_click=Callback::new(move |_| removing.set(Some(del.clone())))>"×"</ActionIcon>
+                                            <ActionIcon title=format!("Remove {code}") on_click=Callback::new(move |_| removing.set(vec![del.clone()]))>"×"</ActionIcon>
                                         </td>
                                     </tr>
                                 }
                             }).collect_view()}
                         </tbody>
                     </Table>
-                }.into_any(),
+                    }.into_any()
+                }
             }}
         </section>
         <ConfirmDialog
             open=confirm_open
-            title=Signal::derive(move || format!("Remove {}?", removing.get().map(|s| s.name).unwrap_or_default()))
+            title=Signal::derive(move || removing.with(|l| remove_title(l)))
             message="Its catalog entries and its book text go; characters and campaigns keep what they hold. Import it again to bring it back."
             confirm_label="Remove"
             on_confirm=Callback::new(remove)
-            on_cancel=Callback::new(move |_| removing.set(None))
+            on_cancel=Callback::new(move |_| removing.set(Vec::new()))
         />
+    }
+}
+
+/// "Remove Monster Manual?", or "Remove 3 books?".
+pub fn remove_title(list: &[SourceInfo]) -> String {
+    match list {
+        [one] => format!("Remove {}?", one.name),
+        many => format!("Remove {} books?", many.len()),
     }
 }
 
@@ -544,11 +581,65 @@ fn AboutSection() -> impl IntoView {
                         <dt>"Mimir"</dt><dd>{format!("Version {}", c.version)}</dd>
                         <dt>"Sign-in"</dt><dd>{format!("{:?}", c.auth)}</dd>
                     </dl>
+                    {c.dev_tools.then(|| view! { <DevTools /> })}
                 }.into_any(),
             }}
         </section>
     }
 }
+
+/// Dev tools (MIMIR-T-0734): on a development server with the fixture,
+/// seed, reseed or clear the fixture campaign (the desktop's dev tools).
+#[component]
+fn DevTools() -> impl IntoView {
+    let state = RwSignal::new(None::<bool>);
+    let busy = RwSignal::new(false);
+    let error = RwSignal::new(String::new());
+    spawn_local(async move {
+        match api::get::<DevFixture>("/dev/fixture").await {
+            Ok(f) => state.set(Some(f.seeded)),
+            Err(e) => error.set(api::message(e)),
+        }
+    });
+    let act = move |action: &'static str| {
+        busy.set(true);
+        error.set(String::new());
+        spawn_local(async move {
+            let r =
+                api::send::<_, DevFixture>("POST", &format!("/dev/fixture/{action}"), &()).await;
+            busy.set(false);
+            match r {
+                Ok(f) => state.set(Some(f.seeded)),
+                Err(e) => error.set(api::message(e)),
+            }
+        });
+    };
+    view! {
+        <section class="mimir-settings__section" aria-label="Dev tools">
+            <SectionLabel label="Dev tools" />
+            <Text size="sm" dimmed=true>"A development server: the fixture campaign, for tests and screenshots. Never real data."</Text>
+            <p class="cl-text cl-text--sm" role="status">
+                {move || match state.get() {
+                    None => "…".to_string(),
+                    Some(true) => format!("{} is in.", TEST_CAMPAIGN),
+                    Some(false) => format!("{} is not in.", TEST_CAMPAIGN),
+                }}
+            </p>
+            <Group>
+                <Button variant="light" disabled=Signal::derive(move || busy.get() || state.get() != Some(false)) on_click=Callback::new(move |_| act("seed"))>"Seed"</Button>
+                <Button variant="light" disabled=busy on_click=Callback::new(move |_| act("reseed"))>"Reseed"</Button>
+                <Button variant="light" bad=true disabled=Signal::derive(move || busy.get() || state.get() != Some(true)) on_click=Callback::new(move |_| act("clear"))>"Clear"</Button>
+            </Group>
+            {move || {
+                let e = error.get();
+                (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
+            }}
+        </section>
+    }
+}
+
+/// The fixture campaign's name (mimir-core's `TEST_CAMPAIGN_NAME`).
+const TEST_CAMPAIGN: &str = "The Lost Mine of Phandelver";
 
 #[cfg(test)]
 mod tests {
@@ -560,6 +651,20 @@ mod tests {
         );
         assert!(super::claude_command("http://x", false)
             .contains("Authorization: Bearer <your DM token>"));
+    }
+
+    #[test]
+    fn removal_titles() {
+        let s = |n: &str| mimir_wire::SourceInfo {
+            code: n.into(),
+            name: n.into(),
+            book: false,
+        };
+        assert_eq!(
+            super::remove_title(&[s("Monster Manual")]),
+            "Remove Monster Manual?"
+        );
+        assert_eq!(super::remove_title(&[s("A"), s("B")]), "Remove 2 books?");
     }
 
     #[test]

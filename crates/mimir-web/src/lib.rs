@@ -18,6 +18,7 @@ pub mod auth;
 pub mod authoring;
 pub mod character;
 pub mod components;
+pub mod current;
 pub mod editor;
 pub mod live;
 pub mod map;

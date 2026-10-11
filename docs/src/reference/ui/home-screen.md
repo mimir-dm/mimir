@@ -37,6 +37,7 @@ The version of Mimir is at the foot of the navigation.
 
 | Element | Function |
 |---------|----------|
+| **Campaign** | Open another campaign: the active ones, then the archived ones (marked). It shows the campaign you opened last. |
 | Theme switch | Light, dark or hyper theme. The browser keeps the choice. |
 | **Sign out** | Forget the token in this browser. Shown on a server with a DM token. |
 
@@ -44,6 +45,7 @@ The version of Mimir is at the foot of the navigation.
 
 | Element | Function |
 |---------|----------|
+| **Continue …** | Open the campaign you opened last. The browser keeps it. |
 | Campaign cards | One card for each campaign, with its description. Click a card to open the [dashboard](./campaign-dashboard.md). |
 | **Show archived** | Also show archived campaigns. They have the **Archived** label. |
 | **Import campaign** | Import a campaign archive. See [Export Campaign](../../how-to/campaigns/export-campaign.md). |

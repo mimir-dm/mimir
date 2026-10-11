@@ -56,6 +56,16 @@ pub struct WebConfig {
     /// Server version.
     pub version: String,
     pub auth: AuthMode,
+    /// A development server with the fixture (MIMIR-T-0734): Settings shows
+    /// the dev tools.
+    #[serde(default)]
+    pub dev_tools: bool,
+}
+
+/// `GET|POST /dev/fixture…`: whether the fixture campaign is in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DevFixture {
+    pub seeded: bool,
 }
 
 /// How the API is protected.
@@ -116,9 +126,16 @@ mod tests {
         let c = WebConfig {
             version: "1.0.0".into(),
             auth: AuthMode::Token,
+            dev_tools: false,
         };
         let json = serde_json::to_string(&c).unwrap();
-        assert_eq!(json, r#"{"version":"1.0.0","auth":"token"}"#);
+        assert_eq!(
+            json,
+            r#"{"version":"1.0.0","auth":"token","dev_tools":false}"#
+        );
+        // An older server's config has no dev_tools: off.
+        let old: WebConfig = serde_json::from_str(r#"{"version":"0.9","auth":"open"}"#).unwrap();
+        assert!(!old.dev_tools);
         assert_eq!(serde_json::from_str::<WebConfig>(&json).unwrap(), c);
         let s = Session {
             role: Role::Dm,

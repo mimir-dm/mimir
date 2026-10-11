@@ -45,6 +45,14 @@ pub fn CampaignDashboard() -> impl IntoView {
         version.track();
         api::campaign(id.get())
     });
+    // Remember it: the header's selector and Home's "Continue".
+    Effect::new(move |_| {
+        if let (Some(Ok(c)), Some(current)) =
+            (campaign.get(), crate::current::CurrentCampaign::get())
+        {
+            current.set(&c.id);
+        }
+    });
     let location = use_location();
     let tab = RwSignal::new(tab_of(&location.pathname.get_untracked()).to_string());
     Effect::new(move |_| tab.set(tab_of(&location.pathname.get()).to_string()));

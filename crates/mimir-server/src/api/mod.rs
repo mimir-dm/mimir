@@ -13,6 +13,7 @@ pub mod catalog;
 pub mod characters;
 pub mod combat;
 pub mod convert;
+pub mod dev;
 pub mod display;
 pub mod homebrew;
 pub mod links;
@@ -80,6 +81,9 @@ pub fn routes() -> Vec<ApiRoute> {
     const G: &[&str] = &["GET"];
     vec![
         route("/session", Player, G, get(crate::session)),
+        // Dev tools (MIMIR-T-0734): 404 unless the server runs the fixture.
+        route("/dev/fixture", Dm, G, get(dev::fixture)),
+        route("/dev/fixture/{action}", Dm, &["POST"], post(dev::act)),
         // Characters (MIMIR-T-0717): a player reaches their own.
         route(
             "/characters/{id}",
