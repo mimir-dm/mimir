@@ -171,12 +171,14 @@ impl<'a> ArchiveService<'a> {
         Self { conn }
     }
 
-    /// Export a campaign to a tar.gz archive.
+    /// Export a campaign to a tar.gz archive. `app_data_dir`: the folder
+    /// the assets' `blob_path`s are relative to ("assets/<id>.<ext>"), as
+    /// the asset and map services.
     pub fn export_campaign(
         &mut self,
         campaign_id: &str,
         output_dir: &Path,
-        assets_dir: &Path,
+        app_data_dir: &Path,
     ) -> ServiceResult<PathBuf> {
         let campaign = dal::get_campaign(self.conn, campaign_id).map_err(|e| match e {
             diesel::result::Error::NotFound => ServiceError::not_found("Campaign", campaign_id),
@@ -186,7 +188,7 @@ impl<'a> ArchiveService<'a> {
         info!(campaign_id = %campaign_id, name = %campaign.name, "Exporting campaign");
 
         let archive_data = self.collect_campaign_data(campaign_id, campaign)?;
-        let asset_files = self.collect_asset_files(&archive_data, assets_dir)?;
+        let asset_files = self.collect_asset_files(&archive_data, app_data_dir)?;
         let catalog_refs = self.extract_catalog_references(&archive_data.documents);
 
         let manifest = ArchiveManifest {
@@ -422,8 +424,12 @@ impl<'a> ArchiveService<'a> {
             module_npcs.extend(dal::list_module_npcs(self.conn, &module.id)?);
         }
 
-        // All campaign assets (maps, tokens, images, etc.)
-        let assets = dal::list_campaign_assets(self.conn, campaign_id)?;
+        // All assets (maps, tokens, images): the campaign's and its
+        // modules'. A module map's file is a module asset.
+        let mut assets = dal::list_campaign_assets(self.conn, campaign_id)?;
+        for module in &modules {
+            assets.extend(dal::list_module_assets(self.conn, &module.id)?);
+        }
 
         // Homebrew items
         let homebrew_items = dal::list_campaign_homebrew_items(self.conn, campaign_id)?;
@@ -451,16 +457,18 @@ impl<'a> ArchiveService<'a> {
         })
     }
 
+    /// `app_data_dir`: the folder the assets' `blob_path`s are relative to
+    /// ("assets/<id>.<ext>"), as the asset and map services.
     fn collect_asset_files(
         &self,
         data: &ArchiveData,
-        assets_dir: &Path,
+        app_data_dir: &Path,
     ) -> ServiceResult<HashMap<String, Vec<u8>>> {
         let mut files = HashMap::new();
 
         // Include all campaign assets - these are the actual binary files (maps, tokens, images)
         for asset in &data.assets {
-            let file_path = assets_dir.join(&asset.blob_path);
+            let file_path = app_data_dir.join(&asset.blob_path);
             if file_path.exists() {
                 match fs::read(&file_path) {
                     Ok(bytes) => {
@@ -1278,6 +1286,69 @@ mod tests {
         }
         assert!(found_manifest, "Archive should contain manifest.json");
         assert!(found_data, "Archive should contain data.json");
+    }
+
+    #[test]
+    fn test_export_includes_campaign_and_module_asset_files() {
+        let mut conn = setup_test_db();
+        let (campaign_id, module_id) = seed_campaign(&mut conn);
+        let output_dir = TempDir::new().unwrap();
+        let app_dir = TempDir::new().unwrap();
+
+        // As the asset service stores them: "assets/<id>.<ext>" under the
+        // app folder.
+        fs::create_dir_all(app_dir.path().join("assets")).unwrap();
+        fs::write(app_dir.path().join("assets/a-camp.png"), b"campaign").unwrap();
+        fs::write(app_dir.path().join("assets/a-mod.uvtt"), b"module map").unwrap();
+        dal::insert_campaign_asset(
+            &mut conn,
+            &NewCampaignAsset::for_campaign(
+                "a-camp",
+                &campaign_id,
+                "handout.png",
+                "image/png",
+                "assets/a-camp.png",
+            ),
+        )
+        .unwrap();
+        dal::insert_campaign_asset(
+            &mut conn,
+            &NewCampaignAsset::for_module(
+                "a-mod",
+                &module_id,
+                "cave.uvtt",
+                "application/json",
+                "assets/a-mod.uvtt",
+            ),
+        )
+        .unwrap();
+
+        let path = ArchiveService::new(&mut conn)
+            .export_campaign(&campaign_id, output_dir.path(), app_dir.path())
+            .unwrap();
+
+        let mut found = HashMap::new();
+        let mut archive = Archive::new(GzDecoder::new(File::open(&path).unwrap()));
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            let name = entry.path().unwrap().to_string_lossy().to_string();
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).unwrap();
+            found.insert(name, bytes);
+        }
+        assert_eq!(
+            found.get("assets/a-camp/handout.png").map(Vec::as_slice),
+            Some(&b"campaign"[..])
+        );
+        assert_eq!(
+            found.get("assets/a-mod/cave.uvtt").map(Vec::as_slice),
+            Some(&b"module map"[..])
+        );
+        let data: ArchiveData = serde_json::from_slice(&found["data.json"]).unwrap();
+        assert!(data
+            .assets
+            .iter()
+            .any(|a| a.id == "a-mod" && a.module_id.as_deref() == Some(module_id.as_str())));
     }
 
     #[test]

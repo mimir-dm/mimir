@@ -35,9 +35,10 @@ pub fn export_campaign(
     };
 
     let output_path = Path::new(&output_dir);
-    let assets_path = &state.paths.assets_dir;
+    // The assets' paths ("assets/<id>.<ext>") are relative to the app folder.
+    let app_dir = &state.paths.app_dir;
 
-    match ArchiveService::new(&mut db).export_campaign(&campaign_id, output_path, assets_path) {
+    match ArchiveService::new(&mut db).export_campaign(&campaign_id, output_path, app_dir) {
         Ok(archive_path) => {
             // Get file size
             let size_bytes = std::fs::metadata(&archive_path)

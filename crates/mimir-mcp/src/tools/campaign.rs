@@ -459,10 +459,16 @@ pub async fn export_campaign(
 
     let mut db = ctx.connect()?;
     let output_dir = Path::new(&args.output_path);
-    let assets_dir = &ctx.assets_dir;
+    // The assets' paths ("assets/<id>.<ext>") are relative to the app
+    // folder, the parent of the assets folder (as the map tools).
+    let app_dir = ctx
+        .assets_dir
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| ctx.assets_dir.clone());
 
     let archive_path = ArchiveService::new(&mut db)
-        .export_campaign(&campaign_id, output_dir, assets_dir)
+        .export_campaign(&campaign_id, output_dir, &app_dir)
         .map_err(|e| McpError::Internal(format!("Export failed: {}", e)))?;
 
     // Get file size
