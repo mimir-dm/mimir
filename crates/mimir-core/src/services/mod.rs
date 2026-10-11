@@ -41,9 +41,10 @@ pub use catalog_search::{
     CatalogSearch,
 };
 pub use character::{
-    AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput, FeatureChoices,
-    FeatureReference, HpGainMethod, InvocationChoices, LevelUpRequest, LevelUpResult,
-    ManeuverChoices, SpellChanges, SpellReference, SubclassChoice, UpdateCharacterInput,
+    creation_skills, AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput,
+    CreationSkills, FeatureChoices, FeatureReference, HpGainMethod, InvocationChoices,
+    LevelUpRequest, LevelUpResult, ManeuverChoices, SpellChanges, SpellReference, SubclassChoice,
+    UpdateCharacterInput,
 };
 pub use combat::{
     ActiveCondition, CombatEntryView, CombatService, CombatState, DamageResult, HpChange,

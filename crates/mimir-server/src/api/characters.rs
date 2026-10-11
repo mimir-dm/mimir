@@ -9,8 +9,9 @@ use axum::{Extension, Json};
 use diesel::SqliteConnection;
 use mimir_core::models::campaign::{CharacterInventory, CharacterSpell};
 use mimir_core::services::{
-    AddInventoryInput, CatalogEntityService, CharacterService, LevelUpRequest, PartyService,
-    RaceService, ServiceError, UpdateCharacterInput,
+    AddInventoryInput, BackgroundService, CatalogEntityService, CharacterService, ClassService,
+    CreateCharacterInput, LevelUpRequest, PartyService, RaceService, ServiceError,
+    UpdateCharacterInput,
 };
 use mimir_wire as wire;
 use serde_json::Value;
@@ -240,6 +241,9 @@ pub async fn patch(
                     ideals: p.ideals,
                     bonds: p.bonds,
                     flaws: p.flaws,
+                    role: p.role,
+                    location: p.location,
+                    faction: p.faction,
                     ..UpdateCharacterInput::default()
                 },
             )?;
@@ -410,6 +414,167 @@ pub async fn level_up(
                 new_total_level: r.new_total_level,
                 is_multiclass: r.is_multiclass,
             })
+        })
+        .await
+        .map(Json)
+}
+
+// ------------------------------------------------------------ the DM's management (MIMIR-T-0721)
+
+/// An empty text is no text.
+fn text(v: Option<String>) -> Option<String> {
+    v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+}
+
+/// A catalog pick: both name and source, or neither.
+fn pick(
+    what: &str,
+    name: Option<String>,
+    source: Option<String>,
+) -> Result<Option<(String, String)>, ApiError> {
+    match (text(name), text(source)) {
+        (Some(n), Some(s)) => Ok(Some((n, s))),
+        (None, None) => Ok(None),
+        _ => Err(ServiceError::validation(format!("give the {what}'s name and source")).into()),
+    }
+}
+
+/// `POST /characters` (DM): a PC from the wizard, or an NPC. Race,
+/// background and class must be in the catalog; the class starts at
+/// level 1.
+pub async fn create(
+    State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
+    JsonBody(body): JsonBody<wire::NewCharacter>,
+) -> Result<(StatusCode, Json<wire::CharacterSheet>), ApiError> {
+    scope::dm(&caller)?;
+    let name = text(Some(body.name.clone()))
+        .ok_or_else(|| ServiceError::validation("the name is empty"))?;
+    if let Some(scores) = body.ability_scores {
+        if scores.iter().any(|s| !(1..=30).contains(s)) {
+            return Err(ServiceError::validation("ability scores go from 1 to 30").into());
+        }
+    }
+    let race = pick("race", body.race_name, body.race_source)?;
+    let background = pick("background", body.background_name, body.background_source)?;
+    let class = pick("class", body.class_name, body.class_source)?;
+    let live = state.live.clone();
+    state
+        .with_db(move |conn| {
+            if let Some((n, s)) = &race {
+                RaceService::new(conn)
+                    .get_by_name_and_source(n, s)?
+                    .ok_or_else(|| ServiceError::not_found("Race", format!("{n} ({s})")))?;
+            }
+            if let Some((n, s)) = &background {
+                BackgroundService::new(conn)
+                    .get_by_name_and_source(n, s)?
+                    .ok_or_else(|| ServiceError::not_found("Background", format!("{n} ({s})")))?;
+            }
+            if let Some((n, s)) = &class {
+                ClassService::new(conn)
+                    .get_by_name_and_source(n, s)?
+                    .ok_or_else(|| ServiceError::not_found("Class", format!("{n} ({s})")))?;
+            }
+            let input = CreateCharacterInput {
+                campaign_id: text(body.campaign_id),
+                name,
+                is_npc: body.is_npc,
+                player_name: if body.is_npc {
+                    None
+                } else {
+                    text(body.player_name)
+                },
+                race_name: race.as_ref().map(|r| r.0.clone()),
+                race_source: race.map(|r| r.1),
+                background_name: background.as_ref().map(|b| b.0.clone()),
+                background_source: background.map(|b| b.1),
+                ability_scores: body.ability_scores,
+                class_name: class.as_ref().map(|c| c.0.clone()),
+                class_source: class.map(|c| c.1),
+                selected_skills: Some(body.selected_skills).filter(|s| !s.is_empty()),
+            };
+            let c = CharacterService::new(conn).create(input)?;
+            let (role, location, faction) =
+                (text(body.role), text(body.location), text(body.faction));
+            if role.is_some() || location.is_some() || faction.is_some() {
+                CharacterService::new(conn).update(
+                    &c.id,
+                    UpdateCharacterInput {
+                        role: Some(role),
+                        location: Some(location),
+                        faction: Some(faction),
+                        ..UpdateCharacterInput::default()
+                    },
+                )?;
+            }
+            notify(&live, conn, &c.id);
+            Ok((StatusCode::CREATED, Json(sheet(conn, &c.id)?)))
+        })
+        .await
+}
+
+/// `DELETE /characters/{id}` (DM): with its sheet, notes and link. A
+/// device on its link is signed out.
+pub async fn delete(
+    State(state): State<AppState>,
+    Extension(caller): Extension<Caller>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, ApiError> {
+    scope::dm(&caller)?;
+    let live = state.live.clone();
+    state
+        .with_db(move |conn| {
+            let c = CharacterService::new(conn)
+                .get(&id)?
+                .ok_or_else(|| ServiceError::not_found("Character", &id))?;
+            CharacterService::new(conn).delete(&id)?;
+            live.publish(Change::SignedOut {
+                character_id: id.clone(),
+            });
+            live.publish(Change::Character {
+                campaign_id: c.campaign_id,
+                character_id: id,
+            });
+            Ok(StatusCode::NO_CONTENT)
+        })
+        .await
+}
+
+/// `PUT /characters/{id}/campaign` (DM): move it to a campaign, or out of
+/// any.
+pub async fn set_campaign(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    JsonBody(body): JsonBody<wire::CampaignAssignment>,
+) -> ApiResult<wire::CharacterSheet> {
+    let live = state.live.clone();
+    state
+        .with_db(move |conn| {
+            let before = CharacterService::new(conn)
+                .get(&id)?
+                .ok_or_else(|| ServiceError::not_found("Character", &id))?;
+            let campaign = text(body.campaign_id);
+            CharacterService::new(conn).set_campaign(&id, campaign.as_deref())?;
+            live.publish(Change::Character {
+                campaign_id: before.campaign_id,
+                character_id: id.clone(),
+            });
+            notify(&live, conn, &id);
+            sheet(conn, &id)
+        })
+        .await
+        .map(Json)
+}
+
+/// `GET /characters/unassigned` (DM): the characters in no campaign.
+pub async fn unassigned(State(state): State<AppState>) -> ApiResult<Vec<wire::CharacterSummary>> {
+    state
+        .with_db(move |conn| {
+            let mut s = CharacterService::new(conn);
+            let list = s.list_unassigned()?;
+            let list = s.enrich_many(list)?;
+            Ok(list.into_iter().map(super::convert::character).collect())
         })
         .await
         .map(Json)

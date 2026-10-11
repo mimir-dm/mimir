@@ -8,8 +8,9 @@ use axum::Json;
 use mimir_core::models::catalog::{ItemFilter, MonsterFilter};
 use mimir_core::services::catalog::find_class_level_info;
 use mimir_core::services::{
-    CatalogEntityService, ClassService, FeatService, ItemService, MonsterService,
-    OptionalFeatureService, ServiceError, SpellService, SubclassService,
+    creation_skills, BackgroundService, CatalogEntityService, ClassService, FeatService,
+    ItemService, MonsterService, OptionalFeatureService, RaceService, ServiceError, SpellService,
+    SubclassService,
 };
 use mimir_wire as wire;
 use serde::Deserialize;
@@ -260,6 +261,67 @@ pub async fn items(
                 (n != lower, !n.starts_with(&lower), n)
             });
             Ok(list)
+        })
+        .await
+        .map(Json)
+}
+
+/// `GET /catalog/races` (DM, MIMIR-T-0721): every race, by name.
+pub async fn races(State(state): State<AppState>) -> ApiResult<Vec<wire::Choice>> {
+    state
+        .with_db(|conn| {
+            let mut list: Vec<wire::Choice> = RaceService::new(conn)
+                .list_all()?
+                .into_iter()
+                .map(|r| choice(r.name, r.source, None))
+                .collect();
+            list.sort_by(|a, b| a.name.cmp(&b.name).then(a.source.cmp(&b.source)));
+            Ok(list)
+        })
+        .await
+        .map(Json)
+}
+
+/// `GET /catalog/backgrounds` (DM, MIMIR-T-0721): every background.
+pub async fn backgrounds(State(state): State<AppState>) -> ApiResult<Vec<wire::Choice>> {
+    state
+        .with_db(|conn| {
+            let mut list: Vec<wire::Choice> = BackgroundService::new(conn)
+                .list_all()?
+                .into_iter()
+                .map(|b| choice(b.name, b.source, None))
+                .collect();
+            list.sort_by(|a, b| a.name.cmp(&b.name).then(a.source.cmp(&b.source)));
+            Ok(list)
+        })
+        .await
+        .map(Json)
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct CreationQuery {
+    pub class: Option<String>,
+    pub class_source: Option<String>,
+    pub background: Option<String>,
+    pub background_source: Option<String>,
+}
+
+/// `GET /catalog/creation-skills?class=&class_source=&background=&background_source=`
+/// (DM, MIMIR-T-0721): the background's skills and the class's pick.
+pub async fn creation_skills_of(
+    State(state): State<AppState>,
+    Query(q): Query<CreationQuery>,
+) -> ApiResult<wire::CreationSkills> {
+    state
+        .with_db(move |conn| {
+            let class = q.class.as_deref().zip(q.class_source.as_deref());
+            let bg = q.background.as_deref().zip(q.background_source.as_deref());
+            let s = creation_skills(conn, class, bg)?;
+            Ok(wire::CreationSkills {
+                background: s.background,
+                choose: s.choose,
+                from: s.from,
+            })
         })
         .await
         .map(Json)

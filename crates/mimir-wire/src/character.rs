@@ -172,6 +172,80 @@ pub struct CharacterPatch {
         skip_serializing_if = "Option::is_none"
     )]
     pub flaws: Option<Option<String>>,
+    /// An NPC's role, place and faction (MIMIR-T-0721).
+    #[serde(
+        default,
+        deserialize_with = "double",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub role: Option<Option<String>>,
+    #[serde(
+        default,
+        deserialize_with = "double",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub location: Option<Option<String>>,
+    #[serde(
+        default,
+        deserialize_with = "double",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub faction: Option<Option<String>>,
+}
+
+/// `POST /characters` (MIMIR-T-0721): a PC from the wizard, or an NPC.
+/// Race, background and class are catalog picks (name and source); the
+/// class starts at level 1.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct NewCharacter {
+    #[serde(default)]
+    pub campaign_id: Option<String>,
+    #[serde(default)]
+    pub is_npc: bool,
+    pub name: String,
+    #[serde(default)]
+    pub player_name: Option<String>,
+    #[serde(default)]
+    pub race_name: Option<String>,
+    #[serde(default)]
+    pub race_source: Option<String>,
+    #[serde(default)]
+    pub background_name: Option<String>,
+    #[serde(default)]
+    pub background_source: Option<String>,
+    #[serde(default)]
+    pub class_name: Option<String>,
+    #[serde(default)]
+    pub class_source: Option<String>,
+    /// Strength, dexterity, constitution, intelligence, wisdom, charisma.
+    #[serde(default)]
+    pub ability_scores: Option<[i32; 6]>,
+    /// The class's picks and the background's skills.
+    #[serde(default)]
+    pub selected_skills: Vec<String>,
+    #[serde(default)]
+    pub role: Option<String>,
+    #[serde(default)]
+    pub location: Option<String>,
+    #[serde(default)]
+    pub faction: Option<String>,
+}
+
+/// `PUT /characters/{id}/campaign`: move it; `null` takes it out of any.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct CampaignAssignment {
+    pub campaign_id: Option<String>,
+}
+
+/// `GET /catalog/creation-skills`: the skills of a new character.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct CreationSkills {
+    /// Granted by the background.
+    pub background: Vec<String>,
+    /// How many the class picks.
+    pub choose: usize,
+    /// What the class picks from.
+    pub from: Vec<String>,
 }
 
 /// `POST /characters/{id}/inventory`

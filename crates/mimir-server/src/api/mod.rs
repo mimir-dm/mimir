@@ -74,8 +74,8 @@ pub fn routes() -> Vec<ApiRoute> {
         route(
             "/characters/{id}",
             Player,
-            &["GET", "PATCH"],
-            get(ch::get).patch(ch::patch),
+            &["GET", "PATCH", "DELETE"],
+            get(ch::get).patch(ch::patch).delete(ch::delete),
         ),
         route(
             "/characters/{id}/inventory",
@@ -152,6 +152,23 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/catalog/spells", Player, G, get(cat::spells)),
         route("/catalog/items", Player, G, get(cat::items)),
         route("/catalog/monsters", Dm, G, get(cat::monsters)),
+        route("/catalog/races", Dm, G, get(cat::races)),
+        route("/catalog/backgrounds", Dm, G, get(cat::backgrounds)),
+        route(
+            "/catalog/creation-skills",
+            Dm,
+            G,
+            get(cat::creation_skills_of),
+        ),
+        // The DM's character management (MIMIR-T-0721).
+        route("/characters", Dm, &["POST"], post(ch::create)),
+        route("/characters/unassigned", Dm, G, get(ch::unassigned)),
+        route(
+            "/characters/{id}/campaign",
+            Dm,
+            &["PUT"],
+            put(ch::set_campaign),
+        ),
         // Player links (DM).
         route(
             "/characters/{id}/link",
