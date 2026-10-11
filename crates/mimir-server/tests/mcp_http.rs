@@ -398,4 +398,13 @@ async fn an_adventure_becomes_a_campaign_over_mcp() {
     assert_eq!(imported["campaign_name"], "MCP Fen again");
     let active = s.call("get_active_campaign", json!({})).await;
     assert_eq!(active["campaign"]["id"], imported["campaign_id"]);
+    // The active campaign as one book (MIMIR-T-0742).
+    let book = s
+        .call(
+            "print_adventure_book",
+            json!({"output_path": out.path().to_string_lossy(), "authors": "Robin"}),
+        )
+        .await;
+    let bytes = std::fs::read(book["path"].as_str().unwrap()).unwrap();
+    assert!(bytes.starts_with(b"%PDF"));
 }

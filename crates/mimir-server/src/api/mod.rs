@@ -212,6 +212,7 @@ pub fn routes() -> Vec<ApiRoute> {
             get(sheet::entry),
         ),
         route("/campaigns/{id}/pdf", Dm, G, get(pdf::campaign)),
+        route("/campaigns/{id}/book", Dm, G, get(pdf::book)),
         route("/modules/{id}/pdf", Dm, G, get(pdf::module)),
         route("/maps/{id}/pdf", Dm, G, get(pdf::map)),
         route("/documents/{id}/pdf", Dm, G, get(pdf::document)),

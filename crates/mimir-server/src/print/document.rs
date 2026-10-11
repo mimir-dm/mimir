@@ -231,13 +231,32 @@ fn load_monster_token_image(
 /// catalog (MIMIR-T-0737).
 fn doc_section(
     db: &mut diesel::SqliteConnection,
+    app_dir: &std::path::Path,
     content: &str,
 ) -> mimir_print::Result<MarkdownSection> {
     let db = std::cell::RefCell::new(db);
     let resolve = |tag: &str, name: &str, source: Option<&str>| {
         statblock_typst(&mut db.borrow_mut(), tag, name, source)
     };
-    MarkdownSection::from_markdown_with(content, &resolve)
+    let image = |url: &str| image_bytes(&mut db.borrow_mut(), app_dir, url);
+    MarkdownSection::from_markdown_full(content, &resolve, &image)
+}
+
+/// The bytes of an image a document names (MIMIR-T-0742): a 5etools image
+/// (`5etools:<path>`, under the catalog images) or an uploaded image
+/// (`/api/v1/assets/<id>/file`). Another address prints as its title.
+pub fn image_bytes(
+    db: &mut diesel::SqliteConnection,
+    app_dir: &std::path::Path,
+    url: &str,
+) -> Option<Vec<u8>> {
+    if let Some(path) = url.strip_prefix(mimir_render::adventure::IMAGE_SCHEME) {
+        let path = crate::api::reference::safe_image_path(path)?;
+        return std::fs::read(app_dir.join("assets").join("catalog").join(path)).ok();
+    }
+    let id = url.strip_prefix("/api/v1/assets/")?.strip_suffix("/file")?;
+    let asset = mimir_core::dal::campaign::get_campaign_asset(db, id).ok()?;
+    std::fs::read(app_dir.join(&asset.blob_path)).ok()
 }
 
 /// Typst for a stat block line: a creature's stat block, else the entry's
@@ -310,7 +329,7 @@ pub fn export_campaign_document(
     };
 
     // Build the PDF using markdown section
-    let section = match doc_section(&mut db, &document.content) {
+    let section = match doc_section(&mut db, &app_state.paths.app_dir, &document.content) {
         Ok(s) => s.with_title(&document.title),
         Err(e) => return ApiResponse::err(format!("Failed to parse markdown: {}", e)),
     };
@@ -342,6 +361,196 @@ pub fn export_campaign_document(
             ApiResponse::err(format!("Failed to generate PDF: {}", e))
         }
     }
+}
+
+/// The title page's lines of a book: its authors and its levels.
+pub fn book_lines(o: &super::BookOptions) -> Vec<String> {
+    let mut lines = Vec::new();
+    let authors: Vec<&str> = o
+        .authors
+        .as_deref()
+        .unwrap_or("")
+        .split(',')
+        .map(str::trim)
+        .filter(|a| !a.is_empty())
+        .collect();
+    if !authors.is_empty() {
+        lines.push(format!("By {}", authors.join(", ")));
+    }
+    match (o.level_start, o.level_end) {
+        (Some(a), Some(b)) if a != b => lines.push(format!("For characters of levels {a} to {b}")),
+        (Some(a), _) => lines.push(format!("For characters of level {a}")),
+        _ => {}
+    }
+    lines
+}
+
+/// The campaign as one book (MIMIR-T-0742): a title page and contents, the
+/// campaign documents, each module (its documents, then the maps that no
+/// document shows), the appendices ("Appendix …", "Credits"), and an
+/// appendix with the stat blocks and items the text names.
+pub fn export_campaign_book(
+    app_state: &PrintCtx,
+    print_state: &PrintState,
+    campaign_id: String,
+    options: Option<super::BookOptions>,
+) -> ApiResponse<PrintResult> {
+    let opts = options.unwrap_or_default();
+    let mut db = match app_state.connect() {
+        Ok(db) => db,
+        Err(e) => return ApiResponse::err(e),
+    };
+    let campaign = match CampaignService::new(&mut db).get(&campaign_id) {
+        Ok(Some(c)) => c,
+        Ok(None) => return ApiResponse::err(format!("Campaign not found: {}", campaign_id)),
+        Err(e) => return ApiResponse::err(format!("Failed to get campaign: {}", e)),
+    };
+    use mimir_core::dal::campaign as dal;
+    let app_dir = app_state.paths.app_dir.clone();
+    let docs = match dal::list_campaign_level_documents(&mut db, &campaign_id) {
+        Ok(d) => d,
+        Err(e) => return ApiResponse::err(format!("Failed to list documents: {}", e)),
+    };
+    let modules = match dal::list_modules(&mut db, &campaign_id) {
+        Ok(m) => m,
+        Err(e) => return ApiResponse::err(format!("Failed to list modules: {}", e)),
+    };
+    let is_back = |t: &str| {
+        let t = t.to_lowercase();
+        t.starts_with("appendix") || t == "credits"
+    };
+
+    let mut builder = DocumentBuilder::new(&campaign.name)
+        .with_templates_root(print_state.templates_dir.clone())
+        .with_title_page(true)
+        .with_title_lines(book_lines(&opts))
+        .with_toc(true);
+    let mut all_text = String::new();
+    let mut creatures: std::collections::BTreeSet<mimir_render::adventure::Ref> =
+        Default::default();
+
+    for d in docs.iter().filter(|d| !is_back(&d.title)) {
+        all_text.push_str(&d.content);
+        match doc_section(&mut db, &app_dir, &d.content) {
+            Ok(s) => builder = builder.append(s.with_title(&d.title)),
+            Err(e) => return ApiResponse::err(format!("{}: {}", d.title, e)),
+        }
+    }
+    for m in &modules {
+        let mdocs = dal::list_module_documents(&mut db, &m.id).unwrap_or_default();
+        let mut content = String::new();
+        for d in &mdocs {
+            all_text.push_str(&d.content);
+            content.push_str(&format!("\n\n## {}\n\n{}\n", d.title, d.content));
+        }
+        // The module's maps that no document already shows (an adventure's
+        // map image has the map's name as its title).
+        let maps = dal::list_module_maps(&mut db, &m.id).unwrap_or_default();
+        let shown: Vec<&mimir_core::models::campaign::Map> = maps
+            .iter()
+            .filter(|map| !content.contains(&format!("![{}](", map.name)))
+            .collect();
+        if !shown.is_empty() {
+            content.push_str("\n\n## Maps\n\n");
+            for map in shown {
+                content.push_str(&format!("![{}](mimir-map:{})\n\n", map.name, map.id));
+            }
+        }
+        for mm in dal::list_module_monsters(&mut db, &m.id).unwrap_or_default() {
+            if let (Some(name), Some(source)) = (mm.monster_name, mm.monster_source) {
+                creatures.insert(mimir_render::adventure::Ref {
+                    kind: "creature".into(),
+                    name,
+                    source,
+                });
+            }
+        }
+        match book_section(&mut db, &app_dir, &content) {
+            Ok(s) => builder = builder.append(s.with_title(&m.name)),
+            Err(e) => return ApiResponse::err(format!("{}: {}", m.name, e)),
+        }
+    }
+    for d in docs.iter().filter(|d| is_back(&d.title)) {
+        all_text.push_str(&d.content);
+        match doc_section(&mut db, &app_dir, &d.content) {
+            Ok(s) => builder = builder.append(s.with_title(&d.title)),
+            Err(e) => return ApiResponse::err(format!("{}: {}", d.title, e)),
+        }
+    }
+
+    // The stat blocks and items the text and the modules name.
+    let mut named = std::collections::BTreeSet::new();
+    mimir_render::adventure::text_refs(&all_text, &mut named);
+    named.extend(creatures);
+    let named: std::collections::BTreeSet<_> = named
+        .into_iter()
+        .filter(|r| r.kind == "creature" || r.kind == "item")
+        .collect();
+    if !named.is_empty() {
+        let found = match crate::adventure::closure(&mut db, named.clone()) {
+            Ok(f) => f,
+            Err(e) => return ApiResponse::err(e.message),
+        };
+        let mut entries: Vec<&mimir_render::adventure::Ref> = found
+            .entries
+            .keys()
+            .filter(|r| {
+                (r.kind == "creature" || r.kind == "item")
+                    && found
+                        .resolved
+                        .iter()
+                        .any(|(from, to)| named.contains(from) && to == *r)
+            })
+            .collect();
+        entries.sort_by(|a, b| {
+            (&a.kind, a.name.to_lowercase()).cmp(&(&b.kind, b.name.to_lowercase()))
+        });
+        if !entries.is_empty() {
+            let lines: String = entries
+                .iter()
+                .map(|r| format!("{{@{} {}|{}}}\n\n", r.kind, r.name, r.source))
+                .collect();
+            match doc_section(&mut db, &app_dir, &lines) {
+                Ok(s) => builder = builder.append(s.with_title("Appendix: Stat Blocks and Items")),
+                Err(e) => return ApiResponse::err(e.to_string()),
+            }
+        }
+    }
+
+    match builder.to_pdf() {
+        Ok(pdf_bytes) => {
+            let size_bytes = pdf_bytes.len();
+            ApiResponse::ok(PrintResult {
+                pdf_base64: base64::engine::general_purpose::STANDARD.encode(&pdf_bytes),
+                size_bytes,
+            })
+        }
+        Err(e) => ApiResponse::err(format!("Failed to make the book: {}", e)),
+    }
+}
+
+/// A book section: [`doc_section`], with module maps (`mimir-map:<id>`)
+/// printed from their files.
+fn book_section(
+    db: &mut diesel::SqliteConnection,
+    app_dir: &std::path::Path,
+    content: &str,
+) -> mimir_print::Result<MarkdownSection> {
+    let db = std::cell::RefCell::new(db);
+    let resolve = |tag: &str, name: &str, source: Option<&str>| {
+        statblock_typst(&mut db.borrow_mut(), tag, name, source)
+    };
+    let image = |url: &str| match url.strip_prefix("mimir-map:") {
+        Some(map_id) => {
+            let conn = &mut *db.borrow_mut();
+            let map = mimir_core::dal::campaign::get_map(conn, map_id).ok()?;
+            let asset =
+                mimir_core::dal::campaign::get_campaign_asset(conn, &map.uvtt_asset_id).ok()?;
+            mimir_print::map_renderer::load_image_from_file(&app_dir.join(&asset.blob_path)).ok()
+        }
+        None => image_bytes(&mut db.borrow_mut(), app_dir, url),
+    };
+    MarkdownSection::from_markdown_full(content, &resolve, &image)
 }
 
 /// Export all campaign documents to PDF
@@ -420,7 +629,7 @@ pub fn export_campaign_documents(
         };
 
         for doc in documents {
-            match doc_section(&mut db, &doc.content) {
+            match doc_section(&mut db, &app_state.paths.app_dir, &doc.content) {
                 Ok(section) => {
                     info!("  Adding document: {}", doc.title);
                     builder = builder.append(section.with_title(&doc.title));
@@ -465,7 +674,7 @@ pub fn export_campaign_documents(
             };
 
             for doc in module_docs {
-                match doc_section(&mut db, &doc.content) {
+                match doc_section(&mut db, &app_state.paths.app_dir, &doc.content) {
                     Ok(section) => {
                         let title = format!("{}: {}", module.name, doc.title);
                         info!("    Adding document: {}", title);
@@ -1135,7 +1344,7 @@ pub fn export_module_documents(
         };
 
         for doc in documents {
-            match doc_section(&mut db, &doc.content) {
+            match doc_section(&mut db, &app_state.paths.app_dir, &doc.content) {
                 Ok(section) => {
                     info!("  Adding document: {}", doc.title);
                     builder = builder.append(section.with_title(&doc.title));
@@ -1528,7 +1737,7 @@ mod statblock_tests {
         assert!(statblock_typst(&mut conn, "creature", "Goblin", Some("LMoP")).is_some());
         assert!(statblock_typst(&mut conn, "creature", "Nobody", Some("XX")).is_none());
         assert!(statblock_typst(&mut conn, "deck", "Tarokka", None).is_none());
-        let section = doc_section(&mut conn, "{@creature Goblin|MM}\n").unwrap();
+        let section = doc_section(&mut conn, dir.path(), "{@creature Goblin|MM}\n").unwrap();
         let pdf = DocumentBuilder::new("T").append(section).to_pdf().unwrap();
         assert!(pdf.starts_with(b"%PDF"));
     }

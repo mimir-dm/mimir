@@ -5,7 +5,8 @@ use std::path::Path;
 use crate::builder::{RenderContext, Renderable};
 use crate::error::{PrintError, Result};
 use crate::markdown::{
-    markdown_to_typst, markdown_to_typst_with, parse_campaign_document_with, StatblockResolver,
+    markdown_to_typst, markdown_to_typst_full, markdown_to_typst_with,
+    parse_campaign_document_full, ImageResolver, StatblockResolver,
 };
 
 /// A markdown document section with optional YAML frontmatter
@@ -16,6 +17,8 @@ pub struct MarkdownSection {
     doc_type: Option<String>,
     /// Typst content converted from markdown
     typst_content: String,
+    /// The images it prints, registered as virtual files when it renders.
+    images: Vec<(String, Vec<u8>)>,
 }
 
 impl MarkdownSection {
@@ -27,7 +30,17 @@ impl MarkdownSection {
     /// As [`Self::from_markdown`], with stat block lines from `resolve`
     /// (MIMIR-T-0737).
     pub fn from_markdown_with(markdown: &str, resolve: StatblockResolver) -> Result<Self> {
-        let parsed = parse_campaign_document_with(markdown, resolve)?;
+        Self::from_markdown_full(markdown, resolve, &|_| None)
+    }
+
+    /// As [`Self::from_markdown_with`], with the images `image` resolves
+    /// (MIMIR-T-0742).
+    pub fn from_markdown_full(
+        markdown: &str,
+        resolve: StatblockResolver,
+        image: ImageResolver,
+    ) -> Result<Self> {
+        let parsed = parse_campaign_document_full(markdown, resolve, image)?;
 
         let title = parsed
             .frontmatter
@@ -45,6 +58,7 @@ impl MarkdownSection {
             title,
             doc_type,
             typst_content: parsed.typst_content,
+            images: parsed.images,
         })
     }
 
@@ -65,6 +79,7 @@ impl MarkdownSection {
             title: title.map(String::from),
             doc_type: None,
             typst_content: markdown_to_typst(content),
+            images: Vec::new(),
         }
     }
 
@@ -78,6 +93,23 @@ impl MarkdownSection {
             title: title.map(String::from),
             doc_type: None,
             typst_content: markdown_to_typst_with(content, resolve),
+            images: Vec::new(),
+        }
+    }
+
+    /// As [`Self::from_content_with`], with images.
+    pub fn from_content_full(
+        content: &str,
+        title: Option<&str>,
+        resolve: StatblockResolver,
+        image: ImageResolver,
+    ) -> Self {
+        let (typst_content, images) = markdown_to_typst_full(content, resolve, image);
+        Self {
+            title: title.map(String::from),
+            doc_type: None,
+            typst_content,
+            images,
         }
     }
 
@@ -94,7 +126,10 @@ impl MarkdownSection {
 }
 
 impl Renderable for MarkdownSection {
-    fn to_typst(&self, _ctx: &RenderContext) -> Result<String> {
+    fn to_typst(&self, ctx: &RenderContext) -> Result<String> {
+        for (name, bytes) in &self.images {
+            ctx.virtual_files.register(name, bytes.clone());
+        }
         Ok(self.typst_content.clone())
     }
 

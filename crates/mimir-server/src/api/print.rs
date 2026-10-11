@@ -99,6 +99,18 @@ pub async fn campaign(
     .await
 }
 
+/// `GET /campaigns/{id}/book`: the campaign as one book (MIMIR-T-0742).
+pub async fn book(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Query(o): Query<print::BookOptions>,
+) -> Result<Response, ApiError> {
+    pdf(&state, format!("book-{id}.pdf"), move |c, p| {
+        print::export_campaign_book(c, p, id, Some(o))
+    })
+    .await
+}
+
 /// `GET /modules/{id}/pdf`
 pub async fn module(
     State(state): State<AppState>,

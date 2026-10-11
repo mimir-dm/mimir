@@ -17,6 +17,23 @@ use crate::sections::monster_cards::plain_tags;
 /// name and the source. `None`: the line prints as a box with the name.
 pub type StatblockResolver<'a> = &'a dyn Fn(&str, &str, Option<&str>) -> Option<String>;
 
+/// The bytes of an image a document names (its markdown URL), or none.
+pub type ImageResolver<'a> = &'a dyn Fn(&str) -> Option<Vec<u8>>;
+
+/// An image as Typst prints it: PNG, at most 2400 pixels wide (5etools
+/// maps are WebP, and large). `None` when it does not decode.
+pub fn print_image(bytes: &[u8]) -> Option<Vec<u8>> {
+    let img = image::load_from_memory(bytes).ok()?;
+    let img = if img.width() > 2400 {
+        img.resize(2400, u32::MAX, image::imageops::FilterType::Triangle)
+    } else {
+        img
+    };
+    let mut out = std::io::Cursor::new(Vec::new());
+    img.write_to(&mut out, image::ImageFormat::Png).ok()?;
+    Some(out.into_inner())
+}
+
 /// The tags a stat block line may hold (as the web's converter).
 const STATBLOCK_TAGS: &[&str] = &[
     "creature",
@@ -83,6 +100,8 @@ pub struct ParsedDocument {
     pub frontmatter: Value,
     /// Markdown content converted to Typst markup
     pub typst_content: String,
+    /// The images it prints (virtual file name, PNG bytes).
+    pub images: Vec<(String, Vec<u8>)>,
 }
 
 /// Parse a campaign document from markdown with YAML frontmatter.
@@ -93,7 +112,7 @@ pub struct ParsedDocument {
 /// # Returns
 /// A `ParsedDocument` with the frontmatter as JSON and content as Typst markup
 pub fn parse_campaign_document(markdown: &str) -> Result<ParsedDocument> {
-    parse_campaign_document_with(markdown, &|_, _, _| None)
+    parse_campaign_document_full(markdown, &|_, _, _| None, &|_| None)
 }
 
 /// As [`parse_campaign_document`], with stat block lines from `resolve`
@@ -101,6 +120,15 @@ pub fn parse_campaign_document(markdown: &str) -> Result<ParsedDocument> {
 pub fn parse_campaign_document_with(
     markdown: &str,
     resolve: StatblockResolver,
+) -> Result<ParsedDocument> {
+    parse_campaign_document_full(markdown, resolve, &|_| None)
+}
+
+/// As [`parse_campaign_document_with`], with images (MIMIR-T-0742).
+pub fn parse_campaign_document_full(
+    markdown: &str,
+    resolve: StatblockResolver,
+    image: ImageResolver,
 ) -> Result<ParsedDocument> {
     // Parse frontmatter using gray_matter
     let matter = Matter::<YAML>::new();
@@ -120,11 +148,12 @@ pub fn parse_campaign_document_with(
     };
 
     // Convert markdown content to Typst
-    let typst_content = markdown_to_typst_with(&parsed.content, resolve);
+    let (typst_content, images) = markdown_to_typst_full(&parsed.content, resolve, image);
 
     Ok(ParsedDocument {
         frontmatter,
         typst_content,
+        images,
     })
 }
 
@@ -147,6 +176,19 @@ pub fn markdown_to_typst(markdown: &str) -> String {
 /// as `resolve` gives it (else a box with the name), and `{@…}` tags as
 /// the words they show.
 pub fn markdown_to_typst_with(markdown: &str, resolve: StatblockResolver) -> String {
+    markdown_to_typst_full(markdown, resolve, &|_| None).0
+}
+
+/// As [`markdown_to_typst_with`], with images: an image `image` resolves
+/// prints as a figure at page width, its bytes returned to register as
+/// virtual files (`/_virtual/<name>`); another prints as its title in a
+/// box.
+pub fn markdown_to_typst_full(
+    markdown: &str,
+    resolve: StatblockResolver,
+    image: ImageResolver,
+) -> (String, Vec<(String, Vec<u8>)>) {
+    let mut images: Vec<(String, Vec<u8>)> = Vec::new();
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -478,13 +520,58 @@ pub fn markdown_to_typst_with(markdown: &str, resolve: StatblockResolver) -> Str
                 output.push_str(&format!("/* {} */", escaped_html));
             }
 
-            // Images
+            // Images: the title is the caption.
             Event::Start(Tag::Image { dest_url, .. }) => {
-                output.push_str(&format!("#image(\"{}\"", dest_url));
+                let mut alt = String::new();
+                while i < events.len() {
+                    let (e, _) = &events[i];
+                    i += 1;
+                    match e {
+                        Event::End(TagEnd::Image) => break,
+                        Event::Text(t) => alt.push_str(t),
+                        _ => {}
+                    }
+                }
+                let alt = plain_tags(&alt);
+                let printed = image(&dest_url).and_then(|b| print_image(&b)).map(|png| {
+                    use std::hash::{Hash, Hasher};
+                    let mut h = std::collections::hash_map::DefaultHasher::new();
+                    dest_url.hash(&mut h);
+                    let name = format!("md-{:016x}.png", h.finish());
+                    if !images.iter().any(|(n, _)| *n == name) {
+                        images.push((name.clone(), png));
+                    }
+                    name
+                });
+                let markup = match printed {
+                    Some(name) if alt.is_empty() => {
+                        format!("\n#figure(image(\"/_virtual/{name}\", width: 100%))\n\n")
+                    }
+                    Some(name) => format!(
+                        "\n#figure(image(\"/_virtual/{name}\", width: 100%), caption: [{}])\n\n",
+                        typst_lit(&alt)
+                    ),
+                    None => format!(
+                        "#block(inset: 4pt, stroke: 0.5pt + luma(180))[#emph[{}]]",
+                        typst_lit(&format!(
+                            "Image: {}",
+                            if alt.is_empty() {
+                                dest_url.as_ref()
+                            } else {
+                                alt.as_str()
+                            }
+                        ))
+                    ),
+                };
+                if in_table {
+                    current_cell.push_str(&typst_lit(&alt));
+                } else if in_link {
+                    link_text.push_str(&typst_lit(&alt));
+                } else {
+                    output.push_str(&markup);
+                }
             }
-            Event::End(TagEnd::Image) => {
-                output.push(')');
-            }
+            Event::End(TagEnd::Image) => {}
 
             // Footnotes (simplified)
             Event::FootnoteReference(name) => {
@@ -541,7 +628,7 @@ pub fn markdown_to_typst_with(markdown: &str, resolve: StatblockResolver) -> Str
         .trim()
         .to_string();
 
-    cleaned + "\n"
+    (cleaned + "\n", images)
 }
 
 /// Escape text for use inside a Typst string literal.
@@ -734,9 +821,30 @@ This is a test."#;
 
     #[test]
     fn test_markdown_image() {
+        // An image no resolver finds prints as its title in a box (it used
+        // to print `#image("image.png"` with the title after it: not Typst).
         let md = "![alt text](image.png)";
         let typst = markdown_to_typst(md);
-        assert!(typst.contains("#image(\"image.png\""));
+        assert!(typst.contains("#emph[#\"Image: alt text\"]"), "{typst}");
+        assert!(!typst.contains("#image("), "{typst}");
+        // A resolved one is a figure on a virtual file, with its caption.
+        let png = {
+            let img = image::RgbImage::new(4, 4);
+            let mut out = std::io::Cursor::new(Vec::new());
+            img.write_to(&mut out, image::ImageFormat::Png).unwrap();
+            out.into_inner()
+        };
+        let (typst, images) = markdown_to_typst_full(md, &|_, _, _| None, &|u| {
+            (u == "image.png").then(|| png.clone())
+        });
+        assert_eq!(images.len(), 1);
+        assert!(
+            typst.contains(&format!(
+                "#figure(image(\"/_virtual/{}\", width: 100%), caption: [#\"alt text\"])",
+                images[0].0
+            )),
+            "{typst}"
+        );
     }
 
     #[test]

@@ -127,3 +127,61 @@ pub fn AdventureExportDialog(
         </Modal>
     }
 }
+
+/// The campaign as one book (MIMIR-T-0742): its title page's lines, then
+/// the PDF downloads.
+#[component]
+pub fn BookDialog(
+    open: RwSignal<bool>,
+    #[prop(into)] campaign_id: String,
+    #[prop(into)] campaign_name: String,
+) -> impl IntoView {
+    let id = StoredValue::new(campaign_id);
+    let file = StoredValue::new(format!("{campaign_name}.pdf"));
+    let authors = RwSignal::new(String::new());
+    let from = RwSignal::new(String::new());
+    let to = RwSignal::new(String::new());
+    let busy = RwSignal::new(false);
+    let error = RwSignal::new(String::new());
+    let download = move |_| {
+        let enc = |s: &str| -> String { js_sys::encode_uri_component(s.trim()).into() };
+        let mut q = format!("authors={}", enc(&authors.get_untracked()));
+        if let Ok(n) = from.get_untracked().trim().parse::<i64>() {
+            q += &format!("&level_start={n}");
+        }
+        if let Ok(n) = to.get_untracked().trim().parse::<i64>() {
+            q += &format!("&level_end={n}");
+        }
+        let path = format!("/campaigns/{}/book?{q}", id.get_value());
+        busy.set(true);
+        error.set(String::new());
+        spawn_local(async move {
+            match api::download(&path, &file.get_value()).await {
+                Ok(()) => open.set(false),
+                Err(e) => error.set(api::message(e)),
+            }
+            busy.set(false);
+        });
+    };
+    view! {
+        <Modal open=open title="Print as a book" locked=busy>
+            <Stack gap="sm">
+                <Text size="sm" dimmed=true>"One PDF: a title page and contents, the campaign documents, each module with its documents and maps, the appendices, and the stat blocks and items the text names."</Text>
+                <TextInput label="Authors" value=authors />
+                <Group>
+                    <TextInput label="From level" value=from />
+                    <TextInput label="To level" value=to />
+                </Group>
+                {move || {
+                    let e = error.get();
+                    (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
+                }}
+                {move || busy.get().then(|| view! { <Text size="sm" dimmed=true>"Making the book…"</Text> })}
+                <Group>
+                    <Button disabled=Signal::derive(move || busy.get()) on_click=Callback::new(download)>"Download the PDF"</Button>
+                    <Button variant="subtle" on_click=Callback::new(move |_| open.set(false))>"Cancel"</Button>
+                </Group>
+            </Stack>
+        </Modal>
+    }
+}

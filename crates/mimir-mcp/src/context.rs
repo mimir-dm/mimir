@@ -56,6 +56,12 @@ impl McpContext {
         }
     }
 
+    /// The database URL (the server's print routes open their own
+    /// connection with it).
+    pub fn db_url(&self) -> &str {
+        &self.db_url
+    }
+
     /// Create a new database connection.
     ///
     /// Each connection is configured with WAL mode and foreign keys enabled.

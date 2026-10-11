@@ -16,7 +16,10 @@ The campaign dashboard (`/campaigns/<id>`) holds everything of one campaign. Its
 |------|----------|
 | **Source books…** | Choose the books that the catalog searches of the campaign use |
 | **PDF…** | Export the campaign to PDF. See [PDF Export](../pdf-export/README.md). |
+| **Print as a book…** | The campaign as one PDF book, with a title page from the authors and levels you give. See [PDF Export](../pdf-export/README.md). |
 | **Export to a file** | Download the campaign archive (`.mimir-campaign.tar.gz`) |
+| **Export as a 5etools adventure…** | Download a 5etools homebrew adventure file. See [Export a Campaign as an Adventure](../../how-to/campaigns/export-adventure.md). |
+| **Export as a Mimir adventure pack…** | Download a Mimir adventure pack (`.mimir-adventure.zip`). See [Adventure Pack Format](../adventure-pack-format.md). |
 | **Archive** | Hide the campaign from the list (active campaigns) |
 | **Restore** | Make an archived campaign active again |
 | **Delete…** | Delete an archived campaign, after you type its name |

@@ -26,7 +26,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 
 ## Tool Reference
 
-### Campaign Management (15 tools)
+### Campaign Management (16 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -43,6 +43,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 | `export_adventure_file` | Export the active campaign as a 5etools homebrew adventure file |
 | `export_adventure_pack` | Write the active campaign as a Mimir adventure pack in a folder |
 | `import_adventure_pack` | Import a Mimir adventure pack as a new campaign |
+| `print_adventure_book` | Write the active campaign as one PDF book in a folder |
 | `import_campaign` | Import campaign from archive |
 | `preview_archive` | Preview archive contents without importing |
 

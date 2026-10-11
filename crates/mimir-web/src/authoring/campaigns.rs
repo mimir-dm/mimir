@@ -118,6 +118,7 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
     let printing = RwSignal::new(false);
     let exporting = RwSignal::new(false);
     let packing = RwSignal::new(false);
+    let booking = RwSignal::new(false);
     let error = RwSignal::new(String::new());
     let archived = campaign.archived_at.is_some();
     let id = StoredValue::new(campaign.id.clone());
@@ -158,6 +159,7 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
             <Menu label="More" aria_label="More campaign actions" align="end">
                 <MenuItem on_click=Callback::new(move |_| sources.set(true))>"Source books…"</MenuItem>
                 <MenuItem on_click=Callback::new(move |_| printing.set(true))>"PDF…"</MenuItem>
+                <MenuItem on_click=Callback::new(move |_| booking.set(true))>"Print as a book…"</MenuItem>
                 <MenuItem on_click=Callback::new(move |_| {
                     let (cid, cname) = (id.get_value(), name_for_file.get_value());
                     spawn_local(async move {
@@ -192,6 +194,11 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
         />
         <super::adventure_export::AdventureExportDialog
             open=exporting
+            campaign_id=campaign.id.clone()
+            campaign_name=campaign.name.clone()
+        />
+        <super::adventure_export::BookDialog
+            open=booking
             campaign_id=campaign.id.clone()
             campaign_name=campaign.name.clone()
         />

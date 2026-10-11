@@ -9,6 +9,7 @@ Mimir makes PDFs with [Typst](https://typst.app/), a typesetting system. The `mi
 | Character | Character sheet, battle card, spell cards, equipment cards | **PDF…** on the character sheet ([how-to](../../how-to/characters/print-character-sheet.md)) |
 | Document | One document, from its markdown | **PDF** on an open document ([how-to](../../how-to/campaigns/manage-documents.md)) |
 | Campaign | Campaign documents, module content, NPCs, map previews, tiled maps and token cutouts, chosen per part | **More**, **PDF…** on the campaign dashboard |
+| Book | The campaign as one book: a title page (authors, levels), contents, the campaign documents, each module with its documents and the maps no document shows, the appendices, and the stat blocks and items the text names | **More**, **Print as a book…** on the campaign dashboard |
 | Module | Documents, monsters, traps, points of interest, NPCs, play notes, map previews and tiled maps, chosen per part | **More**, **PDF…** on the module page |
 | Map | A preview page and/or tiled pages at true scale, with token cutouts | **PDF…** on the DM map ([how-to](../../how-to/maps/print-map.md)) |
 | Monster cards | A half-page card for each monster of a module | **More**, **Monster cards (PDF)** on the module page |
@@ -34,12 +35,15 @@ The routes are under `/api/v1` and need the DM token.
 |-------|---------------|
 | `GET /characters/{id}/pdf` | `include_compact_sheet`, `include_battle_card`, `include_spell_cards`, `include_equipment_cards` |
 | `GET /campaigns/{id}/pdf` | `include_campaign_docs`, `include_module_content`, `include_npcs`, `include_module_map_previews`, `include_module_tiled_maps`, `include_token_cutouts`, `include_campaign_map_previews`, `include_campaign_tiled_maps` |
+| `GET /campaigns/{id}/book` | `authors` (comma-separated), `level_start`, `level_end` |
 | `GET /modules/{id}/pdf` | `include_documents`, `include_monsters`, `include_traps`, `include_pois`, `include_npcs`, `include_play_notes`, `include_preview`, `preview_grid`, `preview_los_walls`, `preview_positions`, `include_play`, `play_grid`, `play_los_walls`, `play_cutouts` |
 | `GET /maps/{id}/pdf` | `include_preview`, `preview_grid`, `preview_los_walls`, `preview_positions`, `include_play`, `play_grid`, `play_los_walls`, `play_cutouts` |
 | `GET /documents/{id}/pdf` | none |
 | `GET /modules/{id}/monster-cards` | `show_cut_lines` |
 
-Each option takes `true` or `false`.
+Each `include_…` option takes `true` or `false`.
+
+In every document PDF, read-aloud boxes and sidebars print as boxes, a stat block line prints the stat block, a tag prints as its words, and an image prints at page width: a 5etools image from the imported images, an uploaded image from its file. An image Mimir cannot find prints as its title in a box.
 
 ## Section Types
 

@@ -121,6 +121,15 @@ pub struct ModuleExportOptions {
     pub play_cutouts: Option<bool>,
 }
 
+/// The campaign as one book (MIMIR-T-0742): the title page's lines.
+#[derive(Debug, Deserialize, Default)]
+pub struct BookOptions {
+    /// Comma-separated.
+    pub authors: Option<String>,
+    pub level_start: Option<i64>,
+    pub level_end: Option<i64>,
+}
+
 #[derive(Debug, Deserialize, Default)]
 pub struct CampaignExportOptions {
     pub include_campaign_docs: Option<bool>,

@@ -150,6 +150,55 @@ pub async fn import_adventure_pack(
     Ok(serde_json::json!({"campaign_id": r.campaign_id, "campaign_name": r.campaign_name}))
 }
 
+tool_args! {
+    pub struct PrintBookArgs {
+        /// The folder to write the PDF in
+        pub output_path: String,
+        /// Its authors, comma-separated, for the title page
+        pub authors: Option<String>,
+        /// The lowest character level, for the title page
+        pub level_start: Option<i64>,
+        /// The highest character level, for the title page
+        pub level_end: Option<i64>,
+    }
+}
+
+/// `print_adventure_book`: the active campaign as one PDF book.
+pub async fn print_adventure_book(
+    ctx: &Arc<McpContext>,
+    args: PrintBookArgs,
+) -> Result<Value, McpError> {
+    use base64::Engine;
+    let campaign_id = ctx
+        .get_active_campaign_id()
+        .ok_or(McpError::NoActiveCampaign)?;
+    let print_ctx = crate::print::PrintCtx::new(ctx.db_url().to_string(), ctx.app_dir.clone());
+    let print_state = mimir_print::PrintState {
+        templates_dir: ctx.app_dir.join("templates"),
+        assets_dir: ctx.app_dir.join("assets"),
+    };
+    let r = crate::print::export_campaign_book(
+        &print_ctx,
+        &print_state,
+        campaign_id.clone(),
+        Some(crate::print::BookOptions {
+            authors: args.authors,
+            level_start: args.level_start,
+            level_end: args.level_end,
+        }),
+    );
+    let data = r
+        .data
+        .ok_or_else(|| McpError::Internal(r.error.unwrap_or_else(|| "no PDF".into())))?;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data.pdf_base64)
+        .map_err(|e| McpError::Internal(e.to_string()))?;
+    let path = std::path::Path::new(&args.output_path).join(format!("book-{campaign_id}.pdf"));
+    std::fs::write(&path, &bytes)
+        .map_err(|e| McpError::Internal(format!("{}: {e}", path.display())))?;
+    Ok(serde_json::json!({"path": path.display().to_string(), "size_bytes": bytes.len()}))
+}
+
 /// `preview_adventure_campaign`
 pub async fn preview_adventure_campaign(
     ctx: &Arc<McpContext>,
@@ -212,6 +261,12 @@ pub fn server_tools() -> &'static [RegisteredTool] {
                 "Import a Mimir adventure pack (.mimir-adventure.zip) as a new campaign; it becomes the active campaign.",
                 ImportPackArgs,
                 import_adventure_pack
+            ),
+            tool!(
+                "print_adventure_book",
+                "Write the active campaign as one PDF book in a folder: a title page (authors, levels), contents, the campaign documents, each module with its documents and maps, the appendices, and the stat blocks and items the text names.",
+                PrintBookArgs,
+                print_adventure_book
             ),
         ]
     })

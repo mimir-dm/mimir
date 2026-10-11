@@ -350,3 +350,23 @@ test('a campaign travels as a Mimir adventure pack', async ({ page }) => {
   // the other tests see the fixture catalog only.
   await page.request.delete('/api/v1/catalog/sources/PhanPackE2E', { headers: { Authorization: `Bearer ${TOKEN}` } })
 })
+
+// The campaign as one book (MIMIR-T-0742).
+test('a campaign prints as a book', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/')
+  await page.locator('main').getByText(CAMPAIGN).first().click()
+  await page.getByRole('button', { name: 'More campaign actions' }).click()
+  await page.getByRole('menuitem', { name: 'Print as a book…' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Print as a book' })
+  await dialog.getByLabel('Authors').fill('Robin')
+  await dialog.getByLabel('From level').fill('1')
+  await dialog.getByLabel('To level').fill('5')
+  const [download] = await Promise.all([
+    page.waitForEvent('download', { timeout: 60_000 }),
+    dialog.getByRole('button', { name: 'Download the PDF' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^book-.+\.pdf$/)
+  expect(readFileSync(await download.path()).subarray(0, 4).toString()).toBe('%PDF')
+  await expect(dialog).toBeHidden()
+})
