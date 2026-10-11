@@ -316,3 +316,31 @@ for (const theme of themes) {
     })
   }
 }
+
+// The rich editor (MIMIR-T-0719): a player writing a note.
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`note-editor ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const auth = { Authorization: `Bearer ${TOKEN}` }
+      const id = await pcId(page, 'Thorin Ironforge')
+      const link = await (await page.request.post(`/api/v1/characters/${id}/link`, { headers: auth })).json()
+      await page.addInitScript((th) => localStorage.setItem('aurora-theme', th), theme)
+      await page.goto(link.path)
+      await page.getByRole('tab', { name: 'Character' }).click()
+      await page.getByRole('tab', { name: 'Notes' }).click()
+      await page.getByRole('button', { name: 'New note' }).click()
+      await page.getByLabel('Title').fill('Ambush at the cave')
+      await page.getByRole('textbox', { name: 'Note' }).click()
+      await page.keyboard.type('## Who was there')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type('1. Goblins on the ridge')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type('A **wolf** pen')
+      await page.mouse.move(0, 0)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/note-editor--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+      await page.request.delete(`/api/v1/characters/${id}/link`, { headers: auth })
+    })
+  }
+}

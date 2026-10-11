@@ -11,6 +11,9 @@
     <!-- Aurora's CSS is injected at runtime by <AuroraStyles/> (app.rs).
          Mimir's own classes, on Aurora tokens only: -->
     <link data-trunk rel="css" href="style/mimir.css" />
+    <!-- The rich editor (TipTap, MIMIR-T-0719): sets window.MimirEditor.
+         Built by editor/build.sh (a Trunk hook). -->
+    <script data-trunk src="editor/dist/mimir-editor.js"></script>
     <link data-trunk rel="rust" data-bin="mimir-web" data-wasm-opt="z" />
   </head>
   <body></body>

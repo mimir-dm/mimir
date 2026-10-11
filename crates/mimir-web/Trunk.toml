@@ -12,9 +12,16 @@ public_url = "/"
 [watch]
 # web-e2e writes screenshots and holds node_modules: watching it would
 # rebuild (and reload the page under test) on each screenshot.
-ignore = ["dist", "web-e2e"]
+ignore = ["dist", "web-e2e", "editor/node_modules", "editor/dist"]
 
 [serve]
 # Not the dev flow: the app needs the same-origin /api of mimir-server.
 # Use `angreal web serve`. Kept on localhost in case.
 addresses = ["127.0.0.1"]
+
+# The TipTap bundle (MIMIR-T-0719): editor/dist/mimir-editor.js, loaded by
+# index.html before the app. Needs Node at build time.
+[[hooks]]
+stage = "pre_build"
+command = "sh"
+command_arguments = ["editor/build.sh"]

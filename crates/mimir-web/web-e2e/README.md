@@ -27,6 +27,12 @@ diff images to `<after>/diff`.
 
 - `specs/smoke.spec.ts`: sign-in, the campaign list, the dashboard tabs, the
   module page, an unknown address.
+- `specs/map.spec.ts`, `display.spec.ts`, `combat.spec.ts`: the DM map, the
+  player display, combat.
+- `specs/players.spec.ts`, `characters.spec.ts`, `party.spec.ts`: player
+  links, character sheets, player notes and party sharing.
+- `specs/editor.spec.ts`: the rich editor. The fixture documents keep their
+  structure and words through it; the toolbar; a numbered list continues.
 - `specs/capture.spec.ts`: the screens to capture.
 - `specs/session.ts`: the token, the fixture names, and `test`. Each test
   fails on a page error or a console error (except the browser's line for a

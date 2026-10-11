@@ -520,3 +520,52 @@
   border-bottom: 1px solid var(--border-fainter);
 }
 .mimir-party__member > div { flex: 1 1 200px; display: flex; flex-direction: column; }
+
+/* The rich editor (MIMIR-T-0719): TipTap's contenteditable on Aurora tokens. */
+.mimir-editor { border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.mimir-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  padding: var(--space-xs);
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-editor__group { display: flex; gap: 2px; }
+.mimir-editor__btn {
+  font: inherit;
+  font-size: 0.8125rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0 var(--space-xs);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.mimir-editor__btn:hover:not(:disabled) { background: var(--border-fainter); }
+.mimir-editor__btn.is-active { border-color: var(--border); background: var(--border-fainter); font-weight: 600; }
+.mimir-editor__btn:disabled { opacity: 0.4; cursor: default; }
+.mimir-editor__body .ProseMirror { min-height: 12rem; padding: var(--space-sm) var(--space-md); outline: none; line-height: 1.55; }
+/* Focus as on an Aurora input: the border. */
+.mimir-editor:focus-within { border-color: var(--ice); }
+.mimir-editor__body .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.mimir-editor__body .ProseMirror table { border-collapse: collapse; margin: var(--space-sm) 0; }
+.mimir-editor__body .ProseMirror th,
+.mimir-editor__body .ProseMirror td { border: 1px solid var(--border); padding: var(--space-xs) var(--space-sm); min-width: 4rem; vertical-align: top; }
+.mimir-editor__body .ProseMirror .selectedCell { background: var(--border-fainter); }
+.mimir-editor__body .ProseMirror blockquote { margin: 0; padding-left: var(--space-md); border-left: 3px solid var(--border); }
+.mimir-editor__body .mimir-editor__comment {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  opacity: 0.6;
+  white-space: pre-wrap;
+  margin: var(--space-xs) 0;
+}
+.mimir-editor__body .mimir-editor__comment.ProseMirror-selectednode { outline: 2px solid var(--border); }

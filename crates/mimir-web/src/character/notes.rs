@@ -11,6 +11,7 @@ use serde_json::json;
 
 use crate::api;
 use crate::components::Markdown;
+use crate::editor::RichEditor;
 
 /// The date part of a timestamp.
 pub fn day(at: &str) -> &str {
@@ -119,7 +120,7 @@ pub fn NotesPanel(character_id: String, editable: bool) -> impl IntoView {
             {move || editing.get().map(|_| view! {
                 <div class="mimir-notes__editor">
                     <TextInput label="Title" value=title />
-                    <Textarea label="Note (markdown)" value=content />
+                    <RichEditor value=content label="Note" placeholder="What happened? Start a line with 1. for a numbered list." />
                     <Group>
                         <Button on_click=Callback::new(save)>"Save note"</Button>
                         <Button variant="subtle" on_click=Callback::new(move |_| editing.set(None))>"Cancel"</Button>

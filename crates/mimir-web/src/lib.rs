@@ -16,6 +16,7 @@ pub mod app;
 pub mod auth;
 pub mod character;
 pub mod components;
+pub mod editor;
 pub mod live;
 pub mod map;
 pub mod markdown;

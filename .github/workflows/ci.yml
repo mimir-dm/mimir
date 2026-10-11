@@ -179,17 +179,19 @@ jobs:
             | tar -xz -C "$HOME/.cargo/bin"
           trunk --version
 
+      # Node: the Trunk hook builds the editor bundle (editor/build.sh,
+      # MIMIR-T-0719), and the e2e harness below.
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
       - name: Build the web app bundle (trunk)
         working-directory: crates/mimir-web
         run: trunk build --release
 
       # Smoke suite: Playwright starts mimir-server (web-e2e/session.sh) on a
       # scratch data dir with the fixture and the bundle built above.
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
       - name: Install the e2e harness
         working-directory: crates/mimir-web/web-e2e
         run: |
@@ -198,7 +200,7 @@ jobs:
 
       - name: Web smoke suite (Playwright)
         working-directory: crates/mimir-web/web-e2e
-        run: npx playwright test specs/smoke.spec.ts specs/map.spec.ts specs/display.spec.ts specs/combat.spec.ts specs/players.spec.ts specs/characters.spec.ts specs/party.spec.ts
+        run: npx playwright test specs/smoke.spec.ts specs/map.spec.ts specs/display.spec.ts specs/combat.spec.ts specs/players.spec.ts specs/characters.spec.ts specs/party.spec.ts specs/editor.spec.ts
 
       - name: Upload Playwright results on failure
         if: failure()

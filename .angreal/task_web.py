@@ -46,6 +46,10 @@ def _build(release: bool) -> int:
     trunk = _trunk()
     if trunk is None:
         return 1
+    # The Trunk hook builds the editor bundle (editor/build.sh): it needs Node.
+    if shutil.which("npm") is None:
+        print("npm is not on PATH. The editor bundle (crates/mimir-web/editor) needs Node.", file=sys.stderr)
+        return 1
     cmd = [trunk, "build"] + (["--release"] if release else [])
     print(f"Building mimir-web ({'release' if release else 'dev'})...")
     result = subprocess.run(cmd, cwd=str(WEB_CRATE))
@@ -181,7 +185,7 @@ def e2e():
     code = _build(False) or _npm_ready()
     if code != 0:
         return code
-    return subprocess.run(["npx", "playwright", "test", "specs/smoke.spec.ts", "specs/map.spec.ts", "specs/display.spec.ts", "specs/combat.spec.ts", "specs/players.spec.ts", "specs/characters.spec.ts", "specs/party.spec.ts"], cwd=str(E2E_DIR)).returncode
+    return subprocess.run(["npx", "playwright", "test", "specs/smoke.spec.ts", "specs/map.spec.ts", "specs/display.spec.ts", "specs/combat.spec.ts", "specs/players.spec.ts", "specs/characters.spec.ts", "specs/party.spec.ts", "specs/editor.spec.ts"], cwd=str(E2E_DIR)).returncode
 
 
 @web()
