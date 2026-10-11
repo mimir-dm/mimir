@@ -124,3 +124,58 @@ async fn entries_sources_books_images() {
     let (status, _, _) = get(&r, "/book-images/..%2F..%2Fdata%2Fmimir.db").await;
     assert_ne!(status, StatusCode::OK, "no escape from the catalog assets");
 }
+
+/// Every SRD entry renders: no panic, its name's kind of content, and no
+/// raw `{@` tag left.
+#[tokio::test]
+async fn every_srd_entry_renders() {
+    let (r, _dir) = fixture().await;
+    let mut total = 0;
+    for (key, _, _) in mimir_render::summary::CATEGORIES {
+        let mut offset = 0;
+        loop {
+            let (_, page, _) = get(
+                &r,
+                &format!("/catalog/search/{key}?limit=500&offset={offset}"),
+            )
+            .await;
+            let rows = page["rows"].as_array().unwrap().clone();
+            for row in &rows {
+                let (name, source) = (
+                    row["name"].as_str().unwrap(),
+                    row["source"].as_str().unwrap(),
+                );
+                let path = format!(
+                    "/catalog/entry/{key}/{}/{}",
+                    urlencode(source),
+                    urlencode(name)
+                );
+                let (status, v, _) = get(&r, &path).await;
+                assert_eq!(status, StatusCode::OK, "{path}");
+                let html = mimir_render::detail::detail(key, &v);
+                assert!(html.contains("detail--"), "{key} {name}");
+                assert!(!html.contains("{@"), "{key} {name}: a tag left in {html}");
+                total += 1;
+            }
+            if page["more"] != true {
+                break;
+            }
+            offset += 500;
+        }
+    }
+    assert!(
+        total > 100,
+        "the fixture catalog has over a hundred entries ({total})"
+    );
+}
+
+fn urlencode(s: &str) -> String {
+    s.bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                (b as char).to_string()
+            }
+            _ => format!("%{b:02X}"),
+        })
+        .collect()
+}

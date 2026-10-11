@@ -8,6 +8,7 @@
 //! data-ref-type data-ref-name data-ref-source>`: the web app opens it.
 
 pub mod book;
+pub mod detail;
 pub mod entries;
 pub mod summary;
 pub mod tags;
