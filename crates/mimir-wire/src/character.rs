@@ -398,6 +398,9 @@ pub struct PlayerNote {
     /// The name of the note's character (for the DM's module view).
     pub character_name: String,
     pub module_id: Option<String>,
+    /// The name of the note's module.
+    #[serde(default)]
+    pub module_name: Option<String>,
     pub title: String,
     /// Markdown.
     pub content: String,

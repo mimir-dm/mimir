@@ -262,3 +262,57 @@ for (const theme of themes) {
     await page.screenshot({ path: `${outDir}/character-levelup--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
   })
 }
+
+// Player notes and the party (MIMIR-T-0718): the DM reads a note on the
+// module and the sheet; a player sees the party with one shared sheet.
+for (const theme of themes) {
+  test(`notes desktop ${theme}`, async ({ page }) => {
+    const auth = { Authorization: `Bearer ${TOKEN}` }
+    const campaign = await campaignId(page)
+    const module = await moduleId(page, campaign)
+    const id = await pcId(page, 'Thorin Ironforge')
+    const link = await (await page.request.post(`/api/v1/characters/${id}/link`, { headers: auth })).json()
+    const note = await (
+      await page.request.post(`/api/v1/characters/${id}/notes`, {
+        headers: { Authorization: `Bearer ${link.token}` },
+        data: {
+          title: 'Ambush at the cave',
+          content: 'Goblins on the ridge.\n\n1. Two at the stream\n2. A **wolf** pen inside',
+          module_id: module,
+        },
+      })
+    ).json()
+    await signIn(page, theme)
+    await page.goto(`/modules/${module}?section=notes`)
+    await expect(page.locator('.mimir-notes__note')).toContainText('Thorin Ironforge')
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/module-notes--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    await page.goto(`/characters/${id}`)
+    await page.getByRole('tab', { name: 'Notes' }).click()
+    await expect(page.locator('.mimir-notes__note')).toBeVisible()
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/character-notes--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    await page.request.delete(`/api/v1/notes/${note.id}`, { headers: { Authorization: `Bearer ${link.token}` } })
+    await page.request.delete(`/api/v1/characters/${id}/link`, { headers: auth })
+  })
+  for (const size of sizes) {
+    test(`player-party ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const auth = { Authorization: `Bearer ${TOKEN}` }
+      const campaign = await campaignId(page)
+      const pcs = await (await page.request.get(`/api/v1/campaigns/${campaign}/pcs`, { headers: auth })).json()
+      const link = await (await page.request.post(`/api/v1/characters/${pcs[0].id}/link`, { headers: auth })).json()
+      await page.request.put(`/api/v1/characters/${pcs[1].id}/sharing`, { headers: auth, data: { shared: true } })
+      await page.addInitScript((th) => localStorage.setItem('aurora-theme', th), theme)
+      await page.goto(link.path)
+      await page.getByRole('tab', { name: 'Party' }).click()
+      await expect(page.locator('.mimir-party__member').getByRole('button', { name: 'View' })).toBeVisible()
+      await page.mouse.move(0, 0)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/player-party--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+      await page.request.put(`/api/v1/characters/${pcs[1].id}/sharing`, { headers: auth, data: { shared: false } })
+      await page.request.delete(`/api/v1/characters/${pcs[0].id}/link`, { headers: auth })
+    })
+  }
+}

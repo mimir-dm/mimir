@@ -1,6 +1,7 @@
 //! The player page (MIMIR-T-0716, ADR MIMIR-A-0010): what a player link
-//! opens. The player display of their campaign, and their character (the
-//! sheet, MIMIR-T-0717). No app shell, no DM pages.
+//! opens. The player display of their campaign, their character (the
+//! sheet, MIMIR-T-0717) and the party (MIMIR-T-0718). No app shell, no DM
+//! pages.
 
 use aurora_leptos::components::*;
 use aurora_leptos::theme::ThemeToggle;
@@ -9,7 +10,8 @@ use mimir_wire::Session;
 
 use aurora_leptos::frame::{TabItem, TabPanel, Tabs};
 
-use crate::character::sheet::CharacterSheetView;
+use crate::character::party::PartyPanel;
+use crate::character::sheet::{CharacterSheetView, SheetAccess};
 use crate::map::display::DisplayView;
 
 #[component]
@@ -25,6 +27,7 @@ pub fn PlayerPage(
     let tabs = vec![
         TabItem::new("display", "Display"),
         TabItem::new("character", "Character"),
+        TabItem::new("party", "Party"),
     ];
     view! {
         <div class="mimir-player">
@@ -45,7 +48,12 @@ pub fn PlayerPage(
                     </TabPanel>
                     <TabPanel value="character">
                         <div class="mimir-player__sheet">
-                            <CharacterSheetView id=character />
+                            <CharacterSheetView id=character access=SheetAccess::Owner />
+                        </div>
+                    </TabPanel>
+                    <TabPanel value="party">
+                        <div class="mimir-player__sheet">
+                            <PartyPanel campaign=campaign />
                         </div>
                     </TabPanel>
                 </Tabs>

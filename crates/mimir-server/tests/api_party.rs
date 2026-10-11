@@ -285,3 +285,47 @@ async fn a_shared_sheet_is_read_only_for_the_party() {
     let (status, _) = send(r, Method::GET, &a_sheet, &f.b_token, None).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
 }
+
+#[tokio::test]
+async fn a_new_note_is_about_the_module_on_the_display() {
+    let f = fixture().await;
+    let r = &f.router;
+    let path = format!("/characters/{}/notes", f.a);
+    let add = |title: &'static str| {
+        send(
+            r,
+            Method::POST,
+            &path,
+            &f.a_token,
+            Some(json!({ "title": title, "content": "" })),
+        )
+    };
+    // Nothing on the display: no module.
+    let (status, n) = add("Before").await;
+    assert_eq!(status, StatusCode::CREATED);
+    assert!(n["module_id"].is_null());
+
+    // A map of the module on the display: the note is about that module.
+    let (_, maps) = send(
+        r,
+        Method::GET,
+        &format!("/modules/{}/maps", f.module),
+        DM,
+        None,
+    )
+    .await;
+    let map = maps[0]["id"].as_str().unwrap();
+    let (status, _) = send(
+        r,
+        Method::PUT,
+        &format!("/campaigns/{}/display", f.campaign),
+        DM,
+        Some(json!({ "map_id": map, "blackout": false })),
+    )
+    .await;
+    assert!(status.is_success());
+    let (_, n) = add("During").await;
+    assert_eq!(n["module_id"], f.module.as_str());
+    let (_, module) = send(r, Method::GET, &format!("/modules/{}", f.module), DM, None).await;
+    assert_eq!(n["module_name"], module["name"]);
+}

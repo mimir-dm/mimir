@@ -6,17 +6,19 @@ use aurora_leptos::data::SectionLabel;
 use aurora_leptos::frame::{PageHeader, TabItem, TabPanel, Tabs};
 use leptos::prelude::*;
 use leptos_router::hooks::{use_params_map, use_query_map};
-use mimir_wire::{MapSummary, ModuleMonsterSummary, ModuleNpcSummary};
+use mimir_wire::{MapSummary, ModuleMonsterSummary, ModuleNpcSummary, PlayerNote};
 
 use crate::api;
+use crate::character::notes::NoteCard;
 use crate::components::{loaded, or_dash, DocumentBrowser, ListResource};
 
 /// The sections of the module page: (value, label).
-const SECTIONS: [(&str, &str); 4] = [
+const SECTIONS: [(&str, &str); 5] = [
     ("documents", "Documents"),
     ("npcs", "NPCs"),
     ("maps", "Maps"),
     ("dangers", "Dangers"),
+    ("notes", "Player notes"),
 ];
 
 /// The section of a `?section=` value; documents when absent or unknown.
@@ -40,6 +42,8 @@ pub fn ModulePage() -> impl IntoView {
         LocalResource::new(move || api::module_list(id.get(), "maps"));
     let monsters: ListResource<ModuleMonsterSummary> =
         LocalResource::new(move || api::module_list(id.get(), "monsters"));
+    let notes: ListResource<PlayerNote> =
+        LocalResource::new(move || api::module_list(id.get(), "notes"));
 
     let header = loaded(module, |m| {
         view! {
@@ -72,8 +76,24 @@ pub fn ModulePage() -> impl IntoView {
             <TabPanel value="npcs">{loaded(npcs, npc_view)}</TabPanel>
             <TabPanel value="maps">{loaded(maps, map_view)}</TabPanel>
             <TabPanel value="dangers">{loaded(monsters, danger_view)}</TabPanel>
+            <TabPanel value="notes">{loaded(notes, notes_view)}</TabPanel>
         </Tabs>
     }
+}
+
+/// The players' notes about the module (MIMIR-T-0718).
+fn notes_view(list: Vec<PlayerNote>) -> impl IntoView {
+    if list.is_empty() {
+        return view! { <Text size="sm" dimmed=true>"No player notes about this module yet."</Text> }
+            .into_any();
+    }
+    view! {
+        <SectionLabel label="Player notes" count=list.len() />
+        <ul class="mimir-notes__list" aria-label="Player notes">
+            {list.into_iter().map(|n| view! { <NoteCard note=n by=true /> }).collect_view()}
+        </ul>
+    }
+    .into_any()
 }
 
 fn npc_view(list: Vec<ModuleNpcSummary>) -> impl IntoView {
@@ -151,6 +171,7 @@ mod tests {
         assert_eq!(section_of(None), "documents");
         assert_eq!(section_of(Some("maps")), "maps");
         assert_eq!(section_of(Some("dangers")), "dangers");
+        assert_eq!(section_of(Some("notes")), "notes");
         assert_eq!(section_of(Some("nonsense")), "documents");
     }
 }

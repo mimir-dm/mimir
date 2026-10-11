@@ -42,7 +42,13 @@ pub fn parse_coins(texts: [&str; 5]) -> Option<Currency> {
 }
 
 #[component]
-pub fn InventoryPanel(sheet: CharacterSheet, on_changed: Callback<()>) -> impl IntoView {
+pub fn InventoryPanel(
+    sheet: CharacterSheet,
+    on_changed: Callback<()>,
+    /// A shared sheet seen by another player: no changes.
+    #[prop(optional)]
+    read_only: bool,
+) -> impl IntoView {
     let id = sheet.id.clone();
     let error = RwSignal::new(String::new());
     let fail = move |e| error.set(api::message(e));
@@ -149,12 +155,20 @@ pub fn InventoryPanel(sheet: CharacterSheet, on_changed: Callback<()>) -> impl I
 
     view! {
         <SectionLabel label="Coins" />
-        <div class="mimir-inv__coins">
-            {coins.iter().map(|(label, v)| view! {
-                <TextInput label=*label value=*v input_type="number" />
-            }).collect_view()}
-            <Button variant="light" on_click=Callback::new(save_coins)>"Save coins"</Button>
-        </div>
+        {if read_only {
+            view! {
+                <Text>{coin_fields(&sheet.currency).iter().map(|(l, v)| format!("{v} {l}")).collect::<Vec<_>>().join(" · ")}</Text>
+            }.into_any()
+        } else {
+            view! {
+                <div class="mimir-inv__coins">
+                    {coins.iter().map(|(label, v)| view! {
+                        <TextInput label=*label value=*v input_type="number" />
+                    }).collect_view()}
+                    <Button variant="light" on_click=Callback::new(save_coins.clone())>"Save coins"</Button>
+                </div>
+            }.into_any()
+        }}
         <Text size="sm" dimmed=true>{format!("Worth {:.2} gp in all.", stats::gold_value(&sheet))}</Text>
 
         <SectionLabel label="Inventory" count=items.len() />
@@ -172,6 +186,20 @@ pub fn InventoryPanel(sheet: CharacterSheet, on_changed: Callback<()>) -> impl I
                         let name = i.item_name.clone();
                         let label = name.clone();
                         let (fewer, more, gone) = (format!("One fewer {name}"), format!("One more {name}"), format!("Remove {name}"));
+                        if read_only {
+                            let flags = [(i.equipped, "equipped"), (i.attuned, "attuned")]
+                                .iter()
+                                .filter(|(on, _)| *on)
+                                .map(|(_, l)| *l)
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            return view! {
+                                <li class="mimir-inv__item" aria-label=label>
+                                    <div class="mimir-inv__name"><Text bold=true>{name}</Text></div>
+                                    <span class="mimir-sheet__num">{format!("×{q} {flags}")}</span>
+                                </li>
+                            }.into_any();
+                        }
                         view! {
                             <li class="mimir-inv__item" aria-label=label>
                                 <div class="mimir-inv__name">
@@ -189,12 +217,13 @@ pub fn InventoryPanel(sheet: CharacterSheet, on_changed: Callback<()>) -> impl I
                                 <Switch label="Attuned" checked=attune on_change=Callback::new(move |on: bool| change(d.clone(), json!({"attuned": on}))) />
                                 <ActionIcon title=gone on_click=Callback::new(move |_| remove(e.clone()))>"×"</ActionIcon>
                             </li>
-                        }
+                        }.into_any()
                     }).collect_view()}
                 </ul>
             }.into_any()
         }}
 
+        {(!read_only).then(|| view! {
         <SectionLabel label="Add an item" />
         <form class="mimir-sheet__add" on:submit=move |ev| {
             ev.prevent_default();
@@ -204,6 +233,7 @@ pub fn InventoryPanel(sheet: CharacterSheet, on_changed: Callback<()>) -> impl I
             <TextInput aria_label="Quantity" value=quantity input_type="number" name="qty" />
             <Button variant="light" button_type="submit">"Search"</Button>
         </form>
+        })}
         {move || {
             let list = results.get();
             (!list.is_empty()).then(|| {

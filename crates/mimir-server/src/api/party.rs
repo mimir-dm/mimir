@@ -7,8 +7,9 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use diesel::SqliteConnection;
+use mimir_core::dal::campaign::get_map;
 use mimir_core::models::campaign::PlayerNote;
-use mimir_core::services::{CharacterService, PartyService, ServiceError};
+use mimir_core::services::{CharacterService, ModuleService, PartyService, ServiceError};
 use mimir_wire as wire;
 
 use super::scope;
@@ -17,12 +18,18 @@ use crate::error::{ApiError, JsonBody};
 use crate::live::{Change, Hub};
 use crate::state::AppState;
 
-fn note(n: PlayerNote, character_name: String) -> wire::PlayerNote {
+fn note(conn: &mut SqliteConnection, n: PlayerNote, character_name: String) -> wire::PlayerNote {
+    let module_name = n
+        .module_id
+        .as_deref()
+        .and_then(|m| ModuleService::new(conn).get(m).ok().flatten())
+        .map(|m| m.name);
     wire::PlayerNote {
         id: n.id,
         character_id: n.character_id,
         character_name,
         module_id: n.module_id,
+        module_name,
         title: n.title,
         content: n.content,
         updated_at: n.updated_at,
@@ -55,17 +62,25 @@ pub async fn list(
     state
         .with_db(move |conn| {
             let name = name_of(conn, &id)?;
-            Ok(PartyService::new(conn)
-                .notes(&id)?
+            let notes = PartyService::new(conn).notes(&id)?;
+            Ok(notes
                 .into_iter()
-                .map(|n| note(n, name.clone()))
+                .map(|n| note(conn, n, name.clone()))
                 .collect())
         })
         .await
         .map(Json)
 }
 
-/// `POST /characters/{id}/notes`: the character's player.
+/// The module of the map on a campaign's display, if any.
+fn shown_module(conn: &mut SqliteConnection, live: &Hub, campaign_id: &str) -> Option<String> {
+    let map_id = live.display(campaign_id).map_id?;
+    get_map(conn, &map_id).ok()?.module_id
+}
+
+/// `POST /characters/{id}/notes`: the character's player. A note with no
+/// module is about the module whose map is on the display (the encounter
+/// the player is in).
 pub async fn add(
     State(state): State<AppState>,
     Extension(caller): Extension<Caller>,
@@ -76,15 +91,20 @@ pub async fn add(
     let live = state.live.clone();
     state
         .with_db(move |conn| {
+            let module = match (&body.module_id, &caller) {
+                (Some(m), _) => Some(m.clone()),
+                (None, Caller::Player(p)) => shown_module(conn, &live, &p.campaign_id),
+                (None, Caller::Dm) => None,
+            };
             let n = PartyService::new(conn).add_note(
                 &id,
-                body.module_id.as_deref(),
+                module.as_deref(),
                 &body.title,
                 &body.content,
             )?;
             let name = name_of(conn, &id)?;
             notify(&live, conn, &id);
-            Ok((StatusCode::CREATED, Json(note(n, name))))
+            Ok((StatusCode::CREATED, Json(note(conn, n, name))))
         })
         .await
 }
@@ -118,7 +138,7 @@ pub async fn patch(
             )?;
             let name = name_of(conn, &old.character_id)?;
             notify(&live, conn, &old.character_id);
-            Ok(note(n, name))
+            Ok(note(conn, n, name))
         })
         .await
         .map(Json)
@@ -148,10 +168,10 @@ pub async fn module_notes(
 ) -> Result<Json<Vec<wire::PlayerNote>>, ApiError> {
     state
         .with_db(move |conn| {
-            Ok(PartyService::new(conn)
-                .module_notes(&id)?
+            let notes = PartyService::new(conn).module_notes(&id)?;
+            Ok(notes
                 .into_iter()
-                .map(|(n, name)| note(n, name))
+                .map(|(n, name)| note(conn, n, name))
                 .collect())
         })
         .await

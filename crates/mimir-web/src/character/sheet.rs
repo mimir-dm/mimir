@@ -18,9 +18,33 @@ use serde_json::json;
 
 use super::inventory::InventoryPanel;
 use super::levelup::LevelUpDialog;
+use super::notes::NotesPanel;
 use super::stats::{self, signed, ABILITIES, SKILLS};
 use crate::api;
 use crate::live::Live;
+
+/// Who looks at a sheet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SheetAccess {
+    /// The DM: changes the sheet; reads the notes.
+    Dm,
+    /// The character's player: changes the sheet and writes the notes.
+    Owner,
+    /// Another player of the party (a shared sheet): reads only; no notes.
+    ReadOnly,
+}
+
+impl SheetAccess {
+    pub fn can_edit(self) -> bool {
+        self != SheetAccess::ReadOnly
+    }
+    pub fn shows_notes(self) -> bool {
+        self != SheetAccess::ReadOnly
+    }
+    pub fn writes_notes(self) -> bool {
+        self == SheetAccess::Owner
+    }
+}
 
 /// `/characters/:id` (DM).
 #[component]
@@ -32,7 +56,15 @@ pub fn CharacterPage() -> impl IntoView {
 
 /// The sheet of a character.
 #[component]
-pub fn CharacterSheetView(#[prop(into)] id: Signal<String>) -> impl IntoView {
+pub fn CharacterSheetView(
+    #[prop(into)] id: Signal<String>,
+    /// Who looks: the DM (default), the owner, or another player (a shared
+    /// sheet, read-only). The server enforces the same rules.
+    #[prop(optional)]
+    access: Option<SheetAccess>,
+) -> impl IntoView {
+    let access = access.unwrap_or(SheetAccess::Dm);
+    let editable = access.can_edit();
     let version = RwSignal::new(0u32);
     let sheet = LocalResource::new(move || {
         version.track();
@@ -83,13 +115,17 @@ pub fn CharacterSheetView(#[prop(into)] id: Signal<String>) -> impl IntoView {
                     tabs.push(TabItem::new("spells", "Spells"));
                 }
                 tabs.push(TabItem::new("details", "Details"));
+                if access.shows_notes() {
+                    tabs.push(TabItem::new("notes", "Notes"));
+                }
                 let sub = format!(
                     "Level {} · {}{}",
                     stats::total_level(&s),
                     s.race_name.clone().map(|r| format!("{r} · ")).unwrap_or_default(),
                     stats::class_line(&s)
                 );
-                let can_level = stats::total_level(&s) < 20 && !s.is_npc;
+                let can_level = editable && stats::total_level(&s) < 20 && !s.is_npc;
+                let sheet_id = s.id.clone();
                 let (s1, s2, s3, s4, s5) = (s.clone(), s.clone(), s.clone(), s.clone(), s.clone());
                 let s5 = StoredValue::new(s5);
                 view! {
@@ -112,10 +148,13 @@ pub fn CharacterSheetView(#[prop(into)] id: Signal<String>) -> impl IntoView {
                         <Tabs tabs=tabs value=tab label="Character sections">
                             <TabPanel value="character">{stats_tab(s1.clone())}</TabPanel>
                             <TabPanel value="equipment">
-                                <InventoryPanel sheet=s2.clone() on_changed=reload />
+                                <InventoryPanel sheet=s2.clone() on_changed=reload read_only=!editable />
                             </TabPanel>
-                            <TabPanel value="spells">{spells_tab(s3.clone(), reload)}</TabPanel>
-                            <TabPanel value="details">{details_tab(s4.clone(), reload)}</TabPanel>
+                            <TabPanel value="spells">{spells_tab(s3.clone(), reload, editable)}</TabPanel>
+                            <TabPanel value="details">{details_tab(s4.clone(), reload, editable)}</TabPanel>
+                            <TabPanel value="notes">
+                                <NotesPanel character_id=sheet_id.clone() editable=access.writes_notes() />
+                            </TabPanel>
                         </Tabs>
                     </div>
                 }
@@ -225,7 +264,7 @@ fn stats_tab(s: CharacterSheet) -> impl IntoView {
     }
 }
 
-fn spells_tab(s: CharacterSheet, reload: Callback<()>) -> impl IntoView {
+fn spells_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl IntoView {
     let casting = stats::casting(&s);
     let slots = stats::spell_slots(&s);
     let error = RwSignal::new(String::new());
@@ -324,6 +363,9 @@ fn spells_tab(s: CharacterSheet, reload: Callback<()>) -> impl IntoView {
                         view! {
                             <li>
                                 <span>{format!("{} ({})", k.spell_name, k.source_class)}</span>
+                                {if !editable {
+                                    view! { <span class="mimir-sheet__num">{if k.prepared { "prepared" } else { "" }}</span> }.into_any()
+                                } else { view! {
                                 <span class="mimir-sheet__row-actions">
                                     <Switch label="Prepared" checked=prepared on_change=Callback::new(move |on: bool| {
                                         let path = path.clone();
@@ -343,13 +385,14 @@ fn spells_tab(s: CharacterSheet, reload: Callback<()>) -> impl IntoView {
                                         });
                                     })>"×"</ActionIcon>
                                 </span>
+                                }.into_any() }}
                             </li>
                         }
                     }).collect_view()}
                 </ul>
             }.into_any()
         }}
-        {(!class0.is_empty()).then(|| view! {
+        {(editable && !class0.is_empty()).then(|| view! {
             <div class="mimir-sheet__add">
                 {move || {
                     let opts: Vec<(String, String)> = choices
@@ -381,7 +424,9 @@ fn ordinal(n: i32) -> String {
     format!("{n}{suffix}")
 }
 
-fn details_tab(s: CharacterSheet, reload: Callback<()>) -> impl IntoView {
+fn details_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl IntoView {
+    let shared = RwSignal::new(s.shared);
+    let share_path = format!("/characters/{}/sharing", s.id);
     let fields: [(&'static str, &'static str, Option<String>); 4] = [
         ("Traits", "traits", s.traits.clone()),
         ("Ideals", "ideals", s.ideals.clone()),
@@ -444,13 +489,39 @@ fn details_tab(s: CharacterSheet, reload: Callback<()>) -> impl IntoView {
     view! {
         <div class="mimir-sheet__columns">
             <section>
+                {(editable && !s.is_npc).then(|| {
+                    let share_path = share_path.clone();
+                    view! {
+                        <Switch
+                            label="Share this sheet with the party (read-only)"
+                            checked=shared
+                            on_change=Callback::new(move |on: bool| {
+                                let path = share_path.clone();
+                                spawn_local(async move {
+                                    if let Err(e) = api::send::<_, mimir_wire::Sharing>("PUT", &path, &json!({ "shared": on })).await {
+                                        error.set(api::message(e));
+                                    }
+                                });
+                            })
+                        />
+                    }
+                })}
                 <SectionLabel label="Personality" />
                 <Stack gap="sm">
-                    {values.iter().map(|(label, _, v)| view! { <Textarea label=*label value=*v /> }).collect_view()}
+                    {values.clone().into_iter().map(|(label, _, v)| {
+                        if editable {
+                            view! { <Textarea label=label value=v /> }.into_any()
+                        } else {
+                            let text = v.get_untracked();
+                            view! { <div><Text size="sm" bold=true>{label}</Text><Text size="sm">{if text.is_empty() { "—".to_string() } else { text }}</Text></div> }.into_any()
+                        }
+                    }).collect_view()}
+                    {editable.then(|| view! {
                     <Group>
-                        <Button on_click=Callback::new(save)>"Save"</Button>
+                        <Button on_click=Callback::new(save.clone())>"Save"</Button>
                         {move || saved.get().then(|| view! { <Text size="sm" dimmed=true>"Saved."</Text> })}
                     </Group>
+                    })}
                     {move || {
                         let e = error.get();
                         (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
@@ -491,7 +562,18 @@ fn details_tab(s: CharacterSheet, reload: Callback<()>) -> impl IntoView {
 
 #[cfg(test)]
 mod tests {
-    use super::ordinal;
+    use super::{ordinal, SheetAccess};
+
+    #[test]
+    fn access_levels() {
+        assert!(
+            SheetAccess::Dm.can_edit()
+                && SheetAccess::Dm.shows_notes()
+                && !SheetAccess::Dm.writes_notes()
+        );
+        assert!(SheetAccess::Owner.can_edit() && SheetAccess::Owner.writes_notes());
+        assert!(!SheetAccess::ReadOnly.can_edit() && !SheetAccess::ReadOnly.shows_notes());
+    }
 
     #[test]
     fn ordinals() {

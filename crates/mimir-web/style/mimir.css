@@ -499,3 +499,24 @@
 .mimir-player__tabs .cl-tabs__panel { flex: 1 1 auto; min-height: 0; }
 .mimir-player__tabs .mimir-player__display { position: relative; height: calc(100vh - 120px); }
 .mimir-player__sheet { overflow: auto; height: calc(100vh - 130px); padding-bottom: var(--space-lg); }
+
+/* Player notes and the party (MIMIR-T-0718). */
+.mimir-notes { display: flex; flex-direction: column; gap: var(--space-md); }
+.mimir-notes__editor { display: flex; flex-direction: column; gap: var(--space-sm); max-width: 48rem; }
+.mimir-notes__editor textarea { min-height: 10rem; }
+.mimir-notes__list { list-style: none; margin: 0; padding: 0; }
+.mimir-notes__note { padding: var(--space-sm) 0 var(--space-md); border-bottom: 1px solid var(--border-fainter); }
+.mimir-notes__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-md); }
+.mimir-notes__head .mimir-sheet__row-actions { margin-left: auto; }
+.mimir-party { display: flex; flex-direction: column; gap: var(--space-md); align-items: stretch; }
+.mimir-party > button { align-self: flex-start; }
+.mimir-party__list { list-style: none; margin: 0; padding: 0; }
+.mimir-party__member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-party__member > div { flex: 1 1 200px; display: flex; flex-direction: column; }

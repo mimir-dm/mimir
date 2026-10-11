@@ -125,7 +125,7 @@ pub fn decide(
             Change::Character { character_id, .. } => ServerMsg::CharacterChanged { character_id },
             Change::SignedOut { .. } => return Vec::new(),
         })],
-        Viewer::Player { character_id, .. } => match change {
+        Viewer::Player { .. } => match change {
             Change::Map { map_id, .. } => shown_view(display)
                 .filter(|shown| shown == map_id)
                 .map(|m| vec![Action::SendPlayerView(m.to_string())])
@@ -140,15 +140,16 @@ pub fn decide(
                 Some(m) if display.show_initiative => vec![Action::SendPlayerView(m.to_string())],
                 _ => Vec::new(),
             },
+            // Any character of the campaign: their own sheet, and the party
+            // list and shared sheets (the ids are not secret; a read of a
+            // sheet that is not shared is refused).
             Change::Character {
                 character_id: changed,
                 ..
-            } if character_id.as_ref() == Some(changed) => {
-                vec![Action::Send(ServerMsg::CharacterChanged {
-                    character_id: changed.clone(),
-                })]
-            }
-            Change::Character { .. } | Change::SignedOut { .. } => Vec::new(),
+            } => vec![Action::Send(ServerMsg::CharacterChanged {
+                character_id: changed.clone(),
+            })],
+            Change::SignedOut { .. } => Vec::new(),
         },
     }
 }
@@ -493,7 +494,7 @@ mod tests {
     }
 
     #[test]
-    fn a_player_hears_of_their_own_character_only() {
+    fn a_player_hears_of_the_characters_of_their_campaign() {
         let p = player(Some("pc1"));
         let d = display(None, false);
         let change = |id: &str| Change::Character {
@@ -506,8 +507,11 @@ mod tests {
                 character_id: "pc1".into()
             })]
         );
-        assert!(decide(&p, Some("c1"), &d, &change("pc2")).is_empty());
+        // Another party member: the party list and a shared sheet reload.
+        assert_eq!(decide(&p, Some("c1"), &d, &change("pc2")).len(), 1);
         assert_eq!(decide(&Viewer::Dm, Some("c1"), &d, &change("pc2")).len(), 1);
+        // Not another campaign.
+        assert!(decide(&p, Some("c2"), &d, &change("pc2")).is_empty());
     }
 
     #[test]
