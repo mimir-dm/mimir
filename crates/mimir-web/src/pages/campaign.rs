@@ -5,12 +5,19 @@
 use aurora_leptos::components::*;
 use aurora_leptos::frame::{TabItem, Tabs};
 use leptos::prelude::*;
+use leptos::task::spawn_local;
 use leptos_router::components::Outlet;
+use leptos_router::hooks::use_navigate;
 use leptos_router::hooks::{use_location, use_params_map};
-use mimir_wire::{CharacterSummary, ModuleSummary};
+use mimir_wire::{CharacterSummary, Direction, ModuleSummary, Move};
 
 use crate::api;
-use crate::components::{class_label, loaded, or_dash, DocumentBrowser, ListResource};
+use crate::authoring::campaigns::CampaignActions;
+use crate::authoring::documents::DocumentWorkspace;
+use crate::authoring::documents::OrderButtons;
+use crate::authoring::maps::MapsPanel;
+use crate::authoring::modules::ModuleDialog;
+use crate::components::{class_label, loaded, or_dash, ListResource};
 
 /// The tab of a dashboard path.
 pub fn tab_of(path: &str) -> &'static str {
@@ -31,7 +38,11 @@ fn campaign_id() -> Memo<String> {
 #[component]
 pub fn CampaignDashboard() -> impl IntoView {
     let id = campaign_id();
-    let campaign = LocalResource::new(move || api::campaign(id.get()));
+    let version = RwSignal::new(0u32);
+    let campaign = LocalResource::new(move || {
+        version.track();
+        api::campaign(id.get())
+    });
     let location = use_location();
     let tab = RwSignal::new(tab_of(&location.pathname.get_untracked()).to_string());
     Effect::new(move |_| tab.set(tab_of(&location.pathname.get()).to_string()));
@@ -57,7 +68,15 @@ pub fn CampaignDashboard() -> impl IntoView {
                 view! {
                     <div class="mimir-dash">
                         <header class="mimir-dash__header">
-                            <h1 class="mimir-dash__title">{name}</h1>
+                            <div class="mimir-dash__titlebar">
+                                <h1 class="mimir-dash__title">{name}</h1>
+                                {move || match campaign.get() {
+                                    Some(Ok(c)) => Some(view! {
+                                        <CampaignActions campaign=c on_changed=Callback::new(move |_| version.update(|v| *v += 1)) />
+                                    }),
+                                    _ => None,
+                                }}
+                            </div>
                             <Tabs tabs=tabs() value=tab label="Campaign sections" />
                         </header>
                         <Outlet />
@@ -73,39 +92,69 @@ pub fn CampaignDashboard() -> impl IntoView {
 #[component]
 pub fn CampaignTab() -> impl IntoView {
     let id = campaign_id();
-    let docs: ListResource<_> =
-        LocalResource::new(move || api::campaign_list(id.get(), "documents"));
-    view! { <DocumentBrowser docs=docs /> }
+    view! {
+        <DocumentWorkspace base=Signal::derive(move || format!("/campaigns/{}", id.get())) />
+        <section class="mimir-dash__maps" aria-label="Campaign maps">
+            <MapsPanel campaign_id=id />
+        </section>
+    }
 }
 
 #[component]
 pub fn ModulesTab() -> impl IntoView {
     let id = campaign_id();
-    let modules: ListResource<ModuleSummary> =
-        LocalResource::new(move || api::campaign_list(id.get(), "modules"));
-    let table = loaded(modules, |list: Vec<ModuleSummary>| {
+    let version = RwSignal::new(0u32);
+    let modules: ListResource<ModuleSummary> = LocalResource::new(move || {
+        version.track();
+        api::campaign_list(id.get(), "modules")
+    });
+    let creating = RwSignal::new(false);
+    let error = RwSignal::new(String::new());
+    let navigate = use_navigate();
+    let move_module = move |module: String, direction: Direction| {
+        spawn_local(async move {
+            let path = format!("/modules/{module}/move");
+            match api::send::<_, Vec<ModuleSummary>>("POST", &path, &Move { direction }).await {
+                Ok(_) => version.update(|v| *v += 1),
+                Err(e) => error.set(api::message(e)),
+            }
+        });
+    };
+    let table = loaded(modules, move |list: Vec<ModuleSummary>| {
+        let n = list.len();
         view! {
-            <Table label="Modules" widths=vec!["4rem".into(), "30%".into(), "auto".into()]>
+            <Table label="Modules" widths=vec!["4rem".into(), "30%".into(), "auto".into(), "6rem".into()]>
                 <thead>
                     <tr>
                         <th>"#"</th>
                         <th>"Module"</th>
                         <th>"Description"</th>
+                        <th>"Order"</th>
                     </tr>
                 </thead>
                 <tbody>
                     {if list.is_empty() {
-                        view! { <TableEmpty message="No modules yet." colspan=3 /> }.into_any()
+                        view! { <TableEmpty message="No modules yet." colspan=4 /> }.into_any()
                     } else {
                         list.into_iter()
-                            .map(|m| {
+                            .enumerate()
+                            .map(|(i, m)| {
+                                let mid = m.id.clone();
                                 view! {
                                     <tr>
                                         <td>{m.module_number}</td>
                                         <td>
-                                            <a href=format!("/modules/{}", m.id)>{m.name}</a>
+                                            <a href=format!("/modules/{}", m.id)>{m.name.clone()}</a>
                                         </td>
                                         <td>{or_dash(&m.description)}</td>
+                                        <td>
+                                            <OrderButtons
+                                                name=m.name
+                                                first=i == 0
+                                                last=i + 1 == n
+                                                on_move=Callback::new(move |d| move_module(mid.clone(), d))
+                                            />
+                                        </td>
                                     </tr>
                                 }
                             })
@@ -116,7 +165,26 @@ pub fn ModulesTab() -> impl IntoView {
             </Table>
         }
     });
-    view! { {table} }
+    view! {
+        <Group>
+            <Button on_click=Callback::new(move |_| creating.set(true))>"New module"</Button>
+        </Group>
+        {move || {
+            let e = error.get();
+            (!e.is_empty()).then(|| view! { <Alert color=aurora_leptos::tokens::token::BAD>{e}</Alert> })
+        }}
+        {table}
+        {move || view! {
+            <ModuleDialog
+                open=creating
+                campaign_id=id.get()
+                on_saved=Callback::new({
+                    let navigate = navigate.clone();
+                    move |m: ModuleSummary| navigate(&format!("/modules/{}", m.id), Default::default())
+                })
+            />
+        }}
+    }
 }
 
 fn characters_table(list: Vec<CharacterSummary>, npc: bool) -> impl IntoView {

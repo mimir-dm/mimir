@@ -6,11 +6,15 @@ use aurora_leptos::data::SectionLabel;
 use aurora_leptos::frame::{PageHeader, TabItem, TabPanel, Tabs};
 use leptos::prelude::*;
 use leptos_router::hooks::{use_params_map, use_query_map};
-use mimir_wire::{MapSummary, ModuleMonsterSummary, ModuleNpcSummary, PlayerNote};
+use mimir_wire::{ModuleNpcSummary, PlayerNote};
 
 use crate::api;
+use crate::authoring::documents::DocumentWorkspace;
+use crate::authoring::maps::MapsPanel;
+use crate::authoring::modules::ModuleActions;
+use crate::authoring::monsters::MonstersPanel;
 use crate::character::notes::NoteCard;
-use crate::components::{loaded, or_dash, DocumentBrowser, ListResource};
+use crate::components::{loaded, or_dash, ListResource};
 
 /// The sections of the module page: (value, label).
 const SECTIONS: [(&str, &str); 5] = [
@@ -34,24 +38,31 @@ pub fn section_of(value: Option<&str>) -> &'static str {
 pub fn ModulePage() -> impl IntoView {
     let params = use_params_map();
     let id = Memo::new(move |_| params.get().get("id").unwrap_or_default());
-    let module = LocalResource::new(move || api::module(id.get()));
-    let docs: ListResource<_> = LocalResource::new(move || api::module_list(id.get(), "documents"));
+    let version = RwSignal::new(0u32);
+    let module = LocalResource::new(move || {
+        version.track();
+        api::module(id.get())
+    });
+    let campaign_id = Signal::derive(move || match module.get() {
+        Some(Ok(m)) => m.campaign_id,
+        _ => String::new(),
+    });
     let npcs: ListResource<ModuleNpcSummary> =
         LocalResource::new(move || api::module_list(id.get(), "npcs"));
-    let maps: ListResource<MapSummary> =
-        LocalResource::new(move || api::module_list(id.get(), "maps"));
-    let monsters: ListResource<ModuleMonsterSummary> =
-        LocalResource::new(move || api::module_list(id.get(), "monsters"));
     let notes: ListResource<PlayerNote> =
         LocalResource::new(move || api::module_list(id.get(), "notes"));
 
-    let header = loaded(module, |m| {
+    let header = loaded(module, move |m| {
+        let actions = m.clone();
         view! {
             <PageHeader
                 title=m.name
                 sub=format!("Module {}", m.module_number)
                 back_href=format!("/campaigns/{}/modules", m.campaign_id)
                 back_label="Modules"
+                actions=Box::new(move || view! {
+                    <ModuleActions module=actions.clone() on_changed=Callback::new(move |_| version.update(|v| *v += 1)) />
+                }.into_any())
             />
         }
     });
@@ -71,11 +82,15 @@ pub fn ModulePage() -> impl IntoView {
         {header}
         <Tabs tabs=tabs value=section label="Module sections">
             <TabPanel value="documents">
-                <DocumentBrowser docs=docs />
+                <DocumentWorkspace base=Signal::derive(move || format!("/modules/{}", id.get())) />
             </TabPanel>
             <TabPanel value="npcs">{loaded(npcs, npc_view)}</TabPanel>
-            <TabPanel value="maps">{loaded(maps, map_view)}</TabPanel>
-            <TabPanel value="dangers">{loaded(monsters, danger_view)}</TabPanel>
+            <TabPanel value="maps">
+                {move || (!campaign_id.get().is_empty()).then(|| view! {
+                    <MapsPanel campaign_id=campaign_id module_id=Signal::derive(move || id.get()) />
+                })}
+            </TabPanel>
+            <TabPanel value="dangers"><MonstersPanel module_id=id /></TabPanel>
             <TabPanel value="notes">{loaded(notes, notes_view)}</TabPanel>
         </Tabs>
     }
@@ -108,53 +123,6 @@ fn npc_view(list: Vec<ModuleNpcSummary>) -> impl IntoView {
                 } else {
                     list.into_iter().map(|n| view! {
                         <tr><td>{n.name}</td><td>{or_dash(&n.role)}</td><td>{or_dash(&n.description)}</td></tr>
-                    }).collect_view().into_any()
-                }}
-            </tbody>
-        </Table>
-    }
-}
-
-fn map_view(list: Vec<MapSummary>) -> impl IntoView {
-    let n = list.len();
-    view! {
-        <SectionLabel label="Maps" count=n />
-        <Table label="Maps" min_width="480px">
-            <thead><tr><th>"Map"</th><th>"Lighting"</th><th>"Fog of war"</th></tr></thead>
-            <tbody>
-                {if list.is_empty() {
-                    view! { <TableEmpty message="No maps in this module." colspan=3 /> }.into_any()
-                } else {
-                    list.into_iter().map(|m| view! {
-                        <tr>
-                            <td><a href=format!("/maps/{}", m.id)>{m.name}</a></td>
-                            <td>{m.lighting_mode}</td>
-                            <td>{if m.fog_enabled { "On" } else { "Off" }}</td>
-                        </tr>
-                    }).collect_view().into_any()
-                }}
-            </tbody>
-        </Table>
-    }
-}
-
-fn danger_view(list: Vec<ModuleMonsterSummary>) -> impl IntoView {
-    let n = list.len();
-    view! {
-        <SectionLabel label="Dangers" count=n />
-        <Table label="Dangers" min_width="480px">
-            <thead><tr><th>"Monster"</th><th>"Count"</th><th>"Source"</th></tr></thead>
-            <tbody>
-                {if list.is_empty() {
-                    view! { <TableEmpty message="No monsters in this module." colspan=3 /> }.into_any()
-                } else {
-                    list.into_iter().map(|m| {
-                        let source = if m.homebrew_monster_id.is_some() {
-                            "Homebrew".to_string()
-                        } else {
-                            or_dash(&m.monster_source)
-                        };
-                        view! { <tr><td>{m.name}</td><td>{m.quantity}</td><td>{source}</td></tr> }
                     }).collect_view().into_any()
                 }}
             </tbody>

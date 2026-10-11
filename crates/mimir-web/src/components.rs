@@ -3,10 +3,9 @@
 use aurora_leptos::components::*;
 use aurora_leptos::tokens::ApiError;
 use leptos::prelude::*;
-use leptos_router::hooks::use_query_map;
-use mimir_wire::{ClassLevel, DocumentSummary};
+use mimir_wire::ClassLevel;
 
-use crate::{api, markdown};
+use crate::markdown;
 
 /// A list read from the API.
 pub type ListResource<T> = LocalResource<Result<Vec<T>, ApiError>>;
@@ -52,78 +51,6 @@ pub fn or_dash(text: &Option<String>) -> String {
 #[component]
 pub fn Markdown(#[prop(into)] source: String) -> impl IntoView {
     view! { <div class="mimir-prose" inner_html=markdown::to_html(&source)></div> }
-}
-
-/// A list of documents and the selected one, rendered. The selection is
-/// in the address (`?doc=<id>`), so a link opens a document; with none,
-/// the first document shows.
-#[component]
-pub fn DocumentBrowser(docs: ListResource<DocumentSummary>) -> impl IntoView {
-    let query = use_query_map();
-    let selected = Memo::new(move |_| {
-        let wanted = query.get().get("doc");
-        let list = match docs.get() {
-            Some(Ok(list)) => list,
-            _ => return None,
-        };
-        wanted
-            .filter(|id| list.iter().any(|d| &d.id == id))
-            .or_else(|| list.first().map(|d| d.id.clone()))
-    });
-    let document = LocalResource::new(move || {
-        let id = selected.get();
-        async move {
-            match id {
-                Some(id) => api::document(id).await.map(Some),
-                None => Ok(None),
-            }
-        }
-    });
-
-    let list = loaded(docs, move |list: Vec<DocumentSummary>| {
-        if list.is_empty() {
-            return view! { <Empty message="No documents yet." /> }.into_any();
-        }
-        view! {
-            <nav class="mimir-doclist" aria-label="Documents">
-                {list
-                    .into_iter()
-                    .map(|d| {
-                        let id = d.id.clone();
-                        let active = move || selected.get().as_deref() == Some(id.as_str());
-                        view! {
-                            <a
-                                class="cl-navlink"
-                                class:cl-navlink--active=active.clone()
-                                aria-current=move || active().then_some("page")
-                                href=format!("?doc={}", d.id)
-                            >
-                                <span class="cl-navlink__label">{d.title}</span>
-                            </a>
-                        }
-                    })
-                    .collect_view()}
-            </nav>
-        }
-        .into_any()
-    });
-    let viewer = loaded(document, |doc| match doc {
-        Some(doc) => view! {
-            <article class="mimir-doc">
-                <h2 class="mimir-doc__title">{doc.title}</h2>
-                <Markdown source=doc.content />
-            </article>
-        }
-        .into_any(),
-        None => ().into_any(),
-    });
-
-    view! {
-        <div class="mimir-split">
-            <div class="mimir-split__side">{list}</div>
-            <div class="mimir-split__main">{viewer}</div>
-        </div>
-    }
 }
 
 #[cfg(test)]

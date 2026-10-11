@@ -103,6 +103,28 @@ pub async fn send<B: serde::Serialize, T: DeserializeOwned>(
     Err(decode_error(status, &text))
 }
 
+/// `POST` a form (a file upload) to a path under `/api/v1`. The browser
+/// sets the multipart content type.
+pub async fn upload<T: DeserializeOwned>(
+    path: &str,
+    form: &web_sys::FormData,
+) -> Result<T, ApiError> {
+    let url = format!("/api/v1{path}");
+    let req = with_token(Request::post(&url), auth::stored_token())
+        .body(wasm_bindgen::JsValue::from(form.clone()))
+        .map_err(|e| ApiError::Unknown(e.to_string()))?;
+    let resp = req.send().await.map_err(|_| ApiError::Network)?;
+    let status = resp.status();
+    if resp.ok() {
+        return resp
+            .json::<T>()
+            .await
+            .map_err(|e| ApiError::Unknown(format!("unexpected response: {e}")));
+    }
+    let text = resp.text().await.unwrap_or_default();
+    Err(decode_error(status, &text))
+}
+
 /// `DELETE` a path under `/api/v1`.
 pub async fn delete(path: &str) -> Result<(), ApiError> {
     let url = format!("/api/v1{path}");

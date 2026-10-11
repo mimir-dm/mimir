@@ -344,3 +344,51 @@ for (const theme of themes) {
     })
   }
 }
+
+// Authoring (MIMIR-T-0720): the new campaign dialog, a document in the
+// editor, the map upload dialog, a module's monsters with a search.
+for (const theme of themes) {
+  test(`campaign-new desktop ${theme}`, async ({ page }) => {
+    await signIn(page, theme)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'New campaign' }).click()
+    await page.getByRole('dialog').getByLabel('Name').fill('Storm King')
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/campaign-new--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+  for (const size of sizes) {
+    test(`document-edit ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const campaign = await campaignId(page)
+      await signIn(page, theme)
+      await page.goto(`/campaigns/${campaign}`)
+      await page.getByRole('button', { name: 'Edit', exact: true }).click()
+      await expect(page.getByRole('textbox', { name: 'Document' })).toBeVisible()
+      await page.mouse.move(0, 0)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/document-edit--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+  test(`map-upload desktop ${theme}`, async ({ page }) => {
+    const campaign = await campaignId(page)
+    const module = await moduleId(page, campaign)
+    await signIn(page, theme)
+    await page.goto(`/modules/${module}?section=maps`)
+    await page.getByRole('button', { name: 'Upload a map' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/map-upload--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+  test(`module-monsters-search desktop ${theme}`, async ({ page }) => {
+    const campaign = await campaignId(page)
+    const module = await moduleId(page, campaign)
+    await signIn(page, theme)
+    await page.goto(`/modules/${module}?section=dangers`)
+    await page.getByLabel('Monster name').fill('goblin')
+    await page.getByRole('button', { name: 'Search' }).click()
+    await expect(page.getByRole('list', { name: 'Monsters found' })).toBeVisible()
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/module-monsters-search--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+}

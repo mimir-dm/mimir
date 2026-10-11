@@ -2,8 +2,8 @@ import { test as base, expect, type Page } from '@playwright/test'
 
 /**
  * `test` with an automatic check: no page error and no console error, but
- * the browser's own line for a 401 or 404 answer (a refused token, an
- * unknown campaign: the specs expect those).
+ * the browser's own line for a 401, 404 or 422 answer (a refused token, an
+ * unknown campaign, a refused upload: the specs expect those).
  */
 export const test = base.extend<{ consoleErrors: string[] }>({
   consoleErrors: [
@@ -14,7 +14,7 @@ export const test = base.extend<{ consoleErrors: string[] }>({
         if (m.type() === 'error') errors.push(m.text())
       })
       await use(errors)
-      expect(errors.filter((e) => !/status of (401|404)/.test(e))).toEqual([])
+      expect(errors.filter((e) => !/status of (401|404|422)/.test(e))).toEqual([])
     },
     { auto: true },
   ],

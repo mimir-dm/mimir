@@ -569,3 +569,38 @@
   margin: var(--space-xs) 0;
 }
 .mimir-editor__body .mimir-editor__comment.ProseMirror-selectednode { outline: 2px solid var(--border); }
+
+/* Authoring (MIMIR-T-0720). */
+.mimir-dash__titlebar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-lg); }
+.mimir-dash__maps { margin-top: var(--space-xl); }
+.mimir-split__side { display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-doclist__row { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-doclist__row .cl-navlink { flex: 1 1 auto; min-width: 0; }
+.mimir-doc__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+.mimir-doc__head .mimir-doc__title { margin: 0; }
+.mimir-doc__head .cl-field { flex: 1 1 260px; }
+.mimir-doc__save { font-size: 0.8125rem; color: var(--fg-3, var(--fg-2)); }
+.mimir-doc__save--bad { color: var(--bad-fg); }
+.mimir-order { display: inline-flex; gap: 2px; }
+.mimir-order__btn {
+  font: inherit;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.mimir-order__btn:hover:not(:disabled) { background: var(--border-fainter); }
+.mimir-order__btn:disabled { opacity: 0.3; cursor: default; }
+.mimir-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-xs); }
+.mimir-file { display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.875rem; }
+.mimir-maps { display: flex; flex-direction: column; gap: var(--space-sm); }

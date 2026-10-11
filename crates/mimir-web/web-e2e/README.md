@@ -31,6 +31,8 @@ diff images to `<after>/diff`.
   player display, combat.
 - `specs/players.spec.ts`, `characters.spec.ts`, `party.spec.ts`: player
   links, character sheets, player notes and party sharing.
+- `specs/authoring.spec.ts`: campaigns, documents (autosave), modules,
+  module monsters, map uploads.
 - `specs/editor.spec.ts`: the rich editor. The fixture documents keep their
   structure and words through it; the toolbar; a numbered list continues.
 - `specs/capture.spec.ts`: the screens to capture.

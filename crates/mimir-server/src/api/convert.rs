@@ -95,9 +95,11 @@ pub fn module_monster(
     m: core::ModuleMonster,
     homebrew_name: Option<String>,
 ) -> wire::ModuleMonsterSummary {
+    // An empty name shown is none (a cleared field).
     let name = m
         .display_name
         .clone()
+        .filter(|n| !n.trim().is_empty())
         .or_else(|| m.monster_name.clone())
         .or(homebrew_name)
         .unwrap_or_else(|| "Unnamed monster".to_string());

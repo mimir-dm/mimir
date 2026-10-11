@@ -50,6 +50,11 @@ web-sys = { version = "0.3", features = [
     "History",
     "Navigator",
     "Clipboard",
+    # Uploads: maps, markdown files (MIMIR-T-0720).
+    "FormData",
+    "File",
+    "FileList",
+    "HtmlInputElement",
 ] }
 js-sys = "0.3"
 # QR codes of player links (MIMIR-T-0716), drawn as SVG.
