@@ -33,6 +33,29 @@ pub enum ModuleType {
 }
 
 impl ModuleType {
+    /// The key of each type (its `template_key`), in menu order.
+    pub const KEYS: [&'static str; 6] = [
+        "general",
+        "mystery",
+        "dungeon",
+        "heist",
+        "horror",
+        "political",
+    ];
+
+    /// The type of a key; `None` for an unknown key.
+    pub fn parse(key: &str) -> Option<Self> {
+        Some(match key {
+            "general" => ModuleType::General,
+            "mystery" => ModuleType::Mystery,
+            "dungeon" => ModuleType::Dungeon,
+            "heist" => ModuleType::Heist,
+            "horror" => ModuleType::Horror,
+            "political" => ModuleType::Political,
+            _ => return None,
+        })
+    }
+
     /// Get the template key for this module type.
     pub fn template_key(&self) -> &'static str {
         match self {
@@ -66,14 +89,7 @@ impl std::fmt::Display for ModuleType {
 
 impl From<Option<&str>> for ModuleType {
     fn from(s: Option<&str>) -> Self {
-        match s {
-            Some("mystery") => ModuleType::Mystery,
-            Some("dungeon") => ModuleType::Dungeon,
-            Some("heist") => ModuleType::Heist,
-            Some("horror") => ModuleType::Horror,
-            Some("political") => ModuleType::Political,
-            _ => ModuleType::General,
-        }
+        s.and_then(ModuleType::parse).unwrap_or_default()
     }
 }
 
@@ -796,6 +812,10 @@ mod tests {
         assert_eq!(ModuleType::from(Some("general")), ModuleType::General);
         assert_eq!(ModuleType::from(Some("unknown")), ModuleType::General);
         assert_eq!(ModuleType::from(None), ModuleType::General);
+        for key in ModuleType::KEYS {
+            assert_eq!(ModuleType::parse(key).map(|t| t.template_key()), Some(key));
+        }
+        assert_eq!(ModuleType::parse("adventure"), None);
     }
 
     #[test]

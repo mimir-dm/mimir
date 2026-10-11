@@ -283,16 +283,13 @@ pub async fn move_document(
 
 /// The module type of a key; unknown keys are refused.
 fn module_type(key: Option<&str>) -> Result<ModuleType, ApiError> {
-    Ok(match key.unwrap_or("general") {
-        "general" => ModuleType::General,
-        "mystery" => ModuleType::Mystery,
-        "dungeon" => ModuleType::Dungeon,
-        "heist" => ModuleType::Heist,
-        "horror" => ModuleType::Horror,
-        "political" => ModuleType::Political,
-        other => {
-            return Err(ServiceError::validation(format!("unknown module type {other:?}")).into())
-        }
+    let key = key.unwrap_or("general");
+    ModuleType::parse(key).ok_or_else(|| {
+        ServiceError::validation(format!(
+            "unknown module type {key:?}: use one of {}",
+            ModuleType::KEYS.join(", ")
+        ))
+        .into()
     })
 }
 
