@@ -23,6 +23,8 @@ use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab
 use crate::pages::characters::CharactersPage;
 use crate::pages::player::PlayerPage;
 use crate::pages::{home::Home, module::ModulePage, not_found::NotFound, sign_in::SignIn};
+use crate::reference::detail::{DetailDrawer, Reference};
+use crate::reference::ReferencePage;
 
 /// Where the app is before the shell.
 #[derive(Clone)]
@@ -166,7 +168,11 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
             .into_any();
         }
         let version = version.clone();
+        // The detail drawer of catalog entries (MIMIR-T-0723), for every
+        // page of the shell.
+        Reference::provide();
         view! {
+            <DetailDrawer />
             <AppShell
                 brand=std::sync::Arc::new(|| view! { <span class="mimir-brand">"Mimir"</span> }.into_any())
                 header=Box::new(move || {
@@ -198,6 +204,7 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                     <Route path=path!("/modules/:id") view=ModulePage />
                     <Route path=path!("/maps/:id") view=DmMapPage />
                     <Route path=path!("/characters") view=CharactersPage />
+                    <Route path=path!("/reference") view=ReferencePage />
                     <Route path=path!("/characters/:id") view=CharacterPage />
                 </Routes>
             </AppShell>
@@ -233,6 +240,9 @@ fn Nav(version: String) -> impl IntoView {
                 </SideNavLink>
                 <SideNavLink href="/characters" active=at("/characters")>
                     "Characters"
+                </SideNavLink>
+                <SideNavLink href="/reference" active=at("/reference")>
+                    "Reference"
                 </SideNavLink>
             </SideNavGroup>
         </SideNav>

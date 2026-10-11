@@ -35,6 +35,8 @@ diff images to `<after>/diff`.
   module monsters, map uploads.
 - `specs/characters-dm.spec.ts`: the character wizard (PC, NPC), the
   characters page (move, delete), NPC fields on the sheet.
+- `specs/reference.spec.ts`: the catalog, cross-references, the book reader,
+  the module inspector.
 - `specs/editor.spec.ts`: the rich editor. The fixture documents keep their
   structure and words through it; the toolbar; a numbered list continues.
 - `specs/capture.spec.ts`: the screens to capture.

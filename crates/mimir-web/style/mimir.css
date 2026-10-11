@@ -633,3 +633,63 @@
 .mimir-wizard__skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: var(--space-xs) var(--space-md); }
 .mimir-wizard__skill { display: flex; align-items: center; gap: var(--space-xs); }
 .mimir-chars__group { margin-bottom: var(--space-xl); }
+
+/* The reference: catalog, books, details (MIMIR-T-0723). */
+.mimir-linkbtn {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ice);
+  cursor: pointer;
+  text-align: left;
+}
+.mimir-linkbtn:hover { text-decoration: underline; }
+.mimir-catalog__bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-sm) var(--space-md); margin-bottom: var(--space-md); }
+.mimir-catalog__bar .cl-field { flex: 0 1 12rem; }
+.mimir-catalog__bar .cl-field:first-child { flex: 1 1 16rem; }
+.mimir-reader__toc { list-style: none; margin: var(--space-sm) 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mimir-reader__headings { list-style: none; margin: var(--space-xs) 0 var(--space-sm) var(--space-md); padding: 0; font-size: 0.8125rem; }
+.mimir-reader__headings li { padding: 2px 0; }
+.mimir-reader__h2 { padding-left: var(--space-md) !important; }
+.mimir-reader__headings a { color: var(--fg-2); text-decoration: none; }
+.mimir-reader__headings a:hover { color: var(--fg-bright); text-decoration: underline; }
+.mimir-rendered a.cross-ref-link { color: var(--ice); text-decoration: none; border-bottom: 1px dotted currentColor; }
+.mimir-rendered a.cross-ref-link:hover { border-bottom-style: solid; }
+.mimir-rendered .dice-roll, .mimir-rendered .damage-roll, .mimir-rendered .d20-roll, .mimir-rendered .hit-bonus {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.mimir-rendered .inset, .mimir-rendered .inset-readaloud {
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--border);
+  background: var(--border-fainter);
+}
+.mimir-rendered .inset-readaloud { border-left-color: var(--ice); font-style: italic; }
+.mimir-rendered table { border-collapse: collapse; margin: var(--space-sm) 0; }
+.mimir-rendered th, .mimir-rendered td { border-bottom: 1px solid var(--border-fainter); padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
+.mimir-rendered caption { text-align: left; font-weight: 600; padding: var(--space-xs) 0; }
+.mimir-rendered .table-wrapper { overflow-x: auto; }
+.mimir-rendered .image-container { margin: var(--space-md) 0; }
+.mimir-rendered .image-wrapper img, .mimir-rendered .detail-image img { max-width: 100%; height: auto; display: block; }
+.mimir-rendered .detail-images { display: flex; justify-content: center; margin-bottom: var(--space-md); }
+.mimir-rendered .detail-image img { max-height: 280px; }
+.mimir-rendered .image-caption { font-size: 0.8125rem; color: var(--fg-2); }
+.mimir-rendered .image-placeholder { font-size: 0.8125rem; color: var(--fg-2); }
+.mimir-rendered .detail-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); margin-bottom: var(--space-sm); }
+.mimir-rendered .detail-sub { margin: 0; font-style: italic; }
+.mimir-rendered .detail-badge { font-size: 0.75rem; padding: 1px var(--space-xs); border: 1px solid var(--border); border-radius: var(--radius-xs); }
+.mimir-rendered .detail-props { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--space-md); margin: var(--space-sm) 0; }
+.mimir-rendered .detail-props dt { font-weight: 600; }
+.mimir-rendered .detail-props dd { margin: 0; }
+.mimir-rendered .detail-section h4 { margin: var(--space-md) 0 var(--space-xs); border-bottom: 1px solid var(--border); }
+.mimir-rendered .detail-abilities { width: 100%; text-align: center; }
+.mimir-rendered .detail-abilities th, .mimir-rendered .detail-abilities td { text-align: center; }
+.mimir-rendered .detail-source { margin-top: var(--space-lg); font-size: 0.8125rem; color: var(--fg-2); text-align: right; }
+.mimir-rendered .statblock-ref { font-style: italic; }
+.mimir-catalog__kinds { display: none; margin-bottom: var(--space-sm); }
+@media (max-width: 860px) {
+  .mimir-catalog__nav { display: none; }
+  .mimir-catalog__kinds { display: flex; }
+}

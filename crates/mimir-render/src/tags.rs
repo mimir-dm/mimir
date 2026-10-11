@@ -205,9 +205,10 @@ fn render(tag: &str, args: &str, hash: bool) -> String {
             None => span("recharge", "(Recharge)"),
         },
         "atk" | "atkr" => attack(first),
-        "h" => "<em>Hit:</em>".into(),
-        "m" => "<em>Miss:</em>".into(),
-        "hom" => "<em>Hit or Miss:</em>".into(),
+        // A space after: the data reads "{@h}5 (1d6 + 2)".
+        "h" => "<em>Hit:</em> ".into(),
+        "m" => "<em>Miss:</em> ".into(),
+        "hom" => "<em>Hit or Miss:</em> ".into(),
         "actSave" => format!("<em>{} Saving Throw:</em>", esc(ability_name(first))),
         "actSaveFail" => match arg(0) {
             Some(n) => format!("<em>Failure by {} or More:</em>", esc(n)),
@@ -334,6 +335,7 @@ mod tests {
         assert!(t("{@atk ms}").contains("Melee Spell Attack:"));
         assert!(t("{@atk rs}").contains("Ranged Spell Attack:"));
         assert!(t("{@h}").contains("Hit:"));
+        assert_eq!(t("{@h}5"), "<em>Hit:</em> 5");
         // 2024 stat blocks.
         assert!(t("{@atkr m}").contains("Melee Attack Roll:"));
         assert!(t("{@actSave dex}").contains("Dexterity Saving Throw:"));

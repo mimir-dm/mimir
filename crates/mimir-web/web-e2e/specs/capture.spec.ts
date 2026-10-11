@@ -426,3 +426,35 @@ for (const theme of themes) {
     await page.screenshot({ path: `${outDir}/wizard-abilities--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
   })
 }
+
+// The reference (MIMIR-T-0723): the catalog, a stat block, a book.
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`reference-catalog ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      await signIn(page, theme)
+      await page.goto('/reference?mode=catalog&category=monsters')
+      await expect(page.getByRole('table', { name: 'Results' }).locator('tbody tr').first()).toBeVisible()
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/reference-catalog--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+    test(`reference-book ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      await signIn(page, theme)
+      await page.goto('/reference?mode=reader&book=DMG&section=0')
+      await expect(page.locator('.mimir-book .image-wrapper img')).toBeVisible()
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/reference-book--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+  test(`reference-statblock desktop ${theme}`, async ({ page }) => {
+    await signIn(page, theme)
+    await page.goto('/reference?mode=catalog&category=monsters')
+    await page.getByLabel('Name').fill('goblin')
+    await page.getByRole('table', { name: 'Results' }).getByRole('button', { name: 'Goblin', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Goblin' })).toContainText('CR 1/4')
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/reference-statblock--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+}

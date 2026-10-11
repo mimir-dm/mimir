@@ -22,6 +22,7 @@ pub mod live;
 pub mod map;
 pub mod markdown;
 pub mod pages;
+pub mod reference;
 
 pub use app::App;
 

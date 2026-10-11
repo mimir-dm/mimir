@@ -12,6 +12,7 @@ use mimir_wire::{Choice, ModuleMonsterPatch, ModuleMonsterSummary, NewModuleMons
 use super::campaigns::optional;
 use crate::api;
 use crate::components::or_dash;
+use crate::reference::detail::{Reference, Target};
 
 #[component]
 pub fn MonstersPanel(#[prop(into)] module_id: Signal<String>) -> impl IntoView {
@@ -21,6 +22,7 @@ pub fn MonstersPanel(#[prop(into)] module_id: Signal<String>) -> impl IntoView {
         api::get::<Vec<ModuleMonsterSummary>>(format!("/modules/{}/monsters", module_id.get()))
     });
     let reload = Callback::new(move |_| version.update(|v| *v += 1));
+    let reference = Reference::get();
     let error = RwSignal::new(String::new());
     let editing = RwSignal::new(None::<ModuleMonsterSummary>);
     let removing = RwSignal::new(None::<ModuleMonsterSummary>);
@@ -66,7 +68,21 @@ pub fn MonstersPanel(#[prop(into)] module_id: Signal<String>) -> impl IntoView {
                                     let name = m.name.clone();
                                     view! {
                                         <tr>
-                                            <td>{m.name.clone()}</td>
+                                            <td>{match (&m.monster_name, &m.monster_source) {
+                                                // The inspector (MIMIR-T-0723): the stat block in the drawer.
+                                                (Some(n), Some(src)) => {
+                                                    let t = Target::new("monsters", src, n);
+                                                    view! {
+                                                        <button
+                                                            type="button"
+                                                            class="mimir-linkbtn"
+                                                            title="Show the stat block"
+                                                            on:click=move |_| if let Some(r) = reference { r.open(t.clone()) }
+                                                        >{m.name.clone()}</button>
+                                                    }.into_any()
+                                                }
+                                                _ => view! { <span>{m.name.clone()}</span> }.into_any(),
+                                            }}</td>
                                             <td>{m.quantity}</td>
                                             <td>{source}</td>
                                             <td>{or_dash(&m.notes)}</td>

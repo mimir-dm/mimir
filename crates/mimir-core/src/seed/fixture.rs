@@ -38,7 +38,9 @@ pub fn seed_ui_fixture(
     app_data_dir: &Path,
 ) -> ServiceResult<UiFixtureReport> {
     let catalog = if catalog::list_sources(conn)?.is_empty() {
-        Some(seed_srd_catalog(conn)?)
+        let counts = seed_srd_catalog(conn)?;
+        seed_fixture_book(conn, app_data_dir)?;
+        Some(counts)
     } else {
         None
     };
@@ -47,6 +49,28 @@ pub fn seed_ui_fixture(
         catalog,
         campaign_created,
     })
+}
+
+/// A short book for the reader (MIMIR-T-0723), under DMG: fixture text,
+/// with headings, a sidebar, cross-references, a dice table and an image
+/// (copied under the catalog assets, as an import does).
+fn seed_fixture_book(conn: &mut SqliteConnection, app_data_dir: &Path) -> ServiceResult<()> {
+    let data = include_str!("assets/fixture-book.json");
+    catalog::upsert_book(
+        conn,
+        &crate::models::catalog::NewBook::new("DMG", "Dungeon Master's Guide", data),
+    )?;
+    let dir = app_data_dir
+        .join("assets")
+        .join("catalog")
+        .join("book")
+        .join("DMG");
+    std::fs::create_dir_all(&dir)?;
+    std::fs::write(
+        dir.join("fixture-hideout.png"),
+        include_bytes!("assets/GoblinHideout.png"),
+    )?;
+    Ok(())
 }
 
 #[cfg(test)]

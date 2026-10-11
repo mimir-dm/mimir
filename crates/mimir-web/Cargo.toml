@@ -13,6 +13,8 @@ license = "MIT"
 
 [dependencies]
 mimir-wire = { path = "../mimir-wire" }
+# 5etools JSON to HTML: the catalog, the reader (MIMIR-T-0723).
+mimir-render = { path = "../mimir-render" }
 # Aurora design system (light, dark and hyper themes), imported as
 # `aurora_leptos`.
 colliery-io-aurora = "0.5.0"
@@ -55,6 +57,10 @@ web-sys = { version = "0.3", features = [
     "File",
     "FileList",
     "HtmlInputElement",
+    # The reference: cross-references, images, scrolling to a heading.
+    "MouseEvent",
+    "NodeList",
+    "Document",
 ] }
 js-sys = "0.3"
 # QR codes of player links (MIMIR-T-0716), drawn as SVG.

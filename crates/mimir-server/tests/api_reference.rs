@@ -179,3 +179,26 @@ fn urlencode(s: &str) -> String {
         })
         .collect()
 }
+
+#[tokio::test]
+async fn the_fixture_book_reads() {
+    let (r, _dir) = fixture().await;
+    let (_, sources, _) = get(&r, "/catalog/sources").await;
+    let dmg = sources
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["code"] == "DMG")
+        .expect("DMG");
+    assert_eq!(dmg["book"], true);
+    let (status, book, _) = get(&r, "/books/DMG").await;
+    assert_eq!(status, StatusCode::OK);
+    let c = mimir_render::book::contents(&book["data"]);
+    assert_eq!(c.len(), 2);
+    assert!(c[0].headings.iter().any(|h| h.id == "fixture-using"));
+    let html = mimir_render::book::section(&book["data"], 0);
+    assert!(html.contains(r#"data-image-path="book/DMG/fixture-hideout.png""#));
+    let (status, _, bytes) = get(&r, "/book-images/book/DMG/fixture-hideout.png").await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(&bytes[1..4], b"PNG");
+}
