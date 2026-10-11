@@ -245,16 +245,25 @@ fn DocumentPane(id: String, on_changed: Callback<()>) -> impl IntoView {
             .await
             {
                 Ok(d) => {
-                    saved.set_value((d.title.clone(), d.content.clone()));
+                    // The pane may be gone (another document, another
+                    // page): the save is done; nothing to show.
+                    let (Some(t), Some(c)) =
+                        (title.try_get_untracked(), content.try_get_untracked())
+                    else {
+                        return;
+                    };
+                    let _ = saved.try_update_value(|v| *v = (d.title.clone(), d.content.clone()));
                     // A change while saving waits for the next save.
-                    if title.get_untracked() == d.title && content.get_untracked() == d.content {
+                    if t == d.title && c == d.content {
                         state.set(Save::Saved);
                     }
                     if patch.title.is_some() {
-                        on_changed.run(());
+                        let _ = on_changed.try_run(());
                     }
                 }
-                Err(e) => state.set(Save::Failed(api::message(e))),
+                Err(e) => {
+                    state.try_set(Save::Failed(api::message(e)));
+                }
             }
         });
     };

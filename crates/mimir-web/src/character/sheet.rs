@@ -96,6 +96,8 @@ pub fn CharacterSheetView(
     });
 
     let tab = RwSignal::new("character".to_string());
+    // "Saved." on Details: held here, as a save reloads the sheet.
+    let details_saved = RwSignal::new(false);
     // The sheet as it was when the level-up opened: the dialog lives
     // outside the part that rebuilds on each reload (the live notice of its
     // own level-up would rebuild it and lose its answer).
@@ -151,7 +153,7 @@ pub fn CharacterSheetView(
                                 <InventoryPanel sheet=s2.clone() on_changed=reload read_only=!editable />
                             </TabPanel>
                             <TabPanel value="spells">{spells_tab(s3.clone(), reload, editable)}</TabPanel>
-                            <TabPanel value="details">{details_tab(s4.clone(), reload, editable)}</TabPanel>
+                            <TabPanel value="details">{details_tab(s4.clone(), reload, editable, details_saved)}</TabPanel>
                             <TabPanel value="notes">
                                 <NotesPanel character_id=sheet_id.clone() editable=access.writes_notes() />
                             </TabPanel>
@@ -424,21 +426,47 @@ fn ordinal(n: i32) -> String {
     format!("{n}{suffix}")
 }
 
-fn details_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl IntoView {
+fn details_tab(
+    s: CharacterSheet,
+    reload: Callback<()>,
+    editable: bool,
+    saved: RwSignal<bool>,
+) -> impl IntoView {
     let shared = RwSignal::new(s.shared);
     let share_path = format!("/characters/{}/sharing", s.id);
-    let fields: [(&'static str, &'static str, Option<String>); 4] = [
+    // An NPC's role, place and faction first (MIMIR-T-0721).
+    let mut fields: Vec<(&'static str, &'static str, Option<String>)> = Vec::new();
+    if s.is_npc {
+        fields.extend([
+            ("Role", "role", s.role.clone()),
+            ("Location", "location", s.location.clone()),
+            ("Faction", "faction", s.faction.clone()),
+        ]);
+    }
+    fields.extend([
         ("Traits", "traits", s.traits.clone()),
         ("Ideals", "ideals", s.ideals.clone()),
         ("Bonds", "bonds", s.bonds.clone()),
         ("Flaws", "flaws", s.flaws.clone()),
-    ];
+    ]);
     let error = RwSignal::new(String::new());
-    let saved = RwSignal::new(false);
     let values: Vec<(&'static str, &'static str, RwSignal<String>)> = fields
         .into_iter()
         .map(|(label, key, v)| (label, key, RwSignal::new(v.unwrap_or_default())))
         .collect();
+    // A new edit: no longer saved (not on the first run: a rebuild after
+    // the save's reload).
+    {
+        let values = values.clone();
+        Effect::new(move |prev: Option<()>| {
+            for (_, _, v) in &values {
+                v.track();
+            }
+            if prev.is_some() {
+                saved.set(false);
+            }
+        });
+    }
     let save = {
         let values = values.clone();
         let id = s.id.clone();

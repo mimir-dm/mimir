@@ -6,3 +6,5 @@ pub mod documents;
 pub mod maps;
 pub mod modules;
 pub mod monsters;
+pub mod wizard;
+pub mod wizard_rules;

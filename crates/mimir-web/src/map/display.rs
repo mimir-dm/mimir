@@ -175,8 +175,9 @@ pub fn DisplayView(
     let fetch = move |map_id: String| {
         spawn_local(async move {
             if let Ok(v) = api::get::<PlayerView>(format!("/maps/{map_id}/player-view")).await {
-                if shown.get_untracked().as_deref() == Some(v.map.id.as_str()) {
-                    view.set(Some(v));
+                // The view may be gone by now (another tab): `try_`.
+                if shown.try_get_untracked().flatten().as_deref() == Some(v.map.id.as_str()) {
+                    view.try_set(Some(v));
                 }
             }
         });

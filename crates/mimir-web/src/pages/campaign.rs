@@ -17,6 +17,7 @@ use crate::authoring::documents::DocumentWorkspace;
 use crate::authoring::documents::OrderButtons;
 use crate::authoring::maps::MapsPanel;
 use crate::authoring::modules::ModuleDialog;
+use crate::authoring::wizard::CharacterWizard;
 use crate::components::{class_label, loaded, or_dash, ListResource};
 
 /// The tab of a dashboard path.
@@ -247,22 +248,41 @@ fn characters_table(list: Vec<CharacterSummary>, npc: bool) -> impl IntoView {
     }
 }
 
+/// The PCs or NPCs of the campaign, and New PC / New NPC (the wizard,
+/// MIMIR-T-0721).
+fn characters_tab(npc: bool) -> impl IntoView {
+    let id = campaign_id();
+    let version = RwSignal::new(0u32);
+    let list: ListResource<CharacterSummary> = LocalResource::new(move || {
+        version.track();
+        api::campaign_list(id.get(), if npc { "npcs" } else { "pcs" })
+    });
+    let creating = RwSignal::new(false);
+    let table = loaded(list, move |l| characters_table(l, npc));
+    view! {
+        <Group>
+            <Button on_click=Callback::new(move |_| creating.set(true))>{if npc { "New NPC" } else { "New PC" }}</Button>
+        </Group>
+        {table}
+        {move || creating.get().then(|| view! {
+            <CharacterWizard
+                campaign_id=id.get()
+                npc=npc
+                on_created=Callback::new(move |_| version.update(|v| *v += 1))
+                on_close=Callback::new(move |_| creating.set(false))
+            />
+        })}
+    }
+}
+
 #[component]
 pub fn NpcsTab() -> impl IntoView {
-    let id = campaign_id();
-    let npcs: ListResource<CharacterSummary> =
-        LocalResource::new(move || api::campaign_list(id.get(), "npcs"));
-    let table = loaded(npcs, |list| characters_table(list, true));
-    view! { {table} }
+    characters_tab(true)
 }
 
 #[component]
 pub fn PcsTab() -> impl IntoView {
-    let id = campaign_id();
-    let pcs: ListResource<CharacterSummary> =
-        LocalResource::new(move || api::campaign_list(id.get(), "pcs"));
-    let table = loaded(pcs, |list| characters_table(list, false));
-    view! { {table} }
+    characters_tab(false)
 }
 
 #[cfg(test)]

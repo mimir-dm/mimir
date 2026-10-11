@@ -392,3 +392,37 @@ for (const theme of themes) {
     await page.screenshot({ path: `${outDir}/module-monsters-search--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
   })
 }
+
+// Character management (MIMIR-T-0721): the characters page, the wizard's
+// ability scores (point buy).
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`characters ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      await signIn(page, theme)
+      await page.goto('/characters')
+      await expect(page.getByRole('region', { name: CAMPAIGN })).toBeVisible()
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/characters--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+  test(`wizard-abilities desktop ${theme}`, async ({ page }) => {
+    await signIn(page, theme)
+    await page.goto('/characters')
+    await page.getByRole('button', { name: 'New character' }).click()
+    const d = page.getByRole('dialog')
+    await d.getByLabel('Name').fill('Robin Brightwater')
+    await d.getByLabel('Player').fill('Sam')
+    for (const label of ['', 'Race', 'Class', 'Background']) {
+      if (label) {
+        const select = d.getByLabel(label)
+        await select.selectOption({ index: 1 })
+      }
+      await d.getByRole('button', { name: 'Next' }).click()
+    }
+    await d.getByLabel('Method').selectOption('point-buy')
+    for (let i = 0; i < 5; i++) await d.getByRole('button', { name: 'Raise Strength' }).click()
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/wizard-abilities--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+}

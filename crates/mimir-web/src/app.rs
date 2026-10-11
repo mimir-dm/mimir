@@ -20,6 +20,7 @@ use crate::character::sheet::CharacterPage;
 use crate::map::display::DisplayPage;
 use crate::map::dm::DmMapPage;
 use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
+use crate::pages::characters::CharactersPage;
 use crate::pages::player::PlayerPage;
 use crate::pages::{home::Home, module::ModulePage, not_found::NotFound, sign_in::SignIn};
 
@@ -196,6 +197,7 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                     </ParentRoute>
                     <Route path=path!("/modules/:id") view=ModulePage />
                     <Route path=path!("/maps/:id") view=DmMapPage />
+                    <Route path=path!("/characters") view=CharactersPage />
                     <Route path=path!("/characters/:id") view=CharacterPage />
                 </Routes>
             </AppShell>
@@ -229,6 +231,9 @@ fn Nav(version: String) -> impl IntoView {
                 <SideNavLink href="/" active=at("/")>
                     "Campaigns"
                 </SideNavLink>
+                <SideNavLink href="/characters" active=at("/characters")>
+                    "Characters"
+                </SideNavLink>
             </SideNavGroup>
         </SideNav>
     }
@@ -240,7 +245,6 @@ pub fn campaigns_section(path: &str) -> bool {
         || path.starts_with("/campaigns/")
         || path.starts_with("/modules/")
         || path.starts_with("/maps/")
-        || path.starts_with("/characters/")
 }
 
 #[cfg(test)]
@@ -260,5 +264,6 @@ mod tests {
         assert!(campaigns_section("/campaigns/c1/npcs"));
         assert!(campaigns_section("/modules/m1"));
         assert!(!campaigns_section("/settings"));
+        assert!(!campaigns_section("/characters/x1"), "under Characters");
     }
 }
