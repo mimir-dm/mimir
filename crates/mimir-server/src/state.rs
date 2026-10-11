@@ -14,6 +14,8 @@ pub struct AppState {
     pub config: Arc<Config>,
     /// Live events and the display states (MIMIR-T-0712).
     pub live: Arc<Hub>,
+    /// Background jobs: catalog imports (MIMIR-T-0724).
+    pub jobs: Arc<crate::jobs::Jobs>,
     db_url: Arc<String>,
 }
 
@@ -23,6 +25,7 @@ impl AppState {
         Self {
             config: Arc::new(config),
             live: Arc::new(Hub::new()),
+            jobs: Arc::new(crate::jobs::Jobs::default()),
             db_url: Arc::new(db_url),
         }
     }

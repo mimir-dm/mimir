@@ -171,12 +171,14 @@ impl<'a> ArchiveService<'a> {
         Self { conn }
     }
 
-    /// Export a campaign to a tar.gz archive.
+    /// Export a campaign to a tar.gz archive. `app_data_dir`: the folder
+    /// the assets' `blob_path`s are relative to ("assets/<id>.<ext>"), as
+    /// the asset and map services.
     pub fn export_campaign(
         &mut self,
         campaign_id: &str,
         output_dir: &Path,
-        assets_dir: &Path,
+        app_data_dir: &Path,
     ) -> ServiceResult<PathBuf> {
         let campaign = dal::get_campaign(self.conn, campaign_id).map_err(|e| match e {
             diesel::result::Error::NotFound => ServiceError::not_found("Campaign", campaign_id),
@@ -186,7 +188,7 @@ impl<'a> ArchiveService<'a> {
         info!(campaign_id = %campaign_id, name = %campaign.name, "Exporting campaign");
 
         let archive_data = self.collect_campaign_data(campaign_id, campaign)?;
-        let asset_files = self.collect_asset_files(&archive_data, assets_dir)?;
+        let asset_files = self.collect_asset_files(&archive_data, app_data_dir)?;
         let catalog_refs = self.extract_catalog_references(&archive_data.documents);
 
         let manifest = ArchiveManifest {
@@ -225,10 +227,13 @@ impl<'a> ArchiveService<'a> {
     ///
     /// Creates a new campaign with all data from the archive, generating new UUIDs
     /// for all entities and remapping all references.
+    ///
+    /// `app_data_dir`: as [`Self::export_campaign`]; the assets land under
+    /// `assets/` in it.
     pub fn import_campaign(
         &mut self,
         archive_path: &Path,
-        assets_dir: &Path,
+        app_data_dir: &Path,
         campaign_name_override: Option<&str>,
     ) -> ServiceResult<ImportResult> {
         info!(path = %archive_path.display(), "Importing campaign archive");
@@ -276,7 +281,7 @@ impl<'a> ArchiveService<'a> {
             &data,
             &mut id_maps,
             &new_campaign_id,
-            assets_dir,
+            app_data_dir,
             temp_dir.path(),
         )?;
 
@@ -454,13 +459,13 @@ impl<'a> ArchiveService<'a> {
     fn collect_asset_files(
         &self,
         data: &ArchiveData,
-        assets_dir: &Path,
+        app_data_dir: &Path,
     ) -> ServiceResult<HashMap<String, Vec<u8>>> {
         let mut files = HashMap::new();
 
         // Include all campaign assets - these are the actual binary files (maps, tokens, images)
         for asset in &data.assets {
-            let file_path = assets_dir.join(&asset.blob_path);
+            let file_path = app_data_dir.join(&asset.blob_path);
             if file_path.exists() {
                 match fs::read(&file_path) {
                     Ok(bytes) => {
@@ -615,7 +620,7 @@ impl<'a> ArchiveService<'a> {
         data: &ArchiveData,
         id_maps: &mut IdMaps,
         campaign_id: &str,
-        assets_dir: &Path,
+        app_data_dir: &Path,
         temp_dir: &Path,
     ) -> ServiceResult<()> {
         for asset in &data.assets {
@@ -627,8 +632,23 @@ impl<'a> ArchiveService<'a> {
                 .join("assets")
                 .join(&asset.id)
                 .join(&asset.filename);
-            let blob_path = format!("campaigns/{}/{}", campaign_id, asset.filename);
-            let dest_path = assets_dir.join(&blob_path);
+            // As the asset and map services: "assets/<id>.<ext>" under the
+            // app data folder (the archive's file name chooses only the
+            // extension, letters and digits only).
+            let ext: String = Path::new(&asset.filename)
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("bin")
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric())
+                .collect();
+            let ext = if ext.is_empty() {
+                "bin".to_string()
+            } else {
+                ext
+            };
+            let blob_path = format!("assets/{new_id}.{ext}");
+            let dest_path = app_data_dir.join(&blob_path);
 
             if src_path.exists() {
                 if let Some(parent) = dest_path.parent() {

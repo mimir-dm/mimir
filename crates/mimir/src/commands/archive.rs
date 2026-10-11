@@ -35,7 +35,8 @@ pub fn export_campaign(
     };
 
     let output_path = Path::new(&output_dir);
-    let assets_path = &state.paths.assets_dir;
+    // Blob paths are relative to the app folder ("assets/<id>.<ext>").
+    let assets_path = &state.paths.app_dir;
 
     match ArchiveService::new(&mut db).export_campaign(&campaign_id, output_path, assets_path) {
         Ok(archive_path) => {
@@ -80,7 +81,8 @@ pub fn import_campaign(
     };
 
     let archive = Path::new(&archive_path);
-    let assets_path = &state.paths.assets_dir;
+    // Blob paths are relative to the app folder ("assets/<id>.<ext>").
+    let assets_path = &state.paths.app_dir;
 
     let result =
         ArchiveService::new(&mut db).import_campaign(archive, assets_path, new_name.as_deref());

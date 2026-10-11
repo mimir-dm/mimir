@@ -5,6 +5,7 @@
 //! (MIMIR-T-0716). Handlers call the `mimir-core` services, never the DAL,
 //! and answer with `mimir-wire` types ([`convert`]).
 
+pub mod admin;
 pub mod authoring;
 pub mod campaigns;
 pub mod catalog;
@@ -63,6 +64,7 @@ fn route(
 
 /// The route table.
 pub fn routes() -> Vec<ApiRoute> {
+    use admin as ad;
     use authoring as w;
     use campaigns as c;
     use catalog as cat;
@@ -165,6 +167,51 @@ pub fn routes() -> Vec<ApiRoute> {
             get(rf::entry),
         ),
         route("/catalog/sources", Dm, G, get(rf::sources)),
+        // Settings and admin (MIMIR-T-0724).
+        route(
+            "/catalog/sources/{code}",
+            Dm,
+            &["DELETE"],
+            delete(ad::delete_source),
+        ),
+        route(
+            "/catalog/import",
+            Dm,
+            &["POST"],
+            post(ad::import_catalog).layer(DefaultBodyLimit::max(ad::CATALOG_LIMIT)),
+        ),
+        route(
+            "/catalog/import-images",
+            Dm,
+            &["POST"],
+            post(ad::import_images).layer(DefaultBodyLimit::max(ad::CATALOG_LIMIT)),
+        ),
+        route("/jobs/{id}", Dm, G, get(ad::job)),
+        route("/campaigns/{id}/export", Dm, G, get(ad::export_archive)),
+        route(
+            "/archives/preview",
+            Dm,
+            &["POST"],
+            post(ad::preview_archive).layer(DefaultBodyLimit::max(ad::ARCHIVE_LIMIT)),
+        ),
+        route(
+            "/archives/import",
+            Dm,
+            &["POST"],
+            post(ad::import_archive).layer(DefaultBodyLimit::max(ad::ARCHIVE_LIMIT)),
+        ),
+        route(
+            "/campaigns/{id}/sources",
+            Dm,
+            &["GET", "PUT"],
+            get(ad::campaign_sources).put(ad::set_campaign_sources),
+        ),
+        route(
+            "/characters/{id}/sources",
+            Dm,
+            &["GET", "PUT"],
+            get(ad::character_sources).put(ad::set_character_sources),
+        ),
         // Homebrew (MIMIR-T-0722).
         route(
             "/campaigns/{id}/homebrew/{kind}",

@@ -34,9 +34,18 @@ subtle = "2"
 mime_guess = "2"
 # Catalog table columns (MIMIR-T-0723).
 mimir-render = { path = "../mimir-render" }
+# Settings (MIMIR-T-0724): uploads streamed to temp files, downloads
+# streamed from them, background jobs.
+tokio-util = { workspace = true, features = ["io"] }
+futures = { workspace = true }
+tempfile = "3"
+uuid = { workspace = true }
 rust-embed = { version = "8", optional = true }
 
 [dev-dependencies]
+# Test archives (MIMIR-T-0724).
+flate2 = "1"
+tar = "0.4"
 # Test images for map uploads (MIMIR-T-0720).
 image = { version = "0.25", default-features = false, features = ["png"] }
 mimir-core = { path = "../mimir-core", features = ["fixtures"] }

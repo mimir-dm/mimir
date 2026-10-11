@@ -3991,6 +3991,8 @@ version = "0.7.3"
 dependencies = [
  "axum",
  "diesel",
+ "flate2",
+ "futures",
  "futures-util",
  "http-body-util",
  "image",
@@ -4002,13 +4004,16 @@ dependencies = [
  "serde",
  "serde_json",
  "subtle",
+ "tar",
  "tempfile",
  "tokio",
  "tokio-tungstenite",
+ "tokio-util",
  "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

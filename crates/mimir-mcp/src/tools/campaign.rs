@@ -459,7 +459,13 @@ pub async fn export_campaign(
 
     let mut db = ctx.connect()?;
     let output_dir = Path::new(&args.output_path);
-    let assets_dir = &ctx.assets_dir;
+    // Blob paths are relative to the app folder: two up from the
+    // assets folder this context holds (<app>/data/assets).
+    let assets_dir = ctx
+        .assets_dir
+        .parent()
+        .and_then(|p| p.parent())
+        .unwrap_or(&ctx.assets_dir);
 
     let archive_path = ArchiveService::new(&mut db)
         .export_campaign(&campaign_id, output_dir, assets_dir)
@@ -482,7 +488,13 @@ pub async fn import_campaign(
 ) -> Result<Value, McpError> {
     let mut db = ctx.connect()?;
     let archive = Path::new(&args.archive_path);
-    let assets_dir = &ctx.assets_dir;
+    // Blob paths are relative to the app folder: two up from the
+    // assets folder this context holds (<app>/data/assets).
+    let assets_dir = ctx
+        .assets_dir
+        .parent()
+        .and_then(|p| p.parent())
+        .unwrap_or(&ctx.assets_dir);
 
     let result = ArchiveService::new(&mut db)
         .import_campaign(archive, assets_dir, args.new_name.as_deref())
