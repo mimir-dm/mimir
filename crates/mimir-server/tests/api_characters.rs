@@ -475,3 +475,143 @@ async fn catalog_choices() {
         .ok(Method::GET, "/catalog/optional-features?type=EI", DM, None)
         .await;
 }
+
+/// The text a sheet names (MIMIR-T-0733): class features with entries,
+/// catalog entries of its items and background, spell levels, and the
+/// character's books on the spell list; a player reads their own only.
+#[tokio::test]
+async fn the_text_a_sheet_names() {
+    let f = fixture().await;
+    let elara = f.pc("Elara Moonwhisper");
+    let thorin = f.pc("Thorin Ironforge");
+    let sheet: wire::CharacterSheet = f
+        .ok(Method::GET, &format!("/characters/{elara}"), DM, None)
+        .await;
+
+    // Class features up to her level, each with its entries.
+    let features: Vec<wire::FeatureText> = f
+        .ok(
+            Method::GET,
+            &format!("/characters/{elara}/features"),
+            DM,
+            None,
+        )
+        .await;
+    let level = sheet.classes[0].level;
+    assert!(
+        !features.is_empty(),
+        "the fixture catalog has class features"
+    );
+    assert!(features.iter().all(|x| x.level <= level));
+    assert!(features
+        .iter()
+        .any(|x| x.entries.as_array().is_some_and(|e| !e.is_empty())));
+
+    // Known spells carry their level.
+    if let Some(k) = sheet.spells.first() {
+        assert!(k.level.is_some(), "{k:?}");
+    }
+
+    // An item of her inventory that the catalog has, through the sheet.
+    let mut found = None;
+    for item in &sheet.inventory {
+        let (status, v) = f
+            .send(
+                Method::GET,
+                &format!(
+                    "/characters/{elara}/entry/items/{}/{}",
+                    item.item_source,
+                    item.item_name.replace(' ', "%20")
+                ),
+                DM,
+                None,
+            )
+            .await;
+        if status == StatusCode::OK {
+            found = Some((item.item_name.clone(), v));
+            break;
+        }
+        assert_eq!(status, StatusCode::NOT_FOUND, "{v}");
+    }
+    let (name, v) = found.expect("an inventory item in the fixture catalog");
+    assert_eq!(
+        v["name"].as_str().unwrap().to_lowercase(),
+        name.to_lowercase()
+    );
+    // Not a sheet's category.
+    let (status, _) = f
+        .send(
+            Method::GET,
+            &format!("/characters/{elara}/entry/monsters/MM/Goblin"),
+            DM,
+            None,
+        )
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+
+    // A player: their own sheet's text, not another's (unshared).
+    let link: Value = f
+        .ok(Method::POST, &format!("/characters/{elara}/link"), DM, None)
+        .await;
+    let token = link["token"].as_str().unwrap().to_string();
+    let (status, _) = f
+        .send(
+            Method::GET,
+            &format!("/characters/{elara}/features"),
+            &token,
+            None,
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = f
+        .send(
+            Method::GET,
+            &format!("/characters/{thorin}/features"),
+            &token,
+            None,
+        )
+        .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+
+    // Her books: the spell list keeps to them.
+    let all: Vec<wire::Choice> = f
+        .ok(
+            Method::GET,
+            "/catalog/spells?class=Wizard&max_level=1",
+            DM,
+            None,
+        )
+        .await;
+    let book = all[0].source.clone();
+    let sources: Value = f.ok(Method::GET, "/catalog/sources", DM, None).await;
+    let other = sources
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["code"].as_str().unwrap().to_string())
+        .find(|c| c != &book)
+        .unwrap();
+    let books = format!("/characters/{elara}/sources");
+    f.ok::<Value>(Method::PUT, &books, DM, Some(json!({ "codes": [other] })))
+        .await;
+    let kept: Vec<wire::Choice> = f
+        .ok(
+            Method::GET,
+            &format!("/catalog/spells?class=Wizard&max_level=1&character={elara}"),
+            DM,
+            None,
+        )
+        .await;
+    assert!(kept.iter().all(|c| c.source != book), "only her books");
+    f.ok::<Value>(Method::PUT, &books, DM, Some(json!({ "codes": [] })))
+        .await;
+    let back: Vec<wire::Choice> = f
+        .ok(
+            Method::GET,
+            &format!("/catalog/spells?class=Wizard&max_level=1&character={elara}"),
+            DM,
+            None,
+        )
+        .await;
+    assert_eq!(back.len(), all.len(), "no books: every book");
+}

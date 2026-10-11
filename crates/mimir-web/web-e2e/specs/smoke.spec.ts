@@ -36,9 +36,9 @@ test('campaign list to dashboard tabs', async ({ page }) => {
   await page.getByRole('tab', { name: 'Modules', exact: true }).click()
   await expect(page.getByRole('link', { name: MODULE })).toBeVisible()
   await page.getByRole('tab', { name: 'NPCs', exact: true }).click()
-  await expect(page.getByRole('cell', { name: 'Gundren Rockseeker' })).toBeVisible()
+  await expect(page.getByRole('listitem', { name: 'Gundren Rockseeker' })).toBeVisible()
   await page.getByRole('tab', { name: 'PCs', exact: true }).click()
-  await expect(page.getByRole('cell', { name: /^Wizard \d+$/ })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Player characters' }).getByText(/^Wizard \d+$/)).toBeVisible()
   await expect(page.getByRole('tab', { name: 'PCs', exact: true })).toHaveAttribute('aria-selected', 'true')
 })
 

@@ -77,6 +77,23 @@ pub struct KnownSpell {
     pub spell_source: String,
     pub source_class: String,
     pub prepared: bool,
+    /// The spell's level (0: a cantrip); `None` when the catalog has it not
+    /// (MIMIR-T-0733).
+    #[serde(default)]
+    pub level: Option<i32>,
+}
+
+/// A class or subclass feature a character has, with its text
+/// (`GET /characters/{id}/features`, MIMIR-T-0733). `entries` is 5etools
+/// JSON; the web app renders it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FeatureText {
+    pub name: String,
+    pub class_name: String,
+    /// Set for a subclass feature.
+    pub subclass_name: Option<String>,
+    pub level: i32,
+    pub entries: serde_json::Value,
 }
 
 /// A feat a character has.

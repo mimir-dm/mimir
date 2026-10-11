@@ -187,19 +187,28 @@ pub struct SpellQuery {
     pub class: String,
     #[serde(default)]
     pub max_level: Option<i32>,
+    /// A character whose source books the list keeps to, when it has any
+    /// (MIMIR-T-0733, as the desktop's spell lists).
+    #[serde(default)]
+    pub character: Option<String>,
 }
 
-/// `GET /catalog/spells?class=Wizard&max_level=3`
+/// `GET /catalog/spells?class=Wizard&max_level=3&character=<id>`
 pub async fn spells(
     State(state): State<AppState>,
     Query(q): Query<SpellQuery>,
 ) -> ApiResult<Vec<wire::Choice>> {
     state
         .with_db(move |conn| {
+            let books = match q.character.as_deref().filter(|c| !c.is_empty()) {
+                Some(c) => SourceService::new(conn).list_character_sources(c)?,
+                None => Vec::new(),
+            };
             let mut list: Vec<wire::Choice> = SpellService::new(conn)
                 .list_by_class(&q.class)?
                 .into_iter()
                 .filter(|s| q.max_level.is_none_or(|m| s.level <= m))
+                .filter(|s| books.is_empty() || books.contains(&s.source))
                 .map(|s| wire::Choice {
                     detail: Some(match (s.level, s.school.as_deref()) {
                         (0, Some(sc)) => format!("cantrip · {sc}"),

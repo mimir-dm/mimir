@@ -1,6 +1,7 @@
 //! `/characters` (MIMIR-T-0721): every character, by campaign, and those
 //! in no campaign. Create one with the wizard, move one to another
-//! campaign (or out of any), delete one.
+//! campaign (or out of any), delete one. Each has Edit, PDF and Level up
+//! (MIMIR-T-0733).
 
 use aurora_leptos::components::*;
 use aurora_leptos::data::SectionLabel;
@@ -10,8 +11,10 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use mimir_wire::{CampaignAssignment, CampaignSummary, CharacterSheet, CharacterSummary};
 
+use crate::admin::pdf::{PdfDialog, CHARACTER};
 use crate::api;
 use crate::authoring::wizard::CharacterWizard;
+use crate::character::levelup::LevelUpDialog;
 use crate::components::{class_label, or_dash};
 
 /// A group of the page: a campaign (none: no campaign) and its characters.
@@ -50,6 +53,18 @@ pub fn CharactersPage() -> impl IntoView {
     let confirm_open = RwSignal::new(false);
     Effect::new(move |_| confirm_open.set(removing.get().is_some()));
     let error = RwSignal::new(String::new());
+    // The character of the PDF dialog; the sheet the level-up opens on.
+    let printing_id = RwSignal::new(String::new());
+    let printing = RwSignal::new(false);
+    let leveling = RwSignal::new(None::<CharacterSheet>);
+    let level_up = move |id: String| {
+        spawn_local(async move {
+            match api::get::<CharacterSheet>(format!("/characters/{id}")).await {
+                Ok(s) => leveling.set(Some(s)),
+                Err(e) => error.set(api::message(e)),
+            }
+        });
+    };
 
     let move_to = move |id: String, campaign: String| {
         spawn_local(async move {
@@ -106,6 +121,8 @@ pub fn CharactersPage() -> impl IntoView {
                                     .collect::<Vec<_>>()
                                     .join(" · ");
                                 let (id, del) = (c.id.clone(), c.clone());
+                                let (pdf_id, lvl_id) = (c.id.clone(), c.id.clone());
+                                let can_level = !c.is_npc && c.level < 20;
                                 let name = c.name.clone();
                                 let here = here.clone();
                                 view! {
@@ -127,6 +144,14 @@ pub fn CharactersPage() -> impl IntoView {
                                             </select>
                                         </td>
                                         <td class="mimir-row-actions">
+                                            <a class="cl-btn cl-btn--subtle" href=format!("/characters/{}", c.id) aria-label=format!("Edit {name}")>"Edit"</a>
+                                            <Button variant="subtle" on_click=Callback::new(move |_| {
+                                                printing_id.set(pdf_id.clone());
+                                                printing.set(true);
+                                            })>"PDF…"</Button>
+                                            {can_level.then(|| view! {
+                                                <Button variant="subtle" on_click=Callback::new(move |_| level_up(lvl_id.clone()))>"Level up"</Button>
+                                            })}
                                             <ActionIcon title=format!("Delete {name}") on_click=Callback::new(move |_| removing.set(Some(del.clone())))>"×"</ActionIcon>
                                         </td>
                                     </tr>
@@ -159,6 +184,23 @@ pub fn CharactersPage() -> impl IntoView {
                 .collect_view()
                 .into_any(),
         }}
+        <PdfDialog
+            open=printing
+            title="PDF of the character"
+            path=Signal::derive(move || format!("/characters/{}/pdf", printing_id.get()))
+            options=CHARACTER
+            file="character.pdf"
+        />
+        {move || leveling.get().map(|s| view! {
+            <LevelUpDialog
+                sheet=s
+                on_close=Callback::new(move |_| leveling.set(None))
+                on_done=Callback::new(move |_| {
+                    leveling.set(None);
+                    reload();
+                })
+            />
+        })}
         {move || creating.get().then(|| view! {
             <CharacterWizard
                 on_created=Callback::new(move |_| reload())

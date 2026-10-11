@@ -339,6 +339,64 @@ pub fn pair_ref(v: &str) -> Option<Ref> {
 
 const PACT_BOONS: [&str; 3] = ["Pact of the Chain", "Pact of the Blade", "Pact of the Tome"];
 
+/// Pick or unpick `r`, up to `limit` picks.
+fn toggle_pick(list: RwSignal<Vec<Ref>>, r: Ref, limit: i32) {
+    list.update(|v| {
+        if let Some(i) = v.iter().position(|x| *x == r) {
+            v.remove(i);
+        } else if (v.len() as i32) < limit {
+            v.push(r);
+        }
+    })
+}
+
+/// The picks, or the typed names when nothing was picked (a catalog
+/// without these features).
+pub fn picked_or_typed(picks: Vec<Ref>, typed: &str) -> Vec<Ref> {
+    if picks.is_empty() {
+        typed_refs(typed)
+    } else {
+        picks
+    }
+}
+
+/// Up to `limit` optional features from the catalog's list, as checkboxes;
+/// with no list, a typed field.
+fn feature_picker(
+    title: &'static str,
+    items: Vec<Choice>,
+    target: RwSignal<Vec<Ref>>,
+    typed: RwSignal<String>,
+    limit: i32,
+) -> AnyView {
+    if items.is_empty() {
+        return view! {
+            <TextInput label=format!("{title} ({limit}; names, separated by commas)") value=typed />
+        }
+        .into_any();
+    }
+    view! {
+        <fieldset class="mimir-levelup__picks">
+            <legend>{move || format!("{title}: {} of {limit}", target.with(Vec::len))}</legend>
+            {items.into_iter().map(|c| {
+                let r = Ref { name: c.name.clone(), source: c.source.clone() };
+                let r2 = r.clone();
+                view! {
+                    <label class="mimir-levelup__pick">
+                        <input
+                            type="checkbox"
+                            prop:checked=move || target.with(|v| v.contains(&r))
+                            on:change=move |_| toggle_pick(target, r2.clone(), limit)
+                        />
+                        {c.name.clone()}
+                    </label>
+                }
+            }).collect_view()}
+        </fieldset>
+    }
+    .into_any()
+}
+
 #[component]
 pub fn LevelUpDialog(
     sheet: CharacterSheet,
@@ -389,6 +447,14 @@ pub fn LevelUpDialog(
     let metamagic_typed = RwSignal::new(String::new());
     let invocations_typed = RwSignal::new(String::new());
     let maneuvers_typed = RwSignal::new(String::new());
+    // Picked from the catalog (MIMIR-T-0733); typing is for a catalog
+    // without them.
+    let metamagic_picks = RwSignal::new(Vec::<Ref>::new());
+    let invocation_picks = RwSignal::new(Vec::<Ref>::new());
+    let maneuver_picks = RwSignal::new(Vec::<Ref>::new());
+    // A known spell for another (a "|"-pair each; empty: no swap).
+    let swap_out = RwSignal::new(String::new());
+    let swap_in = RwSignal::new(String::new());
     let pact_pick = RwSignal::new(String::new());
     let expertise = RwSignal::new(Vec::<String>::new());
     let step = RwSignal::new(0usize);
@@ -424,13 +490,24 @@ pub fn LevelUpDialog(
             let i = i?;
             let lvl = sheet.with_value(|s| new_class_level(s, &i.name));
             let max = max_spell_level(i.caster.as_deref().unwrap_or(""), lvl);
-            api::get::<Vec<Choice>>(format!("/catalog/spells?class={}&max_level={max}", i.name))
-                .await
-                .ok()
+            // The character's books, when it has some (MIMIR-T-0733).
+            let id = sheet.with_value(|s| s.id.clone());
+            api::get::<Vec<Choice>>(format!(
+                "/catalog/spells?class={}&max_level={max}&character={id}",
+                i.name
+            ))
+            .await
+            .ok()
         }
     });
     let styles =
         LocalResource::new(|| api::get::<Vec<Choice>>("/catalog/optional-features?type=FS"));
+    let metamagic_list =
+        LocalResource::new(|| api::get::<Vec<Choice>>("/catalog/optional-features?type=MM"));
+    let maneuver_list =
+        LocalResource::new(|| api::get::<Vec<Choice>>("/catalog/optional-features?type=MV"));
+    let invocation_list =
+        LocalResource::new(|| api::get::<Vec<Choice>>("/catalog/optional-features?type=EI"));
 
     let con_mod = sheet.with_value(|s| stats::modifier(s.abilities.constitution));
     let hp_method = move || -> Option<HpMethod> {
@@ -537,16 +614,19 @@ pub fn LevelUpDialog(
                 })
                 .flatten(),
             metamagic: (sl.metamagic > 0)
-                .then(|| typed_refs(&metamagic_typed.get()))
+                .then(|| picked_or_typed(metamagic_picks.get(), &metamagic_typed.get()))
                 .filter(|v| !v.is_empty()),
             maneuvers: (sl.maneuvers > 0)
                 .then(|| ManeuverChoices {
-                    new_maneuvers: typed_refs(&maneuvers_typed.get()),
+                    new_maneuvers: picked_or_typed(maneuver_picks.get(), &maneuvers_typed.get()),
                 })
                 .filter(|m| !m.new_maneuvers.is_empty()),
             invocations: (sl.invocations > 0)
                 .then(|| InvocationChoices {
-                    new_invocations: typed_refs(&invocations_typed.get()),
+                    new_invocations: picked_or_typed(
+                        invocation_picks.get(),
+                        &invocations_typed.get(),
+                    ),
                 })
                 .filter(|m| !m.new_invocations.is_empty()),
             pact_boon: (sl.pact_boon && !pact_pick.get().is_empty()).then(|| Ref {
@@ -567,10 +647,16 @@ pub fn LevelUpDialog(
             } else {
                 None
             },
-            spell_changes: has(Step::Spells).then(|| SpellChanges {
-                new_cantrips: cantrips.get(),
-                new_spells: spells.get(),
-                ..SpellChanges::default()
+            spell_changes: has(Step::Spells).then(|| {
+                // A swap needs both halves.
+                let (out, inn) = (pair_ref(&swap_out.get()), pair_ref(&swap_in.get()));
+                let both = out.is_some() && inn.is_some();
+                SpellChanges {
+                    new_cantrips: cantrips.get(),
+                    new_spells: spells.get(),
+                    swap_out: out.filter(|_| both),
+                    swap_in: inn.filter(|_| both),
+                }
             }),
             feature_choices: features,
         })
@@ -592,16 +678,6 @@ pub fn LevelUpDialog(
             }
             busy.set(false);
         });
-    };
-
-    let toggle = move |list: RwSignal<Vec<Ref>>, r: Ref, limit: i32| {
-        list.update(|v| {
-            if let Some(i) = v.iter().position(|x| *x == r) {
-                v.remove(i);
-            } else if (v.len() as i32) < limit {
-                v.push(r);
-            }
-        })
     };
 
     let body = move || {
@@ -805,7 +881,7 @@ pub fn LevelUpDialog(
                                         <input
                                             type="checkbox"
                                             prop:checked=move || target.with(|v| v.contains(&r))
-                                            on:change=move |_| toggle(target, r2.clone(), limit)
+                                            on:change=move |_| toggle_pick(target, r2.clone(), limit)
                                         />
                                         {format!("{} — {}", c.name, c.detail.clone().unwrap_or_default())}
                                     </label>
@@ -814,9 +890,42 @@ pub fn LevelUpDialog(
                         </fieldset>
                     }
                 };
+                // Swap a known spell of this class for another (not a cantrip).
+                let class_name = info_now().map(|i| i.name).unwrap_or_default();
+                let out_opts: Vec<(String, String)> = sheet.with_value(|s| {
+                    s.spells
+                        .iter()
+                        .filter(|k| {
+                            k.source_class.eq_ignore_ascii_case(&class_name) && k.level != Some(0)
+                        })
+                        .map(|k| {
+                            (
+                                format!("{}|{}", k.spell_name, k.spell_source),
+                                k.spell_name.clone(),
+                            )
+                        })
+                        .collect()
+                });
+                let in_opts: Vec<(String, String)> = spell_list
+                    .iter()
+                    .map(|c| {
+                        (
+                            format!("{}|{}", c.name, c.source),
+                            format!("{} — {}", c.name, c.detail.clone().unwrap_or_default()),
+                        )
+                    })
+                    .collect();
+                let can_swap = !out_opts.is_empty() && !in_opts.is_empty();
                 view! {
                     {(nc > 0).then(|| pick("Cantrips".into(), cantrip_list.clone(), cantrips, nc))}
                     {(ns > 0).then(|| pick("Spells".into(), spell_list.clone(), spells, ns))}
+                    {can_swap.then(|| view! {
+                        <fieldset class="mimir-levelup__picks">
+                            <legend>"Swap a spell (optional)"</legend>
+                            <Select label="Forget" placeholder="No swap" option_pairs=out_opts.clone() value=swap_out />
+                            <Select label="Learn instead" placeholder="Choose…" option_pairs=in_opts.clone() value=swap_in />
+                        </fieldset>
+                    })}
                     <Text size="sm" dimmed=true>"You can also add spells later on the Spells tab."</Text>
                 }
                 .into_any()
@@ -842,15 +951,9 @@ pub fn LevelUpDialog(
                         <Select label="Fighting style" placeholder="Choose…" option_pairs=style_opts.clone() value=style_pick />
                         <TextInput label="Or type one (Name|SRC)" value=style_typed />
                     })}
-                    {(sl.metamagic > 0).then(|| view! {
-                        <TextInput label=format!("Metamagic ({}; names, separated by commas)", sl.metamagic) value=metamagic_typed />
-                    })}
-                    {(sl.maneuvers > 0).then(|| view! {
-                        <TextInput label=format!("Maneuvers ({}; names, separated by commas)", sl.maneuvers) value=maneuvers_typed />
-                    })}
-                    {(sl.invocations > 0).then(|| view! {
-                        <TextInput label=format!("Eldritch invocations ({}; names, separated by commas)", sl.invocations) value=invocations_typed />
-                    })}
+                    {(sl.metamagic > 0).then(|| feature_picker("Metamagic", metamagic_list.get().and_then(Result::ok).unwrap_or_default(), metamagic_picks, metamagic_typed, sl.metamagic))}
+                    {(sl.maneuvers > 0).then(|| feature_picker("Maneuvers", maneuver_list.get().and_then(Result::ok).unwrap_or_default(), maneuver_picks, maneuvers_typed, sl.maneuvers))}
+                    {(sl.invocations > 0).then(|| feature_picker("Eldritch invocations", invocation_list.get().and_then(Result::ok).unwrap_or_default(), invocation_picks, invocations_typed, sl.invocations))}
                     {sl.pact_boon.then(|| view! {
                         <Select label="Pact boon" placeholder="Choose…" options=PACT_BOONS.iter().map(|b| b.to_string()).collect() value=pact_pick />
                     })}
@@ -902,9 +1005,15 @@ pub fn LevelUpDialog(
                             if let Some(s) = &r.spell_changes {
                                 let names: Vec<String> = s.new_cantrips.iter().chain(&s.new_spells).map(|x| x.name.clone()).collect();
                                 if !names.is_empty() { lines.push(format!("Spells: {}", names.join(", "))); }
+                                if let (Some(o), Some(i)) = (&s.swap_out, &s.swap_in) {
+                                    lines.push(format!("Swap: {} for {}", o.name, i.name));
+                                }
                             }
                             if let Some(f) = &r.feature_choices {
                                 if let Some(x) = &f.fighting_style { lines.push(format!("Fighting style: {}", x.name)); }
+                                if let Some(x) = &f.metamagic { lines.push(format!("Metamagic: {}", x.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", "))); }
+                                if let Some(x) = &f.maneuvers { lines.push(format!("Maneuvers: {}", x.new_maneuvers.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", "))); }
+                                if let Some(x) = &f.invocations { lines.push(format!("Invocations: {}", x.new_invocations.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", "))); }
                                 if let Some(x) = &f.pact_boon { lines.push(format!("Pact boon: {}", x.name)); }
                                 if let Some(x) = &f.expertise_skills { lines.push(format!("Expertise: {}", x.join(", "))); }
                             }
@@ -1087,6 +1196,19 @@ mod tests {
             json!([{"name": "Eldritch Invocations", "progression": [0, 2, 2, 2, 3]}]);
         assert_eq!(feature_slots("Warlock", 5, None, &lock).invocations, 1);
         assert_eq!(feature_slots("Warlock", 2, None, &lock).invocations, 2);
+    }
+
+    #[test]
+    fn picks_win_over_typing() {
+        let r = |n: &str| Ref {
+            name: n.into(),
+            source: "PHB".into(),
+        };
+        assert_eq!(
+            picked_or_typed(vec![r("Precision Attack")], "Riposte|PHB"),
+            vec![r("Precision Attack")]
+        );
+        assert_eq!(picked_or_typed(vec![], "Riposte|PHB"), vec![r("Riposte")]);
     }
 
     #[test]

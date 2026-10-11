@@ -44,12 +44,12 @@ const screens: Screen[] = [
   {
     name: 'dashboard-npcs',
     path: (i) => `/campaigns/${i.campaign}/npcs`,
-    ready: async (p) => expect(p.getByRole('cell', { name: 'Gundren Rockseeker' })).toBeVisible(),
+    ready: async (p) => expect(p.getByRole('listitem', { name: 'Gundren Rockseeker' })).toBeVisible(),
   },
   {
     name: 'dashboard-pcs',
     path: (i) => `/campaigns/${i.campaign}/pcs`,
-    ready: async (p) => expect(p.getByRole('cell', { name: 'Wizard 5' })).toBeVisible(),
+    ready: async (p) => expect(p.getByRole('list', { name: 'Player characters' }).getByText('Wizard 5')).toBeVisible(),
   },
   {
     name: 'dm-map',
@@ -246,7 +246,7 @@ for (const theme of themes) {
     await signIn(page, theme)
     await page.goto(`/characters/${id}`)
     await page.getByRole('tab', { name: 'Equipment' }).click()
-    await expect(page.locator('.mimir-inv__list')).toBeVisible()
+    await expect(page.locator('.mimir-inv__list').first()).toBeVisible()
     await page.mouse.move(0, 0)
     await page.evaluate(() => document.fonts.ready)
     await page.screenshot({ path: `${outDir}/character-equipment--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })

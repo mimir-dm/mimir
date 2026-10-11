@@ -45,11 +45,11 @@ A table of the modules.
 
 ### NPCs
 
-A table of the NPCs of the campaign: **Name**, **Role**, **Location**, **Faction**. Click a name to open the sheet. **New NPC** makes one.
+A card for each NPC of the campaign, with its role, location and faction, **View** and **PDF…**. Click a name to open the sheet. **New NPC** makes one.
 
 ### PCs
 
-A table of the player characters: **Name**, **Player**, **Race**, **Class**, **Link**. Click a name to open the sheet. **New PC** opens the character wizard.
+A card for each player character, with its player, race and class, **View**, **PDF…** and **Player link**. Click a name to open the sheet. **New PC** opens the character wizard.
 
 **Player link** opens the link panel of a PC:
 

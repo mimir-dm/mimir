@@ -7,23 +7,27 @@ Add items, equip gear, attune magic items and track coins on the **Equipment** t
 1. Open the character sheet. For example, click **Characters**, then the character name.
 2. Click the **Equipment** tab.
 
-The tab has three parts: **Coins**, **Inventory** and **Add an item**.
+The tab has four parts: **Coins**, **Equipped**, **Inventory** (the rest) and **Add an item**.
 
 ## Add an Item
 
 1. In **Add an item**, type at least 2 letters of the item name.
-2. Optionally, change the quantity.
+2. Optionally, change the quantity, and type notes (for example "From the goblin chief").
 3. Click **Search**.
 4. Click **Add** next to the item.
 
 The search finds catalog items and the homebrew items of the campaign.
 
+## Read an Item
+
+Click the name of an item. Its details open: type, weight, value, properties and text. A player can do this on their own sheet too.
+
 ## Change an Item
 
-Each item in **Inventory** has:
+Each item in **Equipped** and **Inventory** has:
 
 - **+** and **−** (**One more …**, **One fewer …**): change the quantity
-- **Equipped**: the item is worn or held. An equipped weapon shows under **Attacks** on the **Character** tab.
+- **Equipped**: the item is worn or held. It moves to **Equipped**. An equipped weapon shows under **Attacks** on the **Character** tab.
 - **Attuned**: the character is attuned to the item. The line under **Inventory** shows "Attuned: … of 3". D&D 5e allows 3.
 - **×** (**Remove …**): remove the item
 

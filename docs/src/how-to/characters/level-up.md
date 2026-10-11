@@ -50,13 +50,17 @@ A score cannot go above 20.
 
 *Only for spellcasting classes.*
 
-Select new cantrips and spells. You can also add spells later on the **Spells** tab.
+Select new cantrips and spells. The lists keep to the character's source books when it has some.
+
+To swap a spell, choose it in **Forget** and its replacement in **Learn instead**. A swap needs both.
+
+You can also add spells later on the **Spells** tab.
 
 ### Features
 
 *Only when the new level gives a choice.*
 
-For example: **Fighting style**, **Metamagic**, **Maneuvers**, **Eldritch invocations**, **Pact boon** or expertise skills.
+For example: **Fighting style**, **Metamagic**, **Maneuvers**, **Eldritch invocations**, **Pact boon** or expertise skills. Metamagic, maneuvers and invocations are lists from the catalog: tick up to the number the level gives. With no such entries in the catalog, type the names.
 
 ### Review
 

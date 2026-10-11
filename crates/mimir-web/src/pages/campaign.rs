@@ -190,64 +190,77 @@ pub fn ModulesTab() -> impl IntoView {
     }
 }
 
-fn characters_table(list: Vec<CharacterSummary>, npc: bool) -> impl IntoView {
-    let headers = if npc {
-        ["Name", "Role", "Location", "Faction"]
+/// The lines of a character's card: an NPC's role, place and faction; a
+/// PC's player, race and class. Empty ones are left out.
+pub fn card_lines(c: &CharacterSummary, npc: bool) -> Vec<String> {
+    let lines = if npc {
+        [
+            c.role.clone().map(|r| format!("Role: {r}")),
+            c.location.clone().map(|l| format!("Location: {l}")),
+            c.faction.clone().map(|f| format!("Faction: {f}")),
+        ]
     } else {
-        ["Name", "Player", "Race", "Class"]
+        [
+            c.player_name.clone().map(|p| format!("Player: {p}")),
+            c.race_name.clone(),
+            Some(class_label(&c.classes)).filter(|l| l != "—"),
+        ]
     };
-    let link_header = (!npc).then(|| view! { <th>"Link"</th> });
-    let empty = if npc {
-        "No NPCs yet."
-    } else {
-        "No player characters yet."
-    };
-    view! {
-        <Table label=if npc { "NPCs" } else { "Player characters" } min_width="560px">
-            <thead>
-                <tr>{headers.map(|h| view! { <th>{h}</th> }).collect_view()}{link_header}</tr>
-            </thead>
-            <tbody>
-                {if list.is_empty() {
-                    view! { <TableEmpty message=empty colspan=4 /> }.into_any()
-                } else {
-                    list.into_iter()
-                        .map(|c| {
-                            let cells = if npc {
-                                [or_dash(&c.role), or_dash(&c.location), or_dash(&c.faction)]
-                            } else {
-                                [or_dash(&c.player_name), or_dash(&c.race_name), class_label(&c.classes)]
-                            };
-                            let open = RwSignal::new(false);
-                            let id = c.id.clone();
-                            let name = c.name.clone();
-                            view! {
-                                <tr>
-                                    <td><a href=format!("/characters/{}", c.id)>{c.name}</a></td>
-                                    {cells.map(|t| view! { <td>{t}</td> }).collect_view()}
-                                    {(!npc).then(|| view! {
-                                        <td>
-                                            <Button variant="subtle" on_click=Callback::new(move |_| open.update(|o| *o = !*o))>
-                                                {move || if open.get() { "Close" } else { "Player link" }}
-                                            </Button>
-                                        </td>
-                                    })}
-                                </tr>
-                                {move || open.get().then(|| view! {
-                                    <tr class="mimir-link-row">
-                                        <td colspan="5">
-                                            <LinkPanel character_id=id.clone() name=name.clone() />
-                                        </td>
-                                    </tr>
-                                })}
-                            }
-                        })
-                        .collect_view()
-                        .into_any()
-                }}
-            </tbody>
-        </Table>
+    lines
+        .into_iter()
+        .flatten()
+        .filter(|l| !l.trim().is_empty())
+        .collect()
+}
+
+/// The PCs or NPCs as cards: View, PDF, and a PC's player link
+/// (MIMIR-T-0733, the desktop's character cards).
+fn characters_cards(
+    list: Vec<CharacterSummary>,
+    npc: bool,
+    printing: RwSignal<Option<String>>,
+) -> impl IntoView {
+    let label = if npc { "NPCs" } else { "Player characters" };
+    if list.is_empty() {
+        let empty = if npc {
+            "No NPCs yet."
+        } else {
+            "No player characters yet."
+        };
+        return view! { <Empty message=empty /> }.into_any();
     }
+    view! {
+        <div class="mimir-cards mimir-char-cards" role="list" aria-label=label>
+            {list.into_iter().map(|c| {
+                let lines = card_lines(&c, npc);
+                let open = RwSignal::new(false);
+                let (id, pdf_id) = (c.id.clone(), c.id.clone());
+                let name = c.name.clone();
+                let href = format!("/characters/{}", c.id);
+                let view_label = format!("View {}", c.name);
+                let (aria, title) = (c.name.clone(), c.name.clone());
+                view! {
+                    <article class="cl-card mimir-char-card" role="listitem" aria-label=aria>
+                        <a class="cl-card__title mimir-char-card__name" href=href.clone()>{title}</a>
+                        {lines.into_iter().map(|l| view! { <Text size="sm" dimmed=true>{l}</Text> }).collect_view()}
+                        <Group>
+                            <a class="cl-btn cl-btn--light" href=href aria-label=view_label>"View"</a>
+                            <Button variant="subtle" on_click=Callback::new(move |_| printing.set(Some(pdf_id.clone())))>"PDF…"</Button>
+                            {(!npc).then(|| view! {
+                                <Button variant="subtle" on_click=Callback::new(move |_| open.update(|o| *o = !*o))>
+                                    {move || if open.get() { "Close" } else { "Player link" }}
+                                </Button>
+                            })}
+                        </Group>
+                        {move || open.get().then(|| view! {
+                            <LinkPanel character_id=id.clone() name=name.clone() />
+                        })}
+                    </article>
+                }
+            }).collect_view()}
+        </div>
+    }
+    .into_any()
 }
 
 /// The PCs or NPCs of the campaign, and New PC / New NPC (the wizard,
@@ -260,12 +273,29 @@ fn characters_tab(npc: bool) -> impl IntoView {
         api::campaign_list(id.get(), if npc { "npcs" } else { "pcs" })
     });
     let creating = RwSignal::new(false);
-    let table = loaded(list, move |l| characters_table(l, npc));
+    let printing = RwSignal::new(None::<String>);
+    let pdf_open = RwSignal::new(false);
+    Effect::new(move |_| pdf_open.set(printing.with(Option::is_some)));
+    Effect::new(move |prev: Option<bool>| {
+        let now = pdf_open.get();
+        if prev == Some(true) && !now {
+            printing.set(None);
+        }
+        now
+    });
+    let cards = loaded(list, move |l| characters_cards(l, npc, printing));
     view! {
         <Group>
             <Button on_click=Callback::new(move |_| creating.set(true))>{if npc { "New NPC" } else { "New PC" }}</Button>
         </Group>
-        {table}
+        {cards}
+        <crate::admin::pdf::PdfDialog
+            open=pdf_open
+            title="PDF of the character"
+            path=Signal::derive(move || format!("/characters/{}/pdf", printing.get().unwrap_or_default()))
+            options=crate::admin::pdf::CHARACTER
+            file="character.pdf"
+        />
         {move || creating.get().then(|| view! {
             <CharacterWizard
                 campaign_id=id.get()
@@ -290,6 +320,21 @@ pub fn PcsTab() -> impl IntoView {
 #[cfg(test)]
 mod tests {
     use super::tab_of;
+
+    #[test]
+    fn card_lines_leave_out_empty_fields() {
+        let c: mimir_wire::CharacterSummary = serde_json::from_value(serde_json::json!({
+            "id": "c", "campaign_id": null, "name": "Halia", "is_npc": true, "player_name": null,
+            "race_name": "Human", "background_name": null, "classes": [], "level": 0,
+            "role": "Guild agent", "location": null, "faction": "Zhentarim", "updated_at": ""
+        }))
+        .unwrap();
+        assert_eq!(
+            super::card_lines(&c, true),
+            vec!["Role: Guild agent", "Faction: Zhentarim"]
+        );
+        assert_eq!(super::card_lines(&c, false), vec!["Human"]);
+    }
 
     #[test]
     fn the_tab_comes_from_the_path() {

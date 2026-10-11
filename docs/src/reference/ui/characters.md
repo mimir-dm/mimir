@@ -13,6 +13,9 @@ The page groups the characters by campaign. Characters in no campaign are under 
 | **Details** | Classes with levels, and race |
 | **Player** | The player of a PC |
 | **Campaign** | A menu to move the character to another campaign, or to **No campaign** |
+| **Edit** | Open the sheet |
+| **PDF…** | Export the sheet to PDF |
+| **Level up** | Open the level-up dialog (a PC below level 20) |
 | **×** | Delete the character, after a confirmation |
 
 **New character** opens the wizard. It asks for the **Kind** and the **Campaign** first.
@@ -43,9 +46,9 @@ See [Create a Player Character](../../how-to/characters/create-pc.md).
 | Tab | Contents |
 |-----|----------|
 | **Character** | Abilities, saving throws, skills, armor class, initiative, speed, hit dice, passive Perception, proficiency, attacks |
-| **Equipment** | **Coins**, **Inventory**, **Add an item**. See [Manage Inventory](../../how-to/characters/manage-inventory.md). |
-| **Spells** | Casters only: spellcasting, **Spell slots**, **Known spells**, **Learn a spell…**. See [Manage Spells](../../how-to/characters/manage-spells.md). |
-| **Details** | An NPC's **Role**, **Location** and **Faction**; personality (traits, ideals, bonds, flaws); proficiencies, languages, feats, features and classes. **Save** saves the fields. A PC also has **Share this sheet with the party (read-only)**. |
+| **Equipment** | **Coins**, **Equipped**, **Inventory**, **Add an item** (with notes). A name opens the item. See [Manage Inventory](../../how-to/characters/manage-inventory.md). |
+| **Spells** | Casters only: spellcasting, **Spell slots**, **Known spells** by level (a name opens the spell), **Learn a spell…**. See [Manage Spells](../../how-to/characters/manage-spells.md). |
+| **Details** | An NPC's **Role**, **Location** and **Faction**; personality (traits, ideals, bonds, flaws); the **Background** (a click opens it); classes, proficiencies, languages, feats, chosen features, and the class and subclass features up to the character's level, each opening to its text. **Save** saves the fields. A PC also has **Share this sheet with the party (read-only)**. |
 | **Notes** | The player's notes. The DM reads them; the player writes them. |
 
 The sheet follows changes live. When a player changes their sheet, the DM sees it at once.

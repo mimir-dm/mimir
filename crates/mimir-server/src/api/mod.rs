@@ -21,6 +21,7 @@ pub mod party;
 pub mod print;
 pub mod reference;
 pub mod scope;
+pub mod sheet;
 
 use axum::extract::DefaultBodyLimit;
 use axum::middleware;
@@ -192,6 +193,14 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/jobs/{id}", Dm, G, get(ad::job)),
         // PDF export (MIMIR-T-0724).
         route("/characters/{id}/pdf", Dm, G, get(pdf::character)),
+        // The text a sheet names (MIMIR-T-0733).
+        route("/characters/{id}/features", Player, G, get(sheet::features)),
+        route(
+            "/characters/{id}/entry/{category}/{source}/{name}",
+            Player,
+            G,
+            get(sheet::entry),
+        ),
         route("/campaigns/{id}/pdf", Dm, G, get(pdf::campaign)),
         route("/modules/{id}/pdf", Dm, G, get(pdf::module)),
         route("/maps/{id}/pdf", Dm, G, get(pdf::map)),

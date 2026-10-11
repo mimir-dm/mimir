@@ -43,7 +43,18 @@ fn spell(s: CharacterSpell) -> wire::KnownSpell {
         spell_source: s.spell_source,
         source_class: s.source_class,
         prepared: s.prepared != 0,
+        level: None,
     }
+}
+
+/// A known spell with its level.
+fn spell_with_level(
+    conn: &mut SqliteConnection,
+    campaign: Option<&str>,
+    s: CharacterSpell,
+) -> wire::KnownSpell {
+    let level = super::sheet::spell_level(conn, campaign, &s.spell_name, &s.spell_source);
+    wire::KnownSpell { level, ..spell(s) }
 }
 
 /// Walking speed from the race's catalog data (30 when unknown).
@@ -73,7 +84,7 @@ pub fn sheet(conn: &mut SqliteConnection, id: &str) -> Result<wire::CharacterShe
         .get_enriched(id)?
         .ok_or_else(|| ServiceError::not_found("Character", id))?;
     let inventory = chars.get_inventory(id)?.into_iter().map(item).collect();
-    let spells = chars.list_spells(id)?.into_iter().map(spell).collect();
+    let known = chars.list_spells(id)?;
     let feats = chars
         .list_feats(id)?
         .into_iter()
@@ -92,6 +103,10 @@ pub fn sheet(conn: &mut SqliteConnection, id: &str) -> Result<wire::CharacterShe
             source: f.feature_source,
             source_class: f.source_class,
         })
+        .collect();
+    let spells = known
+        .into_iter()
+        .map(|s| spell_with_level(conn, c.campaign_id.as_deref(), s))
         .collect();
     let speed = race_speed(conn, c.race_name.as_deref(), c.race_source.as_deref());
     let shared = PartyService::new(conn).is_shared(id)?;
@@ -335,7 +350,13 @@ pub async fn add_spell(
                 body.prepared,
             )?;
             notify(&live, conn, &id);
-            Ok((StatusCode::CREATED, Json(spell(s))))
+            let campaign = CharacterService::new(conn)
+                .get(&id)?
+                .and_then(|c| c.campaign_id);
+            Ok((
+                StatusCode::CREATED,
+                Json(spell_with_level(conn, campaign.as_deref(), s)),
+            ))
         })
         .await
 }
@@ -370,7 +391,10 @@ pub async fn patch_spell(
                 CharacterService::new(conn).toggle_spell_prepared(&spell_id)?
             };
             notify(&live, conn, &id);
-            Ok(spell(s))
+            let campaign = CharacterService::new(conn)
+                .get(&id)?
+                .and_then(|c| c.campaign_id);
+            Ok(spell_with_level(conn, campaign.as_deref(), s))
         })
         .await
         .map(Json)

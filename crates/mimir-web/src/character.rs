@@ -9,3 +9,4 @@ pub mod notes;
 pub mod party;
 pub mod sheet;
 pub mod stats;
+pub mod text;

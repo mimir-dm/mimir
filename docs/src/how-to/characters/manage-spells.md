@@ -13,11 +13,11 @@ Learn, prepare and forget spells on the **Spells** tab of a character sheet. A p
 
 - **Spellcasting**: for each casting class, the ability, the spell save DC and the spell attack bonus, for example "DC 13 · +5".
 - **Spell slots**: the slots for each spell level.
-- **Known spells**: the spells the character knows, with the class they come from.
+- **Known spells**: the spells the character knows, by level (**Cantrips**, **1st level**, …), with the class they come from. Click a name to read the spell.
 
 ## Learn a Spell
 
-1. Open **Learn a spell…**. The list has the spells of the class, up to the highest level the character can cast.
+1. Open **Learn a spell…**. The list has the spells of the class, up to the highest level the character can cast. When the character has source books (**Source books…**), the list keeps to them.
 2. Choose a spell.
 3. Click **Learn**.
 
@@ -39,7 +39,7 @@ The level-up dialog has a **Spells** step for casters. You can also add spells l
 
 ## Look Up a Spell
 
-To read the text of a spell, search it in **Reference**, **Catalog**, **Spells**.
+Click the name of a known spell. Its text opens. For other spells, search in **Reference**, **Catalog**, **Spells**.
 
 ## See Also
 

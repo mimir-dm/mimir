@@ -727,6 +727,14 @@
   color: var(--fg);
   padding: 0 var(--space-xs);
 }
+/* Characters (MIMIR-T-0733): cards on the dashboard, class features that
+   open to their text. */
+.mimir-char-card { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-md); }
+.mimir-char-card__name { text-decoration: none; color: inherit; }
+.mimir-features { display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md); }
+.mimir-feature { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-xs) var(--space-sm); }
+.mimir-feature > summary { cursor: pointer; display: flex; gap: var(--space-sm); align-items: baseline; }
+.mimir-feature__level { font-size: 0.75rem; opacity: 0.7; min-width: 4.5em; }
 /* Images and previews (MIMIR-T-0731). */
 .mimir-image-preview { max-width: 100%; max-height: 240px; object-fit: contain; align-self: flex-start; }
 .mimir-image-view { max-width: 100%; max-height: 70vh; object-fit: contain; }

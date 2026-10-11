@@ -4,7 +4,9 @@
 //! Spells (casters), Details (personality, proficiencies, feats, features,
 //! classes). The server decides what a caller may change; the screen shows
 //! the same actions to both. It reads the sheet again when the socket says
-//! the character changed (the DM sees a player's edit live).
+//! the character changed (the DM sees a player's edit live). Names open
+//! their text: items, spells, the background; the class features unfold
+//! (MIMIR-T-0733).
 
 use aurora_leptos::components::*;
 use aurora_leptos::data::SectionLabel;
@@ -20,6 +22,7 @@ use super::inventory::InventoryPanel;
 use super::levelup::LevelUpDialog;
 use super::notes::NotesPanel;
 use super::stats::{self, signed, ABILITIES, SKILLS};
+use super::text::{ClassFeatures, SheetEntry, SheetRef};
 use crate::api;
 use crate::live::Live;
 
@@ -104,6 +107,8 @@ pub fn CharacterSheetView(
     // outside the part that rebuilds on each reload (the live notice of its
     // own level-up would rebuild it and lose its answer).
     let leveling = RwSignal::new(None::<CharacterSheet>);
+    // The entry a name opens (an item, a spell, the background).
+    let showing = RwSignal::new(None::<SheetRef>);
 
     view! {
         {move || match sheet.get() {
@@ -158,10 +163,10 @@ pub fn CharacterSheetView(
                         <Tabs tabs=tabs value=tab label="Character sections">
                             <TabPanel value="character">{stats_tab(s1.clone())}</TabPanel>
                             <TabPanel value="equipment">
-                                <InventoryPanel sheet=s2.clone() on_changed=reload read_only=!editable />
+                                <InventoryPanel sheet=s2.clone() on_changed=reload read_only=!editable showing=showing />
                             </TabPanel>
-                            <TabPanel value="spells">{spells_tab(s3.clone(), reload, editable)}</TabPanel>
-                            <TabPanel value="details">{details_tab(s4.clone(), reload, editable, details_saved)}</TabPanel>
+                            <TabPanel value="spells">{spells_tab(s3.clone(), reload, editable, showing)}</TabPanel>
+                            <TabPanel value="details">{details_tab(s4.clone(), reload, editable, details_saved, showing)}</TabPanel>
                             <TabPanel value="notes">
                                 <NotesPanel character_id=sheet_id.clone() editable=access.writes_notes() />
                             </TabPanel>
@@ -185,6 +190,7 @@ pub fn CharacterSheetView(
                 path=Signal::derive(move || format!("/characters/{}/sources", id.get()))
             />
         })}
+        <SheetEntry character=id showing=showing />
         {move || leveling.get().map(|s| view! {
             <LevelUpDialog
                 sheet=s
@@ -288,7 +294,37 @@ fn stats_tab(s: CharacterSheet) -> impl IntoView {
     }
 }
 
-fn spells_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl IntoView {
+/// Known spells by level: cantrips first, then 1st level up; the ones the
+/// catalog does not know last. Each list by name.
+pub fn spells_by_level(mut spells: Vec<KnownSpell>) -> Vec<(String, Vec<KnownSpell>)> {
+    spells.sort_by(|a, b| {
+        (a.level.is_none(), a.level, &a.spell_name).cmp(&(
+            b.level.is_none(),
+            b.level,
+            &b.spell_name,
+        ))
+    });
+    let mut groups: Vec<(String, Vec<KnownSpell>)> = Vec::new();
+    for k in spells {
+        let heading = match k.level {
+            Some(0) => "Cantrips".to_string(),
+            Some(l) => format!("{} level", ordinal(l)),
+            None => "Level unknown".to_string(),
+        };
+        match groups.last_mut() {
+            Some((h, l)) if *h == heading => l.push(k),
+            _ => groups.push((heading, vec![k])),
+        }
+    }
+    groups
+}
+
+fn spells_tab(
+    s: CharacterSheet,
+    reload: Callback<()>,
+    editable: bool,
+    showing: RwSignal<Option<SheetRef>>,
+) -> impl IntoView {
     let casting = stats::casting(&s);
     let slots = stats::spell_slots(&s);
     let error = RwSignal::new(String::new());
@@ -309,15 +345,20 @@ fn spells_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl I
     let class0 = classes.first().cloned().unwrap_or_default();
     let choices = LocalResource::new({
         let class0 = class0.clone();
+        let id = id.clone();
         move || {
             let c = class0.clone();
+            let id0 = id.clone();
             async move {
                 if c.is_empty() {
                     return Vec::new();
                 }
-                api::get::<Vec<Choice>>(format!("/catalog/spells?class={c}&max_level={max_level}"))
-                    .await
-                    .unwrap_or_default()
+                // The character's books, when it has some (MIMIR-T-0733).
+                api::get::<Vec<Choice>>(format!(
+                    "/catalog/spells?class={c}&max_level={max_level}&character={id0}"
+                ))
+                .await
+                .unwrap_or_default()
             }
         }
     });
@@ -357,8 +398,8 @@ fn spells_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl I
         .iter()
         .map(|k| k.spell_name.to_lowercase())
         .collect();
-    let mut known = s.spells.clone();
-    known.sort_by(|a, b| a.spell_name.cmp(&b.spell_name));
+    let known_n = s.spells.len();
+    let groups = spells_by_level(s.spells.clone());
     view! {
         <div class="mimir-sheet__stats">
             {casting.into_iter().map(|c| view! {
@@ -374,19 +415,24 @@ fn spells_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl I
                 <span class="mimir-sheet__slot">{format!("{}: {n}", ordinal(i as i32 + 1))}</span>
             }).collect_view()}
         </div>
-        <SectionLabel label="Known spells" count=known.len() />
-        {if known.is_empty() {
+        <SectionLabel label="Known spells" count=known_n />
+        {if known_n == 0 {
             view! { <Text size="sm" dimmed=true>"No spells recorded."</Text> }.into_any()
         } else {
-            view! {
+            groups.into_iter().map(|(heading, known)| view! {
+                <SectionLabel label=heading level=4 count=known.len() />
                 <ul class="mimir-sheet__list">
                     {known.into_iter().map(|k| {
                         let prepared = RwSignal::new(k.prepared);
                         let path = format!("/characters/{}/spells/{}", id, k.id);
                         let path2 = path.clone();
+                        let r = SheetRef::new("spells", &k.spell_source, &k.spell_name);
                         view! {
                             <li>
-                                <span>{format!("{} ({})", k.spell_name, k.source_class)}</span>
+                                <span>
+                                    <button type="button" class="mimir-link-button" on:click=move |_| showing.set(Some(r.clone()))>{k.spell_name.clone()}</button>
+                                    {format!(" ({})", k.source_class)}
+                                </span>
                                 {if !editable {
                                     view! { <span class="mimir-sheet__num">{if k.prepared { "prepared" } else { "" }}</span> }.into_any()
                                 } else { view! {
@@ -414,7 +460,7 @@ fn spells_tab(s: CharacterSheet, reload: Callback<()>, editable: bool) -> impl I
                         }
                     }).collect_view()}
                 </ul>
-            }.into_any()
+            }).collect_view().into_any()
         }}
         {(editable && !class0.is_empty()).then(|| view! {
             <div class="mimir-sheet__add">
@@ -453,7 +499,16 @@ fn details_tab(
     reload: Callback<()>,
     editable: bool,
     saved: RwSignal<bool>,
+    showing: RwSignal<Option<SheetRef>>,
 ) -> impl IntoView {
+    let background = s.background_name.clone().map(|n| {
+        SheetRef::new(
+            "backgrounds",
+            s.background_source.as_deref().unwrap_or(""),
+            &n,
+        )
+    });
+    let character = s.id.clone();
     let shared = RwSignal::new(s.shared);
     let share_path = format!("/characters/{}/sharing", s.id);
     // An NPC's role, place and faction first (MIMIR-T-0721).
@@ -579,6 +634,16 @@ fn details_tab(
                 </Stack>
             </section>
             <section>
+                <SectionLabel label="Background" />
+                {match background {
+                    Some(b) => {
+                        let label = format!("{} ({})", b.name, b.source);
+                        view! {
+                            <button type="button" class="mimir-link-button" on:click=move |_| showing.set(Some(b.clone()))>{label}</button>
+                        }.into_any()
+                    }
+                    None => view! { <Text size="sm" dimmed=true>"None."</Text> }.into_any(),
+                }}
                 <SectionLabel label="Classes" />
                 <ul class="mimir-sheet__list">
                     {s.classes.iter().map(|k| view! {
@@ -605,6 +670,7 @@ fn details_tab(
                         <li><span>{f.name.clone()}</span><span class="mimir-sheet__num">{f.kind.replace('_', " ")}</span></li>
                     }).collect_view()}
                 </ul>
+                <ClassFeatures character=character />
             </section>
         </div>
     }
@@ -612,7 +678,35 @@ fn details_tab(
 
 #[cfg(test)]
 mod tests {
-    use super::{ordinal, SheetAccess};
+    use super::{ordinal, spells_by_level, SheetAccess};
+    use mimir_wire::KnownSpell;
+
+    #[test]
+    fn spells_group_by_level() {
+        let k = |n: &str, l: Option<i32>| KnownSpell {
+            id: n.into(),
+            spell_name: n.into(),
+            spell_source: "PHB".into(),
+            source_class: "Wizard".into(),
+            prepared: false,
+            level: l,
+        };
+        let g = spells_by_level(vec![
+            k("Shield", Some(1)),
+            k("Odd", None),
+            k("Light", Some(0)),
+            k("Magic Missile", Some(1)),
+        ]);
+        let heads: Vec<&str> = g.iter().map(|(h, _)| h.as_str()).collect();
+        assert_eq!(heads, vec!["Cantrips", "1st level", "Level unknown"]);
+        assert_eq!(
+            g[1].1
+                .iter()
+                .map(|k| k.spell_name.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Magic Missile", "Shield"]
+        );
+    }
 
     #[test]
     fn access_levels() {

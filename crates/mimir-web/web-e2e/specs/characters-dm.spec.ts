@@ -74,9 +74,9 @@ test('a PC through the wizard starts at level 1', async ({ page }) => {
   await d.getByRole('button', { name: 'Create' }).click()
   await expect(d).toHaveCount(0)
 
-  const row = page.locator('tr', { hasText: 'Robin Brightwater' })
+  const row = page.getByRole('listitem', { name: 'Robin Brightwater' })
   await expect(row).toContainText('Fighter 1')
-  await row.getByRole('link', { name: 'Robin Brightwater' }).click()
+  await row.getByRole('link', { name: 'Robin Brightwater', exact: true }).click()
   await expect(page.locator('.cl-page-header').first()).toContainText('Level 1')
 })
 
@@ -90,11 +90,11 @@ test('an NPC, its fields on the sheet, and the characters page', async ({ page }
   await pick(d.getByLabel('Race'), 'Elf')
   await d.getByLabel('Role').fill('Priestess')
   await d.getByRole('button', { name: 'Create' }).click()
-  const row = page.locator('tr', { hasText: 'Sister Garaele' })
+  const row = page.getByRole('listitem', { name: 'Sister Garaele' })
   await expect(row).toContainText('Priestess')
 
   // The sheet's Details: the NPC fields.
-  await row.getByRole('link', { name: 'Sister Garaele' }).click()
+  await row.getByRole('link', { name: 'Sister Garaele', exact: true }).click()
   await page.getByRole('tab', { name: 'Details' }).click()
   await page.getByLabel('Faction').fill('Harpers')
   await page.getByRole('button', { name: 'Save' }).click()
