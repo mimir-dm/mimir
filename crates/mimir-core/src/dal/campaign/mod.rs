@@ -29,6 +29,7 @@ mod map_trap;
 mod module;
 mod module_monster;
 mod module_npc;
+mod party;
 mod player_link;
 mod token_placement;
 
@@ -56,5 +57,6 @@ pub use map_trap::*;
 pub use module::*;
 pub use module_monster::*;
 pub use module_npc::*;
+pub use party::*;
 pub use player_link::*;
 pub use token_placement::*;

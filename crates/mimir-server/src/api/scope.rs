@@ -5,7 +5,7 @@
 use std::path::Path;
 
 use diesel::SqliteConnection;
-use mimir_core::services::MapService;
+use mimir_core::services::{CharacterService, MapService, PartyService};
 
 use crate::auth::Caller;
 use crate::error::ApiError;
@@ -34,6 +34,37 @@ pub fn character(caller: &Caller, character_id: &str) -> Result<(), ApiError> {
         Caller::Dm => Ok(()),
         Caller::Player(p) if p.character_id == character_id => Ok(()),
         Caller::Player(_) => Err(ApiError::forbidden()),
+    }
+}
+
+/// Read a character: the DM any; a player their own, or another player
+/// character of their campaign whose sheet is shared.
+pub fn read_character(
+    caller: &Caller,
+    conn: &mut SqliteConnection,
+    character_id: &str,
+) -> Result<(), ApiError> {
+    let Caller::Player(p) = caller else {
+        return Ok(());
+    };
+    if p.character_id == character_id {
+        return Ok(());
+    }
+    let same_campaign = CharacterService::new(conn)
+        .get(character_id)?
+        .is_some_and(|c| c.is_npc == 0 && c.campaign_id.as_deref() == Some(p.campaign_id.as_str()));
+    if same_campaign && PartyService::new(conn).is_shared(character_id)? {
+        Ok(())
+    } else {
+        Err(ApiError::forbidden())
+    }
+}
+
+/// Write notes: the character's own player only (the DM reads them).
+pub fn own_player(caller: &Caller, character_id: &str) -> Result<(), ApiError> {
+    match caller {
+        Caller::Player(p) if p.character_id == character_id => Ok(()),
+        _ => Err(ApiError::forbidden()),
     }
 }
 

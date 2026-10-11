@@ -13,10 +13,11 @@ pub mod convert;
 pub mod display;
 pub mod links;
 pub mod maps;
+pub mod party;
 pub mod scope;
 
 use axum::middleware;
-use axum::routing::{delete, get, patch, post, MethodRouter};
+use axum::routing::{delete, get, patch, post, put, MethodRouter};
 use axum::Router;
 
 use crate::auth;
@@ -103,6 +104,27 @@ pub fn routes() -> Vec<ApiRoute> {
             &["POST"],
             post(ch::level_up),
         ),
+        // Notes and the party (MIMIR-T-0718).
+        route(
+            "/characters/{id}/notes",
+            Player,
+            &["GET", "POST"],
+            get(party::list).post(party::add),
+        ),
+        route(
+            "/notes/{id}",
+            Player,
+            &["PATCH", "DELETE"],
+            patch(party::patch).delete(party::delete),
+        ),
+        route("/modules/{id}/notes", Dm, G, get(party::module_notes)),
+        route(
+            "/characters/{id}/sharing",
+            Player,
+            &["PUT"],
+            put(party::set_sharing),
+        ),
+        route("/campaigns/{id}/party", Player, G, get(party::party)),
         // Catalog choices (reference data).
         route("/catalog/classes", Player, G, get(cat::classes)),
         route(

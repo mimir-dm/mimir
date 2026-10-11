@@ -545,6 +545,7 @@ pub(crate) mod tests {
             feats: vec![],
             features: vec![],
             speed: 30,
+            shared: false,
             updated_at: String::new(),
         }
     }

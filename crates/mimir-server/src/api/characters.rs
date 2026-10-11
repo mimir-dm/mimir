@@ -9,8 +9,8 @@ use axum::{Extension, Json};
 use diesel::SqliteConnection;
 use mimir_core::models::campaign::{CharacterInventory, CharacterSpell};
 use mimir_core::services::{
-    AddInventoryInput, CatalogEntityService, CharacterService, LevelUpRequest, RaceService,
-    ServiceError, UpdateCharacterInput,
+    AddInventoryInput, CatalogEntityService, CharacterService, LevelUpRequest, PartyService,
+    RaceService, ServiceError, UpdateCharacterInput,
 };
 use mimir_wire as wire;
 use serde_json::Value;
@@ -93,6 +93,7 @@ pub fn sheet(conn: &mut SqliteConnection, id: &str) -> Result<wire::CharacterShe
         })
         .collect();
     let speed = race_speed(conn, c.race_name.as_deref(), c.race_source.as_deref());
+    let shared = PartyService::new(conn).is_shared(id)?;
     Ok(wire::CharacterSheet {
         id: c.id,
         campaign_id: c.campaign_id,
@@ -151,6 +152,7 @@ pub fn sheet(conn: &mut SqliteConnection, id: &str) -> Result<wire::CharacterShe
         feats,
         features,
         speed,
+        shared,
         updated_at: c.updated_at,
     })
 }
@@ -177,8 +179,13 @@ pub async fn get(
     Extension(caller): Extension<Caller>,
     Path(id): Path<String>,
 ) -> ApiResult<wire::CharacterSheet> {
-    scope::character(&caller, &id)?;
-    state.with_db(move |conn| sheet(conn, &id)).await.map(Json)
+    state
+        .with_db(move |conn| {
+            scope::read_character(&caller, conn, &id)?;
+            sheet(conn, &id)
+        })
+        .await
+        .map(Json)
 }
 
 /// `PATCH /characters/{id}`

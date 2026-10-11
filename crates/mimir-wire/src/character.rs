@@ -127,6 +127,9 @@ pub struct CharacterSheet {
     pub features: Vec<ChosenFeature>,
     /// Walking speed in feet, from the race (30 when unknown).
     pub speed: i32,
+    /// Its player shares it with the party (MIMIR-T-0718).
+    #[serde(default)]
+    pub shared: bool,
     pub updated_at: String,
 }
 
@@ -383,4 +386,64 @@ mod tests {
         let back: LevelUpRequest = serde_json::from_value(v).unwrap();
         assert_eq!(back, r);
     }
+}
+
+// ---- Notes and the party (MIMIR-T-0718) ----------------------------------------
+
+/// A player's note about their encounters.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PlayerNote {
+    pub id: String,
+    pub character_id: String,
+    /// The name of the note's character (for the DM's module view).
+    pub character_name: String,
+    pub module_id: Option<String>,
+    pub title: String,
+    /// Markdown.
+    pub content: String,
+    pub updated_at: String,
+}
+
+/// `POST /characters/{id}/notes`
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NewNote {
+    pub title: String,
+    #[serde(default)]
+    pub content: String,
+    #[serde(default)]
+    pub module_id: Option<String>,
+}
+
+/// `PATCH /notes/{id}`: absent keeps; `module_id: null` clears it.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct NotePatch {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    #[serde(
+        default,
+        deserialize_with = "double",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub module_id: Option<Option<String>>,
+}
+
+/// `PUT /characters/{id}/sharing`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Sharing {
+    pub shared: bool,
+}
+
+/// A player character of the campaign, as the party list shows it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PartyMember {
+    pub character_id: String,
+    pub name: String,
+    pub player_name: Option<String>,
+    pub race_name: Option<String>,
+    /// Its player shares the sheet with the party.
+    pub shared: bool,
+    /// The caller's own character.
+    pub me: bool,
 }
