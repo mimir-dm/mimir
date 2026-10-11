@@ -8,3 +8,4 @@ How-to guides for campaigns.
 - [Manage Source Books](./manage-sources.md): import the catalog and choose the books of a campaign
 - [Archive & Restore](./archive-campaign.md): hide a campaign without deleting it
 - [Export a Campaign](./export-campaign.md): back up and move campaigns
+- [Export as an Adventure](./export-adventure.md): share a campaign as a 5etools adventure file

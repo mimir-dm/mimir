@@ -61,3 +61,4 @@ http-body-util = "0.1"
 tempfile = { workspace = true }
 tokio-tungstenite = "0.29"
 futures-util = "0.3"
+jsonschema = { version = "0.58.6", default-features = false }

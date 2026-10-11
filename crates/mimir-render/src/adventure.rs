@@ -1441,6 +1441,101 @@ pub fn text_refs(text: &str, out: &mut BTreeSet<Ref>) {
     }
 }
 
+/// A text with the source of each catalog tag that `to` maps changed:
+/// `to(&Ref)` gives the new source (an export copies the entry under its
+/// own source). A tag with no source gets one. Tags nest.
+pub fn rewrite_sources(text: &str, to: &dyn Fn(&Ref) -> Option<String>) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(pos) = rest.find("{@") {
+        out.push_str(&rest[..pos]);
+        let Some(end) = closing(rest, pos) else {
+            out.push_str(&rest[pos..]);
+            return out;
+        };
+        let inner = &rest[pos + 2..end];
+        match inner.split_once(' ') {
+            Some((tag, args)) => {
+                let kind = link_kind(if tag == FLUFF_TAG { "creature" } else { tag })
+                    .or_else(|| rule_kind(tag));
+                let args = rewrite_sources(args, to);
+                let rewritten = kind.and_then(|(kind, default)| {
+                    let mut parts: Vec<&str> = args.split('|').collect();
+                    let name = parts.first()?.trim();
+                    if name.is_empty() || name.contains("{@") {
+                        return None;
+                    }
+                    let source = parts
+                        .get(1)
+                        .map(|s| s.trim())
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or(default);
+                    let new = to(&Ref {
+                        kind: kind.into(),
+                        name: name.into(),
+                        source: source.into(),
+                    })?;
+                    if parts.len() < 2 {
+                        parts.push("");
+                    }
+                    let joined = std::iter::once(parts[0])
+                        .chain(std::iter::once(new.as_str()))
+                        .chain(parts[2..].iter().copied())
+                        .collect::<Vec<_>>()
+                        .join("|");
+                    Some(format!("{{@{tag} {joined}}}"))
+                });
+                out.push_str(&rewritten.unwrap_or_else(|| format!("{{@{tag} {args}}}")));
+            }
+            None => out.push_str(&rest[pos..=end]),
+        }
+        rest = &rest[end + 1..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// [`rewrite_sources`] over every text of entries, and the source of each
+/// stat block it maps.
+pub fn rewrite_entry_sources(v: &mut Value, to: &dyn Fn(&Ref) -> Option<String>) {
+    match v {
+        Value::String(s) => {
+            if s.contains("{@") {
+                *s = rewrite_sources(s, to);
+            }
+        }
+        Value::Array(l) => l.iter_mut().for_each(|x| rewrite_entry_sources(x, to)),
+        Value::Object(o) => {
+            if o.get("type").and_then(Value::as_str) == Some("statblock") {
+                let tag = o.get("tag").and_then(Value::as_str).unwrap_or("creature");
+                if let (Some((kind, default)), Some(name)) = (
+                    link_kind(tag).or_else(|| rule_kind(tag)),
+                    o.get("name").and_then(Value::as_str),
+                ) {
+                    let r = Ref {
+                        kind: kind.into(),
+                        name: name.into(),
+                        source: o
+                            .get("source")
+                            .and_then(Value::as_str)
+                            .unwrap_or(default)
+                            .into(),
+                    };
+                    if let Some(new) = to(&r) {
+                        o.insert("source".into(), new.into());
+                    }
+                }
+            }
+            for (k, x) in o.iter_mut() {
+                if k != "href" && k != "id" {
+                    rewrite_entry_sources(x, to);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
 /// The `id`s that `{@area text|id|…}` tags name, in an adventure's data.
 pub fn area_targets(data: &Value) -> HashSet<String> {
     let mut out = HashSet::new();
@@ -1770,6 +1865,23 @@ mod tests {
             .whole
             .markdown
             .contains("> [!sidebar] Running This Adventure"));
+    }
+
+    #[test]
+    fn sources_rewritten() {
+        let to = |r: &Ref| (r.kind == "creature" && r.source == "MM").then(|| "HBX".to_string());
+        assert_eq!(
+            rewrite_sources(
+                "{@creature goblin} and {@creature Klarg|LMoP}, {@b {@creature Owlbear|MM|an owlbear}}; {@spell light}.",
+                &to
+            ),
+            "{@creature goblin|HBX} and {@creature Klarg|LMoP}, {@b {@creature Owlbear|HBX|an owlbear}}; {@spell light}."
+        );
+        let mut v = json!([{"type": "statblock", "tag": "creature", "name": "Goblin", "source": "MM"},
+            {"type": "entries", "name": "x", "entries": ["{@creature Goblin|MM}"]}]);
+        rewrite_entry_sources(&mut v, &to);
+        assert_eq!(v[0]["source"], "HBX");
+        assert_eq!(v[1]["entries"][0], "{@creature Goblin|HBX}");
     }
 
     #[test]

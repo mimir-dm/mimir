@@ -283,3 +283,32 @@ test('the module page: rename in place, NPC details, traps and points of interes
   await pois.getByRole('button', { name: /Point of Interest/ }).click()
   await expect(page.getByRole('dialog', { name: 'Point of Interest' })).toContainText('📍 pin')
 })
+
+// A campaign as a 5etools homebrew adventure (MIMIR-T-0740).
+test('a campaign exports as a 5etools adventure', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/')
+  await page.locator('main').getByText(CAMPAIGN).first().click()
+  await page.getByRole('button', { name: 'More campaign actions' }).click()
+  await page.getByRole('menuitem', { name: 'Export as a 5etools adventure…' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Export as a 5etools adventure' })
+  await expect(dialog.getByLabel('Adventure name')).toHaveValue(CAMPAIGN)
+  // A short code cannot go.
+  await dialog.getByLabel('Source code').fill('LMX')
+  await expect(dialog.getByRole('button', { name: 'Download' })).toBeDisabled()
+  await dialog.getByLabel('Source code').fill('PhandelE2E')
+  await dialog.getByLabel('Authors').fill('Robin, Sam')
+  await dialog.getByLabel('To level').fill('5')
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    dialog.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toBe('PhandelE2E.json')
+  const file = JSON.parse(readFileSync(await download.path(), 'utf8'))
+  expect(file._meta.sources[0].json).toBe('PhandelE2E')
+  expect(file._meta.sources[0].authors).toEqual(['Robin', 'Sam'])
+  expect(file.adventure[0].level).toEqual({ start: 1, end: 5 })
+  expect(file.adventure[0].contents.some((c: { name: string }) => c.name === MODULE)).toBe(true)
+  expect(file.monster.every((m: { source: string }) => m.source === 'PhandelE2E')).toBe(true)
+  await expect(dialog).toBeHidden()
+})

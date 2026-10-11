@@ -31,6 +31,50 @@ tool_args! {
     }
 }
 
+tool_args! {
+    pub struct ExportAdventureArgs {
+        /// The adventure's source code: 6 or more letters, digits or - & + !, not an official source (e.g. "LowFen")
+        pub source: String,
+        /// The adventure's name
+        pub name: String,
+        /// Its authors, comma-separated
+        pub authors: Option<String>,
+        /// Its version (default 1.0.0)
+        pub version: Option<String>,
+        /// Its storyline (default "Homebrew")
+        pub storyline: Option<String>,
+        /// The lowest character level (default 1)
+        pub level_start: Option<i64>,
+        /// The highest character level (default: the lowest)
+        pub level_end: Option<i64>,
+        /// A web address for the adventure
+        pub url: Option<String>,
+    }
+}
+
+/// `export_adventure_file`: the active campaign as a 5etools homebrew
+/// adventure, as JSON.
+pub async fn export_adventure_file(
+    ctx: &Arc<McpContext>,
+    args: ExportAdventureArgs,
+) -> Result<Value, McpError> {
+    let campaign_id = ctx
+        .get_active_campaign_id()
+        .ok_or(McpError::NoActiveCampaign)?;
+    let q = crate::api::admin::AdventureExportQuery {
+        source: args.source,
+        name: args.name,
+        authors: args.authors.unwrap_or_default(),
+        version: args.version,
+        url: args.url,
+        storyline: args.storyline,
+        level_start: args.level_start,
+        level_end: args.level_end,
+    };
+    let mut conn = ctx.connect()?;
+    crate::adventure::export_adventure(&mut conn, &campaign_id, &q.meta()).map_err(mcp_err)
+}
+
 /// `preview_adventure_campaign`
 pub async fn preview_adventure_campaign(
     ctx: &Arc<McpContext>,
@@ -75,6 +119,12 @@ pub fn server_tools() -> &'static [RegisteredTool] {
                 "Make a campaign from an adventure in the reader: modules with their documents, maps and monsters, and campaign documents. The new campaign becomes the active campaign.",
                 AdventureCampaignArgs,
                 create_campaign_from_adventure
+            ),
+            tool!(
+                "export_adventure_file",
+                "Export the active campaign as a 5etools homebrew adventure file (JSON): its documents, its modules as chapters, its homebrew, and a copy of every catalog entry the text names under the adventure's own source. 5etools and Mimir (Settings, Books, Import a homebrew file) read it.",
+                ExportAdventureArgs,
+                export_adventure_file
             ),
         ]
     })

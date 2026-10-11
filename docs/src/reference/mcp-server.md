@@ -26,7 +26,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 
 ## Tool Reference
 
-### Campaign Management (12 tools)
+### Campaign Management (13 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -40,6 +40,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 | `export_campaign` | Export campaign as shareable archive |
 | `preview_adventure_campaign` | Show how an adventure in the reader becomes a campaign |
 | `create_campaign_from_adventure` | Make a campaign from an adventure; it becomes the active campaign |
+| `export_adventure_file` | Export the active campaign as a 5etools homebrew adventure file |
 | `import_campaign` | Import campaign from archive |
 | `preview_archive` | Preview archive contents without importing |
 

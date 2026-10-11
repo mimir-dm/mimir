@@ -88,6 +88,90 @@ fn counts(c: &impl serde::Serialize) -> wire::ArchiveCounts {
 
 /// `GET /campaigns/{id}/export`: the campaign as a `.mimir-campaign.tar.gz`
 /// download (documents, characters, maps with their images, homebrew).
+/// The DM's choices for an exported adventure (query of
+/// `/campaigns/{id}/adventure-export`).
+#[derive(Debug, serde::Deserialize)]
+pub struct AdventureExportQuery {
+    pub source: String,
+    pub name: String,
+    /// Comma-separated.
+    #[serde(default)]
+    pub authors: String,
+    #[serde(default)]
+    pub version: Option<String>,
+    #[serde(default)]
+    pub url: Option<String>,
+    #[serde(default)]
+    pub storyline: Option<String>,
+    #[serde(default)]
+    pub level_start: Option<i64>,
+    #[serde(default)]
+    pub level_end: Option<i64>,
+}
+
+impl AdventureExportQuery {
+    pub fn meta(&self) -> crate::adventure::ExportMeta {
+        let start = self.level_start.unwrap_or(1).clamp(1, 20);
+        crate::adventure::ExportMeta {
+            source: self.source.trim().to_string(),
+            name: self.name.trim().to_string(),
+            authors: self
+                .authors
+                .split(',')
+                .map(str::trim)
+                .filter(|a| !a.is_empty())
+                .map(String::from)
+                .collect(),
+            version: self
+                .version
+                .clone()
+                .filter(|v| !v.trim().is_empty())
+                .unwrap_or_else(|| "1.0.0".into()),
+            url: self.url.clone(),
+            storyline: self
+                .storyline
+                .clone()
+                .filter(|s| !s.trim().is_empty())
+                .unwrap_or_else(|| "Homebrew".into()),
+            level_start: start,
+            level_end: self.level_end.unwrap_or(start).clamp(start, 20),
+        }
+    }
+}
+
+/// `GET /campaigns/{id}/adventure-export?source=…&name=…`: the campaign as
+/// a 5etools homebrew adventure file (MIMIR-T-0740), self-contained.
+pub async fn export_adventure(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<AdventureExportQuery>,
+) -> Result<Response, ApiError> {
+    if q.name.trim().is_empty() {
+        return Err(ServiceError::validation("the adventure needs a name").into());
+    }
+    let meta = q.meta();
+    let file_name = format!("{}.json", meta.source);
+    let v = state
+        .with_db(move |conn| crate::adventure::export_adventure(conn, &id, &meta))
+        .await?;
+    let body =
+        serde_json::to_vec_pretty(&v).map_err(|e| ServiceError::validation(e.to_string()))?;
+    Ok((
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/json".to_string(),
+            ),
+            (
+                axum::http::header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{file_name}\""),
+            ),
+        ],
+        body,
+    )
+        .into_response())
+}
+
 pub async fn export_archive(
     State(state): State<AppState>,
     Path(id): Path<String>,

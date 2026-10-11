@@ -370,4 +370,16 @@ async fn an_adventure_becomes_a_campaign_over_mcp() {
     assert_eq!(made["maps"], 1);
     let active = s.call("get_active_campaign", json!({})).await;
     assert_eq!(active["campaign"]["id"], made["campaign_id"]);
+    // And back out as a homebrew adventure (MIMIR-T-0740).
+    let file = s
+        .call(
+            "export_adventure_file",
+            json!({"source": "McpFen", "name": "MCP Fen", "level_start": 1, "level_end": 3}),
+        )
+        .await;
+    assert_eq!(file["adventure"][0]["id"], "McpFen");
+    assert_eq!(
+        file["adventureData"][0]["data"].as_array().unwrap().len(),
+        3
+    );
 }

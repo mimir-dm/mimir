@@ -494,3 +494,182 @@ async fn an_adventure_becomes_a_campaign() {
         "{books}"
     );
 }
+
+/// The vendored 5etools schemas (mimir-core/schema/5etools), by URI.
+struct SchemaFiles;
+
+const SCHEMA_BASE: &str = "https://schema.mimir.invalid/5etools/";
+
+impl jsonschema::Retrieve for SchemaFiles {
+    fn retrieve(
+        &self,
+        uri: &jsonschema::Uri<String>,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../mimir-core/schema/5etools");
+        // A schema outside the vendored set (Foundry's, for its own
+        // fields): no constraint, with each definition the vendored files
+        // name in it.
+        let Some(rel) = uri.as_str().strip_prefix(SCHEMA_BASE) else {
+            let mut defs = serde_json::Map::new();
+            let needle = format!("{}#/$defs/", uri.as_str());
+            let mut stack = vec![root.clone()];
+            while let Some(dir) = stack.pop() {
+                for e in std::fs::read_dir(&dir)?.flatten() {
+                    let p = e.path();
+                    if p.is_dir() {
+                        stack.push(p);
+                    } else if let Ok(text) = std::fs::read_to_string(&p) {
+                        for part in text.split(needle.as_str()).skip(1) {
+                            let name: String = part
+                                .chars()
+                                .take_while(|c| c.is_alphanumeric() || *c == '_')
+                                .collect();
+                            defs.insert(name, serde_json::json!({}));
+                        }
+                    }
+                }
+            }
+            return Ok(serde_json::json!({"$defs": defs}));
+        };
+        let path = root.join(rel.split('#').next().unwrap_or(rel));
+        Ok(serde_json::from_slice(
+            &std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?,
+        )?)
+    }
+}
+
+#[tokio::test]
+async fn a_campaign_exports_as_a_homebrew_adventure() {
+    let (r, _dir) = fixture().await;
+    // A campaign made from the fixture adventure, its creatures left out.
+    let (_, bytes) = call(
+        &r,
+        Method::POST,
+        "/books/MFA/campaign",
+        Some(serde_json::json!({"name": "Low Fen", "parts": [{"index": 3, "role": "skip"}]})),
+    )
+    .await;
+    let cid = serde_json::from_slice::<Value>(&bytes).unwrap()["campaign_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    // A bad source code, a missing name.
+    let (status, _) = call(
+        &r,
+        Method::GET,
+        &format!("/campaigns/{cid}/adventure-export?source=a%7Cb&name=X"),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    let (status, _) = call(
+        &r,
+        Method::GET,
+        &format!("/campaigns/{cid}/adventure-export?source=LowFen&name=%20"),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+
+    let (status, bytes) = call(
+        &r,
+        Method::GET,
+        &format!("/campaigns/{cid}/adventure-export?source=LowFen&name=Low%20Fen&authors=Robin,%20Sam&version=1.2.0&level_start=1&level_end=3"),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let file: Value = serde_json::from_slice(&bytes).unwrap();
+
+    // Valid against the vendored homebrew schema.
+    let schema: Value = serde_json::from_slice(
+        &std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../mimir-core/schema/5etools/homebrew.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let validator = jsonschema::options()
+        .with_base_uri(format!("{SCHEMA_BASE}homebrew.json"))
+        .with_retriever(SchemaFiles)
+        .build(&schema)
+        .expect("the vendored schema compiles");
+    let errors: Vec<String> = validator
+        .iter_errors(&file)
+        .take(20)
+        .map(|e| {
+            let m = e.to_string();
+            format!(
+                "{} at {}",
+                &m[m.len().saturating_sub(160)..],
+                e.instance_path()
+            )
+        })
+        .collect();
+    assert!(errors.is_empty(), "schema errors:\n{}", errors.join("\n"));
+
+    // What it holds: chapters, its own source on the copies and the tags.
+    let adv = &file["adventure"][0];
+    assert_eq!(adv["id"], "LowFen");
+    assert_eq!(adv["level"], serde_json::json!({"start": 1, "end": 3}));
+    let names: Vec<&str> = adv["contents"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        names,
+        vec!["Introduction", "The Old Causeway", "The Lantern Tower"]
+    );
+    let text = serde_json::to_string(&file["adventureData"]).unwrap();
+    assert!(text.contains("{@area the gatehouse|mfa-g1|x}"), "{text}");
+    assert!(
+        text.contains("{@creature Goblin|LowFen}")
+            || text.contains(r#""name":"Goblin","source":"LowFen""#),
+        "{text}"
+    );
+    assert!(
+        !text.contains("|MM}"),
+        "every catalog tag points at the copies: {text}"
+    );
+    let monsters: Vec<&str> = file["monster"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| m["name"].as_str().unwrap())
+        .collect();
+    for m in ["Goblin", "Lantern Wisp", "Skeleton", "Lich"] {
+        assert!(monsters.contains(&m), "{m} in {monsters:?}");
+    }
+    assert!(file["monster"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|m| m["source"] == "LowFen"));
+
+    // Mimir reads it again: a new server takes it as a homebrew file.
+    let (r2, _dir2) = fixture().await;
+    let (status, done) = upload(
+        &r2,
+        "/catalog/import-homebrew",
+        &[],
+        ("lowfen.json", &bytes),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{done}");
+    assert_eq!(done["adventures"], 1);
+    let book = json(&r2, Method::GET, "/books/LowFen", None).await;
+    assert_eq!(book["data"].as_array().unwrap().len(), 3);
+    let wisp = json(
+        &r2,
+        Method::GET,
+        "/catalog/entry/monsters/LowFen/Lantern%20Wisp",
+        None,
+    )
+    .await;
+    assert_eq!(wisp["source"], "LowFen");
+}

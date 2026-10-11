@@ -222,6 +222,13 @@ pub fn routes() -> Vec<ApiRoute> {
             get(pdf::monster_cards),
         ),
         route("/campaigns/{id}/export", Dm, G, get(ad::export_archive)),
+        // The campaign as a 5etools homebrew adventure (MIMIR-T-0740).
+        route(
+            "/campaigns/{id}/adventure-export",
+            Dm,
+            G,
+            get(ad::export_adventure),
+        ),
         route(
             "/archives/preview",
             Dm,
