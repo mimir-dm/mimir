@@ -95,6 +95,15 @@ pub struct ModuleNpcSummary {
     pub name: String,
     pub role: Option<String>,
     pub description: Option<String>,
+    /// The detail of the NPC (MIMIR-T-0732).
+    #[serde(default)]
+    pub appearance: Option<String>,
+    #[serde(default)]
+    pub personality: Option<String>,
+    #[serde(default)]
+    pub motivation: Option<String>,
+    #[serde(default)]
+    pub secrets: Option<String>,
 }
 
 /// A monster group of a module.

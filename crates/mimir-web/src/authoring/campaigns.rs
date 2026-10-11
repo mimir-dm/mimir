@@ -184,6 +184,7 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
             open=sources
             title=format!("Source books of {name}")
             path=format!("/campaigns/{}/sources", campaign.id)
+            hint="The monster searches of this campaign's modules keep to the books chosen here. None chosen: every book."
         />
         <PdfDialog
             open=printing

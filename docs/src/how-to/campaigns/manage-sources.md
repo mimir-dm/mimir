@@ -23,7 +23,7 @@ The books appear in the **Sources** table. **Readable** shows whether you can re
 4. Select the books that the campaign uses.
 5. Click **Save**.
 
-The catalog searches of the campaign now keep to these books. With no book selected, they use every book.
+The monster search of the campaign's modules (**Add a monster**, **Monster from the catalog…** on the DM map) now keeps to these books. With no book selected, it uses every book. The reference page always shows every book.
 
 ## Choose the Books of a Character
 

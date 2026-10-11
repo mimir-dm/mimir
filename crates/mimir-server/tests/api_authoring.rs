@@ -321,6 +321,47 @@ async fn module_monsters_from_the_catalog() {
         .unwrap()
         .to_lowercase()
         .contains("goblin"));
+    // With the campaign, the search keeps to its source books (MIMIR-T-0732).
+    let source = goblin["source"].as_str().unwrap().to_string();
+    let books = format!("/campaigns/{campaign}/sources");
+    let sources = f.ok(Method::GET, "/catalog/sources", None).await;
+    let other = sources
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["code"].as_str().unwrap().to_string())
+        .find(|c| c != &source)
+        .expect("the fixture catalog has another book");
+    f.ok(Method::PUT, &books, Some(json!({ "codes": [other] })))
+        .await;
+    let none = f
+        .ok(
+            Method::GET,
+            &format!("/catalog/monsters?search=goblin&campaign={campaign}"),
+            None,
+        )
+        .await;
+    assert!(
+        none.as_array().unwrap().iter().all(|c| c["source"] == "HB"),
+        "only homebrew outside the books: {none}"
+    );
+    f.ok(Method::PUT, &books, Some(json!({ "codes": [source] })))
+        .await;
+    let kept = f
+        .ok(
+            Method::GET,
+            &format!("/catalog/monsters?search=goblin&campaign={campaign}"),
+            None,
+        )
+        .await;
+    assert!(kept
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|c| c["source"] == source.as_str()));
+    f.ok(Method::PUT, &books, Some(json!({ "codes": [] })))
+        .await;
+
     let path = format!("/modules/{module}/monsters");
     let body =
         json!({"monster_name": goblin["name"], "monster_source": goblin["source"], "quantity": 2});

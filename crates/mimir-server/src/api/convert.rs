@@ -87,6 +87,10 @@ pub fn module_npc(n: core::ModuleNpc) -> wire::ModuleNpcSummary {
         name: n.name,
         role: n.role,
         description: n.description,
+        appearance: n.appearance,
+        personality: n.personality,
+        motivation: n.motivation,
+        secrets: n.secrets,
     }
 }
 

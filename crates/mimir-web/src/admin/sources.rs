@@ -16,7 +16,13 @@ pub fn SourcesDialog(
     open: RwSignal<bool>,
     #[prop(into)] title: String,
     #[prop(into)] path: Signal<String>,
+    /// What keeps to the chosen books.
+    #[prop(optional, into)]
+    hint: Option<String>,
 ) -> impl IntoView {
+    let hint = StoredValue::new(hint.unwrap_or_else(|| {
+        "The catalog searches keep to the books chosen here. None chosen: every book.".into()
+    }));
     let all = LocalResource::new(|| api::get::<Vec<SourceInfo>>("/catalog/sources"));
     let chosen = RwSignal::new(Vec::<String>::new());
     let loaded = RwSignal::new(false);
@@ -49,7 +55,7 @@ pub fn SourcesDialog(
     view! {
         <Modal open=open title=title size="lg">
             <Stack gap="sm">
-                <Text size="sm" dimmed=true>"The catalog searches keep to the books chosen here. None chosen: every book."</Text>
+                <Text size="sm" dimmed=true>{hint.get_value()}</Text>
                 <Group>
                     <Button variant="subtle" on_click=Callback::new(move |_| {
                         chosen.set(all.get().and_then(Result::ok).unwrap_or_default().into_iter().map(|s| s.code).collect())

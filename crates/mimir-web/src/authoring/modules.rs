@@ -114,7 +114,13 @@ pub fn ModuleDialog(
 /// The module's actions on its page: Play (its first map), Edit, and
 /// More → Delete.
 #[component]
-pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl IntoView {
+pub fn ModuleActions(
+    module: ModuleSummary,
+    on_changed: Callback<()>,
+    /// Rename in place (the module page's title).
+    #[prop(optional)]
+    on_rename: Option<Callback<()>>,
+) -> impl IntoView {
     let editing = RwSignal::new(false);
     let deleting = RwSignal::new(false);
     let printing = RwSignal::new(false);
@@ -153,6 +159,7 @@ pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl In
             })}
             <Button variant="light" on_click=Callback::new(move |_| editing.set(true))>"Edit module"</Button>
             <Menu label="More" aria_label="More module actions" align="end">
+                {on_rename.map(|r| view! { <MenuItem on_click=Callback::new(move |_| r.run(()))>"Rename"</MenuItem> })}
                 <MenuItem on_click=Callback::new(move |_| printing.set(true))>"PDF…"</MenuItem>
                 <MenuItem on_click=Callback::new(move |_| {
                     let (mid, n) = (id.get_value(), file_name.get_value());

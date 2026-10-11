@@ -1,4 +1,4 @@
-import { TOKEN, expect, signIn, test } from './session'
+import { CAMPAIGN, MODULE, TOKEN, expect, signIn, test } from './session'
 import type { Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -230,4 +230,56 @@ test('images: a new document from an image, view it, delete it', async ({ page }
   page.once('dialog', (d) => d.accept())
   await page.getByRole('dialog', { name: 'Wanted poster' }).getByRole('button', { name: 'Delete image' }).click()
   await expect(page.getByRole('button', { name: 'Wanted poster' })).toHaveCount(0)
+})
+
+test('the module page: rename in place, NPC details, traps and points of interest', async ({ page }) => {
+  await signIn(page)
+  const auth = { Authorization: `Bearer ${TOKEN}` }
+  const list = await (await page.request.get('/api/v1/campaigns', { headers: auth })).json()
+  const campaign = list.find((c: { name: string }) => c.name === CAMPAIGN).id
+  const modules = await (await page.request.get(`/api/v1/campaigns/${campaign}/modules`, { headers: auth })).json()
+  const module = modules.find((m: { name: string }) => m.name === MODULE)
+  await page.goto(`/modules/${module.id}`)
+
+  // Click the name: it becomes a field. Esc keeps the name; Enter saves.
+  const heading = page.getByRole('heading', { level: 1, name: MODULE })
+  await heading.click()
+  const field = page.getByLabel('Module name')
+  await expect(field).toHaveValue(MODULE)
+  await field.fill('Not kept')
+  await field.press('Escape')
+  await expect(heading).toBeVisible()
+  await heading.click()
+  await page.getByLabel('Module name').fill('Cragmaw Hideout (renamed)')
+  await page.getByLabel('Module name').press('Enter')
+  await expect(page.getByRole('heading', { level: 1, name: 'Cragmaw Hideout (renamed)' })).toBeVisible()
+  // The menu's Rename too; leaving the field saves.
+  await page.getByRole('button', { name: 'More module actions' }).click()
+  await page.getByRole('menuitem', { name: 'Rename' }).click()
+  await page.getByLabel('Module name').fill(MODULE)
+  await page.getByLabel('Module name').blur()
+  await expect(page.getByRole('heading', { level: 1, name: MODULE })).toBeVisible()
+
+  // An NPC's details.
+  await page.getByRole('tab', { name: 'NPCs' }).click()
+  await page.getByRole('button', { name: 'Sildar Hallwinter' }).click()
+  const npc = page.getByRole('dialog', { name: 'Sildar Hallwinter' })
+  await expect(npc).toContainText('Appearance')
+  await expect(npc).toContainText('military bearing')
+  await expect(npc).toContainText('Wave Echo Cave')
+  await page.keyboard.press('Escape')
+
+  // The traps and points of interest of the module's maps.
+  await page.getByRole('tab', { name: 'Dangers' }).click()
+  const traps = page.getByRole('table', { name: 'Traps' })
+  await expect(traps).toContainText('Pits')
+  await expect(traps).toContainText('Goblin Hideout')
+  await traps.getByRole('button', { name: 'Poison Darts' }).click()
+  const trap = page.getByRole('dialog', { name: 'Poison Darts' })
+  await expect(trap).toContainText('Goblin Hideout')
+  await expect(trap.getByRole('link', { name: 'Open the map' })).toHaveAttribute('href', /\/maps\//)
+  await page.keyboard.press('Escape')
+  const pois = page.getByRole('table', { name: 'Points of interest' })
+  await pois.getByRole('button', { name: /Point of Interest/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Point of Interest' })).toContainText('📍 pin')
 })

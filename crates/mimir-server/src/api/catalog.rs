@@ -9,8 +9,8 @@ use mimir_core::models::catalog::{ItemFilter, MonsterFilter};
 use mimir_core::services::catalog::find_class_level_info;
 use mimir_core::services::{
     creation_skills, BackgroundService, CatalogEntityService, ClassService, FeatService,
-    ItemService, MonsterService, OptionalFeatureService, RaceService, ServiceError, SpellService,
-    SubclassService,
+    ItemService, MonsterService, OptionalFeatureService, RaceService, ServiceError, SourceService,
+    SpellService, SubclassService,
 };
 use mimir_wire as wire;
 use serde::Deserialize;
@@ -341,6 +341,8 @@ pub async fn creation_skills_of(
 
 /// `GET /catalog/monsters?search=gob` (DM, MIMIR-T-0720): up to 50 by
 /// name, the closest first. The detail is the challenge and the type.
+/// With `campaign`, the campaign's homebrew joins, and the catalog keeps to
+/// the campaign's source books when it has any (MIMIR-T-0732).
 pub async fn monsters(
     State(state): State<AppState>,
     Query(q): Query<ItemQuery>,
@@ -351,8 +353,13 @@ pub async fn monsters(
     }
     state
         .with_db(move |conn| {
+            let books = match q.campaign.as_deref().filter(|c| !c.is_empty()) {
+                Some(c) => SourceService::new(conn).list_campaign_sources(c)?,
+                None => Vec::new(),
+            };
             let filter = MonsterFilter {
                 name_contains: Some(needle.clone()),
+                sources: (!books.is_empty()).then_some(books),
                 ..MonsterFilter::default()
             };
             let mut list: Vec<wire::Choice> = MonsterService::new(conn)
