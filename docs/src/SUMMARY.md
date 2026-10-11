@@ -22,6 +22,7 @@
 - [Deploy with Docker](./how-to/deploy-docker.md)
 - [Campaigns](./how-to/campaigns/README.md)
   - [Create a Campaign](./how-to/campaigns/create-campaign.md)
+  - [Make a Campaign from an Adventure](./how-to/campaigns/campaign-from-adventure.md)
   - [Manage Documents](./how-to/campaigns/manage-documents.md)
   - [Manage Source Books](./how-to/campaigns/manage-sources.md)
   - [Archive & Restore](./how-to/campaigns/archive-campaign.md)

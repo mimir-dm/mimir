@@ -2,6 +2,7 @@
 //! the desktop opened in a window of its own; and the detail drawer the
 //! other pages share (the module page's inspector).
 
+pub mod adventure;
 pub mod catalog;
 pub mod detail;
 pub mod reader;

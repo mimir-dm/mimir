@@ -380,3 +380,117 @@ async fn adventures_in_the_reader_and_homebrew_files() {
     .await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
 }
+
+#[tokio::test]
+async fn an_adventure_becomes_a_campaign() {
+    let (r, _dir) = fixture().await;
+    // The plan of the fixture adventure.
+    let plan = json(&r, Method::GET, "/books/MFA/plan", None).await;
+    let parts = plan["parts"].as_array().unwrap();
+    let roles: Vec<&str> = parts.iter().map(|p| p["role"].as_str().unwrap()).collect();
+    assert_eq!(roles, vec!["document", "module", "module", "document"]);
+    assert_eq!(
+        parts[1]["documents"],
+        serde_json::json!(["Arrival", "Ambush at the Reeds", "Causeway Encounters"])
+    );
+    assert_eq!(parts[2]["maps"], serde_json::json!(["The Lantern Tower"]));
+    // A book is not an adventure.
+    let (status, _) = call(&r, Method::GET, "/books/DMG/plan", None).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+
+    // Make it, without the creatures appendix.
+    let (status, bytes) = call(
+        &r,
+        Method::POST,
+        "/books/MFA/campaign",
+        Some(serde_json::json!({"name": "Low Fen", "parts": [{"index": 3, "role": "skip"}]})),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let made: Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(made["modules"], 2);
+    assert_eq!(made["documents"], 5, "{made}");
+    assert_eq!(made["maps"], 1, "{made}");
+    assert_eq!(made["monsters"], 5, "{made}");
+    assert_eq!(made["missing"], serde_json::json!([]), "{made}");
+    let cid = made["campaign_id"].as_str().unwrap().to_string();
+
+    let campaigns = json(&r, Method::GET, "/campaigns", None).await;
+    assert!(campaigns
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|c| c["name"] == "Low Fen"));
+    let modules = json(&r, Method::GET, &format!("/campaigns/{cid}/modules"), None).await;
+    let names: Vec<&str> = modules
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| m["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, vec!["The Old Causeway", "The Lantern Tower"]);
+    let tower = modules[1]["id"].as_str().unwrap().to_string();
+    // Only the adventure's documents: no templates.
+    let docs = json(
+        &r,
+        Method::GET,
+        &format!("/campaigns/{cid}/documents"),
+        None,
+    )
+    .await;
+    let titles: Vec<&str> = docs
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| d["title"].as_str().unwrap())
+        .collect();
+    assert_eq!(titles, vec!["Introduction"]);
+    // The introduction's area link goes to the tower's document.
+    let intro = json(
+        &r,
+        Method::GET,
+        &format!("/documents/{}", docs[0]["id"].as_str().unwrap()),
+        None,
+    )
+    .await;
+    let content = intro["content"].as_str().unwrap();
+    let tower_docs = json(
+        &r,
+        Method::GET,
+        &format!("/modules/{tower}/documents"),
+        None,
+    )
+    .await;
+    let tower_doc = tower_docs[0]["id"].as_str().unwrap();
+    assert!(
+        content.contains(&format!(
+            "[the gatehouse](/modules/{tower}?doc={tower_doc}#mfa-g1)"
+        )),
+        "{content}"
+    );
+    assert!(
+        content.contains("> [!sidebar] Running This Adventure"),
+        "{content}"
+    );
+    // The tower's map, and its monsters from the catalog.
+    let maps = json(&r, Method::GET, &format!("/modules/{tower}/maps"), None).await;
+    assert_eq!(maps[0]["name"], "The Lantern Tower");
+    let monsters = json(&r, Method::GET, &format!("/modules/{tower}/monsters"), None).await;
+    let mnames: Vec<&str> = monsters
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| m["name"].as_str().unwrap_or(""))
+        .collect();
+    assert!(
+        mnames.contains(&"Lantern Wisp") && mnames.contains(&"Skeleton"),
+        "{monsters}"
+    );
+    // The campaign's books: the adventure and what it names.
+    let books = json(&r, Method::GET, &format!("/campaigns/{cid}/sources"), None).await;
+    let codes = books["codes"].as_array().unwrap();
+    assert!(
+        codes.contains(&serde_json::json!("MFA")) && codes.contains(&serde_json::json!("MM")),
+        "{books}"
+    );
+}

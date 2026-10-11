@@ -204,3 +204,46 @@ fn real_adventures_round_trip() {
     }
     assert_eq!(failures, 0, "chapters that do not round-trip");
 }
+
+/// The plan of Lost Mine of Phandelver (needs `adventures.json` in the
+/// scratch folder): four modules, about five documents in Wave Echo Cave,
+/// five square-grid maps.
+#[test]
+#[ignore = "needs MIMIR_ADVENTURE_DIR: a scratch copy of 5etools adventures"]
+fn lmop_plan() {
+    use mimir_render::adventure::{plan, PartRole};
+    let dir = std::path::PathBuf::from(std::env::var("MIMIR_ADVENTURE_DIR").unwrap());
+    let index: Value =
+        serde_json::from_slice(&std::fs::read(dir.join("adventures.json")).unwrap()).unwrap();
+    let entry = index["adventure"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|a| a["id"] == "LMoP")
+        .unwrap()
+        .clone();
+    let file: Value =
+        serde_json::from_slice(&std::fs::read(dir.join("adventure-lmop.json")).unwrap()).unwrap();
+    let data = file["adventureData"][0]["data"].as_array().unwrap();
+    let p = plan(data, entry["contents"].as_array().unwrap());
+    for part in &p {
+        println!(
+            "{:?} {}: {} documents {:?}, {} maps {:?}, {} creatures",
+            part.role,
+            part.name,
+            part.documents.len(),
+            part.documents
+                .iter()
+                .map(|d| d.title.as_str())
+                .collect::<Vec<_>>(),
+            part.maps.len(),
+            part.maps
+                .iter()
+                .map(|m| m.title.as_str())
+                .collect::<Vec<_>>(),
+            part.creatures.len()
+        );
+    }
+    assert_eq!(p.iter().filter(|x| x.role == PartRole::Module).count(), 4);
+    assert_eq!(p.iter().map(|x| x.maps.len()).sum::<usize>(), 5);
+}

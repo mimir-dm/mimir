@@ -466,6 +466,37 @@ pub async fn books(State(state): State<AppState>) -> ApiResult<Vec<wire::BookInf
         .map(Json)
 }
 
+/// `GET /books/{source}/plan`: the adventure as a campaign, before it is
+/// made (MIMIR-T-0739).
+pub async fn adventure_plan(
+    State(state): State<AppState>,
+    Path(source): Path<String>,
+) -> ApiResult<wire::AdventurePlan> {
+    state
+        .with_db(move |conn| {
+            let a = crate::adventure::adventure_text(conn, &source)?;
+            Ok(crate::adventure::plan_view(&a))
+        })
+        .await
+        .map(Json)
+}
+
+/// `POST /books/{source}/campaign`: make the campaign (one transaction).
+pub async fn adventure_campaign(
+    State(state): State<AppState>,
+    Path(source): Path<String>,
+    Json(req): Json<wire::AdventureCampaignRequest>,
+) -> Result<(axum::http::StatusCode, Json<wire::AdventureCampaign>), ApiError> {
+    let data_dir = state.config.data_dir.clone();
+    let made = state
+        .with_db(move |conn| {
+            let a = crate::adventure::adventure_text(conn, &source)?;
+            crate::adventure::create_campaign(conn, &data_dir, &a, &req)
+        })
+        .await?;
+    Ok((axum::http::StatusCode::CREATED, Json(made)))
+}
+
 /// A book image path under the catalog assets, or none when it would
 /// leave them (`..`, a root, a drive).
 pub fn safe_image_path(path: &str) -> Option<&FsPath> {

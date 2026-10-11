@@ -12,6 +12,7 @@ pub mod error;
 pub mod jobs;
 pub mod live;
 pub mod mcp;
+pub mod mcp_tools;
 pub mod print;
 pub mod state;
 pub mod web;

@@ -335,3 +335,39 @@ async fn who_may_connect() {
     let res = s.call("list_campaigns", json!({})).await;
     assert!(res["campaigns"].is_array());
 }
+
+/// The adventure tools of the server (MIMIR-T-0739).
+#[tokio::test]
+async fn an_adventure_becomes_a_campaign_over_mcp() {
+    let (r, dir, state) = server(Some(DM));
+    let url = state.config.database_path().to_string_lossy().into_owned();
+    let mut conn = mimir_core::db::create_connection(&url).unwrap();
+    mimir_core::seed::seed_ui_fixture(&mut conn, dir.path()).unwrap();
+    let (mut s, _) = Session::connect(&r, Some(DM)).await;
+    let tools = s.request("tools/list", json!({})).await;
+    let names: Vec<&str> = tools["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["name"].as_str().unwrap())
+        .collect();
+    assert!(
+        names.contains(&"preview_adventure_campaign")
+            && names.contains(&"create_campaign_from_adventure")
+    );
+
+    let plan = s
+        .call("preview_adventure_campaign", json!({"source": "MFA"}))
+        .await;
+    assert_eq!(plan["parts"].as_array().unwrap().len(), 4);
+    let made = s
+        .call(
+            "create_campaign_from_adventure",
+            json!({"source": "MFA", "name": "MCP Fen", "parts": [{"index": 3, "role": "skip"}]}),
+        )
+        .await;
+    assert_eq!(made["modules"], 2);
+    assert_eq!(made["maps"], 1);
+    let active = s.call("get_active_campaign", json!({})).await;
+    assert_eq!(active["campaign"]["id"], made["campaign_id"]);
+}

@@ -26,7 +26,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 
 ## Tool Reference
 
-### Campaign Management (10 tools)
+### Campaign Management (12 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -38,6 +38,8 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 | `update_campaign` | Update campaign name or description |
 | `delete_campaign` | Delete a campaign and all its data |
 | `export_campaign` | Export campaign as shareable archive |
+| `preview_adventure_campaign` | Show how an adventure in the reader becomes a campaign |
+| `create_campaign_from_adventure` | Make a campaign from an adventure; it becomes the active campaign |
 | `import_campaign` | Import campaign from archive |
 | `preview_archive` | Preview archive contents without importing |
 

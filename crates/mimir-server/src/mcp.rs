@@ -42,6 +42,7 @@ impl MimirMcp {
 pub fn tools() -> Vec<Tool> {
     registry::all_tools()
         .iter()
+        .chain(crate::mcp_tools::server_tools())
         .map(|t| {
             let schema = serde_json::to_value((t.input_schema)())
                 .ok()
@@ -66,7 +67,7 @@ impl ServerHandler for MimirMcp {
         request: CallToolRequestParams,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, ErrorData> {
-        let Some(tool) = registry::find(&request.name) else {
+        let Some(tool) = crate::mcp_tools::find(&request.name) else {
             return Err(ErrorData::invalid_params(
                 format!("unknown tool: {}", request.name),
                 None,

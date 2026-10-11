@@ -77,6 +77,8 @@ pub fn ReaderView() -> impl IntoView {
     // Remove the open book from the library (MIMIR-T-0734): its source
     // goes from the catalog, as in Settings.
     let removing = RwSignal::new(false);
+    // An adventure as a campaign (MIMIR-T-0739).
+    let making = RwSignal::new(false);
     let remove_error = RwSignal::new(String::new());
     let remove_book = move |_| {
         let code = chosen.get_untracked();
@@ -133,6 +135,7 @@ pub fn ReaderView() -> impl IntoView {
     });
 
     view! {
+        <super::adventure::AdventureCampaignDialog open=making source=Signal::derive(move || chosen.get()) />
         <ConfirmDialog
             open=removing
             title=Signal::derive(move || {
@@ -181,6 +184,9 @@ pub fn ReaderView() -> impl IntoView {
                                 let line = chosen_info().map(|b| adventure_line(&b)).unwrap_or_default();
                                 (!line.is_empty()).then(|| view! { <p class="mimir-reader__levels">{line}</p> })
                             }}
+                            {move || chosen_info().is_some_and(|b| b.kind == "adventure").then(|| view! {
+                                <Button variant="light" on_click=Callback::new(move |_| making.set(true))>"Make a campaign…"</Button>
+                            })}
                             <Button variant="subtle" bad=true on_click=Callback::new(move |_| removing.set(true))>
                                 {move || if chosen_info().is_some_and(|b| b.kind == "adventure") { "Remove this adventure…" } else { "Remove this book…" }}
                             </Button>

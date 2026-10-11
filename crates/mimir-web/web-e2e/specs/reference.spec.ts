@@ -108,6 +108,30 @@ test('an adventure in the reader: levels, boxes, maps, area links, homebrew file
   await expect(page.locator('.mimir-book')).toContainText('Mud to the knees.')
 })
 
+test('an adventure becomes a campaign: plan, choices, the campaign', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/reference?mode=reader&book=MFA&section=0')
+  await page.getByRole('button', { name: 'Make a campaign…' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Make a campaign' })
+  await expect(dialog.getByLabel('Campaign name')).toHaveValue('The Lantern of Low Fen')
+  const name = `Fen ${Date.now() % 100000}`
+  await dialog.getByLabel('Campaign name').fill(name)
+  // The plan: the two chapters are modules; leave out the creatures.
+  await expect(dialog.getByLabel('The Old Causeway becomes')).toHaveValue('module')
+  await expect(dialog.getByRole('row', { name: /The Old Causeway/ })).toContainText('3 documents · 0 maps')
+  await expect(dialog.getByRole('row', { name: /The Lantern Tower/ })).toContainText('1 document · 1 map')
+  await dialog.getByLabel('Creatures becomes').selectOption('skip')
+  await dialog.getByLabel('The Old Causeway in one document').check()
+  await dialog.getByRole('button', { name: 'Make the campaign' }).click()
+  await expect(dialog.getByRole('status')).toHaveText('Made 2 modules, 3 documents, 1 map and 5 monsters.')
+  await dialog.getByRole('link', { name: 'Open the campaign' }).click()
+  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+  await expect(page.locator('.mimir-doclist a', { hasText: 'Introduction' })).toBeVisible()
+  await page.getByRole('tab', { name: 'Modules', exact: true }).click()
+  await expect(page.getByRole('link', { name: 'The Old Causeway' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'The Lantern Tower' })).toBeVisible()
+})
+
 test('the module inspector opens a monster', async ({ page }) => {
   await signIn(page)
   const campaign = await campaignId(page)

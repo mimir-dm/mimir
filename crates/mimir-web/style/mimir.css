@@ -939,3 +939,7 @@
   border-radius: var(--radius-sm);
   background: var(--panel);
 }
+
+/* Make a campaign from an adventure (MIMIR-T-0739). */
+.mimir-check { display: inline-flex; align-items: center; gap: var(--space-xs); font-size: var(--fs-sm); }
+.mimir-hidden { display: none; }

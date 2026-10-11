@@ -59,6 +59,65 @@ pub struct HomebrewImport {
     pub books: usize,
 }
 
+/// `GET /books/{source}/plan`: an adventure as a campaign, before it is
+/// made (MIMIR-T-0739).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AdventurePlan {
+    pub source: String,
+    pub name: String,
+    pub parts: Vec<AdventurePart>,
+}
+
+/// A part of an adventure (a chapter, an appendix) in the plan.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AdventurePart {
+    pub index: usize,
+    pub name: String,
+    /// "module" or "document": what it becomes unless the DM chooses.
+    pub role: String,
+    /// Its documents as a module.
+    pub documents: Vec<String>,
+    /// Its square-grid maps (they become Mimir maps).
+    pub maps: Vec<String>,
+    /// The creatures it names (they become module monsters).
+    pub creatures: usize,
+}
+
+/// `POST /books/{source}/campaign`: the DM's choices.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct AdventureCampaignRequest {
+    /// The campaign's name; empty: the adventure's.
+    #[serde(default)]
+    pub name: String,
+    /// A choice per part; a part not listed takes its role in the plan.
+    #[serde(default)]
+    pub parts: Vec<PartChoice>,
+}
+
+/// What one part becomes.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PartChoice {
+    pub index: usize,
+    /// "module", "document" or "skip".
+    pub role: String,
+    /// A module in one document instead of one per section.
+    #[serde(default)]
+    pub one_document: bool,
+}
+
+/// What the conversion made.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AdventureCampaign {
+    pub campaign_id: String,
+    pub modules: usize,
+    pub documents: usize,
+    pub maps: usize,
+    pub monsters: usize,
+    /// What could not come: map images not in the catalog images, creatures
+    /// not in the catalog.
+    pub missing: Vec<String>,
+}
+
 /// `GET /books/{source}`: a book's data (sections are `data[i]`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BookData {

@@ -46,6 +46,7 @@ The reader shows the text of an imported book or adventure.
 |---------|----------|
 | **Book** | Choose the book or adventure. The list has two groups: **Books** and **Adventures**. |
 | Levels line | For an adventure: its level range and its storyline, for example "Levels 1–5 · Starter Set" |
+| **Make a campaign…** | For an adventure: make a campaign from it. See [Make a Campaign from an Adventure](../../how-to/campaigns/campaign-from-adventure.md). |
 | **Remove this book…** or **Remove this adventure…** | Remove it from the library, after a confirmation: its catalog entries and text go, as **×** in Settings |
 | **Contents** | The chapters and headings. Click one to go to it. |
 | **← Previous**, **Next →** | Go to the previous or next section |

@@ -194,7 +194,7 @@ fn block(e: &Value, level: usize, opts: &ToMarkdown, out: &mut Vec<String>) {
 
 fn heading(level: usize, name: &str, id: Option<&str>) -> String {
     let hashes = "#".repeat(level.clamp(1, 6));
-    let mut text = inline(name);
+    let mut text = inline_from(name, false);
     // A heading that ends with a tag would read as `{attributes}`.
     if text.ends_with('}') {
         text.insert(text.len() - 1, '\\');
@@ -237,8 +237,14 @@ fn paragraph(text: &str) -> String {
 /// Escape text for markdown, so it reads back the same. Tags stay
 /// readable: `{`, `}`, `|` and `@` are not escaped.
 pub fn inline(text: &str) -> String {
+    inline_from(text, true)
+}
+
+/// As [`inline`]; `at_line_start`: whether the text starts a line (a
+/// heading's text does not: it follows the `#`s).
+fn inline_from(text: &str, at_line_start: bool) -> String {
+    let mut at_line_start = at_line_start;
     let mut out = String::with_capacity(text.len() + 8);
-    let mut at_line_start = true;
     let chars: Vec<char> = text.chars().collect();
     let mut i = 0;
     while i < chars.len() {
@@ -1098,6 +1104,246 @@ fn parse_statblock_line(text: &str) -> Option<Value> {
 }
 
 // =============================================================================
+// An adventure as a campaign (MIMIR-T-0739)
+// =============================================================================
+
+/// What a part of an adventure (a chapter, an appendix) becomes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PartRole {
+    /// A module, with a document per top-level section.
+    Module,
+    /// One campaign document.
+    Document,
+    /// Left out.
+    Skip,
+}
+
+/// A document of the plan.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanDocument {
+    pub title: String,
+    pub markdown: String,
+    /// The `{@area}` targets in it (its own section's id, and its kept
+    /// heading ids): a link from another document goes here.
+    pub anchors: Vec<String>,
+}
+
+/// A square-grid map image of a part: it becomes a Mimir map.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanMap {
+    pub title: String,
+    /// The image under the 5etools images.
+    pub path: String,
+    /// Pixels a square, from the image's grid.
+    pub grid_px: f64,
+}
+
+/// A part of the adventure, and what it becomes.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanPart {
+    /// Its index in the adventure's data.
+    pub index: usize,
+    pub name: String,
+    /// The role it takes unless the DM chooses another.
+    pub role: PartRole,
+    /// As a module: one document per top-level section, a keyed area
+    /// joined to the section before it.
+    pub documents: Vec<PlanDocument>,
+    /// As one document (a campaign document, or a module the DM wants in
+    /// one piece).
+    pub whole: PlanDocument,
+    pub maps: Vec<PlanMap>,
+    /// The creatures it names (stat blocks and tags): (name, source).
+    pub creatures: Vec<(String, String)>,
+}
+
+/// A keyed area: "1. Cave Mouth", "K1. Front Courtyard", "A1: Path",
+/// "12a. Vault".
+pub fn is_keyed(name: &str) -> bool {
+    let b = name.as_bytes();
+    let mut i = 0;
+    while i < b.len() && i < 3 && b[i].is_ascii_uppercase() {
+        i += 1;
+    }
+    let digits = i;
+    while i < b.len() && b[i].is_ascii_digit() {
+        i += 1;
+    }
+    if i == digits {
+        return false;
+    }
+    if i < b.len() && b[i].is_ascii_alphabetic() {
+        i += 1;
+    }
+    i + 1 < b.len() && (b[i] == b'.' || b[i] == b':') && b[i + 1] == b' '
+}
+
+/// The plan of an adventure: its data (`adventureData[0].data`) and its
+/// contents (from `adventures.json`). A numbered chapter or part is a
+/// module; the rest (introduction, appendices, credits) a campaign
+/// document.
+pub fn plan(data: &[Value], contents: &[Value]) -> Vec<PlanPart> {
+    let opts = ToMarkdown {
+        keep_ids: area_targets(&Value::Array(data.to_vec())),
+    };
+    data.iter()
+        .enumerate()
+        .map(|(index, part)| {
+            let name = part
+                .get("name")
+                .and_then(Value::as_str)
+                .unwrap_or("Untitled")
+                .to_string();
+            let numbered = contents
+                .get(index)
+                .and_then(|c| c.pointer("/ordinal/type"))
+                .and_then(Value::as_str)
+                .is_some_and(|t| matches!(t, "chapter" | "part" | "episode" | "level"));
+            let entries = part
+                .get("entries")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            PlanPart {
+                index,
+                role: if numbered {
+                    PartRole::Module
+                } else {
+                    PartRole::Document
+                },
+                documents: section_documents(&name, &entries, &opts),
+                whole: PlanDocument {
+                    title: name.clone(),
+                    markdown: to_markdown(&entries, 2, &opts),
+                    anchors: anchors_in(part, &opts.keep_ids),
+                },
+                maps: square_maps(part, &name),
+                creatures: refs(part)
+                    .into_iter()
+                    .filter(|r| r.kind == "creature")
+                    .map(|r| (r.name, r.source))
+                    .collect(),
+                name,
+            }
+        })
+        .collect()
+}
+
+/// One document per top-level named section; a keyed area and unnamed
+/// blocks join the document before them; blocks before the first section
+/// make a document named after the part.
+fn section_documents(part: &str, entries: &[Value], opts: &ToMarkdown) -> Vec<PlanDocument> {
+    let mut docs: Vec<(String, Vec<Value>, Vec<String>)> = Vec::new();
+    for e in entries {
+        let named = e
+            .as_object()
+            .filter(|o| {
+                matches!(
+                    o.get("type").and_then(Value::as_str),
+                    Some("section" | "entries")
+                )
+            })
+            .and_then(name_of);
+        match named {
+            Some(n) if !is_keyed(n) || docs.is_empty() => {
+                // A new document: its title is the section's name, its body
+                // the section's entries; the section's id is an anchor.
+                let body = e
+                    .get("entries")
+                    .and_then(Value::as_array)
+                    .cloned()
+                    .unwrap_or_default();
+                let mut anchors = anchors_in(&Value::Array(body.clone()), &opts.keep_ids);
+                if let Some(id) = e
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .filter(|id| opts.keep_ids.contains(*id))
+                {
+                    anchors.insert(0, id.to_string());
+                }
+                docs.push((n.to_string(), body, anchors));
+            }
+            _ => match docs.last_mut() {
+                Some((_, items, anchors)) => {
+                    anchors.extend(anchors_in(e, &opts.keep_ids));
+                    items.push(e.clone());
+                }
+                None => docs.push((
+                    part.to_string(),
+                    vec![e.clone()],
+                    anchors_in(e, &opts.keep_ids),
+                )),
+            },
+        }
+    }
+    docs.into_iter()
+        .map(|(title, items, anchors)| PlanDocument {
+            title,
+            markdown: to_markdown(&items, 2, opts),
+            anchors,
+        })
+        .collect()
+}
+
+/// The kept ids in a value, in order.
+fn anchors_in(v: &Value, keep: &HashSet<String>) -> Vec<String> {
+    let mut out = Vec::new();
+    fn walk(v: &Value, keep: &HashSet<String>, out: &mut Vec<String>) {
+        match v {
+            Value::Object(o) => {
+                if let Some(id) = o.get("id").and_then(Value::as_str) {
+                    if keep.contains(id) && !out.iter().any(|x| x == id) {
+                        out.push(id.to_string());
+                    }
+                }
+                o.values().for_each(|x| walk(x, keep, out));
+            }
+            Value::Array(l) => l.iter().for_each(|x| walk(x, keep, out)),
+            _ => {}
+        }
+    }
+    walk(v, keep, &mut out);
+    out
+}
+
+/// The square-grid map images of a part (the DM's version: `map`, not
+/// `mapPlayer`), each once.
+fn square_maps(part: &Value, part_name: &str) -> Vec<PlanMap> {
+    let mut out: Vec<PlanMap> = Vec::new();
+    fn walk(v: &Value, part_name: &str, out: &mut Vec<PlanMap>) {
+        match v {
+            Value::Object(o) => {
+                if o.get("type").and_then(Value::as_str) == Some("image")
+                    && o.get("imageType").and_then(Value::as_str) == Some("map")
+                    && v.pointer("/grid/type").and_then(Value::as_str) == Some("square")
+                {
+                    let path = v.pointer("/href/path").and_then(Value::as_str);
+                    let size = v.pointer("/grid/size").and_then(Value::as_f64);
+                    if let (Some(path), Some(size)) = (path, size) {
+                        if !out.iter().any(|m| m.path == path) {
+                            out.push(PlanMap {
+                                title: o
+                                    .get("title")
+                                    .and_then(Value::as_str)
+                                    .unwrap_or(part_name)
+                                    .to_string(),
+                                path: path.to_string(),
+                                grid_px: size,
+                            });
+                        }
+                    }
+                }
+                o.values().for_each(|x| walk(x, part_name, out));
+            }
+            Value::Array(l) => l.iter().for_each(|x| walk(x, part_name, out)),
+            _ => {}
+        }
+    }
+    walk(part, part_name, &mut out);
+    out
+}
+
+// =============================================================================
 // References
 // =============================================================================
 
@@ -1447,6 +1693,83 @@ mod tests {
                 ]}
             ]}])
         );
+    }
+
+    #[test]
+    fn keyed_areas() {
+        for k in [
+            "1. Cave Mouth",
+            "K1. Front Courtyard",
+            "A1: Path",
+            "12a. Vault",
+            "E10. Hall",
+        ] {
+            assert!(is_keyed(k), "{k}");
+        }
+        for n in [
+            "Cragmaw Hideout",
+            "Level 1: Rotten Halls",
+            "1st Floor",
+            "Chapter 2. Road",
+            "2",
+        ] {
+            assert!(!is_keyed(n), "{n}");
+        }
+    }
+
+    #[test]
+    fn the_fixture_adventure_as_a_plan() {
+        let file: Value = serde_json::from_str(include_str!(
+            "../../mimir-core/src/seed/assets/fixture-adventure.json"
+        ))
+        .unwrap();
+        let data = file["adventureData"][0]["data"].as_array().unwrap();
+        let contents = file["adventure"][0]["contents"].as_array().unwrap();
+        let p = plan(data, contents);
+        let roles: Vec<PartRole> = p.iter().map(|x| x.role).collect();
+        assert_eq!(
+            roles,
+            vec![
+                PartRole::Document,
+                PartRole::Module,
+                PartRole::Module,
+                PartRole::Document
+            ]
+        );
+        // The tower: "Tower Map", then "1. Gatehouse"… joined to it.
+        let tower = &p[2];
+        let titles: Vec<&str> = tower.documents.iter().map(|d| d.title.as_str()).collect();
+        assert_eq!(titles, vec!["Tower Map"]);
+        let md = &tower.documents[0].markdown;
+        assert!(md.contains("## 1. Gatehouse {#mfa-g1}"), "{md}");
+        assert!(md.contains("## 3. Lantern Room"), "{md}");
+        assert!(tower.documents[0].anchors.contains(&"mfa-g1".to_string()));
+        // Its square-grid map, and the creatures it names.
+        assert_eq!(
+            tower.maps,
+            vec![PlanMap {
+                title: "The Lantern Tower".into(),
+                path: "adventure/MFA/tower-map.png".into(),
+                grid_px: 32.0
+            }]
+        );
+        assert!(tower
+            .creatures
+            .contains(&("Lantern Wisp".to_string(), "MFA".to_string())));
+        assert!(tower
+            .creatures
+            .contains(&("Skeleton".to_string(), "MM".to_string())));
+        // The causeway: a document per section.
+        let causeway: Vec<&str> = p[1].documents.iter().map(|d| d.title.as_str()).collect();
+        assert_eq!(
+            causeway,
+            vec!["Arrival", "Ambush at the Reeds", "Causeway Encounters"]
+        );
+        // The introduction as one document, its sidebar kept.
+        assert!(p[0]
+            .whole
+            .markdown
+            .contains("> [!sidebar] Running This Adventure"));
     }
 
     #[test]

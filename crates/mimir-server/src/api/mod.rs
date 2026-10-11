@@ -262,6 +262,14 @@ pub fn routes() -> Vec<ApiRoute> {
         route("/homebrew/{kind}/{id}/usage", Dm, G, get(hb::usage_of)),
         route("/books", Dm, G, get(rf::books)),
         route("/books/{source}", Dm, G, get(rf::book)),
+        // An adventure as a campaign (MIMIR-T-0739).
+        route("/books/{source}/plan", Dm, G, get(rf::adventure_plan)),
+        route(
+            "/books/{source}/campaign",
+            Dm,
+            &["POST"],
+            post(rf::adventure_campaign),
+        ),
         route("/book-images/{*path}", Dm, G, get(rf::book_image)),
         route("/catalog/races", Dm, G, get(cat::races)),
         route("/catalog/backgrounds", Dm, G, get(cat::backgrounds)),
