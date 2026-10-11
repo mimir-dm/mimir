@@ -2,7 +2,9 @@
 //! (MIMIR-T-0720). The DM reads a document; Edit opens the rich editor,
 //! which saves one second after the last change (as the desktop app).
 //! The starting documents keep their order; the DM's own documents move
-//! up and down. The selection is in the address (`?doc=<id>`).
+//! up and down. The selection is in the address (`?doc=<id>`). Images
+//! (handouts, portraits) list under the documents; a new document can be
+//! an image (MIMIR-T-0731).
 
 use std::time::Duration;
 
@@ -12,11 +14,12 @@ use aurora_leptos::tokens::token;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::{use_navigate, use_query_map};
-use mimir_wire::{Direction, Document, DocumentPatch, DocumentSummary, Move, NewDocument};
-use wasm_bindgen::JsCast;
+use mimir_wire::{
+    image_type, Asset, Direction, Document, DocumentPatch, DocumentSummary, Move, NewDocument,
+};
 
 use crate::api;
-use crate::components::Markdown;
+use crate::components::{DropZone, Markdown};
 use crate::editor::RichEditor;
 
 /// The DM's own documents (the others came with the campaign or module).
@@ -77,6 +80,12 @@ pub fn DocumentWorkspace(#[prop(into)] base: Signal<String>) -> impl IntoView {
     });
     let creating = RwSignal::new(false);
     let error = RwSignal::new(String::new());
+    let images_v = RwSignal::new(0u32);
+    let images = LocalResource::new(move || {
+        images_v.track();
+        api::get::<Vec<Asset>>(format!("{}/images", base.get()))
+    });
+    let viewing = RwSignal::new(None::<Asset>);
 
     let move_doc = move |id: String, direction: Direction| {
         spawn_local(async move {
@@ -154,6 +163,22 @@ pub fn DocumentWorkspace(#[prop(into)] base: Signal<String>) -> impl IntoView {
                     (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
                 }}
                 {list}
+                {move || images.get().and_then(Result::ok).filter(|l| !l.is_empty()).map(|list| {
+                    let n = list.len();
+                    view! {
+                        <nav class="mimir-doclist" aria-label="Images">
+                            <SectionLabel label="Images" count=n />
+                            {list.into_iter().map(|a| {
+                                let label = a.title.clone().unwrap_or_else(|| a.filename.clone());
+                                view! {
+                                    <button type="button" class="cl-navlink mimir-doclist__image" on:click=move |_| viewing.set(Some(a.clone()))>
+                                        <span class="cl-navlink__label">{label}</span>
+                                    </button>
+                                }
+                            }).collect_view()}
+                        </nav>
+                    }
+                })}
             </div>
             <div class="mimir-split__main">
                 {move || selected.get().map(|id| view! {
@@ -171,7 +196,12 @@ pub fn DocumentWorkspace(#[prop(into)] base: Signal<String>) -> impl IntoView {
                 version.update(|v| *v += 1);
                 open_doc.with_value(|f| f(id));
             })
+            on_image=Callback::new(move |a: Asset| {
+                images_v.update(|v| *v += 1);
+                viewing.set(Some(a));
+            })
         />
+        <ImageViewer viewing=viewing on_deleted=Callback::new(move |_| images_v.update(|v| *v += 1)) />
     }
 }
 
@@ -370,23 +400,36 @@ fn NewDocumentDialog(
     open: RwSignal<bool>,
     #[prop(into)] base: Signal<String>,
     on_created: Callback<String>,
+    on_image: Callback<Asset>,
 ) -> impl IntoView {
     let title = RwSignal::new(String::new());
     let content = RwSignal::new(None::<String>);
     let file_name = RwSignal::new(String::new());
     let error = RwSignal::new(String::new());
     let busy = RwSignal::new(false);
+    // An image file: it becomes an image of the campaign or module.
+    let image = StoredValue::new_local(None::<web_sys::File>);
+    let preview = RwSignal::new(None::<String>);
 
-    let pick = move |ev: leptos::ev::Event| {
-        let Some(input) = ev
-            .target()
-            .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok())
-        else {
+    let pick = Callback::new(move |file: web_sys::File| {
+        error.set(String::new());
+        if image_type(&file.name()).is_some() {
+            if file.size() > 50.0 * 1024.0 * 1024.0 {
+                error.set("An image can be 50 MB at most.".into());
+                return;
+            }
+            let name = file.name();
+            if title.get_untracked().trim().is_empty() {
+                title.set(title_of_file(&name));
+            }
+            file_name.set(name);
+            content.set(None);
+            preview.set(web_sys::Url::create_object_url_with_blob(&file).ok());
+            image.set_value(Some(file));
             return;
-        };
-        let Some(file) = input.files().and_then(|f| f.get(0)) else {
-            return;
-        };
+        }
+        image.set_value(None);
+        preview.set(None);
         if file.size() > 5.0 * 1024.0 * 1024.0 {
             error.set("A markdown file can be 5 MB at most.".into());
             return;
@@ -402,8 +445,38 @@ fn NewDocumentDialog(
                 Err(_) => error.set("The file could not be read.".into()),
             }
         });
+    });
+    let reset = move || {
+        open.set(false);
+        title.set(String::new());
+        content.set(None);
+        file_name.set(String::new());
+        error.set(String::new());
+        image.set_value(None);
+        preview.set(None);
     };
     let create = move |_| {
+        if let Some(f) = image.get_value() {
+            let Ok(form) = web_sys::FormData::new() else {
+                return;
+            };
+            let _ = form.append_with_blob_and_filename("file", &f, &f.name());
+            let _ = form.append_with_str("title", title.get_untracked().trim());
+            busy.set(true);
+            spawn_local(async move {
+                let r =
+                    api::upload::<Asset>(&format!("{}/images", base.get_untracked()), &form).await;
+                busy.set(false);
+                match r {
+                    Ok(a) => {
+                        reset();
+                        on_image.run(a);
+                    }
+                    Err(e) => error.set(api::message(e)),
+                }
+            });
+            return;
+        }
         let body = NewDocument {
             title: title.get_untracked(),
             content: content.get_untracked(),
@@ -420,11 +493,7 @@ fn NewDocumentDialog(
             busy.set(false);
             match r {
                 Ok(d) => {
-                    open.set(false);
-                    title.set(String::new());
-                    content.set(None);
-                    file_name.set(String::new());
-                    error.set(String::new());
+                    reset();
                     on_created.run(d.id);
                 }
                 Err(e) => error.set(api::message(e)),
@@ -436,14 +505,18 @@ fn NewDocumentDialog(
         <Modal open=open title="New document" locked=busy>
             <Stack gap="sm">
                 <TextInput label="Title" value=title />
-                <label class="mimir-file">
-                    <span>"Or start from a markdown file (optional)"</span>
-                    <input type="file" accept=".md,.markdown,text/markdown" on:change=pick />
-                </label>
-                {move || {
-                    let n = file_name.get();
-                    (!n.is_empty()).then(|| view! { <Text size="sm" dimmed=true>{format!("From {n}")}</Text> })
-                }}
+                <DropZone
+                    label="Or start from a file: markdown, or an image (PNG, JPEG, WebP, GIF, SVG)"
+                    accept=".md,.markdown,text/markdown,.png,.jpg,.jpeg,.webp,.gif,.svg,image/*"
+                    on_file=pick
+                    chosen=Signal::derive(move || {
+                        let n = file_name.get();
+                        if n.is_empty() { n } else { format!("From {n}") }
+                    })
+                />
+                {move || preview.get().map(|url| view! {
+                    <img class="mimir-image-preview" src=url alt=move || title.get() />
+                })}
                 {move || {
                     let e = error.get();
                     (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
@@ -454,6 +527,83 @@ fn NewDocumentDialog(
                         on_click=Callback::new(create)
                     >"Create"</Button>
                     <Button variant="subtle" on_click=Callback::new(move |_| open.set(false))>"Cancel"</Button>
+                </Group>
+            </Stack>
+        </Modal>
+    }
+}
+
+/// An image, big, with Delete.
+#[component]
+fn ImageViewer(viewing: RwSignal<Option<Asset>>, on_deleted: Callback<()>) -> impl IntoView {
+    let open = RwSignal::new(false);
+    let url = RwSignal::new(None::<String>);
+    let error = RwSignal::new(String::new());
+    Effect::new(move |_| match viewing.get() {
+        Some(a) => {
+            open.set(true);
+            url.set(None);
+            error.set(String::new());
+            spawn_local(async move {
+                match api::image_url(format!("/assets/{}/file", a.id)).await {
+                    Ok(u) => {
+                        url.try_set(u);
+                    }
+                    Err(e) => {
+                        error.try_set(api::message(e));
+                    }
+                }
+            });
+        }
+        None => open.set(false),
+    });
+    Effect::new(move |prev: Option<bool>| {
+        let now = open.get();
+        if prev == Some(true) && !now {
+            viewing.set(None);
+        }
+        now
+    });
+    let title = Signal::derive(move || {
+        viewing
+            .get()
+            .map(|a| a.title.unwrap_or(a.filename))
+            .unwrap_or_default()
+    });
+    let remove = move |_| {
+        let Some(a) = viewing.get_untracked() else {
+            return;
+        };
+        let ok = web_sys::window()
+            .and_then(|w| w.confirm_with_message("Delete this image?").ok())
+            .unwrap_or(false);
+        if !ok {
+            return;
+        }
+        spawn_local(async move {
+            match api::delete(&format!("/assets/{}", a.id)).await {
+                Ok(()) => {
+                    viewing.set(None);
+                    on_deleted.run(());
+                }
+                Err(e) => error.set(api::message(e)),
+            }
+        });
+    };
+    view! {
+        <Modal open=open title=title size="lg">
+            <Stack gap="sm">
+                {move || match url.get() {
+                    Some(u) => view! { <img class="mimir-image-view" src=u alt=move || title.get() /> }.into_any(),
+                    None => view! { <Loading /> }.into_any(),
+                }}
+                {move || {
+                    let e = error.get();
+                    (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
+                }}
+                <Group>
+                    <Button bad=true variant="light" on_click=Callback::new(remove)>"Delete image"</Button>
+                    <Button variant="subtle" on_click=Callback::new(move |_| open.set(false))>"Close"</Button>
                 </Group>
             </Stack>
         </Modal>

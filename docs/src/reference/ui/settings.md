@@ -8,11 +8,11 @@ The settings page (`/settings`) has four tabs. The tab is in the address (`?sect
 
 | Control | Function |
 |---------|----------|
-| File | A campaign archive (`.mimir-campaign.tar.gz`) made by **Export** |
-| **Name (optional; else the archive's)** | The name of the new campaign |
-| **Import** | Upload and import. The message lists the modules, documents, characters and maps that came in. |
+| **Archive** | Drop or choose a campaign archive (`.mimir-campaign.tar.gz`) made by **Export**. A preview shows what it holds; nothing is made yet. |
+| **Name of the new campaign** | The name of the new campaign. It starts as the archive's. |
+| **Import** | Import. The message lists the modules, documents, characters and maps that came in. |
 
-An import always makes a new campaign.
+An import always makes a new campaign. **Import campaign** on the campaign list opens the same import. Every upload on this page takes a dropped file too.
 
 ### Campaigns table
 

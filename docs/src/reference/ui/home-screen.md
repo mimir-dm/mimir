@@ -46,6 +46,7 @@ The version of Mimir is at the foot of the navigation.
 |---------|----------|
 | Campaign cards | One card for each campaign, with its description. Click a card to open the [dashboard](./campaign-dashboard.md). |
 | **Show archived** | Also show archived campaigns. They have the **Archived** label. |
+| **Import campaign** | Import a campaign archive. See [Export Campaign](../../how-to/campaigns/export-campaign.md). |
 | **New campaign** | Make a campaign: **Name**, **Description**, **Create** |
 
 With no campaign, the page shows "No campaigns yet."

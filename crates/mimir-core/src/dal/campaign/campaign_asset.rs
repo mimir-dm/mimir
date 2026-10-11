@@ -43,6 +43,21 @@ pub fn list_campaign_assets(
         .load(conn)
 }
 
+/// Make an asset a module's (no longer the campaign's: an asset has one
+/// parent).
+pub fn move_campaign_asset_to_module(
+    conn: &mut SqliteConnection,
+    id: &str,
+    module_id: &str,
+) -> QueryResult<usize> {
+    diesel::update(campaign_assets::table.find(id))
+        .set((
+            campaign_assets::campaign_id.eq(None::<String>),
+            campaign_assets::module_id.eq(Some(module_id)),
+        ))
+        .execute(conn)
+}
+
 /// List all assets for a module.
 pub fn list_module_assets(
     conn: &mut SqliteConnection,

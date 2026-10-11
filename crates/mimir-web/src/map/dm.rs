@@ -967,6 +967,7 @@ pub fn DmMapPage() -> impl IntoView {
                         path=Signal::derive(move || format!("/maps/{}/pdf", id.get()))
                         options=crate::admin::pdf::MAP
                         file="map.pdf"
+                        squares=Signal::derive(move || map_now().map(|m| (m.columns, m.rows)))
                     />
                     <ActionIcon title="Zoom in" on_click=Callback::new(move |_| zoom_button(1.25))>"+"</ActionIcon>
                     <ActionIcon title="Zoom out" on_click=Callback::new(move |_| zoom_button(0.8))>"−"</ActionIcon>

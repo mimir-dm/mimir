@@ -13,13 +13,15 @@ Add battle maps and area maps to a module or to the campaign.
 
 1. Open the module page and click the **Maps** tab. For a campaign map, open the **Campaign** tab of the dashboard instead.
 2. Click **Upload a map**.
-3. Choose the map file. Mimir fills in **Name** from the file name.
+3. Drop the map file on the box, or click the box to choose it. Mimir fills in **Name** from the file name.
 4. Change the **Name** if you want.
 5. For an image, set **Grid: pixels a square**. The default is 70.
 6. Choose the **Lighting**: Bright, Dim or Dark.
 7. Click **Upload**.
 
 The map appears in the **Maps** table with its lighting and its fog of war state. Click the name to open the [DM map](../../reference/ui/dm-map.md).
+
+To see a map without opening it, click **Preview** in its row. The preview shows the image, the size in squares, the pixels a square and the size in pixels, with **Open** and **PDF…**.
 
 If the file is not a map, Mimir shows the reason in the dialog. Click **Cancel** to close it.
 

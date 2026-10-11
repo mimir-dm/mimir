@@ -458,3 +458,90 @@ async fn map_uploads() {
     let (status, _) = f.send(Method::GET, &format!("/maps/{id}"), None).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 }
+
+/// Images of a campaign and a module (MIMIR-T-0731): upload, list, the
+/// file (an SVG under a no-script policy), refusals, delete.
+#[tokio::test]
+async fn images_upload_list_serve_delete() {
+    let f = fixture().await;
+    let campaigns = f.ok(Method::GET, "/campaigns", None).await;
+    let campaign = campaigns[0]["id"].as_str().unwrap().to_string();
+    let modules = f
+        .ok(Method::GET, &format!("/campaigns/{campaign}/modules"), None)
+        .await;
+    let module = modules[0]["id"].as_str().unwrap().to_string();
+    let path = format!("/campaigns/{campaign}/images");
+    let before = f.ok(Method::GET, &path, None).await;
+
+    let (status, img) = f
+        .upload(
+            &path,
+            &[("title", "Wanted poster")],
+            ("poster.png", &png(4, 4)),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{img}");
+    assert_eq!(img["title"], "Wanted poster");
+    assert_eq!(img["mime_type"], "image/png");
+    let id = img["id"].as_str().unwrap().to_string();
+    let after = f.ok(Method::GET, &path, None).await;
+    assert_eq!(ids(&after).len(), ids(&before).len() + 1);
+
+    // A module's image lists under the module, not the campaign.
+    let svg = br#"<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><script>alert(1)</script></svg>"#;
+    let (status, seal) = f
+        .upload(&path, &[("module_id", &module)], ("seal.svg", svg))
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{seal}");
+    let seal_id = seal["id"].as_str().unwrap().to_string();
+    let listed = f
+        .ok(Method::GET, &format!("/modules/{module}/images"), None)
+        .await;
+    assert!(ids(&listed).contains(&seal_id));
+    assert!(!ids(&f.ok(Method::GET, &path, None).await).contains(&seal_id));
+    // The module's own route.
+    let (status, map_pic) = f
+        .upload(
+            &format!("/modules/{module}/images"),
+            &[("title", "Cave mouth")],
+            ("cave.png", &png(2, 2)),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{map_pic}");
+    assert_eq!(map_pic["module_id"], module.as_str());
+
+    // The file: an SVG never runs its script.
+    let res = f
+        .router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri(format!("/api/v1/assets/{seal_id}/file"))
+                .header(header::AUTHORIZATION, format!("Bearer {DM}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    assert_eq!(res.headers()[header::CONTENT_TYPE], "image/svg+xml");
+    let csp = res.headers()[header::CONTENT_SECURITY_POLICY]
+        .to_str()
+        .unwrap();
+    assert!(csp.contains("default-src 'none'") && csp.contains("sandbox"));
+    assert_eq!(res.headers()[header::X_CONTENT_TYPE_OPTIONS], "nosniff");
+
+    // Refused: not an image type, or not the bytes of one.
+    let (status, _) = f.upload(&path, &[], ("notes.md", b"# hi")).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    let (status, _) = f.upload(&path, &[], ("fake.png", b"GIF89a....")).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+
+    // Delete: the file goes too.
+    let (status, _) = f.send(Method::DELETE, &format!("/assets/{id}"), None).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = f
+        .send(Method::GET, &format!("/assets/{id}/file"), None)
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+}

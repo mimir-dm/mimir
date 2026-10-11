@@ -146,6 +146,33 @@ test('a module: create, monsters, maps, edit, delete', async ({ page }) => {
   await expect(maps.getByRole('link', { name: 'Cave Entrance' })).toBeVisible()
   await expect(maps.locator('tr', { hasText: 'Cave Entrance' })).toContainText('dark')
 
+  // Drop a file on the upload: the same as choosing it (MIMIR-T-0731).
+  await page.getByRole('button', { name: 'Upload a map' }).click()
+  upload = page.getByRole('dialog')
+  const dropped = await page.evaluateHandle((b64) => {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+    const dt = new DataTransfer()
+    dt.items.add(new File([bytes], 'dropped-cave.png', { type: 'image/png' }))
+    return dt
+  }, png.toString('base64'))
+  await upload.locator('.mimir-drop').dispatchEvent('drop', { dataTransfer: dropped })
+  await expect(upload.getByLabel('Name')).toHaveValue('Dropped Cave')
+  await upload.getByRole('button', { name: 'Upload' }).click()
+  await expect(maps.getByRole('link', { name: 'Dropped Cave' })).toBeVisible()
+
+  // The preview: the image, its size and grid, a PDF with the page count.
+  await maps.locator('tr', { hasText: 'Cave Entrance' }).getByRole('button', { name: 'Preview' }).click()
+  const preview = page.getByRole('region', { name: 'Map preview' })
+  await expect(preview.locator('img')).toBeVisible()
+  await expect(preview).toContainText(/[\d.]+ × [\d.]+ squares · 70 px a square/)
+  await preview.getByRole('button', { name: 'PDF…' }).click()
+  const pdfDialog = page.getByRole('dialog', { name: 'PDF of the map' })
+  await expect(pdfDialog).not.toContainText('letter pages')
+  await pdfDialog.getByText('To play on (tiled, actual size)').click()
+  await expect(pdfDialog).toContainText(/about \d+ letter pages at 1 inch a square/)
+  await pdfDialog.getByRole('button', { name: 'Cancel' }).click()
+  await preview.locator('.cl-btn', { hasText: 'Close' }).click()
+
   // A file that is not a map: refused with the server's reason.
   await page.getByRole('button', { name: 'Upload a map' }).click()
   upload = page.getByRole('dialog')
@@ -177,4 +204,30 @@ test('a module: create, monsters, maps, edit, delete', async ({ page }) => {
   await expect(page.getByText('No modules yet.')).toBeVisible()
 
   await removeCampaign(page, id)
+})
+
+test('images: a new document from an image, view it, delete it', async ({ page }) => {
+  await signIn(page)
+  const list = await (await page.request.get('/api/v1/campaigns', { headers: { Authorization: `Bearer ${TOKEN}` } })).json()
+  const campaign = list[0].id
+  const png = Buffer.from(JSON.parse(readFileSync(UVTT, 'utf8')).image, 'base64')
+  await page.goto(`/campaigns/${campaign}`)
+  await page.getByRole('button', { name: 'New document' }).click()
+  const dialog = page.getByRole('dialog', { name: 'New document' })
+  await dialog.locator('input[type=file]').setInputFiles({ name: 'wanted-poster.png', mimeType: 'image/png', buffer: png })
+  await expect(dialog.locator('img.mimir-image-preview')).toBeVisible()
+  await expect(dialog.getByLabel('Title')).toHaveValue('wanted poster')
+  await dialog.getByLabel('Title').fill('Wanted poster')
+  await dialog.getByRole('button', { name: 'Create' }).click()
+
+  // It opens big, and lists under Images.
+  const viewer = page.getByRole('dialog', { name: 'Wanted poster' })
+  await expect(viewer.locator('img.mimir-image-view')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(viewer).toHaveCount(0)
+  const images = page.getByRole('navigation', { name: 'Images' })
+  await images.getByRole('button', { name: 'Wanted poster' }).click()
+  page.once('dialog', (d) => d.accept())
+  await page.getByRole('dialog', { name: 'Wanted poster' }).getByRole('button', { name: 'Delete image' }).click()
+  await expect(page.getByRole('button', { name: 'Wanted poster' })).toHaveCount(0)
 })

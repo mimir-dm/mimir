@@ -701,6 +701,29 @@
 .mimir-order__btn:disabled { opacity: 0.3; cursor: default; }
 .mimir-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-xs); }
 .mimir-file { display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.875rem; }
+/* Images and previews (MIMIR-T-0731). */
+.mimir-image-preview { max-width: 100%; max-height: 240px; object-fit: contain; align-self: flex-start; }
+.mimir-image-view { max-width: 100%; max-height: 70vh; object-fit: contain; }
+.mimir-doclist__image { width: 100%; text-align: left; border: 0; background: none; font: inherit; cursor: pointer; }
+.mimir-map-preview { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
+.mimir-map-preview__image { max-width: 100%; max-height: 360px; object-fit: contain; align-self: flex-start; border: 1px solid var(--border); }
+.mimir-archive-preview { display: flex; flex-direction: column; gap: var(--space-xs); }
+.mimir-archive-preview__refs { margin: 0; padding-left: var(--space-lg); font-size: 0.875rem; }
+/* A file input that takes a dropped file (MIMIR-T-0731). */
+.mimir-drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.mimir-drop--over { border-color: var(--ice); background: var(--hover, rgba(127, 127, 127, 0.1)); }
+.mimir-drop__label { font-weight: 600; }
+.mimir-drop__hint { color: var(--dim, inherit); opacity: 0.8; overflow-wrap: anywhere; }
+.mimir-drop__input { font-size: 0.875rem; }
 .mimir-maps { display: flex; flex-direction: column; gap: var(--space-sm); }
 
 /* The character wizard and the characters page (MIMIR-T-0721). */

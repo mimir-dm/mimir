@@ -1,6 +1,8 @@
 //! Maps of a campaign or a module (MIMIR-T-0720): the list, an upload (a
-//! UVTT file, or an image with its grid size), delete. The map opens on
-//! the DM map page, where tokens, fog, lights and markers are set up.
+//! UVTT file, or an image with its grid size; dropped or chosen), a
+//! preview with the size and grid and a PDF (MIMIR-T-0731), delete. The
+//! map opens on the DM map page, where tokens, fog, lights and markers are
+//! set up.
 
 use aurora_leptos::components::*;
 use aurora_leptos::data::SectionLabel;
@@ -8,10 +10,11 @@ use aurora_leptos::frame::{ConfirmDialog, Modal};
 use aurora_leptos::tokens::token;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use mimir_wire::{MapSummary, LIGHTING_MODES};
-use wasm_bindgen::JsCast;
+use mimir_wire::{MapDetail, MapSummary, LIGHTING_MODES};
 
+use crate::admin::pdf::{PdfDialog, MAP};
 use crate::api;
+use crate::components::DropZone;
 
 /// Whether a file is an image (it needs a grid size), not a UVTT file.
 pub fn is_image(name: &str) -> bool {
@@ -61,6 +64,7 @@ pub fn MapsPanel(
         }
     });
     let uploading = RwSignal::new(false);
+    let previewing = RwSignal::new(None::<String>);
     let removing = RwSignal::new(None::<MapSummary>);
     let confirm_open = RwSignal::new(false);
     Effect::new(move |_| confirm_open.set(removing.get().is_some()));
@@ -101,12 +105,14 @@ pub fn MapsPanel(
                                     list.into_iter().map(|m| {
                                         let del = m.clone();
                                         let name = m.name.clone();
+                                        let pid = m.id.clone();
                                         view! {
                                             <tr>
                                                 <td><a href=format!("/maps/{}", m.id)>{m.name}</a></td>
                                                 <td>{m.lighting_mode}</td>
                                                 <td>{if m.fog_enabled { "On" } else { "Off" }}</td>
                                                 <td class="mimir-row-actions">
+                                                    <Button variant="subtle" on_click=Callback::new(move |_| previewing.set(Some(pid.clone())))>"Preview"</Button>
                                                     <ActionIcon title=format!("Delete {name}") on_click=Callback::new(move |_| removing.set(Some(del.clone())))>"×"</ActionIcon>
                                                 </td>
                                             </tr>
@@ -122,6 +128,7 @@ pub fn MapsPanel(
                 let e = error.get();
                 (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
             }}
+            {move || previewing.get().map(|id| view! { <MapPreview id=id on_close=Callback::new(move |_| previewing.set(None)) /> })}
         </div>
         <UploadDialog
             open=uploading
@@ -154,16 +161,7 @@ fn UploadDialog(
     let lighting = RwSignal::new("bright".to_string());
     let error = RwSignal::new(String::new());
     let busy = RwSignal::new(false);
-    let pick = move |ev: leptos::ev::Event| {
-        let Some(input) = ev
-            .target()
-            .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok())
-        else {
-            return;
-        };
-        let Some(f) = input.files().and_then(|l| l.get(0)) else {
-            return;
-        };
+    let pick = Callback::new(move |f: web_sys::File| {
         let n = f.name();
         if name.get_untracked().trim().is_empty() {
             name.set(map_name(&n));
@@ -171,7 +169,7 @@ fn UploadDialog(
         file_name.set(n);
         file.set_value(Some(f));
         error.set(String::new());
-    };
+    });
     let send = move |_| {
         let Some(f) = file.get_value() else {
             error.set("Pick a file.".into());
@@ -215,10 +213,12 @@ fn UploadDialog(
     view! {
         <Modal open=open title="Upload a map" locked=busy>
             <Stack gap="sm">
-                <label class="mimir-file">
-                    <span>"A UVTT file (.dd2vtt, .uvtt) or an image (PNG, JPEG, WebP)"</span>
-                    <input type="file" accept=".dd2vtt,.uvtt,image/png,image/jpeg,image/webp" on:change=pick />
-                </label>
+                <DropZone
+                    label="A UVTT file (.dd2vtt, .uvtt) or an image (PNG, JPEG, WebP)"
+                    accept=".dd2vtt,.uvtt,image/png,image/jpeg,image/webp"
+                    on_file=pick
+                    chosen=file_name
+                />
                 <TextInput label="Name" value=name />
                 {move || is_image(&file_name.get()).then(|| view! {
                     <NumberInput label="Grid: pixels a square" value=grid min=10.0 max=1000.0 />
@@ -241,6 +241,70 @@ fn UploadDialog(
     }
 }
 
+/// "30 × 20 squares · 70 px a square · 2100 × 1400 px" (a part square
+/// with one decimal).
+pub fn size_line(m: &MapDetail) -> String {
+    let n = |v: f64| {
+        if (v - v.round()).abs() < 0.05 {
+            format!("{}", v.round())
+        } else {
+            format!("{v:.1}")
+        }
+    };
+    format!(
+        "{} × {} squares · {} px a square · {} × {} px",
+        n(m.columns),
+        n(m.rows),
+        n(m.grid_size_px),
+        m.width_px,
+        m.height_px
+    )
+}
+
+/// A map, small: its image, its size and grid, and a PDF.
+#[component]
+fn MapPreview(id: String, on_close: Callback<()>) -> impl IntoView {
+    let id = StoredValue::new(id);
+    let detail =
+        LocalResource::new(move || api::get::<MapDetail>(format!("/maps/{}", id.get_value())));
+    let image =
+        LocalResource::new(move || api::image_url(format!("/maps/{}/image", id.get_value())));
+    let printing = RwSignal::new(false);
+    view! {
+        <section class="mimir-map-preview" aria-label="Map preview">
+            {move || match detail.get() {
+                None => view! { <Loading /> }.into_any(),
+                Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
+                Some(Ok(m)) => {
+                    let squares = (m.columns, m.rows);
+                    let size = size_line(&m);
+                    let href = format!("/maps/{}", m.id);
+                    view! {
+                        <SectionLabel label=m.name.clone() />
+                        {move || image.get().and_then(Result::ok).flatten().map(|u| view! {
+                            <img class="mimir-map-preview__image" src=u alt="The map" />
+                        })}
+                        <Text size="sm">{size}</Text>
+                        <Group>
+                            <a class="cl-btn cl-btn--light" href=href>"Open"</a>
+                            <Button variant="light" on_click=Callback::new(move |_| printing.set(true))>"PDF…"</Button>
+                            <Button variant="subtle" on_click=Callback::new(move |_| on_close.run(()))>"Close"</Button>
+                        </Group>
+                        <PdfDialog
+                            open=printing
+                            title="PDF of the map"
+                            path=Signal::derive(move || format!("/maps/{}/pdf", id.get_value()))
+                            options=MAP
+                            file="map.pdf"
+                            squares=Signal::derive(move || Some(squares))
+                        />
+                    }.into_any()
+                }
+            }}
+        </section>
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -249,6 +313,36 @@ mod tests {
     fn map_names() {
         assert_eq!(map_name("old-owl_well.png"), "Old Owl Well");
         assert_eq!(map_name("cragmaw castle.dd2vtt"), "Cragmaw Castle");
+    }
+
+    #[test]
+    fn the_size_line() {
+        let m = MapDetail {
+            id: "m".into(),
+            campaign_id: "c".into(),
+            module_id: None,
+            name: "Cave".into(),
+            description: None,
+            sort_order: 0,
+            lighting_mode: "bright".into(),
+            fog_enabled: false,
+            reveal_all: false,
+            line_of_sight: true,
+            grid_size_px: 70.0,
+            columns: 30.0,
+            rows: 20.0,
+            width_px: 2100,
+            height_px: 1400,
+        };
+        assert_eq!(
+            size_line(&m),
+            "30 × 20 squares · 70 px a square · 2100 × 1400 px"
+        );
+        let part = MapDetail {
+            rows: 15.428571428571429,
+            ..m
+        };
+        assert!(size_line(&part).starts_with("30 × 15.4 squares"));
     }
 
     #[test]

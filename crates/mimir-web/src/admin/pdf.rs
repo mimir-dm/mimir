@@ -70,6 +70,16 @@ pub const MAP: &[PdfOption] = &[
     ("play_cutouts", "Play: token cutouts", false),
 ];
 
+/// Letter pages to print a map at 1 inch a square, as the print module
+/// tiles it: 8 × 10 inches of map a page (MIMIR-T-0731). The guide page
+/// is not counted.
+pub fn tile_pages(columns: f64, rows: f64) -> u32 {
+    if columns <= 0.0 || rows <= 0.0 {
+        return 0;
+    }
+    ((columns / 8.0).ceil() * (rows / 10.0).ceil()) as u32
+}
+
 /// The query of the chosen options: `?a=true&b=false`.
 pub fn query(chosen: &[(&str, bool)]) -> String {
     let parts: Vec<String> = chosen.iter().map(|(k, on)| format!("{k}={on}")).collect();
@@ -88,8 +98,16 @@ pub fn PdfDialog(
     #[prop(into)] path: Signal<String>,
     options: &'static [PdfOption],
     #[prop(into)] file: String,
+    /// The map's size in squares (columns, rows): the dialog estimates the
+    /// pages to play on.
+    #[prop(optional, into)]
+    squares: Option<Signal<Option<(f64, f64)>>>,
 ) -> impl IntoView {
     let picks: Vec<RwSignal<bool>> = options.iter().map(|o| RwSignal::new(o.2)).collect();
+    let play = options
+        .iter()
+        .position(|o| o.0 == "include_play")
+        .map(|i| picks[i]);
     let picks = StoredValue::new(picks);
     let busy = RwSignal::new(false);
     let error = RwSignal::new(String::new());
@@ -121,6 +139,18 @@ pub fn PdfDialog(
                         <span>{o.1}</span>
                     </label>
                 }).collect_view()}
+                {move || {
+                    let (Some(on), Some(sq)) = (play, squares) else { return None };
+                    let (c, r) = sq.get()?;
+                    on.get().then(|| {
+                        let n = tile_pages(c, r);
+                        view! {
+                            <Text size="sm" dimmed=true>
+                                {format!("To play on: about {n} letter pages at 1 inch a square, and a guide page.")}
+                            </Text>
+                        }
+                    })
+                }}
                 {move || busy.get().then(|| view! { <span class="mimir-doc__save" role="status">"Making the PDF…"</span> })}
                 {move || {
                     let e = error.get();
@@ -143,6 +173,14 @@ mod tests {
     fn queries() {
         assert_eq!(query(&[]), "");
         assert_eq!(query(&[("a", true), ("b", false)]), "?a=true&b=false");
+    }
+
+    #[test]
+    fn pages_to_play_on() {
+        assert_eq!(tile_pages(8.0, 10.0), 1);
+        assert_eq!(tile_pages(9.0, 10.0), 2);
+        assert_eq!(tile_pages(30.0, 25.0), 12, "4 across, 3 down");
+        assert_eq!(tile_pages(0.0, 5.0), 0);
     }
 
     #[test]

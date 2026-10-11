@@ -55,7 +55,13 @@ test('a campaign archive: export, import as a copy, delete the copy', async ({ p
 
   const section = page.getByRole('region', { name: 'Import a campaign' })
   await section.locator('input[type=file]').setInputFiles({ name: 'copy.mimir-campaign.tar.gz', mimeType: 'application/gzip', buffer: archive })
-  await section.getByLabel(/Name/).fill('Phandelver (e2e copy)')
+  // A preview first: what the archive holds, before anything is made.
+  const preview = section.getByLabel('In the archive')
+  await expect(preview).toContainText(CAMPAIGN)
+  await expect(preview).toContainText(/\d+ modules, \d+ documents, \d+ characters, \d+ maps/)
+  await expect(preview).toContainText('Made by Mimir')
+  await expect(section.getByLabel('Name of the new campaign')).toHaveValue(CAMPAIGN)
+  await section.getByLabel('Name of the new campaign').fill('Phandelver (e2e copy)')
   await section.getByRole('button', { name: 'Import' }).click()
   await expect(section.getByRole('alert')).toContainText('Imported Phandelver (e2e copy)')
   const copy = page.getByRole('table', { name: 'Campaigns' }).locator('tr', { hasText: 'Phandelver (e2e copy)' })
@@ -151,4 +157,13 @@ test('Integrations: the MCP endpoint answers the DM', async ({ page }) => {
   expect(await ok.text()).toContain('"name":"mimir"')
   const refused = await page.request.post('/mcp', { headers, data: init })
   expect(refused.status()).toBe(401)
+})
+
+test('Home: Import campaign opens the archive import', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Import campaign' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Import a campaign' })
+  await expect(dialog.locator('.mimir-drop')).toContainText('Archive')
+  await expect(dialog.locator('input[type=file]')).toHaveAttribute('accept', /\.gz/)
 })

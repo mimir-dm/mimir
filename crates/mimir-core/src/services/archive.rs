@@ -291,6 +291,21 @@ impl<'a> ArchiveService<'a> {
         // 3. Import modules
         self.import_modules(&data, &mut id_maps, &new_campaign_id)?;
 
+        // A module's asset goes back to its module (the assets came first,
+        // under the campaign, as the maps need them).
+        for asset in data.assets.iter().filter(|a| a.module_id.is_some()) {
+            let (Some(new_id), Some(new_module)) = (
+                id_maps.assets.get(&asset.id),
+                asset
+                    .module_id
+                    .as_ref()
+                    .and_then(|m| id_maps.modules.get(m)),
+            ) else {
+                continue;
+            };
+            dal::move_campaign_asset_to_module(self.conn, new_id, new_module)?;
+        }
+
         // 4. Import characters
         self.import_characters(&data, &mut id_maps, &new_campaign_id)?;
 
@@ -431,8 +446,13 @@ impl<'a> ArchiveService<'a> {
             module_npcs.extend(dal::list_module_npcs(self.conn, &module.id)?);
         }
 
-        // All campaign assets (maps, tokens, images, etc.)
-        let assets = dal::list_campaign_assets(self.conn, campaign_id)?;
+        // All assets (maps, tokens, images): the campaign's and its
+        // modules'. (Module assets were left out before MIMIR-T-0731, so a
+        // module map came without its file.)
+        let mut assets = dal::list_campaign_assets(self.conn, campaign_id)?;
+        for module in &modules {
+            assets.extend(dal::list_module_assets(self.conn, &module.id)?);
+        }
 
         // Homebrew items
         let homebrew_items = dal::list_campaign_homebrew_items(self.conn, campaign_id)?;
@@ -661,13 +681,19 @@ impl<'a> ArchiveService<'a> {
                 fs::copy(&src_path, &dest_path).map_err(ServiceError::Io)?;
             }
 
-            let new_asset = NewCampaignAsset::for_campaign(
+            let mut new_asset = NewCampaignAsset::for_campaign(
                 &new_id,
                 campaign_id,
                 &asset.filename,
                 &asset.mime_type,
                 &blob_path,
             );
+            if let Some(d) = asset.description.as_deref() {
+                new_asset = new_asset.with_description(d);
+            }
+            if let Some(size) = asset.file_size {
+                new_asset = new_asset.with_file_size(size);
+            }
             dal::insert_campaign_asset(self.conn, &new_asset)?;
         }
         Ok(())
@@ -1485,6 +1511,57 @@ mod tests {
             .door_states(&m.id)
             .unwrap();
         assert_eq!(doors, vec![(1, false)]);
+    }
+
+    #[test]
+    fn module_files_and_image_titles_round_trip() {
+        use crate::services::asset::{AssetService, UploadAssetInput};
+        use crate::services::map::{CreateMapInput, MapService};
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let module_id = create_test_module(&mut conn, &campaign_id);
+        let app_dir = TempDir::new().unwrap();
+        let output_dir = TempDir::new().unwrap();
+        let uvtt =
+            br#"{"resolution":{"pixels_per_grid":70,"map_size":{"x":2,"y":2}},"image":"aGk="}"#;
+        MapService::new(&mut conn, app_dir.path())
+            .create(CreateMapInput::for_module(
+                &campaign_id,
+                &module_id,
+                "Cave",
+                "cave.uvtt",
+                uvtt.to_vec(),
+            ))
+            .unwrap();
+        AssetService::new(&mut conn, app_dir.path())
+            .upload(
+                UploadAssetInput::for_module(
+                    &module_id,
+                    "poster.png",
+                    "image/png",
+                    b"png".to_vec(),
+                )
+                .with_description("Wanted poster"),
+            )
+            .unwrap();
+
+        let archive = ArchiveService::new(&mut conn)
+            .export_campaign(&campaign_id, output_dir.path(), app_dir.path())
+            .unwrap();
+        let imported = ArchiveService::new(&mut conn)
+            .import_campaign(&archive, app_dir.path(), Some("Copy"))
+            .unwrap();
+        let new_module = dal::list_modules(&mut conn, &imported.campaign_id).unwrap()[0]
+            .id
+            .clone();
+        let assets = dal::list_module_assets(&mut conn, &new_module).unwrap();
+        let poster = assets.iter().find(|a| a.filename == "poster.png").unwrap();
+        assert_eq!(poster.description.as_deref(), Some("Wanted poster"));
+        assert!(poster.campaign_id.is_none(), "the module's again");
+        // The module map's file came along and reads.
+        let mut maps = MapService::new(&mut conn, app_dir.path());
+        let map = maps.list_for_module(&new_module).unwrap().remove(0);
+        assert_eq!(maps.read_uvtt_file(&map).unwrap(), uvtt.to_vec());
     }
 
     #[test]

@@ -10,10 +10,10 @@ use aurora_leptos::tokens::token;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_query_map;
-use mimir_wire::{ArchiveImported, CampaignSummary, Job, SourceInfo};
-use wasm_bindgen::JsCast;
+use mimir_wire::{ArchiveImported, ArchivePreview, CampaignSummary, Job, SourceInfo};
 
 use crate::api;
+use crate::components::DropZone;
 
 pub const SECTIONS: [(&str, &str); 4] = [
     ("campaigns", "Campaigns"),
@@ -39,14 +39,6 @@ pub async fn sleep(ms: i32) {
         }
     });
     let _ = wasm_bindgen_futures::JsFuture::from(p).await;
-}
-
-/// The file picked in an `<input type=file>` change event.
-fn picked(ev: &leptos::ev::Event) -> Option<web_sys::File> {
-    ev.target()
-        .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok())
-        .and_then(|i| i.files())
-        .and_then(|f| f.get(0))
 }
 
 #[component]
@@ -96,43 +88,10 @@ fn CampaignsSection() -> impl IntoView {
     });
     let reload = move || version.update(|v| *v += 1);
     let error = RwSignal::new(String::new());
-    let file = StoredValue::new_local(None::<web_sys::File>);
-    let file_name = RwSignal::new(String::new());
-    let new_name = RwSignal::new(String::new());
-    let progress = RwSignal::new(None::<f64>);
-    let result = RwSignal::new(None::<ArchiveImported>);
     let deleting = RwSignal::new(None::<CampaignSummary>);
     let confirm_open = RwSignal::new(false);
     Effect::new(move |_| confirm_open.set(deleting.get().is_some()));
 
-    let import = move |_| {
-        let Some(f) = file.get_value() else { return };
-        let Ok(form) = web_sys::FormData::new() else {
-            return;
-        };
-        let _ = form.append_with_blob_and_filename("file", &f, &f.name());
-        let n = new_name.get_untracked();
-        if !n.trim().is_empty() {
-            let _ = form.append_with_str("name", n.trim());
-        }
-        progress.set(Some(0.0));
-        error.set(String::new());
-        spawn_local(async move {
-            let r =
-                api::upload_with_progress::<ArchiveImported>("/archives/import", &form, move |p| {
-                    progress.set(Some(p))
-                })
-                .await;
-            progress.set(None);
-            match r {
-                Ok(done) => {
-                    result.set(Some(done));
-                    reload();
-                }
-                Err(e) => error.set(api::message(e)),
-            }
-        });
-    };
     let set_archived = move |id: String, on: bool| {
         spawn_local(async move {
             let path = format!("/campaigns/{id}/archive");
@@ -179,31 +138,7 @@ fn CampaignsSection() -> impl IntoView {
     view! {
         <section class="mimir-settings__section" aria-label="Import a campaign">
             <SectionLabel label="Import a campaign" />
-            <Text size="sm" dimmed=true>"A campaign archive (.mimir-campaign.tar.gz) made by Export."</Text>
-            <label class="mimir-file">
-                <span>"Archive"</span>
-                <input type="file" accept=".gz,.tar.gz,application/gzip" on:change=move |ev| {
-                    if let Some(f) = picked(&ev) {
-                        file_name.set(f.name());
-                        file.set_value(Some(f));
-                        result.set(None);
-                    }
-                } />
-            </label>
-            <TextInput label="Name (optional; else the archive's)" value=new_name />
-            <Group>
-                <Button
-                    disabled=Signal::derive(move || file_name.get().is_empty() || progress.get().is_some())
-                    on_click=Callback::new(import)
-                >"Import"</Button>
-            </Group>
-            <Progress value=progress />
-            {move || result.get().map(|r| view! {
-                <Alert color=token::OK>
-                    {format!("Imported {}: {} modules, {} documents, {} characters, {} maps. ", r.campaign_name, r.counts.modules, r.counts.documents, r.counts.characters, r.counts.maps)}
-                    <a href=format!("/campaigns/{}", r.campaign_id)>"Open it"</a>
-                </Alert>
-            })}
+            <ImportArchive on_imported=Callback::new(move |_| reload()) />
         </section>
         {move || {
             let e = error.get();
@@ -252,6 +187,128 @@ fn CampaignsSection() -> impl IntoView {
                 on_cancel=Callback::new(move |_| deleting.set(None))
             />
         })}
+    }
+}
+
+/// Import a campaign archive (MIMIR-T-0731): drop or choose the file, see
+/// what it holds (`/archives/preview`), name it, import it. Settings and
+/// Home use it.
+#[component]
+pub fn ImportArchive(on_imported: Callback<ArchiveImported>) -> impl IntoView {
+    let file = StoredValue::new_local(None::<web_sys::File>);
+    let file_name = RwSignal::new(String::new());
+    let new_name = RwSignal::new(String::new());
+    let progress = RwSignal::new(None::<f64>);
+    let preview = RwSignal::new(None::<ArchivePreview>);
+    let all_refs = RwSignal::new(false);
+    let result = RwSignal::new(None::<ArchiveImported>);
+    let error = RwSignal::new(String::new());
+    let form_of = move |with_name: bool| {
+        let f = file.get_value()?;
+        let form = web_sys::FormData::new().ok()?;
+        let _ = form.append_with_blob_and_filename("file", &f, &f.name());
+        let n = new_name.get_untracked();
+        if with_name && !n.trim().is_empty() {
+            let _ = form.append_with_str("name", n.trim());
+        }
+        Some(form)
+    };
+    // A chosen file: read its manifest first.
+    let chose = Callback::new(move |f: web_sys::File| {
+        file_name.set(f.name());
+        file.set_value(Some(f));
+        preview.set(None);
+        result.set(None);
+        error.set(String::new());
+        all_refs.set(false);
+        let Some(form) = form_of(false) else { return };
+        progress.set(Some(0.0));
+        spawn_local(async move {
+            let r =
+                api::upload_with_progress::<ArchivePreview>("/archives/preview", &form, move |p| {
+                    progress.set(Some(p))
+                })
+                .await;
+            progress.set(None);
+            match r {
+                Ok(p) => {
+                    new_name.set(p.campaign_name.clone());
+                    preview.set(Some(p));
+                }
+                Err(e) => error.set(api::message(e)),
+            }
+        });
+    });
+    let import = move |_| {
+        let Some(form) = form_of(true) else { return };
+        progress.set(Some(0.0));
+        error.set(String::new());
+        spawn_local(async move {
+            let r =
+                api::upload_with_progress::<ArchiveImported>("/archives/import", &form, move |p| {
+                    progress.set(Some(p))
+                })
+                .await;
+            progress.set(None);
+            match r {
+                Ok(done) => {
+                    preview.set(None);
+                    result.set(Some(done.clone()));
+                    on_imported.run(done);
+                }
+                Err(e) => error.set(api::message(e)),
+            }
+        });
+    };
+    view! {
+        <Stack gap="sm">
+            <Text size="sm" dimmed=true>"A campaign archive (.mimir-campaign.tar.gz) made by Export."</Text>
+            <DropZone label="Archive" accept=".gz,.tar.gz,application/gzip" on_file=chose chosen=file_name />
+            <Progress value=progress />
+            {move || preview.get().map(|p| {
+                let c = &p.counts;
+                let counts = format!(
+                    "{} modules, {} documents, {} characters, {} maps, {} images and files, {} homebrew",
+                    c.modules, c.documents, c.characters, c.maps, c.assets,
+                    c.homebrew_items + c.homebrew_monsters + c.homebrew_spells
+                );
+                let refs = p.catalog_references.clone();
+                let n = refs.len();
+                view! {
+                    <div class="mimir-archive-preview" aria-label="In the archive">
+                        <Text bold=true>{p.campaign_name.clone()}</Text>
+                        <Text size="sm">{counts}</Text>
+                        <Text size="xs" dimmed=true>{format!("Made by Mimir {} on {}", p.mimir_version, p.created_at.get(..10).unwrap_or(&p.created_at))}</Text>
+                        {(n > 0).then(|| view! {
+                            <SectionLabel label="Catalog entries it names" count=n />
+                            <ul class="mimir-archive-preview__refs">
+                                {move || {
+                                    let shown = if all_refs.get() { n } else { n.min(8) };
+                                    refs.iter().take(shown).map(|r| view! { <li>{r.clone()}</li> }).collect_view()
+                                }}
+                            </ul>
+                            {move || (n > 8 && !all_refs.get()).then(|| view! {
+                                <Button variant="subtle" on_click=Callback::new(move |_| all_refs.set(true))>{format!("Show all {n}")}</Button>
+                            })}
+                        })}
+                    </div>
+                    <TextInput label="Name of the new campaign" value=new_name />
+                    <Group>
+                        <Button disabled=Signal::derive(move || progress.get().is_some()) on_click=Callback::new(import)>"Import"</Button>
+                    </Group>
+                }
+            })}
+            {move || result.get().map(|r| view! {
+                <Alert color=token::OK>
+                    {format!("Imported {}: {} modules, {} documents, {} characters, {} maps. ", r.campaign_name, r.counts.modules, r.counts.documents, r.counts.characters, r.counts.maps)}
+                    <a href=format!("/campaigns/{}", r.campaign_id)>"Open it"</a>
+                </Alert>
+            })}
+            {move || {
+                let e = error.get();
+                (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
+            }}
+        </Stack>
     }
 }
 
@@ -315,15 +372,15 @@ fn JobImport(
         <section class="mimir-settings__section" aria-label=title>
             <SectionLabel label=label />
             <Text size="sm" dimmed=true>{hint}</Text>
-            <label class="mimir-file">
-                <span>"File"</span>
-                <input type="file" accept=".gz,.tar.gz,application/gzip" on:change=move |ev| {
-                    if let Some(f) = picked(&ev) {
-                        file_name.set(f.name());
-                        file.set_value(Some(f));
-                    }
-                } />
-            </label>
+            <DropZone
+                label="File"
+                accept=".gz,.tar.gz,application/gzip"
+                chosen=file_name
+                on_file=Callback::new(move |f: web_sys::File| {
+                    file_name.set(f.name());
+                    file.set_value(Some(f));
+                })
+            />
             <Group>
                 <Button disabled=Signal::derive(move || file_name.get().is_empty() || running.get()) on_click=Callback::new(start)>"Import"</Button>
             </Group>

@@ -161,9 +161,50 @@ pub struct MapPatch {
     pub line_of_sight: Option<bool>,
 }
 
+/// An image of a campaign or a module (MIMIR-T-0731): a handout, a
+/// portrait, a picture of a place. `GET /assets/{id}/file` serves it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Asset {
+    pub id: String,
+    pub campaign_id: Option<String>,
+    pub module_id: Option<String>,
+    pub filename: String,
+    /// The title the DM gave it; `None`: the file name.
+    pub title: Option<String>,
+    pub mime_type: String,
+    pub file_size: Option<i32>,
+    pub uploaded_at: String,
+}
+
+/// The image types an upload may be, by file extension.
+pub const IMAGE_TYPES: &[(&str, &str)] = &[
+    ("png", "image/png"),
+    ("jpg", "image/jpeg"),
+    ("jpeg", "image/jpeg"),
+    ("webp", "image/webp"),
+    ("gif", "image/gif"),
+    ("svg", "image/svg+xml"),
+];
+
+/// The image type of a file name, if it is one.
+pub fn image_type(filename: &str) -> Option<&'static str> {
+    let (_, ext) = filename.rsplit_once('.')?;
+    let ext = ext.to_ascii_lowercase();
+    IMAGE_TYPES.iter().find(|(e, _)| *e == ext).map(|(_, m)| *m)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn image_types_by_extension() {
+        assert_eq!(image_type("map.PNG"), Some("image/png"));
+        assert_eq!(image_type("a.b.jpeg"), Some("image/jpeg"));
+        assert_eq!(image_type("seal.svg"), Some("image/svg+xml"));
+        assert_eq!(image_type("notes.md"), None);
+        assert_eq!(image_type("noext"), None);
+    }
 
     #[test]
     fn a_patch_tells_absent_from_null() {

@@ -82,7 +82,7 @@ References are extracted at export time by scanning document content for `{@type
 | `tokens` | array | Token placements across all maps |
 | `module_monsters` | array | Monster references attached to modules |
 | `module_npcs` | array | NPCs attached to modules |
-| `assets` | array | Asset records (filename, MIME type, blob path) |
+| `assets` | array | Asset records (filename, title, MIME type, blob path, and the module for a module's asset): the campaign's and its modules'. Archives made before Mimir 1.0 hold the campaign's assets only. |
 | `homebrew_items` | array | Campaign homebrew items |
 | `homebrew_monsters` | array | Campaign homebrew monsters |
 | `homebrew_spells` | array | Campaign homebrew spells |
@@ -113,7 +113,7 @@ Each map entry contains the base map fields (flattened) plus:
 
 ## Asset Files
 
-Binary files (map images, token art) are stored in the archive at `assets/{asset-id}/{filename}`, where `{asset-id}` is the asset's UUID at export time and `{filename}` is its original filename.
+Binary files (map files, images, token art) are stored in the archive at `assets/{asset-id}/{filename}`, where `{asset-id}` is the asset's UUID at export time and `{filename}` is its original filename.
 
 ## Import Behavior
 

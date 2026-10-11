@@ -67,6 +67,9 @@ web-sys = { version = "0.3", features = [
     "ProgressEvent",
     "HtmlAnchorElement",
     "EventTarget",
+    # Drag-and-drop uploads (MIMIR-T-0731).
+    "DragEvent",
+    "DataTransfer",
 ] }
 js-sys = "0.3"
 # QR codes of player links (MIMIR-T-0716), drawn as SVG.

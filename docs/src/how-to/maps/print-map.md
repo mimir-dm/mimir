@@ -23,7 +23,7 @@ The browser downloads the PDF. A large map takes some time.
 
 ### Play
 
-**To play on (tiled, actual size)** prints the map at 1 inch for 5 feet, over many pages, for play on the table.
+**To play on (tiled, actual size)** prints the map at 1 inch for 5 feet, over many pages, for play on the table. The dialog shows about how many letter pages it takes (8 by 10 squares a page), and a guide page shows how they fit together.
 
 - **Play: grid**: draw the grid
 - **Play: walls**: draw the walls

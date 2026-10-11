@@ -6,6 +6,7 @@
 //! and answer with `mimir-wire` types ([`convert`]).
 
 pub mod admin;
+pub mod assets;
 pub mod authoring;
 pub mod campaigns;
 pub mod catalog;
@@ -309,6 +310,30 @@ pub fn routes() -> Vec<ApiRoute> {
             get(c::campaign_maps)
                 .post(w::create_map)
                 .layer(DefaultBodyLimit::max(w::MAP_UPLOAD_LIMIT)),
+        ),
+        // Images (MIMIR-T-0731).
+        route(
+            "/campaigns/{id}/images",
+            Dm,
+            &["GET", "POST"],
+            get(assets::campaign_images)
+                .post(assets::upload_image)
+                .layer(DefaultBodyLimit::max(assets::IMAGE_UPLOAD_LIMIT)),
+        ),
+        route(
+            "/modules/{id}/images",
+            Dm,
+            &["GET", "POST"],
+            get(assets::module_images)
+                .post(assets::upload_module_image)
+                .layer(DefaultBodyLimit::max(assets::IMAGE_UPLOAD_LIMIT)),
+        ),
+        route("/assets/{id}/file", Dm, G, get(assets::image_file)),
+        route(
+            "/assets/{id}",
+            Dm,
+            &["DELETE"],
+            delete(assets::delete_image),
         ),
         route(
             "/campaigns/{id}/display",

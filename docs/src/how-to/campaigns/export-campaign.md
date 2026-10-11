@@ -25,10 +25,11 @@ See [Campaign Archive Format](../../reference/campaign-archive-format.md).
 
 ## Import
 
-1. Click **Settings**, then the **Campaigns** tab.
-2. In **Import a campaign**, choose the `.mimir-campaign.tar.gz` file.
-3. Optionally, type a **Name**. Without one, the campaign keeps the name in the archive.
-4. Click **Import**.
+1. Click **Import campaign** on the campaign list. Or click **Settings**, then the **Campaigns** tab.
+2. Drop the `.mimir-campaign.tar.gz` file on **Archive**, or click it to choose the file.
+3. Read the preview: the campaign name, what it holds (modules, documents, characters, maps, images and homebrew), the Mimir version and date that made it, and the catalog entries its documents name. Nothing is made yet.
+4. Optionally, change **Name of the new campaign**.
+5. Click **Import**.
 
 The message shows what came in: modules, documents, characters and maps. The campaign appears in the **Campaigns** table and on the campaign list. An import always makes a new campaign. It does not replace one.
 

@@ -16,10 +16,27 @@ Both places show the same document list and editor.
 1. Open the **Campaign** tab, or the **Documents** tab of a module.
 2. Click **New document**.
 3. Type a **Title**.
-4. Optionally, choose a markdown file in **Or start from a markdown file (optional)**. The file can be 5 MB at most.
+4. Optionally, drop a markdown file on **Or start from a file**, or click it to choose one. The file can be 5 MB at most.
 5. Click **Create**.
 
 The new document opens.
+
+## Add an Image
+
+An image is a handout, a portrait or a picture of a place. It belongs to the campaign or to the module.
+
+1. Open the **Campaign** tab, or the **Documents** tab of a module.
+2. Click **New document**.
+3. Drop an image (PNG, JPEG, WebP, GIF or SVG) on **Or start from a file**, or click it to choose one. The image can be 50 MB at most. A preview shows.
+4. Change the **Title** if you want.
+5. Click **Create**.
+
+The image opens big. It is listed under **Images**, below the documents.
+
+## View or Delete an Image
+
+1. Click the image under **Images**. It opens big.
+2. To delete it, click **Delete image** and confirm.
 
 ## Read a Document
 

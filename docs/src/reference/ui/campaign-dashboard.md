@@ -27,8 +27,8 @@ The campaign dashboard (`/campaigns/<id>`) holds everything of one campaign. Its
 
 The campaign documents and the campaign maps.
 
-- **Documents**: the document list on the left and the open document on the right. **New document** adds one. See [Manage Documents](../../how-to/campaigns/manage-documents.md).
-- **Maps**: the campaign maps, for places that many modules use. **Upload a map** adds one. Click a name to open the [DM map](./dm-map.md).
+- **Documents**: the document list on the left and the open document on the right. **New document** adds one, from a markdown file or an image too. **Images** lists the images; a click opens one big, with **Delete image**. See [Manage Documents](../../how-to/campaigns/manage-documents.md).
+- **Maps**: the campaign maps, for places that many modules use. **Upload a map** adds one (drop or choose the file). **Preview** shows a map's image, size and grid, with **Open** and **PDF…**. Click a name to open the [DM map](./dm-map.md).
 
 ### Modules
 
