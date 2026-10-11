@@ -1,7 +1,7 @@
 //! MCP Response Helpers
 //!
 //! Standardized response wrappers for MCP tools, providing a consistent API contract
-//! for AI consumers. Analogous to Tauri's `ApiResponse<T>`.
+//! for AI consumers.
 
 use serde_json::{json, Value};
 

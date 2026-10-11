@@ -1,45 +1,43 @@
-# Verify Grid Alignment
+# Set the Grid
 
-How to check that your map's grid matches Mimir's grid overlay, and what to do if it doesn't.
+The grid tells Mimir how large one 5-foot square is on the map image. Tokens snap to it, and sight ranges in feet use it.
 
-## Goal
+## UVTT Files
 
-Ensure that tokens snap to the correct grid squares on your map.
+A UVTT file holds its grid. Mimir uses it. There is nothing to set.
 
-## Steps
+## Image Files
 
-### For UVTT Files
+You set the grid when you upload the image.
 
-1. Upload your UVTT file (see [Upload a Map](./upload-map.md))
-2. Open Token Setup by clicking the map card
-3. **Verify:** The grid overlay should align with the map's drawn grid lines
-4. Place a test token — it should snap to the center of a grid square
+1. Find the size of one square of the map in pixels. Many map makers give it, for example "70 px per square". Or open the image in an image editor and measure one square.
+2. Upload the map. See [Upload a Map](./upload-map.md).
+3. In **Grid: pixels a square**, type the size. The value is from 10 to 1000.
+4. Click **Upload**.
 
-UVTT files embed grid data (cell size, offset, dimensions), so alignment is automatic. If the grid looks correct, you're done.
+The grid starts at the top-left corner of the image.
 
-### For Image Files
+## Check the Grid
 
-1. Upload your image file
-2. Open Token Setup by clicking the map card
-3. **Check alignment:** Mimir defaults to 70 pixels per grid square, starting from the top-left corner
-4. If the overlay grid lines align with the map's drawn grid, you're ready to place tokens
+1. Open the map on the DM map.
+2. Compare the grid lines of Mimir with the squares drawn on the map.
+3. Place a token. It must fill one square.
 
-### If the Grid Doesn't Align (Image Files)
+## If the Grid Does Not Fit
 
-If your image uses a non-standard grid size (e.g., 100px squares), the overlay won't match the map artwork. Options:
+You cannot change the grid of a map after the upload.
 
-1. **Obtain the UVTT version** of the map if available — this is the best fix
-2. **Use the map as a visual backdrop** and position tokens by eye rather than relying on snap-to-grid
+1. Delete the map.
+2. Upload it again with the right **Grid: pixels a square**.
 
-## How Token Snapping Works
+If the squares of the image do not start at the top-left corner, crop the image first, or use the UVTT version of the map.
 
-- Tokens snap to grid centers when placed
-- Token size respects the grid — a Large creature occupies a 2×2 area, Huge occupies 3×3
-- The grid overlay in Token Setup shows exactly where tokens will land
+## Token Sizes
+
+A token covers squares by creature size: Tiny half a square, Small and Medium one square, Large 2×2, Huge 3×3, Gargantuan 4×4.
 
 ## See Also
 
-- [Upload a Map](./upload-map.md) — Supported formats and upload steps
-- [Place Tokens](./place-tokens.md) — Adding tokens to the grid
-- [Fog of War](../play-mode/fog-of-war.md) — How fog interacts with grid and walls
-- [Map Formats](../../explanation/map-formats.md) — Understanding UVTT and image formats
+- [Upload a Map](./upload-map.md)
+- [Place Tokens](./place-tokens.md)
+- [Map Formats](../../explanation/map-formats.md)

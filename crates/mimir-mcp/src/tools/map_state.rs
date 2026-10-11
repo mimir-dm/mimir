@@ -5,7 +5,7 @@
 //! AUTHORING ONLY: agents build and refine the world; people run the game.
 //! Live-play operations — trap trigger/reset, player-visibility toggles,
 //! flipping lights on/off, all fog control — are deliberately NOT exposed
-//! here and remain DM-only in the desktop UI.
+//! here and remain DM-only in the Mimir app.
 
 use mimir_core::models::campaign::{LightSource, MapPoi, MapTrap};
 use mimir_core::services::{
@@ -30,7 +30,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         // Traps
         tool!(
             "add_trap_to_map",
-            "Place a trap on a map (get map ids from list_maps/get_map). Authoring only: traps are placed hidden and inactive concerns like triggering or revealing to players are DM-only in the desktop UI.",
+            "Place a trap on a map (get map ids from list_maps/get_map). Authoring only: traps are placed hidden and inactive concerns like triggering or revealing to players are DM-only in the Mimir app.",
             AddTrapArgs,
             add_trap_to_map
         ),
@@ -55,7 +55,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         // POIs
         tool!(
             "add_poi_to_map",
-            "Place a point of interest on a map (get map ids from list_maps/get_map). Authoring only: revealing POIs to players is DM-only in the desktop UI.",
+            "Place a point of interest on a map (get map ids from list_maps/get_map). Authoring only: revealing POIs to players is DM-only in the Mimir app.",
             AddPoiArgs,
             add_poi_to_map
         ),
@@ -80,7 +80,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         // Lights
         tool!(
             "add_light_to_map",
-            "Place a light source on a map. Use preset 'torch' (20ft bright/40ft dim) or 'lantern' (30ft bright/60ft dim), or omit preset and give name + bright_radius_ft + dim_radius_ft. Coordinates are grid units. Turning lights on/off during play is DM-only in the desktop UI.",
+            "Place a light source on a map. Use preset 'torch' (20ft bright/40ft dim) or 'lantern' (30ft bright/60ft dim), or omit preset and give name + bright_radius_ft + dim_radius_ft. Coordinates are grid units. Turning lights on/off during play is DM-only in the Mimir app.",
             AddLightArgs,
             add_light_to_map
         ),
@@ -577,7 +577,7 @@ pub async fn update_map_light(
                 dim_radius_ft: args.dim_radius_ft.map(|v| v as i32),
                 color: args.color.map(Some),
                 // Deliberately no is_active here — toggling lights during
-                // play is DM-only (desktop UI)
+                // play is DM-only (the Mimir app)
                 is_active: None,
             },
         )

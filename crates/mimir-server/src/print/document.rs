@@ -1,6 +1,6 @@
 //! Document Export Commands
 //!
-//! Tauri commands for exporting campaign and module documents to PDF.
+//! The server's PDF routes: exporting campaign and module documents to PDF.
 
 use base64::Engine;
 use mimir_core::dal::campaign as dal;

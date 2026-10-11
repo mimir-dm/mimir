@@ -1,67 +1,71 @@
 # Level Up a Character
 
-Advance a character to the next level using the level-up dialog.
+Advance a character to the next level with the level-up dialog. A player can level up their own character.
 
 ## Steps
 
-1. Click **Characters** in the header
-2. Find your character in the list
-3. Click the **Level Up** button on the character card
-4. Work through the dialog steps
-5. Click **Confirm Level Up** on the final step
+1. Open the character sheet.
+2. Click **Level up** in the header.
+3. Do each step of the dialog. Click **Next** to go on.
+4. On the **Review** step, click **Level up**.
+5. The dialog shows "Level up done" and the new level. Click **Done**.
 
-## Level-Up Dialog
+**Level up** shows only for a player character below level 20.
 
-The dialog guides you through the relevant steps for your class and level. Steps that don't apply are skipped automatically.
+## The Steps
 
-### Step 1: Select Class
+The dialog shows only the steps that apply to the class and the new level.
 
-Choose which class to level up. For multiclass characters, you can select an existing class or add a new one.
+### Class
 
-### Step 2: Choose Subclass
+Choose the class to level up. For a multiclass character, choose a class it has or add a new one. A new class must meet the multiclass requirement.
 
-*Only appears at subclass selection levels (e.g., level 3 for most classes).*
+### Subclass
 
-Pick a subclass for the chosen class.
+*Only at the level where the class picks a subclass, for example level 3 for most classes.*
 
-### Step 3: Hit Points
+Choose the **Subclass**, or type one in **Or type one (Name|SRC)**.
 
-Choose how to gain HP for the new level:
-- **Average** — Take the class's fixed average
-- **Roll** — Roll the hit die
-- **Manual** — Enter a specific value
+### Hit points
 
-### Step 4: Ability Score
+Choose how the character gains hit points:
+- **average**: the fixed average of the hit die
+- **roll**: type your roll of the hit die
+- **manual**: type the hit points before the Constitution modifier
 
-*Only appears at ASI levels (typically 4, 8, 12, 16, 19).*
+The dialog shows the hit points gained, with the Constitution modifier.
 
-Increase ability scores or choose a feat.
+### Ability scores
 
-### Step 5: Spells
+*Only at ability score improvement levels, for example 4, 8, 12, 16 and 19.*
 
-*Only appears for spellcasting classes.*
+Choose one:
+- **+2 to one**: choose the **Ability**
+- **+1 to two**: choose the **Ability** and the **Second ability**
+- **feat**: choose the **Feat**, or type one
 
-Learn new cantrips or spells available at your new level. Search and select from your class's spell list.
+A score cannot go above 20.
 
-### Step 6: Features
+### Spells
 
-*Only appears when the new level grants feature choices.*
+*Only for spellcasting classes.*
 
-Select from available class features such as Fighting Style, Metamagic options, Battle Master Maneuvers, Warlock Invocations, or Expertise.
+Select new cantrips and spells. You can also add spells later on the **Spells** tab.
 
-### Step 7: Summary
+### Features
 
-Review all features gained at this level.
+*Only when the new level gives a choice.*
 
-### Step 8: Review
+For example: **Fighting style**, **Metamagic**, **Maneuvers**, **Eldritch invocations**, **Pact boon** or expertise skills.
 
-Final review of all changes before confirming. Click **Confirm Level Up** to apply.
+### Review
 
-## Navigation
+Check the changes. Click **Level up** to apply them.
 
-- Completed steps show a checkmark and can be clicked to revisit
-- Use **Back** and **Next** to move between steps
-- **Next** is disabled until the current step is complete
+## Moving Between Steps
+
+- **Next** stays off until the step is complete.
+- **Back** returns to the step before.
 
 ## See Also
 

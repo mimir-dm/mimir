@@ -1,139 +1,102 @@
 # Environment Variables
 
-All environment variables recognized by Mimir and its components.
+The environment variables that Mimir reads.
 
-## Application
+## Server (`mimir-server`)
 
-### `MIMIR_DEV`
+### `MIMIR_BIND`
 
-Forces development mode regardless of build type. When set (any value), Mimir uses the dev database directory instead of production.
-
-```bash
-export MIMIR_DEV=1
-```
-
-**Effect:** Database and assets are read from `{app_dir}/dev/data/` instead of `{app_dir}/data/`. This prevents development from modifying production campaign data.
-
-**Default:** Not set. Dev mode is normally detected automatically via Rust's `cfg!(debug_assertions)` — debug builds use dev paths, release builds use production paths.
-
-### `RUST_LOG`
-
-Controls log verbosity using the [tracing](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) filter syntax.
+The address and port to listen on.
 
 ```bash
-# Show debug logs for all Mimir crates
-export RUST_LOG=mimir=debug,mimir_core=debug
-
-# Trace-level for the core crate only
-export RUST_LOG=mimir_core=trace
-
-# Quiet mode — errors only
-export RUST_LOG=mimir=error
+export MIMIR_BIND=0.0.0.0:8740
 ```
 
-**Default:** `mimir=info,mimir_core=info` (all builds)
+**Default:** `127.0.0.1:8740`. Only this computer can connect. Use `0.0.0.0:8740` in a container or to serve other devices.
 
-**Log output:** Written to files in the logs directory:
-- **macOS:** `~/Library/Application Support/com.mimir.app/logs/`
-- **Linux:** `~/.local/share/com.mimir.app/logs/`
-- **Windows:** `%APPDATA%/com.mimir.app/logs/`
+The server stops with an error if the value is not an address.
 
-## MCP Server
+### `MIMIR_DATA_DIR`
 
-### `MIMIR_DATABASE_PATH`
-
-Overrides the database path for the MCP sidecar server. Useful when running the MCP server outside of Tauri (e.g., as a standalone process for Claude Code).
+The data directory.
 
 ```bash
-export MIMIR_DATABASE_PATH=~/Library/Application\ Support/com.mimir.app/data/mimir.db
+export MIMIR_DATA_DIR=/srv/mimir
 ```
 
-**Default:** Platform-specific:
-| Platform | Default Path |
-|----------|-------------|
-| macOS | `~/Library/Application Support/com.mimir.app/data/mimir.db` |
-| Linux | `$XDG_DATA_HOME/com.mimir.app/data/mimir.db` (falls back to `~/.local/share/...`) |
-| Windows | No default — `MIMIR_DATABASE_PATH` must be set explicitly |
+**Default:** `./mimir-data`, from the directory where the server starts.
 
-The path supports `~` and `$HOME` expansion.
+| Path | Contents |
+|------|----------|
+| `<data dir>/data/mimir.db` | The SQLite database |
+| `<data dir>/assets/` | Map images, token images and imported catalog images |
 
-> **Note on Linux:** The MCP server respects the `XDG_DATA_HOME` environment variable. If unset, it falls back to `~/.local/share/`.
+The server makes the directories and runs the database migrations at start.
+
+### `MIMIR_API_TOKEN`
+
+The DM token. A browser, the API and `/mcp` need it to act as the DM.
+
+```bash
+export MIMIR_API_TOKEN="<a long random value>"
+```
+
+**Default:** not set. With no token, or a blank one, the server is in **open mode**: every caller is the DM and there is no sign-in page. The server logs a warning at start. Use open mode only on a computer that no one else can reach.
+
+Player links work in both modes.
+
+### `MIMIR_WEB_DIST`
+
+Serve the web app from this directory instead of the copy in the binary.
+
+```bash
+export MIMIR_WEB_DIST=crates/mimir-web/dist
+```
+
+**Default:** not set. The server then serves the web app built into the binary (the `embed-web` feature). Without both, it serves a placeholder page. `angreal web serve` sets this variable.
+
+### `MIMIR_SEED`
+
+Development and tests only.
+
+```bash
+export MIMIR_SEED=fixture
+```
+
+`fixture` seeds the SRD catalog and the test campaign "The Lost Mine of Phandelver" into an empty database. The server must be built with the `fixtures` feature. Any other value is an error.
+
+**Default:** not set. No seeding.
 
 ### `MIMIR_SEED_ASSETS`
 
-Development only. Path to the seed-asset directory (sample UVTT maps, token images) used when seeding the dev database from the in-app Dev Tools.
+Development and tests only. The directory of the seed maps and token images for `MIMIR_SEED=fixture`.
+
+**Default:** not set. The seeder looks for `crates/mimir-core/src/seed/assets` in the parent directories.
+
+### `RUST_LOG`
+
+How much the server logs, in the [tracing filter syntax](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html).
 
 ```bash
-export MIMIR_SEED_ASSETS=/path/to/mimir/crates/mimir-core/src/seed/assets
+export RUST_LOG=debug
+export RUST_LOG=info,mimir_core=debug
 ```
 
-**Default:** Not set. The seeder walks parent directories looking for `crates/mimir-core/src/seed/assets`; the variable is only needed when running from a location where that walk fails.
+**Default:** `info`. The server logs to standard output. The request log has the method and the path, never the query.
 
-## Build System
+## Claude Code Plugin
 
-### `TAURI_ENV_TARGET_TRIPLE`
+The plugin in `crates/mimir-mcp/plugin` reads these in the shell that starts Claude Code.
 
-Set by Tauri during builds. Used by the sidecar build scripts to determine the target architecture.
+| Variable | Use | Default |
+|----------|-----|---------|
+| `MIMIR_URL` | The server address | `http://127.0.0.1:8740` |
+| `MIMIR_API_TOKEN` | The DM token | empty (open mode) |
 
-```bash
-# Set automatically by Tauri, but can be overridden for cross-compilation
-export TAURI_ENV_TARGET_TRIPLE=aarch64-apple-darwin
-```
-
-**Supported values:**
-- `aarch64-apple-darwin` (macOS ARM64)
-- `x86_64-apple-darwin` (macOS Intel)
-- `x86_64-unknown-linux-gnu` (Linux x86_64)
-- `aarch64-unknown-linux-gnu` (Linux ARM64)
-- `x86_64-pc-windows-msvc` (Windows x86_64)
-- `aarch64-pc-windows-msvc` (Windows ARM64)
-
-**Default:** Auto-detected from the current platform when not set.
-
-### `CARGO_TERM_COLOR`
-
-Standard Cargo variable for controlling colored output. Set to `always` in CI workflows.
-
-```bash
-export CARGO_TERM_COLOR=always
-```
-
-## Platform Directories
-
-Mimir uses platform-appropriate directories following OS conventions. These aren't environment variables, but they're the default paths that environment variables override:
-
-### macOS
-
-| Purpose | Path |
-|---------|------|
-| App directory | `~/Library/Application Support/com.mimir.app/` |
-| Database | `{app_dir}/data/mimir.db` |
-| Assets | `{app_dir}/assets/` |
-| Logs | `{app_dir}/logs/` |
-| Config | `{app_dir}/config/` |
-
-### Linux
-
-| Purpose | Path |
-|---------|------|
-| App directory | `~/.local/share/com.mimir.app/` |
-| Database | `{app_dir}/data/mimir.db` |
-| Assets | `{app_dir}/assets/` |
-| Logs | `{app_dir}/logs/` |
-| Config | `{app_dir}/config/` |
-
-### Windows
-
-| Purpose | Path |
-|---------|------|
-| App directory | `%APPDATA%/com.mimir.app/` |
-| Database | `{app_dir}/data/mimir.db` |
-| Assets | `{app_dir}/assets/` |
-| Logs | `{app_dir}/logs/` |
-| Config | `{app_dir}/config/` |
+See [MCP Server](./mcp-server.md).
 
 ## See Also
 
-- [Troubleshooting](./troubleshooting.md) — Common issues related to paths and configuration
-- [Development Setup](../developer/DEVELOPMENT.md) — Setting up a development environment
-- [MCP Server Reference](./mcp-server.md) — MCP server configuration
+- [Run the Server](../how-to/run-server.md)
+- [Troubleshooting](./troubleshooting.md)
+- [Development Setup](../developer/DEVELOPMENT.md)

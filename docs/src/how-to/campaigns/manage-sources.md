@@ -1,54 +1,54 @@
-# Manage Campaign Sources
+# Manage Source Books
 
-Configure which D&D source books are available in your campaign.
+This guide shows you how to import the catalog data and choose which source books a campaign uses.
 
 ## Import Source Data
 
-Before you can use catalog content (monsters, spells, items), source data must be imported into Mimir.
+Mimir has no game content until you import it. It imports `.tar.gz` archives of JSON data in the format of the [5etools](https://5e.tools/) community project. Archives are on the [Mimir Resources](https://github.com/mimir-dm/resources/releases) releases page. Get the data archive and the image archive of the same release.
 
-Mimir imports `.tar.gz` archives of JSON data in the format established by the [5etools](https://5e.tools/) community project. Pre-packaged archives are available from the [Mimir Resources](https://github.com/mimir-dm/resources/releases) releases page; download both the data archive and the matching image archive.
+1. Click **Settings** in the side navigation.
+2. Click the **Books** tab.
+3. In **Import 5etools data**, choose the data archive.
+4. Click **Import**.
+5. Wait for the message "Imported … sources". A full import takes a few minutes. You can use Mimir in the meantime.
+6. Optionally, in **Import 5etools images**, choose the image archive and click **Import**. The images add pictures to the books, monsters and items.
 
-1. Click the **Settings** gear icon in the header bar
-2. Under **Admin Tools**, click **Import Books**
-3. In the Manage Catalog Sources modal, click **Import 5etools Data**
-4. Select the data archive (`.tar.gz`)
-5. Wait for the import to complete — this may take a few minutes for large archives
-6. (Optional) Click **Import Images** and select the image archive to add token art and book illustrations
+The books appear in the **Sources** table. **Readable** shows whether you can read the book text in the reference.
 
-After import, the source books appear in the Manage Catalog Sources list.
+## Choose the Books of a Campaign
 
-## Configure Sources for a Campaign
+1. Open the campaign.
+2. Open **More** in the dashboard header.
+3. Click **Source books…**.
+4. Select the books that the campaign uses.
+5. Click **Save**.
 
-Each campaign can restrict which source books are available, letting you run a "PHB only" game or include supplements selectively.
+The catalog searches of the campaign now keep to these books. With no book selected, they use every book.
 
-1. Open your campaign dashboard
-2. Click the **Sources** button in the header
-3. Toggle source books on or off
-4. Close the modal
+## Choose the Books of a Character
 
-Changes take effect immediately — catalog searches within this campaign now filter by the enabled sources.
+A player can own other books than the campaign uses.
 
-## Disable or Remove a Source
+1. Open the character sheet.
+2. Click **Source books…**.
+3. Select the books.
+4. Click **Save**.
 
-To disable a source book for a specific campaign:
-1. Open Campaign Sources (dashboard → Sources button)
-2. Toggle the book off
+## Remove a Source Book
 
-To remove a source book entirely from Mimir:
-1. Click the **Settings** gear icon, then click **Import Books** under Admin Tools
-2. Check the box next to each source book you want to remove
-3. Click **Delete Selected**, then confirm
+1. Click **Settings**, then the **Books** tab.
+2. In the **Sources** table, click **×** (**Remove …**) in the row of the book.
+3. Click **Remove** to confirm.
 
-Removing a source deletes all catalog entries from that book. Campaign data (characters, homebrew, documents) is not affected.
+Mimir deletes the catalog entries and the book text of that source. Characters and campaigns keep what they hold. Import the archive again to bring the book back.
 
 ## Tips
 
-- Configure sources early when creating a campaign — it controls what appears in all catalog searches
-- Characters can optionally have their own source restrictions, independent of the campaign (useful when players own different books)
-- Imported data is stored locally in your SQLite database — no internet connection is needed after import
+- Choose the books when you make a campaign. They control what the searches show in it.
+- The data stays on your server. Mimir does not need the internet after the import.
 
 ## See Also
 
-- [Create a Campaign](./create-campaign.md) — Initial campaign setup
-- [The Catalog System](../../explanation/catalog-system.md) — How source data works
-- [Troubleshooting: Missing catalog data](../../reference/troubleshooting.md#missing-catalog-data)
+- [Create a Campaign](./create-campaign.md)
+- [The Catalog System](../../explanation/catalog-system.md)
+- [Troubleshooting: No catalog results](../../reference/troubleshooting.md#no-catalog-results)

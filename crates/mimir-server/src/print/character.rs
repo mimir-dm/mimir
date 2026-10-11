@@ -1,6 +1,6 @@
 //! Character Export Commands
 //!
-//! Tauri commands for exporting character sheets to PDF.
+//! The server's PDF routes: exporting character sheets to PDF.
 
 use base64::Engine;
 use mimir_core::dal::campaign as dal;

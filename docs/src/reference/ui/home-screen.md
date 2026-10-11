@@ -1,58 +1,62 @@
-# Home Screen
+# Home Screen and Navigation
 
-The Home Screen is your starting point in Mimir. From here you can access campaigns, characters, reference materials, and application settings.
+The campaign list is the start page of Mimir (`/`). This page also describes the sign-in page and the frame around every DM page.
 
-![Home Screen](../../images/reference/home-screen.png)
+## Sign-In Page
 
-## Layout
+Mimir shows the sign-in page when the server has a DM token and the browser has no valid token.
 
-### Header Bar
+| Element | Function |
+|---------|----------|
+| **Token** | Type the DM token of the server |
+| **Sign in** | Check the token and open Mimir |
 
-The header bar is consistent across the entire application — it appears on every screen:
+Messages:
+- "The server refused this token.": the token is wrong.
+- "The server did not answer. Try again.": the server cannot be reached.
+- "This player link no longer works. Ask the DM for a new one.": a player link was revoked or replaced.
 
-| Element | Position | Function |
-|---------|----------|----------|
-| **Mimir Logo** (skull icon) | Left | Returns to the home screen from anywhere |
-| **Campaign Selector** | Left-center | Dropdown to switch campaigns or create new ones |
-| **Characters** | Center | Opens the character list (all campaigns) |
-| **Reference** | Center | Opens the D&D 5e reference browser in a new window |
-| **Settings** (gear icon) | Right | Application preferences and catalog management |
+The browser keeps the token. A server in open mode (no DM token) has no sign-in page.
 
-### Campaign Selector
+## The Frame
 
-The campaign selector dropdown shows:
-- All active (non-archived) campaigns
-- **+ New Campaign** button at the bottom
-- **Import Campaign** option for loading archives
+Every DM page, except the player display, sits in the same frame.
 
-Selecting a campaign navigates to its [Campaign Dashboard](./campaign-dashboard.md).
+### Side Navigation
 
-### Main Content
+| Link | Opens |
+|------|-------|
+| **Campaigns** | The campaign list. It also stays lit on campaign, module and map pages. |
+| **Characters** | All characters, by campaign |
+| **Reference** | The catalog and the book reader |
+| **Settings** | Campaign archives, books, integrations, version |
 
-The home screen displays the Mimir landing with the floating skull and tagline. The skull artwork adapts to the active theme (light, dark, or hyper).
+The version of Mimir is at the foot of the navigation.
 
-## Actions
+### Header
 
-| Action | Location |
-|--------|----------|
-| Open a campaign | Campaign Selector dropdown |
-| Create a campaign | Campaign Selector → + New Campaign |
-| Import a campaign | Campaign Selector → Import Campaign |
-| Access characters | "Characters" link in header |
-| Open reference browser | "Reference" link in header (opens new window) |
-| Open settings | Gear icon in header |
-| Return home | Mimir skull icon |
+| Element | Function |
+|---------|----------|
+| Theme switch | Light, dark or hyper theme. The browser keeps the choice. |
+| **Sign out** | Forget the token in this browser. Shown on a server with a DM token. |
 
-## Settings Screen
+## Campaigns Page
 
-Accessible via the gear icon. The Settings screen provides:
+| Element | Function |
+|---------|----------|
+| Campaign cards | One card for each campaign, with its description. Click a card to open the [dashboard](./campaign-dashboard.md). |
+| **Show archived** | Also show archived campaigns. They have the **Archived** label. |
+| **New campaign** | Make a campaign: **Name**, **Description**, **Create** |
 
-- **Catalog Management** — Import source data archives, enable/disable source books
-- **Theme Selection** — Light, Dark, or Hyper theme
-- **Application Info** — Version number, data paths, dev mode status
+With no campaign, the page shows "No campaigns yet."
+
+## Other Pages
+
+- An unknown address shows "Page not found".
+- An unknown campaign shows "Campaign not found".
 
 ## See Also
 
 - [Create a Campaign](../../how-to/campaigns/create-campaign.md)
 - [Campaign Dashboard](./campaign-dashboard.md)
-- [Keyboard Shortcuts](../keyboard-shortcuts.md)
+- [Settings](./settings.md)

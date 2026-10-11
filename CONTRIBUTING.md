@@ -1,154 +1,140 @@
 # Contributing to Mimir
 
-Thank you for your interest in contributing to Mimir! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in Mimir. This document explains how to contribute.
 
 ## Code of Conduct
 
-By participating in this project, you agree to maintain a respectful and inclusive environment for all contributors.
+By taking part in this project, you agree to keep a respectful and inclusive environment for all contributors.
 
 ## How to Contribute
 
 ### Reporting Bugs
 
-If you find a bug, please create an issue on GitHub with:
-- A clear, descriptive title
-- Steps to reproduce the issue
-- Expected behavior vs actual behavior
-- Your environment (OS, version, etc.)
-- Any relevant logs or screenshots
+Open an issue on GitHub with:
+- A clear title
+- Steps to reproduce the problem
+- What you expected and what happened
+- Your browser and the Mimir version (**Settings**, **About**)
+- Logs or screenshots, if they help
 
 ### Suggesting Features
 
-Feature requests are welcome! Please create an issue with:
+Open an issue with:
 - A clear description of the feature
-- Use cases and benefits
-- Any implementation ideas you have
+- The use cases
+- Ideas for the implementation, if you have them
 
 ### Pull Request Process
 
-1. **Fork the repository** and create your branch from `main`
-2. **Make your changes** following our code style guidelines
-3. **Test your changes** - ensure all tests pass
-4. **Update documentation** if you've changed APIs or added features
-5. **Write a clear commit message** (see conventions below)
-6. **Submit a pull request** with a description of your changes
+1. **Fork the repository** and branch from `main`.
+2. **Make your change** in the style of the code.
+3. **Run the gates** (below). All must pass.
+4. **Update the documentation** if you changed a feature or an API.
+5. **Write a clear commit message** (see below).
+6. **Open a pull request** that describes the change.
 
 ## Development Setup
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed instructions on setting up your development environment.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the full guide.
 
 Quick start:
 ```bash
-# Clone the repository
 git clone https://github.com/mimir-dm/mimir.git
 cd mimir
 
-# Build the MCP sidecar binary (required before cargo build — Tauri's externalBin config expects it)
-bash scripts/build-sidecar.sh
+# Tools: Rust, trunk, Node.js (editor bundle and e2e), angreal
+cargo install trunk --locked
+pip install 'angreal>=2'
 
-# Install dependencies
-cargo build
-cd crates/mimir/frontend && npm install
-
-# Run in development mode (requires angreal: pip install 'angreal>=2')
-cd ../.. && angreal dev launch
+# Build the web app, run the server on fixture data, rebuild on change
+angreal web serve        # http://127.0.0.1:8740
 ```
 
-## Code Style Guidelines
+## Code Style
 
 ### Rust
-- Follow standard Rust formatting: `cargo fmt --all`. CI fails when `cargo fmt --all --check` finds a difference.
-- Clippy must be clean: `cargo clippy --workspace --all-targets -- -D warnings`. CI runs it with Rust 1.93.0 (pinned in `.github/workflows/ci.yml`). If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
-- Write doc comments for public APIs
-- Use meaningful variable and function names
-- Keep functions focused and reasonably sized
+- Format with `cargo fmt --all`. CI fails when `cargo fmt --all --check` finds a difference.
+- Clippy must be clean on the host and for wasm. CI runs it with Rust 1.93.0 (pinned in `.github/workflows/ci.yml`). If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
+- Write doc comments for public items.
+- Keep functions short and focused.
 
-### TypeScript/Vue
-- Follow the existing code style in the frontend
-- Use TypeScript for type safety
-- Write meaningful component and function names
-- Keep components focused and composable
+### Web App
+- The web app is Rust (Leptos) in `crates/mimir-web`. Use Aurora components and tokens.
+- JavaScript is only in the editor bundle (`crates/mimir-web/editor`) and the Playwright harness (`crates/mimir-web/web-e2e`).
+- Give controls accessible names; the e2e specs find them by role and name.
 
 ### General Conventions
-- **No emojis** in code, commit messages, or technical writing
+- **No emojis** in code, commit messages or technical writing
 - **No references to Claude or Anthropic** in git commit messages
-- Use clear, descriptive names
-- Write self-documenting code with comments where necessary
-- Follow existing patterns in the codebase
+- Clear names, and comments where the code needs them
+- Follow the patterns already in the code
 
-## Testing Requirements
+## Gates
 
-Before submitting a pull request:
+Run these before a pull request. CI runs them too.
 
 ```bash
-# Run Rust tests (recommended)
-angreal test unit
-# Underlying command:
-#   cargo test --workspace --exclude mimir -- --test-threads=1
-# (excludes the Tauri crate, which needs the sidecar binary to build;
-#  --test-threads=1 avoids SQLite locking issues)
-
-# Run frontend tests
-cd crates/mimir/frontend && npm test
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy -p mimir-web --target wasm32-unknown-unknown -- -D warnings
+angreal test unit       # cargo test --workspace -- --test-threads=1
+angreal web e2e         # Playwright smoke suite against a real server
 ```
 
-All tests must pass before your PR can be merged.
+`--test-threads=1` avoids SQLite lock errors.
 
-## Commit Message Conventions
+## Commit Messages
 
-Write clear, concise commit messages:
-
-**Good examples:**
+**Good:**
 ```
-Add campaign stage transition validation
-Fix database migration error on fresh install
-Update README with installation instructions
-Refactor class service to use repository pattern
+Add the turn order to the player display
+Fix fog when a PC token is hidden
+Update README with the server setup
 ```
 
-**Bad examples:**
+**Bad:**
 ```
 Fixed stuff
 WIP
 Update code
-Added feature
 ```
 
 **Format:**
-- Use imperative mood ("Add feature" not "Added feature")
+- Use the imperative mood ("Add feature", not "Added feature")
 - Start with a capital letter
 - No period at the end
-- First line should be 50 characters or less
-- Add a blank line and detailed description if needed
-- Reference issue numbers when applicable
+- First line of 50 characters or less
+- A blank line and a longer description if needed
+- Reference the issue when there is one
 
 ## Project Structure
 
 ```
 mimir/
-├── crates/                      # Rust workspace
-│   ├── mimir/                  # Main Tauri app (lib name: mimir_lib)
-│   ├── mimir-core/             # Core business logic, DAL, models
-│   ├── mimir-mapgen/           # Procedural map generation (library + CLI)
-│   ├── mimir-mcp/              # MCP server for Claude integration
-│   └── mimir-print/            # PDF export / Typst rendering
-├── docs/                        # Documentation (mdBook)
-└── .metis/                     # Project management
+├── crates/
+│   ├── mimir-server/   # axum server: API, auth, live socket, MCP at /mcp, serves the web app
+│   ├── mimir-web/      # Leptos web app (trunk), editor bundle, Playwright e2e
+│   ├── mimir-wire/     # JSON types shared by the server and the web app
+│   ├── mimir-core/     # Models, services, data access, migrations
+│   ├── mimir-mcp/      # MCP tools for Claude; plugin/ is the Claude Code plugin
+│   ├── mimir-print/    # PDF export with Typst
+│   ├── mimir-render/   # 5etools JSON to HTML
+│   └── mimir-mapgen/   # Procedural map generation (library and CLI)
+└── docs/               # Documentation (mdBook)
 ```
 
 ## Documentation
 
-- Update relevant documentation when adding or changing features
-- Keep README files up to date
-- Add doc comments to new public APIs
+- Update the docs when you add or change a feature.
+- Keep the READMEs current.
+- Add doc comments to new public items.
 
 ## Questions?
 
-If you have questions about contributing, feel free to:
-- Open an issue for discussion
-- Ask in pull request comments
-- Check existing issues and PRs for similar questions
+- Open an issue for discussion.
+- Ask in the pull request.
+- Look for similar issues and pull requests.
 
 ## License
 
-By contributing to Mimir, you agree that your contributions will be licensed under the same license as the project (MIT).
+By contributing to Mimir, you agree that your contributions are licensed under the license of the project (MIT).

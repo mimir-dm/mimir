@@ -1,145 +1,191 @@
 # Mimir Architecture
 
-Architecture documentation following the [C4 model](https://c4model.com/): Context → Containers → Components → Code.
+Architecture documentation following the [C4 model](https://c4model.com/): Context, Containers, Components, Code.
 
 ## Level 1: System Context
 
-Mimir is a local-first desktop application for D&D 5e campaign management. It has no cloud dependencies — all data stays on the user's machine.
+Mimir is a self-hosted web app for D&D 5e campaign management. It has no cloud dependency: all data stays on the server that runs it.
 
 ```
-                                    ┌─────────────────────┐
-                                    │    Dungeon Master    │
-                                    │      (User)          │
-                                    └──────────┬──────────┘
-                                               │
-                          ┌────────────────────┼────────────────────┐
-                          │                    │                    │
-                          ▼                    ▼                    ▼
-                   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-                   │   Mimir     │     │  Claude Code │     │ Dungeondraft│
-                   │ Desktop App │     │  (via MCP)   │     │  (Map Tool) │
-                   └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
-                          │                   │                    │
-                          │                   │                    │
-                          ▼                   ▼                    ▼
-                   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-                   │   SQLite    │     │  MCP Sidecar │     │ .dd2vtt /   │
-                   │  Database   │◀────│   Server     │     │ .uvtt files │
-                   └─────────────┘     └─────────────┘     └─────────────┘
+   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+   │ Dungeon      │  │ Players      │  │ Claude Code  │  │ Dungeondraft │
+   │ Master       │  │ (own devices,│  │ (MCP client) │  │ (map tool)   │
+   │ (browser)    │  │  TV display) │  │              │  │              │
+   └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+          │ DM token        │ player link     │ DM token        │ .dd2vtt /
+          ▼                 ▼                 ▼                 │ .uvtt files
+   ┌─────────────────────────────────────────────────┐          │
+   │                 mimir-server                    │◀─────────┘ (upload)
+   │   web app · /api/v1 · /ws · /mcp                │
+   └────────────────────────┬────────────────────────┘
+                            ▼
+                ┌───────────────────────┐
+                │ data directory:       │
+                │ SQLite DB + assets/   │
+                └───────────────────────┘
 ```
 
-**Users:** Dungeon Masters preparing and running D&D 5e campaigns.
+**Users:**
+- **The DM** prepares and runs campaigns in the browser, signed in with the DM token.
+- **Players** open a player link on their own device. The table TV shows the player display.
 
 **External systems:**
-- **Claude Code** — AI assistant that manages campaigns via the MCP sidecar server
-- **Dungeondraft** — Map authoring tool; Mimir imports UVTT maps and generates `.dungeondraft_map` files
-- **5etools** — Source of D&D 5e catalog data (monsters, spells, items, etc.), imported into the database at runtime by the user from the Sources UI (`crates/mimir-core/src/import/`)
+- **Claude Code**: manages campaigns through MCP at `/mcp`, with the DM token.
+- **Dungeondraft**: map tool. Mimir uploads UVTT maps; `mimir-mapgen` writes `.dungeondraft_map` files.
+- **5etools**: the source of the catalog data, imported by the DM in **Settings** (`crates/mimir-core/src/import/`).
 
-## Level 2: Container Diagram
-
-The system is a Cargo workspace with 5 crates, a Vue 3 frontend, and a SQLite database.
+## Level 2: Containers
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    Mimir Desktop App                      │
-│  ┌────────────────────────┐  ┌────────────────────────┐  │
-│  │   Vue 3 Frontend       │  │   Tauri Shell (mimir)  │  │
-│  │   TypeScript + Pinia   │──│   Rust command handlers │  │
-│  │                        │  │                        │  │
-│  │   4 feature modules:   │  │   16 command modules   │  │
-│  │   campaigns, modules,  │  │   AppState management  │  │
-│  │   characters, sources  │  │                        │  │
-│  └────────────────────────┘  └───────────┬────────────┘  │
-│                                          │               │
-│              ┌───────────────────────────┼───────────┐   │
-│              │                           │           │   │
-│              ▼                           ▼           │   │
-│  ┌────────────────────────┐  ┌──────────────────┐    │   │
-│  │   mimir-core           │  │   mimir-print    │    │   │
-│  │   Domain logic, DAL,   │  │   Typst-based    │    │   │
-│  │   services, migrations │  │   PDF generation │    │   │
-│  └───────────┬────────────┘  └──────────────────┘    │   │
-│              │                                       │   │
-│              ▼                                       │   │
-│  ┌────────────────────────┐                          │   │
-│  │   SQLite Database      │                          │   │
-│  │   56 tables + FTS5,    │                          │   │
-│  │   WAL mode             │                          │   │
-│  └────────────────────────┘                          │   │
-└──────────────────────────────────────────────────────┘   │
-                                                           │
-┌──────────────────────────────────────────────────────┐   │
-│   MCP Sidecar (mimir-mcp)                            │   │
-│   Separate binary, launched by Tauri externalBin     │◀──┘
-│   54 tools across 8 categories                       │
-│   Depends on: mimir-core, mimir-mapgen               │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Browser                                                       │
+│  mimir-web (Leptos CSR, wasm32)  +  mimir-editor.js (TipTap)  │
+└───────────────┬───────────────────────────────┬──────────────┘
+                │ JSON over HTTPS (/api/v1)     │ WebSocket (/ws)
+┌───────────────▼───────────────────────────────▼──────────────┐
+│ mimir-server (axum, tokio)                                    │
+│  auth · API routes · live hub · MCP (rmcp) · static web app   │
+│  uses: mimir-core, mimir-wire, mimir-print, mimir-render,     │
+│        mimir-mcp                                              │
+└───────────────┬──────────────────────────────────────────────┘
+                │ Diesel
+┌───────────────▼──────────────────────────────────────────────┐
+│ SQLite (WAL) data/mimir.db   ·   assets/ (maps, tokens, images)│
+└──────────────────────────────────────────────────────────────┘
 
-┌──────────────────────────────────────────────────────┐
-│   Map Generator CLI (mimir-mapgen)                   │
-│   Standalone binary + library                        │
-│   Procedural terrain, rooms, polygons → Dungeondraft │
-│   No database dependency                             │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ mimir-mapgen: standalone CLI and library; no database         │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### Container responsibilities
+### Container Responsibilities
 
 | Container | Technology | Purpose |
 |-----------|-----------|---------|
-| **Vue 3 Frontend** | TypeScript, Pinia, Tiptap, Tailwind | UI: campaign dashboard, character sheets, play mode, player display |
-| **Tauri Shell (mimir)** | Rust, Tauri 2 | IPC command handlers, AppState, window management |
-| **mimir-core** | Rust, Diesel ORM | Domain models, services, data access layer, migrations |
-| **mimir-print** | Rust, Typst | PDF generation: character sheets, spell cards, map prints |
-| **mimir-mcp** | Rust, rust-mcp-sdk | MCP server exposing campaign management to AI assistants |
-| **mimir-mapgen** | Rust, noise-rs, clap | Procedural map generation with YAML config or biome presets |
-| **SQLite Database** | SQLite 3, WAL mode | 56 schema tables plus FTS5 indexes: campaigns, characters, maps, D&D 5e catalog |
+| **mimir-web** | Rust, Leptos 0.8 (CSR), Aurora, trunk | The web app: DM pages, DM map, player display, player page |
+| **Editor bundle** | TipTap 3, esbuild | The rich markdown editor, driven from Rust through wasm-bindgen |
+| **mimir-server** | Rust, axum 0.8, tokio, rmcp | Auth, REST API, live socket, MCP endpoint, serves the web app |
+| **mimir-wire** | Rust, serde | The JSON types between server and web app (builds for wasm) |
+| **mimir-core** | Rust, Diesel | Models, services, data access, migrations, catalog import, seed fixture |
+| **mimir-print** | Rust, Typst | PDF generation |
+| **mimir-render** | Rust | 5etools JSON to HTML, for the catalog, the reader and homebrew previews |
+| **mimir-mcp** | Rust | The MCP tool registry, over the core services |
+| **mimir-mapgen** | Rust, noise, clap | Procedural map generation |
+| **SQLite** | SQLite 3, WAL mode | Campaigns, characters, maps, play state, the D&D catalog |
 
-### Crate dependency graph
+### Crate Dependency Graph
 
 ```
-mimir ──────► mimir-core
-  │
-  └─────────► mimir-print
+mimir-server ──► mimir-core
+     │      ──► mimir-wire
+     │      ──► mimir-print
+     │      ──► mimir-render
+     └────────► mimir-mcp ──► mimir-core
+                         └──► mimir-mapgen
 
-mimir-mcp ──► mimir-core
-  │
-  └─────────► mimir-mapgen
+mimir-web ──► mimir-wire
+          └─► mimir-render
 
-(mimir-core, mimir-print, mimir-mapgen have no internal crate dependencies)
+(mimir-core, mimir-wire, mimir-print, mimir-render and mimir-mapgen
+ have no other internal dependencies)
 ```
 
-## Level 3: Component Diagrams
+`mimir-web` depends only on crates that build for `wasm32-unknown-unknown`.
 
-### mimir-core — Domain Logic
+## Level 3: Components
 
-The shared library containing all business logic and data access.
+### mimir-server
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ mimir-server                                                  │
+│                                                               │
+│  config.rs   MIMIR_BIND, MIMIR_DATA_DIR, MIMIR_API_TOKEN,     │
+│              MIMIR_WEB_DIST, MIMIR_SEED                       │
+│  auth.rs     authenticate: DM token (constant-time) or        │
+│              player link (hashed) → Caller; dm_only → 403     │
+│  api/        route table (routes()) with Access per route;    │
+│              handlers per area: campaigns, authoring, maps,   │
+│              combat, characters, party, links, catalog,       │
+│              reference, homebrew, admin, print, display       │
+│  live.rs     /ws: hub of changes; per-client decide()         │
+│  mcp.rs      /mcp: streamable HTTP, one handler per session   │
+│  web.rs      /api/config; SPA fallback (dist dir, embedded,   │
+│              or placeholder)                                  │
+│  jobs.rs     background jobs (catalog and image imports)      │
+│  print/      PDF assembly for each export                     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Endpoints:**
+
+| Path | Auth | Purpose |
+|------|------|---------|
+| `/healthz` | none | Liveness |
+| `/readyz` | none | Readiness: the database answers |
+| `/api/config` | none | Version and sign-in mode, for the app before sign-in |
+| `/api/v1/…` | DM or player, per route | The REST API |
+| `/ws` | DM or player (`?access_token=`) | Live changes |
+| `/mcp` | DM | MCP over streamable HTTP |
+| anything else | none | The web app (SPA fallback to `index.html`) |
+
+**Auth** (ADR MIMIR-A-0010). Every API route and the socket name the caller:
+- the DM: the DM bearer token, or no token at all in open mode;
+- a player: the link token of a player character. Only a SHA-256 hash is stored.
+
+Other tokens get 401. DM routes give a player 403. Player routes check the scope of the player (their campaign, the shown map, their character) in the handler.
+
+**Request flow:**
+
+```
+Browser
+  │  PATCH /api/v1/tokens/<id>   Authorization: Bearer <token>
+  ▼
+auth::authenticate → Caller (Dm | Player)
+  ▼
+auth::dm_only (DM routes) → 403 for a player
+  ▼
+handler (api/maps.rs)
+  │  state.with_db(|conn| MapStateService::new(conn).update_token(…))
+  ▼
+mimir-core service → DAL → SQLite
+  ▼
+convert to mimir-wire type → JSON
+  ▼
+live hub: Change::Map { campaign, map, part: Tokens }
+  → each socket decides: DM gets a notice; a player gets the new player view
+```
+
+**Live socket.** Each client opens `/ws` and watches a campaign. Handlers publish a change on the hub. Each socket task decides, from the role of its client, what to send: a change notice to the DM, the player view of the shown map to a player, a sign-out when a link ends. The display state (shown map, blackout, turn order on display) lives in the hub's memory.
+
+**MCP** (MIMIR-T-0725). `rmcp` serves the `mimir-mcp` registry over streamable HTTP. Each MCP session has its own handler, so the active campaign belongs to the session. The route sits behind `authenticate` and `dm_only`.
+
+**Web app** (ADR MIMIR-A-0009). With the `embed-web` feature, `rust-embed` bakes `crates/mimir-web/dist` into the binary: one artifact. In development, `MIMIR_WEB_DIST` points at the dist directory.
+
+### mimir-web
+
+See [Web App Architecture](./reference/frontend/README.md).
+
+### mimir-core
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                        mimir-core                        │
 │                                                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Models     │  │   Services   │  │    DAL       │  │
-│  │              │  │              │  │              │  │
-│  │  campaign/   │  │  Campaign    │  │  Repository  │  │
-│  │  catalog/    │◀─│  Character   │──│  traits      │  │
-│  │  character/  │  │  Module      │  │              │  │
-│  │              │  │  Document    │  │  Diesel      │  │
-│  │  Domain      │  │  Map, Token  │  │  queries     │  │
-│  │  types and   │  │  Archive     │  │              │  │
-│  │  enums       │  │  Asset       │  └──────────────┘  │
-│  │              │  │  Homebrew    │                     │
-│  └──────────────┘  │              │  ┌──────────────┐  │
-│                    │  24 catalog  │  │  Migrations  │  │
-│                    │  services    │  │  29 migrations│  │
-│                    └──────────────┘  └──────────────┘  │
+│  models/      Domain types (campaign, catalog, character)│
+│  services/    Rules and transactions: Campaign, Module,  │
+│               Document, Character, Map, MapState, Token, │
+│               Combat, PlayerLink, Party, Archive, Asset, │
+│               Homebrew, Source, and the catalog services │
+│  dal/         Diesel queries                             │
+│  import/      5etools archive import (data and images)   │
+│  seed/        The UI fixture (SRD + test campaign)       │
+│  templates/   Starting documents of campaigns and modules│
+│  migrations/  Diesel migrations, run at start            │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Service layer pattern** (per [ADR-0005](/.metis/adr/MIMIR-A-0005.md)):
-
-Services are stateful structs that borrow a database connection:
+**Service pattern.** Services are structs that borrow a database connection:
 
 ```rust
 pub struct CampaignService<'a> {
@@ -150,297 +196,113 @@ impl<'a> CampaignService<'a> {
     pub fn new(conn: &'a mut SqliteConnection) -> Self {
         Self { conn }
     }
-
-    pub fn create(&mut self, input: CreateCampaignInput) -> ServiceResult<Campaign> {
-        // Business logic + database access
-    }
 }
 ```
 
-**Service inventory:**
+The server runs each service call on a blocking thread (`state.with_db`). The MCP tools call the same services.
 
-| Category | Services |
-|----------|----------|
-| Campaign | CampaignService, ModuleService, DocumentService, ArchiveService, AssetService |
-| Character | CharacterService, HomebrewService |
-| Map | MapService, TokenService |
-| Catalog (24) | SpellService, MonsterService, ItemService, ClassService, RaceService, BackgroundService, FeatService, ConditionService, SubclassService, and 15 more |
-
-### Tauri Shell — Command Layer
-
-The `mimir` crate bridges the Vue frontend to core services via Tauri IPC commands.
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                      mimir (Tauri)                        │
-│                                                           │
-│  ┌─────────────┐    ┌──────────────────────────────────┐ │
-│  │  AppState    │    │         Commands (16 modules)    │ │
-│  │             │    │                                  │ │
-│  │  AppPaths   │    │  campaign     character    map   │ │
-│  │  (data_dir, │◀───│  module       document     print │ │
-│  │   db_path,  │    │  archive      homebrew*3   token │ │
-│  │   is_dev)   │    │  asset        source       dev   │ │
-│  │             │    │  dm_map       player_display     │ │
-│  └─────────────┘    │  catalog/ (8 sub-modules)        │ │
-│                     └──────────────────────────────────┘ │
-│                                                           │
-│  ┌──────────────────────────────────────────────────────┐ │
-│  │  Sidecar Management                                  │ │
-│  │  Launches mimir-mcp as externalBin process           │ │
-│  │  Configured in tauri.conf.json                       │ │
-│  └──────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Request flow:**
-
-```
-Vue Component
-    │  invoke('get_campaign', { id: 42 })
-    ▼
-Tauri IPC
-    │  Deserialize params, inject State<AppState>
-    ▼
-Command Handler (commands/campaign.rs)
-    │  let mut conn = state.get_connection()?;
-    │  let mut svc = CampaignService::new(&mut conn);
-    ▼
-CampaignService (mimir-core)
-    │  svc.get_by_id(42)?
-    ▼
-Diesel Query → SQLite
-    │
-    ▼
-Result<ApiResponse<Campaign>, ApiError> → JSON → Frontend
-```
-
-### Vue 3 Frontend
-
-Feature-based organization with 4 domain modules.
-
-```
-frontend/src/
-├── app/                    # App bootstrap, router, root layout
-├── features/
-│   ├── campaigns/          # Dashboard, module listing, homebrew tab
-│   │   ├── views/          # CampaignDashboardView, etc.
-│   │   ├── components/     # WorldTab, ModulesTab, PCsTab, NPCsTab, HomebrewTab
-│   │   └── composables/    # useDashboardState
-│   ├── characters/         # Creation wizard, character sheet, level-up
-│   │   ├── views/          # CharacterListView, CharacterSheetView
-│   │   └── components/     # CharacterCreationWizard, LevelUpDialog
-│   ├── modules/            # Module prep, player display
-│   │   ├── views/          # ModulePrepView
-│   │   └── components/     # ModuleMonsters, ModuleNPCs, ModuleMaps
-│   └── sources/            # D&D 5e catalog browser
-│       └── composables/    # useCatalogSearch (instantiated 22×)
-├── components/             # Shared: TokenPalette, DmMapViewer, print dialogs
-├── stores/                 # Pinia: campaigns, characters, theme
-├── services/               # Tauri command wrappers
-└── types/                  # TypeScript interfaces (generated from Rust)
-```
-
-**Key architectural patterns:**
-- Composition API with `<script setup>` exclusively
-- Pinia setup stores (function-based, not options-based)
-- Tauri `invoke()` for all backend communication
-- `ApiResponse<T>` wrapper for consistent error handling
-- 3 themes: light, dark, hyper (CSS variables + Pinia persistence)
-
-### mimir-mcp — MCP Sidecar Server
-
-Runs as a separate process, sharing the same SQLite database.
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                       mimir-mcp                           │
-│                                                           │
-│  ┌──────────────┐    ┌──────────────────────────────────┐ │
-│  │  MCP Server   │    │     Tools (54 total)             │ │
-│  │              │    │                                  │ │
-│  │  rust-mcp-   │    │  character (13)   campaign (10) │ │
-│  │  sdk 0.8     │    │  module (8)       map (8)       │ │
-│  │              │    │  document (6)     homebrew (5)  │ │
-│  │  stdio +     │◀───│  mapgen (3)       catalog (1)   │ │
-│  │  streamable  │    │                                  │ │
-│  │  HTTP        │    │                                  │ │
-│  └──────────────┘    └──────────────────────────────────┘ │
-│                                                           │
-│  ┌──────────────┐    ┌──────────────────────────────────┐ │
-│  │  Database     │    │  Claude Code Plugin              │ │
-│  │  Context      │    │  plugin/ directory with:         │ │
-│  │              │    │  - plugin.json (manifest)        │ │
-│  │  Shares same  │    │  - skills/ (mapgen, mimir-dm)   │ │
-│  │  SQLite DB    │    │  - agents/ (campaign authoring)  │ │
-│  │  as Tauri app │    │  - hooks/ (event handlers)       │ │
-│  └──────────────┘    └──────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Sidecar lifecycle:**
-1. Tauri launches `mimir-mcp` binary via `externalBin` configuration
-2. Binary built to `crates/mimir/binaries/mimir-mcp-{target-triple}`
-3. Build scripts: `scripts/build-sidecar.{sh,ps1,mjs}`
-4. Must be built before `cargo build -p mimir` (Tauri requirement)
-
-### mimir-mapgen — Procedural Map Generator
-
-Standalone library + CLI for generating Dungeondraft-compatible maps.
+### mimir-mapgen
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                      mimir-mapgen                         │
 │                                                           │
-│  CLI Interface (clap)          Pipeline                   │
-│  ┌──────────────────┐         ┌──────────────────────┐   │
-│  │ generate          │         │  YAML Config         │   │
-│  │   --config / --preset      │       │              │   │
-│  │   --output         │────────│       ▼              │   │
-│  │   --seed           │        │  Noise Generation    │   │
-│  │ validate           │        │       │              │   │
-│  │ list-presets        │        │       ▼              │   │
-│  └──────────────────┘         │  Terrain Blending    │   │
-│                               │       │              │   │
-│  Core Modules (15)            │       ▼              │   │
-│  ┌──────────────────┐         │  Object Placement    │   │
-│  │ noise_gen         │         │  (trees, clutter)    │   │
-│  │ terrain           │         │       │              │   │
-│  │ objects            │         │       ▼              │   │
-│  │ paths (roads,      │         │  Paths & Water      │   │
-│  │   rivers, meander) │         │  (exclusion zones)  │   │
-│  │ water             │         │       │              │   │
-│  │ rooms             │         │       ▼              │   │
-│  │ polygons          │         │  Rooms / Polygons    │   │
-│  │ elevation         │         │       │              │   │
-│  │ contour           │         │       ▼              │   │
-│  │ biomes (12        │         │  Dungeondraft        │   │
-│  │   presets)         │         │  Format Output       │   │
-│  │ format            │         │  (.dungeondraft_map) │   │
-│  │ pipeline          │         └──────────────────────┘   │
-│  │ distribution      │                                    │
-│  │ curves            │                                    │
-│  │ assets            │                                    │
-│  └──────────────────┘                                    │
+│  CLI (clap)                    Pipeline                   │
+│  generate --preset/--output    YAML config                │
+│           --seed                 → noise                  │
+│  validate                        → terrain blending       │
+│  list-presets                    → objects (trees, clutter)│
+│                                  → paths and water        │
+│  12 biome presets                → rooms / polygons       │
+│                                  → .dungeondraft_map      │
 └──────────────────────────────────────────────────────────┘
 ```
 
-**No database dependency.** Operates entirely on YAML config input → file output.
+No database dependency. YAML in, file out.
 
-### mimir-print — PDF Generation
-
-Typst-based document builder with pluggable sections.
+### mimir-print
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                       mimir-print                         │
 │                                                           │
-│  ┌──────────────┐    ┌──────────────────────────────────┐ │
-│  │ PrintService  │    │  Renderable Sections             │ │
-│  │              │    │                                  │ │
-│  │ Template     │    │  CharacterSection (2-page sheet) │ │
-│  │ resolution + │    │  CharacterBattleCardSection      │ │
-│  │ PDF compile  │    │  SpellCardsSection (3×3 grid)    │ │
-│  │              │    │  EquipmentCardsSection            │ │
-│  └──────────────┘    │  MonsterCardSection               │ │
-│                      │  TrapCardSection                  │ │
-│  ┌──────────────┐    │  TiledMapSection + MapPreview    │ │
-│  │ DocumentBuilder   │  TokenCutoutSection               │ │
-│  │              │    │  MarkdownSection                  │ │
-│  │ Assembles    │    └──────────────────────────────────┘ │
-│  │ sections into│                                        │
-│  │ multi-part   │    ┌──────────────────────────────────┐ │
-│  │ documents    │    │  Support Modules                  │ │
-│  └──────────────┘    │  markdown → Typst converter      │ │
-│                      │  map_renderer (grid, LOS, tokens) │ │
-│                      │  Typst World (font/file resolver) │ │
-│                      └──────────────────────────────────┘ │
+│  DocumentBuilder        Sections                          │
+│  assembles sections     character sheet, battle card,     │
+│  into one Typst doc     spell cards, equipment cards,     │
+│                         monster cards, trap cards,        │
+│  Typst World            map preview, tiled map,           │
+│  (fonts, in-memory      token cutouts, markdown           │
+│   files) → PDF                                            │
 └──────────────────────────────────────────────────────────┘
 ```
 
+The server calls it from `crates/mimir-server/src/print/` and answers with `application/pdf`.
+
 ## Level 4: Key Design Decisions
 
-Detailed rationale lives in ADRs. Summary:
+| Decision | Reference | Reason |
+|----------|-----------|--------|
+| One server binary with the web app embedded | ADR MIMIR-A-0009 | One artifact to deploy; the API and the app share an origin, so no CORS |
+| DM token and per-character player links | ADR MIMIR-A-0010 | Players use their own devices without the DM's secret; a link is revoked on its own |
+| Leptos CSR in Rust | | One language end to end; `mimir-wire` types make an API change a compile error |
+| Server-built player view | | The display gets only what players may see; hidden data never leaves the server |
+| Denormalized catalog data | | Child entities (subclasses, subraces) embed parent data to avoid joins on read |
+| JSON columns | | Variable fields (spell components, monster traits) stay as 5etools JSON |
+| Stateful services | | Services borrow `&mut SqliteConnection` for scoped transactions |
 
-| Decision | ADR | Rationale |
-|----------|-----|-----------|
-| Denormalized catalog data | [ADR-0001](/.metis/adr/MIMIR-A-0001.md) | Child entities (subclasses, subraces) embed full parent data to avoid joins on read |
-| Multi-ruleset content | [ADR-0002](/.metis/adr/MIMIR-A-0002.md) | Content organized by rule system and source for future expansion |
-| JSON columns | [ADR-0003](/.metis/adr/MIMIR-A-0003.md) | Variable/complex fields (spell components, monster traits) stored as JSON |
-| Stateful services | [ADR-0005](/.metis/adr/MIMIR-A-0005.md) | Services borrow `&mut SqliteConnection` for lifetime-scoped transactions |
+### Database
 
-### Database Schema (56 schema tables plus FTS5 indexes)
+| Category | Tables |
+|----------|--------|
+| Campaign | campaigns, modules, documents, campaign_sources, campaign_assets, campaign_homebrew_items / _monsters / _spells |
+| Character | characters, character_classes, character_spells, character_inventory, character_feats, character_features, character_proficiencies, character_sources |
+| Map | maps, token_placements, light_sources, fog_revealed_areas, map_pois, map_traps, module_monsters, module_npcs |
+| Play | combat_sessions, combat_entries, player_links, player_notes, sheet_shares |
+| D&D catalog | spells, monsters, items, classes, races, backgrounds, feats, conditions, subclasses and more |
+| Catalog support | catalog_sources, books, spell_classes, spell_subclasses, item_attunement_classes |
 
-| Category | Tables | Examples |
-|----------|--------|----------|
-| Campaign (7) | campaigns, modules, documents, campaign_sources, campaign_assets, campaign_homebrew_* | Core user data |
-| Character (8) | characters, character_classes, character_spells, character_inventory, character_feats, character_features, character_proficiencies, character_sources | PC/NPC data |
-| Map & Tokens (8) | maps, token_placements, light_sources, fog_revealed_areas, map_pois, map_traps, module_monsters, module_npcs | Spatial data |
-| D&D Catalog (28) | spells, monsters, items, classes, races, backgrounds, feats, conditions, subclasses, etc. | Immutable 5etools data |
-| Management (5) | catalog_sources, books, spell_classes, spell_subclasses, item_attunement_classes | Relationships & metadata |
+See the [Data Model](../reference/data-model.md).
 
 ### Data Paths
 
-| Environment | Database | Assets |
-|------------|----------|--------|
-| **Production** | `~/Library/Application Support/com.mimir.app/data/mimir.db` | `~/Library/Application Support/com.mimir.app/assets/` |
-| **Development** | `~/Library/Application Support/com.mimir.app/dev/data/mimir.db` | `~/Library/Application Support/com.mimir.app/dev/assets/` |
-
-Dev mode activated by debug assertions or `MIMIR_DEV` environment variable. Paths shown are macOS; Linux uses `~/.local/share/`, Windows uses `%APPDATA%`.
+| Path | Contents |
+|------|----------|
+| `$MIMIR_DATA_DIR/data/mimir.db` | The database (default data dir: `./mimir-data`) |
+| `$MIMIR_DATA_DIR/assets/` | Map images, token images, catalog images |
+| `target/web-dev/` | The dev data of `angreal web serve` (fixture) |
 
 ## Directory Structure
 
 ```
 mimir/
-├── Cargo.toml                     # Workspace manifest (5 crates)
+├── Cargo.toml                 # workspace
 ├── crates/
-│   ├── mimir/                     # Tauri desktop application
+│   ├── mimir-server/
 │   │   ├── src/
-│   │   │   ├── main.rs            # Entry point, plugin registration
-│   │   │   ├── state.rs           # AppState, AppPaths, dev/prod separation
-│   │   │   └── commands/          # 16 Tauri command modules
-│   │   │       └── catalog/       # 8 sub-modules for D&D catalog queries
-│   │   ├── frontend/              # Vue 3 + TypeScript application
-│   │   │   └── src/
-│   │   │       ├── features/      # campaigns/, characters/, modules/, sources/
-│   │   │       ├── components/    # Shared: TokenPalette, DmMapViewer, print dialogs
-│   │   │       └── stores/        # Pinia: campaigns, characters, theme
-│   │   ├── binaries/              # Sidecar output (mimir-mcp-{target})
-│   │   └── tauri.conf.json        # Tauri config with externalBin sidecar
-│   │
-│   ├── mimir-core/                # Domain logic library
-│   │   └── src/
-│   │       ├── models/            # Domain types (catalog/, campaign/)
-│   │       ├── services/          # 9 core + 24 catalog services
-│   │       │   └── catalog/       # Spell, Monster, Item, Class, Race, etc.
-│   │       ├── dal/               # Data access layer
-│   │       └── migrations/        # 29 Diesel migrations
-│   │
-│   ├── mimir-mcp/                 # MCP sidecar server
-│   │   ├── src/
-│   │   │   ├── main.rs            # Server bootstrap (stdio + HTTP)
-│   │   │   └── tools/             # 8 tool modules (54 tools total)
-│   │   └── plugin/                # Claude Code plugin definition
-│   │       ├── plugin.json        # Manifest
-│   │       ├── skills/            # mapgen, mimir-dm, mimir-campaign
-│   │       └── agents/            # Campaign authoring agent
-│   │
-│   ├── mimir-print/               # PDF generation library
-│   │   └── src/
-│   │       ├── service.rs         # PrintService
-│   │       ├── builder.rs         # DocumentBuilder
-│   │       ├── sections/          # 9 renderable section types
-│   │       └── map_renderer.rs    # Map image rendering
-│   │
-│   └── mimir-mapgen/              # Map generation library + CLI
-│       ├── src/
-│       │   ├── main.rs            # CLI (generate, validate, list-presets)
-│       │   ├── pipeline.rs        # MapConfig, generation orchestration
-│       │   ├── biomes.rs          # 12 biome presets
-│       │   └── (13 more modules)  # noise, terrain, paths, water, rooms, etc.
-│       └── examples/              # YAML configs + generated maps
-│
-├── docs/                          # mdBook documentation
-├── scripts/                       # Build scripts (sidecar, CI)
-└── .metis/                        # Project management (ADRs, initiatives)
+│   │   │   ├── main.rs        # config, prepare (dirs, migrations, seed), serve
+│   │   │   ├── lib.rs         # router(): /healthz, /readyz, /api, /ws, /mcp, SPA
+│   │   │   ├── api/           # route table and handlers
+│   │   │   ├── auth.rs  live.rs  mcp.rs  web.rs  jobs.rs  state.rs  config.rs
+│   │   │   └── print/         # PDF exports
+│   │   └── tests/             # API, auth, players, live, MCP over HTTP
+│   ├── mimir-web/
+│   │   ├── src/               # the Leptos app
+│   │   ├── style/mimir.css
+│   │   ├── editor/            # TipTap bundle
+│   │   ├── web-e2e/           # Playwright
+│   │   ├── index.html
+│   │   └── Trunk.toml
+│   ├── mimir-wire/src/        # wire types per area
+│   ├── mimir-core/
+│   │   ├── src/               # models, services, dal, import, seed, templates
+│   │   ├── migrations/
+│   │   └── tests/
+│   ├── mimir-mcp/
+│   │   ├── src/tools/         # tool families
+│   │   └── plugin/            # Claude Code plugin
+│   ├── mimir-print/src/       # builder, sections, map renderer, Typst world
+│   ├── mimir-render/src/      # 5etools JSON → HTML
+│   └── mimir-mapgen/          # library, CLI, examples
+├── docs/                      # mdBook
+└── .angreal/                  # tasks: web, test, docs
 ```

@@ -10,7 +10,7 @@ In D&D, what characters can see affects:
 - Stealth and surprise
 - Atmosphere and tension
 
-Mimir's vision system brings these rules to your virtual tabletop.
+Mimir's vision system brings these rules to your map and to the screens of your players.
 
 ## D&D 5e Vision Rules
 
@@ -83,15 +83,19 @@ Without wall data, vision is a simple circle (line of sight in all directions).
 
 This prevents accidental reveals from positioned enemies: the DM can stage an entire ambush behind the fog, and nothing leaks until a PC can actually see it.
 
-## Why Fog Implies Token LOS
+## Why Tokens Hide Even Without Fog
 
-Mimir exposes map hiding (Fog) and token hiding (LOS) as separate toggles, but enabling Fog forces LOS on. The reason is information leakage: if the map were hidden while all tokens stayed visible, players would see enemy markers floating in unexplored blackness — revealing exactly what fog is meant to conceal. Hiding the map only makes sense if unseen tokens are hidden too, so the weaker mode (LOS) is folded into the stronger one (Fog). LOS alone remains useful when geography is known but threats are not.
+Mimir hides tokens that no PC can see, also when fog is off. Fog hides the map; the token rule hides the threats. With fog off, players know the layout, but an ambush still stays hidden until a PC can see it. With fog on, the map is hidden too: otherwise players would see enemy tokens floating in the dark, which is exactly what fog is meant to hide.
 
-The actual toolbar controls are documented in the [Play Mode reference](../reference/ui/play-mode.md), and common workflows in the [Fog of War how-to](../how-to/play-mode/fog-of-war.md).
+## Why the DM View Has Its Own Controls
+
+The **Line of sight** switch and the **bright / dim / darkness** control on the DM map change only the DM's view. They let the DM check a scene without a change for the players. The player display always uses the walls and the lighting of the map. This keeps one source of truth for what the players see: the server builds the player view, and the display draws only that.
+
+The controls are in the [DM Map reference](../reference/ui/dm-map.md), and common tasks in the [Fog of War how-to](../how-to/play-mode/fog-of-war.md).
 
 ## See Also
 
 - [Vision & Lighting Reference](../reference/vision-and-lighting.md) — ranges, radii, and precedence rules
 - [Fog of War](../how-to/play-mode/fog-of-war.md) — task recipes for running a session
-- [Play Mode](../reference/ui/play-mode.md) — the controls themselves
+- [DM Map](../reference/ui/dm-map.md) — the controls themselves
 - [Manage Light Sources](../how-to/maps/manage-light-sources.md)

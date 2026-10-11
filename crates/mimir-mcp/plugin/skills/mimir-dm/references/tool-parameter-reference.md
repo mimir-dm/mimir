@@ -83,7 +83,7 @@ The MCP `level_up_character` tool likewise uses **individual parameters**, not a
 
 Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi_ability2: "Charisma", asi_increase2: 1`
 
-> **Note**: The Mimir desktop app's internal (Tauri) commands use `[STR, DEX, CON, INT, WIS, CHA]` and `[CP, SP, EP, GP, PP]` array formats. Those are **not** the MCP interface — through MCP, always use the named parameters above.
+> **Note**: The Mimir app's own API uses `[STR, DEX, CON, INT, WIS, CHA]` and `[CP, SP, EP, GP, PP]` array formats. Those are **not** the MCP interface — through MCP, always use the named parameters above.
 
 ## Enum Values
 

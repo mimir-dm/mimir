@@ -1,129 +1,118 @@
 # Architecture Overview
 
-How Mimir is built and why its architecture looks the way it does.
+How Mimir is built and why.
 
 ## The Stack
 
-Mimir is a desktop application built with [Tauri v2](https://v2.tauri.app/), combining a Rust backend with a Vue 3 frontend. This hybrid approach gives you the performance and reliability of native code for data-heavy operations (database queries, PDF generation, map processing) while using web technologies for the UI layer where rapid iteration and rich interactivity matter.
+Mimir is a web app that you run on your own server. One Rust program, `mimir-server`, serves the API, a live socket, the MCP endpoint and the web app. The web app is written in Rust too, with [Leptos](https://leptos.dev/), and runs in the browser as WebAssembly.
 
 ```
-┌────────────────────────────────┐
-│        Vue 3 Frontend          │  TypeScript, Tailwind CSS
-│   (Campaigns, Maps, Sheets)    │
-├────────────────────────────────┤
-│        Tauri IPC Bridge        │  invoke() / events
-├────────────────────────────────┤
-│        Rust Backend            │  Commands, Services, DAL
-│   (mimir, mimir-core, ...)     │
-├────────────────────────────────┤
-│        SQLite (WAL mode)       │  Diesel ORM
-└────────────────────────────────┘
-         ↕ (shared database)
-┌────────────────────────────────┐
-│     MCP Sidecar (mimir-mcp)    │  Claude Code integration
-└────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│  Browser: mimir-web (Leptos, WebAssembly)    │  DM pages, DM map, player
+│  Aurora design system, TipTap editor         │  display, player page
+└───────────────┬──────────────────────────────┘
+                │ HTTPS: /api/v1 (JSON), /ws (WebSocket)
+┌───────────────┴──────────────────────────────┐   ┌─────────────────┐
+│  mimir-server (axum)                         │◀──│ Claude (MCP     │
+│  auth, API routes, live hub, /mcp, web app   │   │ over HTTP /mcp) │
+├──────────────────────────────────────────────┤   └─────────────────┘
+│  mimir-core: models, services, data access   │
+│  mimir-print (PDF), mimir-mcp (MCP tools)    │
+├──────────────────────────────────────────────┤
+│  SQLite (WAL mode) + assets directory        │
+└──────────────────────────────────────────────┘
 ```
 
-## Why a Desktop App?
+## Why a Self-Hosted Web App?
 
-Mimir is intentionally local-first:
+- **Your data stays on your server.** No cloud account, no subscription, no telemetry.
+- **Every device at the table.** The DM uses a laptop or a tablet. The TV shows the player display. Each player uses their own phone. A browser is all they need.
+- **One place for the data.** All devices work on the same database, so there is nothing to sync.
+- **Private by default.** Run it on a private network, for example a Tailscale tailnet.
 
-- **Your data stays on your machine.** No cloud accounts, no subscriptions, no telemetry.
-- **Works offline.** Prep sessions at the coffee shop, run games at a venue with spotty wifi.
-- **Performance.** SQLite with WAL mode handles concurrent reads without a server process.
-- **Multi-window support.** The DM sees the full prep view while players see only what you reveal on a second display — something web apps struggle with.
+## The Crates
 
-## The Five Crates
+The Cargo workspace has these crates:
 
-Mimir's Rust backend is organized as a Cargo workspace with five crates, each with a clear responsibility:
+### `mimir-server`: the Server
 
-### `mimir` — The Tauri Application
+An [axum](https://github.com/tokio-rs/axum) server. It:
 
-The main application crate. Contains ~200 Tauri command handlers that the frontend calls via IPC. Each command is a thin wrapper that validates input, calls the appropriate service, and returns a structured response.
+- serves the REST API under `/api/v1`. Each route names who may call it: the DM, or the DM and players.
+- checks the caller on each request: the DM token, or the link token of a player. Without a configured token, the server is in open mode.
+- runs the live socket at `/ws` and tells each client what changed.
+- serves MCP over streamable HTTP at `/mcp`, for Claude. DM only.
+- serves the web app: from `MIMIR_WEB_DIST` in development, or built into the binary (`embed-web` feature).
 
-This crate also manages application state: database connections, file paths, and the active campaign.
+### `mimir-web`: the Web App
 
-### `mimir-core` — Models, Services, and Data Access
+A Leptos app, rendered in the browser (client-side rendering) and built with [trunk](https://trunkrs.dev/). It uses the Aurora design system for its components and themes. The rich editor is a small TipTap bundle that the app drives through wasm-bindgen.
+
+### `mimir-wire`: the Wire Types
+
+The JSON types between the server and the web app. Both sides compile against them, so a change to the API breaks the build, not the page. It builds for WebAssembly.
+
+### `mimir-core`: Models, Services and Data Access
 
 The heart of the system. Three layers:
 
-- **Models** define the data structures (Campaign, Character, Module, Map, Document) as Rust structs that map directly to database tables via Diesel.
-- **DAL (Data Access Layer)** provides low-level CRUD operations — one function per database operation, using Diesel query builders.
-- **Services** implement business logic. When you create a character, the CharacterService looks up racial proficiencies from the catalog, calculates starting equipment, and wraps everything in a database transaction. Services are where the D&D rules live.
+- **Models**: the data structures (Campaign, Character, Module, Map, Document) as Rust structs mapped to tables with Diesel.
+- **DAL (Data Access Layer)**: the database operations.
+- **Services**: the rules. When you make a character, the character service looks up the race and class in the catalog and writes everything in one transaction. The D&D rules live here.
 
-This separation means the MCP server and the Tauri app share the same business logic — they both call into `mimir-core` services.
+The API and the MCP tools both call these services.
 
-### `mimir-mcp` — MCP Sidecar Server
+### `mimir-mcp`: the MCP Tools
 
-A standalone binary that implements the [Model Context Protocol](https://modelcontextprotocol.io/). It connects to the same SQLite database as the main app and exposes campaign management tools for AI assistants like Claude Code.
+The registry of MCP tools for AI assistants, over the core services. The server serves it at `/mcp`. The Claude Code plugin is in `crates/mimir-mcp/plugin`.
 
-Runs as a Tauri sidecar process — launched automatically alongside the main app, communicating over stdio.
+### `mimir-print`: PDF Generation
 
-### `mimir-mapgen` — Procedural Map Generation
+Character sheets, cards, documents and maps with the [Typst](https://typst.app/) typesetting engine, inside the server.
 
-Generates Dungeondraft-compatible maps from YAML configuration or biome presets. Uses Perlin noise for terrain, supports room/corridor generation, and outputs the `.dungeondraft_map` format.
+### `mimir-render`: Catalog Rendering
 
-Can be used as a standalone CLI tool or through the MCP server.
+Turns 5etools JSON into HTML for the catalog, the book reader and the homebrew preview. The server and the web app share it.
 
-### `mimir-print` — PDF Generation
+### `mimir-mapgen`: Procedural Map Generation
 
-Produces character sheets, spell cards, monster cards, and campaign document exports using the [Typst](https://typst.app/) typesetting engine. Typst was chosen over LaTeX for its speed and Rust-native integration.
+Makes Dungeondraft maps from YAML or biome presets. It is also a standalone command-line tool.
 
 ## Data Flow
 
-A typical operation flows through these layers:
+A typical change:
 
 ```
-Frontend (Vue)
-  → invoke('create_character', { name: "Gandalf", ... })
-    → Tauri IPC
-      → Command handler (validates input)
-        → CharacterService::create()
-          → Look up race/class from catalog
-          → Calculate proficiencies
-          → Transaction:
-            → DAL: insert_character()
-            → DAL: insert_character_class()
-            → DAL: insert_character_proficiencies()
-          → Return CharacterResponse
-        → ApiResponse { success: true, data: character }
-      → Tauri IPC
-    → Frontend receives response
-  → Pinia store updates
-→ Vue reactivity triggers UI update
+Browser (mimir-web)
+  → PATCH /api/v1/tokens/<id>  { grid_x, grid_y }   (Authorization: Bearer <token>)
+    → auth: who is the caller? (DM, or a player and their character)
+      → route handler
+        → MapStateService (mimir-core)
+          → DAL → SQLite
+        → JSON answer (mimir-wire type)
+      → live hub: "the tokens of this map changed"
+  ← every page that watches the campaign reads the change, or gets the new player view
 ```
 
-Every backend response uses the same envelope:
-
-```typescript
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-}
-```
+Errors use one JSON shape with an error code and its HTTP status.
 
 ## The Database
 
-Mimir uses SQLite with Write-Ahead Logging (WAL mode). This is a deliberate choice:
+Mimir uses SQLite with Write-Ahead Logging (WAL):
 
-- **No server process.** The database is a single file — easy to back up, move, or inspect.
-- **WAL mode** allows concurrent reads while writing, which matters when the MCP sidecar and the main app access the database simultaneously.
-- **Embedded migrations** run automatically on startup, so the schema is always current.
+- **No database server.** The database is one file in the data directory. It is easy to back up.
+- **WAL mode** allows reads while a write runs.
+- **Migrations run at start**, so the schema is always current.
 
-Database connections are created on-demand rather than pooled. With SQLite WAL, this is efficient and avoids the complexity of connection pool management.
+## Security Model
 
-### Dev vs Production
-
-In development builds, Mimir uses a separate database directory (`dev/data/`) to protect production campaign data from development experiments. This separation is automatic — debug builds use the dev path, release builds use production.
-
-## Type Safety Across the Stack
-
-Rust model structs are the source of truth. The `ts-rs` crate generates TypeScript type definitions from Rust structs, which are written to `frontend/src/types/generated/`. This means the frontend's TypeScript types always match the backend's Rust types — a mismatch is a compile error, not a runtime bug.
+- The **DM token** (`MIMIR_API_TOKEN`) gives full access. Keep it secret.
+- A **player link** gives access to one character: its sheet, its notes, the party and the shown map. The server stores only a hash of each link.
+- **Open mode** (no token) gives every caller full access. Use it only where no one else can reach the server.
 
 ## See Also
 
-- [Multi-Window System](./multi-window-system.md) — How the four application windows work together
-- [Campaigns vs Modules](./campaign-vs-module.md) — The data hierarchy
-- [The Catalog System](./catalog-system.md) — How reference data works
-- [Developer Architecture Guide](../developer/ARCHITECTURE.md) — Detailed technical reference
+- [Screens and Devices](./screens-and-devices.md)
+- [Campaigns vs Modules](./campaign-vs-module.md)
+- [The Catalog System](./catalog-system.md)
+- [Developer Architecture Guide](../developer/ARCHITECTURE.md)

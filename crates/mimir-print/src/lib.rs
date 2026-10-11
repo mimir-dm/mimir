@@ -66,7 +66,7 @@ pub use sections::{MonsterCardSection, TrapCardSection};
 pub use service::{PrintService, TemplateInfo};
 pub use world::MimirTypstWorld;
 
-/// State for print functionality, managed by Tauri.
+/// State for print functionality: where the templates are.
 pub struct PrintState {
     /// Path to templates directory
     pub templates_dir: PathBuf,

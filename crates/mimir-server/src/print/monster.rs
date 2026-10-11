@@ -1,6 +1,6 @@
 //! Monster Card Export Commands
 //!
-//! Tauri commands for exporting monster cards to PDF.
+//! The server's PDF routes: exporting monster cards to PDF.
 
 use base64::Engine;
 use mimir_core::dal::campaign as dal;

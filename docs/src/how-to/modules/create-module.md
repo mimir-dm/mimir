@@ -1,48 +1,59 @@
 # Create a Module
 
-Add adventure modules to your campaign.
+Add an adventure module to a campaign.
 
-## What is a Module?
+## What Is a Module?
 
-A module is a self-contained adventure:
+A module is one adventure, for example:
 - "The Goblin Hideout"
 - "Dragon's Lair"
 - "The Haunted Manor"
 
-Each module has its own maps, monsters, NPCs, and documents.
-
-![Modules Tab](../../images/reference/module-tab.png)
+Each module has its own documents, NPCs, maps, monsters and player notes.
 
 ## Steps
 
-1. Open your campaign dashboard
-2. Go to the **Modules** tab
-3. Click the **+** button
-4. Fill in the module details:
-   - **Module Name** - Descriptive title for the adventure
-   - **Module Type** - Select type (Standard Adventure, Mystery, Dungeon Crawl, Heist, Horror, Political Intrigue)
-   - **Description** (optional) - Notes about the module
-5. Click **Create Module**
+1. Open the campaign dashboard.
+2. Click the **Modules** tab.
+3. Click **New module**.
+4. Type the **Name**.
+5. Choose the **Type**: General, Mystery, Dungeon Crawl, Heist, Horror or Political Intrigue. The type picks the starting documents.
+6. Optionally, type a **Description**.
+7. Click **Create**.
 
-## After Creation
+Mimir opens the new module page.
 
-Your new module appears in the module list. Select it to see its dashboard with **Play**, **PDF**, and **Delete** buttons.
+## What You Get
 
-## Organizing Modules
+Each module starts with an overview document for its type and a **Play Notes** document for the session.
 
-Modules are numbered in creation order:
-- Module 1: "Cragmaw Hideout"
-- Module 2: "Cragmaw Castle"
-- Module 3: "Wave Echo Cave"
+## Order the Modules
 
-Use descriptive names to identify content.
+The **Modules** table numbers the modules (**#**). To change the order:
+
+1. Click the up or down arrow in the **Order** column of the module.
+
+## Change or Delete a Module
+
+To change the name, type or description:
+
+1. Click **Edit module** in the module header.
+2. Change the fields.
+3. Click **Save**.
+
+To delete the module:
+
+1. Open **More** in the module header.
+2. Click **Delete module…**.
+3. Click **Delete** to confirm.
+
+The module, its documents, monsters and maps go for good.
 
 ## Tips
 
-- Create one module per dungeon or major location
-- Break large adventures into multiple modules
-- Start with your first session's content
-- Add more modules as players progress
+- Make one module for each dungeon or main place.
+- Split a long adventure into many modules.
+- Start with the content of the first session.
 
 ## See Also
 

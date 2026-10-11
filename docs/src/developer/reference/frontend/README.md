@@ -1,80 +1,143 @@
-# Frontend Architecture
+# Web App Architecture
 
-Mimir's frontend is a Vue 3 application built with TypeScript, using Tauri 2.0 for desktop integration. The application follows a feature-based organization pattern where related components, views, and logic are grouped by domain rather than by technical layer.
+The Mimir web app is the crate `crates/mimir-web`: a [Leptos](https://leptos.dev/) 0.8 app with client-side rendering (CSR), compiled to WebAssembly with [trunk](https://trunkrs.dev/). `mimir-server` serves it and its API from the same origin.
 
 ## Technology Stack
 
-The core framework is Vue 3 using the Composition API exclusively. State management uses Pinia with the setup store pattern, which aligns naturally with the Composition API style. Routing is handled by Vue Router with lazy-loaded route components for code splitting. TypeScript provides static typing throughout the codebase with strict mode enabled.
+| Part | Choice |
+|------|--------|
+| Framework | Leptos 0.8, `csr` feature, `leptos_router` |
+| Language | Rust, target `wasm32-unknown-unknown` |
+| Design system | Aurora (`colliery-io-aurora`, imported as `aurora_leptos`): components, layout frame, tokens, the light, dark and hyper themes |
+| HTTP | `gloo-net`, same-origin `/api` |
+| Wire types | `mimir-wire`, shared with the server |
+| Catalog HTML | `mimir-render`, shared with the server |
+| Markdown view | `pulldown-cmark`, raw HTML escaped |
+| Rich editor | TipTap 3 in a small JavaScript bundle (`editor/`), driven through wasm-bindgen |
+| Build | trunk (`Trunk.toml`, `index.html`) |
+| End-to-end tests | Playwright (`web-e2e/`) |
 
-Desktop integration comes from Tauri 2.0, which provides IPC communication with the Rust backend through the `invoke` function. The frontend calls Tauri commands and receives typed responses, with all data serialization handled automatically.
+## Two Targets
 
-Rich text editing uses Tiptap 3, a headless editor built on ProseMirror. The configuration includes the starter kit for basic formatting, table extensions for structured data, and markdown serialization for storage. Styling uses Tailwind CSS for utility-first class composition. The build toolchain is Vite, providing fast development server startup and optimized production builds.
+The crate has a library and a binary:
 
-## Directory Structure
+- The **library** holds the whole app. `cargo clippy --workspace` and `cargo test --workspace` check it on the host, with no wasm tools.
+- The **binary** `mimir-web` is what trunk compiles to wasm. It mounts `App`.
 
-The src/ directory contains an app/ folder for bootstrap code including the Vue app initialization in main.ts, the root App.vue component, and the router configuration. The features/ folder contains four feature modules: campaigns, modules, characters, and sources. Each feature is self-contained with its own views, components, and composables.
+Keep logic that can run on the host in plain functions with `#[cfg(test)]` tests: routing, vision, the rules of the wizard and level-up, PDF option queries. CI also runs `cargo clippy -p mimir-web --target wasm32-unknown-unknown -- -D warnings`.
 
-Shared infrastructure lives in the shared/ directory with reusable components organized into layout/, ui/, and catalog/ subdirectories. Shared composables provide common logic patterns, shared types define interfaces used across features, and shared utils contain helper functions.
+## Modules
 
-The stores/ directory contains Pinia stores for global state (campaigns, characters, theme). The services/ directory holds business logic services (DocumentService, ModuleService, PrintService) that coordinate between stores and the Tauri backend. Root-level types/ contains the main type definitions exported for use throughout the application.
+`crates/mimir-web/src/`:
 
-## Feature Organization
+| Module | Contents |
+|--------|----------|
+| `app.rs` | The root component. It loads `/api/config`, passes the sign-in gate, then shows the player page (a player) or the shell with the router (the DM). The routes and the side navigation are here. |
+| `auth.rs` | The token in `localStorage` (`mimir-dm-token`), the gate decision, `/play/<token>` links |
+| `api.rs` | A thin client over `/api` and `/api/v1`. Each call sends the stored token as a bearer token. Errors become Aurora's `ApiError`. Downloads (PDFs, archives) and image blobs. |
+| `live.rs` | The live socket `/ws?access_token=…`. It watches a campaign, hands each `ServerMsg` to a callback and reconnects (1 s up to 15 s). |
+| `pages/` | One module per page: `home`, `campaign` (the dashboard tabs), `module`, `characters`, `player`, `sign_in`, `not_found` |
+| `authoring/` | DM writing: campaign and module dialogs, the document workspace, map upload, module monsters, homebrew (list, editor, item form), the character wizard and its rules |
+| `character/` | The character sheet (`sheet`), stats, inventory, level-up, notes, party |
+| `map/` | The DM map (`dm`), the initiative tracker (`tracker`), the player display (`display`), pan and zoom (`viewport`), sight and light (`vision`) |
+| `reference/` | The reference page: catalog browser, book reader, the detail drawer |
+| `admin/` | Settings, the PDF dialog (`pdf`), the source books dialog (`sources`) |
+| `editor.rs` | The `RichEditor` component over `window.MimirEditor` |
+| `markdown.rs` | Safe markdown to HTML for document views |
+| `components.rs` | Small pieces that pages share |
 
-Each feature follows a consistent internal structure. The views/ subdirectory contains page-level components that correspond to routes. The components/ subdirectory holds feature-specific UI elements that are composed within views. The composables/ subdirectory, when present, contains feature-specific logic hooks.
+## Routes
 
-This organization means that when working on campaign functionality, all relevant code lives within features/campaigns/. The pattern keeps features isolated and makes it clear where new code should be added.
+| Path | Component | Frame |
+|------|-----------|-------|
+| `/` | `Home` | Shell |
+| `/campaigns/:id` (+ `modules`, `npcs`, `pcs`, `homebrew`) | `CampaignDashboard` with tab outlets | Shell |
+| `/modules/:id` | `ModulePage` (`?section=`) | Shell |
+| `/maps/:id` | `DmMapPage` | Shell |
+| `/characters`, `/characters/:id` | `CharactersPage`, `CharacterPage` | Shell |
+| `/reference` | `ReferencePage` (`?mode=`) | Shell |
+| `/settings` | `SettingsPage` (`?section=`) | Shell |
+| `/display/:campaign` | `DisplayPage` | None (bare) |
+| anything else | `NotFound` | Shell |
 
-## State Management
+A player session never reaches the router: `App` shows `PlayerPage` with the tabs Display, Character and Party.
 
-Pinia stores use the setup store pattern, which defines stores as functions that return reactive state and methods. This approach mirrors the Composition API and allows stores to use composables directly.
+The shell is Aurora's `AppShell`: the brand, the header (theme switch, **Sign out**), the side navigation and the routes. The catalog detail drawer (`Reference::provide`) is available on every shell page.
 
-```typescript
-export const useCampaignsStore = defineStore('campaigns', () => {
-  const campaigns = ref<Campaign[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+## State and Data
 
-  async function loadCampaigns() {
-    loading.value = true
-    const response = await invoke<ApiResponse<Campaign[]>>('list_campaigns')
-    if (response.success) {
-      campaigns.value = response.data
-    }
-    loading.value = false
-  }
+- **Resources.** Pages load data with `LocalResource` over `api::…` calls. A `version` signal re-runs a resource after a change.
+- **Server truth.** Pages send a change, then read the result. The rules live on the server (for example `CombatService`); the tracker only sends changes and shows the answer.
+- **Live updates.** A page that shows shared state opens the live socket. A `ServerMsg` names what changed (for example the tokens of a map); the page reads that part again. A player gets the new player view directly.
+- **Address as state.** Tabs and selections are in the query (`?section=`, `?doc=`, `?kind=`, `?hb=`, `?mode=`, `?at=`), so links and the back button work.
 
-  return { campaigns, loading, error, loadCampaigns }
-})
-```
+## Aurora and Styling
 
-## Tauri Integration
+Use Aurora components (`Button`, `Select`, `Switch`, `Tabs`, `Table`, `Modal`, `ConfirmDialog`, `Drawer`, `PageHeader`, `ErrorState`, …) and Aurora tokens. `style/mimir.css` holds only the classes Aurora does not have, built on Aurora tokens. Aurora injects its CSS at runtime (`<AuroraStyles hyper=true />`).
 
-Communication with the Rust backend uses Tauri's invoke function with typed responses. All commands return an ApiResponse wrapper containing a success boolean, optional data, and optional error message. This consistent pattern simplifies error handling across the application.
+`index.html` carries Aurora's theme script inline, so the stored theme applies before the first paint. A test in `src/lib.rs` keeps it equal to `aurora_leptos::theme::THEME_INIT_SCRIPT`.
 
-```typescript
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-}
+## Trunk
 
-const response = await invoke<ApiResponse<Campaign[]>>('list_campaigns')
-```
+`Trunk.toml`:
 
-## Layout System
+- builds `index.html` into `dist/`, with `public_url = "/"`;
+- the Rust binary with `data-wasm-opt="z"` in release;
+- a `pre_build` hook runs `sh editor/build.sh` (the editor bundle);
+- `trunk watch` ignores `dist`, `web-e2e` and the editor's `node_modules` and `dist`.
 
-Three layout components handle page structure. MainLayout provides a standard full-page wrapper with header and content areas. TwoPanelLayout adds a collapsible sidebar alongside the main content. ThreePanelLayout extends this with an additional detail panel on the right, useful for master-detail views.
+`trunk serve` is not the dev flow: the app needs the same-origin API. Use `angreal web serve`, which runs `mimir-server` with `MIMIR_WEB_DIST=crates/mimir-web/dist` and `trunk watch`.
 
-## Sources Feature
+| Command | Effect |
+|---------|--------|
+| `angreal web build` | Debug bundle into `crates/mimir-web/dist` |
+| `angreal web build --release` | Release bundle (what ships) |
+| `angreal web serve` | Server on fixture data + rebuild on change |
 
-The sources feature for D&D catalog browsing is the most architecturally complex. It uses a generic `useCatalogSearch` composable that provides initialization, searching, and detail fetching logic. This base pattern is instantiated 22 times for different content types including spells, monsters, items, classes, races, feats, and backgrounds.
+For release, `cargo build --release -p mimir-server --features embed-web` bakes `dist/` into the server binary.
 
-Each catalog type has a dedicated formatter module that transforms raw catalog data into display-ready HTML. These formatters handle the specialized rendering needs of different content types, such as stat block layouts for monsters or component lists for spells.
+## The Editor Bundle
 
-## Theming
+`crates/mimir-web/editor` is TipTap 3 without a framework:
 
-The application supports three themes: light, dark, and hyper. Theme state is managed by a dedicated Pinia store that persists the selection to localStorage and synchronizes across windows through Tauri events. CSS variables define theme colors, allowing components to reference semantic color names that resolve differently based on the active theme.
+- `src/index.js` sets `window.MimirEditor`: a `Handle` that takes an element, markdown, a placeholder, a label and a change callback.
+- Extensions: StarterKit, Placeholder, Markdown, tables, task lists.
+- `build.sh` runs `npm ci` when `node_modules` is missing or older than the lockfile, then esbuild. The output is `editor/dist/mimir-editor.js`. `index.html` loads it before the app.
+- `src/editor.rs` binds the handle with wasm-bindgen. The toolbar (headings, bold, lists, tables, undo) is Leptos. Without the bundle, the editor falls back to a plain text area.
+
+Markdown is the stored format. TipTap does not write the bytes it reads; the bundle fixes the known cases (`&amp;`, task lists, HTML comments, trailing blank lines). `web-e2e/specs/editor.spec.ts` checks that the fixture documents keep their structure and words, and that a second save changes nothing.
+
+Node is needed only for this bundle and for the e2e harness.
+
+## Map Rendering
+
+The DM map and the player display draw one SVG scene in map pixels under a pan and zoom transform (`map/viewport.rs`). Pointer events drive pan, pinch and token drag, so mouse, touch and pen work.
+
+`map/vision.rs` holds pure functions shared by both: walls and doors in pixels, light zones, token vision by light level, visibility polygons, the party's sight. They are tested on the host.
+
+The DM map computes the fog shade from all tokens. The player display draws only the player view the server sends; it computes the sight from that view and the map geometry.
+
+## End-to-End Harness
+
+`crates/mimir-web/web-e2e`:
+
+| File | Purpose |
+|------|---------|
+| `playwright.config.ts` | Playwright config; starts `session.sh` as the web server |
+| `session.sh` | Runs `mimir-server` on a new `mktemp` data directory with `MIMIR_SEED=fixture`, in token mode (`e2e-dm-token`), serving `../dist`. Removes the directory on exit. |
+| `specs/session.ts` | The token, the fixture names, a `test` that fails on page or console errors |
+| `specs/*.spec.ts` | The suites: smoke, map, display, combat, players, characters, party, editor, authoring, characters-dm, reference, homebrew, settings |
+| `specs/capture.spec.ts` | Screenshot capture at desktop (1280×800) and tablet (820×1100), per theme |
+| `diff.mjs` | Pixel diff of two capture runs |
+
+| Command | Effect |
+|---------|--------|
+| `angreal web e2e` | Build, then run the smoke suite (CI runs the same list) |
+| `angreal web screenshots [--themes light,dark,hyper]` | Capture into `screenshots/runs/<timestamp>/` |
+| `angreal web screenshots-diff --before <run> [--after <run>] [--fail]` | Compare two runs; diff images in `<after>/diff` |
+
+Specs find controls by role and accessible name, so give every control a label, an `aria-label` or a `title`.
 
 ## Error Handling
 
-Stores and composables follow a consistent error handling pattern. Async operations set a loading flag before starting, execute within a try-catch block, check the response success field, and update an error ref if something fails. The finally block ensures loading is reset regardless of outcome. This pattern provides predictable loading states and error messages throughout the application.
+API errors arrive as `mimir_wire::ErrorBody` with an error code. `api.rs` turns them into Aurora's `ApiError`. Pages show them with `ErrorState` (with **Retry** where it helps) or an `Alert`. A 401 on a stored token sends the app back to the sign-in page.

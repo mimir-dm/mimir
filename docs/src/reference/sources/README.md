@@ -31,19 +31,28 @@ The cross-reference system supports spells, creatures, items, conditions, action
 
 ## Storage Location
 
-Catalog data lives in the SQLite database in the application data directory. On macOS this is `~/Library/Application Support/com.mimir.app/`, with equivalent locations on Windows and Linux. Imported images are stored under `assets/catalog/` in the same directory and are served on demand.
+Catalog data lives in the SQLite database of the server: `<data dir>/data/mimir.db`. Imported images go to `<data dir>/assets/catalog/`. The server serves them on demand. See [Environment Variables](../environment-variables.md#mimir_data_dir).
 
-## Tauri Commands
+## Where to Use It
 
-The source system exposes the following commands through Tauri IPC.
+- **Settings**, **Books**: import data and images, remove a source. See [Settings](../ui/settings.md).
+- **Reference**: search the catalog and read the books. See [Reference Page](../ui/reference-page.md).
+- **Source books…** on a campaign or a character: choose the books that its searches use.
 
-| Command | Parameters | Description |
-|---------|------------|-------------|
-| `import_catalog_from_zip` | archive_path | Import catalog data from a `.tar.gz` archive |
-| `import_catalog_images` | archive_path | Import images from a `.tar.gz` image archive |
-| `list_catalog_sources` | — | List all imported sources with metadata |
-| `set_source_enabled` | source_code, enabled | Enable or disable a source |
-| `delete_catalog_source` | source_code | Remove a source and its catalog entries |
-| `list_library_books` | — | List sources that have readable book content |
-| `get_book_content` | book_id | Retrieve book content for the reader view |
-| `serve_book_image` | book_id, image_path | Serve an image as a base64 data URL |
+## API
+
+The web app uses these routes under `/api/v1`. They need the DM token.
+
+| Method and path | Function |
+|-----------------|----------|
+| `POST /catalog/import` | Upload a 5etools data archive. Answers with a job. |
+| `POST /catalog/import-images` | Upload a 5etools image archive. Answers with a job. |
+| `GET /jobs/{id}` | The state of an import job |
+| `GET /catalog/sources` | The imported sources |
+| `DELETE /catalog/sources/{code}` | Remove a source and its catalog entries |
+| `GET /catalog/search/{category}` | Search one kind of entry |
+| `GET /catalog/entry/{category}/{source}/{name}` | One entry, rendered |
+| `GET /books/{source}` | The text of a book |
+| `GET /book-images/{path}` | An image of a book |
+| `GET`, `PUT /campaigns/{id}/sources` | The source books of a campaign |
+| `GET`, `PUT /characters/{id}/sources` | The source books of a character |

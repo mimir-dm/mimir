@@ -4,20 +4,29 @@
   <img src="assets/hyper-mimir.png" alt="Mimir" width="512" height="512">
 </p>
 
-Mimir is a local-first desktop application for managing D&D campaigns. Built with Rust and Tauri, it provides campaign workflow management, a searchable D&D 5e catalog, and PDF export capabilities. All data stays on your machine.
+Mimir is a D&D 5e campaign manager for Dungeon Masters. It is a web app that you run on your own server. Prepare campaigns, modules, characters and maps in the browser; run sessions from the DM map; show the map on a TV; and give each player a link to their own character. It has a searchable D&D 5e catalog and PDF export. All data stays on your server.
 
-## Installation
+## Run It
 
-**macOS / Linux**:
+Mimir is one program, `mimir-server`. It serves the web app, its API and an MCP endpoint for Claude.
+
 ```bash
-curl -sSL https://raw.githubusercontent.com/mimir-dm/mimir/main/scripts/install.sh | sh
+angreal web build --release
+cargo build --release -p mimir-server --features embed-web
+
+MIMIR_DATA_DIR=/srv/mimir \
+MIMIR_API_TOKEN="<a long random value>" \
+MIMIR_BIND=0.0.0.0:8740 \
+  ./target/release/mimir-server
 ```
 
-**Windows**: Download and run the `.msi` installer from [GitHub Releases](https://github.com/mimir-dm/mimir/releases).
+Open the server address in a browser and sign in with the DM token. Without `MIMIR_API_TOKEN` the server is in open mode: anyone who reaches it is the DM. Put the server on a private network.
+
+See [Run the Server](docs/src/how-to/run-server.md) and [Environment Variables](docs/src/reference/environment-variables.md).
 
 ## Claude Code Plugin
 
-Mimir includes a [Claude Code](https://claude.ai/code) plugin for AI-assisted campaign authoring directly from the terminal.
+Mimir includes a [Claude Code](https://claude.ai/code) plugin for AI-assisted campaign authoring from the terminal.
 
 **Install from GitHub** (inside a Claude Code session):
 ```
@@ -51,4 +60,4 @@ Full documentation is available at [mimir-dm.github.io](https://mimir-dm.github.
 
 ## Contributing
 
-We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on getting started, code style, and the pull request process.
+We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) and [DEVELOPMENT.md](DEVELOPMENT.md) for the setup, the code style and the pull request process.

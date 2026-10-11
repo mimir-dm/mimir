@@ -1,95 +1,80 @@
 # Your First Campaign
 
-This tutorial walks you through creating your first campaign in Mimir. By the end, you'll have a fully configured campaign ready for adventure modules and session play.
+This tutorial shows you how to sign in to Mimir, make a campaign and import the catalog data. At the end you have a campaign that is ready for modules.
 
-**Time to complete:** 5-10 minutes
+**Time:** 10 minutes
 
-**What you'll learn:**
-- Navigate the Mimir interface
-- Create a new campaign
-- Explore the Campaign Dashboard
-- Import catalog data for the next tutorials
+**You will learn how to:**
+- Sign in and find your way around
+- Make a campaign
+- Use the campaign dashboard
+- Import the catalog data for the next tutorials
 
 ## Prerequisites
 
-- Mimir installed and running
-- No additional setup required
+- The address of your Mimir server, for example `https://mimir.example.ts.net`
+- The DM token of the server, if it has one
 
-## Step 1: Launch Mimir
+## Step 1: Sign In
 
-When you launch Mimir, you'll see the home screen with the floating Mimir skull and the tagline "Your arcane companion for D&D 5e campaign management."
+1. Open the server address in your browser.
+2. If the server asks for a token, type the DM token in **Token**.
+3. Click **Sign in**.
 
-![Mimir Home Screen](../images/tutorials/home-screen.png)
+The browser keeps the token. The next visit opens Mimir directly. If the server has no token (open mode), Mimir opens without the sign-in page.
 
-The header bar contains:
-- **Mimir logo** (skull icon) - Click to return home
-- **Campaign selector** - Switch between campaigns
-- **Characters** - Create and manage PCs and NPCs
-- **Reference** - Open the D&D 5e reference library
-- **Settings** (gear icon) - Configure application preferences
+## Step 2: Find Your Way Around
 
-## Step 2: Create a New Campaign
+The side navigation has four links:
 
-1. Click the **Campaign Selector** dropdown in the header
-2. Click **Create New Campaign**
+- **Campaigns**: your campaigns. This is the start page.
+- **Characters**: every character, by campaign.
+- **Reference**: the catalog and the source books.
+- **Settings**: campaign archives, source books, the Claude integration and the version.
 
-The **Create New Campaign** form opens.
+The header has the theme switch (light, dark, hyper) and, on a server with a token, **Sign out**.
 
-## Step 3: Fill in Campaign Details
+## Step 3: Make a Campaign
 
-The campaign creation form has two fields:
+1. Click **Campaigns**.
+2. Click **New campaign**.
+3. Type a **Name**, for example "Curse of Strahd".
+4. Optionally, type a **Description**. Only you see it.
+5. Click **Create**.
 
-### Campaign Name (Required)
-Enter a descriptive name for your campaign. This appears throughout Mimir and in exported materials.
+Mimir opens the new campaign. A new campaign starts with a set of planning documents: a campaign pitch, a world primer, safety tools and more.
 
-**Example:** "Curse of Strahd", "Homebrew - The Shattered Realms", "One-Shot: Goblin Heist"
+## Step 4: Look at the Campaign Dashboard
 
-### Description (Optional)
-Add notes about your campaign concept, themes, or setting. This is for your reference only.
+The dashboard has the campaign name, a **More** menu and five tabs:
 
-**Example:** "Gothic horror campaign set in the domain of Barovia. Players are trapped and must defeat the vampire Strahd von Zarovich."
+- **Campaign**: the campaign documents and the campaign maps
+- **Modules**: the adventures of the campaign
+- **NPCs**: the non-player characters
+- **PCs**: the player characters and their player links
+- **Homebrew**: your own items, monsters and spells
 
-## Step 4: Create the Campaign
+Click a document in the list to read it. Click **Edit** to change it. See the [Campaign Dashboard reference](../reference/ui/campaign-dashboard.md) for each tab.
 
-Click **Create Campaign**. Mimir will:
-1. Create the campaign in the database
-2. Redirect you to the Campaign Dashboard
+## Step 5: Import Catalog Data
 
-## Step 5: Explore the Campaign Dashboard
+Mimir has no game content until you import it. Tutorial 2 searches the catalog for monsters, so import the data now.
 
-The Campaign Dashboard is your command center for the entire campaign. It has a header showing your campaign name and tabs for the different aspects of your game — Campaign, Modules, NPCs, PCs, and Homebrew. See the [Campaign Dashboard reference](../reference/ui/campaign-dashboard.md) for what each tab contains; you'll work in the Modules tab in the [next tutorial](./02-first-module.md).
+1. Download a 5etools data archive (`.tar.gz`). See [Manage Source Books](../how-to/campaigns/manage-sources.md) for where to get one.
+2. Click **Settings**, then the **Books** tab.
+3. In **Import 5etools data**, choose the archive.
+4. Click **Import**.
+5. Wait for the message "Imported … sources". A full import takes a few minutes.
 
-![Campaign Dashboard](../images/tutorials/campaign-dashboard.png)
+The books appear in the **Sources** table.
 
-## Step 6: Campaign Actions
+## What Is Next?
 
-The dashboard header includes three buttons: **Sources**, **PDF**, and **Export Archive**.
+1. **[Make your first module](./02-first-module.md)**: an adventure with a map and monsters.
+2. **[Make player characters](../how-to/characters/create-pc.md)** for your players.
+3. **Look around the Reference**: search monsters, spells and items.
 
-**Sources** opens the Campaign Sources modal where you select which D&D source books are available for this campaign. This controls which monsters, items, and spells appear in catalog searches.
-
-**PDF** exports campaign documents as a PDF file.
-
-**Export Archive** creates a backup of your entire campaign including:
-- All documents and notes
-- Module data
-- Maps and tokens
-- Character assignments
-
-Use this regularly for backups or when moving campaigns between computers.
-
-## Step 7: Import Catalog Data
-
-Before the next tutorial you'll need catalog data imported — Tutorial 2 searches the catalog for monsters, and Mimir ships with none. Follow [Manage Campaign Sources](../how-to/campaigns/manage-sources.md) to download a source archive and import it, then come back here.
-
-## What's Next?
-
-Your campaign is ready! Here are your next steps:
-
-1. **[Create your first module](./02-first-module.md)** - Build an adventure with maps and encounters
-2. **[Add characters](../how-to/characters/create-pc.md)** - Create PCs for your players
-3. **Explore the Reference** - Browse monsters, spells, and items for inspiration
-
-For details on anything you saw in this tutorial, see the [Campaign Dashboard reference](../reference/ui/campaign-dashboard.md) and [Create a Campaign](../how-to/campaigns/create-campaign.md).
+For more on this tutorial, see the [Campaign Dashboard reference](../reference/ui/campaign-dashboard.md) and [Create a Campaign](../how-to/campaigns/create-campaign.md).
 
 ---
 

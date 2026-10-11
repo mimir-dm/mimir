@@ -1,98 +1,98 @@
 # Running Your First Session
 
-This tutorial walks you through running a game session with the DM Map window. You'll learn how to open the battle map, place your party, control fog of war, show the map to players, and keep session notes.
+This tutorial shows you how to run a game session from the DM map. You place the party, turn on fog of war, show the map to the players and run a combat.
 
-**Time to complete:** 10-15 minutes
+**Time:** 15 minutes
 
-**What you'll learn:**
-- Open the DM Map window for a module
-- Select the active map and place PC tokens
-- Control fog of war
-- Open the Player Display and move tokens during play
+**You will learn how to:**
+- Open the DM map of a module
+- Place the player characters
+- Use fog of war
+- Show the map to the players
+- Run a combat with the initiative tracker
 - Keep session notes
-- End the session
 
 ## Prerequisites
 
-- A module with at least one map and some tokens ([Tutorial 2](./02-first-module.md))
-- At least one PC [created](../how-to/characters/create-pc.md) and [assigned to the campaign](../how-to/characters/assign-to-campaign.md) — fog of war reveals around PC tokens, so you need a PC to see anything
-- For the fog-of-war step, your map must be a UVTT file (it carries the wall data fog needs)
+- A module with a map and monster tokens ([Tutorial 2](./02-first-module.md))
+- Optionally, player characters in the campaign ([Create a Player Character](../how-to/characters/create-pc.md)). The tracker lists them.
 
-## Step 1: Open the DM Map Window
+## Step 1: Open the DM Map
 
-1. Open your campaign and go to the **Modules** tab
-2. Select your module from the sidebar
-3. Click the **Play** button in the module header
+1. Open your campaign and click the **Modules** tab.
+2. Click your module.
+3. Click the **Maps** tab.
+4. Click the map name.
 
-A separate **DM Map** window opens showing your module's battle map. Your main window stays on the campaign dashboard — keep it nearby, you'll use it for monster stats and notes during play.
+The DM map opens. The **Map** menu at the left of the toolbar switches to another map.
 
-## Step 2: Select Your Map
+## Step 2: Place the Party
 
-At the top left of the DM Map window is a **Map** dropdown.
+Fog of war shows what player character (PC) tokens see. Place a PC token for each player.
 
-1. Open the dropdown — it lists your module's maps plus any campaign-level maps (suffixed "(Campaign)")
-2. Select the map you prepared in Tutorial 2 (the first module map is usually selected automatically)
+1. Open the **Place on the map** menu and choose **Player character**.
+2. Click the square where the party enters the map.
+3. The browser asks for the name of the player character. Type it and confirm.
+4. Repeat for each PC.
 
-The map loads in the window with its grid and the monster tokens and light sources you placed in Tutorial 2.
+Drag a token to move it.
 
-## Step 3: Place Your PCs
+## Step 3: Turn On Fog of War
 
-PC tokens aren't placed during prep — you add them at the table.
+1. Click the **Fog** switch in the toolbar.
 
-1. Click **Add PCs** in the map toolbar
+A shade now covers what the party cannot see. The players see nothing under the shade. Drag a PC down a corridor and the seen area follows. On a UVTT map, walls and closed doors block sight. Click a door to open or close it on your map.
 
-A token appears for each PC assigned to the campaign, placed in a small formation in the top-left corner of the map. Drag each PC token to where the party enters the map.
+The **Line of sight** switch and the **bright / dim / darkness** control change only your view. Use them to check what the party would see. The player display always uses the walls and the lighting of the map.
 
-To move any token: click and hold, drag, release. Tokens snap to grid squares.
+## Step 4: Show the Map to the Players
 
-## Step 4: Turn On Fog of War
+1. Click **Show to players**.
+2. Click **Open player display**. The display opens in a new browser tab.
+3. Move that tab to the screen that the players see, for example a TV. Click **Full screen** (⛶) on the display.
 
-Fog starts **off**. To hide everything the party can't see:
+The display shows the map, the tokens the party can see and the shown traps and points of interest. It does not show hidden tokens, hidden markers or trap details. See [The Player Display](./04-player-display.md).
 
-1. Click **Fog** in the map toolbar
+To hide the screen for a moment, click **Blackout**. The display shows "Paused". Click **End blackout** to show the map again.
 
-On your view, areas outside the party's vision turn semi-transparent gray; players see nothing there at all. While Fog is on, **LOS** (token line of sight) is forced on too, so enemies outside the party's sight stay hidden automatically.
+## Step 5: Run a Combat
 
-> **Note:** The **Fog** and **LOS** buttons only appear for UVTT maps — fog needs the wall data UVTT files carry. On a plain image map, work with **Reveal Map** and per-token visibility instead (right-click a token → **Hide from Players**).
+The initiative tracker is at the side of the map.
 
-Try the ambient light dropdown too: set it to **Dark** and watch the visible area shrink to your placed torch and the PCs' darkvision. See [Control Fog of War](../how-to/play-mode/fog-of-war.md) for the full set of controls.
+1. Click **Start combat**. The tracker shows "Round 1".
+2. In **Add a creature…**, choose a creature, then click **Add**. The list has the campaign PCs and the module monsters and NPCs.
+3. To add a creature by name only, type it in **Custom name** and press Enter.
+4. Type each initiative in the box of its row. The rows sort by initiative.
+5. Click **Next turn ›** to go to the next creature. The token of the current creature is marked on the map.
 
-## Step 5: Open the Player Display
+To change hit points, click the name of a creature. Then:
 
-The Player Display is a second window for your players (a TV, projector, or shared screen).
+- If the creature has no hit points yet, type its maximum in **Set HP** and click **Set HP**.
+- Type an amount and click **Damage** or **Heal**.
+- Choose a condition in **Condition…** and, optionally, the number of rounds in **Rnds**. Click **Add**.
+- Click **Concentrating** for a creature that concentrates on a spell. When it takes damage, the tracker shows the save DC. Click **Kept** or **Lost**.
 
-1. Click **Display** in the DM Map window's top toolbar
-2. A new window opens, and the button changes to **Display On**
-3. Drag the new window to your player-facing screen
+To show the turn order on the player display, turn on **Show order to players**. The display shows names only, never hit points.
 
-Players see the current map with fog applied, visible tokens only, and no names, stats, or controls. While the display is open, a **Blackout** button appears next to **Display On** — click it to black out the player screen while you reposition tokens or set up a reveal.
+When the fight is over, click **End combat**, then **End**.
 
-## Step 6: Play
+## Step 6: Keep Session Notes
 
-Now run the encounter:
+Each module has a **Play Notes** document.
 
-- **Move tokens** by dragging them. The Player Display updates immediately, and fog recalculates as PC tokens move — drag a PC down a corridor and watch the visible area follow.
-- **Reveal hidden enemies** by right-clicking a token and choosing **Show to Players** (or select it and press **H**).
-- **Look up monster stats** in your main window: the module dashboard's monster list opens a stat block panel when you click a monster. Double-clicking a monster token in the DM Map window selects that monster in the dashboard for you.
+1. Open the module page in a second browser tab.
+2. In the **Documents** tab, click **Play Notes**.
+3. Click **Edit** and type your notes.
 
-## Step 7: Keep Session Notes
+The editor saves one second after you stop typing. The status shows "Saving…" and then "Saved". Click **Done** when you finish.
 
-Every module comes with a **Play Notes** document. In your main window:
+## Step 7: End the Session
 
-1. On the module dashboard, find **Play Notes** in the Documents panel
-2. Click it to open the editor
+1. Click **Stop showing** on the DM map. The display shows "Waiting for the DM to show a map."
+2. Close the display tab.
 
-Type initiative order, HP, rulings, and player decisions as you go — the editor auto-saves ("Saving..." then "Saved"). Notes persist between sessions and are included when you export the campaign.
-
-## Step 8: End the Session
-
-When you're done:
-
-1. Click **Display On** to close the Player Display
-2. Close the DM Map window
-
-Token positions are saved automatically, so the next time you click **Play**, the map is exactly where you left it.
+Token positions are saved. The next time you open the map, it is as you left it.
 
 ---
 
-*Next tutorial: [Player Display Setup](./04-player-display.md)*
+*Next tutorial: [The Player Display](./04-player-display.md)*

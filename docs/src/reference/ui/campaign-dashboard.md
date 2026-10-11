@@ -1,68 +1,82 @@
 # Campaign Dashboard
 
-The Campaign Dashboard is your central hub for managing a campaign. It uses a tabbed interface to organize different aspects of your campaign.
-
-![Campaign Dashboard](../../images/reference/campaign-dashboard.png)
+The campaign dashboard (`/campaigns/<id>`) holds everything of one campaign. Its tabs are in the address, so a link opens the same tab.
 
 ## Header
 
-- **Campaign Name** — Displayed prominently at the top
-- **Sources** — Configure which D&D source books are enabled for this campaign
-- **PDF** — Export campaign documents as PDF
-- **Export Archive** — Export campaign as `.mimir-campaign.tar.gz` archive
+| Element | Function |
+|---------|----------|
+| Campaign name | The title. **Archived** shows next to it for an archived campaign. |
+| **Edit campaign** | Change the **Name** and the **Description** |
+| **More** | The campaign menu (below) |
+
+### More Menu
+
+| Item | Function |
+|------|----------|
+| **Source books…** | Choose the books that the catalog searches of the campaign use |
+| **PDF…** | Export the campaign to PDF. See [PDF Export](../pdf-export/README.md). |
+| **Export to a file** | Download the campaign archive (`.mimir-campaign.tar.gz`) |
+| **Archive** | Hide the campaign from the list (active campaigns) |
+| **Restore** | Make an archived campaign active again |
+| **Delete…** | Delete an archived campaign, after you type its name |
 
 ## Tabs
 
-### Campaign Tab
+### Campaign
 
-The world-building hub with a two-panel layout:
+The campaign documents and the campaign maps.
 
-**Sidebar (Left):**
-- **Documents** — Campaign-level documents for lore, setting notes, factions, and world-building. Create new documents with the + button. Reorder with up/down arrows.
-- **Maps** — Campaign-level maps (not tied to a specific module). Upload with the + button.
+- **Documents**: the document list on the left and the open document on the right. **New document** adds one. See [Manage Documents](../../how-to/campaigns/manage-documents.md).
+- **Maps**: the campaign maps, for places that many modules use. **Upload a map** adds one. Click a name to open the [DM map](./dm-map.md).
 
-**Main Panel (Right):**
-- Opens the document editor when a document is selected
-- Shows a map preview when a map is selected
-- Maps can be exported to PDF or deleted from the preview
+### Modules
 
-### Modules Tab
+A table of the modules.
 
-Adventure modules within this campaign:
+| Column | Contents |
+|--------|----------|
+| **#** | The module number |
+| **Module** | The name. Click it to open the [module page](./module-page.md). |
+| **Description** | The description |
+| **Order** | Up and down arrows to change the order |
 
-- **Module List** — Table showing all modules with action buttons
-- **Play** — Enter Play Mode for a module
-- **Open** — Open the module prep view
-- **PDF** — Export module materials
-- **Create Module** — Add new adventure modules with the + button
+**New module** makes a module: **Name**, **Type**, **Description**.
 
-### NPCs Tab
+### NPCs
 
-Non-player characters for this campaign:
+A table of the NPCs of the campaign: **Name**, **Role**, **Location**, **Faction**. Click a name to open the sheet. **New NPC** makes one.
 
-- **NPC List** — All NPCs across modules
-- **NPC Details** — Stats, notes, role, location, faction
-- **Create NPC** — Add new NPCs
+### PCs
 
-### PCs Tab
+A table of the player characters: **Name**, **Player**, **Race**, **Class**, **Link**. Click a name to open the sheet. **New PC** opens the character wizard.
 
-Player characters assigned to this campaign:
+**Player link** opens the link panel of a PC:
 
-- **PC List** — Characters in this campaign
-- **Add Existing** — Assign existing characters to the campaign
-- **PC Details** — Full character sheets with tabs for stats, equipment, spells, and details
+| Element | Function |
+|---------|----------|
+| Status | "No link yet." or "A link is active (made …)." |
+| **Make a link** / **New link** | Make a link. A new link ends the old one, after a confirmation. |
+| Link and QR code | Shown once, after you make a link |
+| **Copy link** | Copy the link |
+| **Revoke** | End the link. The device of the player is signed out at once. |
 
-### Homebrew Tab
+See [Share a Player Link](../../how-to/characters/player-links.md).
 
-Custom content for this campaign:
+### Homebrew
 
-- **Items** — Create or clone items from the catalog
-- **Monsters** — Clone and modify monsters from the catalog
-- **Spells** — Clone and modify spells from the catalog
+The homebrew items, monsters and spells of the campaign. The kinds are tabs: **Items**, **Monsters**, **Spells**. Each kind has a list on the left and the selected entry on the right.
 
-See [Homebrew Content](../../how-to/homebrew/) for detailed guides.
+| Element | Function |
+|---------|----------|
+| **New** | Make an entry from a template |
+| **Copy from the catalog** | Copy a catalog entry |
+| **Edit** | Change the selected entry |
+| **×** | Delete the selected entry, after a check of what uses it |
+
+See [Homebrew Content](../../how-to/homebrew/README.md).
 
 ## See Also
 
-- [Module Prep View](./module-prep-view.md)
+- [Module Page](./module-page.md)
 - [Manage Documents](../../how-to/campaigns/manage-documents.md)

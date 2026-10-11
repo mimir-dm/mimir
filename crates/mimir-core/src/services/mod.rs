@@ -1,6 +1,6 @@
 //! Service Layer
 //!
-//! Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
+//! Business logic services that sit between consumers (the server API, MCP) and the DAL layer.
 //! Services encapsulate validation, transactions, and orchestration of database operations.
 
 mod archive;

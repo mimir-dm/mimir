@@ -1,40 +1,41 @@
 # Module Documents
 
-Create and manage documents within your adventure modules for session prep, location descriptions, encounter plans, and more.
+Write and organize the documents of a module: session prep, places, encounter plans and more.
 
-## Creating Documents
+## Create a Document
 
-1. Open a module from the Modules tab
-2. Find the **Documents** section in the module prep view
-3. Click the **+** button to create a new document
-4. Choose between:
-   - **New Document** — Enter a title to create a blank markdown document
-   - **Upload File** — Upload a markdown file or image (`.md`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`)
-5. Click **Create**
+1. Open the module page.
+2. In the **Documents** tab, click **New document**.
+3. Type a **Title**.
+4. Optionally, choose a markdown file to start from (5 MB at most).
+5. Click **Create**.
 
-## Editing Documents
+## Edit a Document
 
-1. Click a document in the sidebar to open the editor
-2. Use the rich text toolbar for formatting:
-   - Headings (H1, H2, H3)
-   - Bold, italic, strikethrough
-   - Bullet and numbered lists
-   - Blockquotes and horizontal rules
-   - Tables
-3. Changes auto-save as you type — watch for the "Saved" indicator
-4. Click **← Back** to return to the module overview
+1. Click the document in the list.
+2. Click **Edit**.
+3. Use the toolbar to format: headings, bold, italic, lists, quotes, rules and tables.
+4. Click **Done** when you finish.
 
-## Reordering Documents
+The editor saves one second after the last change. Watch for **Saved**.
 
-Hover over a document in the sidebar to reveal **up/down arrow buttons**. Click to change the display order.
+## Reorder Documents
+
+Your own documents are under **Your documents**. Click the up or down arrow of a document to move it.
+
+## Export a Document
+
+1. Open the document.
+2. Click **PDF**.
+
+To export all module documents together, open **More** in the module header and click **PDF…**. See [PDF Export](../../reference/pdf-export/README.md).
 
 ## Tips
 
-- Create documents during prep, not at the table
-- Use read-aloud text for atmospheric descriptions
-- Keep encounter plans brief and scannable
-- Session notes can be edited during play
-- Export individual documents to PDF using the **Export PDF** button in the editor header
+- Write documents during prep.
+- Put read-aloud text in a quote block.
+- Keep encounter plans short and easy to scan.
+- Edit the **Play Notes** document during the session.
 
 ## See Also
 

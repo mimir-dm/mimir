@@ -228,7 +228,7 @@ Maps support several overlay types:
 
 **Light Sources** (`light_sources` table) — Dynamic lights with grid position, bright/dim radius, color, and active state.
 
-**Fog Revealed Areas** (`fog_revealed_areas` table) — Rectangles tracking which map areas have been revealed to players (x, y, width, height). Written by the fog reveal commands (`reveal_rect`, `reveal_circle`, `reveal_all`); these are currently not surfaced in the UI — live fog rendering is computed from PC token vision instead (see [Vision System](../explanation/vision-system.md)).
+**Fog Revealed Areas** (`fog_revealed_areas` table) — Rectangles tracking which map areas have been revealed to players (x, y, width, height). Written through the API (`POST /api/v1/maps/<id>/fog/reveal`); the web app has no control for them. When fog is on, the player display treats these areas as seen. Live fog comes from PC token vision (see [Vision System](../explanation/vision-system.md)).
 
 **Points of Interest** (`map_pois` table) — Named markers with descriptions, icons, colors, and visibility at specific grid positions.
 
@@ -316,7 +316,21 @@ Uploaded files (map images, token art) stored as binary blobs.
 | `file_size` | File size in bytes |
 | `uploaded_at` | Upload timestamp |
 
-Assets are stored in the `assets/` directory within the application data folder.
+Assets are stored in the `assets/` directory of the data directory (`MIMIR_DATA_DIR`).
+
+## Play State
+
+Tables for running sessions and for players.
+
+**Combat** (`combat_sessions`, `combat_entries`): one active combat per module, with its round and turn. Each entry is a module monster, a module NPC, a character or a custom name, with its initiative, hit points, temporary hit points, concentration and conditions, and the map token it stands for.
+
+**Player links** (`player_links`): one link per player character. Only a SHA-256 hash of the link token is stored.
+
+**Player notes** (`player_notes`): a player's notes in markdown, with the module they are about (optional).
+
+**Sheet shares** (`sheet_shares`): a row means the player shares the sheet with the party, read-only.
+
+The display state (which map the player display shows, blackout, the turn order on the display) is not stored. It lives in the server's memory.
 
 ## Catalog Data
 

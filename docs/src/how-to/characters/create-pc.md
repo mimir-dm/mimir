@@ -1,70 +1,77 @@
 # Create a Player Character
 
-Create player characters using the character creation wizard.
+Make a player character (PC) with the character wizard. The character starts at level 1.
 
-## Access the Character Creator
+## Open the Wizard
 
-1. Click **Characters** in the header
-2. Click **Create Character**
+From the campaign:
 
-## Character Creation Wizard
+1. Open the campaign and click the **PCs** tab.
+2. Click **New PC**.
 
-The wizard guides you through seven steps:
+The character goes into this campaign.
 
-### Step 1: Basics
-- Character name
-- Player name (who plays this character)
+Or from the characters page:
 
-### Step 2: Race
-- Select race from the campaign's enabled sources
-- Race determines racial traits and ability score options
+1. Click **Characters** in the side navigation.
+2. Click **New character**.
+3. Choose **Kind**: Player character.
+4. Choose the **Campaign**, or **No campaign**.
 
-### Step 3: Class
-- Select class (Fighter, Wizard, Rogue, etc.)
-- Set starting level
-- Choose subclass if applicable
+## Wizard Steps
 
-### Step 4: Background
-- Select a background (Acolyte, Criminal, Noble, etc.)
-- Background grants proficiencies, languages, and starting equipment
+The steps show at the top of the dialog. **Next** stays off until the step is complete. **Back** returns to the step before.
 
-### Step 5: Abilities
-- Set ability scores
-- See computed modifiers
+### 1. Basics
+- **Name** of the character
+- **Player**: who plays the character
 
-### Step 6: Skills
-- Choose skill proficiencies based on class and background options
-- See computed skill bonuses
+### 2. Race
+- Choose the **Race**. The list shows each race with its source book.
 
-### Step 7: Review
-- Review all selections
-- Make final adjustments
-- Click **Create Character**
+### 3. Class
+- Choose the **Class**. The character starts at level 1 in this class.
+
+### 4. Background
+- Choose the **Background**.
+
+### 5. Ability Scores
+Choose a **Method**:
+- **Standard array (15, 14, 13, 12, 10, 8)**: give each value to one ability.
+- **Point buy (27 points)**: click **Raise** and **Lower** for each ability. **Points left** shows what remains.
+- **Manual entry (3 to 18)**: type each score.
+
+### 6. Skills
+- **From the background**: these skills come with the background.
+- **From the class**: select as many skills as the class lets you pick.
+
+### 7. Review
+- Check the choices.
+- Click **Create**.
 
 ## After Creation
 
-Your character appears in the Characters list and is available for campaign assignment. The character sheet has four tabs:
+The character shows in the **PCs** tab and on the **Characters** page. Click the name to open the sheet. The sheet has these tabs:
 
-- **Character** — Stats, combat info, ability scores, saving throws
-- **Equipment** — Inventory and item management
-- **Spells** — Complete class spell reference for caster classes (spell details, spell slots)
-- **Details** — Background, personality traits, ideals, bonds, flaws
+- **Character**: abilities, saving throws, skills, armor class, hit points, attacks
+- **Equipment**: coins and inventory
+- **Spells**: for spellcasters only
+- **Details**: personality, proficiencies, feats, features and classes
+- **Notes**: the notes of the player (read-only for you)
 
-## Editing Characters
+## Edit the Sheet
 
-1. Click a character in the list
-2. Open the character sheet
-3. Edit sections directly
-4. Changes auto-save
+1. Open the sheet.
+2. Change the values in a tab. For example, in **Details**, change the personality fields and click **Save**.
+
+To raise the level, use **Level up**. See [Level Up](./level-up.md).
 
 ## Tips
 
-- Get character info from players before creating
-- Use the wizard for complete characters
-- Quick-create for NPCs doesn't need all steps
-- Level up uses a separate dialog
+- Ask your players for their choices before you make the characters.
+- Give each player their link, so they can keep their own sheet. See [Share a Player Link](./player-links.md).
 
 ## See Also
 
-- [Assign to Campaign](./assign-to-campaign.md)
-- [Print Character Sheet](./print-character-sheet.md)
+- [Move a Character to a Campaign](./assign-to-campaign.md)
+- [Print a Character Sheet](./print-character-sheet.md)

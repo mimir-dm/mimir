@@ -9,7 +9,7 @@ Mimir supports two approaches to maps:
 1. **Upload** an existing map file (UVTT or image)
 2. **Generate** a map procedurally from a biome preset or YAML configuration
 
-Both produce maps you can use in play mode with tokens, fog of war, and lighting.
+Both give maps that you can use on the DM map with tokens, fog of war and lighting.
 
 ## The UVTT Format
 
@@ -18,16 +18,16 @@ UVTT (Universal Virtual Tabletop) is the preferred map format. Created by [Dunge
 - **Map image** — The rendered map as a PNG
 - **Grid data** — Cell size, offset, and dimensions so tokens snap correctly
 - **Walls** — Line segments that block line of sight for fog of war
-- **Doors** — Interactive wall segments that can be opened/closed
+- **Doors** — Wall segments that block sight while closed
 - **Lights** — Light source positions with color and intensity
 
 When you upload a UVTT file, Mimir extracts all of this automatically. Fog of war, line-of-sight calculations, and lighting all work out of the box because the wall data is embedded in the file.
 
 ## Image Files
 
-You can also upload plain images (PNG, JPG, WebP) as maps. These work for basic token placement but lack wall data, so fog of war is not available at all — the Fog and LOS controls only appear for UVTT maps. On image maps, the available tools are the Reveal Map toggle and per-token Hide from Players.
+You can also upload plain images (PNG, JPEG, WebP) as maps. Tokens, lights and fog of war work on them, but an image has no walls: sight goes in all directions up to its range.
 
-Mimir defaults to 70 pixels per grid square for image files. If your map image uses a different grid size, token snapping may not align perfectly. For best results, use UVTT format.
+You give the grid size of an image when you upload it (**Grid: pixels a square**, 70 by default). If the value is wrong, tokens do not fit the squares. For best results, use UVTT.
 
 ## Procedural Map Generation
 
@@ -53,7 +53,7 @@ Mimir cannot open `.dungeondraft_map` files directly — map uploads accept only
 
 ### Standalone CLI
 
-The map generator also works as a standalone command-line tool, independent of the main Mimir application. This is useful for batch generation or scripting.
+The map generator also works as a standalone command-line tool, independent of the Mimir server. This is useful for batch generation or scripting.
 
 ## Why Dungeondraft Format?
 
@@ -65,9 +65,9 @@ Mimir chose the Dungeondraft format for several reasons:
 
 ## The Trade-Offs
 
-Each approach has different strengths. UVTT files give the richest play experience (fog of war, lighting, doors) but require a map-making tool. Images are the most accessible — any map image works — but lose advanced features. Procedural generation is fastest for outdoor terrain and random encounters, but its output requires a pass through Dungeondraft (to export UVTT) before Mimir can use it, and complex interior layouts may need hand-editing there anyway.
+Each approach has different strengths. UVTT files give the richest play experience (walls, doors) but require a map-making tool. Images are the most accessible — any map image works — but lose advanced features. Procedural generation is fastest for outdoor terrain and random encounters, but its output requires a pass through Dungeondraft (to export UVTT) before Mimir can use it, and complex interior layouts may need hand-editing there anyway.
 
-The choice often depends on the encounter: a carefully planned boss fight deserves a hand-crafted UVTT map; a random wilderness encounter can use a generated biome; a map from an online artist works fine as a plain image for token play (no fog of war).
+The choice often depends on the encounter: a carefully planned boss fight deserves a hand-crafted UVTT map; a random wilderness encounter can use a generated biome; a map from an online artist works fine as a plain image (fog of war without walls).
 
 ## See Also
 

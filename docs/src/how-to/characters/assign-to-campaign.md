@@ -1,59 +1,39 @@
-# Assign to Campaign
+# Move a Character to a Campaign
 
-Add characters to a campaign so they appear in Play Mode.
+A character belongs to one campaign, or to no campaign. This guide shows you how to move a character.
 
-## Assigning Player Characters
+## Steps
 
-### From the Campaign Dashboard
-1. Open your campaign
-2. Go to the **PCs** tab
-3. Click **Add Existing** to assign an existing character, or **Create PC** to make a new one
-4. Select a character and click **Add to Campaign**
+1. Click **Characters** in the side navigation.
+2. Find the character. The page groups the characters by campaign. Characters in no campaign are under **No campaign**.
+3. In the **Campaign** column of the row, choose the new campaign, or **No campaign**.
 
-### From the Character List
-1. Click **Characters** in the header
-2. Find an unassigned character
-3. Select a campaign from the dropdown — the character is assigned immediately
+Mimir moves the character at once. The row moves to its new group.
 
-## Assigning NPCs
+## New Characters
 
-### Campaign-Level NPCs
-1. Open your campaign dashboard
-2. Go to the **NPCs** tab
-3. Click **Create NPC** to add a new NPC
+- **New PC** in the **PCs** tab and **New NPC** in the **NPCs** tab put the character in that campaign.
+- **New character** on the **Characters** page lets you choose the campaign, or **No campaign**.
 
-### Module-Level NPCs
-1. Open a module
-2. Find the **NPCs** section
-3. Click **+** to add an NPC
-4. Select from campaign NPCs or create new
+## What the Campaign Gives
 
-## What Assignment Does
+A PC in a campaign:
+- shows in the **PCs** tab, with its player link
+- shows in the initiative tracker of the module maps
+- is part of the party that players see on their **Party** tab
 
-Assigned PCs appear in:
-- Campaign PCs tab
-- Play Mode sidebar
-- "Add PCs" button functionality
+An NPC in a campaign shows in the **NPCs** tab.
 
-Assigned NPCs appear in:
-- Campaign or module NPC lists
-- Token placement palette
+## Delete a Character
 
-## Removing Characters
+1. Click **Characters**.
+2. Click **×** (**Delete …**) in the row of the character.
+3. Click **Delete** to confirm.
 
-1. Find the character in the campaign tab
-2. Click the remove button
-3. Character returns to unassigned
-
-The character isn't deleted - just removed from the campaign.
-
-## Tips
-
-- Assign all PCs before the first session
-- NPCs can belong to multiple modules
-- Characters can be in multiple campaigns
+The character, its sheet, notes and player link go for good. To keep the character, move it to **No campaign** instead.
 
 ## See Also
 
 - [Create a Player Character](./create-pc.md)
 - [Create an NPC](./create-npc.md)
+- [Share a Player Link](./player-links.md)

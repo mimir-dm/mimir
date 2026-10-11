@@ -1,6 +1,6 @@
 //! Trap Card Export Commands
 //!
-//! Tauri commands for exporting trap cards to PDF.
+//! The server's PDF routes: exporting trap cards to PDF.
 
 use base64::Engine;
 use mimir_core::dal::catalog as catalog_dal;

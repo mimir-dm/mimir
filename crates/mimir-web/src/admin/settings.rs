@@ -179,7 +179,7 @@ fn CampaignsSection() -> impl IntoView {
     view! {
         <section class="mimir-settings__section" aria-label="Import a campaign">
             <SectionLabel label="Import a campaign" />
-            <Text size="sm" dimmed=true>"A campaign archive (.mimir-campaign.tar.gz) made by Export, here or in the desktop app."</Text>
+            <Text size="sm" dimmed=true>"A campaign archive (.mimir-campaign.tar.gz) made by Export."</Text>
             <label class="mimir-file">
                 <span>"Archive"</span>
                 <input type="file" accept=".gz,.tar.gz,application/gzip" on:change=move |ev| {

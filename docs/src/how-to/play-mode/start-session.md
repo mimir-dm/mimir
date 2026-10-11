@@ -1,58 +1,58 @@
 # Start a Session
 
-Open the DM Map window to run your game session.
+Open the DM map and set up the scene for your game.
 
 ## Prerequisites
 
 - A module with at least one map
-- Tokens placed on the map (optional but recommended)
-- PCs assigned to the campaign (needed for fog of war and the **Add PCs** button)
+- Tokens on the map (optional, but useful)
+- A player link for each player who uses their own device (optional). See [Share a Player Link](../characters/player-links.md).
 
 ## Steps
 
-1. Open your campaign
-2. Go to the **Modules** tab
-3. Select a module
-4. Click the **Play** button in the module header
+1. Open the campaign and click the **Modules** tab.
+2. Click the module.
+3. Click the **Maps** tab.
+4. Click the map name.
 
-The **DM Map** window opens in a separate window. Your main window stays on the campaign dashboard — keep it open for monster stat lookups and notes during play. (You can also click **Play** in the modules table on the campaign landing page.)
+The DM map opens. The address is `/maps/<map>`. Bookmark it to come back fast.
 
-## The DM Map Window
+## The DM Map
 
-The window contains:
-- **Map selector** (top left) - Dropdown of the module's maps plus campaign-level maps (suffixed "(Campaign)")
-- **Display / Blackout / Fullscreen** (top right) - Display and Blackout control the Player Display; Fullscreen applies to the DM Map window itself (the Player Display has its own F11 fullscreen)
-- **Map toolbar** - Zoom, Add PCs, Reveal Map, and (on UVTT maps) Fog, LOS, and ambient light
-- **Map canvas** - The tactical view with all tokens
+- **Toolbar**: the **Map** menu, **Fog**, **Line of sight**, the light control, **Place on the map**, **Show to players**, **Blackout**, **Open player display**, **PDF…**, zoom
+- **Map**: the map with every token, light and marker
+- **Initiative tracker**: at the side. Click its toggle (**Show or hide the tracker**) to make room for the map.
 
-See [DM Map Window](../../reference/ui/dm-map-window.md) for the full reference.
+See the [DM Map reference](../../reference/ui/dm-map.md).
 
-## Initial Setup
+## Set Up the Scene
 
-1. Select the starting map from the **Map** dropdown
-2. Click **Add PCs** in the map toolbar to place all campaign PCs, then drag them to the party's starting position
-3. On UVTT maps, click **Fog** in the map toolbar if you want fog of war (it starts off)
-4. Click **Display** to open the Player Display (if using a second screen)
-5. You're ready to play
-
-> **Tip:** Open the display and click **Blackout** while you position tokens, then turn Blackout off to reveal the scene.
+1. Choose the starting map in the **Map** menu.
+2. Place a **Player character** token for each PC, then drag them to the start. See [Place Tokens](../maps/place-tokens.md).
+3. Turn on **Fog** if you want fog of war.
+4. Click **Blackout** so that the players see nothing yet.
+5. Click **Show to players**.
+6. Click **Open player display** and move the tab to the shared screen. Or let the players open their links.
+7. Click **End blackout** when you are ready.
 
 ## Session Notes
 
-Use the module's **Play Notes** document: in the main window, open the module dashboard and click **Play Notes** in the Documents panel. It auto-saves as you type.
+Open the module page in a second browser tab. In the **Documents** tab, open **Play Notes** and click **Edit**. It saves as you type.
 
-## Ending the Session
+Notes that players write during the session show in the **Player notes** tab of the module.
 
-There is no explicit end-session action:
+## End the Session
 
-1. Click **Display On** to close the Player Display
-2. Close the DM Map window
+There is no end-session action.
 
-Token positions are saved automatically and restored the next time you click **Play**.
+1. Click **Stop showing**.
+2. If a combat runs, click **End combat**, then **End**.
+
+Token positions, fog and lights are saved. The next time you open the map, it is as you left it. The shown map and the blackout are not saved: after a server restart, the display waits until you show a map again.
 
 ## See Also
 
-- [Manage Encounters](./manage-encounters.md)
+- [Run a Combat](./manage-encounters.md)
 - [Fog of War](./fog-of-war.md)
-- [Use Player Display](./use-player-display.md)
-- [DM Map Window Reference](../../reference/ui/dm-map-window.md)
+- [Use the Player Display](./use-player-display.md)
+- [DM Map Reference](../../reference/ui/dm-map.md)

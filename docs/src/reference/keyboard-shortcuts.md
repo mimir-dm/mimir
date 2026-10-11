@@ -1,42 +1,37 @@
-# Keyboard Shortcuts
+# Keyboard and Pointer Controls
 
-Quick reference for keyboard shortcuts in Mimir.
+Mimir works with a mouse, a touch screen or a pen. It has no app-wide keyboard shortcuts. The editor has the usual text shortcuts.
 
-## Global Shortcuts
+## Maps
 
-| Shortcut | Action |
-|----------|--------|
-| `Escape` | Close modal/panel |
+These work on the DM map and on the player display.
 
-## Map Navigation
+| Input | Action |
+|-------|--------|
+| Drag the map | Pan |
+| Mouse wheel | Zoom at the pointer |
+| Pinch (two fingers) | Zoom |
+| **+** / **−** buttons | Zoom in / out |
+| **⤢** button | Fit the map |
 
-| Shortcut | Action |
-|----------|--------|
-| `Scroll` | Zoom in/out |
-| `Click + Drag` | Pan the map |
-| `+` / `=` | Zoom in |
-| `-` | Zoom out |
-| `0` | Reset view (1:1 zoom, centered) |
+On the DM map only:
 
-## Token Manipulation (Play Mode)
+| Input | Action |
+|-------|--------|
+| Click or tap an item | Select it and open its panel |
+| Drag a token | Move it |
+| Click a square, after a choice in **Place on the map** | Place the item |
+| Click a door | Open or close it (your view only) |
 
-| Shortcut | Action |
-|----------|--------|
-| `Click` | Select token |
-| `Drag` | Move token |
-| `Right-click` | Token context menu |
-| `h` / `H` | Toggle visibility of selected token |
-| `d` / `D` | Toggle dead state of selected token |
-| `Escape` | Close context menu and deselect token |
+On the player display only:
 
-## Player Display Window
+| Input | Action |
+|-------|--------|
+| **⛶** button | Full screen |
 
-| Shortcut | Action |
-|----------|--------|
-| `F11` | Toggle fullscreen |
-| `R` | Reset view (fit map to screen) |
+## Editor
 
-## Document Editor
+The rich editor of documents and notes takes these shortcuts. Use `Cmd` on macOS and `Ctrl` on other systems.
 
 | Shortcut | Action |
 |----------|--------|
@@ -45,8 +40,16 @@ Quick reference for keyboard shortcuts in Mimir.
 | `Cmd/Ctrl + Z` | Undo |
 | `Cmd/Ctrl + Shift + Z` | Redo |
 
-## Notes
+Markdown at the start of a line also formats:
 
-- `Cmd` is used on macOS, `Ctrl` on Windows/Linux
-- Shortcuts are ignored when typing in text inputs or textareas
-- Token manipulation shortcuts require a token to be selected
+| Type | Result |
+|------|--------|
+| `1. ` | Numbered list |
+| `- ` | Bullet list |
+| `# `, `## `, `### ` | Heading 1, 2, 3 |
+| `> ` | Quote |
+
+## Forms
+
+- Press Enter in a search field to search.
+- Press Enter in **Custom name**, **Set HP**, **Amount** or **Rnds** in the initiative tracker to submit it.

@@ -1,72 +1,85 @@
 # Create a Homebrew Item
 
-Create custom items for your campaign — weapons, armor, potions, magic items, and more.
+Make your own items for a campaign: weapons, armor, potions, magic items and more.
 
-## Navigate to Homebrew Items
+## Open Homebrew Items
 
-1. Open your campaign dashboard
-2. Click the **Homebrew** tab
-3. Select the **Items** sub-tab
+1. Open the campaign.
+2. Click the **Homebrew** tab.
+3. Click **Items**.
 
-## Create from Scratch
+## Make an Item
 
-1. Fill in the item form on the right panel
-2. Set the required and optional fields (see below)
-3. Click **Create Item**
+1. Click **New**.
+2. Type the **Name**.
+3. Fill in the form (see below). The **Preview** updates as you type.
+4. Click **Save**.
 
-## Clone from Catalog
+## Copy a Catalog Item
 
-1. Click **Clone from Catalog**
-2. Search for an existing item (minimum 2 characters)
-3. Results show name, type, rarity, and source
-4. Click an item to pre-fill the form with its data
-5. Modify fields as needed
-6. Click **Create Item**
+1. Click **Copy from the catalog**.
+2. In **Catalog name**, type the name and click **Search**.
+3. Click **Pick** next to the item.
+4. Type the **Name** of the copy.
+5. Click **Copy**.
 
-If the name conflicts with an existing homebrew item, " (Custom)" is appended.
+The copy opens. Click **Edit** to change it.
 
 ## Item Fields
 
-### Common Fields (All Items)
+### All Items
 
-- **Name** (required) — Item name
-- **Item Type** — weapon, armor, potion, ring, rod, scroll, staff, wand, wondrous item, adventuring gear
-- **Rarity** — common, uncommon, rare, very rare, legendary, artifact
-- **Weight** — Weight in pounds
-- **Value** — Value in gold pieces
-- **Requires Attunement** — Checkbox; optionally specify attunement requirements (e.g., "by a spellcaster")
-- **Description** — Item description and properties
+- **Name** (required)
+- **Kind**: Adventuring gear, Weapon, Armor, Potion, Ring, Rod, Scroll, Staff, Wand or Wondrous item
+- **Rarity**: Mundane, Common, Uncommon, Rare, Very rare, Legendary or Artifact
+- **Weight (lb.)**
+- **Value (gp)**
+- **Requires attunement**, and optionally **Attunement by (optional)**, for example "by a wizard"
+- **Description (a blank line between paragraphs)**
 
 ### Weapon Fields
 
-Shown when item type is **weapon**:
+For the kind **Weapon**:
 
-- **Category** — Simple or martial
-- **Bonus** — +1, +2, or +3
-- **Damage** — Damage dice (e.g., 1d8)
-- **Damage Type** — Slashing, piercing, bludgeoning, fire, cold, etc.
-- **Versatile Damage** — Alternate damage when wielded two-handed
-- **Range** — Range in feet
-- **Properties** — Finesse, Heavy, Light, Reach, Thrown, Two-Handed, Versatile, Ammunition, Loading, Special
+- **Category**: Simple or Martial
+- **Damage**, for example 1d8
+- **Damage type**: Slashing, Piercing, Bludgeoning, Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant or Thunder
+- **Versatile damage**, for example 1d10
+- **Range**, for example 80/320
+- **Weapon bonus**, for example +1
+- **Properties**: Finesse, Light, Heavy, Reach, Thrown, Two-handed, Versatile, Ammunition, Loading, Special
 
 ### Armor Fields
 
-Shown when item type is **armor**:
+For the kind **Armor**:
 
-- **AC** — Base armor class
-- **Bonus** — +1, +2, or +3
-- **Strength Required** — Minimum strength score
-- **Stealth Disadvantage** — Whether the armor imposes disadvantage on Stealth checks
+- **Armor**: Light, Medium, Heavy or Shield
+- **Armor class**
+- **AC bonus**, for example +1
+- **Strength needed**
+- **Disadvantage on Stealth**
 
-## Editing Items
+## Form or JSON
 
-Click an item in the list, then click **Edit** to modify its fields.
+The form writes 5etools JSON. Click the **JSON** tab to edit the JSON in **Data (JSON)**, for example to add a field that the form does not have, like charges. Click **Form** to go back. The form keeps the fields it does not show.
 
-## Deleting Items
+If the text has lists or tables, the form cannot edit the description. Edit it in the JSON. **Save** stays off while the JSON is not valid.
 
-Click **Delete** on a selected item. If any characters have the item in their inventory, a warning shows which characters are affected.
+## Change an Item
+
+1. Click the item in the list.
+2. Click **Edit**.
+3. Change the fields.
+4. Click **Save**.
+
+## Delete an Item
+
+1. Click the item in the list.
+2. Click **×** (**Delete …**).
+3. The dialog lists what uses the item. Sheets that hold it keep its name.
+4. Click **Delete**.
 
 ## See Also
 
 - [Manage Character Inventory](../characters/manage-inventory.md)
-- [Homebrew Overview](./)
+- [Homebrew Overview](./README.md)

@@ -1,178 +1,179 @@
 # Troubleshooting
 
-Known issues, their causes, and resolutions.
+Known problems, their causes and their fixes.
 
-| Symptom | Category | Likely Cause |
-|---------|----------|-------------|
-| "Database is locked" | [Database](#database-is-locked-errors) | Lingering process holding lock |
-| No catalog results | [Database](#missing-catalog-data) | Data not imported or sources not enabled |
-| Wrong data showing | [Database](#dev-vs-production-database) | Dev build using dev database |
-| Fog doesn't follow walls | [Maps](#fog-of-war-doesnt-follow-walls) | Image file instead of UVTT |
-| Tokens misaligned | [Maps](#tokens-dont-snap-to-grid) | Non-standard grid size |
-| Map image blank | [Maps](#map-image-doesnt-display) | Asset file missing |
-| Player display won't open | [Display](#player-display-window-wont-open) | No map loaded in play mode |
-| Player display black | [Display](#player-display-shows-black-screen) | Blackout mode enabled |
-| Display on wrong screen | [Display](#display-opens-on-wrong-screen) | Window opened on primary monitor |
-| Players see hidden tokens | [Display](#players-see-hidden-tokens) | Token marked visible to players |
-| Fog not updating | [Display](#fog-not-updating) | PC tokens hidden or missing from active map |
-| No second window | [Display](#no-second-window-appears) | Window failed to open |
-| MCP can't find campaigns | [MCP](#claude-code-cant-find-campaigns) | Database path mismatch |
-| MCP sidecar won't start | [MCP](#mcp-sidecar-wont-start) | Binary not built |
-| Blank character PDF | [PDF](#character-sheet-export-is-blank) | Missing character data |
-| App won't launch | [Application](#app-wont-launch) | Check logs for details |
+| Symptom | Section |
+|---------|---------|
+| "The server did not answer. Try again." | [Server](#the-server-does-not-answer) |
+| "The server refused this token." | [Sign-in](#the-server-refuses-the-token) |
+| Anyone can open Mimir without a token | [Sign-in](#mimir-opens-without-a-sign-in-page) |
+| "This player link no longer works." | [Players](#a-player-link-no-longer-works) |
+| No catalog results | [Catalog](#no-catalog-results) |
+| A book is not in the reader | [Catalog](#a-book-is-not-in-the-reader) |
+| The map upload fails | [Maps](#the-map-upload-fails) |
+| Tokens do not fit the squares | [Maps](#tokens-do-not-fit-the-squares) |
+| Fog does not stop at walls | [Maps](#fog-does-not-stop-at-walls) |
+| "Waiting for the DM to show a map." | [Display](#the-display-waits-for-a-map) |
+| The display shows "Paused" | [Display](#the-display-shows-paused) |
+| The display is all covered | [Display](#the-display-is-all-covered) |
+| Players see a hidden token | [Display](#players-see-a-token) |
+| Claude cannot connect | [MCP](#claude-cannot-connect) |
+| A PDF is slow or the fonts look wrong | [PDF](#pdf-export-is-slow-or-the-fonts-look-wrong) |
 
-## Database Issues
+## Server
 
-### "Database is locked" errors
+### The server does not answer
 
-**Cause:** Another process has an exclusive lock on the SQLite database. This can happen if a previous Mimir instance didn't shut down cleanly, or if you're accessing the database with an external tool like `sqlite3` while Mimir is running.
+**Cause:** The server does not run, or the browser cannot reach its address.
 
-**Resolution:** Close all Mimir windows, quit any lingering `mimir` or `mimir-mcp` processes, then relaunch Mimir.
+**Fix:**
+1. Check that the server runs. Open `<server>/healthz`. It must answer `ok`.
+2. Open `<server>/readyz`. It must answer `ready`. If not, the database does not open: read the server log.
+3. Check the address. A server with the default `MIMIR_BIND` (`127.0.0.1:8740`) accepts connections from its own computer only. Set `MIMIR_BIND=0.0.0.0:8740` to serve other devices.
+4. Click **Retry** on the error page.
 
-### Missing catalog data
+### The server does not start
 
-**Cause:** Source data hasn't been imported, or the desired source books aren't enabled for the campaign.
+**Cause:** A setting is wrong, or the port is in use.
 
-**Resolution:** Open the Reference browser (header bar) and search for a common monster like "Goblin" to check whether any data exists. If no results at all, import catalog data via Settings. If some results appear but specific content is missing, check Campaign Sources — the source book may not be enabled for this campaign.
+**Fix:** Read the first line of the output.
+- "MIMIR_BIND is not an address": fix `MIMIR_BIND`, for example `0.0.0.0:8740`.
+- "MIMIR_SEED must be empty or "fixture"": unset `MIMIR_SEED`.
+- "cannot listen on …": another program uses the port. Stop it, or choose another port.
+- "cannot create …": the server cannot write to `MIMIR_DATA_DIR`. Fix the permissions.
 
-### Dev vs production database
+## Sign-in
 
-**Cause:** Mimir uses separate databases for development and production builds. If you're seeing different data than expected, you may be running a dev build that points to the dev database.
+### The server refuses the token
 
-| Build | Database Path (macOS) |
-|-------|----------------------|
-| Production | `~/Library/Application Support/com.mimir.app/data/mimir.db` |
-| Development | `~/Library/Application Support/com.mimir.app/dev/data/mimir.db` |
+**Cause:** The token is not the `MIMIR_API_TOKEN` of the server.
 
-**Linux paths:**
-| Build | Database Path |
-|-------|--------------|
-| Production | `~/.local/share/com.mimir.app/data/mimir.db` |
-| Development | `~/.local/share/com.mimir.app/dev/data/mimir.db` |
+**Fix:** Type the token again. Check the value of `MIMIR_API_TOKEN` on the server. A token has no spaces at the start or the end.
 
-**Windows paths:**
-| Build | Database Path |
-|-------|--------------|
-| Production | `%APPDATA%/com.mimir.app/data/mimir.db` |
-| Development | `%APPDATA%/com.mimir.app/dev/data/mimir.db` |
+### Mimir opens without a sign-in page
 
-**Resolution:** Confirm which build you're running and which database path it uses.
+**Cause:** The server has no `MIMIR_API_TOKEN`. It is in open mode. **Settings**, **About** shows **Sign-in: Open**.
+
+**Fix:** Set `MIMIR_API_TOKEN` and start the server again. See [Environment Variables](./environment-variables.md#mimir_api_token).
+
+## Players
+
+### A player link no longer works
+
+**Cause:** The DM revoked the link or made a new one.
+
+**Fix:** Open the **PCs** tab, click **Player link** and click **Make a link**. Give the new link to the player.
+
+### A player cannot see another sheet
+
+**Cause:** Its player does not share it.
+
+**Fix:** That player turns on **Share this sheet with the party (read-only)** in **Details**.
+
+## Catalog
+
+### No catalog results
+
+**Cause:** No source data is imported.
+
+**Fix:**
+1. Open **Settings**, **Books**. Check the **Sources** table.
+2. If it is empty, import a data archive. See [Manage Source Books](../how-to/campaigns/manage-sources.md).
+3. If a book is missing, import an archive that has it. Mimir imports only core and supplement books.
+
+### A book is not in the reader
+
+**Cause:** The archive had no text for the book. **Readable** shows **No**.
+
+**Fix:** Import a data archive that has the book text.
 
 ## Maps
 
-### Fog of war controls are missing
+### The map upload fails
 
-**Cause:** The map was uploaded as a plain image (PNG/JPG) rather than a UVTT file. Image maps don't contain wall data, so fog of war is not available at all — the Fog and LOS controls only appear for UVTT maps.
+**Cause:** The file is not a supported map, or it is too large.
 
-**Resolution:** Re-upload the map in UVTT format (`.dd2vtt` or `.uvtt`) if available; only UVTT files include the wall geometry needed for fog of war. On image maps, use Reveal Map and per-token Hide from Players instead.
+**Fix:** Read the reason in the dialog. Use a UVTT file (`.dd2vtt`, `.uvtt`) or an image (PNG, JPEG, WebP). A `.dungeondraft_map` file does not work: export it from Dungeondraft as Universal VTT.
 
-### Tokens don't snap to grid
+### Tokens do not fit the squares
 
-**Cause:** Grid alignment mismatch. Image files default to 70 pixels per grid square. If the map image uses a different grid size, tokens won't align.
+**Cause:** The grid size of an image map is wrong.
 
-**Resolution:** Use UVTT format maps, which embed precise grid data. For image maps, ensure the grid squares are approximately 70 pixels wide.
+**Fix:** Delete the map and upload it again with the right **Grid: pixels a square**. See [Set the Grid](../how-to/maps/configure-grid.md).
 
-### Map image doesn't display
+### Fog does not stop at walls
 
-**Cause:** The map asset file may have been moved or deleted from the assets directory.
+**Cause:** The map is an image. It has no walls.
 
-**Resolution:** Check that the file exists at `~/Library/Application Support/com.mimir.app/assets/` (or the platform-equivalent). If the asset is missing, re-upload the map.
+**Fix:** Upload the UVTT version of the map.
 
-## Player Display
+### A map image does not show
 
-### Player display window won't open
+**Cause:** The image file is missing from `<data dir>/assets/`.
 
-**Cause:** The player display is a separate Tauri window. It requires the main application to be running and a map to be loaded in play mode.
+**Fix:** Upload the map again. When you move a server, copy the whole data directory.
 
-**Resolution:** Enter Play Mode from a module (click the play button on a module), load a map in the play view, then click the player display button in the play mode toolbar.
+## Display
 
-### Player display shows black screen
+### The display waits for a map
 
-**Cause:** Blackout mode is enabled, or no map has been sent to the display.
+**Cause:** No map is shown. After a server restart, no map is shown.
 
-**Resolution:** Check the blackout toggle in the play mode toolbar — if active, toggle it off. Ensure a map is loaded and has been sent to the player display.
+**Fix:** On the DM map, click **Show to players**.
 
-### Player display is out of sync
+### The display shows "Paused"
 
-**Cause:** The display viewport hasn't been updated after the DM moved the view.
+**Cause:** Blackout is on.
 
-**Resolution:** The DM viewport updates are sent to the player display via Tauri events. If the display falls behind, toggle the player display closed and reopen it.
+**Fix:** On the DM map, click **End blackout**.
 
-### Display opens on wrong screen
+### The display is all covered
 
-**Cause:** The operating system opens the window on the primary (or last-used) monitor rather than the player-facing screen.
+**Cause:** Fog is on and no PC token is on the map, or the PC tokens are hidden.
 
-**Resolution:** Drag the window to the correct screen, then maximize it after moving.
+**Fix:** Place PC tokens. Check that their **Players see it** is on.
 
-### Players see hidden tokens
+### Players see a token
 
-**Cause:** Tokens intended to be hidden are marked visible to players.
+**Cause:** The token has **Players see it** on, and a PC can see it.
 
-**Resolution:** Check token visibility settings; ensure hidden tokens are not marked visible to players.
+**Fix:** Click the token on the DM map. Turn off **Players see it**.
 
-### Fog not updating
+### The display does not follow the DM
 
-**Cause:** PC tokens are hidden or not placed on the active map, or the map lacks UVTT wall data for wall occlusion.
+**Cause:** The live connection broke, for example after the device slept.
 
-**Resolution:** Verify PC tokens are visible and placed on the active map. Confirm UVTT wall data loaded for wall occlusion.
+**Fix:** Reload the display page.
 
-### No second window appears
+## MCP
 
-**Cause:** The player display window failed to open.
+### Claude cannot connect
 
-**Resolution:** Click Player Display again; if it still doesn't appear, restart Play Mode.
+**Cause:** The address or the token is wrong.
 
-## MCP Server
+**Fix:**
+- A 401 answer: the token is missing or wrong. Use the DM token in `Authorization: Bearer <token>`.
+- A 403 answer: the token is a player link. Use the DM token.
+- Check the address: `<server>/mcp`.
+- Most tools need an active campaign: call `set_active_campaign` first.
 
-### Claude Code can't find campaigns
+See [MCP Server](./mcp-server.md).
 
-**Cause:** The MCP server connects to a database path that may differ from what the main app uses.
+## PDF
 
-**Resolution:** Verify the database path — the MCP server uses `MIMIR_DATABASE_PATH` if set, otherwise platform defaults. If you're using a non-standard database location, set the environment variable (`export MIMIR_DATABASE_PATH=/path/to/your/mimir.db`). Also ensure you've called `set_active_campaign` — most MCP tools require an active campaign.
+### PDF export is slow or the fonts look wrong
 
-### MCP sidecar won't start
+**Cause:** The server renders each PDF with Typst. A large campaign or a tiled map takes time. Typst uses the fonts installed on the server.
 
-**Cause:** The sidecar binary may not be built or may be missing from the expected path.
+**Fix:** Wait for the download. For the best result, install Inter and JetBrains Mono on the server. Without them, Typst falls back to other fonts.
 
-**Resolution:** Check that the binary exists at `crates/mimir/binaries/mimir-mcp-{target-triple}` (e.g., `mimir-mcp-aarch64-apple-darwin`). Rebuild with `bash scripts/build-sidecar.sh`. If running from a release build, the sidecar should be bundled automatically.
+## Logs
 
-## PDF Export
-
-### Character sheet export is blank
-
-**Cause:** The character may not have enough data populated (class, level, ability scores).
-
-**Resolution:** Ensure the character has at least a name, one class with a level, and ability scores set. The PDF template requires these fields to render.
-
-### PDF export is slow
-
-**Cause:** Typst compilation for complex documents (especially those with many monster stat blocks or maps) takes time.
-
-**Resolution:** This is expected for large exports. Campaign document PDFs with many pages take longer than individual character sheets.
-
-## Application
-
-### App won't launch
-
-**Cause:** Could be a missing dependency, corrupted installation, or port conflict.
-
-**Resolution:** Launch from the terminal to see error output, and check logs at:
-- **macOS:** `~/Library/Application Support/com.mimir.app/logs/`
-- **Linux:** `~/.local/share/com.mimir.app/logs/`
-- **Windows:** `%APPDATA%/com.mimir.app/logs/`
-
-## Log Files
-
-Mimir writes logs to platform-specific directories. Default log level is `mimir=info,mimir_core=info`.
-
-Override with the `RUST_LOG` environment variable:
-
-```bash
-RUST_LOG=mimir=debug,mimir_core=trace cargo run -p mimir
-```
+The server logs to standard output. Set `RUST_LOG` for more detail, for example `RUST_LOG=debug`. See [Environment Variables](./environment-variables.md#rust_log).
 
 ## See Also
 
-- [Development Setup](../developer/DEVELOPMENT.md) — For build and development issues
-- [Environment Variables](./environment-variables.md) — All configuration options
-- [MCP Server Reference](./mcp-server.md) — MCP setup and tools
+- [Run the Server](../how-to/run-server.md)
+- [Environment Variables](./environment-variables.md)
+- [MCP Server Reference](./mcp-server.md)
+- [Development Setup](../developer/DEVELOPMENT.md)

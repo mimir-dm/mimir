@@ -1,66 +1,57 @@
-# Print Character Sheet
+# Print a Character Sheet
 
-Export character sheets to PDF for printing.
+Export a character sheet and cards to PDF.
 
 ## Steps
 
-1. Click **Characters** in the header
-2. Find and click the character
-3. Click **Print PDF** on the character sheet
-4. Configure print options
-5. Save the PDF
+1. Open the character sheet.
+2. Click **PDF…** in the header.
+3. Select what the PDF holds (see below).
+4. Click **Download PDF**.
 
-## Print Options
+The browser downloads the PDF. Only the DM has **PDF…**.
 
-The export dialog lets you select which sections to include:
+## Options
 
-**Character Sheets:**
-- **Compact Sheet** (2-page) — Stats, combat, skills, equipment summary
-- **Battle Card** — Half-page combat reference (AC, HP, attacks, saves)
+| Option | Default | Contents |
+|--------|---------|----------|
+| **Character sheet** | On | The 2-page sheet: stats, combat, skills, equipment, proficiencies, personality, spellcasting, inventory, coins |
+| **Battle card** | On | A half-page combat card: AC, HP, attacks, saving throws |
+| **Spell cards** | Off | A card for each spell of a caster |
+| **Equipment cards** | Off | Cards for weapons, magic items and special ammunition |
 
-**Cards:**
-- **Spell Cards** — Printable cards for all spells (if the character is a caster)
-- **Equipment Cards** — Cards for weapons, magic items, and special ammunition
+## Character Sheet
 
-Compact Sheet and Spell Cards are enabled by default. At least one option must be selected to export.
-
-## Compact Sheet
-
-The 2-page character sheet includes:
-- Character name, race, class, and level
+The 2-page sheet holds:
+- Name, race, class and level
 - Ability scores and modifiers
-- Combat stats (AC, HP, speed, initiative)
-- All 18 skills with computed bonuses
-- Saving throws
+- Armor class, hit points, speed, initiative
+- All 18 skills and the saving throws
 - Attacks and equipment
 - Proficiencies
 - Personality traits, ideals, bonds, flaws
-- Spellcasting info and spell slots (if applicable)
-- Full inventory
-- Currency
+- Spellcasting and spell slots, for casters
+- Inventory and coins
 
 ## Battle Card
 
-A half-page combat quick reference — ideal for keeping at the table during encounters. Includes AC, HP, attack bonuses, and saving throw modifiers at a glance.
+A half-page card for the table during combat. It holds AC, HP, attack bonuses and saving throws.
 
 ## Spell Cards
 
-For spellcasters, spell cards are printed in a 3x3 grid:
-- Each spell gets a card with name, level, school, casting time, range, components, and description
-- Cut and use as physical references during play
+A card for each spell: name, level, school, casting time, range, components and text. A long text goes on to a second card. Cut the cards out for play.
 
 ## Equipment Cards
 
-Cards for notable equipment — weapons, magic items, and special ammunition. Print and cut for physical item tracking at the table.
+Cards for weapons, magic items and special ammunition. Cut them out for the table.
 
 ## Tips
 
-- Print before session for quick reference
-- Use card stock for durability
-- Update and reprint after level ups
-- Keep a backup PDF
+- Print before the session.
+- Use card stock for the cards.
+- Print again after a level up.
 
 ## See Also
 
 - [Create a Player Character](./create-pc.md)
-- [Export Campaign](../campaigns/export-campaign.md)
+- [PDF Export](../../reference/pdf-export/README.md)

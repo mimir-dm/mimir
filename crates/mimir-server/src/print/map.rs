@@ -1,6 +1,6 @@
 //! Map Print Commands
 //!
-//! Tauri commands for printing maps to PDF.
+//! The server's PDF routes: printing maps to PDF.
 
 use base64::Engine;
 use mimir_core::services::MapService;

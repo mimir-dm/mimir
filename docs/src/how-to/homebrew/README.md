@@ -1,36 +1,34 @@
 # Homebrew Content
 
-Create custom items, monsters, and spells for your campaigns.
+Make your own items, monsters and spells for a campaign.
 
-## What is Homebrew?
+## What Is Homebrew?
 
-Homebrew content is custom D&D material you create for your campaign. When the official catalog doesn't have what you need — a custom magic sword, a unique creature, or a modified spell — you create it as homebrew.
+Homebrew is D&D content that you make. When the catalog does not have what you need, for example a special sword, a new creature or a changed spell, you make it as homebrew.
 
 ## Where to Find It
 
-Homebrew is managed from the **Homebrew** tab on the Campaign Dashboard (the 5th tab). Each campaign has its own homebrew content.
+Open the campaign and click the **Homebrew** tab. Each campaign has its own homebrew. The tab has three kinds: **Items**, **Monsters** and **Spells**.
 
-## The Three Types
+## How to Make an Entry
 
-| Type | Creation Method | Used In |
-|------|----------------|---------|
-| **Items** | Create from scratch or clone from catalog | Character inventory |
-| **Monsters** | Clone from catalog and modify | Module encounters, token placement |
-| **Spells** | Clone from catalog and modify | Character spell lists |
+| Kind | **New** | **Copy from the catalog** | Editor |
+|------|---------|---------------------------|--------|
+| **Items** | Yes | Yes | A form, or the JSON |
+| **Monsters** | Yes, from a template | Yes | The JSON |
+| **Spells** | Yes, from a template | Yes | The JSON |
 
-## Clone from Catalog
+Each entry is 5etools JSON. The editor shows a live **Preview** as the catalog shows the entry. A copy shows "Copy of …" with the name of the original.
 
-For monsters and spells, the primary workflow is cloning: search the D&D 5e catalog, select an entry, and Mimir creates a homebrew copy you can modify. Items can also be cloned or created from scratch.
+## Where Homebrew Shows
 
-Cloned entries display "Based on [original name]" so you can track the source.
+| Kind | Where |
+|------|-------|
+| **Items** | The item search on the **Equipment** tab of a character sheet |
+| **Monsters** | The monster search on the **Dangers** tab of a module, and then on the maps |
+| **Spells** | The **Homebrew** tab only. The **Spells** tab of a character sheet lists catalog spells. |
 
-## How Homebrew Integrates
-
-- **Homebrew items** appear in inventory search results when adding items to characters
-- **Homebrew monsters** appear in monster search when placing tokens in Token Setup
-- **Homebrew spells** appear in character spell lists alongside catalog spells
-
-All homebrew content is tagged with an **HB** badge throughout the UI.
+Homebrew has the source **HB**. It goes with the campaign in a campaign archive.
 
 ## Guides
 

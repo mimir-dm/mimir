@@ -2,7 +2,7 @@
 //!
 //! Business logic for homebrew items, monsters, and spells.
 //! Centralizes UUID generation, timestamp management, and JSON validation
-//! that was previously duplicated across Tauri commands and MCP tools.
+//! shared by the server API and the MCP tools.
 
 use diesel::SqliteConnection;
 use serde_json::Value;

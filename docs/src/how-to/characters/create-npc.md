@@ -1,50 +1,47 @@
 # Create an NPC
 
-Create non-player characters for your campaigns and modules.
+Make a non-player character (NPC) for a campaign.
 
 ## Steps
 
-NPCs are created from the campaign dashboard:
+1. Open the campaign and click the **NPCs** tab.
+2. Click **New NPC**.
+3. Type the **Name**. It is required.
+4. Optionally, fill in:
+   - **Race**
+   - **Role**: their part in the story, for example shopkeeper, quest giver or villain
+   - **Location**: where the party finds them
+   - **Faction**: their group
+5. Click **Create**.
 
-1. Open your campaign dashboard
-2. Go to the **NPCs** tab
-3. Click **Create NPC**
+The NPC shows in the **NPCs** table with its role, location and faction.
 
-## NPC Creation
+You can also make an NPC on the **Characters** page: click **New character** and choose **Kind**: NPC.
 
-NPC creation is simplified — only a name is required. Optional fields can be filled in during creation or edited later:
+## Change an NPC
 
-1. Enter the NPC **Name** (required)
-2. Optionally fill in:
-   - **Race** — The NPC's race
-   - **Role** — Their function in the story (e.g., shopkeeper, quest giver, villain)
-   - **Location** — Where the party finds them
-   - **Faction** — Organization or group affiliation
-3. Click **Create**
+1. Click the NPC name to open the sheet.
+2. Click the **Details** tab.
+3. Change **Role**, **Location**, **Faction** or the personality fields.
+4. Click **Save**.
 
-## Assigning NPCs
+## NPCs in Modules
 
-NPCs can be assigned to:
-- **Campaign** - Recurring characters across modules
-- **Module** - Location-specific NPCs
+The **NPCs** tab of a module page lists the NPCs of that module, with their role. The list is read-only: the web app does not add NPCs to a module. You can place a module NPC on a module map from the **Place on the map** menu.
 
-## NPC vs Monster
+## NPC or Monster?
 
-| Type | Use Case |
-|------|----------|
-| NPC | Named characters with personality |
-| Monster | Combat encounters, unnamed enemies |
-
-Use NPCs for important characters the party interacts with socially.
+| Type | Use |
+|------|-----|
+| NPC | A named character with a personality |
+| Monster | A creature for a combat |
 
 ## Tips
 
-- Create NPCs during prep, not at the table
-- Keep descriptions brief but memorable
-- Include one distinctive trait or quirk
-- Link to relevant plot threads in notes
+- Make NPCs during prep.
+- Keep each NPC short, with one trait or habit that the players remember.
 
 ## See Also
 
 - [Create a Player Character](./create-pc.md)
-- [Assign to Campaign](./assign-to-campaign.md)
+- [Move a Character to a Campaign](./assign-to-campaign.md)

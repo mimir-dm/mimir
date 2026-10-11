@@ -1,42 +1,49 @@
 # Create a Homebrew Spell
 
-Create custom spells by cloning and modifying entries from the D&D 5e catalog.
+Make your own spells for a campaign. Start from the template or from a catalog spell.
 
-## Navigate to Homebrew Spells
+## Open Homebrew Spells
 
-1. Open your campaign dashboard
-2. Click the **Homebrew** tab
-3. Select the **Spells** sub-tab
+1. Open the campaign.
+2. Click the **Homebrew** tab.
+3. Click **Spells**.
 
-## Clone from Catalog
+## Start From the Template
 
-Homebrew spells are created by cloning existing catalog entries:
+1. Click **New**.
+2. Type the **Name**.
+3. Change the JSON. The template is a 1st-level evocation: 1 action, 60 feet, verbal and somatic, instantaneous.
+4. Look at the **Preview**.
+5. Click **Save**.
 
-1. Click **Clone from Catalog**
-2. Search for a spell (minimum 2 characters)
-3. Results show name, level, school, and source
-4. Click a spell to create a homebrew copy immediately
+## Copy a Catalog Spell
 
-The new spell appears in your homebrew list with "Based on [original name]" shown in the detail view.
+1. Click **Copy from the catalog**.
+2. In **Catalog name**, type the name and click **Search**.
+3. Click **Pick** next to the spell.
+4. Type the **Name** of the copy.
+5. Click **Copy**.
 
-## Editing Spells
+## Edit a Spell
 
-1. Select a spell from the list
-2. Click **Edit**
-3. Modify the **Name** and/or the **JSON data** containing the spell details
-4. Save your changes
+1. Click the spell in the list.
+2. Click **Edit**.
+3. Change the **Name** or **Data (JSON)**.
+4. Click **Save**.
 
-The detail pane shows extracted metadata: spell level and school of magic.
+The list shows the level and school of each spell.
 
-## Using Homebrew Spells
+## Use a Homebrew Spell
 
-Homebrew spells appear automatically in character spell lists alongside catalog spells for spellcasting characters. They are tagged with an **HB** badge.
+Homebrew spells are for your reference and for the AI assistant. The **Spells** tab of a character sheet lists the catalog spells of the class only.
 
-## Deleting Spells
+## Delete a Spell
 
-Click **Delete** on a selected spell. A confirmation prompt appears before deletion.
+1. Click the spell in the list.
+2. Click **×** (**Delete …**).
+3. Click **Delete**.
 
 ## See Also
 
 - [Manage Character Spells](../characters/manage-spells.md)
-- [Homebrew Overview](./)
+- [Homebrew Overview](./README.md)

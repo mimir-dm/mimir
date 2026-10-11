@@ -1,54 +1,84 @@
-# Manage Encounters
+# Run a Combat
 
-Run combat encounters effectively during your session.
+Run a combat with the initiative tracker beside the DM map. The tracker keeps the turn order, hit points, conditions and concentration.
 
-## Viewing Monster Stats
+## Start a Combat
 
-Monster stats live in the main window, which stays on the campaign dashboard while the DM Map window is open. On the module dashboard, click any monster in the Dangers panel to open the Monster Stats Panel:
-- Full stat block
-- Ability scores and saves
-- Actions and attacks
-- Special abilities
+1. Open the DM map of the module.
+2. Click **Start combat** in the tracker.
 
-The panel opens alongside the dashboard, so your main screen becomes the reference screen while the map runs in its own window.
+The tracker shows "Round 1". A module has one combat at a time. The combat stays when you change maps or close the page.
 
-> **Tip:** Double-click a monster token in the DM Map window to select that monster in the dashboard automatically.
+## Add Creatures
 
-## Monster Quick List
+1. Open **Add a creature…**. It lists the campaign PCs (**PC: …**), the module monsters (**Monster: …**) and the module NPCs (**NPC: …**).
+2. Choose a creature.
+3. Click **Add**.
 
-The Dangers panel lists all monsters in the module:
-- **Quantity** - Number of each monster (e.g., "3×")
-- **Name** - Monster name (custom display name if one is set)
+To add a creature by name only, type the name in **Custom name** and press Enter.
 
-Click to select and view stats.
+A creature with a token on the map shows **⌖** (**On the map**). Its token is marked on its turn.
 
-## Adding PCs to the Map
+## Set Initiative
 
-Click the **Add PCs** button in the DM Map window's map toolbar to place all campaign player characters on the current map.
+1. Type the initiative in the box of each row (**Initiative of …**).
+2. Press Tab or click away.
 
-> **Note:** Monster tokens are placed in Token Setup — click the map's card in the module dashboard's Maps section. The dashboard stays available in the main window during a session, so you can place additional monsters there mid-session.
+The rows sort by initiative.
 
-## Moving Tokens in Combat
+## Take Turns
 
-1. Drag tokens to new positions
-2. Tokens snap to the grid
-3. Movement is visible on the player display (if open)
+- Click **Next turn ›** to go to the next creature. After the last one, a new round starts.
+- Click **‹ Prev** to go back.
 
-## Token Visibility
+The current row is marked.
 
-Toggle token visibility to:
-- Hide enemies before combat starts
-- Reveal monsters during surprise rounds
-- Show reinforcements arriving
+## Track Hit Points
 
-Right-click a token and select **Hide from Players** / **Show to Players** (or select the token and press **H**).
+1. Click the name of a creature. Its controls open.
+2. If it has no hit points yet, type the maximum in **Set HP** and click **Set HP**.
+3. Type an amount, then click **Damage** or **Heal**.
+4. Optionally, type **Temp HP**.
+
+The row shows the hit points and a bar. **Recent HP changes** lists the last changes with their round.
+
+## Conditions
+
+1. Click the name of a creature.
+2. Choose a condition in **Condition…**.
+3. Optionally, type the number of rounds in **Rnds**.
+4. Click **Add**.
+
+The condition shows as a pill on the row. Point at the pill to see until when it lasts. Click the pill to remove the condition.
+
+## Concentration
+
+1. Click the name of a creature.
+2. Turn on **Concentrating**. The row shows **Conc.**
+
+When the creature takes damage, the tracker shows "Concentration save DC …". Click **Kept** or **Lost**. **Lost** ends the concentration.
+
+## Remove a Creature
+
+Click **×** (**Remove …**) on its row.
+
+## Show the Order to Players
+
+Turn on **Show order to players**. The player display and the player pages show the round and the names in order, with the current one marked. They do not show hit points.
+
+## End the Combat
+
+1. Click **End combat**.
+2. Click **End** to confirm.
+
+## Monster Stats
+
+Open the module page in a second browser tab. In the **Dangers** tab, click a monster name to see its stat block.
 
 ## Tips
 
-- Open monster stats before combat starts
-- Track HP in the module's Play Notes document (Documents panel on the module dashboard)
-- Use display names and notes to distinguish monsters by room/area
-- Position hidden tokens before players enter areas
+- Hide monster tokens before the fight. Turn on **Players see it** when they appear.
+- Use **Name shown** in the **Dangers** tab to tell groups apart.
 
 ## See Also
 

@@ -1,69 +1,64 @@
 # Add Monsters
 
-Add monsters from the D&D 5e catalog or your homebrew collection to your maps via Token Setup.
+Add monsters from the catalog or from your homebrew to a module. Then place them on the module maps.
 
-![Token Setup](../../images/reference/token-setup.png)
+## Add a Monster to the Module
 
-## Steps
+1. Open the module page.
+2. Click the **Dangers** tab.
+3. In **Monster name**, type the name, for example "goblin".
+4. Click **Search**.
+5. Click **Add** next to the monster.
 
-1. Open a module from the Modules tab
-2. Click the **Place Tokens** button on a map card to open **Token Setup**
-3. In the Token Palette, click **Monster**
-4. Search by name (e.g., "Goblin", "Dragon", "Zombie")
-5. Select a monster from the results
-6. Configure token options (size, color, visibility)
-7. Click on the map to place the monster token
+The results show the source of each monster. Homebrew monsters of the campaign show **Homebrew**.
 
-## Monster Search
+The monster shows in the **Monsters** table.
 
-Type a monster name in the search field to filter results. Results show CR and source for quick reference. Homebrew monsters you've created in the campaign's Homebrew tab also appear in search results alongside catalog entries.
+## Set the Count and Notes
 
-## Token Options
+1. Click **Edit** in the row of the monster.
+2. Set the **Count**.
+3. Optionally, type a **Name shown (empty: the monster's name)**, for example "Goblin archer".
+4. Optionally, type **DM notes**, for example "On the ridge".
+5. Click **Save**.
 
-Before placing, configure:
-- **Size** - Tiny, Small, Medium, Large, Huge, Gargantuan
-- **Color** - Border color to distinguish groups
-- **Visible to Players** - Hide for surprise encounters
+## See the Stat Block
 
-## Placing Multiple Monsters
+1. Click the monster name in the **Monsters** table.
 
-To add multiple of the same monster:
-1. Search and select the monster
-2. Click on the map to place each one
-3. Each placement creates a new token
+The stat block opens in a drawer. A cross-reference in it, for example a spell, opens over it. Click **← Back** to return. Click **Close** to close the drawer.
 
-Each click on the map places an individual token.
+## Remove a Monster
 
-## Managing Monster Tokens
+1. Click **×** (**Remove …**) in the row of the monster.
+2. Confirm.
 
-Placed monsters appear in the **Placed Tokens** panel (right side):
-- Click to select on map
-- Drag to reposition
-- Click **×** to delete
-- Right-click for more options
+Tokens of the monster on the maps stay.
 
-## Viewing Monster Stats
+## Place the Monster on a Map
 
-In Play Mode, click any monster in the sidebar to see:
-- Full stat block
-- Ability scores and modifiers
-- Actions and special abilities
-- Legendary actions (if applicable)
+1. Click the **Maps** tab and click a map.
+2. Open the **Place on the map** menu.
+3. Choose **Monster: …**.
+4. Click a square for each token. Click **Done** when you finish.
 
-## Module Monsters Quick Select
+See [Place Tokens](../maps/place-tokens.md).
 
-Once you've added monsters to a map, the Token Palette shows a **Module Monsters** section at the top with quick-select buttons for monsters already in the module. This saves time when placing the same monster on multiple maps.
+## Print Monster Cards
+
+1. Open **More** in the module header.
+2. Click **Monster cards (PDF)**.
+
+The browser downloads a PDF with a card for each monster of the module.
 
 ## Tips
 
-- Add monsters during prep, not at the table
-- Use different colors to distinguish enemy groups
-- Hide tokens for surprise encounters
-- Search by CR to find level-appropriate challenges
-- Create homebrew monsters in the Homebrew tab if you need custom creatures
+- Add monsters during prep.
+- Use **Name shown** and **DM notes** to tell groups of the same monster apart.
+- Make your own monsters in the **Homebrew** tab. See [Create a Homebrew Monster](../homebrew/create-monster.md).
 
 ## See Also
 
 - [Create a Module](./create-module.md)
 - [Place Tokens](../maps/place-tokens.md)
-- [Manage Encounters](../play-mode/manage-encounters.md)
+- [Run a Combat](../play-mode/manage-encounters.md)
