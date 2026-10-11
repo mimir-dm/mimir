@@ -25,6 +25,7 @@ use super::viewport::Viewport;
 use super::vision::{self, LightLevel};
 use crate::api;
 use crate::live::Live;
+use crate::reference::detail::{Reference, Target};
 
 // ---- Pure helpers (host-tested) ------------------------------------------
 
@@ -90,6 +91,113 @@ impl Place {
             },
         }
     }
+}
+
+/// Vision presets (the desktop's): label, sight in bright light, in dim
+/// light (`None`: no limit), in darkness, and the carried light, in feet.
+pub type VisionPreset = (&'static str, Option<i32>, Option<i32>, i32, i32);
+
+pub const VISION_PRESETS: &[VisionPreset] = &[
+    ("Human", None, None, 0, 0),
+    ("Human + Torch", None, None, 0, 40),
+    ("Human + Lantern", None, None, 0, 60),
+    ("Darkvision 60 ft", None, None, 60, 0),
+    ("Darkvision 120 ft", None, None, 120, 0),
+    ("Blindsight 30 ft", Some(30), Some(30), 30, 0),
+    ("Blindsight 60 ft", Some(60), Some(60), 60, 0),
+    ("Devil's Sight 120 ft", None, None, 120, 0),
+];
+
+/// The preset a token's vision matches, if any (the first one).
+pub fn preset_of(t: &Token) -> Option<&'static str> {
+    VISION_PRESETS
+        .iter()
+        .find(|p| {
+            (p.1, p.2, p.3, p.4)
+                == (
+                    t.vision_bright_ft,
+                    t.vision_dim_ft,
+                    t.vision_dark_ft,
+                    t.light_radius_ft,
+                )
+        })
+        .map(|p| p.0)
+}
+
+/// A key on the DM map (the desktop's keys).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MapKey {
+    ZoomIn,
+    ZoomOut,
+    Fit,
+    ToggleHidden,
+    ToggleDead,
+    Deselect,
+}
+
+pub fn map_key(key: &str) -> Option<MapKey> {
+    match key {
+        "+" | "=" => Some(MapKey::ZoomIn),
+        "-" => Some(MapKey::ZoomOut),
+        "0" => Some(MapKey::Fit),
+        "h" | "H" => Some(MapKey::ToggleHidden),
+        "d" | "D" => Some(MapKey::ToggleDead),
+        "Escape" => Some(MapKey::Deselect),
+        _ => None,
+    }
+}
+
+/// A key for the page, not for a field: no modifier, and the focus is not
+/// in a text field, a select or an editor.
+pub fn page_key(ev: &web_sys::KeyboardEvent) -> bool {
+    if ev.ctrl_key() || ev.meta_key() || ev.alt_key() {
+        return false;
+    }
+    let Some(el) = ev
+        .target()
+        .and_then(|t| wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+    else {
+        return true;
+    };
+    let tag = el.tag_name().to_ascii_uppercase();
+    !(matches!(tag.as_str(), "INPUT" | "TEXTAREA" | "SELECT") || el.is_content_editable())
+}
+
+/// The PCs of the campaign that have no token on the map (by name).
+pub fn missing_pcs(pcs: &[String], tokens: &[Token]) -> Vec<String> {
+    pcs.iter()
+        .filter(|name| {
+            !tokens
+                .iter()
+                .any(|t| t.token_type == "pc" && t.name.eq_ignore_ascii_case(name))
+        })
+        .cloned()
+        .collect()
+}
+
+/// `n` cells in a row from `start`, wrapping inside the map.
+pub fn row_of_cells(start: (i32, i32), n: usize, columns: f64, rows: f64) -> Vec<(i32, i32)> {
+    let cols = (columns.floor() as i32).max(1);
+    let last_row = (rows.floor() as i32 - 1).max(0);
+    let (sx, sy) = (start.0.clamp(0, cols - 1), start.1.clamp(0, last_row));
+    (0..n as i32)
+        .map(|i| {
+            let x = sx + i;
+            ((x % cols), (sy + x / cols).min(last_row))
+        })
+        .collect()
+}
+
+/// A second tap on the same thing within 400 ms.
+pub fn is_double_tap(last: &str, last_at: f64, key: &str, now: f64) -> bool {
+    last == key && now - last_at <= 400.0
+}
+
+/// Details to open after a double tap.
+#[derive(Debug, Clone, PartialEq)]
+enum Detail {
+    Monster(Option<String>),
+    Trap(String),
 }
 
 /// The selected thing.
@@ -247,7 +355,8 @@ pub fn DmMapPage() -> impl IntoView {
     let los = RwSignal::new(true);
     let reveal = RwSignal::new(false);
     let ambient = RwSignal::new(String::from("bright"));
-    let show_walls = RwSignal::new(false);
+    // Overlays for the DM: the walls and the sight of monsters and NPCs.
+    let overlays = RwSignal::new(false);
     Effect::new(move |_| {
         if let Some(m) = map_now() {
             ambient.set(LightLevel::from_mode(&m.lighting_mode).as_str().to_string());
@@ -399,6 +508,55 @@ pub fn DmMapPage() -> impl IntoView {
         }
     };
 
+    // A double click or tap shows the details: a monster's stat block, or
+    // the catalog trap of that name, in the detail drawer. Taken from the
+    // pointer events: a token holds the pointer while it may drag, so the
+    // browser's dblclick goes to the scene, and a tablet has none.
+    // The details open after the tap's pointerup and click: opened on the
+    // pointerdown, the drawer's scrim would take that click and close it.
+    let last_tap = StoredValue::new((String::new(), 0.0_f64));
+    let pending_detail = StoredValue::new(None::<Detail>);
+    let double_tap = move |key: &str| {
+        let now = js_sys::Date::now();
+        let (k, at) = last_tap.get_value();
+        last_tap.set_value((key.to_string(), now));
+        is_double_tap(&k, at, key, now)
+    };
+    let reference = Reference::get();
+    let open_monster = move |monster_id: Option<String>| {
+        let (Some(r), Some(mid)) = (reference, monster_id) else {
+            return;
+        };
+        let Some(m) = monsters
+            .get_untracked()
+            .and_then(Result::ok)
+            .and_then(|l| l.into_iter().find(|m| m.id == mid))
+        else {
+            return;
+        };
+        if let (Some(name), Some(source)) = (m.monster_name, m.monster_source) {
+            r.open(Target::new("monsters", &source, &name));
+        }
+    };
+    let open_trap = move |name: String| {
+        let Some(r) = reference else { return };
+        spawn_local(async move {
+            let path = format!(
+                "/catalog/search/traps?limit=20&search={}",
+                String::from(js_sys::encode_uri_component(&name))
+            );
+            if let Ok(page) = api::get::<wire::CatalogPage>(path).await {
+                if let Some(row) = page
+                    .rows
+                    .iter()
+                    .find(|r| r.name.eq_ignore_ascii_case(&name))
+                {
+                    r.open(Target::new("traps", &row.source, &row.name));
+                }
+            }
+        });
+    };
+
     // ---- Pointer handling --------------------------------------------------
     let on_down = move |ev: web_sys::PointerEvent| vp.down(&ev);
     let on_move = move |ev: web_sys::PointerEvent| {
@@ -416,6 +574,15 @@ pub fn DmMapPage() -> impl IntoView {
         vp.moved(&ev);
     };
     let on_up = move |ev: web_sys::PointerEvent| {
+        if let Some(detail) = pending_detail.try_update_value(Option::take).flatten() {
+            set_timeout(
+                move || match detail {
+                    Detail::Monster(m) => open_monster(m),
+                    Detail::Trap(name) => open_trap(name),
+                },
+                std::time::Duration::ZERO,
+            );
+        }
         if let Some(d) = drag.get_untracked() {
             drag.set(None);
             if d.moved {
@@ -441,9 +608,90 @@ pub fn DmMapPage() -> impl IntoView {
     let on_wheel = move |ev: web_sys::WheelEvent| vp.wheel(&ev);
     let zoom_button = move |factor: f64| vp.zoom(factor);
     let fit = move || {
-        if let Some(m) = map_now() {
+        if let Some(m) = map.get_untracked().and_then(Result::ok) {
             vp.fit(f64::from(m.width_px), f64::from(m.height_px));
         }
+    };
+
+    // Full screen: the whole map page (MIMIR-T-0729).
+    let root = NodeRef::<leptos::html::Div>::new();
+    let full_screen = move || {
+        if let Some(el) = root.get_untracked() {
+            let _ = el.request_fullscreen();
+        }
+    };
+
+    // The keys of the desktop: + = - 0 H D Esc.
+    let key_token = move |change: fn(&Token) -> serde_json::Value| {
+        let Some(Selected::Token(tid)) = selected.get_untracked() else {
+            return;
+        };
+        let Some(t) = tokens
+            .get_untracked()
+            .and_then(Result::ok)
+            .and_then(|l| l.into_iter().find(|t| t.id == tid))
+        else {
+            return;
+        };
+        run(patch::<Token>(format!("/tokens/{tid}"), change(&t)));
+    };
+    let keys = window_event_listener(leptos::ev::keydown, move |ev| {
+        if !page_key(&ev) {
+            return;
+        }
+        let Some(k) = map_key(&ev.key()) else { return };
+        ev.prevent_default();
+        match k {
+            MapKey::ZoomIn => vp.zoom(1.25),
+            MapKey::ZoomOut => vp.zoom(0.8),
+            MapKey::Fit => fit(),
+            MapKey::ToggleHidden => key_token(|t| json!({ "hidden": t.visible_to_players })),
+            MapKey::ToggleDead => key_token(|t| json!({ "dead": !t.dead })),
+            MapKey::Deselect => {
+                selected.set(None);
+                place.set(None);
+                place_menu.set(String::new());
+            }
+        }
+    });
+    on_cleanup(move || keys.remove());
+
+    // Add PCs: a token for each PC of the campaign with none on the map,
+    // in a row from the centre of the view.
+    let add_pcs = move || {
+        let c = campaign.get_untracked();
+        let map_id = id.get_untracked();
+        let Some(m) = map.get_untracked().and_then(Result::ok) else {
+            return;
+        };
+        let have = tokens
+            .get_untracked()
+            .and_then(Result::ok)
+            .unwrap_or_default();
+        let g = m.grid_size_px;
+        let start = scene
+            .get_untracked()
+            .map(|el| {
+                let r = el.get_bounding_client_rect();
+                let (mx, my) = vp.to_map(r.left() + r.width() / 2.0, r.top() + r.height() / 2.0);
+                (cell_of(mx, g), cell_of(my, g))
+            })
+            .unwrap_or((0, 0));
+        run(Box::pin(async move {
+            let pcs: Vec<wire::CharacterSummary> = api::get(format!("/campaigns/{c}/pcs")).await?;
+            let names: Vec<String> = pcs.into_iter().map(|p| p.name).collect();
+            let missing = missing_pcs(&names, &have);
+            let cells = row_of_cells(start, missing.len(), m.columns, m.rows);
+            for (name, (gx, gy)) in missing.into_iter().zip(cells) {
+                api::send::<_, Token>(
+                    "POST",
+                    &format!("/maps/{map_id}/tokens"),
+                    &json!({ "grid_x": gx, "grid_y": gy, "label": name }),
+                )
+                .await?;
+            }
+            Ok(())
+        }));
     };
 
     // ---- Derived scene data ------------------------------------------------
@@ -572,7 +820,7 @@ pub fn DmMapPage() -> impl IntoView {
                         checked=reveal
                         on_change=Callback::new(move |on: bool| patch_map(json!({ "reveal_all": on })))
                     />
-                    <Switch label="Walls" checked=show_walls />
+                    <Switch label="Overlays" checked=overlays />
                     <SegmentedControl
                         options=vec!["bright".into(), "dim".into(), "darkness".into()]
                         value=ambient
@@ -586,6 +834,7 @@ pub fn DmMapPage() -> impl IntoView {
                         value=place_menu
                         on_change=on_place
                     />
+                    <Button variant="light" on_click=Callback::new(move |_| add_pcs())>"Add PCs"</Button>
                 </div>
                 <div class="mimir-map__tool-group">
                     {move || {
@@ -634,6 +883,7 @@ pub fn DmMapPage() -> impl IntoView {
                     <ActionIcon title="Zoom in" on_click=Callback::new(move |_| zoom_button(1.25))>"+"</ActionIcon>
                     <ActionIcon title="Zoom out" on_click=Callback::new(move |_| zoom_button(0.8))>"−"</ActionIcon>
                     <ActionIcon title="Fit the map" on_click=Callback::new(move |_| fit())>"⤢"</ActionIcon>
+                    <ActionIcon title="Full screen" on_click=Callback::new(move |_| full_screen())>"⛶"</ActionIcon>
                 </div>
             </div>
         }
@@ -751,9 +1001,34 @@ pub fn DmMapPage() -> impl IntoView {
                                     }
                                 })
                         }}
-                        // The walls of the map file, on request.
+                        // Overlays: the sight of monsters and NPCs, and the walls.
                         {move || {
-                            show_walls.get().then(|| {
+                            if !overlays.get() {
+                                return None;
+                            }
+                            let m = map_now()?;
+                            let g = m.grid_size_px;
+                            let toks = token_list();
+                            let mut zones = vision::light_zones(&light_list(), &toks, g);
+                            zones.extend(
+                                walls_and_lights
+                                    .with(|w| w.as_ref().map(|w| w.1.iter().map(|l| l.zone.clone()).collect::<Vec<_>>()))
+                                    .unwrap_or_default(),
+                            );
+                            let level = LightLevel::from_mode(&ambient.get());
+                            Some(
+                                toks.iter()
+                                    .filter(|t| t.token_type != "pc")
+                                    .map(|t| (t.color.clone(), vision::token_vision(t, &zones, level, g)))
+                                    .filter(|(_, v)| v.radius_px > 0.0 && v.radius_px < vision::UNLIMITED)
+                                    .map(|(c, v)| view! {
+                                        <circle class="mimir-map__ring" cx=v.x cy=v.y r=v.radius_px style=c.map(|c| format!("stroke:{c}")) />
+                                    })
+                                    .collect_view(),
+                            )
+                        }}
+                        {move || {
+                            overlays.get().then(|| {
                                 let d: String = walls_and_lights
                                     .with(|w| w.as_ref().map(|w| w.3.clone()))
                                     .unwrap_or_default()
@@ -803,6 +1078,7 @@ pub fn DmMapPage() -> impl IntoView {
                                     let s = g * 0.3;
                                     let sel = Selected::Trap(t.id.clone());
                                     let sel2 = sel.clone();
+                                    let trap_name = t.name.clone();
                                     view! {
                                         <g
                                             class="mimir-map__marker mimir-map__marker--trap"
@@ -810,6 +1086,9 @@ pub fn DmMapPage() -> impl IntoView {
                                             class:mimir-map__marker--selected=move || selected.get() == Some(sel2.clone())
                                             on:pointerdown=move |ev: web_sys::PointerEvent| {
                                                 ev.stop_propagation();
+                                                if double_tap(&trap_name) {
+                                                    pending_detail.set_value(Some(Detail::Trap(trap_name.clone())));
+                                                }
                                                 selected.set(Some(sel.clone()));
                                             }
                                         >
@@ -864,6 +1143,7 @@ pub fn DmMapPage() -> impl IntoView {
                                     let is_dead = t.dead || down.contains(&t.id);
                                     let is_turn = turn_token.as_deref() == Some(t.id.as_str());
                                     let tid = t.id.clone();
+                                    let monster_id = t.monster_id.clone();
                                     let sel = Selected::Token(t.id.clone());
                                     let sel2 = sel.clone();
                                     let color = t.color.clone().unwrap_or_else(|| match t.token_type.as_str() {
@@ -883,6 +1163,9 @@ pub fn DmMapPage() -> impl IntoView {
                                             aria-label=t.name.clone()
                                             on:pointerdown=move |ev: web_sys::PointerEvent| {
                                                 ev.stop_propagation();
+                                                if double_tap(&tid) {
+                                                    pending_detail.set_value(Some(Detail::Monster(monster_id.clone())));
+                                                }
                                                 if let Some(el) = scene.get_untracked() {
                                                     let _ = el.set_pointer_capture(ev.pointer_id());
                                                 }
@@ -960,7 +1243,7 @@ pub fn DmMapPage() -> impl IntoView {
     };
 
     view! {
-        <div class="mimir-map">
+        <div class="mimir-map" node_ref=root>
             {header}
             {move || {
                 place
@@ -1037,7 +1320,8 @@ fn token_panel(t: Token, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> im
     let dim = RwSignal::new(feet(t.vision_dim_ft));
     let dark = RwSignal::new(t.vision_dark_ft.to_string());
     let light = RwSignal::new(t.light_radius_ft.to_string());
-    let (p1, p2, p3, p4) = (path.clone(), path.clone(), path.clone(), path);
+    let preset = RwSignal::new(preset_of(&t).unwrap_or_default().to_string());
+    let (p1, p2, p3, p4, p5) = (path.clone(), path.clone(), path.clone(), path.clone(), path);
     view! {
         <Text bold=true>{t.name.clone()}</Text>
         <Text size="xs" dimmed=true>{format!("{} · {}", t.token_type, t.size)}</Text>
@@ -1052,6 +1336,25 @@ fn token_panel(t: Token, run: impl Fn(Job) + Copy + Send + Sync + 'static) -> im
             on_change=Callback::new(move |on: bool| run(patch::<Token>(p4.clone(), json!({ "dead": on }))))
         />
         <SectionLabel label="Vision (feet; empty: no limit)" />
+        <Select
+            aria_label="Vision preset"
+            placeholder="Preset…"
+            options=VISION_PRESETS.iter().map(|p| p.0.to_string()).collect()
+            value=preset
+            on_change=Callback::new(move |label: String| {
+                let Some(p) = VISION_PRESETS.iter().find(|p| p.0 == label) else { return };
+                bright.set(feet(p.1));
+                dim.set(feet(p.2));
+                dark.set(p.3.to_string());
+                light.set(p.4.to_string());
+                run(patch::<Token>(p5.clone(), json!({
+                    "vision_bright_ft": p.1,
+                    "vision_dim_ft": p.2,
+                    "vision_dark_ft": p.3,
+                    "light_radius_ft": p.4,
+                })))
+            })
+        />
         <TextInput label="In bright light" value=bright input_type="number" />
         <TextInput label="In dim light" value=dim input_type="number" />
         <TextInput label="Darkvision" value=dark input_type="number" />
@@ -1184,5 +1487,83 @@ mod tests {
         assert_eq!(Place::parse("npc:n1"), Some(Place::Npc("n1".into())));
         assert_eq!(Place::parse("torch"), Some(Place::Torch));
         assert_eq!(Place::parse(""), None);
+    }
+
+    fn tok(name: &str, kind: &str) -> Token {
+        Token {
+            id: name.into(),
+            map_id: "m".into(),
+            name: name.into(),
+            token_type: kind.into(),
+            size: "medium".into(),
+            grid_x: 0,
+            grid_y: 0,
+            x: 35.0,
+            y: 35.0,
+            visible_to_players: true,
+            color: None,
+            monster_id: None,
+            npc_id: None,
+            vision_bright_ft: None,
+            vision_dim_ft: None,
+            vision_dark_ft: 0,
+            light_radius_ft: 0,
+            dead: false,
+        }
+    }
+
+    #[test]
+    fn vision_presets_match_tokens() {
+        let mut t = tok("Robin", "pc");
+        assert_eq!(preset_of(&t), Some("Human"));
+        t.vision_dark_ft = 60;
+        assert_eq!(preset_of(&t), Some("Darkvision 60 ft"));
+        t.vision_bright_ft = Some(30);
+        assert_eq!(preset_of(&t), None, "custom");
+        assert_eq!(VISION_PRESETS.len(), 8);
+        let blind = VISION_PRESETS
+            .iter()
+            .find(|p| p.0 == "Blindsight 30 ft")
+            .unwrap();
+        assert_eq!((blind.1, blind.2, blind.3), (Some(30), Some(30), 30));
+    }
+
+    #[test]
+    fn the_map_keys() {
+        assert_eq!(map_key("+"), Some(MapKey::ZoomIn));
+        assert_eq!(map_key("="), Some(MapKey::ZoomIn));
+        assert_eq!(map_key("-"), Some(MapKey::ZoomOut));
+        assert_eq!(map_key("0"), Some(MapKey::Fit));
+        assert_eq!(map_key("H"), Some(MapKey::ToggleHidden));
+        assert_eq!(map_key("d"), Some(MapKey::ToggleDead));
+        assert_eq!(map_key("Escape"), Some(MapKey::Deselect));
+        assert_eq!(map_key("x"), None);
+    }
+
+    #[test]
+    fn pcs_to_add_and_where() {
+        let tokens = vec![tok("robin", "pc"), tok("Sam", "monster")];
+        let pcs = vec!["Robin".to_string(), "Sam".to_string(), "Jamie".to_string()];
+        assert_eq!(missing_pcs(&pcs, &tokens), vec!["Sam", "Jamie"]);
+        assert_eq!(
+            row_of_cells((2, 3), 3, 10.0, 10.0),
+            vec![(2, 3), (3, 3), (4, 3)]
+        );
+        assert_eq!(
+            row_of_cells((8, 3), 3, 10.0, 10.0),
+            vec![(8, 3), (9, 3), (0, 4)]
+        );
+        assert_eq!(
+            row_of_cells((-5, 99), 1, 10.0, 10.0),
+            vec![(0, 9)],
+            "kept on the map"
+        );
+    }
+
+    #[test]
+    fn double_taps() {
+        assert!(is_double_tap("a", 1000.0, "a", 1300.0));
+        assert!(!is_double_tap("a", 1000.0, "a", 1500.0), "too slow");
+        assert!(!is_double_tap("a", 1000.0, "b", 1100.0), "another thing");
     }
 }

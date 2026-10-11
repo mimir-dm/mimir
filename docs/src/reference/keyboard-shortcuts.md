@@ -1,6 +1,6 @@
 # Keyboard and Pointer Controls
 
-Mimir works with a mouse, a touch screen or a pen. It has no app-wide keyboard shortcuts. The editor has the usual text shortcuts.
+Mimir works with a mouse, a touch screen or a pen. The DM map and the player display have keys. The editor has the usual text shortcuts. A key does nothing while a text field has the focus.
 
 ## Maps
 
@@ -19,15 +19,25 @@ On the DM map only:
 | Input | Action |
 |-------|--------|
 | Click or tap an item | Select it and open its panel |
+| Double-click or double-tap a monster token | Open its stat block |
+| Double-click a trap | Open the catalog trap of that name |
 | Drag a token | Move it |
 | Click a square, after a choice in **Place on the map** | Place the item |
-| Click a door | Open or close it (your view only) |
+| Click a door | Open or close it (the players see it) |
+| **⛶** button | Full screen |
+| `+` or `=` | Zoom in |
+| `-` | Zoom out |
+| `0` | Fit the map |
+| `H` | Hide or show the selected token |
+| `D` | Mark the selected token dead or alive |
+| `Esc` | Clear the selection and stop placing |
 
 On the player display only:
 
 | Input | Action |
 |-------|--------|
-| **⛶** button | Full screen |
+| **⛶** button, `F` or `F11` | Full screen |
+| `R` | Fit the map |
 
 ## Editor
 

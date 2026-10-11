@@ -39,6 +39,7 @@ The current row is marked.
 2. If it has no hit points yet, type the maximum in **Set HP** and click **Set HP**.
 3. Type an amount, then click **Damage** or **Heal**.
 4. Optionally, type **Temp HP**.
+5. To change the maximum, type it in **Max HP**.
 
 The row shows the hit points and a bar. **Recent HP changes** lists the last changes with their round.
 

@@ -204,6 +204,21 @@ pub fn token_seen(t: &PlayerToken, view: &PlayerView, sight: &Sight) -> bool {
                 .any(|a| t.x >= a.x && t.x <= a.x + a.width && t.y >= a.y && t.y <= a.y + a.height))
 }
 
+/// A key on the player display.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisplayKey {
+    FullScreen,
+    Fit,
+}
+
+pub fn display_key(key: &str) -> Option<DisplayKey> {
+    match key {
+        "f" | "F" | "F11" => Some(DisplayKey::FullScreen),
+        "r" | "R" => Some(DisplayKey::Fit),
+        _ => None,
+    }
+}
+
 #[component]
 pub fn DisplayPage() -> impl IntoView {
     let params = use_params_map();
@@ -360,6 +375,29 @@ pub fn DisplayView(
             let _ = el.request_fullscreen();
         }
     };
+    // Keys (the desktop's): F or F11 full screen, R resets the view.
+    let fit_view = move || {
+        if let Some(v) = view.get_untracked() {
+            vp.fit(f64::from(v.map.width_px), f64::from(v.map.height_px));
+        }
+    };
+    let keys = window_event_listener(leptos::ev::keydown, move |ev| {
+        if !super::dm::page_key(&ev) {
+            return;
+        }
+        match display_key(&ev.key()) {
+            Some(DisplayKey::FullScreen) => {
+                ev.prevent_default();
+                full_screen(());
+            }
+            Some(DisplayKey::Fit) => {
+                ev.prevent_default();
+                fit_view();
+            }
+            None => {}
+        }
+    });
+    on_cleanup(move || keys.remove());
 
     let scene = move || {
         let blackout = display.with(|d| d.as_ref().is_some_and(|d| d.blackout));
@@ -526,11 +564,7 @@ pub fn DisplayView(
             <div class="mimir-display__controls">
                 <ActionIcon title="Zoom in" on_click=Callback::new(move |_| vp.zoom(1.25))>"+"</ActionIcon>
                 <ActionIcon title="Zoom out" on_click=Callback::new(move |_| vp.zoom(0.8))>"−"</ActionIcon>
-                <ActionIcon title="Fit the map" on_click=Callback::new(move |_| {
-                    if let Some(v) = view.get_untracked() {
-                        vp.fit(f64::from(v.map.width_px), f64::from(v.map.height_px));
-                    }
-                })>"⤢"</ActionIcon>
+                <ActionIcon title="Fit the map" on_click=Callback::new(move |_| fit_view())>"⤢"</ActionIcon>
                 <ActionIcon title="Full screen" on_click=Callback::new(full_screen)>"⛶"</ActionIcon>
             </div>
         </div>
@@ -807,5 +841,13 @@ mod tests {
             shadows: true,
         }];
         assert!(token_seen(&v.tokens[1], &v, &sight(&v, Some(&lit))));
+    }
+
+    #[test]
+    fn the_display_keys() {
+        assert_eq!(display_key("F11"), Some(DisplayKey::FullScreen));
+        assert_eq!(display_key("f"), Some(DisplayKey::FullScreen));
+        assert_eq!(display_key("R"), Some(DisplayKey::Fit));
+        assert_eq!(display_key("x"), None);
     }
 }

@@ -58,6 +58,10 @@ test('run a combat from the tracker and show the order to players', async ({ pag
   await expect(page.locator('.mimir-tracker__row', { hasText: 'Sam' }).getByText('Conc.')).toHaveCount(0)
   await expect(page.locator('.mimir-tracker__row', { hasText: 'Sam' }).locator('.mimir-tracker__hp')).toHaveText('12/20')
   await expect(page.getByLabel('Recent HP changes')).toContainText('−8 (round 1)')
+  // Max HP changes at any time; the current HP stays within it.
+  await page.getByLabel('Max HP').fill('10')
+  await page.getByLabel('Max HP').press('Tab')
+  await expect(page.locator('.mimir-tracker__row', { hasText: 'Sam' }).locator('.mimir-tracker__hp')).toHaveText('10/10')
 
   // A condition with a duration; a click on its pill removes it.
   await page.getByLabel('Condition').selectOption('poisoned')

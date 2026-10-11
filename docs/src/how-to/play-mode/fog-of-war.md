@@ -48,7 +48,7 @@ The players never see this token, even where a PC can see it.
 - Choose **bright**, **dim** or **darkness** to set the light level of the map.
 - Turn off **Line of sight** to let the party see through walls. Turn it on again to cut their sight at walls.
 
-The map keeps these settings, and the player display follows them. To see the walls of the map file, turn on **Walls**. Only you see them.
+The map keeps these settings, and the player display follows them. To see the walls of the map file and how far the monsters see, turn on **Overlays**. Only you see them.
 
 To see exactly what the players see, open the player display: click **Open player display**.
 

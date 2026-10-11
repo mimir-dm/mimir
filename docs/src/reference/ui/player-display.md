@@ -47,7 +47,8 @@ The server sends the display only what the players may see.
 |---------|----------|
 | **Zoom in**, **Zoom out** | Zoom the view |
 | **Fit the map** | Fit the whole map in the screen |
-| **Full screen** | Ask the browser for full screen |
+| **Full screen**, `F` or `F11` | Ask the browser for full screen |
+| `R` | Fit the map |
 | Drag, pinch, mouse wheel | Pan and zoom |
 
 The view of the display is its own. It does not follow the zoom of the DM map.

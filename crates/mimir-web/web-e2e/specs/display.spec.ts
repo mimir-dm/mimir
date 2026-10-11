@@ -151,5 +151,11 @@ test('the display pans and zooms for the viewer', async ({ page, context }) => {
   await display.mouse.move(box.x + 300, box.y + 260, { steps: 4 })
   await display.mouse.up()
   await expect.poll(() => g.getAttribute('transform')).not.toBe(zoomed)
+  // Keys: R resets the view; F asks for full screen.
+  await display.keyboard.press('r')
+  await expect.poll(() => g.getAttribute('transform')).toBe(before)
+  await display.keyboard.press('f')
+  await expect.poll(() => display.evaluate(() => document.fullscreenElement !== null)).toBe(true)
+  await display.evaluate(() => document.exitFullscreen())
   await page.request.put(`/api/v1/campaigns/${campaign}/display`, { headers: auth, data: { map_id: null } })
 })

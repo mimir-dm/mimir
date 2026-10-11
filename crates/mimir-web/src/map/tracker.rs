@@ -596,11 +596,13 @@ fn details(
     let amount = RwSignal::new(String::new());
     let temp = RwSignal::new(e.temp_hp.to_string());
     let max = RwSignal::new(String::new());
+    let max_now = RwSignal::new(e.max_hp.map(|m| m.to_string()).unwrap_or_default());
     let condition = RwSignal::new(String::new());
     let rounds = RwSignal::new(String::new());
     let concentrating = RwSignal::new(e.concentrating);
     let valid = Signal::derive(move || positive_int(&amount.get(), 0).is_none());
-    let (id1, id2, id3, id4, id5, id6) = (
+    let (id1, id2, id3, id4, id5, id6, id7) = (
+        id.clone(),
         id.clone(),
         id.clone(),
         id.clone(),
@@ -661,6 +663,15 @@ fn details(
                     on_change=Callback::new(move |v: String| {
                         let n = positive_int(&v, 0).unwrap_or(0);
                         whole("PATCH", format!("/combat-entries/{id3}"), json!({ "temp_hp": n }));
+                    }) />
+            })}
+            // Max HP changes at any time; the current HP stays within it.
+            {has_hp.then(|| view! {
+                <TextInput label="Max HP" value=max_now input_type="number"
+                    on_change=Callback::new(move |v: String| {
+                        if let Some(n) = positive_int(&v, 1) {
+                            whole("PATCH", format!("/combat-entries/{id7}"), json!({ "max_hp": n }));
+                        }
                     }) />
             })}
             {(!has_hp).then(|| view! {

@@ -89,7 +89,7 @@ Mimir hides tokens that no PC can see, also when fog is off. Fog hides the map; 
 
 ## One Source of Truth
 
-The **Line of sight** switch, the **bright / dim / darkness** control, **Reveal map** and the doors are part of the map. The server keeps them, and the DM map and the player display both read them. The server builds the player view, and the display draws only that, so what the DM sets is what the players get. Only **Walls**, a drawing aid, is on the DM's view alone.
+The **Line of sight** switch, the **bright / dim / darkness** control, **Reveal map** and the doors are part of the map. The server keeps them, and the DM map and the player display both read them. The server builds the player view, and the display draws only that, so what the DM sets is what the players get. Only **Overlays**, a drawing aid, is on the DM's view alone.
 
 The controls are in the [DM Map reference](../reference/ui/dm-map.md), and common tasks in the [Fog of War how-to](../how-to/play-mode/fog-of-war.md).
 

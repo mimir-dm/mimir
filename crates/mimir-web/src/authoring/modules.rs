@@ -111,7 +111,8 @@ pub fn ModuleDialog(
     }
 }
 
-/// The module's actions on its page: Edit, and More → Delete.
+/// The module's actions on its page: Play (its first map), Edit, and
+/// More → Delete.
 #[component]
 pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl IntoView {
     let editing = RwSignal::new(false);
@@ -122,6 +123,16 @@ pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl In
     let file_name = StoredValue::new(module.name.clone());
     let campaign = StoredValue::new(module.campaign_id.clone());
     let name = module.name.clone();
+    // Play opens the DM map of the module's first map (MIMIR-T-0729).
+    let first_map = LocalResource::new(move || async move {
+        api::module_list::<mimir_wire::MapSummary>(id.get_value(), "maps")
+            .await
+            .ok()
+            .and_then(|mut l| {
+                l.sort_by_key(|m| m.sort_order);
+                l.into_iter().next()
+            })
+    });
     let navigate = use_navigate();
     let remove = move |_| {
         let navigate = navigate.clone();
@@ -137,6 +148,9 @@ pub fn ModuleActions(module: ModuleSummary, on_changed: Callback<()>) -> impl In
     };
     view! {
         <Group>
+            {move || first_map.get().flatten().map(|m| view! {
+                <a class="cl-btn cl-btn--filled" href=format!("/maps/{}", m.id)>"Play"</a>
+            })}
             <Button variant="light" on_click=Callback::new(move |_| editing.set(true))>"Edit module"</Button>
             <Menu label="More" aria_label="More module actions" align="end">
                 <MenuItem on_click=Callback::new(move |_| printing.set(true))>"PDF…"</MenuItem>

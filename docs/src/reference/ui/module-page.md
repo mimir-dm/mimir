@@ -8,6 +8,7 @@ The module page (`/modules/<id>`) holds one adventure: its documents, NPCs, maps
 |---------|----------|
 | Module name | The title, with "Module …" (its number) under it |
 | **Modules** | Back to the **Modules** tab of the campaign |
+| **Play** | Open the DM map of the first map of the module (shown when the module has a map) |
 | **Edit module** | Change the **Name**, **Type** and **Description** |
 | **More** | The module menu (below) |
 

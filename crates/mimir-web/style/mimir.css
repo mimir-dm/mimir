@@ -172,6 +172,18 @@
 .mimir-map__door--open { stroke-dasharray: 4 8; stroke-opacity: 0.7; }
 /* The map file's lights and walls (MIMIR-T-0728). */
 .mimir-map__file-light { pointer-events: none; }
+/* Overlays: how far a monster or an NPC sees (MIMIR-T-0729). */
+.mimir-map__ring {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+  stroke-opacity: 0.8;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+/* The DM map in full screen fills it. */
+.mimir-map:fullscreen { background: var(--bg); padding: var(--space-md); overflow: auto; }
 .mimir-map__walls {
   fill: none;
   stroke: var(--bad);
