@@ -4,7 +4,7 @@
 //! catalog reader is MIMIR-T-0723.
 
 use axum::extract::{Path, Query, State};
-use axum::Json;
+use axum::{Extension, Json};
 use mimir_core::models::catalog::{ItemFilter, MonsterFilter};
 use mimir_core::services::catalog::find_class_level_info;
 use mimir_core::services::{
@@ -223,13 +223,22 @@ pub async fn spells(
 #[derive(Debug, Deserialize)]
 pub struct ItemQuery {
     pub search: String,
+    /// The campaign whose homebrew joins the results (source "HB",
+    /// MIMIR-T-0722).
+    #[serde(default)]
+    pub campaign: Option<String>,
 }
 
 /// `GET /catalog/items?search=rope`: up to 50 by name.
 pub async fn items(
     State(state): State<AppState>,
+    Extension(caller): Extension<crate::auth::Caller>,
     Query(q): Query<ItemQuery>,
 ) -> ApiResult<Vec<wire::Choice>> {
+    // A player sees only their own campaign's homebrew.
+    if let Some(c) = q.campaign.as_deref().filter(|c| !c.is_empty()) {
+        super::scope::campaign(&caller, c)?;
+    }
     let needle = q.search.trim().to_string();
     if needle.chars().count() < 2 {
         return Ok(Json(Vec::new()));
@@ -255,6 +264,9 @@ pub async fn items(
                     choice(i.name, i.source, (!detail.is_empty()).then_some(detail))
                 })
                 .collect();
+            if let Some(c) = q.campaign.as_deref().filter(|c| !c.is_empty()) {
+                list.extend(super::homebrew::choices(conn, "items", c, &needle)?);
+            }
             let lower = needle.to_lowercase();
             list.sort_by_key(|c| {
                 let n = c.name.to_lowercase();
@@ -358,6 +370,9 @@ pub async fn monsters(
                     choice(m.name, m.source, (!detail.is_empty()).then_some(detail))
                 })
                 .collect();
+            if let Some(c) = q.campaign.as_deref().filter(|c| !c.is_empty()) {
+                list.extend(super::homebrew::choices(conn, "monsters", c, &needle)?);
+            }
             let lower = needle.to_lowercase();
             list.sort_by_key(|c| {
                 let n = c.name.to_lowercase();

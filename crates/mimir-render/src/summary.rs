@@ -273,6 +273,8 @@ pub fn item_type_name(code: &str) -> &str {
         "FD" => "Food and drink",
         "$" | "$C" | "$G" | "$A" => "Treasure",
         "EXP" => "Explosive",
+        // The desktop's homebrew form wrote wondrous items as "W".
+        "W" => "Wondrous item",
         "OTH" => "Other",
         other => other,
     }

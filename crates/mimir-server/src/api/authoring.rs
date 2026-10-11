@@ -420,6 +420,19 @@ pub async fn add_module_monster(
     }
     state
         .with_db(move |conn| {
+            // "HB": the campaign's homebrew monster of that name (MIMIR-T-0722).
+            let monster = match monster {
+                MonsterRef::Catalog { name, source } if source.eq_ignore_ascii_case("HB") => {
+                    let module = ModuleService::new(conn)
+                        .get(&id)?
+                        .ok_or_else(|| ServiceError::not_found("Module", &id))?;
+                    let hb = HomebrewService::new(conn)
+                        .get_monster_by_name(&module.campaign_id, &name)?
+                        .ok_or_else(|| ServiceError::not_found("Homebrew monster", &name))?;
+                    MonsterRef::Homebrew { id: hb.id }
+                }
+                other => other,
+            };
             let mut input = AddMonsterInput::new(id, monster).with_quantity(quantity);
             if let Some(n) = text(body.display_name) {
                 input = input.with_display_name(n);

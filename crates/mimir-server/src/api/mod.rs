@@ -12,6 +12,7 @@ pub mod characters;
 pub mod combat;
 pub mod convert;
 pub mod display;
+pub mod homebrew;
 pub mod links;
 pub mod maps;
 pub mod party;
@@ -66,6 +67,7 @@ pub fn routes() -> Vec<ApiRoute> {
     use campaigns as c;
     use catalog as cat;
     use characters as ch;
+    use homebrew as hb;
     use maps as m;
     use reference as rf;
     use Access::{Dm, Player};
@@ -163,6 +165,20 @@ pub fn routes() -> Vec<ApiRoute> {
             get(rf::entry),
         ),
         route("/catalog/sources", Dm, G, get(rf::sources)),
+        // Homebrew (MIMIR-T-0722).
+        route(
+            "/campaigns/{id}/homebrew/{kind}",
+            Dm,
+            &["GET", "POST"],
+            get(hb::list).post(hb::create),
+        ),
+        route(
+            "/homebrew/{kind}/{id}",
+            Dm,
+            &["GET", "PATCH", "DELETE"],
+            get(hb::get).patch(hb::patch).delete(hb::delete),
+        ),
+        route("/homebrew/{kind}/{id}/usage", Dm, G, get(hb::usage_of)),
         route("/books/{source}", Dm, G, get(rf::book)),
         route("/book-images/{*path}", Dm, G, get(rf::book_image)),
         route("/catalog/races", Dm, G, get(cat::races)),
