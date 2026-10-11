@@ -87,10 +87,23 @@ pub fn InventoryPanel(
     let search = RwSignal::new(String::new());
     let results = RwSignal::new(Vec::<Choice>::new());
     let quantity = RwSignal::new("1".to_string());
+    // The campaign's homebrew items join the search (source HB, MIMIR-T-0722).
+    let campaign = StoredValue::new(
+        sheet
+            .campaign_id
+            .clone()
+            .map(|c| format!("&campaign={}", encode(&c)))
+            .unwrap_or_default(),
+    );
     let find = move || {
         let q = search.get_untracked();
         spawn_local(async move {
-            match api::get::<Vec<Choice>>(format!("/catalog/items?search={}", encode(&q))).await {
+            let path = format!(
+                "/catalog/items?search={}{}",
+                encode(&q),
+                campaign.get_value()
+            );
+            match api::get::<Vec<Choice>>(path).await {
                 Ok(list) => results.set(list),
                 Err(e) => fail(e),
             }

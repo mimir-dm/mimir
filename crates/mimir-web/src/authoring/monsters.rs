@@ -15,7 +15,10 @@ use crate::components::or_dash;
 use crate::reference::detail::{Reference, Target};
 
 #[component]
-pub fn MonstersPanel(#[prop(into)] module_id: Signal<String>) -> impl IntoView {
+pub fn MonstersPanel(
+    #[prop(into)] module_id: Signal<String>,
+    #[prop(into)] campaign_id: Signal<String>,
+) -> impl IntoView {
     let version = RwSignal::new(0u32);
     let monsters = LocalResource::new(move || {
         version.track();
@@ -103,7 +106,7 @@ pub fn MonstersPanel(#[prop(into)] module_id: Signal<String>) -> impl IntoView {
             let e = error.get();
             (!e.is_empty()).then(|| view! { <Alert color=token::BAD>{e}</Alert> })
         }}
-        <AddMonster module_id=module_id on_added=reload />
+        <AddMonster module_id=module_id campaign_id=campaign_id on_added=reload />
         {move || editing.get().map(|m| view! { <EditMonster monster=m on_done=Callback::new(move |changed: bool| {
             editing.set(None);
             if changed { reload.run(()); }
@@ -121,16 +124,22 @@ pub fn MonstersPanel(#[prop(into)] module_id: Signal<String>) -> impl IntoView {
 
 /// Search the catalog and add a monster (one; the same again adds one).
 #[component]
-fn AddMonster(#[prop(into)] module_id: Signal<String>, on_added: Callback<()>) -> impl IntoView {
+fn AddMonster(
+    #[prop(into)] module_id: Signal<String>,
+    #[prop(into)] campaign_id: Signal<String>,
+    on_added: Callback<()>,
+) -> impl IntoView {
     let search = RwSignal::new(String::new());
     let results = RwSignal::new(None::<Result<Vec<Choice>, String>>);
     let added = RwSignal::new(String::new());
     let find = move || {
         let q = search.get_untracked();
         spawn_local(async move {
+            // The campaign's homebrew monsters join the search (HB).
             let path = format!(
-                "/catalog/monsters?search={}",
-                js_sys::encode_uri_component(q.trim())
+                "/catalog/monsters?search={}&campaign={}",
+                js_sys::encode_uri_component(q.trim()),
+                js_sys::encode_uri_component(&campaign_id.get_untracked())
             );
             results.set(Some(
                 api::get::<Vec<Choice>>(path).await.map_err(api::message),

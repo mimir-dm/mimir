@@ -90,7 +90,7 @@ pub fn ModulePage() -> impl IntoView {
                     <MapsPanel campaign_id=campaign_id module_id=Signal::derive(move || id.get()) />
                 })}
             </TabPanel>
-            <TabPanel value="dangers"><MonstersPanel module_id=id /></TabPanel>
+            <TabPanel value="dangers"><MonstersPanel module_id=id campaign_id=campaign_id /></TabPanel>
             <TabPanel value="notes">{loaded(notes, notes_view)}</TabPanel>
         </Tabs>
     }

@@ -3,6 +3,8 @@
 
 pub mod campaigns;
 pub mod documents;
+pub mod homebrew;
+pub mod homebrew_form;
 pub mod maps;
 pub mod modules;
 pub mod monsters;

@@ -458,3 +458,32 @@ for (const theme of themes) {
     await page.screenshot({ path: `${outDir}/reference-statblock--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
   })
 }
+
+// Homebrew (MIMIR-T-0722): the tab with a monster, the item editor.
+for (const theme of themes) {
+  test(`homebrew desktop ${theme}`, async ({ page }) => {
+    const campaign = await campaignId(page)
+    await signIn(page, theme)
+    await page.goto(`/campaigns/${campaign}/homebrew?kind=monsters`)
+    await page.getByRole('navigation', { name: 'Homebrew' }).getByRole('link').first().click()
+    await expect(page.locator('.mimir-split__main .detail')).toBeVisible()
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/homebrew--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+  test(`homebrew-editor desktop ${theme}`, async ({ page }) => {
+    const campaign = await campaignId(page)
+    await signIn(page, theme)
+    await page.goto(`/campaigns/${campaign}/homebrew?kind=items`)
+    await page.getByRole('button', { name: 'New' }).click()
+    const d = page.getByRole('dialog')
+    await d.getByLabel('Name').fill('Flame Tongue Shortsword')
+    await d.getByLabel('Kind').selectOption('weapon')
+    await d.getByLabel('Rarity').selectOption('rare')
+    await d.getByLabel('Damage', { exact: true }).fill('1d6')
+    await d.getByLabel('Damage type').selectOption('P')
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${outDir}/homebrew-editor--desktop--${theme}.png`, animations: 'disabled', caret: 'hide' })
+  })
+}

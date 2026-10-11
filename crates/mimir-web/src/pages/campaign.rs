@@ -26,6 +26,7 @@ pub fn tab_of(path: &str) -> &'static str {
         Some("modules") => "modules",
         Some("npcs") => "npcs",
         Some("pcs") => "pcs",
+        Some("homebrew") => "homebrew",
         _ => "campaign",
     }
 }
@@ -55,6 +56,7 @@ pub fn CampaignDashboard() -> impl IntoView {
             TabItem::new("modules", "Modules").href(format!("{base}/modules")),
             TabItem::new("npcs", "NPCs").href(format!("{base}/npcs")),
             TabItem::new("pcs", "PCs").href(format!("{base}/pcs")),
+            TabItem::new("homebrew", "Homebrew").href(format!("{base}/homebrew")),
         ]
     };
     let name = move || match campaign.get() {
@@ -296,6 +298,7 @@ mod tests {
         assert_eq!(tab_of("/campaigns/c1/modules"), "modules");
         assert_eq!(tab_of("/campaigns/c1/npcs/"), "npcs");
         assert_eq!(tab_of("/campaigns/c1/pcs"), "pcs");
+        assert_eq!(tab_of("/campaigns/c1/homebrew"), "homebrew");
     }
 }
 

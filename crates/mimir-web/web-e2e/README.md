@@ -37,6 +37,8 @@ diff images to `<after>/diff`.
   characters page (move, delete), NPC fields on the sheet.
 - `specs/reference.spec.ts`: the catalog, cross-references, the book reader,
   the module inspector.
+- `specs/homebrew.spec.ts`: homebrew items (form and JSON), monsters
+  (copied, used by a module, deleted), spells.
 - `specs/editor.spec.ts`: the rich editor. The fixture documents keep their
   structure and words through it; the toolbar; a numbered list continues.
 - `specs/capture.spec.ts`: the screens to capture.

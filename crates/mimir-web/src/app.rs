@@ -16,6 +16,7 @@ use mimir_wire::{AuthMode, Role, Session};
 
 use crate::api;
 use crate::auth::{self, Gate};
+use crate::authoring::homebrew::HomebrewTab;
 use crate::character::sheet::CharacterPage;
 use crate::map::display::DisplayPage;
 use crate::map::dm::DmMapPage;
@@ -200,6 +201,7 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                         <Route path=path!("modules") view=ModulesTab />
                         <Route path=path!("npcs") view=NpcsTab />
                         <Route path=path!("pcs") view=PcsTab />
+                        <Route path=path!("homebrew") view=HomebrewTab />
                     </ParentRoute>
                     <Route path=path!("/modules/:id") view=ModulePage />
                     <Route path=path!("/maps/:id") view=DmMapPage />

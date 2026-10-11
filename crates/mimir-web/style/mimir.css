@@ -693,3 +693,26 @@
   .mimir-catalog__nav { display: none; }
   .mimir-catalog__kinds { display: flex; }
 }
+
+/* Homebrew (MIMIR-T-0722). */
+.mimir-doclist .cl-navlink.mimir-homebrew__item { flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; height: auto; padding-top: var(--space-xs); padding-bottom: var(--space-xs); }
+.mimir-homebrew__line { font-size: 0.75rem; color: var(--fg-2); }
+.mimir-homebrew__editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-lg); align-items: start; }
+@media (max-width: 860px) { .mimir-homebrew__editor { grid-template-columns: minmax(0, 1fr); } }
+.mimir-homebrew__inputs, .mimir-homebrew__form { display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-homebrew__group { display: flex; flex-direction: column; gap: var(--space-sm); border: 1px solid var(--border-fainter); border-radius: var(--radius-sm); padding: var(--space-sm) var(--space-md); }
+.mimir-homebrew__group legend { font-weight: 600; padding: 0 var(--space-xs); }
+.mimir-homebrew__json {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  min-height: 24rem;
+  width: 100%;
+  padding: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  resize: vertical;
+}
+.mimir-homebrew__preview { border-left: 1px solid var(--border-fainter); padding-left: var(--space-lg); max-height: 70vh; overflow: auto; }
+.mimir-homebrew__picked { background: var(--border-fainter); }
