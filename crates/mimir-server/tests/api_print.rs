@@ -71,10 +71,24 @@ async fn every_pdf_route_answers_a_pdf() {
         .as_str()
         .unwrap()
         .to_string();
+    // A document with the adventure forms (MIMIR-T-0737): boxes, a stat
+    // block line from the catalog, one it does not have, an escaped line.
+    let forms_doc = {
+        let mut conn = mimir_core::db::create_connection(&url).unwrap();
+        let campaign_id = campaign.clone();
+        let d = mimir_core::services::DocumentService::new(&mut conn)
+            .create(
+                mimir_core::services::CreateDocumentInput::for_campaign(&campaign_id, "Forms")
+                    .with_content("> [!read-aloud]\n>\n> Fog.\n\n> [!sidebar] Tactics\n>\n> Flee.\n\n{@creature Goblin|MM}\n\n{@creatureFluff Goblin|MM}\n\n{@creature Nobody|XX}\n\n\\{@creature Rat|MM}\n\nMeet {@creature Lich|MM|the keeper}.\n"),
+            )
+            .unwrap();
+        d.id
+    };
 
     for path in [
         format!("/characters/{pc}/pdf?include_compact_sheet=true&include_battle_card=true"),
         format!("/documents/{doc}/pdf"),
+        format!("/documents/{forms_doc}/pdf"),
         format!("/modules/{module}/pdf?include_documents=true&include_monsters=true"),
         format!("/modules/{module}/monster-cards?show_cut_lines=true"),
         format!("/maps/{map}/pdf?include_preview=true&preview_grid=true"),

@@ -54,7 +54,10 @@ pub use builder::{
 };
 pub use error::{PrintError, Result};
 pub use map_renderer::{MapPrintOptions, RenderMap, RenderToken, RenderedMapForPrint};
-pub use markdown::{markdown_to_typst, parse_campaign_document, ParsedDocument};
+pub use markdown::{
+    markdown_to_typst, markdown_to_typst_with, parse_campaign_document,
+    parse_campaign_document_with, ParsedDocument, StatblockResolver,
+};
 pub use sections::CharacterBattleCardSection;
 pub use sections::MarkdownSection;
 pub use sections::SpellCardsSection;

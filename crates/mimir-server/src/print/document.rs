@@ -227,6 +227,59 @@ fn load_monster_token_image(
 }
 
 /// Export a single campaign document to PDF
+/// A document's markdown as a section, its stat block lines from the
+/// catalog (MIMIR-T-0737).
+fn doc_section(
+    db: &mut diesel::SqliteConnection,
+    content: &str,
+) -> mimir_print::Result<MarkdownSection> {
+    let db = std::cell::RefCell::new(db);
+    let resolve = |tag: &str, name: &str, source: Option<&str>| {
+        statblock_typst(&mut db.borrow_mut(), tag, name, source)
+    };
+    MarkdownSection::from_markdown_with(content, &resolve)
+}
+
+/// Typst for a stat block line: a creature's stat block, else the entry's
+/// name and text (a creature's lore for `{@creatureFluff}`). `None` when
+/// the catalog does not have it.
+fn statblock_typst(
+    db: &mut diesel::SqliteConnection,
+    tag: &str,
+    name: &str,
+    source: Option<&str>,
+) -> Option<String> {
+    use mimir_print::sections::card_utils::flatten_entries;
+    use mimir_print::sections::monster_cards::{monster_statblock_typst, plain_tags};
+    let (kind, lore) = if tag == "creatureFluff" {
+        ("creature", true)
+    } else {
+        (tag, false)
+    };
+    let category = crate::adventure::category_of(kind)?;
+    let v = crate::api::reference::entry_named(db, category, name, source.unwrap_or(""))
+        .ok()
+        .flatten()?;
+    if category == "monsters" && !lore {
+        return Some(monster_statblock_typst(&v));
+    }
+    let entries = if lore {
+        v.pointer("/fluff/entries")
+    } else {
+        v.get("entries")
+    };
+    let text = entries
+        .and_then(Value::as_array)
+        .map(|l| flatten_entries(l))
+        .unwrap_or_default();
+    let lit = |s: &str| format!("#\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""));
+    Some(format!(
+        "#block(width: 100%, inset: 8pt, radius: 3pt, stroke: 0.5pt + luma(150))[*{}* \\\n{}]\n\n",
+        lit(v["name"].as_str().unwrap_or(name)),
+        lit(&plain_tags(&text))
+    ))
+}
+
 pub fn export_campaign_document(
     app_state: &PrintCtx,
     print_state: &PrintState,
@@ -257,7 +310,7 @@ pub fn export_campaign_document(
     };
 
     // Build the PDF using markdown section
-    let section = match MarkdownSection::from_markdown(&document.content) {
+    let section = match doc_section(&mut db, &document.content) {
         Ok(s) => s.with_title(&document.title),
         Err(e) => return ApiResponse::err(format!("Failed to parse markdown: {}", e)),
     };
@@ -367,7 +420,7 @@ pub fn export_campaign_documents(
         };
 
         for doc in documents {
-            match MarkdownSection::from_markdown(&doc.content) {
+            match doc_section(&mut db, &doc.content) {
                 Ok(section) => {
                     info!("  Adding document: {}", doc.title);
                     builder = builder.append(section.with_title(&doc.title));
@@ -412,7 +465,7 @@ pub fn export_campaign_documents(
             };
 
             for doc in module_docs {
-                match MarkdownSection::from_markdown(&doc.content) {
+                match doc_section(&mut db, &doc.content) {
                     Ok(section) => {
                         let title = format!("{}: {}", module.name, doc.title);
                         info!("    Adding document: {}", title);
@@ -1082,7 +1135,7 @@ pub fn export_module_documents(
         };
 
         for doc in documents {
-            match MarkdownSection::from_markdown(&doc.content) {
+            match doc_section(&mut db, &doc.content) {
                 Ok(section) => {
                     info!("  Adding document: {}", doc.title);
                     builder = builder.append(section.with_title(&doc.title));
@@ -1456,5 +1509,27 @@ pub fn export_module_documents(
             error!("Failed to generate module PDF: {:?}", e);
             ApiResponse::err(format!("Failed to generate PDF: {}", e))
         }
+    }
+}
+
+#[cfg(test)]
+mod statblock_tests {
+    use super::*;
+
+    #[test]
+    fn stat_block_lines_from_the_catalog() {
+        let dir = tempfile::tempdir().unwrap();
+        let url = dir.path().join("mimir.db").to_string_lossy().into_owned();
+        let mut conn = mimir_core::db::init_database(&url).unwrap();
+        mimir_core::seed::srd::seed_srd_catalog(&mut conn).unwrap();
+        let goblin = statblock_typst(&mut conn, "creature", "Goblin", Some("MM")).unwrap();
+        assert!(goblin.contains("#\"Scimitar\""), "{goblin}");
+        // A wrong source falls back to the name.
+        assert!(statblock_typst(&mut conn, "creature", "Goblin", Some("LMoP")).is_some());
+        assert!(statblock_typst(&mut conn, "creature", "Nobody", Some("XX")).is_none());
+        assert!(statblock_typst(&mut conn, "deck", "Tarokka", None).is_none());
+        let section = doc_section(&mut conn, "{@creature Goblin|MM}\n").unwrap();
+        let pdf = DocumentBuilder::new("T").append(section).to_pdf().unwrap();
+        assert!(pdf.starts_with(b"%PDF"));
     }
 }

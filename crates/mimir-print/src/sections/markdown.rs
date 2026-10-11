@@ -4,7 +4,9 @@ use std::path::Path;
 
 use crate::builder::{RenderContext, Renderable};
 use crate::error::{PrintError, Result};
-use crate::markdown::{markdown_to_typst, parse_campaign_document};
+use crate::markdown::{
+    markdown_to_typst, markdown_to_typst_with, parse_campaign_document_with, StatblockResolver,
+};
 
 /// A markdown document section with optional YAML frontmatter
 pub struct MarkdownSection {
@@ -19,7 +21,13 @@ pub struct MarkdownSection {
 impl MarkdownSection {
     /// Create from raw markdown string (with optional YAML frontmatter)
     pub fn from_markdown(markdown: &str) -> Result<Self> {
-        let parsed = parse_campaign_document(markdown)?;
+        Self::from_markdown_with(markdown, &|_, _, _| None)
+    }
+
+    /// As [`Self::from_markdown`], with stat block lines from `resolve`
+    /// (MIMIR-T-0737).
+    pub fn from_markdown_with(markdown: &str, resolve: StatblockResolver) -> Result<Self> {
+        let parsed = parse_campaign_document_with(markdown, resolve)?;
 
         let title = parsed
             .frontmatter
@@ -57,6 +65,19 @@ impl MarkdownSection {
             title: title.map(String::from),
             doc_type: None,
             typst_content: markdown_to_typst(content),
+        }
+    }
+
+    /// As [`Self::from_content`], with stat block lines from `resolve`.
+    pub fn from_content_with(
+        content: &str,
+        title: Option<&str>,
+        resolve: StatblockResolver,
+    ) -> Self {
+        Self {
+            title: title.map(String::from),
+            doc_type: None,
+            typst_content: markdown_to_typst_with(content, resolve),
         }
     }
 

@@ -4,11 +4,77 @@
 //! and converting them to Typst markup for PDF rendering.
 
 use gray_matter::{engine::YAML, Matter, ParsedEntity};
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use std::ops::Range;
+
+use pulldown_cmark::{CowStr, Event, Options, Parser, Tag, TagEnd};
 use serde_json::Value;
 use serde_yaml::Value as YamlValue;
 
 use crate::error::{PrintError, Result};
+use crate::sections::monster_cards::plain_tags;
+
+/// Typst for a stat block line (`{@creature Name|Source}`): the tag, the
+/// name and the source. `None`: the line prints as a box with the name.
+pub type StatblockResolver<'a> = &'a dyn Fn(&str, &str, Option<&str>) -> Option<String>;
+
+/// The tags a stat block line may hold (as the web's converter).
+const STATBLOCK_TAGS: &[&str] = &[
+    "creature",
+    "creatureFluff",
+    "item",
+    "spell",
+    "background",
+    "deck",
+    "object",
+    "vehicle",
+    "trap",
+    "hazard",
+    "race",
+    "feat",
+    "optfeature",
+    "reward",
+    "table",
+];
+
+/// A stat block line: (tag, name, source).
+pub fn statblock_line(text: &str) -> Option<(&str, &str, Option<&str>)> {
+    let inner = text.trim().strip_prefix("{@")?.strip_suffix('}')?;
+    if inner.contains(['{', '}']) {
+        return None;
+    }
+    let (tag, args) = inner.split_once(' ')?;
+    if !STATBLOCK_TAGS.contains(&tag) {
+        return None;
+    }
+    let mut parts = args.split('|');
+    let name = parts.next()?.trim();
+    let source = parts.next().map(str::trim).filter(|s| !s.is_empty());
+    (parts.next().is_none() && !name.is_empty()).then_some((tag, name, source))
+}
+
+fn typst_lit(s: &str) -> String {
+    format!("#\"{}\"", escape_for_typst_string(s))
+}
+
+/// The opening of a callout box (MIMIR-T-0737), from its marker line.
+fn callout_open(line: &str) -> Option<String> {
+    let line = line.trim_start();
+    if line.starts_with("[!read-aloud]") {
+        return Some(
+            "#block(width: 100%, inset: 8pt, fill: luma(245), stroke: (left: 2pt + rgb(\"#4a7fb0\")))[#set text(style: \"italic\")\n".into(),
+        );
+    }
+    let rest = line.strip_prefix("[!sidebar]")?;
+    let title = rest.trim();
+    let head = if title.is_empty() {
+        String::new()
+    } else {
+        format!("*{}*\n\n", typst_lit(&plain_tags(title)))
+    };
+    Some(format!(
+        "#block(width: 100%, inset: 8pt, fill: luma(240), stroke: (left: 2pt + luma(150)))[{head}"
+    ))
+}
 
 /// A parsed campaign document with frontmatter and converted content.
 #[derive(Debug, Clone)]
@@ -27,6 +93,15 @@ pub struct ParsedDocument {
 /// # Returns
 /// A `ParsedDocument` with the frontmatter as JSON and content as Typst markup
 pub fn parse_campaign_document(markdown: &str) -> Result<ParsedDocument> {
+    parse_campaign_document_with(markdown, &|_, _, _| None)
+}
+
+/// As [`parse_campaign_document`], with stat block lines from `resolve`
+/// (MIMIR-T-0737).
+pub fn parse_campaign_document_with(
+    markdown: &str,
+    resolve: StatblockResolver,
+) -> Result<ParsedDocument> {
     // Parse frontmatter using gray_matter
     let matter = Matter::<YAML>::new();
     let parsed: ParsedEntity<YamlValue> = matter
@@ -45,7 +120,7 @@ pub fn parse_campaign_document(markdown: &str) -> Result<ParsedDocument> {
     };
 
     // Convert markdown content to Typst
-    let typst_content = markdown_to_typst(&parsed.content);
+    let typst_content = markdown_to_typst_with(&parsed.content, resolve);
 
     Ok(ParsedDocument {
         frontmatter,
@@ -64,11 +139,29 @@ pub fn parse_campaign_document(markdown: &str) -> Result<ParsedDocument> {
 /// - Code blocks (converted to raw blocks)
 /// - Tables (converted to Typst table syntax)
 pub fn markdown_to_typst(markdown: &str) -> String {
+    markdown_to_typst_with(markdown, &|_, _, _| None)
+}
+
+/// As [`markdown_to_typst`], with the adventure forms (MIMIR-T-0737):
+/// `> [!read-aloud]` and `> [!sidebar] Title` as boxes, a stat block line
+/// as `resolve` gives it (else a box with the name), and `{@…}` tags as
+/// the words they show.
+pub fn markdown_to_typst_with(markdown: &str, resolve: StatblockResolver) -> String {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_STRIKETHROUGH);
 
-    let parser = Parser::new_ext(markdown, options);
+    // Adjacent text as one event, with its source range (a marker or a tag
+    // is split at brackets by the parser).
+    let mut events: Vec<(Event, Range<usize>)> = Vec::new();
+    for (e, r) in Parser::new_ext(markdown, options).into_offset_iter() {
+        if let (Event::Text(t), Some((Event::Text(prev), pr))) = (&e, events.last_mut()) {
+            *prev = CowStr::from(format!("{prev}{t}"));
+            pr.end = r.end;
+            continue;
+        }
+        events.push((e, r));
+    }
     let mut output = String::new();
     let mut list_depth: usize = 0;
     let mut in_table = false;
@@ -79,7 +172,53 @@ pub fn markdown_to_typst(markdown: &str) -> String {
     let mut link_url = String::new();
     let mut in_link = false;
 
-    for event in parser {
+    // For each open block quote: a callout box (true) or a quote.
+    let mut quotes: Vec<bool> = Vec::new();
+    let mut i = 0;
+    while i < events.len() {
+        let (event, range) = events[i].clone();
+        // A block quote whose first line is a callout marker.
+        if let Event::Start(Tag::BlockQuote(_)) = &event {
+            if let (
+                Some((Event::Start(Tag::Paragraph), _)),
+                Some((Event::Text(t), _)),
+                Some((next, _)),
+            ) = (events.get(i + 1), events.get(i + 2), events.get(i + 3))
+            {
+                if let Some(open) = callout_open(t) {
+                    output.push_str(&open);
+                    quotes.push(true);
+                    i += match next {
+                        Event::End(TagEnd::Paragraph) | Event::SoftBreak | Event::HardBreak => 4,
+                        _ => 3,
+                    };
+                    continue;
+                }
+            }
+        }
+        // A paragraph that is only a stat block tag (not `\{@…}`).
+        if let (
+            Event::Start(Tag::Paragraph),
+            Some((Event::Text(t), _)),
+            Some((Event::End(TagEnd::Paragraph), _)),
+        ) = (&event, events.get(i + 1), events.get(i + 2))
+        {
+            let escaped = markdown
+                .get(range.clone())
+                .is_some_and(|raw| raw.trim_start().starts_with("\\{"));
+            if let (Some((tag, name, source)), false) = (statblock_line(t), escaped) {
+                let block = resolve(tag, name, source).unwrap_or_else(|| {
+                    format!(
+                        "#block(width: 100%, inset: 6pt, stroke: 0.5pt + luma(150))[*{}*]\n\n",
+                        typst_lit(name)
+                    )
+                });
+                output.push_str(&block);
+                i += 3;
+                continue;
+            }
+        }
+        i += 1;
         match event {
             // Headers
             Event::Start(Tag::Heading { level, .. }) => {
@@ -282,9 +421,11 @@ pub fn markdown_to_typst(markdown: &str) -> String {
 
             // Block quotes
             Event::Start(Tag::BlockQuote(_)) => {
+                quotes.push(false);
                 output.push_str("#quote[\n");
             }
             Event::End(TagEnd::BlockQuote(_)) => {
+                quotes.pop();
                 output.push_str("]\n\n");
             }
 
@@ -315,7 +456,7 @@ pub fn markdown_to_typst(markdown: &str) -> String {
             Event::Text(text) => {
                 // Wrap text in Typst string literal to safely handle special characters
                 // This avoids issues with */, #, $, @ etc. in user content
-                let escaped = escape_for_typst_string(&text);
+                let escaped = escape_for_typst_string(&plain_tags(&text));
                 let safe_text = format!("#\"{}\"", escaped);
                 if in_link {
                     link_text.push_str(&safe_text);
@@ -610,5 +751,53 @@ This is a test."#;
         let typst = markdown_to_typst(md);
         // Backslashes should be escaped inside string literal
         assert!(typst.contains(r#"\\to\\file"#));
+    }
+}
+
+#[cfg(test)]
+mod adventure_forms {
+    use super::*;
+    use crate::builder::DocumentBuilder;
+    use crate::sections::MarkdownSection;
+
+    const FORMS: &str = "## Arrival\n\n> [!read-aloud]\n>\n> Fog lies thick.\n\n> [!sidebar] Goblin Tactics\n>\n> They flee.\n\n> A plain quote.\n\n{@creature Goblin|MM}\n\n{@creature Nobody|XX}\n\n\\{@creature Rat|MM}\n\nMeet {@creature Lich|MM|the keeper} at {@area the gate|g1|x}.\n";
+
+    #[test]
+    fn boxes_stat_blocks_and_tags() {
+        let resolve = |tag: &str, name: &str, _: Option<&str>| {
+            (tag == "creature" && name == "Goblin").then(|| "/* GOBLIN STAT BLOCK */\n".to_string())
+        };
+        let t = markdown_to_typst_with(FORMS, &resolve);
+        assert!(
+            t.contains("#block(width: 100%, inset: 8pt, fill: luma(245)"),
+            "{t}"
+        );
+        assert!(t.contains("*#\"Goblin Tactics\"*"), "{t}");
+        assert!(t.contains("#quote["), "{t}");
+        assert!(!t.contains("[!"), "{t}");
+        assert!(t.contains("/* GOBLIN STAT BLOCK */"), "{t}");
+        // A name the resolver does not know: a box with the name.
+        assert!(t.contains("[*#\"Nobody\"*]"), "{t}");
+        // The escaped line is text; tags print as their words.
+        assert!(t.contains("#\"Rat\""), "{t}");
+        assert!(t.contains("#\"Meet the keeper at the gate.\""), "{t}");
+    }
+
+    #[test]
+    fn a_document_with_the_forms_compiles_to_pdf() {
+        let goblin = serde_json::json!({"name": "Goblin", "size": ["S"], "type": "humanoid", "ac": [15],
+            "hp": {"average": 7, "formula": "2d6"}, "speed": {"walk": 30},
+            "str": 8, "dex": 14, "con": 10, "int": 10, "wis": 8, "cha": 8, "cr": "1/4",
+            "action": [{"name": "Scimitar", "entries": ["{@hit 4} to hit."]}]});
+        let resolve = move |tag: &str, _: &str, _: Option<&str>| {
+            (tag == "creature")
+                .then(|| crate::sections::monster_cards::monster_statblock_typst(&goblin))
+        };
+        let section = MarkdownSection::from_content_with(FORMS, Some("Causeway"), &resolve);
+        let pdf = DocumentBuilder::new("Forms")
+            .append(section)
+            .to_pdf()
+            .expect("compiles");
+        assert!(pdf.starts_with(b"%PDF"));
     }
 }

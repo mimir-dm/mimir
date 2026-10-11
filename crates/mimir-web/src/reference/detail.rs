@@ -169,6 +169,56 @@ pub fn load_images(root: &web_sys::Element) {
     }
 }
 
+/// The stat block lines of a document (MIMIR-T-0737): each shows the
+/// entry it names (a creature's lore for `{@creatureFluff}`), from the
+/// catalog. A name the catalog does not have stays a link.
+pub fn fill_statblocks(root: &web_sys::Element) {
+    let Ok(list) = root.query_selector_all(".mimir-statblock-line[data-ref-type]") else {
+        return;
+    };
+    for i in 0..list.length() {
+        let Some(el) = list
+            .get(i)
+            .and_then(|n| n.dyn_into::<web_sys::Element>().ok())
+        else {
+            continue;
+        };
+        if el.get_attribute("data-filled").is_some() {
+            continue;
+        }
+        let _ = el.set_attribute("data-filled", "1");
+        let kind = el.get_attribute("data-ref-type").unwrap_or_default();
+        let Some(category) = summary::category_of(&kind) else {
+            continue;
+        };
+        let name = el.get_attribute("data-ref-name").unwrap_or_default();
+        let source = el
+            .get_attribute("data-ref-source")
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| "-".into());
+        let lore = el.class_list().contains("mimir-statblock-line--lore");
+        spawn_local(async move {
+            let path = format!("/catalog/entry/{category}/{}/{}", enc(&source), enc(&name));
+            let Ok(v) = api::get::<Value>(&path).await else {
+                return;
+            };
+            let html = if lore {
+                let fluff = v
+                    .get("fluff")
+                    .and_then(|f| f.get("entries"))
+                    .cloned()
+                    .unwrap_or_default();
+                mimir_render::entries::entries(&fluff)
+            } else {
+                detail::detail(category, &v)
+            };
+            if !html.is_empty() {
+                el.set_inner_html(&format!(r#"<div class="mimir-statblock">{html}</div>"#));
+            }
+        });
+    }
+}
+
 /// HTML from mimir-render, with cross-references, tooltips and images.
 #[component]
 pub fn Rendered(
@@ -181,7 +231,10 @@ pub fn Rendered(
         html.track();
         if let Some(el) = node.get() {
             // After the new HTML is in.
-            request_animation_frame(move || load_images(&el));
+            request_animation_frame(move || {
+                load_images(&el);
+                fill_statblocks(&el);
+            });
         }
     });
     view! {

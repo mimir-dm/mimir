@@ -149,3 +149,69 @@ test('the toolbar: headings, tables with rows and columns, rule, undo', async ({
   await page.request.delete(`/api/v1/characters/${thorin.id}/link`, { headers: auth })
   await device.close()
 })
+
+// The adventure forms (MIMIR-T-0737): boxes, stat block lines and tags
+// keep their markdown through the editor, the toolbar inserts the boxes,
+// and the viewer shows them, with the stat block from the catalog.
+const FORMS = [
+  '## Arrival',
+  '',
+  '> [!read-aloud]',
+  '>',
+  '> Fog lies thick on the causeway.',
+  '',
+  '> [!sidebar] Goblin Tactics',
+  '>',
+  '> They flee at half their hit points.',
+  '',
+  '{@creature Goblin|MM}',
+  '',
+  '{@creatureFluff Lantern Wisp|MFA}',
+  '',
+  '\\{@creature Rat|MM}',
+  '',
+  'Meet {@creature Lich|MM|the keeper} at the tower.',
+].join('\n')
+
+test('the adventure forms keep their markdown and show as boxes', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/')
+  await page.waitForFunction(() => 'MimirEditor' in window)
+  const once = await trip(page, FORMS)
+  expect(once.markdown).toBe(FORMS)
+  const types = JSON.parse(once.json).content.map((n: { type: string }) => n.type)
+  expect(types).toEqual(['heading', 'callout', 'callout', 'statblockLine', 'statblockLine', 'paragraph', 'paragraph'])
+
+  const campaign = await campaignId(page)
+  const doc = await (
+    await page.request.post(`/api/v1/campaigns/${campaign}/documents`, {
+      headers: auth,
+      data: { title: 'Causeway Notes', content: FORMS },
+    })
+  ).json()
+  await page.goto(`/campaigns/${campaign}?doc=${doc.id}`)
+  const view = page.locator('.mimir-doc-body')
+  await expect(view.locator(':scope > .inset-readaloud')).toContainText('Fog lies thick')
+  await expect(view.locator(':scope > .inset h5')).toHaveText('Goblin Tactics')
+  // The stat block line shows the catalog's stat block.
+  await expect(view.locator('.mimir-statblock-line .mimir-statblock')).toContainText('Scimitar')
+  // The escaped line is text with a link; the inline tag shows its words.
+  await expect(view.locator('p a.creature-ref', { hasText: 'Rat' })).toBeVisible()
+  await expect(view).toContainText('Meet the keeper at the tower.')
+
+  // The toolbar inserts a read-aloud box and a sidebar; Done saves them.
+  await page.getByRole('button', { name: 'Edit', exact: true }).click()
+  const editor = page.getByRole('textbox', { name: 'Document' })
+  // The cursor at the end of the last paragraph.
+  await editor.getByText('at the tower.').click()
+  await page.keyboard.press('End')
+  await page.getByRole('button', { name: 'Insert a read-aloud box' }).click()
+  await page.keyboard.type('The tower leans over the water.')
+  await expect(editor.locator('.mimir-callout--read-aloud')).toHaveCount(2)
+  await page.getByRole('button', { name: 'Done' }).click()
+  await expect(view.locator(':scope > .inset-readaloud')).toHaveCount(2)
+  await expect
+    .poll(async () => (await (await page.request.get(`/api/v1/documents/${doc.id}`, { headers: auth })).json()).content)
+    .toContain('> [!read-aloud]\n>\n> The tower leans over the water.')
+  await page.request.delete(`/api/v1/documents/${doc.id}`, { headers: auth })
+})

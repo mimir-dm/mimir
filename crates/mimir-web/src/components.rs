@@ -103,10 +103,19 @@ pub fn or_dash(text: &Option<String>) -> String {
     }
 }
 
-/// Markdown, rendered (raw HTML escaped, see [`markdown`]).
+/// Markdown, rendered (raw HTML escaped, see [`markdown`]). The DM's
+/// view: tags link to the catalog, stat block lines show their stat block,
+/// catalog images load. `player`: plain text for tags, and nothing that
+/// asks the catalog (a player's notes, MIMIR-T-0737).
 #[component]
-pub fn Markdown(#[prop(into)] source: String) -> impl IntoView {
-    view! { <div class="mimir-prose" inner_html=markdown::to_html(&source)></div> }
+pub fn Markdown(#[prop(into)] source: String, #[prop(optional)] player: bool) -> impl IntoView {
+    if player {
+        let html = markdown::to_html_with(&source, markdown::Catalog::Off);
+        view! { <div class="mimir-prose" inner_html=html></div> }.into_any()
+    } else {
+        let html = markdown::to_html(&source);
+        view! { <crate::reference::detail::Rendered html=html class="mimir-doc-body" /> }.into_any()
+    }
 }
 
 #[cfg(test)]

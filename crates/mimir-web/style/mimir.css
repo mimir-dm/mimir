@@ -904,3 +904,38 @@
 .mimir-book a.area-ref {
   text-decoration: underline dotted;
 }
+
+/* Adventure forms in documents (MIMIR-T-0737): the editor's boxes and
+   stat block lines, as the reader shows them. */
+.mimir-callout {
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--border);
+  background: var(--border-fainter);
+}
+.mimir-callout--read-aloud { border-left-color: var(--ice); font-style: italic; }
+.mimir-callout--read-aloud::before { content: "Read aloud"; }
+.mimir-callout--sidebar::before { content: "Sidebar"; }
+.mimir-callout::before {
+  display: block;
+  font-style: normal;
+  font-size: var(--fs-xs, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-2);
+}
+.mimir-callout__title { font-weight: 600; font-style: normal; }
+.mimir-editor__statblock {
+  margin: var(--space-sm) 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-2);
+}
+.mimir-statblock-line { margin: var(--space-md) 0; }
+.mimir-statblock {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}

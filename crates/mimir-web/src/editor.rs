@@ -77,7 +77,7 @@ const fn tool(
 }
 
 /// The toolbar, in groups: the same features as the desktop editor.
-pub const TOOLBAR: [&[Tool]; 5] = [
+pub const TOOLBAR: [&[Tool]; 6] = [
     &[
         tool("heading", r#"{"level":1}"#, "H1", "Heading 1"),
         tool("heading", r#"{"level":2}"#, "H2", "Heading 2"),
@@ -93,6 +93,11 @@ pub const TOOLBAR: [&[Tool]; 5] = [
         tool("orderedList", "", "1. List", "Numbered list"),
         tool("blockquote", "", "Quote", "Quote"),
         tool("rule", "", "Rule", "Horizontal rule"),
+    ],
+    // The adventure boxes (MIMIR-T-0737).
+    &[
+        tool("readAloud", "", "Read aloud", "Insert a read-aloud box"),
+        tool("sidebar", "", "Sidebar", "Insert a sidebar"),
     ],
     &[
         tool("insertTable", "", "+ Table", "Insert a table"),
@@ -113,7 +118,15 @@ pub const TOOLBAR: [&[Tool]; 5] = [
 pub fn is_toggle(t: &Tool) -> bool {
     matches!(
         t.command,
-        "heading" | "bold" | "italic" | "strike" | "bulletList" | "orderedList" | "blockquote"
+        "heading"
+            | "bold"
+            | "italic"
+            | "strike"
+            | "bulletList"
+            | "orderedList"
+            | "blockquote"
+            | "readAloud"
+            | "sidebar"
     )
 }
 

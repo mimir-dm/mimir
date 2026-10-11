@@ -45,7 +45,7 @@ pub fn NoteCard(
                 <Text size="xs" dimmed=true>{meta}</Text>
                 {actions.map(|a| a.run())}
             </div>
-            <Markdown source=note.content />
+            <Markdown source=note.content player=true />
         </li>
     }
 }

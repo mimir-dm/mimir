@@ -55,17 +55,34 @@ The toolbar has:
 - **Heading 1**, **Heading 2**, **Heading 3**
 - **Bold**, **Italic**, **Strikethrough**
 - **Bullet list**, **Numbered list**, **Quote**, **Horizontal rule**
+- **Insert a read-aloud box**, **Insert a sidebar**
 - **Insert a table**, **Add a row**, **Add a column**, **Delete the row**, **Delete the column**, **Delete the table**
 - **Undo**, **Redo**
 
 Documents are markdown. Type `1. ` at the start of a line to start a numbered list.
+
+## Add Adventure Text
+
+Documents can hold the blocks of a published adventure. The editor shows each one as a box, and the document view and the PDF show it as the reader does.
+
+| In the markdown | Shows as |
+|-----------------|----------|
+| `> [!read-aloud]` and quoted lines after it | A box of text to read aloud to the players |
+| `> [!sidebar] Title` and quoted lines after it | A sidebar with its title |
+| A line that is only `{@creature Goblin\|MM}` | The full stat block of that creature from the catalog |
+| A line that is only `{@creatureFluff Goblin\|MM}` | The creature's lore |
+| `{@creature Goblin\|MM\|two goblins}` in a sentence | A link that opens the creature in the detail drawer |
+
+A stat block line can also name an item, a spell, a background or another catalog entry: `{@item Bag of Holding|DMG}`. To keep a line that is only a tag as text, start it with a backslash: `\{@creature Goblin|MM}`.
+
+In a player's notes, tags show as their words only.
 
 ## Export a Document as PDF
 
 1. Open the document.
 2. Click **PDF**.
 
-The browser downloads the PDF.
+The browser downloads the PDF. Read-aloud boxes and sidebars print as boxes, and stat block lines print the stat block from the catalog.
 
 ## Reorder Documents
 
