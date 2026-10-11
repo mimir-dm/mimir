@@ -174,7 +174,7 @@ async fn a_modules_contents_and_a_document() {
 async fn every_route_needs_a_token() {
     let r = router(Some("dm-secret"));
     for route in mimir_server::api::routes() {
-        let path = format!("/api/v1{}", route.path.replace("{id}", "x"));
+        let path = format!("/api/v1{}", fill(route.path));
         for method in route.methods {
             for bearer in [None, Some("wrong")] {
                 let mut req = Request::builder().method(*method).uri(&path);
@@ -196,4 +196,12 @@ async fn every_route_needs_a_token() {
     }
     let (status, _) = call(&r, "/api/v1/campaigns", Some("dm-secret")).await;
     assert_eq!(status, StatusCode::OK);
+}
+
+/// A route path with each `{param}` filled with "x".
+fn fill(path: &str) -> String {
+    path.split('/')
+        .map(|seg| if seg.starts_with('{') { "x" } else { seg })
+        .collect::<Vec<_>>()
+        .join("/")
 }

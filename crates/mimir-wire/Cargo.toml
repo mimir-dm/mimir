@@ -9,6 +9,8 @@ license = "MIT"
 # mimir-core (conversions from core models live in mimir-server).
 [dependencies]
 serde = { workspace = true }
+# Catalog values passed through as JSON (class progressions).
+serde_json = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

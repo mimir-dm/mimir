@@ -6,6 +6,8 @@
 //! and answer with `mimir-wire` types ([`convert`]).
 
 pub mod campaigns;
+pub mod catalog;
+pub mod characters;
 pub mod combat;
 pub mod convert;
 pub mod display;
@@ -57,11 +59,73 @@ fn route(
 /// The route table.
 pub fn routes() -> Vec<ApiRoute> {
     use campaigns as c;
+    use catalog as cat;
+    use characters as ch;
     use maps as m;
     use Access::{Dm, Player};
     const G: &[&str] = &["GET"];
     vec![
         route("/session", Player, G, get(crate::session)),
+        // Characters (MIMIR-T-0717): a player reaches their own.
+        route(
+            "/characters/{id}",
+            Player,
+            &["GET", "PATCH"],
+            get(ch::get).patch(ch::patch),
+        ),
+        route(
+            "/characters/{id}/inventory",
+            Player,
+            &["POST"],
+            post(ch::add_item),
+        ),
+        route(
+            "/inventory/{id}",
+            Player,
+            &["PATCH", "DELETE"],
+            patch(ch::patch_item).delete(ch::remove_item),
+        ),
+        route(
+            "/characters/{id}/spells",
+            Player,
+            &["POST"],
+            post(ch::add_spell),
+        ),
+        route(
+            "/characters/{id}/spells/{spell_id}",
+            Player,
+            &["PATCH", "DELETE"],
+            patch(ch::patch_spell).delete(ch::remove_spell),
+        ),
+        route(
+            "/characters/{id}/level-up",
+            Player,
+            &["POST"],
+            post(ch::level_up),
+        ),
+        // Catalog choices (reference data).
+        route("/catalog/classes", Player, G, get(cat::classes)),
+        route(
+            "/catalog/classes/{name}/{source}/level-info",
+            Player,
+            G,
+            get(cat::class_level_info),
+        ),
+        route(
+            "/catalog/classes/{name}/subclasses",
+            Player,
+            G,
+            get(cat::subclasses),
+        ),
+        route("/catalog/feats", Player, G, get(cat::feats)),
+        route(
+            "/catalog/optional-features",
+            Player,
+            G,
+            get(cat::optional_features),
+        ),
+        route("/catalog/spells", Player, G, get(cat::spells)),
+        route("/catalog/items", Player, G, get(cat::items)),
         // Player links (DM).
         route(
             "/characters/{id}/link",

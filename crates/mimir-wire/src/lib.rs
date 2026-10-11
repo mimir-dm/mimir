@@ -18,6 +18,7 @@
 //! only. Conversions from `mimir-core` models live in the server.
 
 pub mod campaign;
+pub mod character;
 pub mod combat;
 pub mod error;
 pub mod live;
@@ -25,6 +26,7 @@ pub mod map;
 pub mod patch;
 
 pub use campaign::*;
+pub use character::*;
 pub use combat::*;
 pub use error::{ErrorBody, ErrorCode, ErrorDetail};
 pub use live::*;

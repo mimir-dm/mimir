@@ -1,5 +1,6 @@
 //! Character inventory.
 
+use diesel::OptionalExtension;
 use uuid::Uuid;
 
 use crate::dal::campaign as dal;
@@ -11,6 +12,10 @@ use crate::services::{ServiceError, ServiceResult};
 use super::CharacterService;
 
 /// Input for adding an item to inventory.
+/// A character attunes to at most this many items (5e).
+pub const MAX_ATTUNED: i64 = 3;
+const ATTUNE_LIMIT: &str = "a character can attune to at most 3 items";
+
 #[derive(Debug, Clone)]
 pub struct AddInventoryInput {
     /// Item name from catalog
@@ -78,6 +83,12 @@ impl<'a> CharacterService<'a> {
         if !dal::character_exists(self.conn, character_id)? {
             return Err(ServiceError::not_found("Character", character_id));
         }
+        if input.quantity.is_some_and(|q| q < 1) {
+            return Err(ServiceError::validation("the quantity must be at least 1"));
+        }
+        if input.attuned && dal::count_attuned_items(self.conn, character_id)? >= MAX_ATTUNED {
+            return Err(ServiceError::validation(ATTUNE_LIMIT));
+        }
 
         let inv_id = Uuid::new_v4().to_string();
         let notes_ref = input.notes.as_deref();
@@ -140,6 +151,19 @@ impl<'a> CharacterService<'a> {
         equipped: Option<bool>,
         attuned: Option<bool>,
     ) -> ServiceResult<CharacterInventory> {
+        if quantity.is_some_and(|q| q < 1) {
+            return Err(ServiceError::validation("the quantity must be at least 1"));
+        }
+        if attuned == Some(true) {
+            let item = dal::get_character_inventory(self.conn, inventory_id)
+                .optional()?
+                .ok_or_else(|| ServiceError::not_found("InventoryItem", inventory_id))?;
+            if item.attuned == 0
+                && dal::count_attuned_items(self.conn, &item.character_id)? >= MAX_ATTUNED
+            {
+                return Err(ServiceError::validation(ATTUNE_LIMIT));
+            }
+        }
         let update = UpdateCharacterInventory {
             quantity,
             equipped: equipped.map(|e| if e { 1 } else { 0 }),
@@ -153,6 +177,13 @@ impl<'a> CharacterService<'a> {
         }
 
         dal::get_character_inventory(self.conn, inventory_id).map_err(ServiceError::from)
+    }
+
+    /// The character an inventory row belongs to.
+    pub fn inventory_owner(&mut self, inventory_id: &str) -> ServiceResult<Option<String>> {
+        Ok(dal::get_character_inventory(self.conn, inventory_id)
+            .optional()?
+            .map(|i| i.character_id))
     }
 
     /// Count attuned items for a character (D&D 5e max is 3).
@@ -284,5 +315,50 @@ mod tests {
         assert_eq!(updated.quantity, 15);
         assert!(updated.is_equipped());
         assert!(!updated.is_attuned());
+    }
+
+    #[test]
+    fn attunement_stops_at_three_and_quantities_at_one() {
+        let mut conn = setup_test_db();
+        let campaign = create_test_campaign(&mut conn);
+        let mut service = CharacterService::new(&mut conn);
+        let pc = service
+            .create(CreateCharacterInput::new_pc(Some(campaign), "Robin", "Sam"))
+            .unwrap();
+        for n in 0..3 {
+            service
+                .add_to_inventory(
+                    &pc.id,
+                    AddInventoryInput::new(format!("Ring {n}"), "DMG").attuned(),
+                )
+                .unwrap();
+        }
+        let fourth =
+            service.add_to_inventory(&pc.id, AddInventoryInput::new("Ring 4", "DMG").attuned());
+        assert!(matches!(fourth, Err(ServiceError::Validation(_))));
+        let plain = service
+            .add_to_inventory(&pc.id, AddInventoryInput::new("Cloak", "DMG"))
+            .unwrap();
+        let attune = service.update_inventory_item(&plain.id, None, None, Some(true));
+        assert!(matches!(attune, Err(ServiceError::Validation(_))));
+        // An attuned item stays attuned when set again.
+        let rings = service.get_attuned_items(&pc.id).unwrap();
+        assert!(service
+            .update_inventory_item(&rings[0].id, None, None, Some(true))
+            .is_ok());
+        // Unattune one: then another can attune.
+        service
+            .update_inventory_item(&rings[0].id, None, None, Some(false))
+            .unwrap();
+        assert!(service
+            .update_inventory_item(&plain.id, None, None, Some(true))
+            .is_ok());
+        let zero = service.update_inventory_item(&plain.id, Some(0), None, None);
+        assert!(matches!(zero, Err(ServiceError::Validation(_))));
+        let none = service.add_to_inventory(
+            &pc.id,
+            AddInventoryInput::new("Rope", "PHB").with_quantity(0),
+        );
+        assert!(matches!(none, Err(ServiceError::Validation(_))));
     }
 }

@@ -164,11 +164,7 @@ async fn a_player_token_reaches_only_player_routes() {
     assert_eq!(session["campaign_id"], f.campaign.as_str());
 
     for route in routes() {
-        let path = route
-            .path
-            .replace("{id}", "x")
-            .replace("{area_id}", "y")
-            .replace("{name}", "z");
+        let path = fill(route.path);
         for method in route.methods {
             let m: Method = method.parse().unwrap();
             let status = f.status(m, &path, Some(&f.player)).await;
@@ -389,4 +385,12 @@ async fn the_player_socket_gets_the_view_and_is_closed_on_revoke() {
     let again =
         tokio_tungstenite::connect_async(format!("ws://{addr}/ws?access_token={}", f.player)).await;
     assert!(again.unwrap_err().to_string().contains("401"));
+}
+
+/// A route path with each `{param}` filled with "x".
+fn fill(path: &str) -> String {
+    path.split('/')
+        .map(|seg| if seg.starts_with('{') { "x" } else { seg })
+        .collect::<Vec<_>>()
+        .join("/")
 }

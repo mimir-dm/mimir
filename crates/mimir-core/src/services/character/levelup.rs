@@ -45,8 +45,10 @@ pub struct LevelUpRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpellChanges {
     /// New spells learned this level (for Spells Known casters or Wizard spellbook)
+    #[serde(default)]
     pub new_spells: Vec<SpellReference>,
     /// New cantrips learned this level
+    #[serde(default)]
     pub new_cantrips: Vec<SpellReference>,
     /// Spell to remove (for Spells Known swap)
     pub swap_out: Option<SpellReference>,
@@ -93,6 +95,7 @@ pub struct FeatureReference {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ManeuverChoices {
     /// New maneuvers to learn
+    #[serde(default)]
     pub new_maneuvers: Vec<FeatureReference>,
     /// Maneuver to swap out (optional, one per level)
     pub swap_out: Option<FeatureReference>,
@@ -104,6 +107,7 @@ pub struct ManeuverChoices {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InvocationChoices {
     /// New invocations to learn
+    #[serde(default)]
     pub new_invocations: Vec<FeatureReference>,
     /// Invocation to swap out (optional, one per level)
     pub swap_out: Option<FeatureReference>,

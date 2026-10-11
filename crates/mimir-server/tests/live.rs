@@ -321,3 +321,45 @@ async fn combat_changes_reach_the_dm() {
         }
     );
 }
+
+#[tokio::test]
+async fn character_changes_reach_the_dm() {
+    let s = server().await;
+    let (campaign, _, _) = fixture_ids(&s).await;
+    let pcs = http(&s, "GET", &format!("/campaigns/{campaign}/pcs"), None).await;
+    let pc = pcs[0]["id"].as_str().unwrap().to_string();
+    let mut ws = connect(&s, Some(TOKEN)).await.unwrap();
+    next(&mut ws).await;
+    tell(
+        &mut ws,
+        &ClientMsg::Watch {
+            campaign_id: campaign.clone(),
+        },
+    )
+    .await;
+    next(&mut ws).await;
+    http(
+        &s,
+        "PATCH",
+        &format!("/characters/{pc}"),
+        Some(json!({"bonds": "A promise"})),
+    )
+    .await;
+    assert_eq!(
+        next(&mut ws).await,
+        ServerMsg::CharacterChanged {
+            character_id: pc.clone()
+        }
+    );
+    http(
+        &s,
+        "POST",
+        &format!("/characters/{pc}/inventory"),
+        Some(json!({"item_name": "Torch", "item_source": "PHB"})),
+    )
+    .await;
+    assert_eq!(
+        next(&mut ws).await,
+        ServerMsg::CharacterChanged { character_id: pc }
+    );
+}

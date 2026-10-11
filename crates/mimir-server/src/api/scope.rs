@@ -28,6 +28,15 @@ pub fn campaign(caller: &Caller, campaign_id: &str) -> Result<(), ApiError> {
     }
 }
 
+/// The caller's own character (a player), or any (the DM).
+pub fn character(caller: &Caller, character_id: &str) -> Result<(), ApiError> {
+    match caller {
+        Caller::Dm => Ok(()),
+        Caller::Player(p) if p.character_id == character_id => Ok(()),
+        Caller::Player(_) => Err(ApiError::forbidden()),
+    }
+}
+
 /// A map the player display of the caller's campaign shows now.
 pub fn shown_map(
     caller: &Caller,
