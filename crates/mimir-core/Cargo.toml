@@ -27,6 +27,9 @@ chrono = { workspace = true }
 
 # UUID generation
 uuid = { workspace = true }
+# Player link tokens: random, stored as a SHA-256 hash (MIMIR-T-0716).
+rand = { workspace = true }
+sha2 = { workspace = true }
 
 # Logging
 tracing = { workspace = true }

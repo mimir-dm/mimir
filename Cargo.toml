@@ -5,6 +5,9 @@ members = [
     "crates/mimir-mapgen",
     "crates/mimir-mcp",
     "crates/mimir-print",
+    "crates/mimir-server",
+    "crates/mimir-web",
+    "crates/mimir-wire",
     "crates/mimir-ui-bridge",
 ]
 resolver = "2"

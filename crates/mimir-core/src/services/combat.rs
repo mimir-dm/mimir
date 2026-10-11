@@ -614,6 +614,11 @@ impl<'a> CombatService<'a> {
         })
     }
 
+    /// The session an entry belongs to.
+    pub fn session_of_entry(&mut self, entry_id: &str) -> ServiceResult<String> {
+        Ok(self.entry(entry_id)?.session_id)
+    }
+
     // --- Helpers -----------------------------------------------------------
 
     /// The session if it exists and is still active.

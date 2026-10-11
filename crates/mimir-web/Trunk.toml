@@ -1,0 +1,20 @@
+# Trunk build of the Mimir web app (MIMIR-T-0705).
+#
+# `angreal web build [--release]` ensures the wasm32 target and runs this.
+# The bundle lands in crates/mimir-web/dist/; mimir-server serves it from
+# MIMIR_WEB_DIST (dev) or embeds it (`--features embed-web`).
+
+[build]
+target = "index.html"
+dist = "dist"
+public_url = "/"
+
+[watch]
+# web-e2e writes screenshots and holds node_modules: watching it would
+# rebuild (and reload the page under test) on each screenshot.
+ignore = ["dist", "web-e2e"]
+
+[serve]
+# Not the dev flow: the app needs the same-origin /api of mimir-server.
+# Use `angreal web serve`. Kept on localhost in case.
+addresses = ["127.0.0.1"]

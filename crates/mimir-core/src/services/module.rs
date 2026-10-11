@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Module, ModuleMonster, NewDocument, NewModule, NewModuleMonster,
+    Module, ModuleMonster, ModuleNpc, NewDocument, NewModule, NewModuleMonster,
     UpdateModule as DalUpdateModule, UpdateModuleMonster,
 };
 use crate::services::{ServiceError, ServiceResult};
@@ -466,6 +466,11 @@ impl<'a> ModuleService<'a> {
     /// List all monster entries for a module.
     pub fn list_monsters(&mut self, module_id: &str) -> ServiceResult<Vec<ModuleMonster>> {
         Ok(dal::list_module_monsters(self.conn, module_id)?)
+    }
+
+    /// List the NPCs of a module.
+    pub fn list_npcs(&mut self, module_id: &str) -> ServiceResult<Vec<ModuleNpc>> {
+        Ok(dal::list_module_npcs(self.conn, module_id)?)
     }
 
     /// Check if a module exists.

@@ -326,6 +326,18 @@ impl<'a> CharacterService<'a> {
         dal::list_npcs_by_faction(self.conn, campaign_id, faction).map_err(ServiceError::from)
     }
 
+    /// The features a character chose (fighting style, metamagic,
+    /// maneuvers, invocations, pact boon).
+    pub fn list_features(
+        &mut self,
+        character_id: &str,
+    ) -> ServiceResult<Vec<crate::models::campaign::CharacterFeature>> {
+        if !dal::character_exists(self.conn, character_id)? {
+            return Err(ServiceError::not_found("Character", character_id));
+        }
+        Ok(dal::list_character_features(self.conn, character_id)?)
+    }
+
     /// Get a character by ID.
     pub fn get(&mut self, id: &str) -> ServiceResult<Option<Character>> {
         dal::get_character_optional(self.conn, id).map_err(ServiceError::from)

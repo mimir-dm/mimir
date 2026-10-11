@@ -1,0 +1,501 @@
+/* Mimir web app: the few classes Aurora does not have. Aurora tokens only,
+   no hard-coded colours. */
+
+.mimir-brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg-bright);
+}
+
+.mimir-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+/* Campaign list */
+.mimir-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+/* Dashboard: one header row with the name and the tabs */
+.mimir-dash__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm) var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+.mimir-dash__header .cl-tabs {
+  flex: 1 1 auto;
+}
+.mimir-dash__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  color: var(--fg-bright);
+}
+
+/* A list on the side and the selected item */
+.mimir-split {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .mimir-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.mimir-doclist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mimir-doc__title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-lg);
+  color: var(--fg-bright);
+}
+
+/* Rendered markdown */
+.mimir-prose {
+  line-height: 1.6;
+  color: var(--fg);
+  max-width: 72ch;
+}
+.mimir-prose h1,
+.mimir-prose h2,
+.mimir-prose h3,
+.mimir-prose h4 {
+  color: var(--fg-bright);
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+.mimir-prose h1 { font-size: var(--fs-xl); }
+.mimir-prose h2 { font-size: var(--fs-lg); }
+.mimir-prose h3 { font-size: var(--fs-md); }
+.mimir-prose > :first-child { margin-top: 0; }
+.mimir-prose a { color: var(--ice); }
+.mimir-prose code {
+  font-family: var(--font-mono);
+  background: var(--inset);
+  border-radius: var(--radius-xs);
+  padding: 0 0.25em;
+}
+.mimir-prose pre {
+  background: var(--inset);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow-x: auto;
+}
+.mimir-prose pre code { background: none; padding: 0; }
+.mimir-prose blockquote {
+  margin: 1em 0;
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--border);
+  color: var(--fg-2);
+}
+.mimir-prose table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.mimir-prose th,
+.mimir-prose td {
+  border: 1px solid var(--border-soft);
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+}
+.mimir-prose hr {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  margin: 1.5em 0;
+}
+
+.mimir-cards { margin-top: var(--space-md); }
+.cl-tabs__panel { padding-top: var(--space-md); }
+
+/* ---- DM map ------------------------------------------------------------ */
+.mimir-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  height: calc(100vh - var(--cl-header-h) - 44px);
+  min-height: 420px;
+}
+.mimir-map__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-lg);
+}
+.mimir-map__tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.mimir-map__scene {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--inset);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.mimir-map__scene--placing { cursor: crosshair; }
+.mimir-map__svg { display: block; width: 100%; height: 100%; }
+.mimir-map__grid {
+  fill: none;
+  stroke: var(--fg);
+  stroke-opacity: 0.18;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.mimir-map__fog { fill: var(--scrim); pointer-events: none; }
+.mimir-map__door {
+  stroke: var(--gold);
+  stroke-width: 7;
+  stroke-linecap: round;
+  cursor: pointer;
+}
+.mimir-map__door--open { stroke-dasharray: 4 8; stroke-opacity: 0.7; }
+.mimir-map__light--off { opacity: 0.35; }
+.mimir-map__handle {
+  stroke: var(--bg);
+  stroke-width: 3;
+  cursor: pointer;
+}
+.mimir-map__handle--selected { stroke: var(--ice); stroke-width: 5; }
+.mimir-map__marker { cursor: pointer; }
+.mimir-map__marker--trap path { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-map__marker--poi circle { stroke: var(--bg); stroke-width: 3; }
+.mimir-map__marker--hidden { opacity: 0.5; }
+.mimir-map__marker--selected path,
+.mimir-map__marker--selected circle { stroke: var(--ice); stroke-width: 5; }
+.mimir-map__marker text,
+.mimir-map__token-name {
+  fill: var(--fg-bright);
+  stroke: var(--bg);
+  stroke-width: 4;
+  paint-order: stroke;
+  font-size: 18px;
+  font-family: var(--font-sans);
+}
+.mimir-map__token { cursor: grab; }
+.mimir-map__token-ring {
+  fill: var(--panel);
+  stroke-width: 5;
+}
+.mimir-map__token-initial {
+  fill: var(--fg-bright);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+.mimir-map__token--hidden { opacity: 0.5; }
+.mimir-map__token--dead { filter: grayscale(1); opacity: 0.45; }
+.mimir-map__token--selected .mimir-map__token-ring { stroke: var(--ice); stroke-width: 8; }
+.mimir-map__panel {
+  position: absolute;
+  top: 56px;
+  right: var(--space-sm);
+  width: min(320px, calc(100% - 2 * var(--space-sm)));
+  max-height: calc(100% - 64px);
+  overflow: auto;
+  z-index: 2;
+}
+.mimir-map__hint {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+  z-index: 3;
+}
+.mimir-map__error { position: absolute; bottom: var(--space-md); left: var(--space-md); z-index: 3; }
+/* Touch: larger targets on a tablet. */
+@media (pointer: coarse) {
+  .mimir-map__door { stroke-width: 12; }
+}
+
+/* ---- Player display ------------------------------------------------------ */
+/* Fog is black on a table display in any theme: the one fixed colour. */
+.mimir-display {
+  --mimir-fog: #000;
+  position: fixed;
+  inset: 0;
+  background: var(--mimir-fog);
+  color: var(--fg);
+}
+.mimir-display__scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  background: var(--mimir-fog);
+}
+.mimir-display__svg { display: block; width: 100%; height: 100%; }
+.mimir-display__cover { fill: var(--mimir-fog); pointer-events: none; }
+.mimir-display__trap { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-display__message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+}
+.mimir-display__controls {
+  position: absolute;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--panel);
+  border-radius: var(--radius-pill);
+  opacity: 0.7;
+}
+.mimir-display__controls:focus-within,
+.mimir-display__controls:hover { opacity: 1; }
+
+/* ---- DM map body: the stage and the tracker ------------------------------ */
+.mimir-map__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: var(--space-sm);
+}
+.mimir-map__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mimir-map__stage .mimir-map__panel { top: var(--space-sm); }
+.mimir-map__token--turn .mimir-map__token-ring { stroke: var(--gold); stroke-width: 9; }
+
+/* ---- Initiative tracker ---------------------------------------------------- */
+.mimir-tracker {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+.mimir-tracker--collapsed { flex-basis: auto; }
+.mimir-tracker__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-soft);
+}
+.mimir-tracker__head > :last-child { margin-left: auto; }
+.mimir-tracker--collapsed .mimir-tracker__head { border-bottom: 0; }
+.mimir-tracker__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow: auto;
+}
+.mimir-tracker__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mimir-tracker__row {
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs);
+  border-left: 3px solid transparent;
+}
+.mimir-tracker__row--current { background: var(--ice-bg); border-left-color: var(--ice); }
+.mimir-tracker__row--selected { outline: 2px solid var(--ice); }
+.mimir-tracker__row--down .mimir-tracker__name { text-decoration: line-through; color: var(--fg-2); }
+.mimir-tracker__line { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-tracker__init {
+  width: 3.2em;
+  min-height: 36px;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  color: var(--fg);
+  font: inherit;
+}
+.mimir-tracker__name {
+  flex: 1 1 auto;
+  min-height: 36px;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: var(--fg-bright);
+  font: inherit;
+  cursor: pointer;
+}
+.mimir-tracker__hp { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--fg-2); }
+.mimir-tracker__linked { color: var(--fg-2); }
+.mimir-tracker__badges { display: flex; flex-wrap: wrap; gap: var(--space-xs); padding-left: 3.6em; }
+.mimir-tracker__condition {
+  border: 1px solid var(--gold);
+  background: var(--gold-bg);
+  color: var(--gold-fg);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-sm);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.mimir-tracker__details { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-xs) 0 var(--space-xs) 3.6em; }
+.mimir-tracker__bar { height: 8px; border-radius: var(--radius-pill); background: var(--inset); overflow: hidden; }
+.mimir-tracker__bar > span { display: block; height: 100%; }
+.mimir-tracker__bar--healthy > span { background: var(--ok); }
+.mimir-tracker__bar--bloodied > span { background: var(--gold); }
+.mimir-tracker__bar--down > span { background: var(--bad); }
+.mimir-tracker__add { display: flex; gap: var(--space-xs); align-items: flex-end; }
+.mimir-tracker__add > :first-child { flex: 1 1 auto; }
+.mimir-tracker__log { margin: 0; padding-left: 1.2em; font-size: var(--fs-sm); color: var(--fg-2); }
+@media (max-width: 900px) {
+  .mimir-map__body { flex-direction: column; }
+  .mimir-tracker { flex-basis: auto; max-height: 45%; }
+}
+
+/* ---- Turn order on the player display ------------------------------------ */
+.mimir-display__order {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  min-width: 180px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--panel);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  opacity: 0.92;
+}
+.mimir-display__order ol { margin: var(--space-xs) 0 0; padding-left: 1.4em; }
+.mimir-display__order li[aria-current="step"] { color: var(--fg-bright); font-weight: 600; }
+
+/* ---- Player page ----------------------------------------------------------- */
+.mimir-player { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+.mimir-player__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+.mimir-player__actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-player__display { position: relative; flex: 1 1 auto; min-height: 0; }
+.mimir-display--framed { position: absolute; }
+
+/* ---- Player link panel ------------------------------------------------------ */
+.mimir-link { display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-sm) 0; }
+.mimir-link__new { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
+.mimir-link__url {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  word-break: break-all;
+  background: var(--inset);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.mimir-link__qr svg { display: block; width: 180px; height: 180px; }
+
+/* ---- Character sheet -------------------------------------------------------- */
+.mimir-sheet__abilities {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.mimir-sheet__ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+.mimir-sheet__ability-mod { font-size: var(--fs-xl); font-weight: 600; color: var(--fg-bright); }
+.mimir-sheet__ability-score { font-family: var(--font-mono); color: var(--fg-2); }
+.mimir-sheet__stats { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.mimir-sheet__stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+}
+.mimir-sheet__stat-label { font-size: var(--fs-xs); color: var(--fg-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.mimir-sheet__stat-value { font-size: var(--fs-lg); color: var(--fg-bright); font-weight: 600; }
+.mimir-sheet__columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-lg); }
+.mimir-sheet__list { list-style: none; margin: 0 0 var(--space-md); padding: 0; }
+.mimir-sheet__list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-sheet__num { font-family: var(--font-mono); color: var(--fg-2); }
+.mimir-sheet__prof > :first-child { font-weight: 600; color: var(--fg-bright); }
+.mimir-sheet__expert > :first-child::after { content: " ★"; color: var(--gold); }
+.mimir-sheet__slots { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.mimir-sheet__slot { padding: 2px var(--space-sm); border-radius: var(--radius-pill); background: var(--ice-bg); color: var(--ice-fg); font-size: var(--fs-sm); }
+.mimir-sheet__row-actions { display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-sheet__add { display: flex; gap: var(--space-sm); align-items: flex-end; margin: var(--space-sm) 0; }
+.mimir-sheet__add > :first-child { flex: 1 1 auto; }
+.mimir-sheet__profs { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-xs) var(--space-md); margin: 0 0 var(--space-md); }
+.mimir-sheet__profs dt { color: var(--fg-2); }
+.mimir-sheet__profs dd { margin: 0; }
+@media (max-width: 700px) {
+  .mimir-sheet__abilities { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ---- Inventory ------------------------------------------------------------------ */
+.mimir-inv__coins { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: flex-end; }
+.mimir-inv__coins .cl-field { width: 6em; }
+.mimir-inv__list, .mimir-inv__results { list-style: none; margin: 0 0 var(--space-md); padding: 0; }
+.mimir-inv__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-inv__name { flex: 1 1 200px; display: flex; flex-direction: column; }
+.mimir-inv__qty { display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); }
+.mimir-inv__results li { display: flex; justify-content: space-between; align-items: center; padding: var(--space-xs) 0; }
+
+/* ---- Level-up ------------------------------------------------------------------- */
+.mimir-levelup__steps { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); list-style: none; padding: 0; margin: 0 0 var(--space-md); color: var(--fg-2); font-size: var(--fs-sm); }
+.mimir-levelup__here { color: var(--fg-bright); font-weight: 600; border-bottom: 2px solid var(--ice); }
+.mimir-levelup__body { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-md); min-height: 160px; }
+.mimir-levelup__picks { border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-sm); max-height: 260px; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+.mimir-levelup__pick { display: flex; gap: var(--space-sm); align-items: center; min-height: 32px; }
+
+/* ---- Player page tabs --------------------------------------------------------- */
+.mimir-player__tabs { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0 var(--space-md); }
+.mimir-player__tabs .cl-tabs__panel { flex: 1 1 auto; min-height: 0; }
+.mimir-player__tabs .mimir-player__display { position: relative; height: calc(100vh - 120px); }
+.mimir-player__sheet { overflow: auto; height: calc(100vh - 130px); padding-bottom: var(--space-lg); }

@@ -295,6 +295,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    player_links (character_id) {
+        character_id -> Text,
+        token_hash -> Text,
+        created_at -> Text,
+    }
+}
+
+diesel::table! {
     combat_sessions (id) {
         id -> Text,
         module_id -> Text,
@@ -736,6 +744,7 @@ diesel::joinable!(characters -> campaigns (campaign_id));
 diesel::joinable!(classes -> catalog_sources (source));
 diesel::joinable!(combat_entries -> combat_sessions (session_id));
 diesel::joinable!(combat_sessions -> modules (module_id));
+diesel::joinable!(player_links -> characters (character_id));
 diesel::joinable!(conditions -> catalog_sources (source));
 diesel::joinable!(cults -> catalog_sources (source));
 diesel::joinable!(deities -> catalog_sources (source));
@@ -837,4 +846,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     traps,
     variant_rules,
     vehicles,
+    player_links,
 );

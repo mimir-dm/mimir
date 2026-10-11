@@ -1,0 +1,16 @@
+{
+  "name": "mimir-web-e2e",
+  "private": true,
+  "description": "Playwright smoke suite and screenshot captures for mimir-web, against mimir-server on fixture data.",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test specs/smoke.spec.ts specs/map.spec.ts specs/display.spec.ts specs/combat.spec.ts specs/players.spec.ts specs/characters.spec.ts",
+    "screenshots": "playwright test specs/capture.spec.ts",
+    "screenshots:diff": "node diff.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0"
+  }
+}

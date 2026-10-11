@@ -1,0 +1,16 @@
+[package]
+name = "mimir-wire"
+version = "0.7.3"
+edition = "2021"
+description = "Request and response types shared by mimir-server and mimir-web (COLLIERY-I-0612)."
+license = "MIT"
+
+# Must build for wasm32-unknown-unknown: serde only, no diesel, tokio or
+# mimir-core (conversions from core models live in mimir-server).
+[dependencies]
+serde = { workspace = true }
+# Catalog values passed through as JSON (class progressions).
+serde_json = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -1,0 +1,57 @@
+[package]
+name = "mimir-web"
+version = "0.7.3"
+edition = "2021"
+description = "Mimir web app: Leptos CSR on Aurora, served by mimir-server (COLLIERY-I-0612)."
+license = "MIT"
+
+# Two targets, as kairos-web:
+# - the `mimir-web` bin is what trunk compiles to wasm32-unknown-unknown
+#   (`angreal web build`, Trunk.toml);
+# - the lib holds the whole app, so `cargo clippy --workspace` on the host
+#   checks every component without wasm tools.
+
+[dependencies]
+mimir-wire = { path = "../mimir-wire" }
+# Aurora design system (light, dark and hyper themes), imported as
+# `aurora_leptos`.
+colliery-io-aurora = "0.5.0"
+# The bin picks the renderer: CSR only.
+leptos = { version = "0.8", features = ["csr"] }
+leptos_router = "0.8"
+# Same-origin REST to mimir-server.
+gloo-net = { version = "0.6", default-features = false, features = ["http", "json"] }
+# Documents render from markdown; raw HTML is escaped (src/markdown.rs).
+pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1.7"
+web-sys = { version = "0.3", features = [
+    "Storage",
+    "Window",
+    "Location",
+    # Map images as blobs (fetched with the token).
+    "Blob",
+    "BlobPropertyBag",
+    "Url",
+    # The live socket.
+    "WebSocket",
+    "MessageEvent",
+    "CloseEvent",
+    # The map: pan, zoom, drag.
+    "PointerEvent",
+    "WheelEvent",
+    "Element",
+    "DomRect",
+    # Keep the map fitted while its box changes size.
+    "ResizeObserver",
+    # /play/<token>: replace the address; copy a player link.
+    "History",
+    "Navigator",
+    "Clipboard",
+] }
+js-sys = "0.3"
+# QR codes of player links (MIMIR-T-0716), drawn as SVG.
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+wasm-bindgen-futures = "0.4"

@@ -28,6 +28,7 @@ mod map_trap;
 mod module;
 mod module_monster;
 mod module_npc;
+mod player_link;
 mod token_placement;
 
 pub use campaign::{Campaign, NewCampaign, UpdateCampaign};
@@ -67,4 +68,5 @@ pub use map_trap::{MapTrap, NewMapTrap, UpdateMapTrap};
 pub use module::{Module, NewModule, UpdateModule};
 pub use module_monster::{ModuleMonster, NewModuleMonster, UpdateModuleMonster};
 pub use module_npc::{ModuleNpc, NewModuleNpc, UpdateModuleNpc};
+pub use player_link::{NewPlayerLink, PlayerLink};
 pub use token_placement::{NewTokenPlacement, TokenPlacement, UpdateTokenPlacement};

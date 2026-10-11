@@ -155,6 +155,59 @@ jobs:
       - name: Run core tests
         run: angreal test unit --core
 
+  test-web:
+    name: Web Server, Wire Types and Web App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install Rust stable (wasm32)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Test mimir-wire, mimir-server and mimir-web
+        run: cargo test -p mimir-wire -p mimir-server -p mimir-web
+
+      # The web app compiles against mimir-wire, so it must build for wasm.
+      - name: Build mimir-wire for wasm32
+        run: cargo build -p mimir-wire --target wasm32-unknown-unknown
+
+      - name: Install trunk
+        run: |
+          curl -sSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz -C "$HOME/.cargo/bin"
+          trunk --version
+
+      - name: Build the web app bundle (trunk)
+        working-directory: crates/mimir-web
+        run: trunk build --release
+
+      # Smoke suite: Playwright starts mimir-server (web-e2e/session.sh) on a
+      # scratch data dir with the fixture and the bundle built above.
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install the e2e harness
+        working-directory: crates/mimir-web/web-e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Web smoke suite (Playwright)
+        working-directory: crates/mimir-web/web-e2e
+        run: npx playwright test specs/smoke.spec.ts specs/map.spec.ts specs/display.spec.ts specs/combat.spec.ts specs/players.spec.ts specs/characters.spec.ts
+
+      - name: Upload Playwright results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-e2e-results
+          path: crates/mimir-web/web-e2e/results
+          if-no-files-found: ignore
+
   test-integration:
     name: Integration Tests (Heavy)
     runs-on: ubuntu-latest

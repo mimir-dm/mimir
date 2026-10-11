@@ -203,6 +203,24 @@ impl<'a> TokenService<'a> {
         Self { conn, app_dir }
     }
 
+    /// The image file of a token, if it has one: a catalog monster's token
+    /// art at `assets/catalog/bestiary/tokens/{source}/{name}.{webp|png|jpg|jpeg}`.
+    /// NPC, PC and homebrew tokens have none. A missing token is an error.
+    pub fn image_path(&mut self, id: &str) -> ServiceResult<Option<std::path::PathBuf>> {
+        let placement = dal::get_token_placement_optional(self.conn, id)?
+            .ok_or_else(|| ServiceError::not_found("Token", id))?;
+        let Some(monster_id) = placement.module_monster_id else {
+            return Ok(None);
+        };
+        let Some(monster) = dal::get_module_monster_optional(self.conn, &monster_id)? else {
+            return Ok(None);
+        };
+        let (Some(name), Some(source)) = (monster.monster_name, monster.monster_source) else {
+            return Ok(None);
+        };
+        Ok(token_image_file(self.app_dir, &source, &name))
+    }
+
     /// List all tokens for a map.
     pub fn list(&mut self, map_id: &str) -> ServiceResult<Vec<TokenResponse>> {
         let grid_size_px = self.get_grid_size(map_id);
@@ -505,6 +523,28 @@ fn normalize_size_code(size: &str) -> String {
         "G" => "gargantuan".to_string(),
         other => other.to_lowercase(),
     }
+}
+
+/// A catalog name that is safe as one path segment.
+fn safe_segment(name: &str) -> bool {
+    !name.is_empty() && name != "." && name != ".." && !name.contains(['/', '\\', '\0'])
+}
+
+/// The first token image that exists for a catalog monster.
+fn token_image_file(app_dir: &Path, source: &str, name: &str) -> Option<std::path::PathBuf> {
+    if !safe_segment(source) || !safe_segment(name) {
+        return None;
+    }
+    let dir = app_dir
+        .join("assets")
+        .join("catalog")
+        .join("bestiary")
+        .join("tokens")
+        .join(source);
+    ["webp", "png", "jpg", "jpeg"]
+        .iter()
+        .map(|ext| dir.join(format!("{name}.{ext}")))
+        .find(|p| p.is_file())
 }
 
 #[cfg(test)]
@@ -1274,5 +1314,39 @@ mod tests {
         assert_eq!(vision.vision_dim_ft, Some(Some(30)));
         assert_eq!(vision.vision_dark_ft, Some(60));
         assert_eq!(vision.light_radius_ft, Some(20));
+    }
+}
+
+#[cfg(test)]
+mod image_tests {
+    use super::*;
+
+    #[test]
+    fn finds_the_first_token_image_by_extension_order() {
+        let dir = tempfile::tempdir().unwrap();
+        let tokens = dir.path().join("assets/catalog/bestiary/tokens/MM");
+        std::fs::create_dir_all(&tokens).unwrap();
+        std::fs::write(tokens.join("Goblin.png"), b"png").unwrap();
+        std::fs::write(tokens.join("Goblin.jpg"), b"jpg").unwrap();
+        let found = token_image_file(dir.path(), "MM", "Goblin").unwrap();
+        assert!(found.ends_with("MM/Goblin.png"));
+        assert!(token_image_file(dir.path(), "MM", "Orc").is_none());
+    }
+
+    #[test]
+    fn names_that_leave_the_directory_are_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("secret.png"), b"x").unwrap();
+        for (source, name) in [
+            ("..", "secret"),
+            ("MM", "../../../../../secret"),
+            ("a/b", "x"),
+            ("", "x"),
+        ] {
+            assert!(
+                token_image_file(dir.path(), source, name).is_none(),
+                "{source}/{name}"
+            );
+        }
     }
 }
