@@ -66,7 +66,7 @@ pub use party::{PartyMember, PartyService};
 pub use player_link::{hash_token, LinkHolder, PlayerLinkService};
 pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
-pub use uvtt::{GridPoint, MapGeometry, UvttLight, UvttPortal};
+pub use uvtt::{parse_geometry, uvtt_from_image, GridPoint, MapGeometry, UvttLight, UvttPortal};
 
 /// Default query limit to prevent memory issues on large result sets.
 pub const DEFAULT_QUERY_LIMIT: i64 = 1000;

@@ -17,6 +17,7 @@
 //! This crate must build for `wasm32-unknown-unknown` (checked in CI): serde
 //! only. Conversions from `mimir-core` models live in the server.
 
+pub mod authoring;
 pub mod campaign;
 pub mod character;
 pub mod combat;
@@ -25,6 +26,7 @@ pub mod live;
 pub mod map;
 pub mod patch;
 
+pub use authoring::*;
 pub use campaign::*;
 pub use character::*;
 pub use combat::*;

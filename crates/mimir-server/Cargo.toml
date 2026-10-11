@@ -21,7 +21,7 @@ fixtures = ["mimir-core/fixtures"]
 [dependencies]
 mimir-wire = { path = "../mimir-wire" }
 mimir-core = { path = "../mimir-core" }
-axum = { version = "0.8", features = ["ws"] }
+axum = { version = "0.8", features = ["ws", "multipart"] }
 tokio = { workspace = true }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace"] }
@@ -35,6 +35,8 @@ mime_guess = "2"
 rust-embed = { version = "8", optional = true }
 
 [dev-dependencies]
+# Test images for map uploads (MIMIR-T-0720).
+image = { version = "0.25", default-features = false, features = ["png"] }
 mimir-core = { path = "../mimir-core", features = ["fixtures"] }
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"

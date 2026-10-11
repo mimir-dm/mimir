@@ -5,11 +5,11 @@
 
 use axum::extract::{Path, Query, State};
 use axum::Json;
-use mimir_core::models::catalog::ItemFilter;
+use mimir_core::models::catalog::{ItemFilter, MonsterFilter};
 use mimir_core::services::catalog::find_class_level_info;
 use mimir_core::services::{
-    CatalogEntityService, ClassService, FeatService, ItemService, OptionalFeatureService,
-    ServiceError, SpellService, SubclassService,
+    CatalogEntityService, ClassService, FeatService, ItemService, MonsterService,
+    OptionalFeatureService, ServiceError, SpellService, SubclassService,
 };
 use mimir_wire as wire;
 use serde::Deserialize;
@@ -252,6 +252,48 @@ pub async fn items(
                     .collect::<Vec<_>>()
                     .join(" · ");
                     choice(i.name, i.source, (!detail.is_empty()).then_some(detail))
+                })
+                .collect();
+            let lower = needle.to_lowercase();
+            list.sort_by_key(|c| {
+                let n = c.name.to_lowercase();
+                (n != lower, !n.starts_with(&lower), n)
+            });
+            Ok(list)
+        })
+        .await
+        .map(Json)
+}
+
+/// `GET /catalog/monsters?search=gob` (DM, MIMIR-T-0720): up to 50 by
+/// name, the closest first. The detail is the challenge and the type.
+pub async fn monsters(
+    State(state): State<AppState>,
+    Query(q): Query<ItemQuery>,
+) -> ApiResult<Vec<wire::Choice>> {
+    let needle = q.search.trim().to_string();
+    if needle.chars().count() < 2 {
+        return Ok(Json(Vec::new()));
+    }
+    state
+        .with_db(move |conn| {
+            let filter = MonsterFilter {
+                name_contains: Some(needle.clone()),
+                ..MonsterFilter::default()
+            };
+            let mut list: Vec<wire::Choice> = MonsterService::new(conn)
+                .search_paginated(&filter, 50, 0)?
+                .into_iter()
+                .map(|m| {
+                    let detail = [
+                        m.cr.clone().map(|c| format!("CR {c}")),
+                        m.creature_type.clone(),
+                    ]
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<_>>()
+                    .join(" · ");
+                    choice(m.name, m.source, (!detail.is_empty()).then_some(detail))
                 })
                 .collect();
             let lower = needle.to_lowercase();

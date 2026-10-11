@@ -52,7 +52,7 @@ flate2 = "1.0"
 base64 = "0.22"
 
 # Image processing
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
 tempfile.workspace = true
 
 [features]

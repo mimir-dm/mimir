@@ -168,9 +168,56 @@ pub fn parse_geometry(bytes: &[u8], scaled_ppg: Option<f64>) -> Result<MapGeomet
     })
 }
 
+/// A map image (PNG, JPEG or WebP) as a UVTT file with no walls: the grid
+/// from `pixels_per_grid`, the image as it is (MIMIR-T-0720, web upload).
+pub fn uvtt_from_image(bytes: &[u8], pixels_per_grid: f64) -> Result<Vec<u8>, String> {
+    use base64::Engine;
+    if !(10.0..=1000.0).contains(&pixels_per_grid) {
+        return Err("the grid size must be 10 to 1000 pixels a square".into());
+    }
+    let reader = image::ImageReader::new(std::io::Cursor::new(bytes))
+        .with_guessed_format()
+        .map_err(|e| format!("not an image: {e}"))?;
+    if reader.format().is_none() {
+        return Err("not a PNG, JPEG or WebP image".into());
+    }
+    let (w, h) = reader
+        .into_dimensions()
+        .map_err(|e| format!("not an image: {e}"))?;
+    let file = serde_json::json!({
+        "format": 1.0,
+        "resolution": {
+            "map_origin": { "x": 0.0, "y": 0.0 },
+            "map_size": {
+                "x": f64::from(w) / pixels_per_grid,
+                "y": f64::from(h) / pixels_per_grid,
+            },
+            "pixels_per_grid": pixels_per_grid,
+        },
+        "line_of_sight": [],
+        "portals": [],
+        "lights": [],
+        "image": base64::engine::general_purpose::STANDARD.encode(bytes),
+    });
+    serde_json::to_vec(&file).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_image_becomes_a_uvtt_map() {
+        let mut png = Vec::new();
+        image::RgbImage::new(140, 70)
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .unwrap();
+        let uvtt = uvtt_from_image(&png, 70.0).unwrap();
+        let g = parse_geometry(&uvtt, None).unwrap();
+        assert_eq!((g.columns, g.rows, g.pixels_per_grid), (2.0, 1.0, 70.0));
+        assert!(uvtt_from_image(b"not an image", 70.0).is_err());
+        assert!(uvtt_from_image(&png, 2.0).is_err());
+    }
 
     #[test]
     fn parses_walls_doors_and_lights() {

@@ -5,6 +5,7 @@
 //! (MIMIR-T-0716). Handlers call the `mimir-core` services, never the DAL,
 //! and answer with `mimir-wire` types ([`convert`]).
 
+pub mod authoring;
 pub mod campaigns;
 pub mod catalog;
 pub mod characters;
@@ -16,6 +17,7 @@ pub mod maps;
 pub mod party;
 pub mod scope;
 
+use axum::extract::DefaultBodyLimit;
 use axum::middleware;
 use axum::routing::{delete, get, patch, post, put, MethodRouter};
 use axum::Router;
@@ -59,6 +61,7 @@ fn route(
 
 /// The route table.
 pub fn routes() -> Vec<ApiRoute> {
+    use authoring as w;
     use campaigns as c;
     use catalog as cat;
     use characters as ch;
@@ -148,6 +151,7 @@ pub fn routes() -> Vec<ApiRoute> {
         ),
         route("/catalog/spells", Player, G, get(cat::spells)),
         route("/catalog/items", Player, G, get(cat::items)),
+        route("/catalog/monsters", Dm, G, get(cat::monsters)),
         // Player links (DM).
         route(
             "/characters/{id}/link",
@@ -156,30 +160,98 @@ pub fn routes() -> Vec<ApiRoute> {
             get(links::status).post(links::issue).delete(links::revoke),
         ),
         // Campaign content (read).
-        route("/campaigns", Dm, G, get(c::list_campaigns)),
-        route("/campaigns/{id}", Dm, G, get(c::get_campaign)),
+        // Campaign content: read, and the DM's writes (MIMIR-T-0720).
+        route(
+            "/campaigns",
+            Dm,
+            &["GET", "POST"],
+            get(c::list_campaigns).post(w::create_campaign),
+        ),
+        route(
+            "/campaigns/{id}",
+            Dm,
+            &["GET", "PATCH", "DELETE"],
+            get(c::get_campaign)
+                .patch(w::patch_campaign)
+                .delete(w::delete_campaign),
+        ),
+        route(
+            "/campaigns/{id}/archive",
+            Dm,
+            &["PUT", "DELETE"],
+            put(w::archive_campaign).delete(w::unarchive_campaign),
+        ),
         route(
             "/campaigns/{id}/documents",
             Dm,
-            G,
-            get(c::campaign_documents),
+            &["GET", "POST"],
+            get(c::campaign_documents).post(w::create_campaign_document),
         ),
-        route("/campaigns/{id}/modules", Dm, G, get(c::campaign_modules)),
+        route(
+            "/campaigns/{id}/modules",
+            Dm,
+            &["GET", "POST"],
+            get(c::campaign_modules).post(w::create_module),
+        ),
         route("/campaigns/{id}/pcs", Dm, G, get(c::campaign_pcs)),
         route("/campaigns/{id}/npcs", Dm, G, get(c::campaign_npcs)),
-        route("/campaigns/{id}/maps", Dm, G, get(c::campaign_maps)),
+        route(
+            "/campaigns/{id}/maps",
+            Dm,
+            &["GET", "POST"],
+            get(c::campaign_maps)
+                .post(w::create_map)
+                .layer(DefaultBodyLimit::max(w::MAP_UPLOAD_LIMIT)),
+        ),
         route(
             "/campaigns/{id}/display",
             Player,
             &["GET", "PUT"],
             get(display::get_display).put(display::set_display),
         ),
-        route("/modules/{id}", Dm, G, get(c::get_module)),
-        route("/modules/{id}/documents", Dm, G, get(c::module_documents)),
-        route("/modules/{id}/monsters", Dm, G, get(c::module_monsters)),
+        route(
+            "/modules/{id}",
+            Dm,
+            &["GET", "PATCH", "DELETE"],
+            get(c::get_module)
+                .patch(w::patch_module)
+                .delete(w::delete_module),
+        ),
+        route("/modules/{id}/move", Dm, &["POST"], post(w::move_module)),
+        route(
+            "/modules/{id}/documents",
+            Dm,
+            &["GET", "POST"],
+            get(c::module_documents).post(w::create_module_document),
+        ),
+        route(
+            "/modules/{id}/monsters",
+            Dm,
+            &["GET", "POST"],
+            get(c::module_monsters).post(w::add_module_monster),
+        ),
+        route(
+            "/module-monsters/{id}",
+            Dm,
+            &["PATCH", "DELETE"],
+            patch(w::patch_module_monster).delete(w::delete_module_monster),
+        ),
         route("/modules/{id}/npcs", Dm, G, get(c::module_npcs)),
         route("/modules/{id}/maps", Dm, G, get(c::module_maps)),
-        route("/documents/{id}", Dm, G, get(c::get_document)),
+        route(
+            "/documents/{id}",
+            Dm,
+            &["GET", "PATCH", "DELETE"],
+            get(c::get_document)
+                .patch(w::patch_document)
+                .delete(w::delete_document),
+        ),
+        route(
+            "/documents/{id}/move",
+            Dm,
+            &["POST"],
+            post(w::move_document),
+        ),
         // Combat.
         route(
             "/modules/{id}/combat",
@@ -238,7 +310,12 @@ pub fn routes() -> Vec<ApiRoute> {
             delete(combat::remove_condition),
         ),
         // Maps.
-        route("/maps/{id}", Dm, G, get(m::get_map)),
+        route(
+            "/maps/{id}",
+            Dm,
+            &["GET", "PATCH", "DELETE"],
+            get(m::get_map).patch(w::patch_map).delete(w::delete_map),
+        ),
         route("/maps/{id}/geometry", Player, G, get(m::get_geometry)),
         route("/maps/{id}/image", Player, G, get(m::get_map_image)),
         route("/maps/{id}/player-view", Player, G, get(m::player_view)),
