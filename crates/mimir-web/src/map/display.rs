@@ -148,7 +148,18 @@ pub fn token_seen(t: &PlayerToken, view: &PlayerView, sight: &Sight) -> bool {
 pub fn DisplayPage() -> impl IntoView {
     let params = use_params_map();
     let campaign = Memo::new(move |_| params.get().get("campaign").unwrap_or_default());
+    view! { <DisplayView campaign=campaign /> }
+}
 
+/// The display of a campaign. `framed`: inside a page (the player page),
+/// not the whole window. `on_signed_out`: the server ended this device's
+/// player link.
+#[component]
+pub fn DisplayView(
+    #[prop(into)] campaign: Signal<String>,
+    #[prop(optional)] framed: bool,
+    #[prop(optional)] on_signed_out: Option<Callback<()>>,
+) -> impl IntoView {
     let display = RwSignal::new(None::<DisplayState>);
     let view = RwSignal::new(None::<PlayerView>);
     let shown = Memo::new(move |_| {
@@ -196,6 +207,11 @@ pub fn DisplayPage() -> impl IntoView {
                 }
             }
             ServerMsg::PlayerView { view: v } => view.set(Some(*v)),
+            ServerMsg::SignedOut => {
+                if let Some(cb) = on_signed_out {
+                    cb.run(());
+                }
+            }
             _ => {}
         })));
     });
@@ -372,7 +388,7 @@ pub fn DisplayPage() -> impl IntoView {
     };
 
     view! {
-        <div class="mimir-display">
+        <div class="mimir-display" class:mimir-display--framed=framed>
             <div
                 class="mimir-display__scene"
                 node_ref=vp.scene

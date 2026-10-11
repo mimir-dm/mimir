@@ -17,13 +17,20 @@ pub enum Gate {
     SignIn,
 }
 
-/// The first gate, from the server's auth mode and the stored token.
+/// The first gate, from the server's auth mode and the stored token. A
+/// stored token is checked even in open mode: it can be a player link.
 pub fn gate(mode: AuthMode, stored: Option<&str>) -> Gate {
     match (mode, stored.map(str::trim)) {
+        (_, Some(t)) if !t.is_empty() => Gate::CheckStored,
         (AuthMode::Open, _) => Gate::Open,
-        (AuthMode::Token, Some(t)) if !t.is_empty() => Gate::CheckStored,
         (AuthMode::Token, _) => Gate::SignIn,
     }
+}
+
+/// The token of a player link address (`/play/<token>`).
+pub fn play_token(path: &str) -> Option<&str> {
+    let t = path.strip_prefix("/play/")?.trim_end_matches('/');
+    (!t.is_empty() && !t.contains('/')).then_some(t)
 }
 
 fn storage() -> Option<web_sys::Storage> {
@@ -57,9 +64,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn open_mode_needs_no_token() {
+    fn open_mode_needs_no_token_but_checks_a_stored_one() {
         assert_eq!(gate(AuthMode::Open, None), Gate::Open);
-        assert_eq!(gate(AuthMode::Open, Some("x")), Gate::Open);
+        assert_eq!(gate(AuthMode::Open, Some("x")), Gate::CheckStored);
+    }
+
+    #[test]
+    fn player_link_addresses() {
+        assert_eq!(play_token("/play/abc123"), Some("abc123"));
+        assert_eq!(play_token("/play/abc123/"), Some("abc123"));
+        assert_eq!(play_token("/play/"), None);
+        assert_eq!(play_token("/play/a/b"), None);
+        assert_eq!(play_token("/maps/x"), None);
     }
 
     #[test]

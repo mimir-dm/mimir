@@ -9,7 +9,12 @@ use leptos::task::spawn_local;
 use crate::{api, auth};
 
 #[component]
-pub fn SignIn(on_signed_in: Callback<()>) -> impl IntoView {
+pub fn SignIn(
+    on_signed_in: Callback<()>,
+    /// A line above the form (a player link that no longer works).
+    #[prop(optional, into)]
+    note: String,
+) -> impl IntoView {
     let token = RwSignal::new(String::new());
     let error = RwSignal::new(String::new());
     let busy = RwSignal::new(false);
@@ -40,6 +45,7 @@ pub fn SignIn(on_signed_in: Callback<()>) -> impl IntoView {
     view! {
         <CenterScreen>
             <AuthCard title="Mimir" sub="Sign in with the token of this server.">
+                {(!note.is_empty()).then(|| view! { <Alert color=aurora_leptos::tokens::token::GOLD>{note.clone()}</Alert> })}
                 <form on:submit=move |ev| {
                     ev.prevent_default();
                     submit();

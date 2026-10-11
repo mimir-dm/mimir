@@ -190,3 +190,31 @@ for (const theme of themes) {
     })
   })
 }
+
+// The player page (a player link), with the DM showing the module map.
+for (const theme of themes) {
+  for (const size of sizes) {
+    test(`player-page ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      const auth = { Authorization: `Bearer ${TOKEN}` }
+      const campaign = await campaignId(page)
+      const map = await mapId(page)
+      await page.request.put(`/api/v1/campaigns/${campaign}/display`, { headers: auth, data: { map_id: map } })
+      const pcs = await (await page.request.get(`/api/v1/campaigns/${campaign}/pcs`, { headers: auth })).json()
+      const link = await (await page.request.post(`/api/v1/characters/${pcs[0].id}/link`, { headers: auth })).json()
+      await page.addInitScript(
+        ([t, th]) => {
+          localStorage.setItem('aurora-theme', th)
+          if (!localStorage.getItem('mimir-dm-token')) localStorage.setItem('mimir-dm-token', t)
+        },
+        [link.token, theme] as const,
+      )
+      await page.goto(link.path)
+      await expect(page.locator('.mimir-player__bar')).toContainText(pcs[0].name)
+      await expect(page.locator('.mimir-display__svg image')).toBeAttached()
+      await page.waitForTimeout(400)
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/player-page--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
+  }
+}

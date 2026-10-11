@@ -390,3 +390,29 @@
 }
 .mimir-display__order ol { margin: var(--space-xs) 0 0; padding-left: 1.4em; }
 .mimir-display__order li[aria-current="step"] { color: var(--fg-bright); font-weight: 600; }
+
+/* ---- Player page ----------------------------------------------------------- */
+.mimir-player { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+.mimir-player__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+.mimir-player__actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-player__display { position: relative; flex: 1 1 auto; min-height: 0; }
+.mimir-display--framed { position: absolute; }
+
+/* ---- Player link panel ------------------------------------------------------ */
+.mimir-link { display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-sm) 0; }
+.mimir-link__new { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
+.mimir-link__url {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  word-break: break-all;
+  background: var(--inset);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.mimir-link__qr svg { display: block; width: 180px; height: 180px; }

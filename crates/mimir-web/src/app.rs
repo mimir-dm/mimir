@@ -12,13 +12,14 @@ use leptos::task::spawn_local;
 use leptos_router::components::{ParentRoute, Route, Router, Routes};
 use leptos_router::hooks::use_location;
 use leptos_router::path;
-use mimir_wire::AuthMode;
+use mimir_wire::{AuthMode, Role, Session};
 
 use crate::api;
 use crate::auth::{self, Gate};
 use crate::map::display::DisplayPage;
 use crate::map::dm::DmMapPage;
 use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
+use crate::pages::player::PlayerPage;
 use crate::pages::{home::Home, module::ModulePage, not_found::NotFound, sign_in::SignIn};
 
 /// Where the app is before the shell.
@@ -27,31 +28,63 @@ enum Phase {
     Loading,
     /// The server did not answer, or answered with an error.
     Failed(ApiError),
-    SignIn,
+    /// Sign in; the note says why (a player link that ended).
+    SignIn(String),
     Ready {
         mode: AuthMode,
         version: String,
+        session: Session,
     },
+}
+
+const LINK_ENDED: &str = "This player link no longer works. Ask the DM for a new one.";
+
+/// A visit to `/play/<token>`: keep the token as this device's, and show
+/// `/player` in the address. True when the page was a player link.
+fn take_play_link() -> bool {
+    let Some(window) = web_sys::window() else {
+        return false;
+    };
+    let path = window.location().pathname().unwrap_or_default();
+    let Some(token) = auth::play_token(&path) else {
+        return false;
+    };
+    auth::store_token(token);
+    if let Ok(history) = window.history() {
+        let _ = history.replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some("/player"));
+    }
+    true
 }
 
 /// Read the config and the stored token, and decide the phase.
 async fn boot() -> Phase {
+    let from_link = take_play_link();
     let config = match api::config().await {
         Ok(c) => c,
         Err(e) => return Phase::Failed(e),
     };
-    let ready = Phase::Ready {
+    let ready = |session: Session| Phase::Ready {
         mode: config.auth,
         version: config.version.clone(),
+        session,
     };
     match auth::gate(config.auth, auth::stored_token().as_deref()) {
-        Gate::Open => ready,
-        Gate::SignIn => Phase::SignIn,
+        Gate::Open => ready(Session {
+            role: Role::Dm,
+            character_id: None,
+            character_name: None,
+            campaign_id: None,
+        }),
+        Gate::SignIn => Phase::SignIn(String::new()),
         Gate::CheckStored => match api::session().await {
-            Ok(_) => ready,
+            Ok(s) => ready(s),
             Err(e) if api::is_unauthorized(&e) => {
                 auth::clear_token();
-                Phase::SignIn
+                Phase::SignIn(if from_link {
+                    LINK_ENDED.into()
+                } else {
+                    String::new()
+                })
             }
             Err(e) => Phase::Failed(e),
         },
@@ -72,7 +105,11 @@ pub fn App() -> impl IntoView {
     let signed_in = Callback::new(move |_| start());
     let sign_out = Callback::new(move |_| {
         auth::clear_token();
-        phase.set(Phase::SignIn);
+        phase.set(Phase::SignIn(String::new()));
+    });
+    let link_ended = Callback::new(move |_| {
+        auth::clear_token();
+        phase.set(Phase::SignIn(LINK_ENDED.into()));
     });
 
     view! {
@@ -87,8 +124,12 @@ pub fn App() -> impl IntoView {
                 }
                     .into_any()
             }
-            Phase::SignIn => view! { <SignIn on_signed_in=signed_in /> }.into_any(),
-            Phase::Ready { mode, version } => {
+            Phase::SignIn(note) => view! { <SignIn on_signed_in=signed_in note=note /> }.into_any(),
+            Phase::Ready { session, .. } if session.role == Role::Player => {
+                view! { <PlayerPage session=session on_sign_out=sign_out on_link_ended=link_ended /> }
+                    .into_any()
+            }
+            Phase::Ready { mode, version, .. } => {
                 view! { <Shell mode=mode version=version on_sign_out=sign_out /> }.into_any()
             }
         }}

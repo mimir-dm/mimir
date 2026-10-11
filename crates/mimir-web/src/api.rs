@@ -208,6 +208,15 @@ pub fn decode_error(status: u16, body: &str) -> ApiError {
     }
 }
 
+/// The text of an error, for a person.
+pub fn message(e: ApiError) -> String {
+    match e {
+        ApiError::Http { message, .. } => message,
+        ApiError::Network => "The server did not answer.".into(),
+        ApiError::Unknown(m) => m,
+    }
+}
+
 /// Is this a refused token (401)?
 pub fn is_unauthorized(err: &ApiError) -> bool {
     matches!(err, ApiError::Http { status: 401, .. })

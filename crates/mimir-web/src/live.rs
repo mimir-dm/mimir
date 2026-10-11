@@ -71,12 +71,25 @@ impl Live {
 
 impl Drop for Live {
     fn drop(&mut self) {
-        let mut inner = self.inner.borrow_mut();
+        // The page can drop this from inside a handler (a message that
+        // leaves the page). Detach the handlers from the socket, close it,
+        // and free the handlers on the next tick, not while one runs.
+        let Ok(mut inner) = self.inner.try_borrow_mut() else {
+            return;
+        };
         inner.stopped = true;
         if let Some(s) = inner.socket.take() {
+            s.set_onopen(None);
+            s.set_onmessage(None);
+            s.set_onclose(None);
             let _ = s.close();
         }
-        inner.handlers.clear();
+        let handlers = std::mem::take(&mut inner.handlers);
+        let later = Closure::once_into_js(move || drop(handlers));
+        if let Some(w) = web_sys::window() {
+            let _ =
+                w.set_timeout_with_callback_and_timeout_and_arguments_0(later.unchecked_ref(), 0);
+        }
     }
 }
 

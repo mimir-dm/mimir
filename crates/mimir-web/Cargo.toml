@@ -46,6 +46,12 @@ web-sys = { version = "0.3", features = [
     "DomRect",
     # Keep the map fitted while its box changes size.
     "ResizeObserver",
+    # /play/<token>: replace the address; copy a player link.
+    "History",
+    "Navigator",
+    "Clipboard",
 ] }
 js-sys = "0.3"
+# QR codes of player links (MIMIR-T-0716), drawn as SVG.
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
 wasm-bindgen-futures = "0.4"
