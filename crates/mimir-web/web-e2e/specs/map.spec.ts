@@ -278,6 +278,12 @@ test('token setup: placement form, catalog monster, candle, drag, POI dialog, me
   await edit.getByRole('button', { name: 'Save' }).click()
   await expect(page.locator('.mimir-map__marker--poi[aria-label="Dry well"]')).toBeAttached()
 
+  // A double click on the POI opens its dialog too.
+  await page.locator('.mimir-map__marker--poi[aria-label="Dry well"]').dblclick()
+  await expect(edit.getByLabel('Name')).toHaveValue('Dry well')
+  await page.keyboard.press('Escape')
+  await expect(edit).toBeHidden()
+
   // A trap; its right-click menu triggers and resets it.
   await place.selectOption('trap')
   await placing.getByLabel('Trap name').fill('Spikes')

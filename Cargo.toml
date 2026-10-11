@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "crates/mimir",
     "crates/mimir-core",
     "crates/mimir-mapgen",
     "crates/mimir-mcp",
@@ -9,7 +8,6 @@ members = [
     "crates/mimir-server",
     "crates/mimir-web",
     "crates/mimir-wire",
-    "crates/mimir-ui-bridge",
 ]
 resolver = "2"
 
@@ -93,11 +91,7 @@ tempfile = "3.10"
 # TypeScript type generation
 ts-rs = "10"
 
-# Binary lookup
-which = "6.0"
 
-# Tauri
-tauri = { version = "2" }
 
 [profile.dev]
 opt-level = 0

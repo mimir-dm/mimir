@@ -1,7 +1,8 @@
-//! Mimir MCP Server
+//! Mimir MCP tools
 //!
-//! Model Context Protocol server for D&D 5e campaign management.
-//! Enables Claude Code and other MCP clients to interact with Mimir campaigns.
+//! The Model Context Protocol tools of D&D 5e campaign management. The
+//! server serves them at `/mcp`, so Claude Code and other MCP clients can
+//! work on Mimir campaigns.
 
 pub mod context;
 pub mod error;
@@ -15,8 +16,7 @@ pub use error::McpError;
 pub use handler::MimirHandler;
 pub use response::McpResponse;
 
-/// What the MCP server tells the assistant at the start (both the stdio
-/// binary and the server's `/mcp`).
+/// What the server's `/mcp` tells the assistant at the start.
 pub const INSTRUCTIONS: &str =
     "Mimir manages D&D 5e campaigns. You assist a Dungeon Master (the user): you \
              execute mechanical tasks, they make every creative and narrative decision.\n\n\

@@ -57,7 +57,7 @@ tempfile.workspace = true
 
 [features]
 # SRD catalog loader and the UI fixture campaign (seed::srd, seed::seed_ui_fixture).
-# Dev-only: used by integration tests and mimir-ui-bridge, never by the app.
+# Dev-only: used by tests and the server's dev fixture, never in a release.
 fixtures = []
 
 [dev-dependencies]

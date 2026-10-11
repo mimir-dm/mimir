@@ -2,7 +2,7 @@
 # https://github.com/xd009642/tarpaulin
 
 [general]
-# Workspace members to cover (exclude the Tauri UI crate)
+# Workspace members to cover
 packages = ["mimir-core"]
 
 # Run tests single-threaded to avoid SQLite locking issues

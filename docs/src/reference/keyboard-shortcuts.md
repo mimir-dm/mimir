@@ -21,6 +21,7 @@ On the DM map only:
 | Click or tap an item | Select it and open its panel |
 | Double-click or double-tap a monster token | Open its stat block |
 | Double-click a trap | Open the catalog trap of that name |
+| Double-click a point of interest | Open its dialog |
 | Drag a token, a light, a trap or a POI | Move it |
 | Right-click a token, a trap or a POI | Its menu |
 | Right-click a light | Turn it on or off |

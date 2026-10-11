@@ -1,108 +1,30 @@
-//! MCP Server Handler
+//! Tool dispatch
 //!
-//! Implements the ServerHandler trait to route tool calls to appropriate handlers.
+//! Runs a tool of the registry by name. The server's `/mcp` speaks the
+//! protocol; this is the tests' entry point to the tools.
 
-use async_trait::async_trait;
-use rust_mcp_sdk::mcp_server::ServerHandler;
-use rust_mcp_sdk::schema::{
-    CallToolRequestParams, CallToolResult, ContentBlock, ListToolsResult, PaginatedRequestParams,
-    RpcError, Tool,
-};
-use rust_mcp_sdk::McpServer;
 use serde_json::Value;
 use std::sync::Arc;
-use tracing::{error, info};
 
 use crate::context::McpContext;
 use crate::McpError;
 
-/// Mimir MCP Server Handler.
-///
-/// Routes incoming MCP requests to the appropriate tool implementations.
+/// Runs the registry's tools over one context.
 pub struct MimirHandler {
     context: Arc<McpContext>,
 }
 
 impl MimirHandler {
-    /// Create a new handler with initialized context.
-    pub fn new() -> Result<Self, McpError> {
-        let context = McpContext::new()?;
-        Ok(Self {
-            context: Arc::new(context),
-        })
-    }
-
-    /// Create a handler with an existing context.
+    /// A handler over an existing context.
     pub fn with_context(context: Arc<McpContext>) -> Self {
         Self { context }
     }
 
-    /// Get the list of available tools from the registry.
-    pub(crate) fn get_tools() -> Vec<Tool> {
-        crate::registry::all_tools()
-            .iter()
-            .map(|t| t.to_tool())
-            .collect()
-    }
-
-    /// Route a tool call through the registry.
-    async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
+    /// Run a tool of the registry.
+    pub async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
         match crate::registry::find(name) {
             Some(tool) => (tool.handler)(&self.context, args).await,
             None => Err(McpError::ToolNotFound(name.to_string())),
-        }
-    }
-}
-
-#[async_trait]
-impl ServerHandler for MimirHandler {
-    async fn handle_list_tools_request(
-        &self,
-        _params: Option<PaginatedRequestParams>,
-        _runtime: Arc<dyn McpServer>,
-    ) -> Result<ListToolsResult, RpcError> {
-        info!("Handling list_tools request");
-        Ok(ListToolsResult {
-            tools: Self::get_tools(),
-            meta: None,
-            next_cursor: None,
-        })
-    }
-
-    async fn handle_call_tool_request(
-        &self,
-        params: CallToolRequestParams,
-        _runtime: Arc<dyn McpServer>,
-    ) -> Result<CallToolResult, rust_mcp_sdk::schema::schema_utils::CallToolError> {
-        info!(tool = %params.name, "Handling call_tool request");
-
-        let args = params
-            .arguments
-            .map(Value::Object)
-            .unwrap_or(Value::Object(Default::default()));
-
-        match self.execute_tool(&params.name, args).await {
-            Ok(result) => {
-                let content = vec![ContentBlock::text_content(
-                    serde_json::to_string_pretty(&result).unwrap_or_default(),
-                )];
-                Ok(CallToolResult {
-                    content,
-                    is_error: None,
-                    meta: None,
-                    structured_content: None,
-                })
-            }
-            Err(e) => {
-                error!(tool = %params.name, error = %e, "Tool execution failed");
-                let content = vec![ContentBlock::text_content(format!("Error: {}", e))];
-                Ok(CallToolResult {
-                    content,
-                    is_error: Some(true),
-                    meta: None,
-                    structured_content: None,
-                })
-            }
         }
     }
 }
@@ -123,8 +45,10 @@ mod tests {
 
     #[test]
     fn no_duplicate_tool_names() {
-        let tools = MimirHandler::get_tools();
-        let mut names: Vec<&str> = tools.iter().map(|t| t.name.as_str()).collect();
+        let mut names: Vec<&str> = crate::registry::all_tools()
+            .iter()
+            .map(|t| t.name)
+            .collect();
         names.sort();
         for window in names.windows(2) {
             assert_ne!(window[0], window[1], "Duplicate tool name: '{}'", window[0]);
@@ -133,10 +57,9 @@ mod tests {
 
     #[test]
     fn all_tools_have_descriptions() {
-        let tools = MimirHandler::get_tools();
-        for tool in &tools {
+        for tool in crate::registry::all_tools() {
             assert!(
-                tool.description.is_some() && !tool.description.as_ref().unwrap().is_empty(),
+                !tool.description.is_empty(),
                 "Tool '{}' is missing a description",
                 tool.name
             );
@@ -1941,7 +1864,7 @@ mod tests {
             res
         );
 
-        // Remove — case-insensitive, matching the desktop UI behavior
+        // Remove — case-insensitive, matching the app
         let res = call_ok(
             &handler,
             "remove_character_spell",

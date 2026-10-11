@@ -169,6 +169,7 @@ pub fn is_double_tap(last: &str, last_at: f64, key: &str, now: f64) -> bool {
 enum Detail {
     Monster(Option<String>),
     Trap(String),
+    Poi(PoiEdit),
 }
 
 /// The selected thing.
@@ -549,7 +550,9 @@ pub fn DmMapPage() -> impl IntoView {
     };
 
     // A double click or tap shows the details: a monster's stat block, or
-    // the catalog trap of that name, in the detail drawer. Taken from the
+    // the catalog trap of that name, in the detail drawer; a point of
+    // interest in its dialog. (Tokens hold no character, so a PC or NPC
+    // token has none, as in the desktop.) Taken from the
     // pointer events: a token holds the pointer while it may drag, so the
     // browser's dblclick goes to the scene, and a tablet has none.
     // The details open after the tap's pointerup and click: opened on the
@@ -655,6 +658,7 @@ pub fn DmMapPage() -> impl IntoView {
                 move || match detail {
                     Detail::Monster(m) => open_monster(m),
                     Detail::Trap(name) => open_trap(name),
+                    Detail::Poi(edit) => poi_edit.set(Some(edit)),
                 },
                 std::time::Duration::ZERO,
             );
@@ -1219,6 +1223,8 @@ pub fn DmMapPage() -> impl IntoView {
                                     let sel3 = sel.clone();
                                     let emoji = poi_emoji(&p.icon);
                                     let poi_label = p.name.clone();
+                                    let poi_key = p.id.clone();
+                                    let poi_details = PoiEdit::of(&p);
                                     let color = p.color.clone().unwrap_or_else(|| token::ICE.to_string());
                                     view! {
                                         <g
@@ -1228,6 +1234,9 @@ pub fn DmMapPage() -> impl IntoView {
                                             aria-label=poi_label
                                             on:pointerdown=move |ev: web_sys::PointerEvent| {
                                                 ev.stop_propagation();
+                                                if double_tap(&poi_key) {
+                                                    pending_detail.set_value(Some(Detail::Poi(poi_details.clone())));
+                                                }
                                                 selected.set(Some(sel.clone()));
                                                 start_drag(sel.clone(), &ev);
                                             }

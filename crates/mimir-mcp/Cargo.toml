@@ -2,55 +2,30 @@
 name = "mimir-mcp"
 version = "0.7.3"
 edition = "2021"
-description = "MCP server for Mimir campaign management"
-
-[[bin]]
-name = "mimir-mcp"
-path = "src/main.rs"
+description = "The MCP tools of Mimir campaign management (served at the server's /mcp)"
 
 [dependencies]
 # Internal crates
 mimir-core = { path = "../mimir-core" }
 mimir-mapgen = { path = "../mimir-mapgen" }
 
-# MCP SDK
-rust-mcp-sdk = { version = "0.8", default-features = false, features = [
-    "server",
-    "macros",
-    "hyper-server",
-    "streamable-http",
-    "stdio",
-] }
-async-trait = { workspace = true }
-
-# URL with serde support (needed for rust-mcp-sdk)
-url = { workspace = true }
-
-# Async runtime
-tokio = { workspace = true }
-
 # Error handling
 thiserror = { workspace = true }
-anyhow = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 
-# Logging
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-
 # Database
 diesel = { workspace = true }
 
 # Utilities
-chrono = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
 # SRD catalog fixture for catalog search tests.
 mimir-core = { path = "../mimir-core", features = ["fixtures"] }
+tokio = { workspace = true }
 tempfile = { workspace = true }
 diesel_migrations = { workspace = true }

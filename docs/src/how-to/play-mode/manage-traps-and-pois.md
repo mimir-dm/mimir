@@ -10,7 +10,7 @@ Place trap markers and points of interest (POIs) on a map, choose what the playe
 4. Turn on **Players see it** to show the trap at once. A new trap is hidden by default.
 5. Click a grid square.
 
-A trap with the name of a catalog trap opens that trap's details when you double-click it.
+A trap with the name of a catalog trap opens that trap's details when you double-click it. A point of interest opens its dialog when you double-click it.
 
 ## Place a POI
 
