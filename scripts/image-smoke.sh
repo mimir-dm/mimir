@@ -7,7 +7,7 @@ set -eu
 image="${1:?usage: image-smoke.sh <image>}"
 name="mimir-smoke-$$"
 
-cleanup() { docker rm -f "$name" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -f -v "$name" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 docker run -d --name "$name" -p 127.0.0.1::8740 "$image" >/dev/null
