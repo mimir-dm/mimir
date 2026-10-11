@@ -352,29 +352,37 @@ pub async fn entry(
 ) -> ApiResult<Value> {
     state
         .with_db(move |conn| {
-            if let Some(v) = entry_json(conn, &category, &name, &source)? {
-                return Ok(v);
-            }
-            let q = SearchQuery {
-                search: Some(name.clone()),
-                ..SearchQuery::default()
-            };
-            let rows = search_rows(conn, &category, &q, None, 50, 0)?;
-            let hit = rows
-                .into_iter()
-                .find(|(n, _, _)| n.eq_ignore_ascii_case(&name));
-            match hit {
-                Some((n, s, _)) => entry_json(conn, &category, &n, &s)?
-                    .ok_or_else(|| ServiceError::not_found(category.as_str(), &name).into()),
-                None => Err(ServiceError::not_found(
-                    category.as_str(),
-                    format!("{name} ({source})"),
-                )
-                .into()),
-            }
+            entry_named(conn, &category, &name, &source)?.ok_or_else(|| {
+                ServiceError::not_found(category.as_str(), format!("{name} ({source})")).into()
+            })
         })
         .await
         .map(Json)
+}
+
+/// The entry of that name and source; else the first entry with the name,
+/// in any source (a tag's default source can be wrong); else none.
+pub fn entry_named(
+    conn: &mut SqliteConnection,
+    category: &str,
+    name: &str,
+    source: &str,
+) -> Result<Option<Value>, ApiError> {
+    if let Some(v) = entry_json(conn, category, name, source)? {
+        return Ok(Some(v));
+    }
+    let q = SearchQuery {
+        search: Some(name.to_string()),
+        ..SearchQuery::default()
+    };
+    let rows = search_rows(conn, category, &q, None, 50, 0)?;
+    match rows
+        .into_iter()
+        .find(|(n, _, _)| n.eq_ignore_ascii_case(name))
+    {
+        Some((n, s, _)) => entry_json(conn, category, &n, &s),
+        None => Ok(None),
+    }
 }
 
 /// `GET /catalog/sources`: the source books, and which have a book to

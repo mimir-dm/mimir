@@ -4,6 +4,7 @@
 //! bearer auth, open mode without a token), the web app's own endpoints, and
 //! the built Leptos app with SPA fallback.
 
+pub mod adventure;
 pub mod api;
 pub mod auth;
 pub mod config;

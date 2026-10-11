@@ -2,10 +2,11 @@
 name = "mimir-render"
 version = "0.7.3"
 edition = "2021"
-description = "5etools JSON to HTML for the catalog and the book reader (MIMIR-T-0723): tags, entries, stat blocks."
+description = "5etools JSON to HTML for the catalog and the book reader (MIMIR-T-0723): tags, entries, stat blocks; adventure entries to and from markdown (MIMIR-T-0738)."
 license = "MIT"
 
 # Builds for wasm32-unknown-unknown (mimir-web) and runs its tests on the
-# host. JSON in, escaped HTML out; no I/O.
+# host. JSON in, escaped HTML or markdown out; no I/O.
 [dependencies]
 serde_json = { workspace = true }
+pulldown-cmark = { workspace = true }

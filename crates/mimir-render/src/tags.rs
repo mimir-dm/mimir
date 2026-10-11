@@ -6,7 +6,7 @@ use crate::{esc, link};
 
 /// A tag that links to a catalog entry: the reference type, and the
 /// source when the tag gives none.
-fn link_kind(tag: &str) -> Option<(&'static str, &'static str)> {
+pub(crate) fn link_kind(tag: &str) -> Option<(&'static str, &'static str)> {
     Some(match tag {
         "spell" => ("spell", "PHB"),
         "item" => ("item", "PHB"),
@@ -68,7 +68,7 @@ fn split_args(s: &str) -> Vec<&str> {
 }
 
 /// The index of the `}` that closes the `{` at `open`.
-fn closing(s: &str, open: usize) -> Option<usize> {
+pub(crate) fn closing(s: &str, open: usize) -> Option<usize> {
     let mut depth = 0usize;
     for (i, c) in s[open..].char_indices() {
         match c {

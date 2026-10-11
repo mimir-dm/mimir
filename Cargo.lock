@@ -2836,6 +2836,7 @@ dependencies = [
 name = "mimir-render"
 version = "0.7.3"
 dependencies = [
+ "pulldown-cmark",
  "serde_json",
 ]
 

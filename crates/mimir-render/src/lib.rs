@@ -7,6 +7,7 @@
 //! A cross-reference is `<a href="#" class="cross-ref-link {type}-ref"
 //! data-ref-type data-ref-name data-ref-source>`: the web app opens it.
 
+pub mod adventure;
 pub mod book;
 pub mod detail;
 pub mod entries;
