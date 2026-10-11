@@ -9,34 +9,25 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-desktop:
-    name: Build Desktop Applications
+  build-mapgen:
+    name: Build mimir-mapgen
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: 'macos-latest'
             target: 'aarch64-apple-darwin'
-            args: '--target aarch64-apple-darwin'
           - platform: 'macos-latest'
             target: 'x86_64-apple-darwin'
-            args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04'
             target: 'x86_64-unknown-linux-gnu'
-            args: ''
           - platform: 'windows-latest'
             target: 'x86_64-pc-windows-msvc'
-            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -48,128 +39,165 @@ jobs:
         with:
           workspaces: '. -> target'
 
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: Build mimir-mapgen binary
+        run: cargo build --release --package mimir-mapgen --target ${{ matrix.target }}
 
-      - name: Install frontend dependencies
-        working-directory: ./crates/mimir/frontend
-        run: npm ci
-
-      - name: Build mimir-mcp sidecar (unix)
+      - name: Name the binary for its target (unix)
         if: matrix.platform != 'windows-latest'
-        env:
-          TAURI_ENV_TARGET_TRIPLE: ${{ matrix.target }}
-        run: bash scripts/build-sidecar.sh
+        run: cp target/${{ matrix.target }}/release/mimir-mapgen mimir-mapgen-${{ matrix.target }}
 
-      - name: Build mimir-mcp sidecar (windows)
+      - name: Name the binary for its target (windows)
         if: matrix.platform == 'windows-latest'
         shell: pwsh
-        env:
-          TAURI_ENV_TARGET_TRIPLE: ${{ matrix.target }}
-        run: .\scripts\build-sidecar.ps1
+        run: Copy-Item target/${{ matrix.target }}/release/mimir-mapgen.exe mimir-mapgen-${{ matrix.target }}.exe
 
-      - name: Upload mimir-mcp binary (unix)
-        if: matrix.platform != 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: mimir-mcp-${{ matrix.target }}
-          path: crates/mimir/binaries/mimir-mcp-${{ matrix.target }}
-
-      - name: Upload mimir-mcp binary (windows)
-        if: matrix.platform == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: mimir-mcp-${{ matrix.target }}
-          path: crates/mimir/binaries/mimir-mcp-${{ matrix.target }}.exe
-
-      - name: Build mimir-mapgen binary
-        run: cargo build --release --package mimir-mapgen ${{ matrix.args }}
-
-      - name: Upload mimir-mapgen binary (unix cross-compiled)
-        if: matrix.platform != 'windows-latest' && matrix.args != ''
+      - name: Upload mimir-mapgen binary
         uses: actions/upload-artifact@v4
         with:
           name: mimir-mapgen-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/mimir-mapgen
+          path: mimir-mapgen-${{ matrix.target }}*
 
-      - name: Upload mimir-mapgen binary (unix native)
-        if: matrix.platform != 'windows-latest' && matrix.args == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: mimir-mapgen-${{ matrix.target }}
-          path: target/release/mimir-mapgen
-
-      - name: Upload mimir-mapgen binary (windows)
-        if: matrix.platform == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: mimir-mapgen-${{ matrix.target }}
-          path: target/release/mimir-mapgen.exe
-
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          TAURI_ENV_TARGET_TRIPLE: ${{ matrix.target }}
-        with:
-          projectPath: ./crates/mimir
-          tagName: app-v__VERSION__
-          releaseName: 'Mimir v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.args }}
-
-  upload-mcp-binaries:
-    name: Attach MCP binaries to release
-    needs: build-desktop
+  release:
+    name: Draft the release
+    needs: build-mapgen
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all mimir-mcp artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: mimir-mcp-*
-          path: mcp-binaries
-          merge-multiple: false
-
-      - name: Download all mimir-mapgen artifacts
+      - name: Download the mimir-mapgen binaries
         uses: actions/download-artifact@v4
         with:
           pattern: mimir-mapgen-*
           path: mapgen-binaries
-          merge-multiple: false
+          merge-multiple: true
 
-      - name: Get version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload MCP and mapgen binaries to release
+      - name: Create the draft release with the binaries
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          TAG="app-v${{ steps.version.outputs.version }}"
-          echo "Uploading binaries to release ${TAG}..."
+          gh release create "$GITHUB_REF_NAME" mapgen-binaries/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Mimir $GITHUB_REF_NAME" \
+            --notes "See the assets to download this version." \
+            --draft
 
-          for dir in mcp-binaries/mimir-mcp-*/; do
-            for file in "$dir"*; do
-              filename=$(basename "$file")
-              echo "Uploading $filename..."
-              gh release upload "$TAG" "$file" --clobber
-            done
-          done
+  # The server image (MIMIR-T-0706), after the Kairos release: each
+  # architecture is built on its own runner and pushed by digest, checked
+  # with scripts/image-smoke.sh, then one job tags the manifest list. Only a
+  # tag publishes; versioned tags only, never `latest`.
+  image:
+    name: Build the image (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          for dir in mapgen-binaries/mimir-mapgen-*/; do
-            for file in "$dir"*; do
-              filename=$(basename "$file")
-              echo "Uploading $filename..."
-              gh release upload "$TAG" "$file" --clobber
-            done
+      - name: Check the tag against the server version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          crate_version="$(grep -m1 '^version = ' crates/mimir-server/Cargo.toml | cut -d'"' -f2)"
+          if [ "${version}" != "${crate_version}" ]; then
+            echo "Tag version ${version} != mimir-server version ${crate_version}" >&2
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=ghcr.io/mimir-dm/mimir,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=image-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=image-${{ matrix.arch }}
+
+      - name: Check the image
+        run: |
+          image="ghcr.io/mimir-dm/mimir@${{ steps.build.outputs.digest }}"
+          docker pull "${image}"
+          scripts/image-smoke.sh "${image}"
+
+      - name: Export the digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload the digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  image-manifest:
+    name: Publish the image manifest
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download the digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: image-digest-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push the manifest list
+        working-directory: /tmp/digests
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          docker buildx imagetools create \
+            -t "ghcr.io/mimir-dm/mimir:${version}" \
+            $(printf 'ghcr.io/mimir-dm/mimir@sha256:%s ' *)
+
+      - name: Check both architectures are in the manifest
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          manifest="$(docker buildx imagetools inspect --raw "ghcr.io/mimir-dm/mimir:${version}")"
+          echo "$manifest"
+          for arch in amd64 arm64; do
+            echo "$manifest" | grep -q "\"architecture\": *\"${arch}\"" \
+              || { echo "the manifest is missing linux/${arch}" >&2; exit 1; }
           done

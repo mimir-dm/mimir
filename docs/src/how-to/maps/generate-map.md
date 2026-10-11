@@ -16,7 +16,7 @@ Output files open directly in Dungeondraft for further editing or UVTT export. M
 
 ## Quick Start: Using a Preset
 
-**Prerequisite:** the `mimir-mapgen` binary is not bundled with the Mimir app. Either download a pre-built binary from [GitHub Releases](https://github.com/mimir-dm/mimir/releases) (attached to each release for every platform) or build it from source with `cargo build -p mimir-mapgen --release`. See [Install and Use Mapgen as a Standalone Tool](./mapgen-standalone.md) for details.
+**Prerequisite:** `mimir-mapgen` is a separate program from the Mimir server. Either download a pre-built binary from [GitHub Releases](https://github.com/mimir-dm/mimir/releases) (attached to each release for every platform) or build it from source with `cargo build -p mimir-mapgen --release`. See [Install and Use Mapgen as a Standalone Tool](./mapgen-standalone.md) for details.
 
 Generate a map from one of 12 built-in biome presets:
 

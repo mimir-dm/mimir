@@ -18,4 +18,6 @@ pub mod srd;
 
 pub use dev::{clear_dev_seed_data, is_already_seeded, seed_dev_data, TEST_CAMPAIGN_NAME};
 #[cfg(feature = "fixtures")]
-pub use fixture::{seed_ui_fixture, UiFixtureReport, FIXTURE_CAMPAIGN_NAME};
+pub use fixture::{
+    seed_ui_fixture, UiFixtureReport, FIXTURE_ADVENTURE_SOURCE, FIXTURE_CAMPAIGN_NAME,
+};

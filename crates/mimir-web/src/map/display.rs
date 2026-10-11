@@ -1,0 +1,857 @@
+//! `/display/:campaign`: the player display. A TV, a tablet or a player's
+//! device; no app shell. It shows the map the DM shows, from the server's
+//! player view only (hidden tokens, unlit lights, hidden markers and trap
+//! details never reach it), and follows the DM over the live socket. The
+//! viewer pans and zooms; a button asks for full screen.
+
+use std::collections::HashMap;
+
+use aurora_leptos::components::*;
+use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos_router::hooks::use_params_map;
+use mimir_wire::{
+    DisplayState, Fog, Light, MapDetail, MapGeometry, PlayerLight, PlayerToken, PlayerView,
+    ServerMsg, Token,
+};
+
+use super::dm::{cells_for_size, grid_path};
+use super::viewport::Viewport;
+use super::vision::{self, LightLevel, Point};
+use crate::api;
+use crate::live::Live;
+
+/// A player token as the vision functions take it.
+pub fn as_token(t: &PlayerToken) -> Token {
+    Token {
+        id: t.id.clone(),
+        map_id: String::new(),
+        name: t.name.clone(),
+        token_type: t.token_type.clone(),
+        size: t.size.clone(),
+        grid_x: t.grid_x,
+        grid_y: t.grid_y,
+        x: t.x,
+        y: t.y,
+        visible_to_players: true,
+        color: t.color.clone(),
+        monster_id: None,
+        npc_id: None,
+        vision_bright_ft: t.vision_bright_ft,
+        vision_dim_ft: t.vision_dim_ft,
+        vision_dark_ft: t.vision_dark_ft,
+        light_radius_ft: t.light_radius_ft,
+        dead: t.dead,
+    }
+}
+
+/// A lit light as the vision functions take it.
+pub fn as_light(l: &PlayerLight) -> Light {
+    Light {
+        id: l.id.clone(),
+        map_id: String::new(),
+        name: None,
+        grid_x: l.grid_x,
+        grid_y: l.grid_y,
+        x: l.x,
+        y: l.y,
+        bright_radius_ft: l.bright_radius_ft,
+        dim_radius_ft: l.dim_radius_ft,
+        color: l.color.clone(),
+        active: true,
+    }
+}
+
+/// What the players see of the map: the sight of the party (with walls),
+/// the lit areas the party has a line to, the revealed fog, and how dark
+/// the rest is.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sight {
+    /// Areas seen: SVG paths (party sight, lit areas, revealed fog areas).
+    pub holes: Vec<String>,
+    /// The seen polygons (for token visibility).
+    pub polygons: Vec<Vec<Point>>,
+    /// Opacity of the cover over the rest: 1 under fog, less for darkness,
+    /// 0 for none.
+    pub cover: f64,
+    /// The DM revealed the whole map: the players see all of it.
+    pub all: bool,
+}
+
+/// The sight on a map. `tokens` and `lights`: as the players have them
+/// (the vision functions skip hidden tokens and unlit lights).
+/// `blocking`: [`vision::blocking_for`]. `file_lit`: [`vision::file_lit`].
+pub fn sight_for(
+    m: &MapDetail,
+    tokens: &[Token],
+    lights: &[Light],
+    fog: &Fog,
+    blocking: &[vision::Wall],
+    file_lit: &[vision::Lit],
+) -> Sight {
+    if m.reveal_all {
+        return Sight {
+            holes: Vec::new(),
+            polygons: Vec::new(),
+            cover: 0.0,
+            all: true,
+        };
+    }
+    let g = m.grid_size_px;
+    let (w, h) = (f64::from(m.width_px), f64::from(m.height_px));
+    let ambient = LightLevel::from_mode(&m.lighting_mode);
+    let mut zones = vision::light_zones(lights, tokens, g);
+    zones.extend(file_lit.iter().map(|l| l.zone.clone()));
+    let party = vision::party_vision(tokens, &zones, ambient, g);
+    let cap = w.max(h) * 2.0;
+    let mut polygons: Vec<Vec<Point>> = party
+        .iter()
+        .filter(|v| v.radius_px > 0.0)
+        .map(|v| {
+            vision::visibility_polygon(
+                Point { x: v.x, y: v.y },
+                blocking,
+                v.radius_px.min(cap),
+                w,
+                h,
+            )
+        })
+        .collect();
+    // A lit area shows where the party has a line to its light (the
+    // desktop's map light zones), past the reach of their own sight.
+    if ambient != LightLevel::Bright && !party.is_empty() {
+        let lines: Vec<Vec<Point>> = party
+            .iter()
+            .map(|v| vision::visibility_polygon(Point { x: v.x, y: v.y }, blocking, cap, w, h))
+            .collect();
+        let placed = vision::light_zones(lights, tokens, g);
+        for z in placed.iter().filter(|z| z.dim_px > 0.0) {
+            let c = Point { x: z.x, y: z.y };
+            if vision::party_has_line_to(c, &lines) {
+                polygons.push(vision::visibility_polygon(c, blocking, z.dim_px, w, h));
+            }
+        }
+        for l in file_lit {
+            if vision::party_has_line_to(
+                Point {
+                    x: l.zone.x,
+                    y: l.zone.y,
+                },
+                &lines,
+            ) {
+                polygons.push(l.area.clone());
+            }
+        }
+    }
+    let mut holes: Vec<String> = polygons.iter().map(|p| vision::svg_path(p)).collect();
+    if fog.enabled {
+        holes.extend(
+            fog.revealed
+                .iter()
+                .map(|a| format!("M{} {}h{}v{}h{}Z", a.x, a.y, a.width, a.height, -a.width)),
+        );
+    }
+    let cover = if fog.enabled {
+        1.0
+    } else if vision::needs_vision_overlay(ambient, &party) {
+        match ambient {
+            LightLevel::Darkness => 0.92,
+            _ => 0.75,
+        }
+    } else {
+        0.0
+    };
+    Sight {
+        holes,
+        polygons,
+        cover,
+        all: false,
+    }
+}
+
+/// The sight of a player view and the map geometry.
+pub fn sight(view: &PlayerView, geometry: Option<&MapGeometry>) -> Sight {
+    let m = &view.map;
+    let tokens: Vec<Token> = view.tokens.iter().map(as_token).collect();
+    let lights: Vec<Light> = view.lights.iter().map(as_light).collect();
+    let blocking = vision::blocking_for(geometry, &view.doors, m.line_of_sight);
+    let file_lit = geometry
+        .map(|g| vision::file_lit(g, &blocking, f64::from(m.width_px), f64::from(m.height_px)))
+        .unwrap_or_default();
+    sight_for(m, &tokens, &lights, &view.fog, &blocking, &file_lit)
+}
+
+/// Does the party see this token? PCs always; others inside the sight or a
+/// revealed area. With no PCs on the map: all, unless the fog is on.
+pub fn token_seen(t: &PlayerToken, view: &PlayerView, sight: &Sight) -> bool {
+    if t.token_type == "pc" || sight.all {
+        return true;
+    }
+    let has_party = view.tokens.iter().any(|t| t.token_type == "pc");
+    if !has_party {
+        return !view.fog.enabled;
+    }
+    let p = Point { x: t.x, y: t.y };
+    sight
+        .polygons
+        .iter()
+        .any(|poly| vision::point_in_polygon(p, poly))
+        || (view.fog.enabled
+            && view
+                .fog
+                .revealed
+                .iter()
+                .any(|a| t.x >= a.x && t.x <= a.x + a.width && t.y >= a.y && t.y <= a.y + a.height))
+}
+
+/// A key on the player display.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisplayKey {
+    FullScreen,
+    Fit,
+}
+
+pub fn display_key(key: &str) -> Option<DisplayKey> {
+    match key {
+        "f" | "F" | "F11" => Some(DisplayKey::FullScreen),
+        "r" | "R" => Some(DisplayKey::Fit),
+        _ => None,
+    }
+}
+
+#[component]
+pub fn DisplayPage() -> impl IntoView {
+    let params = use_params_map();
+    let campaign = Memo::new(move |_| params.get().get("campaign").unwrap_or_default());
+    view! { <DisplayView campaign=campaign /> }
+}
+
+/// The display of a campaign. `framed`: inside a page (the player page),
+/// not the whole window. `on_signed_out`: the server ended this device's
+/// player link.
+#[component]
+pub fn DisplayView(
+    #[prop(into)] campaign: Signal<String>,
+    #[prop(optional)] framed: bool,
+    #[prop(optional)] on_signed_out: Option<Callback<()>>,
+) -> impl IntoView {
+    let display = RwSignal::new(None::<DisplayState>);
+    let view = RwSignal::new(None::<PlayerView>);
+    let shown = Memo::new(move |_| {
+        display.with(|d| {
+            d.as_ref()
+                .filter(|d| !d.blackout)
+                .and_then(|d| d.map_id.clone())
+        })
+    });
+
+    // With the DM token the socket sends notices; read the player view
+    // then. A player's socket sends the view itself.
+    let fetch = move |map_id: String| {
+        spawn_local(async move {
+            if let Ok(v) = api::get::<PlayerView>(format!("/maps/{map_id}/player-view")).await {
+                // The view may be gone by now (another tab): `try_`.
+                if shown.try_get_untracked().flatten().as_deref() == Some(v.map.id.as_str()) {
+                    view.try_set(Some(v));
+                }
+            }
+        });
+    };
+    let live = StoredValue::new_local(None::<Live>);
+    Effect::new(move |_| {
+        let c = campaign.get();
+        if c.is_empty() {
+            return;
+        }
+        live.set_value(Some(Live::watch(c, move |msg| match msg {
+            ServerMsg::Display { display: d } => {
+                let map = (!d.blackout).then(|| d.map_id.clone()).flatten();
+                display.set(Some(d));
+                match map {
+                    Some(m) => fetch(m),
+                    None => view.set(None),
+                }
+            }
+            ServerMsg::MapChanged { map_id, .. } => {
+                if shown.get_untracked().as_deref() == Some(map_id.as_str()) {
+                    fetch(map_id);
+                }
+            }
+            ServerMsg::CombatChanged { .. } => {
+                if let Some(m) = shown.get_untracked() {
+                    fetch(m);
+                }
+            }
+            ServerMsg::PlayerView { view: v } => view.set(Some(*v)),
+            ServerMsg::SignedOut => {
+                if let Some(cb) = on_signed_out {
+                    cb.run(());
+                }
+            }
+            _ => {}
+        })));
+    });
+
+    let geometry = LocalResource::new(move || {
+        let m = shown.get();
+        async move {
+            match m {
+                Some(m) => api::get::<MapGeometry>(format!("/maps/{m}/geometry"))
+                    .await
+                    .ok(),
+                None => None,
+            }
+        }
+    });
+    // Walls, doors and the file's lights change rarely: work them out when
+    // they change, not on each token move.
+    let door_key = Memo::new(move |_| {
+        view.with(|v| {
+            v.as_ref().map(|v| {
+                (
+                    v.doors.clone(),
+                    v.map.line_of_sight,
+                    v.map.width_px,
+                    v.map.height_px,
+                )
+            })
+        })
+    });
+    let walls_and_lights = Memo::new(move |_| {
+        let geo = geometry.get().flatten()?;
+        let (doors, los, w, h) = door_key.get()?;
+        let blocking = vision::blocking_for(Some(&geo), &doors, los);
+        let mut shown_doors = vision::doors_px(&geo);
+        vision::apply_door_states(&mut shown_doors, &doors);
+        let lit = vision::file_lit(&geo, &blocking, f64::from(w), f64::from(h));
+        Some((blocking, lit, shown_doors))
+    });
+    let image = LocalResource::new(move || {
+        let m = shown.get();
+        async move {
+            match m {
+                Some(m) => api::image_url(format!("/maps/{m}/image"))
+                    .await
+                    .ok()
+                    .flatten(),
+                None => None,
+            }
+        }
+    });
+    let art = RwSignal::new(HashMap::<String, Option<String>>::new());
+    Effect::new(move |_| {
+        let Some(v) = view.get() else { return };
+        for t in v.tokens.into_iter().filter(|t| t.token_type == "monster") {
+            if art.with_untracked(|m| m.contains_key(&t.id)) {
+                continue;
+            }
+            art.update(|m| {
+                m.insert(t.id.clone(), None);
+            });
+            spawn_local(async move {
+                if let Ok(Some(url)) = api::image_url(format!("/tokens/{}/image", t.id)).await {
+                    art.update(|m| {
+                        m.insert(t.id, Some(url));
+                    });
+                }
+            });
+        }
+    });
+
+    let vp = Viewport::new();
+    vp.keep_fitted();
+    let fitted_for = RwSignal::new(String::new());
+    Effect::new(move |_| {
+        let Some(v) = view.get() else { return };
+        if vp.scene.get().is_none() || fitted_for.get_untracked() == v.map.id {
+            return;
+        }
+        vp.fit(f64::from(v.map.width_px), f64::from(v.map.height_px));
+        fitted_for.set(v.map.id);
+    });
+
+    let full_screen = move |_| {
+        if let Some(el) = vp.scene.get_untracked() {
+            let _ = el.request_fullscreen();
+        }
+    };
+    // Keys (the desktop's): F or F11 full screen, R resets the view.
+    let fit_view = move || {
+        if let Some(v) = view.get_untracked() {
+            vp.fit(f64::from(v.map.width_px), f64::from(v.map.height_px));
+        }
+    };
+    let keys = window_event_listener(leptos::ev::keydown, move |ev| {
+        if !super::dm::page_key(&ev) {
+            return;
+        }
+        match display_key(&ev.key()) {
+            Some(DisplayKey::FullScreen) => {
+                ev.prevent_default();
+                full_screen(());
+            }
+            Some(DisplayKey::Fit) => {
+                ev.prevent_default();
+                fit_view();
+            }
+            None => {}
+        }
+    });
+    on_cleanup(move || keys.remove());
+
+    let scene = move || {
+        let blackout = display.with(|d| d.as_ref().is_some_and(|d| d.blackout));
+        if blackout {
+            return view! {
+                <div class="mimir-display__message" role="status">
+                    <Text size="lg">"Paused"</Text>
+                </div>
+            }
+            .into_any();
+        }
+        let Some(v) = view.get() else {
+            return view! {
+                <div class="mimir-display__message" role="status">
+                    <Text size="lg" dimmed=true>"Waiting for the DM to show a map."</Text>
+                </div>
+            }
+            .into_any();
+        };
+        let m = v.map.clone();
+        let (w, h, g) = (
+            f64::from(m.width_px),
+            f64::from(m.height_px),
+            m.grid_size_px,
+        );
+        let (blocking, file_lit, doors) = walls_and_lights.get().unwrap_or_default();
+        let s = sight_for(
+            &v.map,
+            &v.tokens.iter().map(as_token).collect::<Vec<_>>(),
+            &v.lights.iter().map(as_light).collect::<Vec<_>>(),
+            &v.fog,
+            &blocking,
+            &file_lit,
+        );
+        let cover = s.cover;
+        let holes = s.holes.clone();
+        let tokens: Vec<PlayerToken> = v
+            .tokens
+            .iter()
+            .filter(|t| token_seen(t, &v, &s))
+            .cloned()
+            .collect();
+        let grid = grid_path(m.columns, m.rows, g);
+        view! {
+            <svg class="mimir-display__svg" role="img" aria-label=format!("Map: {}", m.name)>
+                <defs>
+                    <clipPath id="mimir-display-clip">
+                        <rect x="0" y="0" width=w height=h />
+                    </clipPath>
+                    <mask id="mimir-sight-mask" maskUnits="userSpaceOnUse" x="0" y="0" width=w height=h>
+                        <rect x="0" y="0" width=w height=h fill="white" />
+                        {holes.into_iter().map(|d| view! { <path d=d fill="black" /> }).collect_view()}
+                    </mask>
+                </defs>
+                <g transform=move || vp.view.get().transform()>
+                    {move || image.get().flatten().map(|href| view! { <image href=href x="0" y="0" width=w height=h /> })}
+                    <path class="mimir-map__grid" d=grid />
+                    <g clip-path="url(#mimir-display-clip)">
+                    // The map file's lights: their glow stops at the walls.
+                    {file_lit.iter().map(|l| view! {
+                        <path class="mimir-map__file-light" d=vision::svg_path(&l.area) style=format!("fill:{}", l.color) opacity=0.12 * l.intensity.clamp(0.2, 2.0) />
+                    }).collect_view()}
+                    {v.lights.iter().map(|l| {
+                        let color = l.color.clone().unwrap_or_else(|| "#ffcc66".into());
+                        let dim = vision::feet_to_px(f64::from(l.dim_radius_ft), g);
+                        let bright = vision::feet_to_px(f64::from(l.bright_radius_ft), g);
+                        view! {
+                            <circle cx=l.x cy=l.y r=dim fill=color.clone() opacity="0.10" />
+                            <circle cx=l.x cy=l.y r=bright fill=color opacity="0.14" />
+                        }
+                    }).collect_view()}
+                    </g>
+                    {doors.into_iter().map(|d| view! {
+                        <line
+                            class="mimir-display__door"
+                            class:mimir-map__door--open=!d.closed
+                            x1=d.wall.p1.x
+                            y1=d.wall.p1.y
+                            x2=d.wall.p2.x
+                            y2=d.wall.p2.y
+                        />
+                    }).collect_view()}
+                    {v.markers.iter().map(|mk| {
+                        let (x, y) = ((f64::from(mk.grid_x) + 0.5) * g, (f64::from(mk.grid_y) + 0.5) * g);
+                        let s = g * 0.3;
+                        let shape = if mk.kind == "trap" {
+                            view! { <path class="mimir-display__trap" d=format!("M{x} {}L{} {}L{} {}Z", y - s, x + s, y + s, x - s, y + s) /> }.into_any()
+                        } else {
+                            let color = mk.color.clone().unwrap_or_else(|| "var(--ice)".into());
+                            let emoji = super::setup::poi_emoji(&mk.icon);
+                            view! {
+                                <circle cx=x cy=y r=g * 0.25 style=format!("fill:{color}") />
+                                <text class="mimir-map__poi-icon" x=x y=y text-anchor="middle" dominant-baseline="central" font-size=g * 0.28>{emoji}</text>
+                            }.into_any()
+                        };
+                        view! {
+                            <g class="mimir-map__marker" aria-label=mk.name.clone()>
+                                {shape}
+                                <text x=x y=y + s + g * 0.3 text-anchor="middle">{mk.name.clone()}</text>
+                            </g>
+                        }
+                    }).collect_view()}
+                    {tokens.into_iter().map(|t| {
+                        let side = cells_for_size(&t.size) * g;
+                        let (x, y) = (f64::from(t.grid_x) * g, f64::from(t.grid_y) * g);
+                        let color = t.color.clone().unwrap_or_else(|| match t.token_type.as_str() {
+                            "pc" => "var(--ok)".to_string(),
+                            "npc" => "var(--ice)".to_string(),
+                            _ => "var(--bad)".to_string(),
+                        });
+                        let initial: String = t.name.chars().next().map(String::from).unwrap_or_default();
+                        let clip = format!("mimir-dtok-{}", t.id);
+                        let tid = t.id.clone();
+                        view! {
+                            <g class="mimir-map__token" class:mimir-map__token--dead=t.dead aria-label=t.name.clone()>
+                                <clipPath id=clip.clone()>
+                                    <circle cx=x + side / 2.0 cy=y + side / 2.0 r=side * 0.45 />
+                                </clipPath>
+                                <circle class="mimir-map__token-ring" cx=x + side / 2.0 cy=y + side / 2.0 r=side * 0.47 style=format!("stroke:{color}") />
+                                {move || match art.with(|a| a.get(&tid).cloned().flatten()) {
+                                    Some(href) => view! { <image href=href x=x y=y width=side height=side clip-path=format!("url(#{clip})") /> }.into_any(),
+                                    None => view! { <text class="mimir-map__token-initial" x=x + side / 2.0 y=y + side / 2.0 text-anchor="middle" dominant-baseline="central" font-size=side * 0.45>{initial.clone()}</text> }.into_any(),
+                                }}
+                                <text class="mimir-map__token-name" x=x + side / 2.0 y=y + side + g * 0.28 text-anchor="middle">{t.name.clone()}</text>
+                            </g>
+                        }
+                    }).collect_view()}
+                    {(cover > 0.0).then(|| view! {
+                        <rect class="mimir-display__cover" x="0" y="0" width=w height=h opacity=cover mask="url(#mimir-sight-mask)" />
+                    })}
+                </g>
+            </svg>
+        }
+            .into_any()
+    };
+
+    view! {
+        <div class="mimir-display" class:mimir-display--framed=framed>
+            <div
+                class="mimir-display__scene"
+                node_ref=vp.scene
+                on:pointerdown=move |ev: web_sys::PointerEvent| vp.down(&ev)
+                on:pointermove=move |ev: web_sys::PointerEvent| vp.moved(&ev)
+                on:pointerup=move |ev: web_sys::PointerEvent| {
+                    vp.up(&ev);
+                }
+                on:pointercancel=move |ev: web_sys::PointerEvent| {
+                    vp.up(&ev);
+                }
+                on:wheel=move |ev: web_sys::WheelEvent| vp.wheel(&ev)
+            >
+                {scene}
+            </div>
+            {move || {
+                let blackout = display.with(|d| d.as_ref().is_some_and(|d| d.blackout));
+                let order = view.with(|v| v.as_ref().and_then(|v| v.initiative.clone()));
+                order.filter(|_| !blackout).map(|o| view! {
+                    <section class="mimir-display__order" aria-label="Turn order">
+                        <Text bold=true>{format!("Round {}", o.round)}</Text>
+                        <ol>
+                            {o.entries.into_iter().map(|e| view! {
+                                <li aria-current=e.current.then_some("step")>{e.name}</li>
+                            }).collect_view()}
+                        </ol>
+                    </section>
+                })
+            }}
+            <div class="mimir-display__controls">
+                <ActionIcon title="Zoom in" on_click=Callback::new(move |_| vp.zoom(1.25))>"+"</ActionIcon>
+                <ActionIcon title="Zoom out" on_click=Callback::new(move |_| vp.zoom(0.8))>"−"</ActionIcon>
+                <ActionIcon title="Fit the map" on_click=Callback::new(move |_| fit_view())>"⤢"</ActionIcon>
+                <ActionIcon title="Full screen" on_click=Callback::new(full_screen)>"⛶"</ActionIcon>
+            </div>
+        </div>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mimir_wire::{FogArea, PlayerMarker};
+
+    fn map(mode: &str) -> MapDetail {
+        MapDetail {
+            id: "m1".into(),
+            campaign_id: "c1".into(),
+            module_id: None,
+            name: "Cave".into(),
+            description: None,
+            sort_order: 0,
+            lighting_mode: mode.into(),
+            fog_enabled: false,
+            reveal_all: false,
+            line_of_sight: true,
+            grid_size_px: 70.0,
+            columns: 10.0,
+            rows: 10.0,
+            width_px: 700,
+            height_px: 700,
+        }
+    }
+
+    fn tok(id: &str, kind: &str, gx: i32, gy: i32) -> PlayerToken {
+        PlayerToken {
+            id: id.into(),
+            name: id.into(),
+            token_type: kind.into(),
+            size: "medium".into(),
+            grid_x: gx,
+            grid_y: gy,
+            x: (f64::from(gx) + 0.5) * 70.0,
+            y: (f64::from(gy) + 0.5) * 70.0,
+            color: None,
+            vision_bright_ft: Some(30),
+            vision_dim_ft: Some(30),
+            vision_dark_ft: 0,
+            light_radius_ft: 0,
+            dead: false,
+        }
+    }
+
+    fn view(mode: &str, fog: bool, tokens: Vec<PlayerToken>) -> PlayerView {
+        PlayerView {
+            map: map(mode),
+            fog: Fog {
+                enabled: fog,
+                revealed: vec![],
+            },
+            tokens,
+            lights: vec![],
+            markers: vec![] as Vec<PlayerMarker>,
+            initiative: None,
+            doors: vec![],
+        }
+    }
+
+    #[test]
+    fn fog_covers_all_but_the_party_sight() {
+        let v = view(
+            "bright",
+            true,
+            vec![
+                tok("pc", "pc", 1, 1),
+                tok("orc", "monster", 8, 8),
+                tok("rat", "monster", 2, 1),
+            ],
+        );
+        let s = sight(&v, None);
+        assert_eq!(s.cover, 1.0);
+        assert_eq!(s.holes.len(), 1, "one PC, one hole");
+        let seen: Vec<&str> = v
+            .tokens
+            .iter()
+            .filter(|t| token_seen(t, &v, &s))
+            .map(|t| t.id.as_str())
+            .collect();
+        assert_eq!(seen, vec!["pc", "rat"], "the orc is beyond 30 ft");
+    }
+
+    #[test]
+    fn revealed_areas_show_and_their_tokens_too() {
+        let mut v = view(
+            "bright",
+            true,
+            vec![tok("pc", "pc", 0, 0), tok("orc", "monster", 8, 8)],
+        );
+        v.fog.revealed = vec![FogArea {
+            id: "a".into(),
+            x: 500.0,
+            y: 500.0,
+            width: 200.0,
+            height: 200.0,
+        }];
+        let s = sight(&v, None);
+        assert_eq!(s.holes.len(), 2);
+        assert!(token_seen(&v.tokens[1], &v, &s));
+    }
+
+    #[test]
+    fn without_fog_bright_unlimited_sight_has_no_cover() {
+        let mut pc = tok("pc", "pc", 1, 1);
+        pc.vision_bright_ft = None;
+        let v = view("bright", false, vec![pc]);
+        assert_eq!(sight(&v, None).cover, 0.0);
+        let dark = view("dark", false, vec![tok("pc", "pc", 1, 1)]);
+        assert_eq!(sight(&dark, None).cover, 0.92);
+        let dim = view("dim", false, vec![tok("pc", "pc", 1, 1)]);
+        assert_eq!(sight(&dim, None).cover, 0.75);
+    }
+
+    #[test]
+    fn no_pcs_shows_all_unless_fog() {
+        let v = view("bright", false, vec![tok("orc", "monster", 8, 8)]);
+        let s = sight(&v, None);
+        assert!(token_seen(&v.tokens[0], &v, &s));
+        let f = view("bright", true, vec![tok("orc", "monster", 8, 8)]);
+        let s = sight(&f, None);
+        assert!(!token_seen(&f.tokens[0], &f, &s));
+    }
+
+    #[test]
+    fn walls_limit_the_sight() {
+        let v = view(
+            "bright",
+            true,
+            vec![tok("pc", "pc", 1, 1), tok("orc", "monster", 4, 1)],
+        );
+        let mut geo = MapGeometry {
+            grid_size_px: 70.0,
+            columns: 10.0,
+            rows: 10.0,
+            walls: vec![],
+            portals: vec![],
+            lights: vec![],
+            ambient_light: None,
+            baked_lighting: false,
+        };
+        let mut far_sight = v.clone();
+        far_sight.tokens[0].vision_bright_ft = None;
+        let open = sight(&far_sight, Some(&geo));
+        assert!(token_seen(&far_sight.tokens[1], &far_sight, &open));
+        // A wall between them at x = 3 cells.
+        geo.walls = vec![vec![
+            mimir_wire::GridPoint { x: 3.0, y: 0.0 },
+            mimir_wire::GridPoint { x: 3.0, y: 10.0 },
+        ]];
+        let walled = sight(&far_sight, Some(&geo));
+        assert!(!token_seen(&far_sight.tokens[1], &far_sight, &walled));
+    }
+
+    // ---- The play state of the map (MIMIR-T-0728)
+    fn walled_geometry() -> MapGeometry {
+        MapGeometry {
+            grid_size_px: 70.0,
+            columns: 10.0,
+            rows: 10.0,
+            // A wall at x = 3 cells with a door in it (rows 4 to 6).
+            walls: vec![
+                vec![
+                    mimir_wire::GridPoint { x: 3.0, y: 0.0 },
+                    mimir_wire::GridPoint { x: 3.0, y: 4.0 },
+                ],
+                vec![
+                    mimir_wire::GridPoint { x: 3.0, y: 6.0 },
+                    mimir_wire::GridPoint { x: 3.0, y: 10.0 },
+                ],
+            ],
+            portals: vec![mimir_wire::Portal {
+                position: mimir_wire::GridPoint { x: 3.0, y: 5.0 },
+                bounds: [
+                    mimir_wire::GridPoint { x: 3.0, y: 4.0 },
+                    mimir_wire::GridPoint { x: 3.0, y: 6.0 },
+                ],
+                rotation: 0.0,
+                closed: true,
+                freestanding: false,
+            }],
+            lights: vec![],
+            ambient_light: None,
+            baked_lighting: false,
+        }
+    }
+
+    #[test]
+    fn a_revealed_map_shows_everything() {
+        let mut v = view("dark", true, vec![tok("orc", "monster", 8, 8)]);
+        v.map.reveal_all = true;
+        let s = sight(&v, None);
+        assert_eq!((s.cover, s.all), (0.0, true));
+        assert!(token_seen(&v.tokens[0], &v, &s));
+    }
+
+    #[test]
+    fn the_dms_doors_and_line_of_sight_reach_the_players() {
+        let mut v = view(
+            "bright",
+            true,
+            vec![tok("pc", "pc", 1, 5), tok("orc", "monster", 6, 5)],
+        );
+        v.tokens[0].vision_bright_ft = None;
+        let geo = walled_geometry();
+        assert!(
+            !token_seen(&v.tokens[1], &v, &sight(&v, Some(&geo))),
+            "the door is closed"
+        );
+        v.doors = vec![mimir_wire::DoorState {
+            index: 0,
+            closed: false,
+        }];
+        assert!(
+            token_seen(&v.tokens[1], &v, &sight(&v, Some(&geo))),
+            "the DM opened it"
+        );
+        v.doors.clear();
+        v.map.line_of_sight = false;
+        assert!(
+            token_seen(&v.tokens[1], &v, &sight(&v, Some(&geo))),
+            "walls do not block"
+        );
+    }
+
+    #[test]
+    fn a_lit_area_shows_where_the_party_has_a_line_to_its_light() {
+        // Darkness; the PC has no darkvision and no light, so sees nothing
+        // of its own. A torch 6 cells away lights the orc.
+        let mut v = view(
+            "dark",
+            false,
+            vec![tok("pc", "pc", 1, 5), tok("orc", "monster", 7, 5)],
+        );
+        v.lights = vec![PlayerLight {
+            id: "torch".into(),
+            grid_x: 7,
+            grid_y: 5,
+            x: 7.5 * 70.0,
+            y: 5.5 * 70.0,
+            bright_radius_ft: 20,
+            dim_radius_ft: 40,
+            color: None,
+        }];
+        let open = sight(&v, None);
+        assert!(
+            token_seen(&v.tokens[1], &v, &open),
+            "the torch lights the orc"
+        );
+        // A closed door between them: no line to the torch.
+        let mut geo = walled_geometry();
+        geo.walls = vec![vec![
+            mimir_wire::GridPoint { x: 4.0, y: 0.0 },
+            mimir_wire::GridPoint { x: 4.0, y: 10.0 },
+        ]];
+        geo.portals.clear();
+        let walled = sight(&v, Some(&geo));
+        assert!(!token_seen(&v.tokens[1], &v, &walled));
+        // The map file's lights count too.
+        v.lights.clear();
+        let mut lit = walled_geometry();
+        lit.walls.clear();
+        lit.portals.clear();
+        lit.lights = vec![mimir_wire::MapFileLight {
+            position: mimir_wire::GridPoint { x: 7.5, y: 5.5 },
+            range: 4.0,
+            intensity: 1.0,
+            color: "ffffcc66".into(),
+            shadows: true,
+        }];
+        assert!(token_seen(&v.tokens[1], &v, &sight(&v, Some(&lit))));
+    }
+
+    #[test]
+    fn the_display_keys() {
+        assert_eq!(display_key("F11"), Some(DisplayKey::FullScreen));
+        assert_eq!(display_key("f"), Some(DisplayKey::FullScreen));
+        assert_eq!(display_key("R"), Some(DisplayKey::Fit));
+        assert_eq!(display_key("x"), None);
+    }
+}

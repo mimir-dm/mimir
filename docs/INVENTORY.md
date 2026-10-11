@@ -1,153 +1,137 @@
-# Mimir Documentation Inventory (Phase 1 — Discovery)
+# Mimir Documentation Inventory
 
-Generated 2026-06-09 against version 0.7.2 (commit 6b356db). Every surface listed
-here must be covered by a doc or explicitly deferred with a reason. File:line
-citations point at the source of truth.
+The surfaces of Mimir 1.0 (the web app) that the documentation must cover, with where each lives in the code. A surface is covered by a doc page or deferred with a reason.
 
 ## 1. Entrypoints & top-level structure
 
 | Surface | Location |
 |---|---|
-| Cargo workspace (5 crates: mimir, mimir-core, mimir-mapgen, mimir-mcp, mimir-print) | `Cargo.toml:1-9` |
-| Tauri desktop app entry | `crates/mimir/src/main.rs` |
-| MCP server binary (stdio transport) | `crates/mimir-mcp/src/main.rs:16-79` |
-| mapgen CLI binary | `crates/mimir-mapgen/src/main.rs:1-162` |
-| mimir-print (library only, no binary) | `crates/mimir-print/src/lib.rs` |
-| Frontend: 4 HTML entry points (index, sources, player-display, dm-map) | `crates/mimir/frontend/vite.config.ts:18-23` |
-| READMEs: root `README.md`, `DEVELOPMENT.md`, `CONTRIBUTING.md`, plugin `crates/mimir-mcp/plugin/README.md` | — |
+| Cargo workspace (8 crates: mimir-core, mimir-mapgen, mimir-mcp, mimir-print, mimir-render, mimir-server, mimir-web, mimir-wire) | `Cargo.toml` |
+| Server binary `mimir-server` | `crates/mimir-server/src/main.rs` |
+| Router: `/healthz`, `/readyz`, `/api/config`, `/api/v1`, `/ws`, `/mcp`, SPA fallback | `crates/mimir-server/src/lib.rs` (`router`) |
+| Web app (Leptos CSR, trunk) | `crates/mimir-web` (`src/app.rs`, `index.html`, `Trunk.toml`) |
+| Editor bundle (TipTap, esbuild) | `crates/mimir-web/editor` |
+| e2e harness (Playwright) | `crates/mimir-web/web-e2e` |
+| mapgen CLI binary | `crates/mimir-mapgen/src/main.rs` |
+| READMEs: root `README.md`, `DEVELOPMENT.md`, `CONTRIBUTING.md`, plugin `crates/mimir-mcp/plugin/README.md`, `crates/mimir-web/editor/README.md`, `crates/mimir-web/web-e2e/README.md` | — |
 | Docs site: mdBook at `docs/` (theme navy, mermaid, search) | `docs/book.toml` |
+
+Docs: [Architecture Overview](src/explanation/architecture-overview.md), [Architecture](src/developer/ARCHITECTURE.md), [Web App Architecture](src/developer/reference/frontend/README.md).
 
 ## 2. User-facing surfaces
 
-### 2.1 Tauri commands (in-app API) — 295 commands
+### 2.1 Web app screens
 
-Registered in `crates/mimir/src/main.rs:80-436` via `tauri::generate_handler!`.
-All return `ApiResponse<T>` (`crates/mimir/src/commands/mod.rs:26-56`).
-Domains (counts): campaigns (12), archive export/import (3), homebrew items/monsters/spells (16),
-modules incl. tokens (21), characters incl. inventory/spells/sources (25), documents (9),
-maps incl. UVTT/light/fog/traps/POIs (44), assets (6), catalog search across 23 entity
-groups + level-up helpers (122), sources & book content (8), player display window (7),
-DM map window (4), app info & dev tools (6), print/PDF export (12).
-These are internal app plumbing — documented indirectly through UI reference/how-tos,
-not as a public API (deferred: not a user-callable surface).
+Routes in `crates/mimir-web/src/app.rs`; the player page in `src/pages/player.rs`.
 
-### 2.2 MCP tools — 71 tools (user-facing via Claude)
+| Screen | Route | Doc |
+|---|---|---|
+| Sign-in | before the shell | `reference/ui/home-screen.md` |
+| Campaigns | `/` | `reference/ui/home-screen.md` |
+| Campaign dashboard (Campaign, Modules, NPCs, PCs, Homebrew) | `/campaigns/:id[/modules|npcs|pcs|homebrew]` | `reference/ui/campaign-dashboard.md` |
+| Module page (Documents, NPCs, Maps, Dangers, Player notes) | `/modules/:id?section=` | `reference/ui/module-page.md` |
+| DM map + initiative tracker | `/maps/:id` | `reference/ui/dm-map.md` |
+| Player display | `/display/:campaign` | `reference/ui/player-display.md` |
+| Player page (Display, Character, Party) | `/play/<token>` → `/player` | `reference/ui/player-page.md` |
+| Characters, character sheet | `/characters`, `/characters/:id` | `reference/ui/characters.md` |
+| Reference (Catalog, Books) | `/reference?mode=` | `reference/ui/reference-page.md` |
+| Settings (Campaigns, Books, Integrations, About) | `/settings?section=` | `reference/ui/settings.md` |
 
-Registered once each through the registry (`crates/mimir-mcp/src/registry.rs`); each family's `registered_tools()` lives in
-`crates/mimir-mcp/src/tools/{campaign,module,document,character,map,map_state,homebrew,catalog,mapgen}.rs`.
-- Campaign (11): list_campaigns, get_active_campaign, set_active_campaign, get_campaign_details, get_campaign_sources, create_campaign, update_campaign, delete_campaign, export_campaign, import_campaign, preview_archive
-- Module (9): create_module, list_modules, get_module_details, update_module, delete_module, add_monster_to_module, update_module_monster, remove_monster_from_module, add_item_to_module
-- Document (6): list_documents, read_document, create_document, edit_document, delete_document, reorder_document
-- Character (16): list_characters, get_character, create_character, edit_character, delete_character, level_up_character, get_character_inventory, add_item_to_character, remove_item_from_character, update_character_inventory, add_character_spell, remove_character_spell, list_character_spells, add_character_feat, list_character_feats, remove_character_feat
-- Map (8): create_map, list_maps, get_map, update_map, delete_map, add_token_to_map, list_tokens_on_map, remove_token
-- Map state (12, authoring only; no fog, trigger/reset, visibility, or light on/off): add_trap_to_map, list_map_traps, update_map_trap, remove_map_trap, add_poi_to_map, list_map_pois, update_map_poi, remove_map_poi, add_light_to_map, list_map_lights, update_map_light, remove_map_light
-- Homebrew (5): list_homebrew, get_homebrew, create_homebrew, update_homebrew, delete_homebrew
-- Mapgen (3): generate_map, list_map_presets, validate_map_config
-- Catalog (1): search_catalog (`crates/mimir-mcp/src/tools/catalog.rs:39`)
-- Active-campaign requirement: most tools error with NoActiveCampaign until `set_active_campaign` (in-memory `McpContext.active_campaign_id`, `crates/mimir-mcp/src/context.rs`)
+Themes: light, dark, hyper (Aurora; stored by the browser). No app-wide keyboard shortcuts; editor shortcuts from TipTap StarterKit (`reference/keyboard-shortcuts.md`).
 
-### 2.3 Claude Code plugin (crates/mimir-mcp/plugin)
+### 2.2 REST API
 
-- `plugin.json` (name mimir-dm, v0.7.2): `.claude-plugin/plugin.json`
-- `.mcp.json`: command `mimir-mcp`, env MIMIR_DATABASE_PATH
-- Slash commands (5): /mimir-campaigns, /create-module, /search-monsters, /search-spells, /generate-map (`plugin/commands/*.md`)
-- Skills (8): mimir-dm, encounter-balance, npc-network, loot-audit, continuity-check, session-prep, pressure-test, mapgen (`plugin/skills/*/SKILL.md`)
+96 paths under `/api/v1`, each with its access (`Dm` or `Player`), in `crates/mimir-server/src/api/mod.rs` (`routes()`). Wire types in `crates/mimir-wire`. Internal to the web app; documented where a user or an integrator meets it: sources (`reference/sources/README.md`), PDF (`reference/pdf-export/README.md`), fog areas (`reference/data-model.md`). No full public API reference (deferred: the web app is the client).
 
-### 2.4 mapgen CLI
+### 2.3 Auth
 
-`crates/mimir-mapgen/src/main.rs:4-45` (clap):
-- `generate [CONFIG] -o/--output <path=output.dungeondraft_map> -s/--seed <u64> -p/--preset <name>`
-- `validate <CONFIG>`
-- `list-presets`
-- 12 presets: forest, grassland, cave, desert, lake, ice_lake, arctic, island_tropical, island_forest, island_arctic, swamp, forest_river
-- YAML MapConfig: `crates/mimir-mapgen/src/pipeline.rs:24-95`; validation `pipeline.rs:150-204`; output format `.dungeondraft_map` JSON (`src/format/mod.rs:22-55`)
-- Examples: `crates/mimir-mapgen/examples/`
+DM bearer token (`MIMIR_API_TOKEN`), open mode without it, player links (hashed, per character) — `crates/mimir-server/src/auth.rs`, ADR MIMIR-A-0010. Docs: `how-to/run-server.md`, `how-to/characters/player-links.md`, `explanation/architecture-overview.md`.
 
-### 2.5 Environment variables
+### 2.4 Live socket
+
+`/ws` (`crates/mimir-server/src/live.rs`, `crates/mimir-web/src/live.rs`): change notices to the DM, the player view to players, display state in memory. Docs: `explanation/screens-and-devices.md`.
+
+### 2.5 MCP
+
+Streamable HTTP at `/mcp`, DM only (`crates/mimir-server/src/mcp.rs`), over the tool registry in `crates/mimir-mcp/src/registry.rs` (tool families in `src/tools/`). Docs: `reference/mcp-server.md`, `how-to/ai-assistant/README.md`.
+
+### 2.6 Claude Code plugin (`crates/mimir-mcp/plugin`)
+
+- `.claude-plugin/plugin.json` (name mimir-dm)
+- `.mcp.json`: HTTP server at `${MIMIR_URL}/mcp` with `Authorization: Bearer ${MIMIR_API_TOKEN}`
+- Slash commands (5): /mimir-campaigns, /create-module, /search-monsters, /search-spells, /generate-map
+- Skills (8): mimir-dm, encounter-balance, npc-network, loot-audit, continuity-check, session-prep, pressure-test, mapgen
+
+### 2.7 mapgen CLI
+
+`crates/mimir-mapgen/src/main.rs`: `generate`, `validate`, `list-presets`; 12 presets; YAML config in `src/pipeline.rs`; output `.dungeondraft_map`. Docs: `reference/mapgen.md`, `how-to/maps/generate-map.md`, `how-to/maps/mapgen-standalone.md`.
+
+### 2.8 Environment variables
 
 | Var | Default / behavior | Source |
 |---|---|---|
-| MIMIR_DEV | unset; if set forces dev mode (dev/ data subdir) | `crates/mimir/src/state.rs:21` |
-| RUST_LOG | "mimir=info,mimir_core=info" | `crates/mimir/src/main.rs:41-43` |
-| MIMIR_DATABASE_PATH | unset → platform default DB path; supports `~/`/`$HOME/` expansion; empty/template values ignored | `crates/mimir-mcp/src/context.rs:29-103` |
-| MIMIR_SEED_ASSETS | unset → walks parents for seed assets dir (dev seeding only) | `crates/mimir-core/src/seed/dev.rs:890` |
-| HOME / APPDATA / XDG_DATA_HOME | platform path construction | `crates/mimir/src/main.rs:21-29`, `crates/mimir-mcp/src/context.rs:73-97` |
-| TAURI_ENV_TARGET_TRIPLE | build-time, sidecar target selection | `scripts/build-sidecar.sh` |
+| MIMIR_BIND | `127.0.0.1:8740` | `crates/mimir-server/src/config.rs` |
+| MIMIR_DATA_DIR | `./mimir-data`; `data/mimir.db`, `assets/` | `config.rs` |
+| MIMIR_API_TOKEN | unset or blank → open mode (warning logged) | `config.rs`, `main.rs` |
+| MIMIR_WEB_DIST | unset → embedded app (`embed-web`) or placeholder | `config.rs`, `web.rs` |
+| MIMIR_SEED | `fixture` → SRD + test campaign (needs `fixtures` feature) | `config.rs`, `lib.rs` |
+| MIMIR_SEED_ASSETS | seed asset dir, else found from parent dirs | `crates/mimir-core/src/seed/dev.rs` |
+| RUST_LOG | `info` | `main.rs` |
+| MIMIR_URL (plugin) | `http://127.0.0.1:8740` | `plugin/.mcp.json` |
 
-### 2.6 Config / storage locations
-
-- DB paths (prod vs dev `dev/` subdir; macOS/Windows/Linux table): `crates/mimir/src/state.rs:15-58`
-- MCP server DB default per platform; Windows default NOT implemented (returns None): `crates/mimir-mcp/src/context.rs:88-102`
-- Logs: daily-rotated `logs/mimir.log` under app data dir: `crates/mimir/src/main.rs:19-38`
-- Assets dir, config dir: `crates/mimir/src/state.rs:28-109`
-- Theme persistence: localStorage key `theme`, cross-window `theme-changed` event: `frontend/src/stores/theme.ts:8-94`
-- SQLite WAL mode, FK on, per-call connections (no pool): `crates/mimir/src/state.rs:144-146`
-
-### 2.7 Frontend surfaces
-
-- Router: 15 routes (`frontend/src/app/router/index.ts`) — home, campaign create/detail/dashboard (+5 tabs), module detail, settings, characters list/sheet, player-display (the two ModulePlayView play routes were removed 2026-06-10)
-- Windows: main (tauri.conf.json:14-22), player-display (`commands/player_display.rs:38`), dm-map (`commands/dm_map.rs:9`), sources (sources.html)
-- Player-display IPC events: player-display:map-update / viewport-update / blackout (`commands/player_display.rs:125,141,157`)
-- Keyboard shortcuts: DM map viewer `+/=`, `-`, `0`, `H`, `D`, `Escape` (`frontend/src/components/DmMapViewer.vue:1871-1908`); player display `F11`, `R` (`PlayerDisplayWindow.vue:380-391`); modal `Escape` (`shared/AppModal.vue:108-120`)
-- Themes (3): light, dark, hyper (`frontend/src/assets/styles/themes/*.css`)
-- Settings view sections: Theme, Integrations (Claude/MCP config generation), About, Dev Tools (dev only) (`frontend/src/views/SettingsView.vue:80-168`)
-- Vision/fog system: composables `useVisionCalculation`, `useVisibilityPolygon`, `useTokenVision`, `useFog`, `useLightSources`, `useUvttMap`, `usePlayerDisplayEvents`, `usePlayerViewport` (`frontend/src/composables/map/`)
-- Ambient light modes: Bright / Dim / Darkness
+Docs: `reference/environment-variables.md`.
 
 ## 3. Data model (mimir-core)
 
-Schema: `crates/mimir-core/src/schema.rs`; 29 migrations at `crates/mimir-core/migrations/001-029`.
+Schema: `crates/mimir-core/src/schema.rs`; migrations in `crates/mimir-core/migrations/` (latest: 030 combat, 031 player links, 032 player notes and sheet shares). Docs: `reference/data-model.md`.
 
-- Catalog tables (26 entity types + join/support tables): catalog_sources, actions, backgrounds, books, classes, class_features, subclasses, subclass_features, conditions, cults, deities, diseases, feats, hazards, items, item_attunement_classes, languages, monsters, objects, optional_features, psionics, races, rewards, senses, skills, spells, spell_classes, spell_subclasses, tables, traps, variant_rules, vehicles
-- Campaign tables: campaigns, campaign_sources, modules, documents (+documents_fts FTS5 porter), campaign_assets, maps, token_placements, light_sources, map_traps, map_pois, fog_revealed_areas
-- Character tables: characters, character_sources, character_classes, character_inventory, character_spells, character_proficiencies, character_features, character_feats
-- Module tables: module_monsters, module_npcs
-- Homebrew tables: campaign_homebrew_items / _monsters / _spells (clone-from-catalog deep merge: `services/homebrew.rs:143-150`)
+## 4. Main workflows
 
-## 4. Main workflows (end to end)
-
-| Workflow | Path through code |
-|---|---|
-| Campaign creation → 11 template docs auto-created | `services/campaign.rs:83`, templates `src/templates/mod.rs:96-152` |
-| Module creation → type-specific overview doc (6 types: general, mystery, dungeon, heist, horror, political) + play notes | `services/module.rs:16-42,150+`, `templates/mod.rs:155-236` |
-| Character create / level up (multiclass, ASI/feat, spells, features, HP method Average/Roll/Fixed) | `services/character.rs:278-365` |
-| Catalog import from 5etools zip (discovery → collection → per-source transactional import + FTS) | `src/import/{discovery,collector,service}.rs`; 26 entity types `discovery.rs:178-387`; only groups core/supplement are imported (`DEFAULT_ALLOWED_GROUPS`, `import/service.rs:83`); setting/adventure/screen/homebrew skipped (note: rustdoc comment at service.rs:101 is stale on this) |
-| Campaign archive export/import (.tar.gz, manifest v2.0, data.json, asset files, UUID remap on import, catalog refs via `{@type name|source}` regex) | `services/archive.rs:33-498` |
-| Map upload (UVTT as campaign_asset) → grid/lighting config → tokens/light/fog/traps/POIs → play | `services/map.rs`, `commands/map/*` |
-| Play mode: Play button opens the DM Map window (`ModulesTab.vue` handlePlayModule → openDmMapWindow). The former in-window ModulePlayView and its routes were removed 2026-06-10 as unreachable dead code. Player display window, viewport sync, blackout, fog/vision | `commands/{player_display,dm_map}.rs`, `frontend/src/components/{DmMapViewer,DmMapWindow,PlayerDisplayWindow}.vue` |
-| PDF export via Typst: documents, character sheets, battle cards, monster/spell/equipment/trap cards, map previews, tiled maps, token cutouts | `crates/mimir-print/src/sections/*`, `service.rs:54-99`, embedded templates `embedded_templates.rs` |
-| Mapgen: YAML/preset → noise/terrain/water/objects/paths/rooms/polygons/lights pipeline → .dungeondraft_map | `crates/mimir-mapgen/src/pipeline.rs`, module files per generator |
-| AI workflow: Claude Code plugin → mimir-mcp (sidecar or standalone) → same DB | `plugin/`, `context.rs` |
+| Workflow | Code | Docs |
+|---|---|---|
+| Campaign creation with 11 template documents | `services/campaign.rs`, `templates/` | `how-to/campaigns/create-campaign.md` |
+| Module creation (6 types) with overview and Play Notes | `services/module.rs` | `how-to/modules/create-module.md` |
+| Documents with the rich editor, autosave, reorder | `src/authoring/documents.rs`, `src/editor.rs` | `how-to/campaigns/manage-documents.md` |
+| Character wizard (PC at level 1, NPC form), level-up | `src/authoring/wizard*.rs`, `src/character/levelup.rs`, `services/character/` | `how-to/characters/*` |
+| Catalog import (data and images) as a background job | `api/admin.rs`, `jobs.rs`, `mimir-core/src/import/` | `how-to/campaigns/manage-sources.md` |
+| Campaign archive export/import | `services/archive.rs`, `api/admin.rs` | `how-to/campaigns/export-campaign.md`, `reference/campaign-archive-format.md` |
+| Map upload (UVTT or image with grid), tokens, lights, traps, POIs, fog | `src/authoring/maps.rs`, `src/map/dm.rs`, `api/maps.rs` | `how-to/maps/*`, `how-to/play-mode/*` |
+| Player display and player view | `src/map/display.rs`, `api/maps.rs` (`build_player_view`), `live.rs` | `how-to/play-mode/use-player-display.md` |
+| Combat (initiative tracker) | `src/map/tracker.rs`, `api/combat.rs`, `services/combat.rs` | `how-to/play-mode/manage-encounters.md` |
+| Player links, notes, party sharing | `api/links.rs`, `api/party.rs`, `src/character/{notes,party}.rs` | `how-to/characters/player-links.md` |
+| Homebrew items, monsters, spells | `src/authoring/homebrew*.rs`, `api/homebrew.rs` | `how-to/homebrew/*` |
+| PDF export via Typst | `crates/mimir-server/src/print/`, `crates/mimir-print` | `reference/pdf-export/README.md` |
+| Mapgen | `crates/mimir-mapgen` | `how-to/maps/generate-map.md` |
+| AI workflow: Claude Code → `/mcp` → same database | `mcp.rs`, `plugin/` | `how-to/ai-assistant/README.md` |
 
 ## 5. Build / test / deploy lifecycle
 
-- Angreal tasks (authoritative): `dev launch`, `dev reset` (`.angreal/task_dev.py:29-101`); `test unit [--watch|--core|--ui|--all]`, `test coverage [--core|--ui|--all|--open]` (`.angreal/task_test.py:25-173`); `docs build/serve/watch/check/clean/init/production/test` (`.angreal/task_docs.py`)
-- `dev launch` = npm ci (if needed) + Vite dev server + build sidecar if missing + `cargo run -p mimir --no-default-features`
-- Feature flag: mimir default `custom-protocol`; dev disables it (`crates/mimir/Cargo.toml:55`, `task_dev.py:94`)
-- Sidecar build scripts: `scripts/build-sidecar.{sh,ps1,mjs}` → `crates/mimir/binaries/mimir-mcp-<target-triple>`; required by `tauri.conf.json:65-67` externalBin BEFORE building mimir
-- Installer: `scripts/install.sh` (macOS/Linux, GitHub Releases `app-v<version>` tags, installs app + mimir-mcp CLI to ~/.local/bin)
-- Fixtures: `scripts/extract-srd-fixtures.py` (SRD-only, OGL-safe)
-- CI (`.github/workflows/ci.yml`): test-gui-build matrix (macOS arm/x64, Ubuntu 22.04, Windows), test-frontend (vitest), test-other-crates (`angreal test unit --core`), test-integration (SRD smoke, main pushes only), coverage (tarpaulin → artifacts)
-- Release (`.github/workflows/release.yml`): tag `v*.*.*` → desktop matrix build (tauri-action, draft release `app-v<ver>`), sidecar + mapgen binaries uploaded to release
-- Docs deploy (`.github/workflows/docs.yml`): mdBook build → push to external repo mimir-dm/mimir-dm.github.io via PAGES_DEPLOY_TOKEN
-- Tests: Rust `--test-threads=1` everywhere (SQLite locking); tarpaulin only mimir-core, fail-under 50% (`tarpaulin.toml`); frontend vitest + jsdom, fixtures in `frontend/__tests__/`
-- mimir-core integration tests: `tests/{catalog_import,srd_smoke_test}.rs`; mapgen: `tests/{cli_integration,format_roundtrip,polygon_snapshots}.rs`
+- Angreal tasks: `web build [--release]`, `web serve [--port --token --fresh]`, `web e2e`, `web screenshots [--themes]`, `web screenshots-diff --before [--after --fail]` (`.angreal/task_web.py`); `test unit`, `test coverage [--open]` (`.angreal/task_test.py`); `docs build/serve/watch/check/clean/init/production/test` (`.angreal/task_docs.py`)
+- Release binary: `angreal web build --release`, then `cargo build --release -p mimir-server --features embed-web`
+- CI (`.github/workflows/ci.yml`): fmt; clippy host and wasm (Rust 1.93.0); `angreal test unit`; wasm build of `mimir-wire`, `trunk build --release`, Playwright smoke suite; SRD smoke test (pushes to main only); coverage (tarpaulin, does not fail CI)
+- Release (`.github/workflows/release.yml`): tag `v*.*.*` → `mimir-mapgen` binaries per platform → draft GitHub release. The workflow does not build the server.
+- Docs deploy (`.github/workflows/docs.yml`): mdBook build → GitHub Pages
+- Tests: Rust `--test-threads=1` (SQLite locking); `mimir-server/tests/` for API, auth, live, MCP; host tests of web logic; Playwright specs in `web-e2e/specs/`
+
+Docs: `developer/DEVELOPMENT.md`, `developer/CONTRIBUTING.md`.
 
 ## 6. Dependencies & integration points
 
-- Tauri v2 (+plugins: dialog, fs, window perms per tauri.conf.json capabilities), Diesel/SQLite, rust-mcp-sdk 0.8 (stdio), Typst (typst + typst_pdf), noise/Perlin, clap, Vue 3 + Pinia + Vue Router + Vite + Vitest
-- 5etools data tarball (catalog source); Dungeondraft (consumes .dungeondraft_map; exports UVTT)
-- Claude Code (plugin host); GitHub Releases (distribution); external Pages repo (docs)
+- axum 0.8, tokio, rmcp (streamable HTTP), Diesel/SQLite (bundled), Typst, rust-embed (`embed-web`)
+- Leptos 0.8 CSR, leptos_router, Aurora (`colliery-io-aurora`), gloo-net, wasm-bindgen, web-sys, qrcode
+- TipTap 3 + esbuild (editor bundle), Playwright (e2e) — Node.js only for these two
+- 5etools data and image archives (catalog source); Dungeondraft (UVTT export)
+- Claude Code (plugin host); GitHub Releases (mapgen binaries); GitHub Pages (docs)
 
-## 7. Implicit / tribal knowledge
+## 7. Implicit knowledge
 
-1. Sidecar MUST exist at `crates/mimir/binaries/mimir-mcp-<triple>` before `cargo build -p mimir` (externalBin), or the build fails. `angreal dev launch` handles this.
-2. Dev vs prod DB separation: dev mode = `cfg!(debug_assertions) || MIMIR_DEV` → `dev/` subdir (`state.rs:15-58`). `angreal dev reset` only ever deletes the dev DB.
-3. `cargo tauri dev` from `crates/mimir` is the documented-but-suboptimal path; the supported dev loop is `angreal dev launch` (manual Vite + `cargo run -p mimir --no-default-features`). DEVELOPMENT.md/CONTRIBUTING.md still lead with `cargo tauri dev` (flagged stale).
-4. Rust tests must run `--test-threads=1` (SQLite locking).
-5. Image-processing deps pinned to opt-level 3 in dev profile to avoid 10-50x slowdown (`Cargo.toml:103-110`).
-6. MCP server on Windows has no default DB path — MIMIR_DATABASE_PATH is mandatory there (`context.rs:99-102`).
-7. Most MCP tools require `set_active_campaign` first; active campaign is in-memory per server process.
-8. SRD smoke test is heavy and only runs on pushes to main, not PRs (`ci.yml:118`).
-9. Dev seeding commands (seed/reseed/clear) exist only in debug builds (`commands/dev.rs`).
-10. Docs deploy goes to a *different repo* (mimir-dm.github.io) — pushing docs/ to main triggers it.
+1. `angreal web serve` uses fixture data in `target/web-dev`; it never touches a real data directory. The e2e harness uses a new temporary directory each run.
+2. Open mode (no `MIMIR_API_TOKEN`) makes every caller the DM. Player links still work.
+3. The display state (shown map, blackout, turn order on display) and import jobs are in memory; a restart clears them.
+4. The Line of sight switch, the light control and door clicks on the DM map change the DM's view only.
+5. Rust tests run with `--test-threads=1`.
+6. Image-processing crates are built at opt-level 3 in the dev profile (`Cargo.toml`), else map work is 10–50× slower.
+7. `cargo build --workspace` needs no wasm tools; the web app's library builds on the host.
+8. The trunk pre-build hook needs Node (`editor/build.sh`).
+9. Most MCP tools need `set_active_campaign` first; the active campaign belongs to the MCP session.
+10. The SRD smoke test runs only on pushes to `main`.

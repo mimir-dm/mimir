@@ -1,0 +1,66 @@
+[package]
+name = "mimir-server"
+version = "1.0.0"
+edition = "2021"
+description = "Mimir web server: the API over mimir-core and the Leptos app (COLLIERY-I-0612)."
+license = "MIT"
+
+[[bin]]
+name = "mimir-server"
+path = "src/main.rs"
+
+[features]
+# Bake the built web app (crates/mimir-web/dist, built by trunk) into the
+# binary: the release path, one artifact (MIMIR-A-0009). Off by default so
+# `cargo build --workspace` needs no wasm tools.
+embed-web = ["dep:rust-embed"]
+# MIMIR_SEED=fixture (SRD catalog + the fixture campaign): development and
+# tests only, never in a release image (mirrors mimir-core's `fixtures`).
+fixtures = ["mimir-core/fixtures"]
+
+[dependencies]
+mimir-wire = { path = "../mimir-wire" }
+mimir-core = { path = "../mimir-core" }
+axum = { version = "0.8", features = ["ws", "multipart"] }
+tokio = { workspace = true }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+diesel = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+subtle = "2"
+mime_guess = "2"
+# Catalog table columns (MIMIR-T-0723).
+mimir-render = { path = "../mimir-render" }
+# Settings (MIMIR-T-0724): uploads streamed to temp files, downloads
+# streamed from them, background jobs.
+tokio-util = { workspace = true, features = ["io"] }
+futures = { workspace = true }
+tempfile = "3"
+uuid = { workspace = true }
+# PDF export (MIMIR-T-0724): typst, server only (heavy; system fonts).
+mimir-print = { path = "../mimir-print" }
+base64 = "0.22"
+# MCP over streamable HTTP at /mcp (MIMIR-T-0725): rmcp as Kairos, over the
+# mimir-mcp tool registry.
+rmcp = { version = "2.2.0", features = ["server", "transport-streamable-http-server"] }
+mimir-mcp = { path = "../mimir-mcp" }
+rust-embed = { version = "8", optional = true }
+zip = { version = "9.0.1", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+# Test archives (MIMIR-T-0724).
+flate2 = "1"
+tar = "0.4"
+# Test images for map uploads (MIMIR-T-0720).
+image = { version = "0.25", default-features = false, features = ["png"] }
+mimir-core = { path = "../mimir-core", features = ["fixtures"] }
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+tempfile = { workspace = true }
+tokio-tungstenite = "0.29"
+futures-util = "0.3"
+jsonschema = { version = "0.58.6", default-features = false }
+pdf-extract = "0.12.1"

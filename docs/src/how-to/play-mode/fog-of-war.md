@@ -1,82 +1,70 @@
 # Fog of War
 
-Recipes for controlling what players see on the battle map. All controls live in the map toolbar of the DM Map window, and changes take effect on the Player Display immediately.
+Recipes to control what the players see on the map. The controls are in the toolbar of the DM map. The player display and the player pages follow at once.
 
-- Control-by-control reference: [Play Mode](../../reference/ui/play-mode.md)
-- Rules and numbers (vision ranges, light radii): [Vision & Lighting](../../reference/vision-and-lighting.md)
-- How and why the system works: [Vision System](../../explanation/vision-system.md)
+- Controls: [DM Map](../../reference/ui/dm-map.md)
+- Rules and numbers: [Vision & Lighting](../../reference/vision-and-lighting.md)
+- How it works: [Vision System](../../explanation/vision-system.md)
 
-![Fog of War - Player View](../../images/reference/player-view-fog.png)
+## Hide the Map While the Party Explores
 
-> **Note:** The vision controls (**Fog**, **LOS**, ambient light, debug overlays) only appear for maps with UVTT wall data. On plain image maps, work with **Reveal Map** and per-token visibility instead.
+1. Turn on **Fog**.
+2. Look at your map. A shade covers what the party cannot see. The players see nothing under it.
 
-## Hide the map during exploration
+Fog of war shows only what the PC tokens see. The **Maps** table shows **On** in the **Fog of war** column.
 
-Use this when the party enters an unexplored area and should only see what their characters can see.
+## Show More of the Map
 
-1. Open the Player Display.
-2. In the map toolbar, click **Fog**.
-3. Check the DM view: areas players cannot see are shaded semi-transparently for you and hidden entirely from players.
+There is no reveal brush. The seen area comes from the PC tokens where they stand now. To show more:
 
-While Fog is on, **LOS** is forced on as well — tokens outside the party's line of sight are hidden automatically. You cannot turn LOS off without first turning Fog off.
+1. Drag the PC tokens forward. Their sight follows them.
+2. Place or light a torch or a lantern where the map is dim or dark. See [Manage Light Sources](../maps/manage-light-sources.md). In dim light or darkness, the players also see a lit area when a PC has a line to its light.
 
-## Reveal areas as the party explores
+When a PC moves back, the area that it no longer sees is covered again.
 
-There is no manual reveal brush — the revealed area is computed live from PC token vision. To reveal more of the map:
+## Show the Whole Map
 
-1. Drag PC tokens forward. Vision follows each token.
-2. Click a door on the map to open it. Open doors let vision pass; closed doors block it.
-3. Add or activate light sources where ambient light is dim or dark — see [Manage Light Sources](../maps/manage-light-sources.md).
-4. If a whole area should become visible, raise the ambient light level to **Bright**.
+1. Turn on **Reveal map**.
+2. The players see all of the map: no fog and no sight limits. Hidden tokens and hidden markers stay hidden.
 
-Moving a token back also retracts its vision: fog is recalculated from current token positions, not accumulated.
+Turn off **Reveal map** to hide the map again.
 
-## Hide enemies but show terrain
+## Show the Map but Hide the Monsters
 
-Use this for encounters where players know the layout but should not see unseen threats.
+1. Turn off **Fog**.
+2. Place the PC tokens.
 
-1. Make sure **Fog** is off.
-2. Click **LOS** in the map toolbar.
+The players see the whole map. Monster and NPC tokens show only where a PC can see them. With no PC token on the map, all tokens that players may see show.
 
-![Token LOS Mode](../../images/reference/player-view-token-los.png)
+## Hide One Token
 
-The map stays fully visible; tokens outside the party's line of sight are hidden until a PC can see them.
+1. Click the token.
+2. Turn off **Players see it**.
 
-## Reveal the whole map temporarily
+The players never see this token, even where a PC can see it.
 
-Use this for town maps, overviews, or any scene where fog doesn't fit the fiction.
+## Change the Light or the Walls
 
-1. Click the **Reveal Map** (eye) button in the toolbar.
-2. When you want fog back, click it again — the tooltip changes to "Hide map (restore fog)".
+- Choose **bright**, **dim** or **darkness** to set the light level of the map.
+- Turn off **Line of sight** to let the party see through walls. Turn it on again to cut their sight at walls.
 
-Reveal Map overrides Fog and LOS (both buttons are disabled while it is active) but does not change their settings, so switching it off restores exactly the state you had before. Tokens you have individually hidden stay hidden.
+The map keeps these settings, and the player display follows them. To see the walls of the map file and how far the monsters see, turn on **Overlays**. Only you see them.
 
-## Hide a lurking enemy regardless of vision
+To see exactly what the players see, open the player display: click **Open player display**.
 
-1. Right-click the token and choose **Hide from Players** (or select the token and press **H**).
-2. The token is hidden from the Player Display even where players have vision, and even while Reveal Map is active.
+## Open a Door
 
-## Set the mood with ambient light
+On a UVTT map, click a door to open or close it. An open door lets sight through. The map keeps the door state, and the player display follows it.
 
-1. Pick **Bright**, **Dim**, or **Dark** from the ambient light dropdown.
-2. In Dark, only darkvision and light sources grant vision — combine with sparse, placed torches for room-by-room tension.
+## Stage a Reveal
 
-The dropdown starts at the map's UVTT ambient light value (if any); your selection overrides it for the session.
-
-## Stage a dramatic reveal
-
-1. Click **Blackout** in the header (available while the Player Display is open) so players see nothing.
-2. Position tokens, toggle lights, and set the ambient light.
-3. Turn Blackout off to present the finished scene.
-
-## Check what players can actually see
-
-1. Toggle the debug overlays button in the toolbar to draw vision ranges and walls on the DM view.
-2. For ground truth, glance at the Player Display window itself.
+1. Click **Blackout**. The players see "Paused".
+2. Move tokens, change lights or change the map.
+3. Click **End blackout**.
 
 ## See Also
 
-- [Use Player Display](./use-player-display.md)
+- [Use the Player Display](./use-player-display.md)
 - [Manage Light Sources](../maps/manage-light-sources.md)
 - [Vision & Lighting Reference](../../reference/vision-and-lighting.md)
 - [Vision System](../../explanation/vision-system.md)

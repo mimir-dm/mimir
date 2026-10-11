@@ -262,3 +262,123 @@ mod tests {
         );
     }
 }
+
+/// Unpack a 5etools image archive (`5etools-img-*.tar.gz`) under `dest`
+/// (MIMIR-T-0724; moved from the desktop app): images only (webp, png,
+/// jpg, gif, svg), the archive's top folder stripped. An entry that would
+/// leave `dest` (`..`, a root) is skipped. `progress` gets the count so
+/// far every 500 images. Returns how many were written.
+pub fn import_images_from_tarball(
+    archive_path: &Path,
+    dest: &Path,
+    mut progress: impl FnMut(usize),
+) -> Result<usize, String> {
+    use std::path::Component;
+
+    let file =
+        std::fs::File::open(archive_path).map_err(|e| format!("cannot open the archive: {e}"))?;
+    let mut archive =
+        tar::Archive::new(flate2::read::GzDecoder::new(std::io::BufReader::new(file)));
+    let entries = archive
+        .entries()
+        .map_err(|e| format!("not a tar.gz archive: {e}"))?;
+    let mut count = 0usize;
+    for entry in entries {
+        let Ok(mut entry) = entry else { continue };
+        if !entry.header().entry_type().is_file() {
+            continue;
+        }
+        let Ok(path) = entry.path().map(|p| p.to_path_buf()) else {
+            continue;
+        };
+        let is_image = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e.to_lowercase())
+            .is_some_and(|e| matches!(e.as_str(), "webp" | "png" | "jpg" | "jpeg" | "gif" | "svg"));
+        if !is_image {
+            continue;
+        }
+        // Plain parts only; drop the top folder when it is the archive's
+        // own ("5etools-img-2.24.0/…").
+        let mut parts: Vec<std::ffi::OsString> = Vec::new();
+        let mut safe = true;
+        for c in path.components() {
+            match c {
+                Component::Normal(p) => parts.push(p.to_os_string()),
+                Component::CurDir => {}
+                _ => safe = false,
+            }
+        }
+        if !safe || parts.is_empty() {
+            continue;
+        }
+        if parts.len() > 1 && parts[0].to_string_lossy().starts_with("5etools-img") {
+            parts.remove(0);
+        }
+        let target = parts
+            .iter()
+            .fold(dest.to_path_buf(), |p, part| p.join(part));
+        if let Some(parent) = target.parent() {
+            if std::fs::create_dir_all(parent).is_err() {
+                continue;
+            }
+        }
+        let Ok(mut out) = std::fs::File::create(&target) else {
+            continue;
+        };
+        if std::io::copy(&mut entry, &mut out).is_ok() {
+            count += 1;
+            if count.is_multiple_of(500) {
+                progress(count);
+            }
+        }
+    }
+    progress(count);
+    Ok(count)
+}
+
+#[cfg(test)]
+mod tarball_tests {
+    use super::*;
+
+    fn archive(entries: &[(&str, &[u8])]) -> tempfile::NamedTempFile {
+        let f = tempfile::NamedTempFile::new().unwrap();
+        let gz = flate2::write::GzEncoder::new(f.reopen().unwrap(), flate2::Compression::fast());
+        let mut b = tar::Builder::new(gz);
+        for (path, data) in entries {
+            let mut h = tar::Header::new_gnu();
+            h.set_size(data.len() as u64);
+            h.set_mode(0o644);
+            h.set_entry_type(tar::EntryType::Regular);
+            // Write the name raw: tar::Builder refuses ".." itself.
+            let name = h.as_old_mut();
+            name.name[..path.len()].copy_from_slice(path.as_bytes());
+            h.set_cksum();
+            b.append(&h, *data).unwrap();
+        }
+        b.into_inner().unwrap().finish().unwrap();
+        f
+    }
+
+    #[test]
+    fn images_land_under_dest_and_nothing_escapes() {
+        let a = archive(&[
+            ("5etools-img-2.0/book/PHB/cover.webp", b"img"),
+            ("5etools-img-2.0/book/PHB/notes.txt", b"text"),
+            ("5etools-img-2.0/../../escape.png", b"bad"),
+        ]);
+        let root = tempfile::tempdir().unwrap();
+        let dest = root.path().join("catalog");
+        let mut seen = Vec::new();
+        let n = import_images_from_tarball(a.path(), &dest, |c| seen.push(c)).unwrap();
+        assert_eq!(n, 1);
+        assert!(dest.join("book/PHB/cover.webp").exists());
+        assert!(!dest.join("book/PHB/notes.txt").exists());
+        assert!(
+            !root.path().join("escape.png").exists()
+                && !root.path().parent().unwrap().join("escape.png").exists()
+        );
+        assert_eq!(seen.last(), Some(&1));
+    }
+}

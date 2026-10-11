@@ -26,7 +26,7 @@ The import format follows the schema established by the [5etools](https://5e.too
 - Token images and creature artwork
 - Source book metadata and publication information
 
-After import, all data lives in your local SQLite database. Mimir never phones home or downloads content.
+After import, all data lives in the SQLite database of your server. Mimir never phones home or downloads content.
 
 ## Source Filtering
 
@@ -34,7 +34,7 @@ Not every campaign uses every sourcebook. A "Player's Handbook only" game should
 
 Mimir's source filtering works at two levels:
 
-**Campaign sources** control which books are active for a campaign. When you open Campaign Sources and enable only PHB and MM, catalog searches within that campaign only return content from those books.
+**Campaign sources** control which books are active for a campaign. When you open **Source books…** and choose only PHB and MM, catalog searches within that campaign only return content from those books.
 
 **Character sources** optionally restrict further. A character can have their own source list — useful when one player owns different books than another.
 
@@ -67,7 +67,7 @@ Catalog entities are stored as structured JSON in the database, following the sc
 - Spells include casting components, duration, scaling behavior
 - Items include variant generation rules for magic items (a +1/+2/+3 weapon generates three entries)
 
-The JSON is parsed on-demand by the frontend formatters, which render stat blocks, spell descriptions, and item cards in familiar D&D presentation style.
+The `mimir-render` crate turns the JSON into HTML on demand, in the familiar D&D presentation style: stat blocks, spell descriptions and item cards. The catalog, the book reader and the homebrew preview all use it.
 
 ## Why Not a Bundled Database?
 
@@ -79,6 +79,6 @@ You might wonder why Mimir doesn't ship with a pre-populated catalog. Three reas
 
 ## See Also
 
-- [Manage Campaign Sources](../how-to/campaigns/manage-sources.md) — Configuring which books are active
+- [Manage Source Books](../how-to/campaigns/manage-sources.md) — Configuring which books are active
 - [The Homebrew System](./homebrew-system.md) — Creating custom content
 - [File Formats](../reference/file-formats.md) — Technical details on data formats

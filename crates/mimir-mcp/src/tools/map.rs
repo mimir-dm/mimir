@@ -170,12 +170,9 @@ tool_args! {
 // Handlers
 // =============================================================================
 
-/// Get the app_data_dir from context (parent of assets_dir).
+/// The app folder (the asset paths are relative to it).
 fn app_data_dir(ctx: &Arc<McpContext>) -> std::path::PathBuf {
-    ctx.assets_dir
-        .parent()
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| ctx.assets_dir.clone())
+    ctx.app_dir.clone()
 }
 
 fn parse_lighting_mode(s: &str) -> Result<LightingMode, McpError> {

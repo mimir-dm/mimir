@@ -4,60 +4,40 @@ Use Mimir with Claude Code for AI-assisted campaign management via natural langu
 
 ## What It Does
 
-Mimir includes an MCP (Model Context Protocol) server that exposes 54 tools to Claude Code, enabling you to manage campaigns, search catalogs, generate maps, and prep sessions through conversation. Ask "create a forest map" or "find CR 5 undead monsters" and the assistant handles it.
+The Mimir server has an MCP (Model Context Protocol) endpoint with 71 tools for Claude Code, enabling you to manage campaigns, search catalogs, generate maps, and prep sessions through conversation. Ask "create a forest map" or "find CR 5 undead monsters" and the assistant handles it.
 
 ## Prerequisites
 
-- Mimir desktop app installed
+- A running Mimir server (on your computer: `http://127.0.0.1:8740`)
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
-- The `mimir-mcp` binary (installed alongside the app, or built from source)
+- The DM token (`MIMIR_API_TOKEN`), if the server has one
 
 ## Setup
 
-### For App Users
-
-Inside the desktop app, the MCP server runs as a sidecar — a companion process bundled with the app that launches automatically. For Claude Code, you use the standalone `mimir-mcp` binary instead. On macOS, the install script places it at `~/.local/bin/mimir-mcp`, so it's already on your PATH (if not, add `~/.local/bin` to your PATH). On Linux and Windows, download the binary for your platform from [GitHub Releases](https://github.com/mimir-dm/mimir/releases) (e.g. `mimir-mcp-x86_64-unknown-linux-gnu` or `mimir-mcp-x86_64-pc-windows-msvc.exe`), or build it from source as described below.
-
-1. Register the server with Claude Code:
+1. Tell Claude Code where the server is:
 
    ```bash
-   claude mcp add mimir -- mimir-mcp
+   export MIMIR_URL="http://127.0.0.1:8740"   # or the server's address
+   export MIMIR_API_TOKEN="…"                 # the DM token; empty in open mode
    ```
 
-2. Install the Claude Code plugin. Inside a Claude Code session, add the Mimir marketplace, then install the plugin:
+2. Install the Claude Code plugin. Inside a Claude Code session, add the
+   Mimir marketplace, then install the plugin:
 
    ```
    /plugin marketplace add mimir-dm/mimir
    /plugin install mimir-dm@mimir
    ```
 
-### From Source
+   Or add only the server:
 
-If you're working from the Mimir repository, build the binary yourself:
+   ```bash
+   claude mcp add --transport http mimir "$MIMIR_URL/mcp" \
+     --header "Authorization: Bearer $MIMIR_API_TOKEN"
+   ```
 
-```bash
-cargo build --release -p mimir-mcp
-```
-
-Then register the built binary (`target/release/mimir-mcp`) with `claude mcp add` as above.
-
-### Database Path
-
-The server auto-detects the Mimir database on macOS (`~/Library/Application Support/com.mimir.app/data/mimir.db`) and Linux (`$XDG_DATA_HOME/com.mimir.app/data/mimir.db`, falling back to `~/.local/share/...`). On Windows there is no default — you must set the environment variable:
-
-```bash
-# macOS / Linux
-export MIMIR_DATABASE_PATH=/path/to/mimir.db
-```
-
-```powershell
-# Windows (PowerShell)
-$env:MIMIR_DATABASE_PATH = "C:\Users\you\AppData\Roaming\com.mimir.app\data\mimir.db"
-```
-
-You can find your database path in the app under **Settings > Integrations**, which displays it with a copy button.
-
-See [Environment Variables](../../reference/environment-variables.md) for details.
+Mimir's **Settings > Integrations** page shows this command with the
+server's address.
 
 ## Available Tools, Commands, and Skills
 

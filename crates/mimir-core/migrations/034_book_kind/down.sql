@@ -1,0 +1,2 @@
+ALTER TABLE books DROP COLUMN meta;
+ALTER TABLE books DROP COLUMN kind;

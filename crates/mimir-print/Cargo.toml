@@ -1,6 +1,6 @@
 [package]
 name = "mimir-print"
-version = "0.7.3"
+version = "1.0.0"
 edition = "2021"
 description = "Print and PDF generation for Mimir using Typst"
 authors = ["Dylan Storey"]
@@ -36,7 +36,7 @@ image = { workspace = true }
 imageproc = { workspace = true }
 rusttype = { workspace = true }
 
-# Base64 encoding for Tauri commands
+# Base64 encoding
 base64 = { workspace = true }
 
 # Regex for 5etools tag stripping

@@ -1,49 +1,46 @@
 # Print Maps
 
-Export maps to PDF for physical play or reference.
+Export a map to PDF for play at the table or for reference.
 
 ## Steps
 
-1. Open Play Mode for your module
-2. Select the map you want to print
-3. Click the **Print** button in the map toolbar
-4. Configure print sections (see below)
-5. Click **Generate PDF**
-6. Preview the PDF, then save to your chosen location
+1. Open the map on the DM map.
+2. Click **PDF…** in the toolbar.
+3. Select the parts of the PDF (see below).
+4. Click **Download PDF**.
 
-## Print Sections
+The browser downloads the PDF. A large map takes some time.
 
-The print dialog has two independent sections that can be enabled together or separately.
+## Options
 
 ### Preview
 
-Fits the entire map on a single page — useful for DM reference or handouts.
+**Preview (one page)** fits the whole map on one page. Use it for DM reference or a handout.
 
-Options:
-- **Grid** — Overlay the grid on the map
-- **LOS Walls** — Show line-of-sight wall positions
-- **Starting Positions** — Show where tokens are placed
+- **Preview: grid**: draw the grid
+- **Preview: walls**: draw the walls that block sight
+- **Preview: positions**: draw where the tokens stand
 
 ### Play
 
-Prints at 1 inch = 5 feet scale, tiled across multiple pages for physical tabletop play. The dialog shows an estimated page count when tiling is needed.
+**To play on (tiled, actual size)** prints the map at 1 inch for 5 feet, over many pages, for play on the table. The dialog shows about how many letter pages it takes (8 by 10 squares a page), and a guide page shows how they fit together.
 
-Options:
-- **Grid** — Overlay the grid on the map
-- **LOS Walls** — Show line-of-sight wall positions
-- **Token Cutouts** — Generate printable circular token images
+- **Play: grid**: draw the grid
+- **Play: walls**: draw the walls
+- **Play: token cutouts**: add sheets of paper tokens to cut out
 
 ## Token Cutouts
 
-When enabled in the Play section, the PDF includes a sheet of circular token images that can be cut out for use as physical tokens on the printed map.
+With **Play: token cutouts**, the PDF has paper standees for the tokens on the map, sized by creature size. Cut them out and fold them.
 
-## Tips
+## Print All Maps of a Module
 
-- Use the Preview section for quick DM reference sheets
-- Use the Play section with token cutouts for a complete physical play kit
-- Enable both sections to get everything in one PDF
+1. Open the module page.
+2. Open **More** and click **PDF…**.
+3. Select **Map previews** or **Maps to play on (tiled)** and their options.
+4. Click **Download PDF**.
 
 ## See Also
 
 - [Upload a Map](./upload-map.md)
-- [Export Campaign](../campaigns/export-campaign.md)
+- [PDF Export](../../reference/pdf-export/README.md)

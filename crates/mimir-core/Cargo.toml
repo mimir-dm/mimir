@@ -1,6 +1,6 @@
 [package]
 name = "mimir-core"
-version = "0.7.3"
+version = "1.0.0"
 edition = "2021"
 description = "Mimir core library - models, services, and data access"
 
@@ -27,6 +27,9 @@ chrono = { workspace = true }
 
 # UUID generation
 uuid = { workspace = true }
+# Player link tokens: random, stored as a SHA-256 hash (MIMIR-T-0716).
+rand = { workspace = true }
+sha2 = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
@@ -49,12 +52,12 @@ flate2 = "1.0"
 base64 = "0.22"
 
 # Image processing
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
 tempfile.workspace = true
 
 [features]
 # SRD catalog loader and the UI fixture campaign (seed::srd, seed::seed_ui_fixture).
-# Dev-only: used by integration tests and mimir-ui-bridge, never by the app.
+# Dev-only: used by tests and the server's dev fixture, never in a release.
 fixtures = []
 
 [dev-dependencies]

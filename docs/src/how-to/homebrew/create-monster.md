@@ -1,46 +1,54 @@
 # Create a Homebrew Monster
 
-Create custom monsters by cloning and modifying entries from the D&D 5e catalog.
+Make your own monsters for a campaign. Start from a catalog monster or from the template.
 
-## Navigate to Homebrew Monsters
+## Open Homebrew Monsters
 
-1. Open your campaign dashboard
-2. Click the **Homebrew** tab
-3. Select the **Monsters** sub-tab
+1. Open the campaign.
+2. Click the **Homebrew** tab.
+3. Click **Monsters**.
 
-## Clone from Catalog
+## Copy a Catalog Monster
 
-Homebrew monsters are created by cloning existing catalog entries:
+1. Click **Copy from the catalog**.
+2. In **Catalog name**, type the name, for example "goblin". Click **Search**.
+3. Click **Pick** next to the monster.
+4. Type the **Name** of the copy.
+5. Click **Copy**.
 
-1. Click **Clone from Catalog**
-2. Search for a monster (minimum 2 characters)
-3. Results show name, CR, size, type, and source
-4. Click a monster to create a homebrew copy immediately
+The copy opens with its stat block. It shows "Copy of …".
 
-The new monster appears in your homebrew list with "Based on [original name]" shown in the detail view.
+## Start From the Template
 
-## Editing Monsters
+1. Click **New**.
+2. Type the **Name**.
+3. Change the JSON. The template is a medium humanoid of challenge 1/2 with a club attack.
+4. Click **Save**.
 
-1. Select a monster from the list
-2. Click **Edit**
-3. Modify the **Name** and/or the **JSON data** containing the full stat block
-4. Save your changes
+## Edit a Monster
 
-The stat block data is stored as JSON. The detail pane shows extracted metadata: CR, size, and creature type.
+1. Click the monster in the list.
+2. Click **Edit**.
+3. Change the **Name** or the stat block in **Data (JSON)**. The JSON is in the 5etools format. For simple changes, find the field and change its value, for example `"hp"`, `"ac"` or `"cr"`.
+4. Look at the **Preview**.
+5. Click **Save**.
 
-## Using Homebrew Monsters
+## Use a Homebrew Monster
 
-Homebrew monsters appear in monster search results alongside catalog entries when:
-- Placing tokens in **Token Setup**
-- Browsing monsters in module prep
+1. Open a module and click the **Dangers** tab.
+2. Search for the monster. It shows **Homebrew**.
+3. Click **Add**.
 
-They are tagged with an **HB** badge for identification.
+Then place it on the module maps. See [Add Monsters](../modules/add-monsters.md).
 
-## Deleting Monsters
+## Delete a Monster
 
-Click **Delete** on a selected monster. If any modules reference the monster, a warning shows which modules are affected.
+1. Click the monster in the list.
+2. Click **×** (**Delete …**).
+3. The dialog lists the modules that use the monster. Modules that use it lose it too.
+4. Click **Delete**.
 
 ## See Also
 
-- [Add Monsters to Module](../modules/add-monsters.md)
-- [Homebrew Overview](./)
+- [Add Monsters to a Module](../modules/add-monsters.md)
+- [Homebrew Overview](./README.md)

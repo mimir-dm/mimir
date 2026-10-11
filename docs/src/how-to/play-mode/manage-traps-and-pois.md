@@ -1,70 +1,64 @@
 # Manage Traps and POIs
 
-Place trap markers and points of interest (POIs) on a map, control what players see, and trigger traps during play.
-
-Traps and POIs are placed in the **Token Setup modal** and managed during play from the DM Map window's map viewer. Some operations are only available in Token Setup — each section below says where it works.
+Place trap markers and points of interest (POIs) on a map, choose what the players see and trigger traps during play. You do all of this on the DM map.
 
 ## Place a Trap
 
-1. Open Token Setup: click the map card (or its **Place Tokens** button) in the Module Prep View or the dashboard Modules tab.
-2. In the token palette, select **Trap** (⚠️).
-3. Optionally use **Link Trap** to search the catalog and link a published trap — the marker takes the trap's name, and its full description can be pulled up in the trap details panel during play.
-4. Set the name (if not linked) and choose whether the marker starts **Visible** to players (off by default — traps usually start hidden).
-5. Click a grid square on the map to place the marker.
+1. Open the DM map.
+2. Open the **Place on the map** menu and choose **Trap**.
+3. In the **Placement** panel, type the **Trap name**. To use a trap of the catalog, type in **Link a catalog trap**, click **Search** and click the trap: its name fills in.
+4. Turn on **Players see it** to show the trap at once. A new trap is hidden by default.
+5. Click a grid square.
 
-Drag the marker to reposition it (Token Setup only).
-
-> **Note:** A trap record also stores a detection DC and trigger/effect text. The current UI does not provide a form for editing these fields directly; link a catalog trap to give the marker a name that resolves to full trap mechanics in the play-mode trap details panel.
-
-## Hide or Reveal a Trap
-
-Hidden traps appear gray and are never sent to the Player Display. Visible traps show a dashed green ring and appear on the Player Display.
-
-- **Token Setup:** right-click the marker and choose **Show to Players** / **Hide from Players**, or use the **Vis/Hid** button next to the trap in the placed-content list.
-- **Play Mode / DM Map window:** right-click the trap marker to toggle its visibility directly.
-
-Reveal a trap when the party detects it; keep it hidden until then.
-
-## Trigger and Reset a Trap
-
-Available in **Token Setup only**: right-click the trap marker and choose **Trigger Trap**. The marker is shown in its triggered state and the placed-content list shows "(Triggered)". To re-arm it, right-click again and choose the reset option.
+A trap with the name of a catalog trap opens that trap's details when you double-click it. A point of interest opens its dialog when you double-click it.
 
 ## Place a POI
 
-1. Open Token Setup for the map.
-2. In the token palette, select **Marker** (📍).
-3. Set a name and color, and choose initial player visibility.
-4. Click a grid square to place it.
+1. Open the **Place on the map** menu and choose **Point of interest**.
+2. Click a grid square. The **New point of interest** dialog opens.
+3. Type the **Name** and, optionally, a **Description**.
+4. Click an icon (Pin, Star, Skull, Chest, Door, Secret, Question, Exclamation) and a colour. Or choose **Another colour**. The preview shows the marker.
+5. Turn on **Players see it** to show it at once.
+6. Click **Save**.
 
-New POIs use the pin icon. To change the icon or add a description, edit the POI (next section).
+A new POI is hidden from the players unless you turn on **Players see it**.
 
-## Edit a POI (Icon, Color, Description)
+## Change a POI
 
-Open the POI edit form from either view:
+1. Click the POI, then click **Edit** in its panel. Or right-click it and click **Edit**.
+2. Change the name, description, icon or colour.
+3. Click **Save**.
 
-- **Token Setup:** click the **Edit** button next to the POI in the placed-content list, or right-click the marker and choose **Edit...**
-- **Play Mode / DM Map window:** right-click the POI marker and choose **Edit...**
+## Show or Hide a Marker
 
-The form lets you set the name, a DM-notes description, one of eight icons (pin, star, skull, chest, door, secret, question, exclamation), and a color.
+1. Click the trap or the POI on the map. A panel opens.
+2. Turn **Players see it** on or off.
 
-## Hide or Reveal a POI
+The players see a shown trap with its name only, never its DC, trigger or effect. They see a shown POI with its name. A hidden marker never reaches them.
 
-- **Token Setup:** use the **Vis/Hid** button in the placed-content list, or right-click the marker.
-- **Play Mode / DM Map window:** right-click the POI marker and choose **Show to Players** / **Hide from Players**.
+## Trigger a Trap
 
-Visible POIs are sent to the Player Display with their icon and color.
+1. Click the trap.
+2. Turn on **Triggered**.
 
-## Delete a Trap or POI
+Turn it off to set the trap again. Or right-click the trap and click **Trigger** or **Reset**.
 
-Right-click the marker and choose **Delete** (POI deletion is available in both views; trap deletion in Token Setup), or use the **×** button in the Token Setup placed-content list. Deletion asks for confirmation and is permanent.
+## Read the Trap Details
 
-## During Play
+Click the trap. The panel shows its **DC**, **Trigger**, **Effect** and **Notes** when the trap has them. The web app does not edit these fields. The AI assistant can set them. See [AI Assistant](../ai-assistant/README.md).
 
-- Double-clicking a trap or POI in the DM Map window focuses its details in the campaign dashboard — for catalog-linked traps this shows the full trap mechanics.
-- Marker visibility changes propagate to the Player Display immediately while it is open.
+## Move a Marker
+
+Drag the trap or the POI to a new square. Mimir saves the new place at once.
+
+## Remove a Marker
+
+1. Click the trap or the POI.
+2. Click **Remove trap** or **Remove**.
+3. Confirm.
 
 ## See Also
 
-- [Fog of War](./fog-of-war.md) — Controlling map visibility around your markers
-- [Token Setup Modal](../../reference/ui/token-setup-modal.md) — Full reference for the placement UI
-- [Play Mode](../../reference/ui/play-mode.md) — Session interface reference
+- [Fog of War](./fog-of-war.md)
+- [Place Tokens](../maps/place-tokens.md)
+- [DM Map](../../reference/ui/dm-map.md)

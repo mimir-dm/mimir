@@ -1,57 +1,68 @@
-# Use Player Display
+# Use the Player Display
 
-Show players a fog-of-war view on a second screen.
+Show the map to the players on a shared screen, with fog of war and without your secrets.
 
-![Player Display Header](../../images/reference/player-display-header.png)
+## Open the Display
 
-## Opening the Display
+1. Open the DM map.
+2. Click **Open player display**. The display opens in a new browser tab at `/display/<campaign>`.
+3. Move the tab to the screen that the players see.
+4. Click **Full screen** (⛶) on the display.
 
-1. Click **Play** on a module to open the DM Map window
-2. Click **Display** in the window's top toolbar (it changes to **Display On**)
-3. A new window opens
-4. Drag the window to your player-facing screen
+To use another device as the display, for example a computer next to the TV, open the same address in its browser and sign in with the DM token.
 
-## What Players See
+## Show a Map
 
-![Player View](../../images/reference/player-view-fog.png)
+1. On the DM map, click **Show to players**.
 
-The player display shows:
-- Current map with fog of war
-- Visible tokens only
-- No monster names or stats
-- Clean interface without controls
+The display shows that map. Until then it says "Waiting for the DM to show a map."
 
-## Blackout Mode
+## Switch Maps
 
-Hide everything from players:
-1. Click the **Blackout** button (crossed-out-eye icon, tooltip "Toggle Blackout") next to **Display On** — it appears while the display is open
-2. Player screen blacks out and shows "Display Paused"
-3. Click again to restore
+1. Click **Blackout** so that the players do not see the change.
+2. Choose another map in the **Map** menu.
+3. Click **Show to players** on the new map.
+4. Click **End blackout**.
 
-Use for:
-- Setup before session
-- Dramatic reveals
-- Map transitions
-- Bathroom breaks
+The display shows one map for the campaign at a time. **Show to players** on a map replaces the map shown before.
 
-## Switching Maps
+## What the Players See
 
-1. Pick a different map from the **Map** dropdown at the top left of the DM Map window
-2. Player display updates automatically
-3. Use Blackout during transitions for drama
+- The map image and the grid
+- PC tokens, and other tokens where a PC can see them
+- Lit lights
+- Shown traps (name only) and shown POIs
+- The turn order, if **Show order to players** is on in the tracker
 
-## Closing the Display
+They do not see hidden tokens, hidden markers, trap details, unlit lights or hit points. Fog of war covers what the party cannot see.
 
-- Click the **Display On** button again, or
-- Close the window directly
+## Blackout
+
+1. Click **Blackout**. The display shows "Paused".
+2. Click **End blackout** to show the map again.
+
+Use it to set up a scene, to change maps or for a break.
+
+## Stop Showing
+
+1. Click **Stop showing**. The display waits for a map again.
+
+## Zoom and Pan on the Display
+
+The display has **Zoom in**, **Zoom out** and **Fit the map** buttons. Drag to pan. Pinch or use the mouse wheel to zoom. This changes the display only, not your map.
+
+## Players on Their Own Devices
+
+Each player can follow the map on their own device with their player link. Their **Display** tab shows the same view as the display. See [Share a Player Link](../characters/player-links.md).
 
 ## Tips
 
-- Use fullscreen (F11) on the player screen
-- Keep notes on your screen, map on theirs
-- Use Blackout liberally for reveals
+- Keep your notes on your screen and the map on theirs.
+- Use blackout often.
+- For remote play, share the display tab in your video call.
 
 ## See Also
 
 - [Fog of War](./fog-of-war.md)
-- [Tutorial: Player Display Setup](../../tutorials/04-player-display.md)
+- [Tutorial: The Player Display](../../tutorials/04-player-display.md)
+- [Player Display Reference](../../reference/ui/player-display.md)

@@ -1,167 +1,93 @@
-# Player Display Setup
+# The Player Display
 
-This tutorial walks you through setting up and using the Player Display - a second window that shows your players what their characters can see while you maintain full DM control.
+This tutorial shows you how to show the map to your players. You put the player display on a shared screen, and you give each player a link to their own character.
 
-**Time to complete:** 5 minutes
+**Time:** 10 minutes
 
-**What you'll learn:**
-- Set up a second screen for players
-- Open and control the Player Display
-- Understand what players see vs. what you see
-- Use Blackout mode for dramatic reveals
+**You will learn how to:**
+- Open the player display on a TV or a second screen
+- Know what the players see and what they do not see
+- Use blackout
+- Give a player a link to their character
 
 ## Prerequisites
 
-- Completed [Tutorial 3](./03-first-session.md) (DM Map window basics)
-- Ideally: a second monitor, TV, or projector for players
+- [Tutorial 3](./03-first-session.md) done
+- A player character in the campaign ([Create a Player Character](../how-to/characters/create-pc.md))
+- Optionally, a TV, a projector or a second screen
 
-## The Two-Screen Setup
+## Two Ways to Show the Map
 
-The Player Display creates a two-screen experience:
+| Way | Who uses it | Address |
+|-----|-------------|---------|
+| **Player display** | A shared screen at the table | `/display/<campaign>`, opened from the DM map |
+| **Player page** | Each player on their own phone, tablet or computer | The player link of their character |
 
-| Your Screen (DM) | Player Screen |
-|------------------|---------------|
-| Full map with all tokens | Fog of war applied |
-| Monster names and stats | Token images only |
-| Hidden tokens visible | Hidden tokens invisible |
-| All controls and tools | Clean, focused view |
+Both show the same map, from the same rules.
 
-This lets you manage everything behind the scenes while players see only what their characters would see.
+## Step 1: Open the Player Display
 
-## Step 1: Connect Your Second Screen
+1. Open the DM map of your module.
+2. Click **Open player display**. The display opens in a new browser tab.
+3. Move the tab to the shared screen. Or open the same address on the browser of another device, for example a smart TV or a small computer next to the TV. That device must sign in with the DM token.
+4. Click **Full screen** (⛶) on the display.
 
-Before opening the Player Display, connect your second screen:
+Until you show a map, the display says "Waiting for the DM to show a map."
 
-- **TV or Monitor** - HDMI/DisplayPort connection
-- **Projector** - For tabletop projection
-- **Extended Display** - Not mirrored (each screen shows different content)
+## Step 2: Show the Map
 
-### Display Arrangement
+1. On the DM map, click **Show to players**.
 
-On your computer:
-1. Open display settings
-2. Set to "Extend" (not "Mirror")
-3. Arrange screens to match physical layout
-4. Note which screen is secondary
+The display shows the map at once. When you move a token on the DM map, the display follows.
 
-## Step 2: Open the DM Map Window
+The display has its own **Zoom in**, **Zoom out** and **Fit the map** buttons. Anyone at the display can also drag to pan, pinch or use the mouse wheel to zoom. This does not change your view.
 
-1. Open your campaign
-2. Go to the **Modules** tab
-3. Select a module and click **Play** — the DM Map window opens
-4. Make sure a map is selected in the **Map** dropdown at the top left of the window
+## Step 3: Know What Players See
 
-## Step 3: Open the Player Display
+| You see (DM map) | Players see (display) |
+|------------------|-----------------------|
+| Every token | Tokens the party can see; never hidden tokens |
+| Hidden traps and points of interest | Only the ones you show; for a trap, its name only |
+| A light shade where fog is | A full cover where fog is |
+| All lights | Only the lit lights |
 
-In the DM Map window's toolbar:
+Fog of war follows the PC tokens. A PC token always shows. Other tokens show only where a PC can see them. See [Vision & Lighting](../reference/vision-and-lighting.md).
 
-1. Click the **Display** button
-2. A new window opens
-3. The button changes to show **Display On**
+## Step 4: Use Blackout
 
-![Player Display Button](../images/tutorials/player-display-header.png)
+1. Click **Blackout** on the DM map.
+2. The display shows "Paused".
+3. Move tokens, change maps or set up the next scene.
+4. Click **End blackout**. The display shows the map again.
 
-### Position the Window
+## Step 5: Give a Player Their Link
 
-Drag the Player Display window to your secondary screen:
-1. Click and hold the window title bar
-2. Drag to the player-facing screen
-3. Maximize the window (or press F11 for fullscreen)
+A player can follow the map on their own device and use their character sheet.
 
-> **Tip:** On macOS, you can use Mission Control to move windows between spaces. On Windows, use Win+Shift+Arrow keys.
+1. Open the campaign and click the **PCs** tab.
+2. Click **Player link** in the row of the character.
+3. Click **Make a link**.
+4. Mimir shows the link and a QR code once. Let the player scan the QR code, or click **Copy link** and send it.
 
-## Step 4: Understanding the Views
+The player opens the link and sees the player page with three tabs: **Display**, **Character** and **Party**. The player cannot see your pages.
 
-### What You See (DM View)
+To end a link, click **Revoke**. The device of the player is signed out at once. See [Share a Player Link](../how-to/characters/player-links.md).
 
-![DM View](../images/tutorials/dm-view.png)
+## Step 6: End the Session
 
-Your view shows everything:
-- All tokens (visible and hidden)
-- Token names and labels
-- Full toolbar and controls
-- Line of sight visualization (debug overlays)
+1. Click **Stop showing** on the DM map. The display waits again.
+2. Close the display tab, or leave it open for the next session.
 
-### What Players See
+## Tips
 
-![Player View - Fog of War](../images/tutorials/player-view-fog.png)
-
-![Player View - Token Line of Sight](../images/tutorials/player-view-token-los.png)
-
-The player display shows:
-- The map image
-- Fog of war based on PC positions
-- Visible tokens only (no hidden enemies)
-- Token images without names
-- No controls or UI elements
-
-## Step 5: Controlling What Players See
-
-### Fog of War
-
-With **Fog** enabled in the map toolbar (UVTT maps only — fog needs wall data), fog of war updates automatically based on:
-- Where PC tokens are positioned
-- Their vision radius (including darkvision)
-- Active light sources
-- Walls and obstacles
-
-Move a PC token and watch the fog update in real-time on both screens.
-
-### Reveal Map Toggle
-
-For situations where you want to show the whole map:
-1. Find the **Reveal Map** toggle in the toolbar
-2. Enable it to bypass fog of war
-3. Disable it to restore fog of war
-
-Use this for:
-- Area maps without exploration
-- Post-combat wrap-up
-- Location reveals
-
-### Ambient Lighting
-
-The ambient light level affects visibility:
-
-| Level | Effect |
-|-------|--------|
-| Bright | Normal visibility, full colors |
-| Dim | Reduced visibility, muted colors |
-| Dark | Only darkvision and light sources work |
-
-Change this to match the in-game environment (dungeon, night, etc.).
-
-## Step 6: Using Blackout Mode
-
-The **Blackout** button (a crossed-out-eye icon with the tooltip "Toggle Blackout") appears next to **Display On** in the DM Map window toolbar while the display is open:
-
-1. Click **Blackout** to hide everything from players
-2. The player screen blacks out and shows "Display Paused"
-3. Click again to restore the view
-
-Blackout is handy whenever you want to change something without the players watching — setup, map transitions, or a dramatic reveal.
-
-## Step 7: Closing the Display
-
-When your session ends:
-
-1. Click the **Display On** button again, or
-2. Close the player display window directly
-3. The button returns to **Display**
-
-The DM Map window stays open - you can reopen the display anytime.
-
-## Setup Tips
-
-For in-person play, position the TV, monitor, or projector so all players can see it, and adjust brightness for the room. For remote play, screen-share the Player Display window through your video call app.
-
-If something isn't working, see [Troubleshooting](../reference/troubleshooting.md).
+- For remote play, share the display tab in your video call, or give each player their link.
+- If something does not work, see [Troubleshooting](../reference/troubleshooting.md).
 
 ---
 
 ## Next Steps
 
-You can now create campaigns, build modules with maps and encounters, run sessions with fog of war, and use a second screen for players. One tutorial remains: creating your own homebrew content.
+You can now make campaigns, build modules, run sessions with fog of war and show the map to players. One tutorial remains: your own homebrew content.
 
 ---
 

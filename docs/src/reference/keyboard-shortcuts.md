@@ -1,42 +1,50 @@
-# Keyboard Shortcuts
+# Keyboard and Pointer Controls
 
-Quick reference for keyboard shortcuts in Mimir.
+Mimir works with a mouse, a touch screen or a pen. The DM map and the player display have keys. The editor has the usual text shortcuts. A key does nothing while a text field has the focus.
 
-## Global Shortcuts
+## Maps
 
-| Shortcut | Action |
-|----------|--------|
-| `Escape` | Close modal/panel |
+These work on the DM map and on the player display.
 
-## Map Navigation
+| Input | Action |
+|-------|--------|
+| Drag the map | Pan |
+| Mouse wheel | Zoom at the pointer |
+| Pinch (two fingers) | Zoom |
+| **+** / **−** buttons | Zoom in / out |
+| **⤢** button | Fit the map |
 
-| Shortcut | Action |
-|----------|--------|
-| `Scroll` | Zoom in/out |
-| `Click + Drag` | Pan the map |
-| `+` / `=` | Zoom in |
+On the DM map only:
+
+| Input | Action |
+|-------|--------|
+| Click or tap an item | Select it and open its panel |
+| Double-click or double-tap a monster token | Open its stat block |
+| Double-click a trap | Open the catalog trap of that name |
+| Double-click a point of interest | Open its dialog |
+| Drag a token, a light, a trap or a POI | Move it |
+| Right-click a token, a trap or a POI | Its menu |
+| Right-click a light | Turn it on or off |
+| Click a square, after a choice in **Place on the map** | Place the item |
+| Click a door | Open or close it (the players see it) |
+| **⛶** button | Full screen |
+| `+` or `=` | Zoom in |
 | `-` | Zoom out |
-| `0` | Reset view (1:1 zoom, centered) |
+| `0` | Fit the map |
+| `H` | Hide or show the selected token |
+| `D` | Mark the selected token dead or alive |
+| `Esc` | Clear the selection and stop placing |
 
-## Token Manipulation (Play Mode)
+On the player display only:
 
-| Shortcut | Action |
-|----------|--------|
-| `Click` | Select token |
-| `Drag` | Move token |
-| `Right-click` | Token context menu |
-| `h` / `H` | Toggle visibility of selected token |
-| `d` / `D` | Toggle dead state of selected token |
-| `Escape` | Close context menu and deselect token |
+| Input | Action |
+|-------|--------|
+| **⛶** button, `F` or `F11` | Full screen |
+| `R` | Fit the map |
 
-## Player Display Window
+## Editor
 
-| Shortcut | Action |
-|----------|--------|
-| `F11` | Toggle fullscreen |
-| `R` | Reset view (fit map to screen) |
-
-## Document Editor
+The rich editor of documents and notes takes these shortcuts. Use `Cmd` on macOS and `Ctrl` on other systems.
 
 | Shortcut | Action |
 |----------|--------|
@@ -45,8 +53,16 @@ Quick reference for keyboard shortcuts in Mimir.
 | `Cmd/Ctrl + Z` | Undo |
 | `Cmd/Ctrl + Shift + Z` | Redo |
 
-## Notes
+Markdown at the start of a line also formats:
 
-- `Cmd` is used on macOS, `Ctrl` on Windows/Linux
-- Shortcuts are ignored when typing in text inputs or textareas
-- Token manipulation shortcuts require a token to be selected
+| Type | Result |
+|------|--------|
+| `1. ` | Numbered list |
+| `- ` | Bullet list |
+| `# `, `## `, `### ` | Heading 1, 2, 3 |
+| `> ` | Quote |
+
+## Forms
+
+- Press Enter in a search field to search.
+- Press Enter in **Custom name**, **Set HP**, **Amount** or **Rnds** in the initiative tracker to submit it.

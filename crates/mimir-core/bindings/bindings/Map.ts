@@ -47,4 +47,12 @@ created_at: string,
 /**
  * ISO8601 timestamp of last update
  */
-updated_at: string, };
+updated_at: string, 
+/**
+ * The players see the whole map (no fog, no sight limits).
+ */
+reveal_all: number, 
+/**
+ * Walls and closed doors block sight.
+ */
+line_of_sight: number, };

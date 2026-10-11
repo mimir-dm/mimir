@@ -1,9 +1,9 @@
-# Play Mode
+# Running Sessions
 
-How-to guides for running game sessions.
+How-to guides for game sessions.
 
-- [Start a Session](./start-session.md) - Enter Play Mode
-- [Manage Encounters](./manage-encounters.md) - Run combat encounters
-- [Fog of War](./fog-of-war.md) - Control visibility
-- [Manage Traps & POIs](./manage-traps-and-pois.md) - Place, reveal, and trigger map markers
-- [Use Player Display](./use-player-display.md) - Set up a second screen
+- [Start a Session](./start-session.md): open the DM map and set up the scene
+- [Run a Combat](./manage-encounters.md): the initiative tracker
+- [Fog of War](./fog-of-war.md): control what the players see
+- [Manage Traps & POIs](./manage-traps-and-pois.md): place, show and trigger map markers
+- [Use the Player Display](./use-player-display.md): show the map on a shared screen

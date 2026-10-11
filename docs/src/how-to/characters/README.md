@@ -1,11 +1,12 @@
 # Characters
 
-How-to guides for creating and managing characters.
+How-to guides for characters.
 
-- [Create a Player Character](./create-pc.md) - Build a PC
-- [Create an NPC](./create-npc.md) - Add non-player characters
-- [Assign to Campaign](./assign-to-campaign.md) - Link characters to campaigns
-- [Manage Inventory](./manage-inventory.md) - Add items, equip gear, track currency
-- [Manage Spells](./manage-spells.md) - View and manage character spells
-- [Level Up](./level-up.md) - Advance a character to the next level
-- [Print Character Sheet](./print-character-sheet.md) - Export character sheets
+- [Create a Player Character](./create-pc.md): make a PC with the wizard
+- [Create an NPC](./create-npc.md): add non-player characters
+- [Move a Character to a Campaign](./assign-to-campaign.md): put characters in a campaign, or take them out
+- [Share a Player Link](./player-links.md): give a player access to their character
+- [Manage Inventory](./manage-inventory.md): add items, equip gear, track coins
+- [Manage Spells](./manage-spells.md): learn, prepare and forget spells
+- [Level Up](./level-up.md): advance a character to the next level
+- [Print a Character Sheet](./print-character-sheet.md): export character sheets and cards

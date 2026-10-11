@@ -1,54 +1,64 @@
 # Manage Light Sources
 
-Light sources affect visibility in fog of war. This guide covers placing and controlling lights.
+Lights change what the party can see when the map is dim or dark. This guide shows you how to place lights and turn them on and off.
 
-## Light Source Types
+## Light Types
 
-| Type | Bright Light | Dim Light |
+| Type | Bright light | Dim light |
 |------|-------------|-----------|
 | Torch | 20 ft | 40 ft |
 | Lantern | 30 ft | 60 ft |
 | Candle | 5 ft | 10 ft |
+| Carried light (on a token) | Half of the radius | The radius you set |
 
-## Placing Light Sources
+## Place a Light
 
-1. Open Token Setup (click the **Place Tokens** button on a map card)
-2. Find **Light Sources** in the Token Palette
-3. Click a light type (Torch, Lantern, or Candle)
-4. Click on the map to place
+1. Open the DM map.
+2. Open the **Place on the map** menu.
+3. Choose **Torch**, **Lantern** or **Candle**.
+4. Click a grid square.
 
-## Light Source Inventory
+## Move a Light
 
-Placed light sources appear in the right panel under "Light Sources":
-- Each light shows its type
-- **Lit/Unlit** button toggles the light
-- **×** button deletes the light
+Drag the light's handle to a new square.
 
-## Toggling Lights
+## Turn a Light On or Off
 
-### In Token Setup
-Click the **Lit/Unlit** button next to any light source in the inventory.
+1. Click the light on the map.
+2. Turn the **Lit** switch on or off.
 
-### In Play Mode
-Right-click a light source on the map to toggle it.
+Or right-click the light: it turns on or off at once.
 
-## How Lights Affect Visibility
+An unlit light gives no light, and the player display does not show it.
 
-- **Lit** - Expands visible area for all tokens
-- **Unlit** - No effect on visibility
-- Lights work with PC darkvision to determine what players see
+## Remove a Light
 
-## Use Cases
+1. Click the light on the map.
+2. Click **Remove light**.
 
-- **Torches on walls** - Simulate dungeon lighting
-- **Lanterns with party** - Light source that moves with PCs
-- **Candles on tables** - Ambient lighting for atmosphere
+## Give a Token Its Own Light
+
+A character with a torch in hand carries the light along.
+
+1. Click the token.
+2. Type the radius in **Carried light**, for example 40 for a torch.
+3. Click **Save vision**.
+
+The light moves with the token.
+
+## How Lights Change Sight
+
+- A token sees by the light where it stands. In darkness, a token in the light of a torch sees as in dim or bright light.
+- A light does not show the map to the players by itself. It changes how far a PC sees.
+- With the map lighting **Bright**, lights change nothing.
+
+See [Vision & Lighting](../../reference/vision-and-lighting.md).
 
 ## Tips
 
-- Place lights at choke points for dramatic reveals
-- Toggle lights during play for effect (torch goes out!)
-- Combine with ambient light settings for atmosphere
+- Put torches on the walls of a dungeon room.
+- Turn a torch off during play for effect: the torch goes out.
+- Use **Dark** map lighting with few lights for tension.
 
 ## See Also
 

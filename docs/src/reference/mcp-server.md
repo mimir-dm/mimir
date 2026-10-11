@@ -1,37 +1,32 @@
 # MCP Server Reference
 
-Technical reference for Mimir's Model Context Protocol (MCP) server — the sidecar that enables AI assistant integration.
+Technical reference for Mimir's Model Context Protocol (MCP) endpoint, which lets an AI assistant work with your campaigns.
 
 ## Architecture
 
-The MCP server (`mimir-mcp`) runs as a Tauri sidecar process. It connects to the same SQLite database as the main app and exposes 54 tools across 8 categories.
+The Mimir server serves MCP at `/mcp` (MCP over streamable HTTP). The tools
+use the same database and services as the web app. The tool list is in
+`crates/mimir-mcp` (its registry); the server serves it.
 
 ### Components
 
-- **Binary**: `mimir-mcp` (built to `crates/mimir/binaries/mimir-mcp-{target-triple}`)
-- **Protocol**: MCP over stdio
-- **Database**: Shared SQLite database (same file the desktop app uses; default location varies by platform — see below)
-- **Plugin**: Claude Code plugin at `crates/mimir-mcp/plugin/`
-
-### Configuration
-
-The database path is resolved from the `MIMIR_DATABASE_PATH` environment variable, falling back to a platform default:
-
-| Platform | Default database path |
-|----------|----------------------|
-| macOS | `~/Library/Application Support/com.mimir.app/data/mimir.db` |
-| Linux | `$XDG_DATA_HOME/com.mimir.app/data/mimir.db` (falls back to `~/.local/share/com.mimir.app/data/mimir.db` when `XDG_DATA_HOME` is unset) |
-| Windows | No default — `MIMIR_DATABASE_PATH` must be set |
-
-See [Environment Variables](./environment-variables.md) for details.
+- **Endpoint**: `<server>/mcp`, for example `http://127.0.0.1:8740/mcp`
+- **Protocol**: MCP, streamable HTTP (sessions: the `Mcp-Session-Id` header)
+- **Access**: the DM token (`Authorization: Bearer <MIMIR_API_TOKEN>`). A
+  player link is refused (403); no token or a wrong token is refused (401).
+  A server in open mode (no `MIMIR_API_TOKEN`) lets every caller in.
+- **Plugin**: Claude Code plugin at `crates/mimir-mcp/plugin/` (it reads
+  `MIMIR_URL` and `MIMIR_API_TOKEN`)
 
 ### Errors
 
-Most tools operate on an active campaign. Until a campaign is selected with `set_active_campaign`, campaign-scoped tools return a `NoActiveCampaign` error (`No active campaign. Use set_active_campaign first.`). The active campaign is held in memory per server process — it is not persisted, so each new server process starts with no campaign selected.
+Most tools operate on an active campaign. Until a campaign is selected with `set_active_campaign`, campaign-scoped tools return a `NoActiveCampaign` error (`No active campaign. Use set_active_campaign first.`). Each MCP session has its own active campaign; it is not stored, so a new session starts with no campaign selected.
+
+A tool's failure comes back as a tool result with `isError: true` and the text `Error: …`; an unknown tool is a JSON-RPC error.
 
 ## Tool Reference
 
-### Campaign Management (10 tools)
+### Campaign Management (16 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -43,6 +38,12 @@ Most tools operate on an active campaign. Until a campaign is selected with `set
 | `update_campaign` | Update campaign name or description |
 | `delete_campaign` | Delete a campaign and all its data |
 | `export_campaign` | Export campaign as shareable archive |
+| `preview_adventure_campaign` | Show how an adventure in the reader becomes a campaign |
+| `create_campaign_from_adventure` | Make a campaign from an adventure; it becomes the active campaign |
+| `export_adventure_file` | Export the active campaign as a 5etools homebrew adventure file |
+| `export_adventure_pack` | Write the active campaign as a Mimir adventure pack in a folder |
+| `import_adventure_pack` | Import a Mimir adventure pack as a new campaign |
+| `print_adventure_book` | Write the active campaign as one PDF book in a folder |
 | `import_campaign` | Import campaign from archive |
 | `preview_archive` | Preview archive contents without importing |
 

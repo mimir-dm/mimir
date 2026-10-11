@@ -125,6 +125,25 @@ pub fn assign_character_to_campaign(
         .execute(conn)
 }
 
+/// Move a character to a campaign, or out of any (`None`).
+pub fn set_character_campaign(
+    conn: &mut SqliteConnection,
+    character_id: &str,
+    campaign_id: Option<&str>,
+) -> QueryResult<usize> {
+    diesel::update(characters::table.find(character_id))
+        .set(characters::campaign_id.eq(campaign_id))
+        .execute(conn)
+}
+
+/// The characters in no campaign (PCs and NPCs), by name.
+pub fn list_unassigned_characters(conn: &mut SqliteConnection) -> QueryResult<Vec<Character>> {
+    characters::table
+        .filter(characters::campaign_id.is_null())
+        .order(characters::name.asc())
+        .load(conn)
+}
+
 /// Check if a character exists.
 pub fn character_exists(conn: &mut SqliteConnection, id: &str) -> QueryResult<bool> {
     use diesel::dsl::exists;

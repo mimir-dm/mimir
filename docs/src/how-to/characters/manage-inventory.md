@@ -1,56 +1,45 @@
 # Manage Character Inventory
 
-Add items, equip gear, attune magic items, and track currency on the Equipment tab.
+Add items, equip gear, attune magic items and track coins on the **Equipment** tab of a character sheet. A player can do the same on their own sheet.
 
-## Accessing the Equipment Tab
+## Open the Equipment Tab
 
-1. Click **Characters** in the header
-2. Select a character
-3. Click the **Equipment** tab in the character sheet
+1. Open the character sheet. For example, click **Characters**, then the character name.
+2. Click the **Equipment** tab.
 
-Clicking opens the **Inventory & Equipment** dialog, which has three tabs: **Inventory**, **Equipment**, and **Currency**.
+The tab has four parts: **Coins**, **Equipped**, **Inventory** (the rest) and **Add an item**.
 
-## Inventory Tab
+## Add an Item
 
-### Adding Items
+1. In **Add an item**, type at least 2 letters of the item name.
+2. Optionally, change the quantity, and type notes (for example "From the goblin chief").
+3. Click **Search**.
+4. Click **Add** next to the item.
 
-1. Click **+ Add Item**
-2. Use the search box to find items (minimum 2 characters)
-3. Select an item from the dropdown results — both catalog and homebrew items appear
-4. Set the **Quantity** and optional **Notes**
-5. Click **Add to Inventory**
+The search finds catalog items and the homebrew items of the campaign.
 
-Homebrew items are marked with an **HB** badge.
+## Read an Item
 
-### Viewing and Removing Items
+Click the name of an item. Its details open: type, weight, value, properties and text. A player can do this on their own sheet too.
 
-Your inventory lists all items with:
-- Item name and source badge
-- Quantity (shown as x2, x3, etc.)
-- Equipped status
-- Notes (if any)
+## Change an Item
 
-Click the **−** button to remove an item.
+Each item in **Equipped** and **Inventory** has:
 
-## Equipment Tab
+- **+** and **−** (**One more …**, **One fewer …**): change the quantity
+- **Equipped**: the item is worn or held. It moves to **Equipped**. An equipped weapon shows under **Attacks** on the **Character** tab.
+- **Attuned**: the character is attuned to the item. The line under **Inventory** shows "Attuned: … of 3". D&D 5e allows 3.
+- **×** (**Remove …**): remove the item
 
-Toggle items as equipped or unequipped using checkboxes. All inventory items appear in this list — check the box next to an item to mark it as equipped.
+## Coins
 
-### Attunement
+1. Type the amounts in **PP**, **GP**, **EP**, **SP** and **CP**. Coins are whole numbers, 0 or more.
+2. Click **Save coins**.
 
-Below the equipped items list, the **Attuned Items** section shows magic items eligible for attunement with a counter (e.g., "Attuned Items 2/3"). Check the box to attune an item. The D&D 5e limit of 3 attuned items is enforced.
-
-## Currency Tab
-
-Track character wealth with four fields:
-- **Platinum (pp)**
-- **Gold (gp)**
-- **Silver (sp)**
-- **Copper (cp)**
-
-A total gold value is calculated and displayed below.
+The line under the coins shows what they are worth in gold pieces.
 
 ## See Also
 
 - [Create a Player Character](./create-pc.md)
-- [Print Character Sheet](./print-character-sheet.md) — Equipment Cards print option
+- [Create a Homebrew Item](../homebrew/create-item.md)
+- [Print a Character Sheet](./print-character-sheet.md): the **Equipment cards** option

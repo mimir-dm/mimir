@@ -10,7 +10,7 @@ In D&D, what characters can see affects:
 - Stealth and surprise
 - Atmosphere and tension
 
-Mimir's vision system brings these rules to your virtual tabletop.
+Mimir's vision system brings these rules to your map and to the screens of your players.
 
 ## D&D 5e Vision Rules
 
@@ -59,7 +59,7 @@ Each PC token's visible area is derived from the light level at the token's own 
 
 ### Light Sources
 
-Placed light sources create zones of bright and dim illumination (a torch, for example, gives bright light near it and dim light farther out). A token must stand inside a light's radius to benefit from it — light is evaluated where the creature is, not where it is looking. Lit sources expand visible areas; unlit sources have no effect.
+Placed light sources and the lights drawn into a UVTT map file create zones of bright and dim illumination (a torch, for example, gives bright light near it and dim light farther out). A token inside a light's radius sees by that light — light is evaluated where the creature is. In dim light or darkness, a lit area also shows when a PC has a line to its light, as a lit room shows from a dark corridor. Unlit sources have no effect.
 
 ### Wall Occlusion
 
@@ -79,19 +79,23 @@ Without wall data, vision is a simple circle (line of sight in all directions).
 - NPC tokens
 - Monster tokens
 - Hidden tokens
-- Light sources on their own — a light never reveals fog by itself; it raises the light level where a PC stands, extending how far that PC can see
+- Light sources on their own — a light shows its area only to a PC with a line to it
 
 This prevents accidental reveals from positioned enemies: the DM can stage an entire ambush behind the fog, and nothing leaks until a PC can actually see it.
 
-## Why Fog Implies Token LOS
+## Why Tokens Hide Even Without Fog
 
-Mimir exposes map hiding (Fog) and token hiding (LOS) as separate toggles, but enabling Fog forces LOS on. The reason is information leakage: if the map were hidden while all tokens stayed visible, players would see enemy markers floating in unexplored blackness — revealing exactly what fog is meant to conceal. Hiding the map only makes sense if unseen tokens are hidden too, so the weaker mode (LOS) is folded into the stronger one (Fog). LOS alone remains useful when geography is known but threats are not.
+Mimir hides tokens that no PC can see, also when fog is off. Fog hides the map; the token rule hides the threats. With fog off, players know the layout, but an ambush still stays hidden until a PC can see it. With fog on, the map is hidden too: otherwise players would see enemy tokens floating in the dark, which is exactly what fog is meant to hide.
 
-The actual toolbar controls are documented in the [Play Mode reference](../reference/ui/play-mode.md), and common workflows in the [Fog of War how-to](../how-to/play-mode/fog-of-war.md).
+## One Source of Truth
+
+The **Line of sight** switch, the **bright / dim / darkness** control, **Reveal map** and the doors are part of the map. The server keeps them, and the DM map and the player display both read them. The server builds the player view, and the display draws only that, so what the DM sets is what the players get. Only **Overlays**, a drawing aid, is on the DM's view alone.
+
+The controls are in the [DM Map reference](../reference/ui/dm-map.md), and common tasks in the [Fog of War how-to](../how-to/play-mode/fog-of-war.md).
 
 ## See Also
 
 - [Vision & Lighting Reference](../reference/vision-and-lighting.md) — ranges, radii, and precedence rules
 - [Fog of War](../how-to/play-mode/fog-of-war.md) — task recipes for running a session
-- [Play Mode](../reference/ui/play-mode.md) — the controls themselves
+- [DM Map](../reference/ui/dm-map.md) — the controls themselves
 - [Manage Light Sources](../how-to/maps/manage-light-sources.md)

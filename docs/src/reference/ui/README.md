@@ -1,12 +1,22 @@
 # UI Reference
 
-Detailed documentation for each screen and interface in Mimir.
+The screens of the Mimir web app and their addresses.
 
 ## Screens
 
-- [Home Screen](./home-screen.md) - The main landing page
-- [Campaign Dashboard](./campaign-dashboard.md) - The central hub for campaign management
-- [Module Prep View](./module-prep-view.md) - Preparing adventure modules
-- [Play Mode](./play-mode.md) - Running game sessions
-- [Token Setup Modal](./token-setup-modal.md) - Placing and configuring tokens on maps
-- [Player Display](./player-display.md) - The player-facing display window
+| Screen | Address | Who |
+|--------|---------|-----|
+| [Sign-in page](./home-screen.md#sign-in-page) | any address, before sign-in | Everyone |
+| [Campaigns (home)](./home-screen.md) | `/` | DM |
+| [Campaign Dashboard](./campaign-dashboard.md) | `/campaigns/<id>`, `/campaigns/<id>/modules`, `/npcs`, `/pcs`, `/homebrew` | DM |
+| [Module Page](./module-page.md) | `/modules/<id>` | DM |
+| [DM Map](./dm-map.md) | `/maps/<id>` | DM |
+| [Player Display](./player-display.md) | `/display/<campaign>` | DM (shown to players) |
+| [Player Page](./player-page.md) | `/play/<link>`, then `/player` | A player |
+| [Characters and Character Sheet](./characters.md) | `/characters`, `/characters/<id>` | DM |
+| [Reference Page](./reference-page.md) | `/reference` | DM |
+| [Settings](./settings.md) | `/settings` | DM |
+
+Most screens keep their tab or selection in the address (`?section=`, `?doc=`, `?kind=`). A link or the back button opens the same view.
+
+Mimir works on a desktop browser and on a tablet. The map pages take mouse, touch and pen.

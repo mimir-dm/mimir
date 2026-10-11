@@ -1,62 +1,106 @@
 # Manage Documents
 
-Mimir uses documents to organize campaign and module content — session notes, location descriptions, lore, encounter plans, and anything else you need for your game.
+Documents hold your campaign and module content: session notes, places, lore, encounter plans and anything else for your game.
 
-## Document Scope
+## Where Documents Live
 
-Documents belong to either a campaign or a module:
+A document belongs to a campaign or to a module:
 
-- **Campaign documents** — World-building, lore, factions, and setting notes. Created from the Campaign tab on the dashboard.
-- **Module documents** — Session prep, encounter notes, and location descriptions. Created within a specific module's prep view.
+- **Campaign documents**: world, lore, factions, setting. They are in the **Campaign** tab of the dashboard.
+- **Module documents**: session prep, encounters, places. They are in the **Documents** tab of the module page.
 
-## Creating a Document
+Both places show the same document list and editor.
 
-1. Navigate to where you want the document:
-   - **Campaign tab** for campaign-level documents
-   - **Module prep view** for module documents
-2. Click the **+** button in the document sidebar
-3. Choose between two modes:
-   - **New Document** — Enter a title and create a blank markdown document
-   - **Upload File** — Drag and drop (or browse for) a markdown file or image. Supported formats: `.md`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`
-4. Click **Create**
+## Create a Document
 
-## Editing Documents
+1. Open the **Campaign** tab, or the **Documents** tab of a module.
+2. Click **New document**.
+3. Type a **Title**.
+4. Optionally, drop a markdown file on **Or start from a file**, or click it to choose one. The file can be 5 MB at most.
+5. Click **Create**.
 
-Click a document in the sidebar to open it in the rich text editor.
+The new document opens.
 
-The editor supports:
-- **Headings** — H1, H2, H3
-- **Formatting** — Bold, italic, strikethrough
-- **Lists** — Bullet and numbered lists
-- **Blocks** — Blockquotes, horizontal rules
-- **Tables** — Insert and manage tables with rows and columns
-- **Undo/Redo** — Full history support
+## Add an Image
 
-Documents are written in Markdown under the hood. The editor renders markdown visually while preserving the underlying format.
+An image is a handout, a portrait or a picture of a place. It belongs to the campaign or to the module.
 
-### Auto-Save
+1. Open the **Campaign** tab, or the **Documents** tab of a module.
+2. Click **New document**.
+3. Drop an image (PNG, JPEG, WebP, GIF or SVG) on **Or start from a file**, or click it to choose one. The image can be 50 MB at most. A preview shows.
+4. Change the **Title** if you want.
+5. Click **Create**.
 
-Changes save automatically as you type (after a brief pause). A status indicator shows:
-- **Saving...** — Changes being written
-- **Saved** — All changes persisted
+The image opens big. It is listed under **Images**, below the documents.
 
-There is no manual save button — your work is always preserved.
+## View or Delete an Image
 
-### PDF Export
+1. Click the image under **Images**. It opens big.
+2. To delete it, click **Delete image** and confirm.
 
-Click the **Export PDF** button in the editor header to export the current document as a PDF.
+## Read a Document
 
-## Reordering Documents
+Click a document in the list. Mimir shows it on the right. The address holds the document (`?doc=…`), so you can bookmark it or send the link to yourself.
 
-Documents can be reordered using the **up/down arrow buttons** that appear when you hover over a document in the sidebar. This controls the display order within that document's scope (campaign or module).
+## Edit a Document
 
-## Deleting Documents
+1. Open the document.
+2. Click **Edit**.
+3. Change the **Title** or the text.
+4. Click **Done** when you finish.
 
-Hover over a document in the sidebar to reveal a **delete** button (trash icon). Click it and confirm to remove the document. This is permanent.
+The editor saves one second after the last change. The status shows **Saving…** and then **Saved**. There is no save button.
+
+The toolbar has:
+- **Heading 1**, **Heading 2**, **Heading 3**
+- **Bold**, **Italic**, **Strikethrough**
+- **Bullet list**, **Numbered list**, **Quote**, **Horizontal rule**
+- **Insert a read-aloud box**, **Insert a sidebar**
+- **Insert a table**, **Add a row**, **Add a column**, **Delete the row**, **Delete the column**, **Delete the table**
+- **Undo**, **Redo**
+
+Documents are markdown. Type `1. ` at the start of a line to start a numbered list.
+
+## Add Adventure Text
+
+Documents can hold the blocks of a published adventure. The editor shows each one as a box, and the document view and the PDF show it as the reader does.
+
+| In the markdown | Shows as |
+|-----------------|----------|
+| `> [!read-aloud]` and quoted lines after it | A box of text to read aloud to the players |
+| `> [!sidebar] Title` and quoted lines after it | A sidebar with its title |
+| A line that is only `{@creature Goblin\|MM}` | The full stat block of that creature from the catalog |
+| A line that is only `{@creatureFluff Goblin\|MM}` | The creature's lore |
+| `{@creature Goblin\|MM\|two goblins}` in a sentence | A link that opens the creature in the detail drawer |
+
+A stat block line can also name an item, a spell, a background or another catalog entry: `{@item Bag of Holding|DMG}`. To keep a line that is only a tag as text, start it with a backslash: `\{@creature Goblin|MM}`.
+
+In a player's notes, tags show as their words only.
+
+## Export a Document as PDF
+
+1. Open the document.
+2. Click **PDF**.
+
+The browser downloads the PDF. Read-aloud boxes and sidebars print as boxes, and stat block lines print the stat block from the catalog.
+
+## Reorder Documents
+
+The documents that came with the campaign or module keep their order. Your own documents are under **Your documents**. They have up and down arrows.
+
+1. Click the up arrow (**Move … up**) or the down arrow (**Move … down**) of a document.
+
+## Delete a Document
+
+1. Open the document.
+2. Click **×** (**Delete the document**).
+3. Click **Delete** to confirm.
+
+The document goes for good.
 
 ## Session Notes
 
-Every module gets an auto-created **Play Notes** document for in-session tracking (HP, initiative, events). Open it from the module's Documents panel during play — it auto-saves like any other document.
+Each module has a **Play Notes** document for the session: HP, initiative, events. Open it from the **Documents** tab of the module.
 
 ## See Also
 

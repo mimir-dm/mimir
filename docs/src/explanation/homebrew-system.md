@@ -16,38 +16,38 @@ Homebrew content belongs to a specific campaign. This is intentional:
 ## Three Content Types
 
 ### Items
-The most flexible type. Items can be created **from scratch** with a structured form (name, type, rarity, weight, value, description) or **cloned from the catalog**. Weapon and armor types get additional fields for damage, AC, and properties.
+The most flexible type. Make an item **from a template** with a form (name, kind, rarity, weight, value, attunement, description) or **copy one from the catalog**. Weapons and armor get more fields: damage, properties, armor class. The form writes 5etools JSON; the JSON tab shows it for fields the form does not have.
 
 ### Monsters
-Created by **cloning from the catalog only** — there's no blank monster form. This is because monster stat blocks are complex JSON structures. Clone an existing monster and modify its data to create your variant.
+Copy a catalog monster, or start **from a template** (a simple humanoid). A stat block is a complex JSON structure, so the editor is the JSON with a live preview of the stat block.
 
 ### Spells
-Same as monsters: **clone-only**. Spell data is structured JSON, so cloning provides a valid starting point that you can modify.
+Same as monsters: copy one, or start from a template (a 1st-level evocation), then edit the JSON with a live preview.
 
-## Clone from Catalog
+## Copy from the Catalog
 
-The clone workflow is the heart of the homebrew system. Rather than starting from a blank form, you find a similar catalog entry and clone it — Mimir creates a homebrew copy immediately, ready to edit, and the copy remembers its origin ("Based on [original name]").
+Copying is the fastest way to a good homebrew entry. Find a similar catalog entry and copy it. Mimir makes a homebrew copy at once, ready to edit, and the copy keeps its origin ("Copy of [original name]").
 
-This approach is faster than creating from scratch and ensures the data structure is valid: a cloned monster or spell is guaranteed to have a well-formed stat block, because it started as one. For the step-by-step procedure, see [Create a Homebrew Item](../how-to/homebrew/create-item.md).
+This is faster than starting from a template, and the data stays valid: a copied monster or spell has a well-formed stat block, because it started as one. For the steps, see [Create a Homebrew Monster](../how-to/homebrew/create-monster.md).
 
 ## Integration Points
 
 Homebrew content isn't isolated — it flows into the rest of Mimir:
 
 - **Items** appear in character inventory search results when adding equipment
-- **Monsters** appear in Token Setup when placing tokens on maps
-- **Spells** appear in character spell lists for spellcasting classes
+- **Monsters** appear in the monster search of a module, and from there on its maps
+- **Spells** stay in the Homebrew tab; character spell lists show catalog spells only
 
-All homebrew entries are tagged with an **HB** badge so you can distinguish them from catalog content at a glance.
+All homebrew entries have the source **HB**, and search results mark them **Homebrew**, so you can tell them from catalog content.
 
 ## Data Storage
 
-Homebrew content is stored in the campaign database alongside catalog data. Items use structured fields (name, type, rarity, etc.) while monsters and spells store their full stat blocks as JSON. This means:
-- Items have a user-friendly form editor
-- Monsters and spells use a JSON text editor
-- All three types support the clone-from-catalog workflow
+Homebrew content is stored in the database of the server, per campaign. All three kinds store their data as 5etools JSON. This means:
+- Items have a form editor that writes the JSON, and the JSON itself
+- Monsters and spells use a JSON editor with a live preview
+- All three kinds support copy from the catalog and a new entry from a template
 
 ## See Also
 
-- [Homebrew How-To Guides](../how-to/homebrew/)
+- [Homebrew How-To Guides](../how-to/homebrew/README.md)
 - [The Two-Board System](./two-board-system.md)

@@ -1,77 +1,87 @@
 # Settings
 
-The Settings screen provides application-wide configuration. Access it via the gear icon in the header bar.
+The settings page (`/settings`) has four tabs. The tab is in the address (`?section=campaigns`, `books`, `integrations`, `about`).
 
-The sidebar is divided into three groups: **Admin Tools**, **Application**, and (in development builds only) **Developer**.
+## Campaigns
 
-## Admin Tools
+### Import a campaign
 
-### Manage Campaigns
+| Control | Function |
+|---------|----------|
+| **Archive** | Drop or choose a campaign archive (`.mimir-campaign.tar.gz`) made by **Export**. A preview shows what it holds; nothing is made yet. |
+| **Name of the new campaign** | The name of the new campaign. It starts as the archive's. |
+| **Import** | Import. The message lists the modules, documents, characters and maps that came in. |
 
-Opens the Campaign Management modal for archiving, restoring, and deleting campaigns.
+An import always makes a new campaign. **Import campaign** on the campaign list opens the same import. Every upload on this page takes a dropped file too.
 
-### Import Books
+### Campaigns table
 
-Opens the **Manage Catalog Sources** modal for the D&D 5e source data that powers catalog searches:
+| Column | Contents |
+|--------|----------|
+| **Campaign** | The name |
+| **State** | Active or Archived |
+| **Export** | Download the campaign archive |
+| **Archive** / **Restore** | Archive or restore the campaign |
+| **Delete…** | Delete an archived campaign, after you type its name |
 
-| Action | Description |
-|--------|-------------|
-| **Import 5etools Data** | Import a source data archive to populate the catalog |
-| **Import Images** | Import an image archive to add token art, cover art, and book illustrations |
-| **Enable/Disable** | Toggle individual source books on or off globally |
-| **Remove** | Delete a source book and all its catalog entries from the database |
+## Books
 
-See [Manage Campaign Sources](../../how-to/campaigns/manage-sources.md) for the import workflow.
+### Import 5etools data
 
-## Application
+The 5etools data archive (`.tar.gz`): the core and supplement books and the adventures, their entries and their text. Choose the file and click **Import**. The upload shows its progress, then the import runs on the server. A full import takes a few minutes.
 
-### Theme
+### Import a homebrew file
 
-Choose between three visual themes:
+A drop zone for a 5etools homebrew file (`.json`) and **Import**. The file's monsters, items and spells go to the catalog, its adventures and books to the reader. The message names the sources and counts what came in. A file whose source is already in the catalog is refused: remove the source first.
 
-| Theme | Description |
-|-------|-------------|
-| **Light** | Light background, dark text |
-| **Dark** | Dark background, light text |
-| **Hyper** | High-contrast dark theme with vivid accent colors |
+### Import 5etools images
 
-Theme changes apply to all open windows (main, DM map, player display, sources).
+The 5etools image archive (`5etools-img-….tar.gz`): pictures for the books, monsters and items. Choose the file and click **Import**.
 
-### Integrations
+### Sources table
 
-Configuration for connecting Claude Code or Claude Desktop to Mimir via the MCP server. Displays:
+| Column | Contents |
+|--------|----------|
+| Checkbox | Select the source. **Remove selected (…)** removes the selected sources, after a confirmation. |
+| **Code** | The source code, for example PHB |
+| **Book** | The name of the book |
+| **Readable** | Yes when the book text can be read in the reference |
+| **×** | Remove the source, after a confirmation. Its catalog entries and book text go. Characters and campaigns keep what they hold. |
 
-| Element | Description |
-|---------|-------------|
-| **Database Path** | Location of your Mimir database, with a copy button. Used as the `MIMIR_DATABASE_PATH` value in MCP configuration |
-| **Claude Code (CLI)** | A ready-to-copy `claude mcp add mimir` command that registers the `mimir-mcp` server with your database path |
-| **Claude Desktop** | A ready-to-copy JSON `mcpServers` snippet for `claude_desktop_config.json` |
+## Integrations
 
-Claude starts the MCP server automatically; no manual server management is required.
+How to connect Claude to Mimir over MCP.
 
-### About
+| Element | Contents |
+|---------|----------|
+| **Endpoint** | The MCP address of this server: `<server>/mcp` |
+| Claude Code | A `claude mcp add --transport http mimir …/mcp` command, with an `Authorization: Bearer <your DM token>` header |
+| Plugin | How to install the Claude Code plugin; set `MIMIR_URL` to the server address and `MIMIR_API_TOKEN` to the DM token first |
 
-| Field | Description |
-|-------|-------------|
-| **Version** | Current Mimir version |
+Only the DM token works at `/mcp`. A player link is refused. See [MCP Server](../mcp-server.md).
 
-## Developer
+## About
 
-Only visible in development builds.
+| Field | Contents |
+|-------|----------|
+| **Mimir** | The version |
+| **Sign-in** | Token or Open |
 
-### Dev Tools
+### Dev tools
 
-| Element | Description |
-|---------|-------------|
-| **Status** | Whether test data is currently present (`Test Data Present` / `Not Seeded`) |
-| **Seed Test Data** | Creates the "Lost Mine of Phandelver" test campaign with modules, characters, monsters, and NPCs |
-| **Reseed (Clear & Recreate)** | Deletes the test campaign and seeds it fresh |
-| **Clear Test Data** | Deletes the test campaign without reseeding |
+Only on a development server that runs the fixture (`MIMIR_SEED=fixture`). The status line says whether the fixture campaign is in.
 
-All dev commands are rejected by the backend outside debug builds.
+| Button | Function |
+|--------|----------|
+| **Seed** | Add the fixture campaign (when it is not in) |
+| **Reseed** | Remove the fixture campaign and add it again, fresh |
+| **Clear** | Remove the fixture campaign |
+
+The fixture is test data only. Never use real campaign data on a development server.
 
 ## See Also
 
-- [Home Screen](./home-screen.md) — Navigation overview
-- [MCP Server](../mcp-server.md) — The integration the Integrations section configures
-- [Environment Variables](../environment-variables.md) — Advanced configuration
+- [Manage Source Books](../../how-to/campaigns/manage-sources.md)
+- [Export a Campaign](../../how-to/campaigns/export-campaign.md)
+- [MCP Server](../mcp-server.md)
+- [Environment Variables](../environment-variables.md)

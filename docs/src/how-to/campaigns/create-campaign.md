@@ -1,44 +1,47 @@
 # Create a Campaign
 
-This guide shows you how to create a new campaign in Mimir and configure it for your game.
-
-![Home Screen](../../images/reference/home-screen.png)
+This guide shows you how to make a campaign and choose its source books.
 
 ## Steps
 
-1. **Open the Campaign Selector** in the header bar
-2. Click **+ New Campaign**
-3. Fill in the campaign details:
-   - **Campaign Name** (required) — A descriptive name for your campaign
-   - **Description** (optional) — Notes about your campaign concept, themes, or setting
-4. Click **Create Campaign**
+1. Click **Campaigns** in the side navigation.
+2. Click **New campaign**.
+3. Type a **Name**. It is required.
+4. Optionally, type a **Description**. Only you see it.
+5. Click **Create**.
 
-You'll be redirected to your new campaign's dashboard.
+Mimir opens the dashboard of the new campaign.
 
-## What Gets Created
+## What You Get
 
-When you create a campaign, Mimir automatically generates **11 template documents** to give you a starting structure: Campaign Pitch, Starting Scenario, World Primer, Character Guidelines, Table Expectations, Character Integration, Campaign Bible, Safety Tools, House Rules, Player Secrets, and Faction Overview. These appear in the Campaign tab of your dashboard. Edit or delete them as needed — they're a starting point, not a requirement.
+A new campaign starts with a set of planning documents: Campaign Pitch, Starting Scenario, World Primer, Character Guidelines, Table Expectations, Character Integration, Campaign Bible, Safety Tools, House Rules, Player Secrets and Faction Overview. They are in the **Campaign** tab. Change them or delete them. They are a start, not a rule.
 
-## Configure Campaign Sources
+## Choose the Source Books
 
-After creating your campaign, you'll likely want to configure which D&D source books are available:
+The catalog searches of a campaign can keep to some books, for example a "PHB only" game.
 
-1. Click the **Sources** button in the dashboard header
-2. Enable the books your group owns or you want to use
-3. Close the modal
+1. Open **More** in the dashboard header.
+2. Click **Source books…**.
+3. Select the books.
+4. Click **Save**.
 
-Source filtering affects all catalog searches within this campaign — monster searches, spell lists in character creation, item lookups, and more. A "PHB only" campaign won't show Xanathar's Guide content.
+With no book selected, the searches use every book. See [Manage Source Books](./manage-sources.md).
+
+## Change the Name or Description
+
+1. Click **Edit campaign** in the dashboard header.
+2. Change the **Name** or the **Description**.
+3. Click **Save**.
 
 ## Tips
 
-- Use descriptive names that help you identify campaigns later (e.g., "Curse of Strahd - Tuesday Group" rather than just "Campaign 1")
-- The description is only visible to you — use it for notes about themes, players, or campaign status
-- Configure sources early — it controls what content appears throughout the campaign
-- You can archive campaigns you're no longer running to keep your list clean
+- Use a name that you can tell apart later, for example "Curse of Strahd - Tuesday group".
+- Choose the source books early. They control what the catalog searches show in the campaign.
+- Archive campaigns that you do not run now. See [Archive & Restore](./archive-campaign.md).
 
 ## See Also
 
 - [Tutorial: Your First Campaign](../../tutorials/01-first-campaign.md)
 - [Manage Documents](./manage-documents.md)
-- [Export Campaign](./export-campaign.md)
-- [Campaigns vs Modules](../../explanation/campaign-vs-module.md) — Understanding the hierarchy
+- [Export a Campaign](./export-campaign.md)
+- [Campaigns vs Modules](../../explanation/campaign-vs-module.md)

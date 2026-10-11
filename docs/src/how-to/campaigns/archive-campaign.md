@@ -1,38 +1,53 @@
 # Archive and Restore Campaigns
 
-Hide completed or inactive campaigns without deleting them.
+Hide a finished or paused campaign without deleting it.
 
 ## Archive a Campaign
 
-1. Open the campaign you want to archive
-2. In the campaign dashboard header, click the **Archive** action
-3. Confirm the archive
+1. Open the campaign.
+2. Open **More** in the dashboard header.
+3. Click **Archive**.
 
-The campaign disappears from the default campaign list but all data is preserved.
+The header shows **Archived**. The campaign leaves the campaign list. All its data stays.
 
-## View Archived Campaigns
+You can also archive a campaign in **Settings**, **Campaigns** tab: click **Archive** in its row.
 
-1. Open the **Campaign Selector** dropdown in the header
-2. Toggle the **Show Archived** option
-3. Archived campaigns appear in the list, marked as archived
+## See Archived Campaigns
 
-## Restore an Archived Campaign
+1. Click **Campaigns**.
+2. Turn on **Show archived**.
 
-1. View archived campaigns (see above)
-2. Select the archived campaign
-3. Click **Unarchive** in the dashboard header
-4. The campaign returns to the active campaign list
+Archived campaigns show with the **Archived** label.
+
+## Restore a Campaign
+
+1. Open the archived campaign.
+2. Open **More** in the dashboard header.
+3. Click **Restore**.
+
+Or click **Restore** in its row in **Settings**, **Campaigns** tab.
+
+## Delete a Campaign
+
+You can delete only an archived campaign.
+
+1. Archive the campaign.
+2. Open **More** and click **Delete…**. Or click **Delete…** in its row in **Settings**.
+3. Type the name of the campaign.
+4. Click **Delete**.
+
+The campaign, its documents, modules, characters and maps go for good.
 
 ## Archive vs Delete
 
-| Action | Data Preserved | Reversible |
-|--------|---------------|------------|
-| **Archive** | All data intact, hidden from default views | Yes — unarchive at any time |
-| **Delete** | All data permanently removed (cascades to modules, characters, documents, maps) | No |
+| Action | Data | Can you undo it? |
+|--------|------|------------------|
+| **Archive** | All data stays; hidden from the list | Yes. Restore it at any time. |
+| **Delete** | All data goes: modules, characters, documents, maps | No |
 
-Archive first, delete only when you're certain you no longer need the campaign.
+Export the campaign before you delete it. See [Export a Campaign](./export-campaign.md).
 
 ## See Also
 
-- [Export Campaign](./export-campaign.md) — Create a portable backup before archiving
+- [Export a Campaign](./export-campaign.md)
 - [Create a Campaign](./create-campaign.md)

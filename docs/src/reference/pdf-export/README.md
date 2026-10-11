@@ -1,41 +1,49 @@
 # PDF Export
 
-Mimir generates PDFs from campaign data using [Typst](https://typst.app/), a modern typesetting system compiled in-process by the `mimir-print` crate. Every export returns the finished PDF to the frontend as base64 data, where it can be previewed and saved to disk.
+Mimir makes PDFs with [Typst](https://typst.app/), a typesetting system. The `mimir-print` crate compiles the Typst source inside the server. The server answers with the PDF (`application/pdf`), and the browser downloads it.
 
 ## Export Types
 
-| Export | Contents | Triggered from |
-|--------|----------|----------------|
-| Character | Full character sheet, plus optional compact sheet, battle card, spell cards, and equipment cards | Character print dialog ([how-to](../../how-to/characters/print-character-sheet.md)) |
-| Single document | One campaign document rendered from its markdown content | Document editor ([how-to](../../how-to/campaigns/manage-documents.md)) |
-| Campaign | Campaign documents, module content, NPCs, map previews, true-scale tiled maps, and token cutouts, toggled per section | Campaign export dialog |
-| Module | Module documents, monster cards, trap cards, points of interest, NPCs, play notes, and map preview/play pages, toggled per section | Module export dialog ([how-to](../../how-to/modules/module-documents.md)) |
-| Map | Preview page (fit to one page) and/or true-scale tiled play pages with token cutouts | Map print dialog ([how-to](../../how-to/maps/print-map.md)) |
-| Monster cards | Half-page reference cards for one monster, or all monsters in a module | `export_monster_card` / `export_module_monsters` commands |
-| Trap cards | Half-page reference cards for one or more traps | `export_trap_card` / `export_trap_cards` commands |
+| Export | Contents | Where |
+|--------|----------|-------|
+| Character | Character sheet, battle card, spell cards, equipment cards | **PDF…** on the character sheet ([how-to](../../how-to/characters/print-character-sheet.md)) |
+| Document | One document, from its markdown | **PDF** on an open document ([how-to](../../how-to/campaigns/manage-documents.md)) |
+| Campaign | Campaign documents, module content, NPCs, map previews, tiled maps and token cutouts, chosen per part | **More**, **PDF…** on the campaign dashboard |
+| Book | The campaign as one book: a title page (authors, levels), contents, the campaign documents, each module with its documents and the maps no document shows, the appendices, and the stat blocks and items the text names | **More**, **Print as a book…** on the campaign dashboard |
+| Module | Documents, monsters, traps, points of interest, NPCs, play notes, map previews and tiled maps, chosen per part | **More**, **PDF…** on the module page |
+| Map | A preview page and/or tiled pages at true scale, with token cutouts | **PDF…** on the DM map ([how-to](../../how-to/maps/print-map.md)) |
+| Monster cards | A half-page card for each monster of a module | **More**, **Monster cards (PDF)** on the module page |
 
-## Tauri Commands
+Only the DM can export PDFs.
 
-The application registers twelve print commands (`crates/mimir/src/main.rs`), implemented in `crates/mimir/src/commands/print/`.
+## Options
 
-| Command | Parameters | Description |
-|---------|------------|-------------|
-| `list_print_templates` | — | List `.typ` files found under the app data `templates/` directory |
-| `export_character` | `character_id`, `options?` | Character sheet with optional compact sheet, battle card, spell cards, equipment cards |
-| `export_campaign_document` | `document_id` | Render a single campaign document |
-| `export_campaign_documents` | `campaign_id`, `options?` | Combined campaign PDF with per-section toggles |
-| `export_module_documents` | `module_id`, `options?` | Combined module PDF with per-section toggles |
-| `print_map` | `map_id`, `options?` | Map preview and/or tiled play pages |
-| `generate_character_sheet` | `character_id`, `template?` | Legacy API; currently returns a "not yet implemented" error |
-| `save_pdf` | `pdf_base64`, `path` | Decode base64 PDF data and write it to a file |
-| `export_module_monsters` | `module_id`, `options?` | Cards for every monster in a module |
-| `export_monster_card` | `monster_name`, `monster_source`, `options?` | Card for a single catalog monster |
-| `export_trap_card` | `trap_name`, `trap_source`, `options?` | Card for a single trap |
-| `export_trap_cards` | `traps` (list of name/source pairs), `options?` | Cards for multiple traps |
+The PDF dialog lists the options of each export. Each option is a query parameter of the route.
 
-Card commands accept a `show_cut_lines` option. Map and module options include grid overlay, line-of-sight walls, starting positions, and token cutout toggles.
+| Export | Options (default on in bold) |
+|--------|------------------------------|
+| Character | **Character sheet**, **Battle card**, Spell cards, Equipment cards |
+| Campaign | **Campaign documents**, **Module content**, **NPCs**, Module map previews, Module maps to play on (tiled), Token cutouts, Campaign map previews, Campaign maps to play on (tiled) |
+| Module | **Documents**, **Monsters**, **Traps**, **Points of interest**, **NPCs**, Play notes, **Map previews**, **Previews: grid**, Previews: walls, Previews: positions, Maps to play on (tiled), **Play: grid**, Play: walls, Play: token cutouts |
+| Map | **Preview (one page)**, **Preview: grid**, Preview: walls, Preview: positions, To play on (tiled, actual size), **Play: grid**, Play: walls, Play: token cutouts |
 
-All rendering commands return `ApiResponse<PrintResult>`, where `PrintResult` contains `pdf_base64` (the PDF as base64) and `size_bytes` (the decoded size). `save_pdf` returns `ApiResponse<()>` and `list_print_templates` returns a list of `{ id, name, category }` entries.
+## API
+
+The routes are under `/api/v1` and need the DM token.
+
+| Route | Query options |
+|-------|---------------|
+| `GET /characters/{id}/pdf` | `include_compact_sheet`, `include_battle_card`, `include_spell_cards`, `include_equipment_cards` |
+| `GET /campaigns/{id}/pdf` | `include_campaign_docs`, `include_module_content`, `include_npcs`, `include_module_map_previews`, `include_module_tiled_maps`, `include_token_cutouts`, `include_campaign_map_previews`, `include_campaign_tiled_maps` |
+| `GET /campaigns/{id}/book` | `authors` (comma-separated), `level_start`, `level_end` |
+| `GET /modules/{id}/pdf` | `include_documents`, `include_monsters`, `include_traps`, `include_pois`, `include_npcs`, `include_play_notes`, `include_preview`, `preview_grid`, `preview_los_walls`, `preview_positions`, `include_play`, `play_grid`, `play_los_walls`, `play_cutouts` |
+| `GET /maps/{id}/pdf` | `include_preview`, `preview_grid`, `preview_los_walls`, `preview_positions`, `include_play`, `play_grid`, `play_los_walls`, `play_cutouts` |
+| `GET /documents/{id}/pdf` | none |
+| `GET /modules/{id}/monster-cards` | `show_cut_lines` |
+
+Each `include_…` option takes `true` or `false`.
+
+In every document PDF, read-aloud boxes and sidebars print as boxes, a stat block line prints the stat block, a tag prints as its words, and an image prints at page width: a 5etools image from the imported images, an uploaded image from its file. An image Mimir cannot find prints as its title in a box.
 
 ## Section Types
 
@@ -56,14 +64,8 @@ PDFs are assembled from typed sections (`crates/mimir-print/src/sections/`), eac
 
 ## Rendering Pipeline
 
-Each command gathers data from the database, builds the relevant sections, and assembles them with a `DocumentBuilder`. The combined Typst source is compiled in-memory by the Typst compiler library inside a custom `MimirTypstWorld` — no external Typst CLI and no temporary data files are involved. Images (maps, tokens) are passed to the compiler as in-memory virtual files.
+Each route gathers data from the database, builds the relevant sections, and assembles them with a `DocumentBuilder`. The combined Typst source is compiled in-memory by the Typst compiler library inside a custom `MimirTypstWorld` — no external Typst CLI and no temporary data files are involved. Images (maps, tokens) are passed to the compiler as in-memory virtual files.
 
-Shared Typst components are embedded in the application binary (`crates/mimir-print/src/embedded_templates.rs`): `_shared/styles.typ`, `_shared/components.typ`, and `_shared/icons.typ`. Imports of these paths are resolved from the embedded copies before any disk lookup. The embedded styles define grayscale, print-friendly colors and the font stacks Inter / Helvetica / Arial (headings and body) and JetBrains Mono / Consolas (monospace).
+Shared Typst components are embedded in the server binary (`crates/mimir-print/src/embedded_templates.rs`): `_shared/styles.typ`, `_shared/components.typ`, and `_shared/icons.typ`. Imports of these paths are resolved from the embedded copies before any disk lookup. The embedded styles define grayscale, print-friendly colors and the font stacks Inter / Helvetica / Arial (headings and body) and JetBrains Mono / Consolas (monospace).
 
-Fonts are not bundled: the compiler uses system fonts, discovered once per process via `fontdb` (`crates/mimir-print/src/world.rs`). If the first font in a stack is not installed, Typst falls back through the stack.
-
-## Template Directory
-
-`list_print_templates` scans the `templates/` directory inside the application data directory, recursively collecting `.typ` files (anything under a `_shared/` directory is skipped). Each entry's `id` is its relative path without the extension, its `category` is the first directory component, and its `name` is the title-cased file name. If the directory does not exist, the command returns an empty list.
-
-This listing is informational only: the export commands above generate their Typst source from the embedded section types and embedded shared components, and do not render user-supplied `.typ` files.
+Fonts are not bundled: the compiler uses the fonts installed on the server, discovered once per process via `fontdb` (`crates/mimir-print/src/world.rs`). If the first font in a stack is not installed, Typst falls back through the stack.

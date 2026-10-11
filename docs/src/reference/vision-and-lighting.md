@@ -1,89 +1,93 @@
 # Vision & Lighting
 
-Reference values and rules used by Mimir's fog of war calculation.
+The values and rules that Mimir uses for fog of war and sight.
 
-For the toolbar controls, see [Play Mode](./ui/play-mode.md). For step-by-step usage, see [Fog of War](../how-to/play-mode/fog-of-war.md). For the design rationale, see [Vision System](../explanation/vision-system.md).
+For the controls, see the [DM Map](./ui/dm-map.md). For steps, see [Fog of War](../how-to/play-mode/fog-of-war.md). For the design, see [Vision System](../explanation/vision-system.md).
 
 ## Scale
 
-One grid square equals 5 feet. All ranges below are in feet and converted to map pixels using the map's grid size.
+One grid square is 5 feet. Mimir turns each range in feet into map pixels with the grid of the map.
 
 ## Token Vision Values
 
-Each token carries four vision-related values:
+Each token has four vision values. Set them in the token panel of the DM map.
 
-| Value | Meaning | Notes |
-|-------|---------|-------|
-| Bright vision | Sight range in bright light | Unset = unlimited |
-| Dim vision | Sight range in dim light | Unset = unlimited |
-| Dark vision | Sight range in darkness | 0 = blind in darkness; 60 ft = typical darkvision |
-| Light radius | Dim radius of light the token carries | 0 = no light; bright radius is half the dim radius |
+| Value | Field | Meaning | Notes |
+|-------|-------|---------|-------|
+| Bright vision | **In bright light** | Sight range in bright light | Empty = no limit |
+| Dim vision | **In dim light** | Sight range in dim light | Empty = no limit |
+| Dark vision | **Darkvision** | Sight range in darkness | 0 = blind in darkness; 60 ft is typical |
+| Light radius | **Carried light** | Dim radius of a light the token carries | 0 = no light; the bright radius is half |
 
 ## Ambient Light Levels
 
-| Level | Description | Vision range used |
-|-------|-------------|-------------------|
-| Bright | Daylight, well-lit rooms | Bright vision (usually unlimited) |
-| Dim | Twilight, torchlit edges | Dim vision; rendered as dim sight |
-| Darkness | Underground, night | The larger of dark vision and the token's own light radius; darkvision counts as dim sight |
+| Level | Description | Range used |
+|-------|-------------|------------|
+| Bright | Daylight, lit rooms | Bright vision |
+| Dim | Twilight | Dim vision |
+| Darkness | Night, underground | The larger of dark vision and the carried light |
 
-The ambient level initializes from the map's UVTT data when present and can be overridden per session from the map toolbar.
+A new map starts at the ambient light of its UVTT file (bright when the file has none). The **bright / dim / darkness** control on the DM map changes the light level of the map; the player display follows it.
 
 ## Light Source Presets
 
-| Source | Bright Light | Dim Light |
+| Source | Bright light | Dim light |
 |--------|-------------|-----------|
-| Candle | 5 ft | 10 ft |
 | Torch | 20 ft | 40 ft |
 | Lantern | 30 ft | 60 ft |
-| Spell / Custom | 20 ft | 40 ft (defaults; editable) |
+| Candle | 5 ft | 10 ft |
 
-Token-carried light uses the token's light radius value as the dim radius, with the bright radius at half that distance.
+A token's carried light uses its **Carried light** value as the dim radius and half of it as the bright radius. A light drawn into a UVTT map file uses its range as the dim radius and half of it as the bright radius. Its glow stops at the walls.
 
 ## Light Level at a Point
 
-The effective light level at a point is the best of:
+The light level at a point is the best of:
 
-- Bright, if the point is within any active source's bright radius
-- Dim, if the point is within any active source's dim radius (when ambient is darkness)
-- The ambient level otherwise
+- Bright, if the point is in the bright radius of a lit light
+- Dim, if the point is in the dim radius of a lit light
+- The ambient level
 
-A token must be inside a light's radius to benefit from it: the light level at the token's own position determines which vision range applies.
+A token sees by the light where it stands. The light level at its own place picks which range applies.
 
-## What Reveals Fog
+In dim light or darkness, the players also see the area of a lit light when a PC has a line to the light (walls only, no range limit).
 
-| Token | Reveals fog? |
-|-------|--------------|
-| PC token, visible to players | Yes |
-| PC token, individually hidden | No |
+## Which Tokens Reveal
+
+| Token | Reveals the map? |
+|-------|------------------|
+| PC token with **Players see it** on | Yes |
+| PC token with **Players see it** off | No |
 | NPC token | No |
 | Monster token | No |
 
-## Visibility States
+## What the Players See
 
-The **Fog** and **LOS** toggles are separate buttons but not fully independent: enabling Fog forces LOS on, and the LOS button is locked until Fog is turned off. **Reveal Map** overrides both. The resulting states:
+| | Fog off | Fog on |
+|-|---------|--------|
+| Map in the party's sight | Visible | Visible |
+| Map outside the party's sight | Visible in bright light when no PC has a sight limit; darkened otherwise | Covered |
+| PC tokens | Shown | Shown |
+| Other tokens in the party's sight | Shown | Shown |
+| Other tokens outside the party's sight | Not shown | Not shown |
+| Tokens with **Players see it** off | Never | Never |
 
-| State | Map (player view) | Tokens (player view) |
-|-------|-------------------|----------------------|
-| Fog off, LOS off | Fully visible | All player-visible tokens shown |
-| LOS only | Fully visible | Only tokens within party line of sight |
-| Fog on (LOS forced on) | Hidden outside party vision | Only tokens within party line of sight |
-| Reveal Map | Fully visible | All player-visible tokens shown |
+With no PC token on the map and fog off, all tokens with **Players see it** on are shown. With no PC token and fog on, the whole map is covered.
 
-Individually hidden tokens are never shown to players, in any state. See [Play Mode](./ui/play-mode.md) for the controls themselves.
+With **Reveal map** on, the players see the whole map and every token with **Players see it** on, also under fog.
 
-## Wall Occlusion
+## Walls
 
-UVTT maps include wall and portal (door) data:
+UVTT maps have walls and doors:
 
-- Vision is computed as a visibility polygon by raycasting against walls
-- Closed doors block vision; open doors do not
-- The Fog and LOS toggles are only available on maps with UVTT data
+- Sight is a visibility polygon cast against the walls.
+- Closed doors block sight; open doors do not.
+- The DM opens or closes a door on the DM map. The map keeps the door state, and the player display follows it.
+- With **Line of sight** off, walls and doors do not block sight.
 
-Maps without wall data use circular (radius-only) vision with no obstructions.
+Image maps have no walls. Sight is a circle of its range.
 
 ## See Also
 
-- [Fog of War](../how-to/play-mode/fog-of-war.md) — task recipes
-- [Vision System](../explanation/vision-system.md) — how the D&D 5e rules map to the implementation
-- [Play Mode](./ui/play-mode.md) — toolbar controls
+- [Fog of War](../how-to/play-mode/fog-of-war.md)
+- [Vision System](../explanation/vision-system.md)
+- [DM Map](./ui/dm-map.md)

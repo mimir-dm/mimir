@@ -1,48 +1,68 @@
 # Upload a Map
 
-Add battle maps and area maps to your campaign modules.
+Add battle maps and area maps to a module or to the campaign.
 
 ## Supported Formats
 
-| Format | Extensions | Grid Data | Walls/Doors | Lighting |
-|--------|-----------|-----------|-------------|----------|
-| **UVTT** | `.dd2vtt`, `.uvtt` | Embedded | Embedded | Embedded |
-| **Image** | `.png`, `.jpg`, `.webp` | Default (70px) | None | None |
+| Format | Extensions | Grid | Walls and doors |
+|--------|-----------|------|-----------------|
+| **UVTT** | `.dd2vtt`, `.uvtt` | In the file | In the file |
+| **Image** | `.png`, `.jpg`, `.jpeg`, `.webp` | You set it | None |
 
 ## Steps
 
-1. Open a module from the Modules tab
-2. Find the **Maps** section in the module dashboard
-3. Click the **+** button
-4. Choose your map file
-5. Enter a **Name** for the map
-6. Click **Upload**
+1. Open the module page and click the **Maps** tab. For a campaign map, open the **Campaign** tab of the dashboard instead.
+2. Click **Upload a map**.
+3. Drop the map file on the box, or click the box to choose it. Mimir fills in **Name** from the file name.
+4. Change the **Name** if you want.
+5. For an image, set **Grid: pixels a square**. The default is 70.
+6. Choose the **Lighting**: Bright, Dim or Dark.
+7. Click **Upload**.
 
-The map appears as a card in the Maps section. Click it to open Token Setup.
+The map appears in the **Maps** table with its lighting and its fog of war state. Click the name to open the [DM map](../../reference/ui/dm-map.md).
+
+To see a map without opening it, click **Preview** in its row. The preview shows the image, the size in squares, the pixels a square and the size in pixels, with **Open** and **PDF…**.
+
+If the file is not a map, Mimir shows the reason in the dialog. Click **Cancel** to close it.
 
 ## UVTT Files (Recommended)
 
-UVTT files from tools like [Dungeondraft](https://dungeondraft.net/) include grid, wall, door, and lighting data that Mimir imports automatically. This gives you line-of-sight fog of war, accurate token snapping, and dynamic lighting out of the box.
-
-See [Map Formats](../../explanation/map-formats.md) for details on what UVTT files contain and why they're preferred.
+UVTT files from tools like [Dungeondraft](https://dungeondraft.net/) hold the grid, the walls and the doors. Fog of war then stops at walls, and doors open and close. See [Map Formats](../../explanation/map-formats.md).
 
 ## Image Files
 
-Standard image files work for basic token placement but lack wall data, so fog of war is not available — the Fog and LOS controls only appear for UVTT maps. On image maps, use the Reveal Map toggle and per-token Hide from Players instead. Mimir defaults to 70 pixels per grid square. See [Configure Grid](./configure-grid.md) for details.
+An image works for tokens, lights and fog of war. It has no walls, so sight goes in all directions up to its range.
+
+## Lighting
+
+The lighting of the map is the light where no light source shines:
+
+- **Bright**: daylight. Characters see as far as they can.
+- **Dim**: twilight. Characters see their dim-light range.
+- **Dark**: night or underground. Only darkvision and light sources give sight.
+
+The player display uses this lighting. You choose it when you upload the map.
 
 ## Generated Maps
 
-Maps produced by `mimir-mapgen` are `.dungeondraft_map` files. Mimir cannot open `.dungeondraft_map` files directly — map uploads accept only UVTT (`.dd2vtt`, `.uvtt`) and image files. To use a generated map in Mimir, open it in Dungeondraft (a paid tool) and export it as Universal VTT.
+`mimir-mapgen` makes `.dungeondraft_map` files. Mimir cannot open them. Open the file in Dungeondraft and export it as Universal VTT. Then upload the UVTT file.
+
+## Delete a Map
+
+1. In the **Maps** table, click **×** (**Delete …**) in the row of the map.
+2. Click **Delete** to confirm.
+
+Its tokens, lights, traps and points of interest go with it.
 
 ## Tips
 
-- **Always prefer UVTT** when available — fog of war and dynamic lighting only work on UVTT maps
-- Maps can belong to a specific module or to the campaign at large
-- You can upload multiple maps per module (one per room/area is common for dungeon crawls)
+- Use UVTT when you can.
+- Upload one map for each room or area of a dungeon.
+- Campaign maps are for places that many modules use, for example a world map or a home town.
 
 ## See Also
 
-- [Configure Grid](./configure-grid.md) — Grid alignment details
-- [Place Tokens](./place-tokens.md) — Adding monsters and NPCs to maps
-- [Map Formats](../../explanation/map-formats.md) — Understanding UVTT and alternatives
-- [Generate Maps](./generate-map.md) — Create maps procedurally
+- [Set the Grid](./configure-grid.md)
+- [Place Tokens](./place-tokens.md)
+- [Map Formats](../../explanation/map-formats.md)
+- [Generate Maps](./generate-map.md)

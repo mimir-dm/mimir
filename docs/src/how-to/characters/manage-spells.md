@@ -1,50 +1,47 @@
 # Manage Character Spells
 
-View and manage spells for spellcasting characters.
+Learn, prepare and forget spells on the **Spells** tab of a character sheet. A player can do the same on their own sheet.
 
-## Accessing the Spells Tab
+## Open the Spells Tab
 
-1. Click **Characters** in the header
-2. Select a spellcasting character
-3. Click the **Spells** tab in the character sheet
+1. Open the character sheet.
+2. Click the **Spells** tab.
 
-> **Note:** The Spells tab only appears for characters with a spellcasting class (Wizard, Cleric, Bard, etc.). Non-casters won't see this tab.
+> **Note:** Only characters with a spellcasting class have the **Spells** tab.
 
-## Spells Tab Overview
+## What the Tab Shows
 
-The Spells tab displays three sections:
+- **Spellcasting**: for each casting class, the ability, the spell save DC and the spell attack bonus, for example "DC 13 · +5".
+- **Spell slots**: the slots for each spell level.
+- **Known spells**: the spells the character knows, by level (**Cantrips**, **1st level**, …), with the class they come from. Click a name to read the spell.
 
-### Spellcasting Stats
+## Learn a Spell
 
-Shows your spellcasting fundamentals:
-- **Spell Save DC** — Difficulty class for saving throws against your spells
-- **Spell Attack** — Your modifier for spell attack rolls
-- **Spellcasting Ability** — Which ability score powers your spells
+1. Open **Learn a spell…**. The list has the spells of the class, up to the highest level the character can cast. When the character has source books (**Source books…**), the list keeps to them.
+2. Choose a spell.
+3. Click **Learn**.
 
-For multiclass characters, stats are shown for each spellcasting class separately.
+The spell shows in **Known spells**.
 
-### Spell Slots
+## Prepare a Spell
 
-Displays available spell slots by level (1st through 9th). Cantrips are marked as unlimited.
+1. Find the spell in **Known spells**.
+2. Turn on **Prepared**.
 
-### Available Spells
+## Forget a Spell
 
-Your class spells grouped by level (Cantrips through 9th level). Each level header shows the spell count and can be expanded or collapsed.
+1. Find the spell in **Known spells**.
+2. Click **×** (**Forget …**).
 
-Each spell card shows:
-- Spell name and school of magic
-- Tags: **HB** (homebrew), **R** (ritual), **C** (concentration)
-- Expand a spell to see full details: casting time, range, components, duration, and description
+## Spells at Level Up
 
-## How Spell Management Works
+The level-up dialog has a **Spells** step for casters. You can also add spells later on this tab. See [Level Up](./level-up.md).
 
-Mimir displays all possible spells for your class — spell preparation and selection is a table activity managed by the player during the game. The Spells tab serves as a complete reference so players can browse their full spell list and look up details on the fly.
+## Look Up a Spell
 
-## Homebrew Spells
-
-Homebrew spells created in the campaign's Homebrew tab automatically appear alongside catalog spells in the character's spell list, tagged with **HB**.
+Click the name of a known spell. Its text opens. For other spells, search in **Reference**, **Catalog**, **Spells**.
 
 ## See Also
 
 - [Create a Player Character](./create-pc.md)
-- [Print Character Sheet](./print-character-sheet.md) — Spell Cards print option
+- [Print a Character Sheet](./print-character-sheet.md): the **Spell cards** option

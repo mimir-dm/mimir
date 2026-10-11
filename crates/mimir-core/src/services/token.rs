@@ -130,6 +130,8 @@ pub struct UpdateTokenInput {
     pub vision_dark_ft: Option<i32>,
     /// Update light radius
     pub light_radius_ft: Option<i32>,
+    /// Mark dead or alive
+    pub dead: Option<bool>,
 }
 
 impl UpdateTokenInput {
@@ -187,6 +189,8 @@ pub struct TokenResponse {
     pub vision_dim_ft: Option<i32>,
     pub vision_dark_ft: i32,
     pub light_radius_ft: i32,
+    /// The DM marked it dead.
+    pub dead: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -201,6 +205,24 @@ impl<'a> TokenService<'a> {
     /// Create a new token service.
     pub fn new(conn: &'a mut SqliteConnection, app_dir: &'a Path) -> Self {
         Self { conn, app_dir }
+    }
+
+    /// The image file of a token, if it has one: a catalog monster's token
+    /// art at `assets/catalog/bestiary/tokens/{source}/{name}.{webp|png|jpg|jpeg}`.
+    /// NPC, PC and homebrew tokens have none. A missing token is an error.
+    pub fn image_path(&mut self, id: &str) -> ServiceResult<Option<std::path::PathBuf>> {
+        let placement = dal::get_token_placement_optional(self.conn, id)?
+            .ok_or_else(|| ServiceError::not_found("Token", id))?;
+        let Some(monster_id) = placement.module_monster_id else {
+            return Ok(None);
+        };
+        let Some(monster) = dal::get_module_monster_optional(self.conn, &monster_id)? else {
+            return Ok(None);
+        };
+        let (Some(name), Some(source)) = (monster.monster_name, monster.monster_source) else {
+            return Ok(None);
+        };
+        Ok(token_image_file(self.app_dir, &source, &name))
     }
 
     /// List all tokens for a map.
@@ -301,6 +323,7 @@ impl<'a> TokenService<'a> {
             vision_dim_ft: input.vision_dim_ft,
             vision_dark_ft: input.vision_dark_ft,
             light_radius_ft: input.light_radius_ft,
+            dead: input.dead.map(i32::from),
         };
 
         let rows = dal::update_token_placement(self.conn, id, &update)?;
@@ -433,6 +456,7 @@ impl<'a> TokenService<'a> {
             vision_dim_ft: placement.vision_dim_ft,
             vision_dark_ft: placement.vision_dark_ft,
             light_radius_ft: placement.light_radius_ft,
+            dead: placement.dead != 0,
             created_at: placement.created_at.clone(),
             updated_at: placement.created_at, // Use created_at as updated_at since we don't track it
         })
@@ -505,6 +529,28 @@ fn normalize_size_code(size: &str) -> String {
         "G" => "gargantuan".to_string(),
         other => other.to_lowercase(),
     }
+}
+
+/// A catalog name that is safe as one path segment.
+fn safe_segment(name: &str) -> bool {
+    !name.is_empty() && name != "." && name != ".." && !name.contains(['/', '\\', '\0'])
+}
+
+/// The first token image that exists for a catalog monster.
+fn token_image_file(app_dir: &Path, source: &str, name: &str) -> Option<std::path::PathBuf> {
+    if !safe_segment(source) || !safe_segment(name) {
+        return None;
+    }
+    let dir = app_dir
+        .join("assets")
+        .join("catalog")
+        .join("bestiary")
+        .join("tokens")
+        .join(source);
+    ["webp", "png", "jpg", "jpeg"]
+        .iter()
+        .map(|ext| dir.join(format!("{name}.{ext}")))
+        .find(|p| p.is_file())
 }
 
 #[cfg(test)]
@@ -952,6 +998,24 @@ mod tests {
     }
 
     #[test]
+    fn a_token_is_marked_dead_and_alive() {
+        let (mut conn, temp_dir) = setup_test_env();
+        let (_campaign_id, _module_id, map_id) = create_prerequisites(&mut conn);
+        let mut service = TokenService::new(&mut conn, temp_dir.path());
+        let token = service
+            .create(CreateTokenInput::for_pc(&map_id, "Fighter", 0, 0))
+            .expect("create");
+        assert!(!token.dead);
+        let mark = |dead| UpdateTokenInput {
+            dead: Some(dead),
+            ..Default::default()
+        };
+        assert!(service.update(&token.id, mark(true)).unwrap().dead);
+        assert!(service.get(&token.id).unwrap().unwrap().dead, "saved");
+        assert!(!service.update(&token.id, mark(false)).unwrap().dead);
+    }
+
+    #[test]
     fn test_toggle_visibility_not_found() {
         let (mut conn, temp_dir) = setup_test_env();
 
@@ -1274,5 +1338,39 @@ mod tests {
         assert_eq!(vision.vision_dim_ft, Some(Some(30)));
         assert_eq!(vision.vision_dark_ft, Some(60));
         assert_eq!(vision.light_radius_ft, Some(20));
+    }
+}
+
+#[cfg(test)]
+mod image_tests {
+    use super::*;
+
+    #[test]
+    fn finds_the_first_token_image_by_extension_order() {
+        let dir = tempfile::tempdir().unwrap();
+        let tokens = dir.path().join("assets/catalog/bestiary/tokens/MM");
+        std::fs::create_dir_all(&tokens).unwrap();
+        std::fs::write(tokens.join("Goblin.png"), b"png").unwrap();
+        std::fs::write(tokens.join("Goblin.jpg"), b"jpg").unwrap();
+        let found = token_image_file(dir.path(), "MM", "Goblin").unwrap();
+        assert!(found.ends_with("MM/Goblin.png"));
+        assert!(token_image_file(dir.path(), "MM", "Orc").is_none());
+    }
+
+    #[test]
+    fn names_that_leave_the_directory_are_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("secret.png"), b"x").unwrap();
+        for (source, name) in [
+            ("..", "secret"),
+            ("MM", "../../../../../secret"),
+            ("a/b", "x"),
+            ("", "x"),
+        ] {
+            assert!(
+                token_image_file(dir.path(), source, name).is_none(),
+                "{source}/{name}"
+            );
+        }
     }
 }

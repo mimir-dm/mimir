@@ -297,6 +297,14 @@ impl<'a> MapStateService<'a> {
         self.get_light(&id)
     }
 
+    /// Create a candle (5ft bright, 10ft dim).
+    pub fn create_candle(&mut self, map_id: &str, x: i32, y: i32) -> ServiceResult<LightSource> {
+        let id = Uuid::new_v4().to_string();
+        let light = NewLightSource::candle(&id, map_id, x, y);
+        dal::insert_light_source(self.conn, &light)?;
+        self.get_light(&id)
+    }
+
     /// Toggle a light on/off, returning the updated light.
     pub fn toggle_light(&mut self, id: &str) -> ServiceResult<LightSource> {
         let light = self.get_light(id)?;

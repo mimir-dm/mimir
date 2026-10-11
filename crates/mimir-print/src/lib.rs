@@ -54,7 +54,11 @@ pub use builder::{
 };
 pub use error::{PrintError, Result};
 pub use map_renderer::{MapPrintOptions, RenderMap, RenderToken, RenderedMapForPrint};
-pub use markdown::{markdown_to_typst, parse_campaign_document, ParsedDocument};
+pub use markdown::{
+    markdown_to_typst, markdown_to_typst_full, markdown_to_typst_with, parse_campaign_document,
+    parse_campaign_document_full, parse_campaign_document_with, print_image, ImageResolver,
+    ParsedDocument, StatblockResolver,
+};
 pub use sections::CharacterBattleCardSection;
 pub use sections::MarkdownSection;
 pub use sections::SpellCardsSection;
@@ -66,7 +70,7 @@ pub use sections::{MonsterCardSection, TrapCardSection};
 pub use service::{PrintService, TemplateInfo};
 pub use world::MimirTypstWorld;
 
-/// State for print functionality, managed by Tauri.
+/// State for print functionality: where the templates are.
 pub struct PrintState {
     /// Path to templates directory
     pub templates_dir: PathBuf,

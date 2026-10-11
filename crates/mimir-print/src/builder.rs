@@ -146,6 +146,8 @@ pub struct DocumentConfig {
     pub margin: f32,
     /// Base font size in points
     pub font_size: f32,
+    /// Lines under the title on the title page (authors, levels).
+    pub title_lines: Vec<String>,
 }
 
 impl Default for DocumentConfig {
@@ -156,6 +158,7 @@ impl Default for DocumentConfig {
             page_numbers: true,
             margin: 0.5, // Reduced for more drawing area
             font_size: 10.0,
+            title_lines: Vec::new(),
         }
     }
 }
@@ -201,6 +204,12 @@ impl DocumentBuilder {
     /// Enable or disable table of contents generation
     pub fn with_toc(mut self, include: bool) -> Self {
         self.config.include_toc = include;
+        self
+    }
+
+    /// Lines under the title on the title page (MIMIR-T-0742).
+    pub fn with_title_lines(mut self, lines: Vec<String>) -> Self {
+        self.config.title_lines = lines;
         self
     }
 
@@ -386,6 +395,12 @@ impl DocumentBuilder {
             "  #title-text[{}]\n",
             escape_typst_string(&self.title)
         ));
+        for line in &self.config.title_lines {
+            title_page.push_str(&format!(
+                "  #v(0.6em)\n  #text(size: 13pt)[{}]\n",
+                escape_typst_string(line)
+            ));
+        }
         title_page.push_str("]\n");
 
         title_page

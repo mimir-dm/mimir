@@ -26,7 +26,7 @@ Documents flow through the campaign lifecycle:
 
 **During prep**, you write into campaign documents as the world takes shape and into module documents as a specific session approaches. Because everything auto-saves, prep notes are always current — there is no "publish" step between preparing and running.
 
-**During play**, prepared documents are read-only reference material in spirit: each module's auto-created Play Notes document is the surface for in-the-moment tracking (initiative, HP, events), so your carefully written prep is not overwritten by table chaos.
+**During play**, prepared documents are read-only reference material in spirit: each module's auto-created Play Notes document is the surface for in-the-moment tracking (initiative, HP, events), so your carefully written prep is not overwritten by table chaos. Players keep their own notes on their character sheets; the notes they write while you show a module's map collect on that module's **Player notes** tab.
 
 **After play**, observations migrate upward: session outcomes get folded into campaign documents, turning module-level events into campaign-level history. This is the Module → Campaign information flow described in the Two-Board System.
 

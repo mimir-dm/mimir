@@ -1,803 +1,222 @@
 # Development Setup and Guide
 
-This comprehensive guide covers everything you need to know about developing Mimir, from initial setup to advanced development workflows.
+How to build, run and test Mimir: the server (`mimir-server`) and the web app (`mimir-web`).
 
-## Quick Links
+## Prerequisites
 
-- [Developer Documentation Home](./README.md) - Overview of developer docs
-- [Contributing Guide](./CONTRIBUTING.md) - How to contribute to the project
-- [Architecture](./ARCHITECTURE.md) - Technical architecture overview
-- [GitHub Repository](https://github.com/mimir-dm/mimir)
+| Tool | Use |
+|------|-----|
+| Rust (via [rustup](https://rustup.rs/)) | Everything. CI pins Rust 1.93.0 for fmt and clippy. |
+| `wasm32-unknown-unknown` target | The web app. `angreal web build` adds it. |
+| [trunk](https://trunkrs.dev/) | Builds the web app: `cargo install trunk --locked` |
+| Node.js LTS and npm | Only for the editor bundle (a trunk pre-build hook) and the Playwright e2e harness |
+| [angreal](https://github.com/angreal/angreal) | The task runner: `pip install 'angreal>=2'` |
+| [mdBook](https://rust-lang.github.io/mdBook/) and `mdbook-mermaid` | Only for the docs: `cargo install mdbook mdbook-mermaid` |
 
-## Table of Contents
+No system libraries are needed beyond a C toolchain: SQLite is bundled.
 
-1. [Environment Setup](#environment-setup)
-2. [Building and Running](#building-and-running)
-3. [Project Architecture](#project-architecture)
-4. [Development Workflows](#development-workflows)
-5. [Testing Strategy](#testing-strategy)
-6. [Debugging Techniques](#debugging-techniques)
-7. [Database Management](#database-management)
-8. [Frontend Development](#frontend-development)
-9. [Tauri-Specific Considerations](#tauri-specific-considerations)
-10. [Common Tasks](#common-tasks)
-
-## Environment Setup
-
-### System Requirements
-
-- **macOS**: 10.15 (Catalina) or later
-- **Windows**: Windows 10 or later
-- **Linux**: Any modern distribution with glibc 2.31+
-
-### Required Tools
-
-#### Rust Toolchain
-```bash
-# Install rustup (Rust version manager)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Verify installation
-rustc --version
-cargo --version
-```
-
-#### Node.js and npm
-```bash
-# macOS (via Homebrew)
-brew install node
-
-# Windows (via installer)
-# Download from https://nodejs.org
-
-# Linux (via package manager)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Verify installation
-node --version  # Should be v18 or higher
-npm --version
-```
-
-### Platform-Specific Dependencies
-
-#### macOS Setup
-```bash
-# Install Xcode Command Line Tools
-xcode-select --install
-
-# Install Homebrew (if not already installed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Optional: Install additional development tools
-brew install git gh
-```
-
-#### Linux Setup (Ubuntu/Debian)
-```bash
-# Update package lists
-sudo apt-get update
-
-# Install required dependencies
-sudo apt-get install -y \
-  libwebkit2gtk-4.1-dev \
-  build-essential \
-  curl \
-  wget \
-  file \
-  libssl-dev \
-  libgtk-3-dev \
-  libayatana-appindicator3-dev \
-  librsvg2-dev \
-  patchelf
-
-# Optional: Install git and gh
-sudo apt-get install -y git gh
-```
-
-#### Linux Setup (Fedora)
-```bash
-sudo dnf install \
-  webkit2gtk4.1-devel \
-  openssl-devel \
-  curl \
-  wget \
-  file \
-  libappindicator-gtk3-devel \
-  librsvg2-devel \
-  patchelf
-
-sudo dnf groupinstall "C Development Tools and Libraries"
-```
-
-#### Windows Setup
-1. Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-2. Install [Git for Windows](https://git-scm.com/download/win)
-3. Install [Node.js](https://nodejs.org/)
-4. Install Rust via [rustup-init.exe](https://rustup.rs/)
-
-### Angreal (Recommended Workflow)
-
-Angreal is the project's task runner and the recommended way to run, test, and document Mimir. It requires Python and pip:
+## First Build
 
 ```bash
-pip install 'angreal>=2'
-```
-
-Key tasks (run from the project root):
-
-```bash
-angreal dev launch     # Start Vite dev server + Tauri app (builds sidecar if missing)
-angreal dev reset      # Delete the dev database and dev assets (never touches production)
-angreal test unit      # Run Rust tests for core crates (excludes the Tauri app crate)
-angreal test coverage  # Coverage via cargo-tarpaulin (config: tarpaulin.toml)
-angreal docs serve     # Serve the mdBook docs locally with hot reload
-```
-
-The full `angreal docs` task list: `build`, `serve`, `watch`, `clean`, `test`, `check`, `init`, `production` (see `.angreal/task_docs.py`).
-
-### Optional Development Tools
-
-```bash
-# Tauri CLI (faster startup for dev mode)
-cargo install tauri-cli
-
-# Diesel CLI (database migrations)
-cargo install diesel_cli --no-default-features --features sqlite
-
-# mdBook (documentation, used by angreal docs tasks)
-cargo install mdbook mdbook-mermaid
-
-# GitHub CLI (for PR management)
-brew install gh  # macOS
-# or download from https://cli.github.com/
-```
-
-### IDE Setup
-
-#### VS Code (Recommended)
-Install these extensions:
-- **rust-analyzer** - Rust language support
-- **Tauri** - Tauri development tools
-- **Volar** - Vue 3 language support
-- **ESLint** - JavaScript/TypeScript linting
-- **Error Lens** - Inline error messages
-
-Settings:
-```json
-{
-  "rust-analyzer.checkOnSave.command": "clippy",
-  "editor.formatOnSave": true,
-  "[rust]": {
-    "editor.defaultFormatter": "rust-lang.rust-analyzer"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[vue]": {
-    "editor.defaultFormatter": "Vue.volar"
-  }
-}
-```
-
-#### IntelliJ IDEA / CLion
-- Install Rust plugin
-- Install Vue.js plugin
-- Enable Tauri support
-
-## Building and Running
-
-### Initial Build
-
-```bash
-# Clone repository
 git clone https://github.com/mimir-dm/mimir.git
 cd mimir
-
-# Build the MCP sidecar FIRST — tauri.conf.json declares it as externalBin,
-# so building the mimir crate fails if the binary is missing
-bash scripts/build-sidecar.sh        # on Windows: .\scripts\build-sidecar.ps1
-
-# Build Rust workspace
-cargo build
-
-# Install frontend dependencies
-cd crates/mimir/frontend
-npm install
-cd ../../..
+cargo build --workspace
 ```
 
-### Development Mode
+`cargo build --workspace` builds the server and checks the web app as a host library. It needs no wasm tools.
 
-The recommended way to run in development mode is via the angreal task:
+## Run the App in Development
 
 ```bash
-angreal dev launch
+angreal web serve
 ```
 
-This handles the Vite dev server and Tauri app startup correctly.
+This command:
 
-#### Manual Development Mode
+1. builds the web app with trunk (debug),
+2. starts `mimir-server` with the `fixtures` feature, `MIMIR_SEED=fixture` and the data in `target/web-dev`,
+3. runs `trunk watch`, so a code change rebuilds the bundle.
 
-> **Known issue:** `cargo tauri dev` has a bug where it runs `npm run dev` from `crates/` instead of `crates/mimir/frontend`, causing the Vite dev server to fail. Use the workaround below.
+Open <http://127.0.0.1:8740>. Reload the page after a rebuild. Ctrl-C stops both.
+
+The dev data is a fixture: the SRD catalog and the campaign "The Lost Mine of Phandelver". It never touches a real data directory.
+
+| Option | Effect |
+|--------|--------|
+| `--port 8750` | Another port |
+| `--token dev-token` | Token mode, to test the sign-in page. Without it the server is in open mode. |
+| `--fresh` | Delete `target/web-dev` first |
+
+To run the server alone on a bundle that you built:
 
 ```bash
-# Terminal 1: Start Vite dev server manually
-cd crates/mimir/frontend
-npm run dev
-
-# Terminal 2: Run Rust backend (without Tauri's frontend handling)
-cargo run -p mimir --no-default-features
+angreal web build
+MIMIR_WEB_DIST=crates/mimir-web/dist MIMIR_DATA_DIR=target/web-dev \
+  cargo run -p mimir-server
 ```
 
-#### Sidecar Binary
-
-The MCP sidecar binary must exist before building the `mimir` crate (required by `externalBin` in `tauri.conf.json`):
+## Release Build
 
 ```bash
-# Build the sidecar (on Windows: .\scripts\build-sidecar.ps1)
-./scripts/build-sidecar.sh
-
-# Output: crates/mimir/binaries/mimir-mcp-{target-triple}
+angreal web build --release
+cargo build --release -p mimir-server --features embed-web
 ```
 
-> **Build performance:** the image-processing dependencies (`image`, `png`, `fdeflate`, `zune-jpeg`) are pinned to `opt-level = 3` in the dev profile (workspace `Cargo.toml`) because their pixel loops are 10-50x slower unoptimized, which would make map extraction unusable in debug builds.
+`embed-web` bakes `crates/mimir-web/dist` into the binary. The result is one file: `target/release/mimir-server`. See [Run the Server](../how-to/run-server.md) and [Environment Variables](../reference/environment-variables.md).
 
-### Production Build
+## Gates
+
+CI (`.github/workflows/ci.yml`) runs these. Run them before a pull request.
 
 ```bash
-# Build optimized release
-cd crates/mimir
-cargo tauri build
-
-# Output locations:
-# macOS: target/release/bundle/dmg/
-# Windows: target/release/bundle/msi/
-# Linux: target/release/bundle/deb/ and target/release/bundle/appimage/
-```
-
-## Project Architecture
-
-### Workspace Structure
-
-```
-mimir/
-├── Cargo.toml                 # Workspace configuration
-├── crates/
-│   ├── mimir/             # Main application
-│   ├── mimir-core/        # Business logic
-│   ├── mimir-mcp/         # MCP server for Claude Code
-│   ├── mimir-mapgen/      # Procedural map generation
-│   └── mimir-print/       # PDF generation
-├── docs/                      # Documentation
-├── data/                      # D&D reference data
-└── .metis/                   # Project management
-```
-
-### Architecture Layers
-
-**Frontend Layer (Vue 3 + TypeScript)**
-- Views: Page-level components
-- Components: Reusable UI components
-- Stores: Pinia state management
-- Services: API wrappers for Tauri commands
-
-**Application Layer (Tauri + Rust)**
-- Commands: IPC handlers
-- Services: Application-level business logic
-- State: Application state management
-
-**Domain Layer (mimir-core)**
-- Models: Domain entities
-- Services: Business logic
-- DAL: Data access layer
-- Migrations: Database schema
-
-**Infrastructure Layer**
-- Database: SQLite with Diesel ORM
-- File System: Campaign data storage
-
-### Data Flow
-
-```
-User Interaction
-      ↓
-Vue Component
-      ↓
-Pinia Store / API Service
-      ↓
-Tauri Command (IPC)
-      ↓
-Command Handler
-      ↓
-Core Service
-      ↓
-Repository (DAL)
-      ↓
-Database
-```
-
-## Development Workflows
-
-### Feature Development
-
-1. **Create Feature Branch**
-```bash
-git checkout -b feature/my-feature
-```
-
-2. **Implement Feature**
-- Add backend logic in `mimir-core`
-- Add Tauri command in `mimir/src/commands`
-- Add frontend UI in `mimir/frontend/src`
-
-3. **Test Locally**
-```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy -p mimir-web --target wasm32-unknown-unknown -- -D warnings
 angreal test unit
-cd crates/mimir/frontend && npm test
+angreal web e2e
 ```
 
-4. **Commit and Push**
-```bash
-git add .
-git commit -m "Add feature description"
-git push origin feature/my-feature
-```
+| Gate | What it checks |
+|------|----------------|
+| `cargo fmt --all --check` | Formatting |
+| `cargo clippy --workspace --all-targets -- -D warnings` | Lints on the host. Warnings are errors. |
+| `cargo clippy -p mimir-web --target wasm32-unknown-unknown -- -D warnings` | Lints of the web app as wasm |
+| `angreal test unit` | `cargo test --workspace -- --test-threads=1`. One thread avoids SQLite lock errors. |
+| `angreal web e2e` | The Playwright smoke suite against a real server |
 
-### Bug Fix Workflow
+If a clippy lint does not fit, add `#[allow(clippy::…)]` with a comment that gives the reason.
 
-1. **Reproduce the Bug**
-- Create a failing test
-- Document reproduction steps
+CI also builds `mimir-wire` for wasm, builds the web app with `trunk build --release`, and, on pushes to `main`, runs the heavy SRD smoke test (`cargo test -p mimir-core --test srd_smoke_test`) and coverage.
 
-2. **Fix the Issue**
-- Implement fix
-- Verify test passes
+## Tests
 
-3. **Test Edge Cases**
-- Add additional tests
-- Manual testing
-
-4. **Submit PR**
-
-### Adding a New Page
-
-1. **Create Vue Component**
-```bash
-# In crates/mimir/frontend/src/views/
-touch MyNewView.vue
-```
-
-2. **Add Route**
-```typescript
-// In crates/mimir/frontend/src/app/router/index.ts
-{
-  path: '/my-new-page',
-  name: 'MyNewPage',
-  component: () => import('@/views/MyNewView.vue')
-}
-```
-
-3. **Add Navigation**
-```vue
-<!-- In layout component -->
-<router-link to="/my-new-page">My New Page</router-link>
-```
-
-### Adding a New Tauri Command
-
-1. **Create Command Function**
-
-Commands take `State<'_, AppState>` and open an on-demand connection with `state.connect()`, returning an `ApiResponse` (mirroring `crates/mimir/src/commands/campaign.rs`):
-
-```rust
-// In crates/mimir/src/commands/my_commands.rs
-use tauri::State;
-
-use crate::state::AppState;
-use super::{to_api_response, ApiResponse};
-
-#[tauri::command]
-pub fn my_new_command(state: State<'_, AppState>, param: String) -> ApiResponse<String> {
-    let mut db = match state.connect() {
-        Ok(db) => db,
-        Err(e) => return ApiResponse::err(e),
-    };
-
-    // Business logic here, e.g. via a mimir-core service:
-    // let result = CampaignService::new(&mut db).list(false);
-    // to_api_response(result)
-    ApiResponse::ok(format!("Processed: {}", param))
-}
-```
-
-2. **Register Command**
-```rust
-// In crates/mimir/src/main.rs
-.invoke_handler(tauri::generate_handler![
-    commands::my_new_command,
-    // ... other commands
-])
-```
-
-3. **Call from Frontend**
-```typescript
-// In frontend service
-import { invoke } from '@tauri-apps/api/core';
-
-export async function myNewCommand(param: string): Promise<string> {
-  return await invoke<string>('my_new_command', { param });
-}
-```
-
-## Testing Strategy
-
-### Rust Testing
-
-#### Unit Tests
-```rust
-// In same file as implementation
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_feature() {
-        let result = my_function();
-        assert_eq!(result, expected);
-    }
-}
-```
-
-#### Integration Tests
-
-Integration tests live in each crate's `tests/` directory. The real targets are:
-
-- `mimir-core`: `catalog_import`, `srd_smoke_test`
-- `mimir-mapgen`: `cli_integration`, `format_roundtrip`, `polygon_snapshots`
-
-SRD test fixtures are generated by `scripts/extract-srd-fixtures.py` (SRD/OGL-safe content only) into `crates/mimir/frontend/__tests__/fixtures` and `crates/mimir-core/tests/fixtures`.
-
-```rust
-// In crates/mimir-core/tests/catalog_import.rs (for example)
-use mimir_core::*;
-
-#[test]
-fn test_database_workflow() {
-    let mut conn = create_connection(":memory:").unwrap();
-    run_migrations(&mut conn).unwrap();
-
-    // Test full workflow
-}
-```
-
-#### Running Rust Tests
-
-The recommended entry point is angreal:
+### Rust
 
 ```bash
-# Rust tests for core crates (recommended)
-angreal test unit
-
-# With coverage (cargo-tarpaulin, config in tarpaulin.toml)
-angreal test coverage
+angreal test unit                         # the whole workspace
+cargo test -p mimir-core                  # one crate
+cargo test -p mimir-server --test api_maps -- --test-threads=1   # one test file
+cargo test -p mimir-core some_test_name   # by name
+angreal test coverage --open              # cargo-tarpaulin (tarpaulin.toml)
 ```
 
-`angreal test unit` runs the real underlying command:
+| Where | What |
+|-------|------|
+| `crates/mimir-core/src/**` (`#[cfg(test)]`) | Unit tests of models, services, the DAL |
+| `crates/mimir-core/tests/` | Catalog import, SRD smoke test |
+| `crates/mimir-server/tests/` | The API, auth, player links, the live socket and MCP over HTTP, each against an in-process server and a temporary database |
+| `crates/mimir-web/src/**` (`#[cfg(test)]`) | Pure logic of the web app: routing, vision, rules of the wizard and level-up. They run on the host. |
+| `crates/mimir-mapgen/tests/` | CLI, format round trip, polygon snapshots |
+
+### Web (Playwright)
 
 ```bash
-cargo test --workspace --exclude mimir -- --test-threads=1
+angreal web e2e
 ```
 
-The `mimir` (Tauri) crate is excluded because it cannot build without the sidecar binary, and `--test-threads=1` is required to avoid SQLite locking issues. Avoid bare `cargo test --workspace`.
+It builds the bundle, installs the harness (`npm ci` in `crates/mimir-web/web-e2e` the first time) and runs the specs. Playwright starts `web-e2e/session.sh`. The script runs `mimir-server` on a new scratch data directory with the UI fixture, in token mode, and removes the directory after. Results of a failed run are in `crates/mimir-web/web-e2e/results`.
 
-Targeted runs:
+To install the browser the first time:
 
 ```bash
-# Specific crate
-cargo test -p mimir-core -- --test-threads=1
-
-# Specific integration test target
-cargo test -p mimir-core --test catalog_import -- --test-threads=1
-cargo test -p mimir-mapgen --test cli_integration
-
-# Specific test by name
-cargo test -p mimir-core test_campaign_creation -- --test-threads=1
-
-# With output
-cargo test -p mimir-core -- --test-threads=1 --nocapture
+cd crates/mimir-web/web-e2e && npx playwright install chromium
 ```
 
-### Frontend Testing
-
-#### Component Tests
-```typescript
-// In crates/mimir/frontend/src/components/__tests__/
-import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
-import MyComponent from '../MyComponent.vue';
-
-describe('MyComponent', () => {
-  it('renders correctly', () => {
-    const wrapper = mount(MyComponent, {
-      props: { title: 'Test' }
-    });
-    expect(wrapper.text()).toContain('Test');
-  });
-});
-```
-
-#### Running Frontend Tests
-```bash
-cd crates/mimir/frontend
-
-# Run tests
-npm test
-
-# Watch mode
-npm test -- --watch
-
-# Coverage
-npm run test:coverage
-
-# UI mode
-npm run test:ui
-```
-
-## Debugging Techniques
-
-### Rust Debugging
-
-#### Print Debugging
-```rust
-use tracing::{info, debug, warn, error};
-
-debug!("Variable value: {:?}", my_var);
-info!("Operation started");
-warn!("Unusual condition: {}", condition);
-error!("Operation failed: {}", err);
-```
-
-#### VS Code Debugging
-1. Install CodeLLDB extension
-2. Add `.vscode/launch.json`:
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "lldb",
-      "request": "launch",
-      "name": "Debug Tauri",
-      "cargo": {
-        "args": ["build", "--manifest-path=crates/mimir/Cargo.toml"]
-      },
-      "cwd": "${workspaceFolder}"
-    }
-  ]
-}
-```
-
-### Frontend Debugging
-
-#### Browser DevTools
-- Right-click in app → "Inspect Element"
-- Console tab for logs
-- Network tab for Tauri commands
-- Vue DevTools for component inspection
-
-#### Console Logging
-```typescript
-console.log('Debug:', variable);
-console.warn('Warning:', condition);
-console.error('Error:', error);
-```
-
-### Database Debugging
+### Screenshots
 
 ```bash
-# Open development database (macOS)
-sqlite3 ~/Library/Application\ Support/com.mimir.app/dev/data/mimir.db
-
-# Common commands
-.tables                # List tables
-.schema campaigns      # Show table structure
-SELECT * FROM campaigns;  # Query data
-.quit                  # Exit
+angreal web screenshots                         # light and dark themes
+angreal web screenshots --themes light,dark,hyper
+angreal web screenshots-diff --before <run>     # compare with the latest run
 ```
 
-## Database Management
+Each screen is captured at desktop (1280×800) and tablet (820×1100) width, in `crates/mimir-web/web-e2e/screenshots/runs/<timestamp>/`. `screenshots-diff` writes diff images to `<after>/diff`; `--fail` exits 1 on any change.
 
-### Migrations
+## Project Structure
 
-#### Creating a Migration
-```bash
-cd crates/mimir-core
-diesel migration generate add_new_feature
-
-# Edit migrations/YYYY-MM-DD-HHMMSS_add_new_feature/up.sql
-# Edit migrations/YYYY-MM-DD-HHMMSS_add_new_feature/down.sql
+```
+crates/
+├── mimir-server/   # axum server: API (/api/v1), auth, live socket (/ws), MCP (/mcp), serves the web app
+├── mimir-web/      # Leptos CSR web app (trunk)
+│   ├── src/        # app.rs (router), pages/, map/, character/, authoring/, reference/, admin/
+│   ├── style/      # mimir.css: the few classes Aurora does not have
+│   ├── editor/     # TipTap bundle (Node, esbuild) → editor/dist/mimir-editor.js
+│   ├── web-e2e/    # Playwright specs and screenshot capture
+│   ├── index.html  # trunk entry
+│   └── Trunk.toml
+├── mimir-wire/     # JSON types shared by server and web app (builds for wasm)
+├── mimir-core/     # models, services, DAL, migrations, catalog import, seed fixture
+├── mimir-mcp/      # MCP tool registry; plugin/ is the Claude Code plugin
+├── mimir-print/    # PDF generation with Typst
+├── mimir-render/   # 5etools JSON → HTML (catalog, reader, homebrew preview)
+└── mimir-mapgen/   # procedural map generator (library and CLI)
+docs/               # this book (mdBook)
 ```
 
-#### Running Migrations
-```bash
-# Apply migrations
-diesel migration run
-
-# Rollback last migration
-diesel migration revert
-
-# Test migration cycle
-diesel migration redo
-```
-
-#### Development Database Location
-
-- **macOS**: `~/Library/Application Support/com.mimir.app/dev/data/mimir.db`
-- **Linux**: `~/.local/share/com.mimir.app/dev/data/mimir.db`
-- **Windows**: `%APPDATA%\com.mimir.app\dev\data\mimir.db`
-
-### Resetting Development Database
-
-```bash
-angreal dev reset
-```
-
-This deletes ONLY the dev database (`.../com.mimir.app/dev/data/mimir.db`) and clears dev assets — it never touches the production database (see `.angreal/task_dev.py`). Restart the app (e.g. `angreal dev launch`) to recreate a fresh database.
-
-## Frontend Development
-
-### Hot Reload
-
-Changes to Vue components, TypeScript, and CSS hot reload automatically:
-- Save file
-- Browser refreshes automatically
-- State may reset depending on change
-
-### State Management (Pinia)
-
-```typescript
-// Define store
-import { defineStore } from 'pinia';
-
-export const useCampaignStore = defineStore('campaign', () => {
-  const campaigns = ref<Campaign[]>([]);
-
-  async function loadCampaigns() {
-    campaigns.value = await invoke('list_campaigns');
-  }
-
-  return { campaigns, loadCampaigns };
-});
-
-// Use in component
-const campaignStore = useCampaignStore();
-await campaignStore.loadCampaigns();
-```
-
-### Calling Tauri Commands
-
-```typescript
-import { invoke } from '@tauri-apps/api/core';
-
-// Basic invocation
-const result = await invoke<string>('command_name', { param: value });
-
-// With error handling
-try {
-  const data = await invoke<Campaign>('get_campaign', { id: campaignId });
-} catch (error) {
-  console.error('Failed to get campaign:', error);
-}
-```
-
-## Tauri-Specific Considerations
-
-### IPC Communication
-
-Commands run in separate thread from UI:
-- Always async
-- Data must be serializable
-- Large data may have performance impact
-
-### File System Access
-
-Tauri v2 resolves paths via the app handle's path resolver (see `crates/mimir/src/main.rs`):
-
-```rust
-// Inside .setup(|app| { ... })
-let data_dir = app
-    .path()
-    .app_data_dir()
-    .expect("Failed to get app data directory");
-```
-
-### Window Management
-
-Frontend uses `@tauri-apps/api` v2:
-
-```typescript
-import { getCurrentWindow } from '@tauri-apps/api/window';
-
-const appWindow = getCurrentWindow();
-await appWindow.setTitle('New Title');
-await appWindow.maximize();
-```
-
-For creating secondary windows, see `crates/mimir/frontend/src/utils/windows.ts`, which uses `WebviewWindow` from `@tauri-apps/api/webviewWindow`.
+See [Architecture](./ARCHITECTURE.md) and [Web App Architecture](./reference/frontend/README.md).
 
 ## Common Tasks
 
-### Updating Dependencies
+### Add an API Route
+
+1. Add the request and answer types to `crates/mimir-wire` (serde only).
+2. Write the handler in `crates/mimir-server/src/api/<area>.rs`. Call `mimir-core` services, never the DAL.
+3. Add the route to `routes()` in `crates/mimir-server/src/api/mod.rs` with its `Access`: `Dm`, or `Player` (the handler then limits a player to their scope).
+4. If the change matters to other clients, publish a change on the live hub (`crates/mimir-server/src/live.rs`).
+5. Add a test in `crates/mimir-server/tests/`.
+6. Call it from the web app through `crates/mimir-web/src/api.rs`.
+
+### Add a Page
+
+1. Add a component under `crates/mimir-web/src/pages/` (or the area module).
+2. Add its `<Route>` in `crates/mimir-web/src/app.rs`. Add a side navigation link if it is a top-level page.
+3. Use Aurora components; add a class to `style/mimir.css` only when Aurora has none.
+4. Add an e2e spec or extend one in `crates/mimir-web/web-e2e/specs/`, and add it to the list in `.angreal/task_web.py` and `ci.yml`.
+
+### Add a Database Migration
+
+1. Add a directory `crates/mimir-core/migrations/NNN_name/` with `up.sql` and `down.sql`.
+2. Update `crates/mimir-core/src/schema.rs` and the models.
+3. The server runs migrations at start (`mimir_core::db::init_database`).
+
+## Debugging
+
+### Server
 
 ```bash
-# Rust dependencies
-cargo update
-
-# Frontend dependencies
-cd crates/mimir/frontend
-npm update
+RUST_LOG=debug angreal web serve
+RUST_LOG=info,mimir_core=debug cargo run -p mimir-server
 ```
 
-### Formatting Code
+The server logs to standard output.
+
+### Web App
+
+Use the browser developer tools. A panic in the app shows in the console (`console_error_panic_hook`). The network tab shows each `/api/v1` call and the `/ws` socket.
+
+### Database
+
+The dev database is `target/web-dev/data/mimir.db`:
 
 ```bash
-# Rust
-cargo fmt
-
-# TypeScript/Vue
-cd crates/mimir/frontend
-npm run lint
+sqlite3 target/web-dev/data/mimir.db
+.tables
+.schema campaigns
 ```
 
-### Running Clippy
+`angreal web serve --fresh` starts again from the fixture.
+
+## Documentation
 
 ```bash
-cargo clippy --all-targets --all-features
-
-# Fix auto-fixable issues
-cargo clippy --fix
+angreal docs serve        # http://localhost:3000, live reload
+angreal docs build
+angreal docs check        # build and report broken links
 ```
 
-### Type Checking Frontend
-
-```bash
-cd crates/mimir/frontend
-npm run type-check
-```
-
-## Performance Optimization
-
-### Profiling Rust Code
-
-Build in release mode and use an external profiler:
-
-```bash
-cargo build --release
-
-# Example: samply (cargo install samply)
-samply record ./target/release/mimir-mapgen generate --preset forest --output /tmp/map.dungeondraft_map
-
-# On macOS, Instruments (Xcode) also works against the release binary
-```
-
-### Frontend Performance
-
-- Use Vue DevTools performance tab
-- Check bundle size: `npm run build -- --analyze`
-- Lazy load routes and heavy components
-
-## Additional Resources
-
-- [Tauri Documentation](https://tauri.app/)
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Rust Book](https://doc.rust-lang.org/book/)
-- [Diesel Guide](https://diesel.rs/guides/)
-- [Pinia Documentation](https://pinia.vuejs.org/)
+The docs deploy from `main` to the GitHub Pages site (`.github/workflows/docs.yml`).
 
 ## Getting Help
 
-- Check [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines
-- Search [GitHub Issues](https://github.com/mimir-dm/mimir/issues)
-- Review crate READMEs for detailed architecture info
-- Ask questions in pull request comments
+- Search the [GitHub issues](https://github.com/mimir-dm/mimir/issues).
+- Ask in [GitHub Discussions](https://github.com/mimir-dm/mimir/discussions).

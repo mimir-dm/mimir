@@ -124,6 +124,8 @@ diesel::table! {
         data -> Text,
         contents -> Nullable<Text>,
         cover_path -> Nullable<Text>,
+        kind -> Text,
+        meta -> Nullable<Text>,
     }
 }
 
@@ -295,6 +297,33 @@ diesel::table! {
 }
 
 diesel::table! {
+    player_notes (id) {
+        id -> Text,
+        character_id -> Text,
+        module_id -> Nullable<Text>,
+        title -> Text,
+        content -> Text,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    sheet_shares (character_id) {
+        character_id -> Text,
+        created_at -> Text,
+    }
+}
+
+diesel::table! {
+    player_links (character_id) {
+        character_id -> Text,
+        token_hash -> Text,
+        created_at -> Text,
+    }
+}
+
+diesel::table! {
     combat_sessions (id) {
         id -> Text,
         module_id -> Text,
@@ -461,6 +490,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    map_door_states (map_id, portal_index) {
+        map_id -> Text,
+        portal_index -> Integer,
+        closed -> Integer,
+    }
+}
+
+diesel::table! {
     maps (id) {
         id -> Text,
         campaign_id -> Text,
@@ -473,6 +510,8 @@ diesel::table! {
         fog_enabled -> Integer,
         created_at -> Text,
         updated_at -> Text,
+        reveal_all -> Integer,
+        line_of_sight -> Integer,
     }
 }
 
@@ -678,6 +717,7 @@ diesel::table! {
         vision_dark_ft -> Integer,
         light_radius_ft -> Integer,
         created_at -> Text,
+        dead -> Integer,
     }
 }
 
@@ -736,6 +776,10 @@ diesel::joinable!(characters -> campaigns (campaign_id));
 diesel::joinable!(classes -> catalog_sources (source));
 diesel::joinable!(combat_entries -> combat_sessions (session_id));
 diesel::joinable!(combat_sessions -> modules (module_id));
+diesel::joinable!(player_links -> characters (character_id));
+diesel::joinable!(player_notes -> characters (character_id));
+diesel::joinable!(player_notes -> modules (module_id));
+diesel::joinable!(sheet_shares -> characters (character_id));
 diesel::joinable!(conditions -> catalog_sources (source));
 diesel::joinable!(cults -> catalog_sources (source));
 diesel::joinable!(deities -> catalog_sources (source));
@@ -750,6 +794,7 @@ diesel::joinable!(items -> catalog_sources (source));
 diesel::joinable!(languages -> catalog_sources (source));
 diesel::joinable!(light_sources -> maps (map_id));
 diesel::joinable!(map_traps -> maps (map_id));
+diesel::joinable!(map_door_states -> maps (map_id));
 diesel::joinable!(map_pois -> maps (map_id));
 diesel::joinable!(maps -> campaign_assets (uvtt_asset_id));
 diesel::joinable!(maps -> campaigns (campaign_id));
@@ -815,6 +860,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     items,
     languages,
     light_sources,
+    map_door_states,
     map_traps,
     map_pois,
     maps,
@@ -837,4 +883,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     traps,
     variant_rules,
     vehicles,
+    player_links,
+    player_notes,
+    sheet_shares,
 );

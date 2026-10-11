@@ -53,11 +53,15 @@ See [PDF Export](pdf-export/README.md) for details.
 Campaign archive format:
 - `.mimir-campaign.tar.gz` archive containing all campaign data
 - Maps, documents, characters, homebrew content
-- Portable between installations; see [Export Campaign](../how-to/campaigns/export-campaign.md)
+- Portable between Mimir servers; see [Export Campaign](../how-to/campaigns/export-campaign.md)
+
+## Document Uploads
+
+A new document can start from a markdown file (`.md`, `.markdown`), 5 MB at most. Documents are stored as markdown.
 
 ## Character Data
 
-Characters are stored in the Mimir database:
+Characters are stored in the database of the server:
 - Not exported as separate files
 - Included in campaign archives (see [Export Campaign](../how-to/campaigns/export-campaign.md))
 - PDF export produces printable sheets

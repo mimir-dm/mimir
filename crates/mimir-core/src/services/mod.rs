@@ -1,6 +1,6 @@
 //! Service Layer
 //!
-//! Business logic services that sit between consumers (MCP, Tauri) and the DAL layer.
+//! Business logic services that sit between consumers (the server API, MCP) and the DAL layer.
 //! Services encapsulate validation, transactions, and orchestration of database operations.
 
 mod archive;
@@ -15,8 +15,11 @@ mod homebrew;
 mod map;
 mod map_state;
 mod module;
+mod party;
+mod player_link;
 mod source;
 mod token;
+mod uvtt;
 
 use thiserror::Error;
 
@@ -38,9 +41,10 @@ pub use catalog_search::{
     CatalogSearch,
 };
 pub use character::{
-    AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput, FeatureChoices,
-    FeatureReference, HpGainMethod, InvocationChoices, LevelUpRequest, LevelUpResult,
-    ManeuverChoices, SpellChanges, SpellReference, SubclassChoice, UpdateCharacterInput,
+    creation_skills, AddInventoryInput, AsiOrFeat, CharacterService, CreateCharacterInput,
+    CreationSkills, FeatureChoices, FeatureReference, HpGainMethod, InvocationChoices,
+    LevelUpRequest, LevelUpResult, ManeuverChoices, SpellChanges, SpellReference, SubclassChoice,
+    UpdateCharacterInput,
 };
 pub use combat::{
     ActiveCondition, CombatEntryView, CombatService, CombatState, DamageResult, HpChange,
@@ -59,8 +63,11 @@ pub use map_state::{
 pub use module::{
     AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
 };
+pub use party::{PartyMember, PartyService};
+pub use player_link::{hash_token, LinkHolder, PlayerLinkService};
 pub use source::SourceService;
 pub use token::{CreateTokenInput, TokenResponse, TokenService, UpdateTokenInput};
+pub use uvtt::{parse_geometry, uvtt_from_image, GridPoint, MapGeometry, UvttLight, UvttPortal};
 
 /// Default query limit to prevent memory issues on large result sets.
 pub const DEFAULT_QUERY_LIMIT: i64 = 1000;

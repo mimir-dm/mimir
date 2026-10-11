@@ -5,6 +5,7 @@
 use diesel::SqliteConnection;
 
 mod core;
+mod creation;
 mod feats;
 mod inventory;
 mod levelup;
@@ -14,6 +15,7 @@ mod spells;
 mod test_support;
 
 pub use core::{CreateCharacterInput, UpdateCharacterInput};
+pub use creation::{creation_skills, CreationSkills};
 pub use inventory::AddInventoryInput;
 pub use levelup::{
     AsiOrFeat, FeatureChoices, FeatureReference, HpGainMethod, InvocationChoices, LevelUpRequest,

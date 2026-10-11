@@ -1,0 +1,975 @@
+/* Mimir web app: the few classes Aurora does not have. Aurora tokens only,
+   no hard-coded colours. */
+
+.mimir-brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg-bright);
+}
+
+.mimir-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+/* Campaign list */
+.mimir-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+/* Dashboard: one header row with the name and the tabs */
+.mimir-dash__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm) var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+.mimir-dash__header .cl-tabs {
+  flex: 1 1 auto;
+}
+.mimir-dash__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  color: var(--fg-bright);
+}
+
+/* A list on the side and the selected item */
+.mimir-split {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .mimir-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.mimir-doclist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mimir-doc__title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-lg);
+  color: var(--fg-bright);
+}
+
+/* Rendered markdown */
+.mimir-prose {
+  line-height: 1.6;
+  color: var(--fg);
+  max-width: 72ch;
+}
+.mimir-prose h1,
+.mimir-prose h2,
+.mimir-prose h3,
+.mimir-prose h4 {
+  color: var(--fg-bright);
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+.mimir-prose h1 { font-size: var(--fs-xl); }
+.mimir-prose h2 { font-size: var(--fs-lg); }
+.mimir-prose h3 { font-size: var(--fs-md); }
+.mimir-prose > :first-child { margin-top: 0; }
+.mimir-prose a { color: var(--ice); }
+.mimir-prose code {
+  font-family: var(--font-mono);
+  background: var(--inset);
+  border-radius: var(--radius-xs);
+  padding: 0 0.25em;
+}
+.mimir-prose pre {
+  background: var(--inset);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow-x: auto;
+}
+.mimir-prose pre code { background: none; padding: 0; }
+.mimir-prose blockquote {
+  margin: 1em 0;
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--border);
+  color: var(--fg-2);
+}
+.mimir-prose table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.mimir-prose th,
+.mimir-prose td {
+  border: 1px solid var(--border-soft);
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+}
+.mimir-prose hr {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  margin: 1.5em 0;
+}
+
+.mimir-cards { margin-top: var(--space-md); }
+.cl-tabs__panel { padding-top: var(--space-md); }
+
+/* ---- DM map ------------------------------------------------------------ */
+.mimir-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  height: calc(100vh - var(--cl-header-h) - 44px);
+  min-height: 420px;
+}
+.mimir-map__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-lg);
+}
+.mimir-map__tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.mimir-map__scene {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--inset);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.mimir-map__scene--placing { cursor: crosshair; }
+.mimir-map__svg { display: block; width: 100%; height: 100%; }
+.mimir-map__grid {
+  fill: none;
+  stroke: var(--fg);
+  stroke-opacity: 0.18;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.mimir-map__fog { fill: var(--scrim); pointer-events: none; }
+.mimir-map__door {
+  stroke: var(--gold);
+  stroke-width: 7;
+  stroke-linecap: round;
+  cursor: pointer;
+}
+.mimir-map__door--open { stroke-dasharray: 4 8; stroke-opacity: 0.7; }
+/* The map file's lights and walls (MIMIR-T-0728). */
+.mimir-map__file-light { pointer-events: none; }
+/* Overlays: how far a monster or an NPC sees (MIMIR-T-0729). */
+.mimir-map__ring {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+  stroke-opacity: 0.8;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+/* Token setup (MIMIR-T-0730): the placement form, the right-click menu,
+   the lists of what is on the map, and the point of interest dialog. */
+.mimir-map__placing {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  width: min(300px, calc(100% - 2 * var(--space-sm)));
+  max-height: calc(100% - 2 * var(--space-sm));
+  overflow: auto;
+  z-index: 2;
+}
+.mimir-place { display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-place__search { display: flex; gap: var(--space-xs); align-items: flex-end; }
+.mimir-place__results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.mimir-place__color { display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-map__poi-icon { pointer-events: none; }
+.mimir-map__menu {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: var(--space-xs);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-md);
+}
+.mimir-map__menu-item {
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+}
+.mimir-map__menu-item:hover, .mimir-map__menu-item:focus-visible { background: var(--hover, rgba(127, 127, 127, 0.15)); }
+.mimir-placed ul { list-style: none; margin: 0 0 var(--space-sm); padding: 0; }
+.mimir-placed__row { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-placed__name {
+  flex: 1 1 auto;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mimir-poi__icons, .mimir-poi__colors { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
+.mimir-poi__icon {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--panel);
+  cursor: pointer;
+}
+.mimir-poi__icon[aria-pressed="true"], .mimir-poi__swatch[aria-pressed="true"] { outline: 3px solid var(--fg); outline-offset: 1px; }
+.mimir-poi__swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer; }
+.mimir-poi__preview { display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-poi__badge {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+/* The DM map in full screen fills it. */
+.mimir-map:fullscreen { background: var(--bg); padding: var(--space-md); overflow: auto; }
+.mimir-map__walls {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.mimir-map__light--off { opacity: 0.35; }
+.mimir-map__handle {
+  stroke: var(--bg);
+  stroke-width: 3;
+  cursor: pointer;
+}
+.mimir-map__handle--selected { stroke: var(--ice); stroke-width: 5; }
+.mimir-map__marker { cursor: pointer; }
+.mimir-map__marker--trap path { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-map__marker--poi circle { stroke: var(--bg); stroke-width: 3; }
+.mimir-map__marker--hidden { opacity: 0.5; }
+.mimir-map__marker--selected path,
+.mimir-map__marker--selected circle { stroke: var(--ice); stroke-width: 5; }
+.mimir-map__marker text,
+.mimir-map__token-name {
+  fill: var(--fg-bright);
+  stroke: var(--bg);
+  stroke-width: 4;
+  paint-order: stroke;
+  font-size: 18px;
+  font-family: var(--font-sans);
+}
+.mimir-map__token { cursor: grab; }
+.mimir-map__token-ring {
+  fill: var(--panel);
+  stroke-width: 5;
+}
+.mimir-map__token-initial {
+  fill: var(--fg-bright);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+.mimir-map__token--hidden { opacity: 0.5; }
+.mimir-map__token--dead { filter: grayscale(1); opacity: 0.45; }
+.mimir-map__token--selected .mimir-map__token-ring { stroke: var(--ice); stroke-width: 8; }
+.mimir-map__panel {
+  position: absolute;
+  top: 56px;
+  right: var(--space-sm);
+  width: min(320px, calc(100% - 2 * var(--space-sm)));
+  max-height: calc(100% - 64px);
+  overflow: auto;
+  z-index: 2;
+}
+.mimir-map__hint {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+  z-index: 3;
+}
+.mimir-map__error { position: absolute; bottom: var(--space-md); left: var(--space-md); z-index: 3; }
+/* Touch: larger targets on a tablet. */
+@media (pointer: coarse) {
+  .mimir-map__door { stroke-width: 12; }
+}
+
+/* ---- Player display ------------------------------------------------------ */
+/* Fog is black on a table display in any theme: the one fixed colour. */
+.mimir-display {
+  --mimir-fog: #000;
+  position: fixed;
+  inset: 0;
+  background: var(--mimir-fog);
+  color: var(--fg);
+}
+.mimir-display__scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  background: var(--mimir-fog);
+}
+.mimir-display__svg { display: block; width: 100%; height: 100%; }
+.mimir-display__cover { fill: var(--mimir-fog); pointer-events: none; }
+.mimir-display__trap { fill: var(--bad); stroke: var(--bg); stroke-width: 3; }
+.mimir-display__door { stroke: var(--gold); stroke-width: 6; stroke-linecap: round; pointer-events: none; }
+.mimir-display__message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+}
+.mimir-display__controls {
+  position: absolute;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--panel);
+  border-radius: var(--radius-pill);
+  opacity: 0.7;
+}
+.mimir-display__controls:focus-within,
+.mimir-display__controls:hover { opacity: 1; }
+
+/* ---- DM map body: the stage and the tracker ------------------------------ */
+.mimir-map__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: var(--space-sm);
+}
+.mimir-map__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mimir-map__stage .mimir-map__panel { top: var(--space-sm); }
+.mimir-map__token--turn .mimir-map__token-ring { stroke: var(--gold); stroke-width: 9; }
+
+/* ---- Initiative tracker ---------------------------------------------------- */
+.mimir-tracker {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+.mimir-tracker--collapsed { flex-basis: auto; }
+.mimir-tracker__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-soft);
+}
+.mimir-tracker__head > :last-child { margin-left: auto; }
+.mimir-tracker--collapsed .mimir-tracker__head { border-bottom: 0; }
+.mimir-tracker__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow: auto;
+}
+.mimir-tracker__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mimir-tracker__row {
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs);
+  border-left: 3px solid transparent;
+}
+.mimir-tracker__row--current { background: var(--ice-bg); border-left-color: var(--ice); }
+.mimir-tracker__row--selected { outline: 2px solid var(--ice); }
+.mimir-tracker__row--down .mimir-tracker__name { text-decoration: line-through; color: var(--fg-2); }
+.mimir-tracker__line { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-tracker__init {
+  width: 3.2em;
+  min-height: 36px;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  color: var(--fg);
+  font: inherit;
+}
+.mimir-tracker__name {
+  flex: 1 1 auto;
+  min-height: 36px;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: var(--fg-bright);
+  font: inherit;
+  cursor: pointer;
+}
+.mimir-tracker__hp { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--fg-2); }
+.mimir-tracker__linked { color: var(--fg-2); }
+.mimir-tracker__badges { display: flex; flex-wrap: wrap; gap: var(--space-xs); padding-left: 3.6em; }
+.mimir-tracker__condition {
+  border: 1px solid var(--gold);
+  background: var(--gold-bg);
+  color: var(--gold-fg);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-sm);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.mimir-tracker__details { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-xs) 0 var(--space-xs) 3.6em; }
+.mimir-tracker__bar { height: 8px; border-radius: var(--radius-pill); background: var(--inset); overflow: hidden; }
+.mimir-tracker__bar > span { display: block; height: 100%; }
+.mimir-tracker__bar--healthy > span { background: var(--ok); }
+.mimir-tracker__bar--bloodied > span { background: var(--gold); }
+.mimir-tracker__bar--down > span { background: var(--bad); }
+.mimir-tracker__add { display: flex; gap: var(--space-xs); align-items: flex-end; }
+.mimir-tracker__add > :first-child { flex: 1 1 auto; }
+.mimir-tracker__log { margin: 0; padding-left: 1.2em; font-size: var(--fs-sm); color: var(--fg-2); }
+@media (max-width: 900px) {
+  .mimir-map__body { flex-direction: column; }
+  .mimir-tracker { flex-basis: auto; max-height: 45%; }
+}
+
+/* ---- Turn order on the player display ------------------------------------ */
+.mimir-display__order {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  min-width: 180px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--panel);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  opacity: 0.92;
+}
+.mimir-display__order ol { margin: var(--space-xs) 0 0; padding-left: 1.4em; }
+.mimir-display__order li[aria-current="step"] { color: var(--fg-bright); font-weight: 600; }
+
+/* ---- Player page ----------------------------------------------------------- */
+.mimir-player { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+.mimir-player__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+.mimir-player__actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-player__display { position: relative; flex: 1 1 auto; min-height: 0; }
+.mimir-display--framed { position: absolute; }
+
+/* ---- Player link panel ------------------------------------------------------ */
+.mimir-link { display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-sm) 0; }
+.mimir-link__new { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
+.mimir-link__url {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  word-break: break-all;
+  background: var(--inset);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.mimir-link__qr svg { display: block; width: 180px; height: 180px; }
+
+/* ---- Character sheet -------------------------------------------------------- */
+.mimir-sheet__abilities {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.mimir-sheet__ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+.mimir-sheet__ability-mod { font-size: var(--fs-xl); font-weight: 600; color: var(--fg-bright); }
+.mimir-sheet__ability-score { font-family: var(--font-mono); color: var(--fg-2); }
+.mimir-sheet__stats { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.mimir-sheet__stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+}
+.mimir-sheet__stat-label { font-size: var(--fs-xs); color: var(--fg-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.mimir-sheet__stat-value { font-size: var(--fs-lg); color: var(--fg-bright); font-weight: 600; }
+.mimir-sheet__columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-lg); }
+.mimir-sheet__list { list-style: none; margin: 0 0 var(--space-md); padding: 0; }
+.mimir-sheet__list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-sheet__num { font-family: var(--font-mono); color: var(--fg-2); }
+.mimir-sheet__prof > :first-child { font-weight: 600; color: var(--fg-bright); }
+.mimir-sheet__expert > :first-child::after { content: " ★"; color: var(--gold); }
+.mimir-sheet__slots { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.mimir-sheet__slot { padding: 2px var(--space-sm); border-radius: var(--radius-pill); background: var(--ice-bg); color: var(--ice-fg); font-size: var(--fs-sm); }
+.mimir-sheet__row-actions { display: flex; align-items: center; gap: var(--space-sm); }
+.mimir-sheet__add { display: flex; gap: var(--space-sm); align-items: flex-end; margin: var(--space-sm) 0; }
+.mimir-sheet__add > :first-child { flex: 1 1 auto; }
+.mimir-sheet__profs { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-xs) var(--space-md); margin: 0 0 var(--space-md); }
+.mimir-sheet__profs dt { color: var(--fg-2); }
+.mimir-sheet__profs dd { margin: 0; }
+@media (max-width: 700px) {
+  .mimir-sheet__abilities { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ---- Inventory ------------------------------------------------------------------ */
+.mimir-inv__coins { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: flex-end; }
+.mimir-inv__coins .cl-field { width: 6em; }
+.mimir-inv__list, .mimir-inv__results { list-style: none; margin: 0 0 var(--space-md); padding: 0; }
+.mimir-inv__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-inv__name { flex: 1 1 200px; display: flex; flex-direction: column; }
+.mimir-inv__qty { display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); }
+.mimir-inv__results li { display: flex; justify-content: space-between; align-items: center; padding: var(--space-xs) 0; }
+
+/* ---- Level-up ------------------------------------------------------------------- */
+.mimir-levelup__steps { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); list-style: none; padding: 0; margin: 0 0 var(--space-md); color: var(--fg-2); font-size: var(--fs-sm); }
+.mimir-levelup__here { color: var(--fg-bright); font-weight: 600; border-bottom: 2px solid var(--ice); }
+.mimir-levelup__body { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-md); min-height: 160px; }
+.mimir-levelup__picks { border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-sm); max-height: 260px; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+.mimir-levelup__pick { display: flex; gap: var(--space-sm); align-items: center; min-height: 32px; }
+
+/* ---- Player page tabs --------------------------------------------------------- */
+.mimir-player__tabs { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0 var(--space-md); }
+.mimir-player__tabs .cl-tabs__panel { flex: 1 1 auto; min-height: 0; }
+.mimir-player__tabs .mimir-player__display { position: relative; height: calc(100vh - 120px); }
+.mimir-player__sheet { overflow: auto; height: calc(100vh - 130px); padding-bottom: var(--space-lg); }
+
+/* Player notes and the party (MIMIR-T-0718). */
+.mimir-notes { display: flex; flex-direction: column; gap: var(--space-md); }
+.mimir-notes__editor { display: flex; flex-direction: column; gap: var(--space-sm); max-width: 48rem; }
+.mimir-notes__editor textarea { min-height: 10rem; }
+.mimir-notes__list { list-style: none; margin: 0; padding: 0; }
+.mimir-notes__note { padding: var(--space-sm) 0 var(--space-md); border-bottom: 1px solid var(--border-fainter); }
+.mimir-notes__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-md); }
+.mimir-notes__head .mimir-sheet__row-actions { margin-left: auto; }
+.mimir-party { display: flex; flex-direction: column; gap: var(--space-md); align-items: stretch; }
+.mimir-party > button { align-self: flex-start; }
+.mimir-party__list { list-style: none; margin: 0; padding: 0; }
+.mimir-party__member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-party__member > div { flex: 1 1 200px; display: flex; flex-direction: column; }
+
+/* The rich editor (MIMIR-T-0719): TipTap's contenteditable on Aurora tokens. */
+.mimir-editor { border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.mimir-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  padding: var(--space-xs);
+  border-bottom: 1px solid var(--border-fainter);
+}
+.mimir-editor__group { display: flex; gap: 2px; }
+.mimir-editor__btn {
+  font: inherit;
+  font-size: 0.8125rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0 var(--space-xs);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.mimir-editor__btn:hover:not(:disabled) { background: var(--border-fainter); }
+.mimir-editor__btn.is-active { border-color: var(--border); background: var(--border-fainter); font-weight: 600; }
+.mimir-editor__btn:disabled { opacity: 0.4; cursor: default; }
+.mimir-editor__body .ProseMirror { min-height: 12rem; padding: var(--space-sm) var(--space-md); outline: none; line-height: 1.55; }
+/* Focus as on an Aurora input: the border. */
+.mimir-editor:focus-within { border-color: var(--ice); }
+.mimir-editor__body .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.mimir-editor__body .ProseMirror table { border-collapse: collapse; margin: var(--space-sm) 0; }
+.mimir-editor__body .ProseMirror th,
+.mimir-editor__body .ProseMirror td { border: 1px solid var(--border); padding: var(--space-xs) var(--space-sm); min-width: 4rem; vertical-align: top; }
+.mimir-editor__body .ProseMirror .selectedCell { background: var(--border-fainter); }
+.mimir-editor__body .ProseMirror blockquote { margin: 0; padding-left: var(--space-md); border-left: 3px solid var(--border); }
+.mimir-editor__body .mimir-editor__comment {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  opacity: 0.6;
+  white-space: pre-wrap;
+  margin: var(--space-xs) 0;
+}
+.mimir-editor__body .mimir-editor__comment.ProseMirror-selectednode { outline: 2px solid var(--border); }
+
+/* Authoring (MIMIR-T-0720). */
+.mimir-dash__titlebar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-lg); }
+.mimir-dash__maps { margin-top: var(--space-xl); }
+.mimir-split__side { display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-doclist__row { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-doclist__row .cl-navlink { flex: 1 1 auto; min-width: 0; }
+.mimir-doc__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+.mimir-doc__head .mimir-doc__title { margin: 0; }
+.mimir-doc__head .cl-field { flex: 1 1 260px; }
+.mimir-doc__save { font-size: 0.8125rem; color: var(--fg-3, var(--fg-2)); }
+.mimir-doc__save--bad { color: var(--bad-fg); }
+.mimir-order { display: inline-flex; gap: 2px; }
+.mimir-order__btn {
+  font: inherit;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.mimir-order__btn:hover:not(:disabled) { background: var(--border-fainter); }
+.mimir-order__btn:disabled { opacity: 0.3; cursor: default; }
+.mimir-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-xs); }
+.mimir-file { display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.875rem; }
+/* The module page (MIMIR-T-0732): a name that opens details, the details
+   as label and text, and the title renamed in place. */
+.mimir-link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--link, var(--ice));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mimir-details { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-xs) var(--space-md); margin: 0; }
+.mimir-details dt { font-weight: 600; }
+.mimir-details dd { margin: 0; white-space: pre-wrap; }
+.mimir-title-edit .cl-page-header__title { cursor: text; }
+.mimir-title-input {
+  font: inherit;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--fg);
+  padding: 0 var(--space-xs);
+}
+/* The header's campaign selector and Home's "Continue" (MIMIR-T-0734). */
+.mimir-switcher { min-width: 12rem; max-width: 18rem; }
+.mimir-continue { margin-bottom: var(--space-md); }
+@media (max-width: 720px) { .mimir-switcher { min-width: 8rem; } }
+/* Read by screen readers only. */
+.mimir-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+/* Characters (MIMIR-T-0733): cards on the dashboard, class features that
+   open to their text. */
+.mimir-char-card { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-md); }
+.mimir-char-card__name { text-decoration: none; color: inherit; }
+.mimir-features { display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md); }
+.mimir-feature { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-xs) var(--space-sm); }
+.mimir-feature > summary { cursor: pointer; display: flex; gap: var(--space-sm); align-items: baseline; }
+.mimir-feature__level { font-size: 0.75rem; opacity: 0.7; min-width: 4.5em; }
+/* Images and previews (MIMIR-T-0731). */
+.mimir-image-preview { max-width: 100%; max-height: 240px; object-fit: contain; align-self: flex-start; }
+.mimir-image-view { max-width: 100%; max-height: 70vh; object-fit: contain; }
+.mimir-doclist__image { width: 100%; text-align: left; border: 0; background: none; font: inherit; cursor: pointer; }
+.mimir-map-preview { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
+.mimir-map-preview__image { max-width: 100%; max-height: 360px; object-fit: contain; align-self: flex-start; border: 1px solid var(--border); }
+.mimir-archive-preview { display: flex; flex-direction: column; gap: var(--space-xs); }
+.mimir-archive-preview__refs { margin: 0; padding-left: var(--space-lg); font-size: 0.875rem; }
+/* A file input that takes a dropped file (MIMIR-T-0731). */
+.mimir-drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.mimir-drop--over { border-color: var(--ice); background: var(--hover, rgba(127, 127, 127, 0.1)); }
+.mimir-drop__label { font-weight: 600; }
+.mimir-drop__hint { color: var(--dim, inherit); opacity: 0.8; overflow-wrap: anywhere; }
+.mimir-drop__input { font-size: 0.875rem; }
+.mimir-maps { display: flex; flex-direction: column; gap: var(--space-sm); }
+
+/* The character wizard and the characters page (MIMIR-T-0721). */
+.mimir-wizard__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--fg-2);
+}
+.mimir-wizard__steps li.mimir-wizard__here { color: var(--fg-bright); font-weight: 600; }
+.mimir-wizard__body { min-height: 14rem; display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-wizard__scores { border-collapse: collapse; }
+.mimir-wizard__scores th, .mimir-wizard__scores td { padding: var(--space-xs) var(--space-sm); text-align: left; }
+.mimir-wizard__select {
+  font: inherit;
+  padding: 2px var(--space-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+}
+.mimir-wizard__stepper { display: inline-flex; align-items: center; gap: var(--space-xs); }
+.mimir-wizard__score { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+.mimir-wizard__skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: var(--space-xs) var(--space-md); }
+.mimir-wizard__skill { display: flex; align-items: center; gap: var(--space-xs); }
+.mimir-chars__group { margin-bottom: var(--space-xl); }
+
+/* The reference: catalog, books, details (MIMIR-T-0723). */
+.mimir-linkbtn {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ice);
+  cursor: pointer;
+  text-align: left;
+}
+.mimir-linkbtn:hover { text-decoration: underline; }
+.mimir-catalog__bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-sm) var(--space-md); margin-bottom: var(--space-md); }
+.mimir-catalog__bar .cl-field { flex: 0 1 12rem; }
+.mimir-catalog__bar .cl-field:first-child { flex: 1 1 16rem; }
+.mimir-reader__toc { list-style: none; margin: var(--space-sm) 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mimir-reader__headings { list-style: none; margin: var(--space-xs) 0 var(--space-sm) var(--space-md); padding: 0; font-size: 0.8125rem; }
+.mimir-reader__headings li { padding: 2px 0; }
+.mimir-reader__h2 { padding-left: var(--space-md) !important; }
+.mimir-reader__headings a { color: var(--fg-2); text-decoration: none; }
+.mimir-reader__headings a:hover { color: var(--fg-bright); text-decoration: underline; }
+.mimir-rendered a.cross-ref-link { color: var(--ice); text-decoration: none; border-bottom: 1px dotted currentColor; }
+.mimir-rendered a.cross-ref-link:hover { border-bottom-style: solid; }
+.mimir-rendered .dice-roll, .mimir-rendered .damage-roll, .mimir-rendered .d20-roll, .mimir-rendered .hit-bonus {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.mimir-rendered .inset, .mimir-rendered .inset-readaloud {
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--border);
+  background: var(--border-fainter);
+}
+.mimir-rendered .inset-readaloud { border-left-color: var(--ice); font-style: italic; }
+.mimir-rendered table { border-collapse: collapse; margin: var(--space-sm) 0; }
+.mimir-rendered th, .mimir-rendered td { border-bottom: 1px solid var(--border-fainter); padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
+.mimir-rendered caption { text-align: left; font-weight: 600; padding: var(--space-xs) 0; }
+.mimir-rendered .table-wrapper { overflow-x: auto; }
+.mimir-rendered .image-container { margin: var(--space-md) 0; }
+.mimir-rendered .image-wrapper img, .mimir-rendered .detail-image img { max-width: 100%; height: auto; display: block; }
+.mimir-rendered .detail-images { display: flex; justify-content: center; margin-bottom: var(--space-md); }
+.mimir-rendered .detail-image img { max-height: 280px; }
+.mimir-rendered .image-caption { font-size: 0.8125rem; color: var(--fg-2); }
+.mimir-rendered .image-placeholder { font-size: 0.8125rem; color: var(--fg-2); }
+.mimir-rendered .detail-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); margin-bottom: var(--space-sm); }
+.mimir-rendered .detail-sub { margin: 0; font-style: italic; }
+.mimir-rendered .detail-badge { font-size: 0.75rem; padding: 1px var(--space-xs); border: 1px solid var(--border); border-radius: var(--radius-xs); }
+.mimir-rendered .detail-props { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--space-md); margin: var(--space-sm) 0; }
+.mimir-rendered .detail-props dt { font-weight: 600; }
+.mimir-rendered .detail-props dd { margin: 0; }
+.mimir-rendered .detail-section h4 { margin: var(--space-md) 0 var(--space-xs); border-bottom: 1px solid var(--border); }
+.mimir-rendered .detail-abilities { width: 100%; text-align: center; }
+.mimir-rendered .detail-abilities th, .mimir-rendered .detail-abilities td { text-align: center; }
+.mimir-rendered .detail-source { margin-top: var(--space-lg); font-size: 0.8125rem; color: var(--fg-2); text-align: right; }
+.mimir-rendered .statblock-ref { font-style: italic; }
+.mimir-catalog__kinds { display: none; margin-bottom: var(--space-sm); }
+@media (max-width: 860px) {
+  .mimir-catalog__nav { display: none; }
+  .mimir-catalog__kinds { display: flex; }
+}
+
+/* Homebrew (MIMIR-T-0722). */
+.mimir-doclist .cl-navlink.mimir-homebrew__item { flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; height: auto; padding-top: var(--space-xs); padding-bottom: var(--space-xs); }
+.mimir-homebrew__line { font-size: 0.75rem; color: var(--fg-2); }
+.mimir-homebrew__editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-lg); align-items: start; }
+@media (max-width: 860px) { .mimir-homebrew__editor { grid-template-columns: minmax(0, 1fr); } }
+.mimir-homebrew__inputs, .mimir-homebrew__form { display: flex; flex-direction: column; gap: var(--space-sm); }
+.mimir-homebrew__group { display: flex; flex-direction: column; gap: var(--space-sm); border: 1px solid var(--border-fainter); border-radius: var(--radius-sm); padding: var(--space-sm) var(--space-md); }
+.mimir-homebrew__group legend { font-weight: 600; padding: 0 var(--space-xs); }
+.mimir-homebrew__json {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  min-height: 24rem;
+  width: 100%;
+  padding: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  resize: vertical;
+}
+.mimir-homebrew__preview { border-left: 1px solid var(--border-fainter); padding-left: var(--space-lg); max-height: 70vh; overflow: auto; }
+.mimir-homebrew__picked { background: var(--border-fainter); }
+
+/* Settings (MIMIR-T-0724). */
+.mimir-settings__section { display: flex; flex-direction: column; gap: var(--space-sm); margin: var(--space-lg) 0; max-width: 56rem; }
+.mimir-progress { height: 6px; border-radius: 3px; background: var(--border-fainter); overflow: hidden; }
+.mimir-progress__bar { height: 100%; background: var(--ice); transition: width 0.2s; }
+.mimir-sources { max-height: 50vh; overflow: auto; }
+
+/* Reader: an adventure's level range (MIMIR-T-0736). */
+.mimir-reader__levels {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+.mimir-book .image-kind {
+  font-style: normal;
+  opacity: 0.75;
+}
+.mimir-book a.area-ref {
+  text-decoration: underline dotted;
+}
+
+/* Adventure forms in documents (MIMIR-T-0737): the editor's boxes and
+   stat block lines, as the reader shows them. */
+.mimir-callout {
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--border);
+  background: var(--border-fainter);
+}
+.mimir-callout--read-aloud { border-left-color: var(--ice); font-style: italic; }
+.mimir-callout--read-aloud::before { content: "Read aloud"; }
+.mimir-callout--sidebar::before { content: "Sidebar"; }
+.mimir-callout::before {
+  display: block;
+  font-style: normal;
+  font-size: var(--fs-xs, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-2);
+}
+.mimir-callout__title { font-weight: 600; font-style: normal; }
+.mimir-editor__statblock {
+  margin: var(--space-sm) 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-2);
+}
+.mimir-statblock-line { margin: var(--space-md) 0; }
+.mimir-statblock {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+/* Make a campaign from an adventure (MIMIR-T-0739). */
+.mimir-check { display: inline-flex; align-items: center; gap: var(--space-xs); font-size: var(--fs-sm); }
+.mimir-hidden { display: none; }
+
+/* Adventures (MIMIR-T-0745). */
+.mimir-adventures__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-sm);
+}
+.mimir-adventures__group {
+  margin: var(--space-lg) 0 0;
+  font-size: var(--fs-md);
+}
+.mimir-adventures__search { flex: 1 1 16rem; max-width: 24rem; }
+.mimir-adventure .cl-card { height: 100%; }
+.mimir-adventure__marks { display: flex; gap: var(--space-xs); }
+.mimir-adventure__cover {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: var(--radius-sm, 4px);
+  margin-bottom: var(--space-sm);
+}
+.mimir-adventure__name {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+.mimir-adventure__name:hover { text-decoration: underline; }
