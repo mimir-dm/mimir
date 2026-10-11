@@ -37,7 +37,7 @@ The message shows what came in: modules, documents, characters and maps. The cam
 
 - **Backup**: export often.
 - **Move**: take a campaign to another server.
-- **Share**: send a campaign to another DM.
+- **Share**: send a campaign, as it was played, to another DM. To share an adventure ready to play, without your players' characters and the table's state, export a Mimir adventure pack: see [Export a Campaign as an Adventure](./export-adventure.md#export-a-mimir-adventure-pack).
 
 ## See Also
 

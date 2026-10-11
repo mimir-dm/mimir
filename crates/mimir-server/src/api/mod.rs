@@ -229,6 +229,25 @@ pub fn routes() -> Vec<ApiRoute> {
             G,
             get(ad::export_adventure),
         ),
+        // The Mimir adventure pack (MIMIR-T-0741).
+        route(
+            "/campaigns/{id}/adventure-pack",
+            Dm,
+            G,
+            get(ad::export_pack),
+        ),
+        route(
+            "/adventure-packs/preview",
+            Dm,
+            &["POST"],
+            post(ad::preview_pack).layer(DefaultBodyLimit::max(ad::ARCHIVE_LIMIT)),
+        ),
+        route(
+            "/adventure-packs/import",
+            Dm,
+            &["POST"],
+            post(ad::import_pack).layer(DefaultBodyLimit::max(ad::ARCHIVE_LIMIT)),
+        ),
         route(
             "/archives/preview",
             Dm,

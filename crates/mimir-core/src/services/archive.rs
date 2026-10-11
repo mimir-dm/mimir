@@ -250,7 +250,35 @@ impl<'a> ArchiveService<'a> {
         let data_content = fs::read_to_string(&data_path).map_err(ServiceError::Io)?;
         let data: ArchiveData = serde_json::from_str(&data_content)
             .map_err(|e| ServiceError::validation(format!("Invalid data.json: {}", e)))?;
+        self.import_data(data, temp_dir.path(), app_data_dir, campaign_name_override)
+    }
 
+    /// A campaign's data and its asset files (`<asset id>/<filename>` →
+    /// bytes), as an archive holds them: the Mimir adventure pack
+    /// (MIMIR-T-0741) is made from them.
+    pub fn campaign_data(
+        &mut self,
+        campaign_id: &str,
+        app_data_dir: &Path,
+    ) -> ServiceResult<(ArchiveData, HashMap<String, Vec<u8>>)> {
+        let campaign = dal::get_campaign(self.conn, campaign_id).map_err(|e| match e {
+            diesel::result::Error::NotFound => ServiceError::not_found("Campaign", campaign_id),
+            other => ServiceError::Database(other),
+        })?;
+        let data = self.collect_campaign_data(campaign_id, campaign)?;
+        let files = self.collect_asset_files(&data, app_data_dir)?;
+        Ok((data, files))
+    }
+
+    /// Import data as a new campaign; `unpacked` holds the asset files at
+    /// `assets/<asset id>/<filename>` (an unpacked archive or pack).
+    pub fn import_data(
+        &mut self,
+        data: ArchiveData,
+        unpacked: &Path,
+        app_data_dir: &Path,
+        campaign_name_override: Option<&str>,
+    ) -> ServiceResult<ImportResult> {
         // Determine campaign name
         let campaign_name = campaign_name_override
             .map(|s| s.to_string())
@@ -285,7 +313,7 @@ impl<'a> ArchiveService<'a> {
             &mut id_maps,
             &new_campaign_id,
             app_data_dir,
-            temp_dir.path(),
+            unpacked,
         )?;
 
         // 3. Import modules

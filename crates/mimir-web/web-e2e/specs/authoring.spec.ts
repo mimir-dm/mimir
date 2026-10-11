@@ -312,3 +312,41 @@ test('a campaign exports as a 5etools adventure', async ({ page }) => {
   expect(file.monster.every((m: { source: string }) => m.source === 'PhandelE2E')).toBe(true)
   await expect(dialog).toBeHidden()
 })
+
+// A campaign as a Mimir adventure pack, and back in as a new campaign
+// (MIMIR-T-0741).
+test('a campaign travels as a Mimir adventure pack', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/')
+  await page.locator('main').getByText(CAMPAIGN).first().click()
+  await page.getByRole('button', { name: 'More campaign actions' }).click()
+  await page.getByRole('menuitem', { name: 'Export as a Mimir adventure pack…' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Export as a Mimir adventure pack' })
+  await dialog.getByLabel('Source code').fill('PhanPackE2E')
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    dialog.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toBe('PhanPackE2E.mimir-adventure.zip')
+  const pack = readFileSync(await download.path())
+  expect(pack.subarray(0, 2).toString()).toBe('PK')
+
+  await page.goto('/settings')
+  const section = page.getByRole('region', { name: 'Import a campaign' })
+  await section.locator('input[type=file]').setInputFiles({ name: 'p.mimir-adventure.zip', mimeType: 'application/zip', buffer: pack })
+  const preview = section.getByLabel('In the archive')
+  await expect(preview).toContainText(`Adventure pack 1.0: ${CAMPAIGN} (PhanPackE2E)`)
+  await expect(preview).toContainText(/\d+ modules, \d+ documents, \d+ characters, \d+ maps/)
+  await section.getByLabel('Name of the new campaign').fill('Phandelver (pack)')
+  await section.getByRole('button', { name: 'Import' }).click()
+  await expect(section.getByRole('alert')).toContainText('Imported Phandelver (pack)')
+  // No player characters came.
+  const list = await (await page.request.get('/api/v1/campaigns', { headers: { Authorization: `Bearer ${TOKEN}` } })).json()
+  const id = list.find((c: { name: string }) => c.name === 'Phandelver (pack)').id
+  const pcs = await (await page.request.get(`/api/v1/campaigns/${id}/pcs`, { headers: { Authorization: `Bearer ${TOKEN}` } })).json()
+  expect(pcs).toEqual([])
+  await page.request.delete(`/api/v1/campaigns/${id}`, { headers: { Authorization: `Bearer ${TOKEN}` } })
+  // The pack brought its catalog copies under its source: they go too, so
+  // the other tests see the fixture catalog only.
+  await page.request.delete('/api/v1/catalog/sources/PhanPackE2E', { headers: { Authorization: `Bearer ${TOKEN}` } })
+})

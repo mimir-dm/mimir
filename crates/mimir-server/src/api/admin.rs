@@ -172,6 +172,82 @@ pub async fn export_adventure(
         .into_response())
 }
 
+/// `GET /campaigns/{id}/adventure-pack?source=…&name=…` (the query of the
+/// adventure export): the campaign as a Mimir adventure pack (MIMIR-T-0741).
+pub async fn export_pack(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<AdventureExportQuery>,
+) -> Result<Response, ApiError> {
+    if q.name.trim().is_empty() {
+        return Err(ServiceError::validation("the adventure needs a name").into());
+    }
+    let meta = q.meta();
+    let file_name = format!("{}.mimir-adventure.zip", meta.source);
+    let data_dir = state.config.data_dir.clone();
+    let body = state
+        .with_db(move |conn| crate::adventure::export_pack(conn, &data_dir, &id, &meta))
+        .await?;
+    Ok((
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/zip".to_string(),
+            ),
+            (
+                axum::http::header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{file_name}\""),
+            ),
+        ],
+        body,
+    )
+        .into_response())
+}
+
+/// `POST /adventure-packs/preview` (multipart `file`): what a pack holds.
+pub async fn preview_pack(
+    State(state): State<AppState>,
+    form: Multipart,
+) -> Result<Json<wire::AdventurePackPreview>, ApiError> {
+    let mut up = save_upload(form, &tmp_dir(&state)).await?;
+    let (_, path) = the_file(&mut up)?;
+    let bytes = tokio::fs::read(&path).await.map_err(ServiceError::Io)?;
+    Ok(Json(crate::adventure::preview_pack(&bytes)?))
+}
+
+/// `POST /adventure-packs/import` (multipart `file`, optional `name`): the
+/// pack as a new campaign, in one transaction.
+pub async fn import_pack(
+    State(state): State<AppState>,
+    form: Multipart,
+) -> Result<(StatusCode, Json<wire::ArchiveImported>), ApiError> {
+    let mut up = save_upload(form, &tmp_dir(&state)).await?;
+    let (_, path) = the_file(&mut up)?;
+    let name = up
+        .fields
+        .get("name")
+        .map(|n| n.trim().to_string())
+        .filter(|n| !n.is_empty());
+    let bytes = tokio::fs::read(&path).await.map_err(ServiceError::Io)?;
+    let data_dir = state.config.data_dir.clone();
+    state
+        .with_db(move |conn| {
+            use diesel::Connection;
+            let r = conn.transaction::<_, ApiError, _>(|c| {
+                crate::adventure::import_pack(c, &data_dir, &bytes, name.as_deref())
+            })?;
+            Ok((
+                StatusCode::CREATED,
+                Json(wire::ArchiveImported {
+                    campaign_id: r.campaign_id,
+                    campaign_name: r.campaign_name,
+                    counts: counts(&r.counts),
+                }),
+            ))
+        })
+        .await
+}
+
 pub async fn export_archive(
     State(state): State<AppState>,
     Path(id): Path<String>,

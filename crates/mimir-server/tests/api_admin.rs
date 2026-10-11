@@ -673,3 +673,143 @@ async fn a_campaign_exports_as_a_homebrew_adventure() {
     .await;
     assert_eq!(wisp["source"], "LowFen");
 }
+
+/// A server with no catalog and no campaign.
+fn bare() -> (axum::Router, tempfile::TempDir) {
+    let dir = tempfile::tempdir().unwrap();
+    let config = Config {
+        bind: "127.0.0.1:0".parse().unwrap(),
+        data_dir: dir.path().to_path_buf(),
+        api_token: Some(DM.into()),
+        web_dist: None,
+        seed_fixture: false,
+    };
+    mimir_server::prepare(&config).unwrap();
+    (mimir_server::router(AppState::new(config)), dir)
+}
+
+#[tokio::test]
+async fn a_campaign_travels_as_a_mimir_adventure_pack() {
+    let (r, _dir) = fixture().await;
+    let campaigns = json(&r, Method::GET, "/campaigns", None).await;
+    let cid = campaigns[0]["id"].as_str().unwrap().to_string();
+    let npcs_before = json(&r, Method::GET, &format!("/campaigns/{cid}/npcs"), None).await;
+    let pcs_before = json(&r, Method::GET, &format!("/campaigns/{cid}/pcs"), None).await;
+    assert!(!pcs_before.as_array().unwrap().is_empty());
+
+    let (status, pack) = call(
+        &r,
+        Method::GET,
+        &format!("/campaigns/{cid}/adventure-pack?source=PhanPack&name=Phandelver%20Pack&level_start=1&level_end=5"),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(&pack[..2], b"PK", "a zip");
+
+    // What it holds: no player characters.
+    let (status, preview) = upload(
+        &r,
+        "/adventure-packs/preview",
+        &[],
+        ("p.mimir-adventure.zip", &pack),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{preview}");
+    assert_eq!(preview["adventure_source"], "PhanPack");
+    assert_eq!(preview["version"], "1.0");
+    assert_eq!(
+        preview["counts"]["characters"].as_u64().unwrap() as usize,
+        npcs_before.as_array().unwrap().len()
+    );
+    let maps = preview["counts"]["maps"].as_u64().unwrap();
+    let monsters = preview["counts"]["module_monsters"].as_u64().unwrap();
+    assert!(maps > 0 && monsters > 0, "{preview}");
+
+    // Into a Mimir with no catalog: the pack's copies stand in.
+    let (r2, _dir2) = bare();
+    let (status, done) = upload(
+        &r2,
+        "/adventure-packs/import",
+        &[("name", "Phandelver at Sam's")],
+        ("p.zip", &pack),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{done}");
+    assert_eq!(done["campaign_name"], "Phandelver at Sam's");
+    let new_id = done["campaign_id"].as_str().unwrap().to_string();
+    assert_eq!(
+        json(&r2, Method::GET, &format!("/campaigns/{new_id}/pcs"), None).await,
+        serde_json::json!([])
+    );
+    assert_eq!(
+        json(&r2, Method::GET, &format!("/campaigns/{new_id}/npcs"), None)
+            .await
+            .as_array()
+            .unwrap()
+            .len(),
+        npcs_before.as_array().unwrap().len()
+    );
+    let new_maps = json(&r2, Method::GET, &format!("/campaigns/{new_id}/maps"), None).await;
+    let old_maps = json(&r, Method::GET, &format!("/campaigns/{cid}/maps"), None).await;
+    assert_eq!(
+        new_maps.as_array().unwrap().len(),
+        old_maps.as_array().unwrap().len()
+    );
+    // A map's image and walls came along.
+    let map = new_maps[0]["id"].as_str().unwrap();
+    let (status, _) = call(&r2, Method::GET, &format!("/maps/{map}/image"), None).await;
+    assert_eq!(status, StatusCode::OK);
+    // The adventure is in the reader, and its creatures in the catalog.
+    let book = json(&r2, Method::GET, "/books/PhanPack", None).await;
+    assert!(!book["data"].as_array().unwrap().is_empty());
+    let modules = json(
+        &r2,
+        Method::GET,
+        &format!("/campaigns/{new_id}/modules"),
+        None,
+    )
+    .await;
+    let mid = modules[0]["id"].as_str().unwrap();
+    let mms = json(&r2, Method::GET, &format!("/modules/{mid}/monsters"), None).await;
+    let goblin = mms
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|m| m["name"] == "Goblin")
+        .expect("the goblins");
+    assert_eq!(goblin["monster_source"], "PhanPack", "{goblin}");
+    let (status, _) = call(
+        &r2,
+        Method::GET,
+        "/catalog/entry/monsters/PhanPack/Goblin",
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // Not a pack; a pack of another major version.
+    let (status, _) = upload(&r2, "/adventure-packs/preview", &[], ("x.zip", b"nothing")).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    let mut zin = zip::ZipArchive::new(std::io::Cursor::new(pack.clone())).unwrap();
+    let mut zout = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    for i in 0..zin.len() {
+        use std::io::{Read, Write};
+        let mut f = zin.by_index(i).unwrap();
+        let name = f.name().unwrap().to_string();
+        let mut bytes = Vec::new();
+        f.read_to_end(&mut bytes).unwrap();
+        if name == "mimir.json" {
+            let mut v: Value = serde_json::from_slice(&bytes).unwrap();
+            v["version"] = "2.0".into();
+            bytes = serde_json::to_vec(&v).unwrap();
+        }
+        zout.start_file(name, zip::write::SimpleFileOptions::default())
+            .unwrap();
+        zout.write_all(&bytes).unwrap();
+    }
+    let v2 = zout.finish().unwrap().into_inner();
+    let (status, err) = upload(&r2, "/adventure-packs/import", &[], ("v2.zip", &v2)).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert!(err.to_string().contains("version 2.0"), "{err}");
+}

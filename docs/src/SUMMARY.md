@@ -85,6 +85,7 @@
 - [Environment Variables](./reference/environment-variables.md)
 - [Campaign Archive Format](./reference/campaign-archive-format.md)
 - [Adventure File Format](./reference/adventure-file-format.md)
+- [Adventure Pack Format](./reference/adventure-pack-format.md)
 - [PDF Export](./reference/pdf-export/README.md)
 - [MCP Server](./reference/mcp-server.md)
 - [Mapgen](./reference/mapgen.md)

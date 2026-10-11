@@ -382,4 +382,20 @@ async fn an_adventure_becomes_a_campaign_over_mcp() {
         file["adventureData"][0]["data"].as_array().unwrap().len(),
         3
     );
+    // A pack out to a folder, and in again as a new campaign (MIMIR-T-0741).
+    let out = tempfile::tempdir().unwrap();
+    let written = s
+        .call("export_adventure_pack", json!({"output_path": out.path().to_string_lossy(), "source": "McpFen", "name": "MCP Fen"}))
+        .await;
+    let path = written["path"].as_str().unwrap().to_string();
+    assert!(path.ends_with("McpFen.mimir-adventure.zip"));
+    let imported = s
+        .call(
+            "import_adventure_pack",
+            json!({"path": path, "name": "MCP Fen again"}),
+        )
+        .await;
+    assert_eq!(imported["campaign_name"], "MCP Fen again");
+    let active = s.call("get_active_campaign", json!({})).await;
+    assert_eq!(active["campaign"]["id"], imported["campaign_id"]);
 }

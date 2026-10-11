@@ -203,6 +203,9 @@ pub fn ImportArchive(on_imported: Callback<ArchiveImported>) -> impl IntoView {
     let all_refs = RwSignal::new(false);
     let result = RwSignal::new(None::<ArchiveImported>);
     let error = RwSignal::new(String::new());
+    // A Mimir adventure pack (.zip, MIMIR-T-0741), not an archive.
+    let is_pack = Signal::derive(move || file_name.get().to_lowercase().ends_with(".zip"));
+    let pack_line = RwSignal::new(None::<String>);
     let form_of = move |with_name: bool| {
         let f = file.get_value()?;
         let form = web_sys::FormData::new().ok()?;
@@ -218,17 +221,40 @@ pub fn ImportArchive(on_imported: Callback<ArchiveImported>) -> impl IntoView {
         file_name.set(f.name());
         file.set_value(Some(f));
         preview.set(None);
+        pack_line.set(None);
         result.set(None);
         error.set(String::new());
         all_refs.set(false);
         let Some(form) = form_of(false) else { return };
         progress.set(Some(0.0));
+        let pack = is_pack.get_untracked();
         spawn_local(async move {
-            let r =
+            let r = if pack {
+                api::upload_with_progress::<mimir_wire::AdventurePackPreview>(
+                    "/adventure-packs/preview",
+                    &form,
+                    move |p| progress.set(Some(p)),
+                )
+                .await
+                .map(|p| {
+                    pack_line.set(Some(format!(
+                        "Adventure pack {}: {} ({})",
+                        p.version, p.adventure_name, p.adventure_source
+                    )));
+                    ArchivePreview {
+                        campaign_name: p.campaign_name,
+                        counts: p.counts,
+                        catalog_references: Vec::new(),
+                        mimir_version: env!("CARGO_PKG_VERSION").into(),
+                        created_at: p.created_at,
+                    }
+                })
+            } else {
                 api::upload_with_progress::<ArchivePreview>("/archives/preview", &form, move |p| {
                     progress.set(Some(p))
                 })
-                .await;
+                .await
+            };
             progress.set(None);
             match r {
                 Ok(p) => {
@@ -243,12 +269,16 @@ pub fn ImportArchive(on_imported: Callback<ArchiveImported>) -> impl IntoView {
         let Some(form) = form_of(true) else { return };
         progress.set(Some(0.0));
         error.set(String::new());
+        let path = if is_pack.get_untracked() {
+            "/adventure-packs/import"
+        } else {
+            "/archives/import"
+        };
         spawn_local(async move {
-            let r =
-                api::upload_with_progress::<ArchiveImported>("/archives/import", &form, move |p| {
-                    progress.set(Some(p))
-                })
-                .await;
+            let r = api::upload_with_progress::<ArchiveImported>(path, &form, move |p| {
+                progress.set(Some(p))
+            })
+            .await;
             progress.set(None);
             match r {
                 Ok(done) => {
@@ -262,8 +292,8 @@ pub fn ImportArchive(on_imported: Callback<ArchiveImported>) -> impl IntoView {
     };
     view! {
         <Stack gap="sm">
-            <Text size="sm" dimmed=true>"A campaign archive (.mimir-campaign.tar.gz) made by Export."</Text>
-            <DropZone label="Archive" accept=".gz,.tar.gz,application/gzip" on_file=chose chosen=file_name />
+            <Text size="sm" dimmed=true>"A campaign archive (.mimir-campaign.tar.gz) made by Export, or a Mimir adventure pack (.mimir-adventure.zip)."</Text>
+            <DropZone label="Archive" accept=".gz,.tar.gz,application/gzip,.zip,application/zip" on_file=chose chosen=file_name />
             <Progress value=progress />
             {move || preview.get().map(|p| {
                 let c = &p.counts;
@@ -276,6 +306,7 @@ pub fn ImportArchive(on_imported: Callback<ArchiveImported>) -> impl IntoView {
                 let n = refs.len();
                 view! {
                     <div class="mimir-archive-preview" aria-label="In the archive">
+                        {move || pack_line.get().map(|l| view! { <Text size="sm">{l}</Text> })}
                         <Text bold=true>{p.campaign_name.clone()}</Text>
                         <Text size="sm">{counts}</Text>
                         <Text size="xs" dimmed=true>{format!("Made by Mimir {} on {}", p.mimir_version, p.created_at.get(..10).unwrap_or(&p.created_at))}</Text>

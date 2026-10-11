@@ -4,6 +4,9 @@ Technical reference for Mimir's campaign export/import archive format.
 
 ## Overview
 
+To give an adventure, ready to play, to another Mimir user, use an [adventure pack](./adventure-pack-format.md) instead: it leaves out the player characters and the table's state.
+
+
 Campaign archives are gzip-compressed tar files with the extension `.mimir-campaign.tar.gz`. An archive contains a complete snapshot of one campaign — metadata, modules, documents, characters, maps, tokens, homebrew content, and binary assets. Archives are self-contained and portable between machines and Mimir installations.
 
 | Property | Value |

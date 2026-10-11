@@ -2,7 +2,7 @@
 
 Mimir can write a campaign as a 5etools homebrew adventure file. 5etools users load the file to read the adventure. Mimir reads it too: see [Import a Homebrew File](./manage-sources.md#import-a-homebrew-file).
 
-To give another Mimir user the maps with their walls and the placements on them, use a campaign archive instead. See [Export a Campaign](./export-campaign.md).
+To give another Mimir user the adventure ready to play, with the maps, their walls and the placements on them, export a Mimir adventure pack. See [Export a Mimir Adventure Pack](#export-a-mimir-adventure-pack).
 
 ## Export the File
 
@@ -30,9 +30,20 @@ The browser downloads `<source code>.json`.
 
 Skills, senses and decks have no catalog entry in Mimir: their tags keep their official source.
 
+## Export a Mimir Adventure Pack
+
+1. Open the campaign.
+2. Click **More**, then **Export as a Mimir adventure pack…**.
+3. Fill in the dialog as for the adventure file.
+4. Click **Download**.
+
+The browser downloads `<source code>.mimir-adventure.zip`. It holds the adventure file, the maps with their walls, lights, traps and points of interest, the token placements, the module monsters and NPCs, the NPC characters and the images. It leaves out the player characters, the fog, the doors' state and the state of the combat. See [Adventure Pack Format](../../reference/adventure-pack-format.md).
+
+To import a pack, open **Settings**, then **Import a campaign**, and choose the `.mimir-adventure.zip` file. The preview names the pack's adventure. The import makes a new campaign.
+
 ## With Claude
 
-The MCP tool `export_adventure_file` exports the active campaign. See [MCP Server Reference](../../reference/mcp-server.md).
+The MCP tool `export_adventure_file` exports the active campaign as an adventure file. `export_adventure_pack` writes a pack in a folder, and `import_adventure_pack` imports one. See [MCP Server Reference](../../reference/mcp-server.md).
 
 ## See Also
 

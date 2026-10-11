@@ -117,6 +117,7 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
     let sources = RwSignal::new(false);
     let printing = RwSignal::new(false);
     let exporting = RwSignal::new(false);
+    let packing = RwSignal::new(false);
     let error = RwSignal::new(String::new());
     let archived = campaign.archived_at.is_some();
     let id = StoredValue::new(campaign.id.clone());
@@ -166,6 +167,7 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
                     });
                 })>"Export to a file"</MenuItem>
                 <MenuItem on_click=Callback::new(move |_| exporting.set(true))>"Export as a 5etools adventure…"</MenuItem>
+                <MenuItem on_click=Callback::new(move |_| packing.set(true))>"Export as a Mimir adventure pack…"</MenuItem>
                 {if archived {
                     view! {
                         <MenuItem on_click=Callback::new(move |_| set_archived(false))>"Restore"</MenuItem>
@@ -192,6 +194,12 @@ pub fn CampaignActions(campaign: CampaignSummary, on_changed: Callback<()>) -> i
             open=exporting
             campaign_id=campaign.id.clone()
             campaign_name=campaign.name.clone()
+        />
+        <super::adventure_export::AdventureExportDialog
+            open=packing
+            campaign_id=campaign.id.clone()
+            campaign_name=campaign.name.clone()
+            pack=true
         />
         <PdfDialog
             open=printing

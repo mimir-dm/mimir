@@ -1,5 +1,6 @@
-//! A campaign as a 5etools homebrew adventure (MIMIR-T-0740): the DM names
-//! the adventure's source, then the browser downloads the file.
+//! A campaign as a 5etools homebrew adventure (MIMIR-T-0740), or as a
+//! Mimir adventure pack (MIMIR-T-0741): the DM names the adventure's
+//! source, then the browser downloads the file.
 
 use aurora_leptos::components::*;
 use aurora_leptos::frame::Modal;
@@ -47,6 +48,9 @@ pub fn AdventureExportDialog(
     open: RwSignal<bool>,
     #[prop(into)] campaign_id: String,
     #[prop(into)] campaign_name: String,
+    /// A Mimir adventure pack (.zip) instead of the homebrew file.
+    #[prop(optional)]
+    pack: bool,
 ) -> impl IntoView {
     let id = StoredValue::new(campaign_id);
     let source = RwSignal::new(String::new());
@@ -70,8 +74,13 @@ pub fn AdventureExportDialog(
             &to.get_untracked(),
             &url.get_untracked(),
         );
-        let file = format!("{}.json", source.get_untracked().trim());
-        let path = format!("/campaigns/{}/adventure-export?{q}", id.get_value());
+        let (route, ext) = if pack {
+            ("adventure-pack", "mimir-adventure.zip")
+        } else {
+            ("adventure-export", "json")
+        };
+        let file = format!("{}.{ext}", source.get_untracked().trim());
+        let path = format!("/campaigns/{}/{route}?{q}", id.get_value());
         busy.set(true);
         error.set(String::new());
         spawn_local(async move {
@@ -83,9 +92,13 @@ pub fn AdventureExportDialog(
         });
     };
     view! {
-        <Modal open=open title="Export as a 5etools adventure" locked=busy>
+        <Modal open=open title=if pack { "Export as a Mimir adventure pack" } else { "Export as a 5etools adventure" } locked=busy>
             <Stack gap="sm">
-                <Text size="sm" dimmed=true>"A homebrew file that 5etools and Mimir read: the campaign's documents, its modules as chapters, its homebrew, and a copy of every monster, item and spell the text names, under the adventure's own source."</Text>
+                {if pack {
+                    view! { <Text size="sm" dimmed=true>"The adventure ready to play, for another Mimir: the 5etools adventure file, and the maps with their walls, lights, traps and placements, the module monsters and NPCs, and the images. No player characters, notes, fog or combat."</Text> }.into_any()
+                } else {
+                    view! { <Text size="sm" dimmed=true>"A homebrew file that 5etools and Mimir read: the campaign's documents, its modules as chapters, its homebrew, and a copy of every monster, item and spell the text names, under the adventure's own source."</Text> }.into_any()
+                }}
                 <TextInput label="Source code" value=source />
                 <Text size="xs" dimmed=true>"6 or more letters, digits or - & + !, not an official source: for example LowFen."</Text>
                 <TextInput label="Adventure name" value=name />

@@ -31,6 +31,19 @@ pub struct ArchivePreview {
     pub created_at: String,
 }
 
+/// `POST /adventure-packs/preview`: what a Mimir adventure pack holds
+/// (MIMIR-T-0741).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AdventurePackPreview {
+    pub campaign_name: String,
+    pub adventure_name: String,
+    /// The source of its catalog copies and its adventure text.
+    pub adventure_source: String,
+    pub version: String,
+    pub counts: ArchiveCounts,
+    pub created_at: String,
+}
+
 /// `POST /archives/import`: the new campaign.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ArchiveImported {

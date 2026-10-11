@@ -75,6 +75,81 @@ pub async fn export_adventure_file(
     crate::adventure::export_adventure(&mut conn, &campaign_id, &q.meta()).map_err(mcp_err)
 }
 
+tool_args! {
+    pub struct ExportPackArgs {
+        /// The folder to write the pack in
+        pub output_path: String,
+        /// The adventure's source code: 6 or more letters, digits or - & + !, not an official source
+        pub source: String,
+        /// The adventure's name
+        pub name: String,
+        /// Its authors, comma-separated
+        pub authors: Option<String>,
+        /// The lowest character level (default 1)
+        pub level_start: Option<i64>,
+        /// The highest character level (default: the lowest)
+        pub level_end: Option<i64>,
+    }
+}
+
+tool_args! {
+    pub struct ImportPackArgs {
+        /// The path of a .mimir-adventure.zip
+        pub path: String,
+        /// The new campaign's name (default: the pack's)
+        pub name: Option<String>,
+    }
+}
+
+/// `export_adventure_pack`: the active campaign as a Mimir adventure pack,
+/// written to `output_path`.
+pub async fn export_adventure_pack(
+    ctx: &Arc<McpContext>,
+    args: ExportPackArgs,
+) -> Result<Value, McpError> {
+    let campaign_id = ctx
+        .get_active_campaign_id()
+        .ok_or(McpError::NoActiveCampaign)?;
+    let q = crate::api::admin::AdventureExportQuery {
+        source: args.source,
+        name: args.name,
+        authors: args.authors.unwrap_or_default(),
+        version: None,
+        url: None,
+        storyline: None,
+        level_start: args.level_start,
+        level_end: args.level_end,
+    };
+    let meta = q.meta();
+    let mut conn = ctx.connect()?;
+    let bytes = crate::adventure::export_pack(&mut conn, &ctx.app_dir, &campaign_id, &meta)
+        .map_err(mcp_err)?;
+    let path = std::path::Path::new(&args.output_path)
+        .join(format!("{}.mimir-adventure.zip", meta.source));
+    std::fs::write(&path, &bytes)
+        .map_err(|e| McpError::Internal(format!("{}: {e}", path.display())))?;
+    Ok(serde_json::json!({"path": path.display().to_string(), "size_bytes": bytes.len()}))
+}
+
+/// `import_adventure_pack`: a pack as a new campaign, which becomes the
+/// active one.
+pub async fn import_adventure_pack(
+    ctx: &Arc<McpContext>,
+    args: ImportPackArgs,
+) -> Result<Value, McpError> {
+    use diesel::Connection;
+    let bytes = std::fs::read(&args.path)
+        .map_err(|e| McpError::InvalidArguments(format!("{}: {e}", args.path)))?;
+    let mut conn = ctx.connect()?;
+    let r = conn
+        .transaction::<_, ApiError, _>(|c| {
+            crate::adventure::import_pack(c, &ctx.app_dir, &bytes, args.name.as_deref())
+        })
+        .map_err(mcp_err)?;
+    ctx.set_active_campaign_id(Some(r.campaign_id.clone()));
+    Ok(serde_json::json!({"campaign_id": r.campaign_id, "campaign_name": r.campaign_name}))
+}
+
 /// `preview_adventure_campaign`
 pub async fn preview_adventure_campaign(
     ctx: &Arc<McpContext>,
@@ -125,6 +200,18 @@ pub fn server_tools() -> &'static [RegisteredTool] {
                 "Export the active campaign as a 5etools homebrew adventure file (JSON): its documents, its modules as chapters, its homebrew, and a copy of every catalog entry the text names under the adventure's own source. 5etools and Mimir (Settings, Books, Import a homebrew file) read it.",
                 ExportAdventureArgs,
                 export_adventure_file
+            ),
+            tool!(
+                "export_adventure_pack",
+                "Write the active campaign as a Mimir adventure pack (.mimir-adventure.zip) in a folder: the adventure to be played, with its maps, walls, placements, module monsters and NPCs, for another Mimir. No player characters, notes, fog or combat state.",
+                ExportPackArgs,
+                export_adventure_pack
+            ),
+            tool!(
+                "import_adventure_pack",
+                "Import a Mimir adventure pack (.mimir-adventure.zip) as a new campaign; it becomes the active campaign.",
+                ImportPackArgs,
+                import_adventure_pack
             ),
         ]
     })

@@ -787,6 +787,223 @@ pub fn export_adventure(
     Ok(Value::Object(out))
 }
 
+// =============================================================================
+// The Mimir adventure pack (MIMIR-T-0741)
+// =============================================================================
+
+/// The pack's format name, in `mimir.json`.
+pub const PACK_FORMAT: &str = "mimir-adventure";
+/// The pack's version; an import refuses another major version.
+pub const PACK_VERSION: &str = "1.0";
+
+/// A campaign as an adventure to be played: the campaign archive's data
+/// without the table's state (player characters, fog, doors, dead
+/// tokens, triggered traps, revealed maps).
+pub fn adventure_data(
+    mut data: mimir_core::services::ArchiveData,
+) -> mimir_core::services::ArchiveData {
+    data.characters.retain(|c| c.character.is_npc());
+    for m in &mut data.maps {
+        m.fog_areas.clear();
+        m.door_states.clear();
+        m.map.reveal_all = 0;
+        for t in &mut m.traps {
+            t.triggered = 0;
+        }
+    }
+    for t in &mut data.tokens {
+        t.dead = 0;
+    }
+    data
+}
+
+/// The pack of a campaign: `adventure.json` (the homebrew adventure of
+/// [`export_adventure`]), `mimir.json` (format, version, the adventure's
+/// source and [`adventure_data`]) and `assets/<id>/<filename>`.
+pub fn export_pack(
+    conn: &mut SqliteConnection,
+    data_dir: &std::path::Path,
+    campaign_id: &str,
+    meta: &ExportMeta,
+) -> Result<Vec<u8>, ApiError> {
+    use mimir_core::services::{ArchiveService, ServiceError};
+    use std::io::Write;
+    let adventure = export_adventure(conn, campaign_id, meta)?;
+    let (data, files) = ArchiveService::new(conn).campaign_data(campaign_id, data_dir)?;
+    let mimir = serde_json::json!({
+        "format": PACK_FORMAT,
+        "version": PACK_VERSION,
+        "created_at": mimir_core::utils::now_rfc3339(),
+        "mimir_version": env!("CARGO_PKG_VERSION"),
+        "adventure_source": meta.source,
+        "adventure_name": meta.name,
+        "data": adventure_data(data),
+    });
+    let io = |e: std::io::Error| ApiError::from(ServiceError::Io(e));
+    let zerr = |e: zip::result::ZipError| ApiError::from(ServiceError::validation(e.to_string()));
+    let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    let opts = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+    for (name, bytes) in [
+        (
+            "mimir.json",
+            serde_json::to_vec_pretty(&mimir)
+                .map_err(|e| ServiceError::validation(e.to_string()))?,
+        ),
+        (
+            "adventure.json",
+            serde_json::to_vec_pretty(&adventure)
+                .map_err(|e| ServiceError::validation(e.to_string()))?,
+        ),
+    ] {
+        zip.start_file(name, opts).map_err(zerr)?;
+        zip.write_all(&bytes).map_err(io)?;
+    }
+    let mut names: Vec<&String> = files.keys().collect();
+    names.sort();
+    for name in names {
+        zip.start_file(format!("assets/{name}"), opts)
+            .map_err(zerr)?;
+        zip.write_all(&files[name]).map_err(io)?;
+    }
+    Ok(zip.finish().map_err(zerr)?.into_inner())
+}
+
+/// A pack, read: `mimir.json`, `adventure.json`, and the asset files
+/// unpacked into `into` (`assets/<id>/<filename>`).
+pub struct Pack {
+    pub mimir: Value,
+    pub adventure: Value,
+}
+
+/// Read a pack, its asset files unpacked into `into`. Not a pack, or a pack
+/// of another major version, is refused.
+pub fn read_pack(bytes: &[u8], into: Option<&std::path::Path>) -> Result<Pack, ApiError> {
+    use mimir_core::services::ServiceError;
+    use std::io::Read;
+    let bad = |m: &str| ApiError::from(ServiceError::validation(m.to_string()));
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes))
+        .map_err(|_| bad("not a Mimir adventure pack (not a zip file)"))?;
+    let mut json_of = |name: &str| -> Result<Value, ApiError> {
+        let mut f = zip
+            .by_name(name)
+            .map_err(|_| bad(&format!("not a Mimir adventure pack: {name} is missing")))?;
+        let mut s = String::new();
+        f.read_to_string(&mut s).map_err(ServiceError::Io)?;
+        serde_json::from_str(&s).map_err(|e| bad(&format!("{name}: {e}")))
+    };
+    let mimir = json_of("mimir.json")?;
+    if mimir["format"] != PACK_FORMAT {
+        return Err(bad(
+            "not a Mimir adventure pack (mimir.json has another format)",
+        ));
+    }
+    let version = mimir["version"].as_str().unwrap_or("");
+    if version.split('.').next() != PACK_VERSION.split('.').next() {
+        return Err(bad(&format!(
+            "this pack is version {version}; this Mimir reads version {PACK_VERSION} packs"
+        )));
+    }
+    let adventure = json_of("adventure.json")?;
+    if let Some(dir) = into {
+        for i in 0..zip.len() {
+            let mut f = zip.by_index(i).map_err(|e| bad(&e.to_string()))?;
+            let Some(path) = f.enclosed_name() else {
+                continue;
+            };
+            if !path.starts_with("assets") || f.is_dir() {
+                continue;
+            }
+            let out = dir.join(path);
+            if let Some(parent) = out.parent() {
+                std::fs::create_dir_all(parent).map_err(ServiceError::Io)?;
+            }
+            let mut w = std::fs::File::create(&out).map_err(ServiceError::Io)?;
+            std::io::copy(&mut f, &mut w).map_err(ServiceError::Io)?;
+        }
+    }
+    Ok(Pack { mimir, adventure })
+}
+
+fn pack_data(p: &Pack) -> Result<mimir_core::services::ArchiveData, ApiError> {
+    serde_json::from_value(p.mimir["data"].clone()).map_err(|e| {
+        mimir_core::services::ServiceError::validation(format!("mimir.json data: {e}")).into()
+    })
+}
+
+/// What a pack holds.
+pub fn preview_pack(bytes: &[u8]) -> Result<mimir_wire::AdventurePackPreview, ApiError> {
+    let p = read_pack(bytes, None)?;
+    let d = pack_data(&p)?;
+    Ok(mimir_wire::AdventurePackPreview {
+        campaign_name: d.campaign.name.clone(),
+        adventure_name: p.mimir["adventure_name"].as_str().unwrap_or("").to_string(),
+        adventure_source: p.mimir["adventure_source"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        version: p.mimir["version"].as_str().unwrap_or("").to_string(),
+        created_at: p.mimir["created_at"].as_str().unwrap_or("").to_string(),
+        counts: mimir_wire::ArchiveCounts {
+            modules: d.modules.len(),
+            documents: d.documents.len(),
+            characters: d.characters.len(),
+            maps: d.maps.len(),
+            tokens: d.tokens.len(),
+            module_monsters: d.module_monsters.len(),
+            module_npcs: d.module_npcs.len(),
+            assets: d.assets.len(),
+            homebrew_items: d.homebrew_items.len(),
+            homebrew_monsters: d.homebrew_monsters.len(),
+            homebrew_spells: d.homebrew_spells.len(),
+        },
+    })
+}
+
+/// Import a pack as a new campaign (the caller's transaction): its
+/// adventure file first, when its source is not in the catalog (the
+/// catalog copies and the adventure in the reader), then the campaign; a
+/// module monster whose catalog entry this Mimir lacks uses the pack's copy.
+pub fn import_pack(
+    conn: &mut SqliteConnection,
+    data_dir: &std::path::Path,
+    bytes: &[u8],
+    name: Option<&str>,
+) -> Result<mimir_core::services::ImportResult, ApiError> {
+    use mimir_core::dal::catalog as cat;
+    use mimir_core::services::{ArchiveService, ServiceError};
+    let unpacked = tempfile::tempdir().map_err(ServiceError::Io)?;
+    let p = read_pack(bytes, Some(unpacked.path()))?;
+    let mut data = pack_data(&p)?;
+    let pack_source = p.mimir["adventure_source"]
+        .as_str()
+        .unwrap_or("")
+        .to_string();
+    if !pack_source.is_empty()
+        && !cat::source_exists(conn, &pack_source).map_err(ServiceError::from)?
+    {
+        mimir_core::import::CatalogImportService::new(conn)
+            .import_homebrew(&p.adventure)
+            .map_err(|e| ServiceError::validation(format!("adventure.json: {e:#}")))?;
+    }
+    for mm in &mut data.module_monsters {
+        if let (Some(n), Some(s)) = (mm.monster_name.clone(), mm.monster_source.clone()) {
+            let here = cat::get_monster_by_name(conn, &n, &s)
+                .map_err(ServiceError::from)?
+                .is_some();
+            if !here
+                && !pack_source.is_empty()
+                && cat::get_monster_by_name(conn, &n, &pack_source)
+                    .map_err(ServiceError::from)?
+                    .is_some()
+            {
+                mm.monster_source = Some(pack_source.clone());
+            }
+        }
+    }
+    Ok(ArchiveService::new(conn).import_data(data, unpacked.path(), data_dir, name)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

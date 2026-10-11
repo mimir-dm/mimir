@@ -48,6 +48,7 @@ base64 = "0.22"
 rmcp = { version = "2.2.0", features = ["server", "transport-streamable-http-server"] }
 mimir-mcp = { path = "../mimir-mcp" }
 rust-embed = { version = "8", optional = true }
+zip = { version = "9.0.1", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 # Test archives (MIMIR-T-0724).
