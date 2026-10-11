@@ -1,9 +1,10 @@
 //! The book reader (MIMIR-T-0723): a book with readable content, its
 //! contents, one section at a time. The book, the section and the
 //! heading are in the address (`?mode=reader&book=PHB&section=3&at=id`).
-//! Adventures are listed apart from books, with their level range, and
-//! their `{@area}` links go to the chapter that holds the place
-//! (MIMIR-T-0736).
+//! An adventure reads on its own page (`/adventures/<id>?section=3`,
+//! MIMIR-T-0745), with its level range, and its `{@area}` links go to the
+//! chapter that holds the place (MIMIR-T-0736). Reference › Books lists
+//! books only.
 
 use aurora_leptos::components::*;
 use aurora_leptos::frame::ConfirmDialog;
@@ -25,8 +26,17 @@ pub fn href(book: &str, section: usize, at: Option<&str>) -> String {
     h
 }
 
+/// The address of a place in an adventure, on its own page.
+pub fn adventure_href(id: &str, section: usize, at: Option<&str>) -> String {
+    let mut h = format!("/adventures/{}?section={section}", enc(id));
+    if let Some(a) = at {
+        h += &format!("&at={}", enc(a));
+    }
+    h
+}
+
 fn enc(s: &str) -> String {
-    js_sys::encode_uri_component(s).into()
+    crate::character::inventory::encode(s)
 }
 
 /// "Levels 1–3 · Starter Set" for an adventure; empty for a book.
@@ -47,8 +57,19 @@ pub fn adventure_line(b: &BookInfo) -> String {
         .join(" · ")
 }
 
+/// The reader. Without `adventure`: the books, one chosen in the address.
+/// With it: that adventure only.
 #[component]
-pub fn ReaderView() -> impl IntoView {
+pub fn ReaderView(#[prop(optional, into)] adventure: Option<Signal<String>>) -> impl IntoView {
+    let fixed = adventure.is_some();
+    let kind = if fixed { "adventure" } else { "book" };
+    let addr = move |b: &str, section: usize, at: Option<&str>| {
+        if fixed {
+            adventure_href(b, section, at)
+        } else {
+            href(b, section, at)
+        }
+    };
     let query = use_query_map();
     let navigate = use_navigate();
     let go = StoredValue::new(move |to: String| navigate(&to, Default::default()));
@@ -57,13 +78,22 @@ pub fn ReaderView() -> impl IntoView {
         sources_v.track();
         api::get::<Vec<BookInfo>>("/books")
     });
-    let books = move || sources.get().and_then(Result::ok).unwrap_or_default();
-    let chosen = Memo::new(move |_| {
-        query
+    let books = move || {
+        sources
+            .get()
+            .and_then(Result::ok)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|b| b.kind == kind)
+            .collect::<Vec<_>>()
+    };
+    let chosen = Memo::new(move |_| match adventure {
+        Some(a) => a.get(),
+        None => query
             .get()
             .get("book")
             .or_else(|| books().first().map(|b| b.source.clone()))
-            .unwrap_or_default()
+            .unwrap_or_default(),
     });
     let chosen_info = move || books().into_iter().find(|b| b.source == chosen.get());
     let section = Memo::new(move |_| {
@@ -87,7 +117,12 @@ pub fn ReaderView() -> impl IntoView {
                 Ok(()) => {
                     removing.set(false);
                     sources_v.update(|v| *v += 1);
-                    go.with_value(|g| g("/reference?mode=reader".to_string()));
+                    let back = if fixed {
+                        "/adventures"
+                    } else {
+                        "/reference?mode=reader"
+                    };
+                    go.with_value(|g| g(back.to_string()));
                 }
                 Err(e) => {
                     removing.set(false);
@@ -150,36 +185,34 @@ pub fn ReaderView() -> impl IntoView {
         {move || match sources.get() {
             None => view! { <Loading /> }.into_any(),
             Some(Err(e)) => view! { <ErrorState error=e /> }.into_any(),
+            Some(Ok(_)) if fixed && chosen_info().is_none() => view! {
+                <Empty message="This adventure is not in the catalog." />
+            }.into_any(),
             Some(Ok(_)) if books().is_empty() => view! {
-                <Empty message="No books or adventures to read. Import the 5etools data or a homebrew file (Settings)." />
+                <Empty message="No books to read. Import the 5etools data or a homebrew file (Settings)." />
             }.into_any(),
             Some(Ok(_)) => {
                 let list = books();
                 view! {
                     <div class="mimir-split mimir-reader">
                         <nav class="mimir-split__side mimir-reader__contents" aria-label="Contents">
-                            <label class="mimir-file">
-                                <span>"Book"</span>
-                                <select
-                                    class="mimir-wizard__select"
-                                    aria-label="Book"
-                                    on:change=move |ev| {
-                                        let v = event_target_value(&ev);
-                                        go.with_value(|g| g(href(&v, 0, None)));
-                                    }
-                                >
-                                    {[("book", "Books"), ("adventure", "Adventures")].into_iter().filter_map(|(kind, label)| {
-                                        let group: Vec<BookInfo> = list.iter().filter(|b| b.kind == kind).cloned().collect();
-                                        (!group.is_empty()).then(|| view! {
-                                            <optgroup label=label>
-                                                {group.into_iter().map(|b| view! {
-                                                    <option value=b.source.clone() selected=b.source == chosen.get_untracked()>{b.name.clone()}</option>
-                                                }).collect_view()}
-                                            </optgroup>
-                                        })
-                                    }).collect_view()}
-                                </select>
-                            </label>
+                            {(!fixed).then(|| view! {
+                                <label class="mimir-file">
+                                    <span>"Book"</span>
+                                    <select
+                                        class="mimir-wizard__select"
+                                        aria-label="Book"
+                                        on:change=move |ev| {
+                                            let v = event_target_value(&ev);
+                                            go.with_value(|g| g(href(&v, 0, None)));
+                                        }
+                                    >
+                                        {list.into_iter().map(|b| view! {
+                                            <option value=b.source.clone() selected=b.source == chosen.get_untracked()>{b.name.clone()}</option>
+                                        }).collect_view()}
+                                    </select>
+                                </label>
+                            })}
                             {move || {
                                 let line = chosen_info().map(|b| adventure_line(&b)).unwrap_or_default();
                                 (!line.is_empty()).then(|| view! { <p class="mimir-reader__levels">{line}</p> })
@@ -207,7 +240,7 @@ pub fn ReaderView() -> impl IntoView {
                                                     class="cl-navlink"
                                                     class:cl-navlink--active=current
                                                     aria-current=current.then_some("page")
-                                                    href=href(&b, c.index, None)
+                                                    href=addr(&b, c.index, None)
                                                 >
                                                     <span class="cl-navlink__label">{c.name.clone()}</span>
                                                 </a>
@@ -215,7 +248,7 @@ pub fn ReaderView() -> impl IntoView {
                                                     <ul class="mimir-reader__headings">
                                                         {c.headings.iter().map(|h| view! {
                                                             <li class=format!("mimir-reader__h{}", h.depth)>
-                                                                <a href=href(&b2, c.index, Some(&h.id))>{h.name.clone()}</a>
+                                                                <a href=addr(&b2, c.index, Some(&h.id))>{h.name.clone()}</a>
                                                             </li>
                                                         }).collect_view()}
                                                     </ul>
@@ -241,7 +274,7 @@ pub fn ReaderView() -> impl IntoView {
                                 };
                                 if let Some(sec) = target {
                                     let b = chosen.get_untracked();
-                                    go.with_value(|g| g(href(&b, sec, Some(&id))));
+                                    go.with_value(|g| g(addr(&b, sec, Some(&id))));
                                 }
                             }
                         >
@@ -255,8 +288,8 @@ pub fn ReaderView() -> impl IntoView {
                                     view! {
                                         <Rendered html=html class="mimir-book" />
                                         <Group>
-                                            {(i > 0).then(|| view! { <a class="cl-btn cl-btn--subtle" href=href(&b, i - 1, None)>"← Previous"</a> })}
-                                            {(i + 1 < n).then(|| view! { <a class="cl-btn cl-btn--light" href=href(&b, i + 1, None)>"Next →"</a> })}
+                                            {(i > 0).then(|| view! { <a class="cl-btn cl-btn--subtle" href=addr(&b, i - 1, None)>"← Previous"</a> })}
+                                            {(i + 1 < n).then(|| view! { <a class="cl-btn cl-btn--light" href=addr(&b, i + 1, None)>"Next →"</a> })}
                                         </Group>
                                     }.into_any()
                                 }
@@ -281,6 +314,8 @@ mod tests {
             level_start: start,
             level_end: end,
             storyline: story.map(str::to_string),
+            cover: None,
+            homebrew: false,
         }
     }
 
@@ -299,5 +334,14 @@ mod tests {
             "Tales"
         );
         assert_eq!(adventure_line(&info("book", Some(1), Some(5), None)), "");
+    }
+
+    #[test]
+    fn addresses() {
+        assert_eq!(href("PHB", 2, None), "?mode=reader&book=PHB&section=2");
+        assert_eq!(
+            adventure_href("LMoP", 3, Some("a b")),
+            "/adventures/LMoP?section=3&at=a%20b"
+        );
     }
 }

@@ -25,9 +25,10 @@ The browser keeps the token. The next visit opens Mimir directly. If the server 
 
 ## Step 2: Find Your Way Around
 
-The side navigation has four links:
+The side navigation has five links:
 
 - **Campaigns**: your campaigns. This is the start page.
+- **Adventures**: the published and homebrew adventures. Read one, or make a campaign from it.
 - **Characters**: every character, by campaign.
 - **Reference**: the catalog and the source books.
 - **Settings**: campaign archives, source books, the Claude integration and the version.

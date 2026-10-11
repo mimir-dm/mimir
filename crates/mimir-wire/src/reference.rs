@@ -47,6 +47,12 @@ pub struct BookInfo {
     /// An adventure's storyline (e.g. "Starter Set").
     #[serde(default)]
     pub storyline: Option<String>,
+    /// The cover image, a path under `/book-images/` (MIMIR-T-0745).
+    #[serde(default)]
+    pub cover: Option<String>,
+    /// From a homebrew file.
+    #[serde(default)]
+    pub homebrew: bool,
 }
 
 /// `POST /catalog/import-homebrew`: what a homebrew file brought.

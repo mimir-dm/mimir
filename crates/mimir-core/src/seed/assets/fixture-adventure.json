@@ -23,6 +23,7 @@
       "author": "Mimir fixtures",
       "storyline": "Mimir fixtures",
       "level": { "start": 1, "end": 3 },
+      "cover": { "type": "internal", "path": "covers/MFA.png" },
       "contents": [
         { "name": "Introduction", "headers": ["Running This Adventure", "Background"] },
         {

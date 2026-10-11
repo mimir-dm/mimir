@@ -13,7 +13,7 @@ Mimir has no game content until you import it. It imports `.tar.gz` archives of 
 5. Wait for the message "Imported … sources". A full import takes a few minutes. You can use Mimir in the meantime.
 6. Optionally, in **Import 5etools images**, choose the image archive and click **Import**. The images add pictures to the books, adventures, monsters and items.
 
-The data archive also holds the published adventures. Mimir imports each adventure's text into the reader, and its own monsters, items and spells into the catalog.
+The data archive also holds the published adventures. Mimir puts each adventure on the **Adventures** page, and its own monsters, items and spells into the catalog.
 
 ## Import a Homebrew File
 
@@ -22,7 +22,7 @@ A homebrew file is a `.json` file in the 5etools homebrew format. It can hold an
 1. Open **Settings**, then **Books**.
 2. In **Import a homebrew file**, choose the file.
 3. Click **Import**.
-4. Read the message, for example "Imported HBX: 1 adventure, 3 entries." The adventure is in the reader, and the entries are in the catalog under the source of the file.
+4. Read the message, for example "Imported HBX: 1 adventure, 3 entries." The adventure is on the **Adventures** page, and the entries are in the catalog under the source of the file.
 
 Mimir refuses a file whose source is already in the catalog. To import a new version of the file, remove the source first. See [Remove a Source Book](#remove-a-source-book).
 

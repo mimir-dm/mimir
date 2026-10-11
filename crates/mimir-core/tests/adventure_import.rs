@@ -183,6 +183,9 @@ fn a_homebrew_adventure_file() {
     assert_eq!(adv.kind, "adventure");
     let data: Value = serde_json::from_str(&adv.data).unwrap();
     assert_eq!(data.as_array().unwrap().len(), 4);
+    // Marked as homebrew for the Adventures page (MIMIR-T-0745).
+    let meta: Value = serde_json::from_str(adv.meta.as_deref().unwrap()).unwrap();
+    assert_eq!(meta["homebrew"], true);
     assert!(
         catalog::get_monster_by_name(&mut conn, "Lantern Wisp", "MFA")
             .unwrap()

@@ -2141,9 +2141,16 @@ fn homebrew_files(file: &Value) -> HashMap<String, String> {
         "data/books.json".into(),
         serde_json::json!({ "book": list("book") }).to_string(),
     );
+    // The reader marks the adventures of a homebrew file (MIMIR-T-0745).
+    let mut adventures = list("adventure");
+    for a in adventures.as_array_mut().into_iter().flatten() {
+        if let Some(o) = a.as_object_mut() {
+            o.insert("homebrew".into(), Value::Bool(true));
+        }
+    }
     out.insert(
         "data/adventures.json".into(),
-        serde_json::json!({ "adventure": list("adventure") }).to_string(),
+        serde_json::json!({ "adventure": adventures }).to_string(),
     );
     for (key, dir, prefix) in [
         ("bookData", "book", "book"),

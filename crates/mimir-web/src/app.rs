@@ -21,6 +21,7 @@ use crate::authoring::homebrew::HomebrewTab;
 use crate::character::sheet::CharacterPage;
 use crate::map::display::DisplayPage;
 use crate::map::dm::DmMapPage;
+use crate::pages::adventures::{AdventurePage, AdventuresPage};
 use crate::pages::campaign::{CampaignDashboard, CampaignTab, ModulesTab, NpcsTab, PcsTab};
 use crate::pages::characters::CharactersPage;
 use crate::pages::player::PlayerPage;
@@ -209,6 +210,8 @@ fn Frame(mode: AuthMode, version: String, on_sign_out: Callback<()>) -> impl Int
                     </ParentRoute>
                     <Route path=path!("/modules/:id") view=ModulePage />
                     <Route path=path!("/maps/:id") view=DmMapPage />
+                    <Route path=path!("/adventures") view=AdventuresPage />
+                    <Route path=path!("/adventures/:id") view=AdventurePage />
                     <Route path=path!("/characters") view=CharactersPage />
                     <Route path=path!("/reference") view=ReferencePage />
                     <Route path=path!("/settings") view=SettingsPage />
@@ -244,6 +247,9 @@ fn Nav(version: String) -> impl IntoView {
             <SideNavGroup>
                 <SideNavLink href="/" active=at("/")>
                     "Campaigns"
+                </SideNavLink>
+                <SideNavLink href="/adventures" active=at("/adventures")>
+                    "Adventures"
                 </SideNavLink>
                 <SideNavLink href="/characters" active=at("/characters")>
                     "Characters"

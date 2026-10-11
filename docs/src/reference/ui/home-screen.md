@@ -27,6 +27,7 @@ Every DM page, except the player display, sits in the same frame.
 | Link | Opens |
 |------|-------|
 | **Campaigns** | The campaign list. It also stays lit on campaign, module and map pages. |
+| **Adventures** | The adventures to read and to make into campaigns. See [Adventures Page](./adventures-page.md). |
 | **Characters** | All characters, by campaign |
 | **Reference** | The catalog and the book reader |
 | **Settings** | Campaign archives, books, integrations, version |

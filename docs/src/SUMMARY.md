@@ -74,6 +74,7 @@
   - [Player Display](./reference/ui/player-display.md)
   - [Player Page](./reference/ui/player-page.md)
   - [Characters and Character Sheet](./reference/ui/characters.md)
+  - [Adventures Page](./reference/ui/adventures-page.md)
   - [Reference Page](./reference/ui/reference-page.md)
   - [Settings](./reference/ui/settings.md)
 - [Data Model](./reference/data-model.md)

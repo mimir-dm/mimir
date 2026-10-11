@@ -326,6 +326,13 @@ async fn adventures_in_the_reader_and_homebrew_files() {
         (mfa["level_start"].as_i64(), mfa["level_end"].as_i64()),
         (Some(1), Some(3))
     );
+    // Its cover from the index, and the homebrew mark (MIMIR-T-0745).
+    assert_eq!(mfa["cover"], "covers/MFA.png");
+    assert_eq!(mfa["homebrew"], true);
+    let dmg = list.iter().find(|b| b["source"] == "DMG").expect("DMG");
+    assert_eq!(dmg["homebrew"], false);
+    let (status, _) = call(&r, Method::GET, "/book-images/covers/MFA.png", None).await;
+    assert_eq!(status, StatusCode::OK);
     let text = json(&r, Method::GET, "/books/MFA", None).await;
     assert_eq!(text["data"].as_array().unwrap().len(), 4);
     // Its own monster is in the catalog.

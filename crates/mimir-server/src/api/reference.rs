@@ -449,6 +449,8 @@ pub async fn books(State(state): State<AppState>) -> ApiResult<Vec<wire::BookInf
                         level_start: meta.pointer("/level/start").and_then(Value::as_i64),
                         level_end: meta.pointer("/level/end").and_then(Value::as_i64),
                         storyline: meta["storyline"].as_str().map(str::to_string),
+                        cover: book_cover(b.cover_path.as_deref(), &meta),
+                        homebrew: meta["homebrew"].as_bool().unwrap_or(false),
                         source: b.source,
                         name: b.name,
                         kind: b.kind,
@@ -464,6 +466,16 @@ pub async fn books(State(state): State<AppState>) -> ApiResult<Vec<wire::BookInf
         })
         .await
         .map(Json)
+}
+
+/// The cover of a book: the one the import copied, else the one its index
+/// names (the images can come after the data). A path under
+/// `/book-images/`.
+fn book_cover(copied: Option<&str>, meta: &Value) -> Option<String> {
+    copied
+        .or_else(|| meta.pointer("/cover/path").and_then(Value::as_str))
+        .map(|p| p.trim_start_matches("img/").to_string())
+        .filter(|p| !p.is_empty())
 }
 
 /// `GET /books/{source}/plan`: the adventure as a campaign, before it is
@@ -531,7 +543,19 @@ pub async fn book_image(
 
 #[cfg(test)]
 mod tests {
-    use super::safe_image_path;
+    use super::{book_cover, safe_image_path};
+
+    #[test]
+    fn a_cover_from_the_import_or_the_index() {
+        use serde_json::json;
+        let meta = json!({"cover": {"type": "internal", "path": "covers/LMoP.webp"}});
+        assert_eq!(book_cover(None, &meta).as_deref(), Some("covers/LMoP.webp"));
+        assert_eq!(
+            book_cover(Some("img/covers/X.webp"), &meta).as_deref(),
+            Some("covers/X.webp")
+        );
+        assert_eq!(book_cover(None, &json!({})), None);
+    }
 
     #[test]
     fn image_paths_stay_under_the_catalog() {

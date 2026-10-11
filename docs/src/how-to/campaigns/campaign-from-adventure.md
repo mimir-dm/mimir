@@ -1,6 +1,6 @@
 # Make a Campaign from an Adventure
 
-Mimir can turn an adventure in the reader into a campaign to prepare and play. The adventure comes from the 5etools data or from a homebrew file. See [Manage Source Books](./manage-sources.md).
+Mimir can turn an adventure of the **Adventures** page into a campaign to prepare and play. The adventure comes from the 5etools data or from a homebrew file. See [Manage Source Books](./manage-sources.md).
 
 ## What Mimir Makes
 
@@ -18,9 +18,9 @@ The campaign's books are the adventure's source and the sources of the creatures
 
 ## Make the Campaign
 
-1. Open **Reference**, then the **Books** tab.
-2. In **Book**, choose the adventure in the **Adventures** group.
-3. Click **Make a campaign…**.
+1. Click **Adventures** in the side navigation.
+2. Find the adventure. Use **Search** or **Level** if the list is long.
+3. On its card, click **Make a campaign…**. You can also click **Make a campaign…** on the page of the adventure.
 4. Optionally, change the **Campaign name**.
 5. For each part, choose what it becomes: **Module**, **Campaign document** or **Leave out**.
 6. Optionally, for a module, tick **One document** to keep the whole chapter in one document.
@@ -36,5 +36,6 @@ The MCP tools `preview_adventure_campaign` and `create_campaign_from_adventure` 
 
 ## See Also
 
+- [Adventures Page](../../reference/ui/adventures-page.md)
 - [Manage Documents](./manage-documents.md): the read-aloud boxes, sidebars and stat blocks of adventure text
 - [Upload a Map](../maps/upload-map.md): replace an image map with a UVTT map that has walls

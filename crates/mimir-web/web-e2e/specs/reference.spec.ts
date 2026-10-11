@@ -22,7 +22,7 @@ test('the catalog: search, filter, detail, cross-references', async ({ page }) =
 
   // A filter: cantrips only.
   await page.getByLabel('Name').fill('')
-  await page.getByLabel('Level').selectOption('0')
+  await page.getByLabel('Level', { exact: true }).selectOption('0')
   await expect(results.locator('tbody tr').first()).toContainText('Cantrip')
   const levels = await results.locator('tbody tr td:nth-child(2)').allInnerTexts()
   expect(levels.every((l) => l === 'Cantrip')).toBe(true)
@@ -69,13 +69,49 @@ test('the reader: contents, headings, images, tooltips', async ({ page }) => {
   await expect(pageBody.locator('.inset-readaloud')).toContainText('The road bends')
 })
 
+test('the Adventures page: cards, search, level, grouping', async ({ page }) => {
+  await signIn(page)
+  // The sidebar item, between Campaigns and Characters (MIMIR-T-0745).
+  await page.goto('/')
+  const nav = page.getByRole('navigation').filter({ hasText: 'Characters' }).first()
+  await expect(nav.getByRole('link')).toContainText(['Campaigns', 'Adventures', 'Characters'])
+  await nav.getByRole('link', { name: 'Adventures' }).click()
+  await expect(page).toHaveURL(/\/adventures$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Adventures' })).toBeVisible()
+  // The fixture adventure: its cover, levels, storyline, homebrew mark,
+  // under its storyline.
+  const card = page.getByRole('region', { name: 'The Lantern of Low Fen' })
+  await expect(card.locator('img.mimir-adventure__cover')).toBeVisible()
+  await expect(card).toContainText('Levels 1–3 · Mimir fixtures')
+  await expect(card).toContainText('Homebrew')
+  await expect(page.getByRole('heading', { level: 2, name: 'Mimir fixtures' })).toBeVisible()
+  // Grouped by name: one list, no group headings.
+  await page.getByLabel('Group by').selectOption('name')
+  await expect(page.getByRole('heading', { level: 2, name: 'Mimir fixtures' })).toHaveCount(0)
+  await expect(card).toBeVisible()
+  // The search and the level filter.
+  await page.getByLabel('Search', { exact: true }).fill('dragon')
+  await expect(page.getByText('No adventure matches.')).toBeVisible()
+  await page.getByLabel('Search', { exact: true }).fill('fen')
+  await expect(card).toBeVisible()
+  await page.getByLabel('Level', { exact: true }).selectOption('4')
+  await expect(card).toHaveCount(0)
+  await page.getByLabel('Level', { exact: true }).selectOption('2')
+  await expect(card).toBeVisible()
+  // Reference › Books lists books only.
+  await page.goto('/reference?mode=reader')
+  await expect(page.getByLabel('Book').locator('option', { hasText: 'The Lantern of Low Fen' })).toHaveCount(0)
+  await expect(page.getByLabel('Book').locator('option', { hasText: "Dungeon Master's Guide" })).toHaveCount(1)
+})
+
 test('an adventure in the reader: levels, boxes, maps, area links, homebrew files', async ({ page }) => {
   await signIn(page)
-  // The fixture adventure (MIMIR-T-0736) is listed under Adventures.
-  await page.goto('/reference?mode=reader')
-  const pick = page.getByLabel('Book')
-  await expect(pick.locator('optgroup[label="Adventures"] option', { hasText: 'The Lantern of Low Fen' })).toHaveCount(1)
-  await pick.selectOption('MFA')
+  // The fixture adventure (MIMIR-T-0736), opened from its card.
+  await page.goto('/adventures')
+  await page.getByRole('region', { name: 'The Lantern of Low Fen' }).getByRole('link', { name: 'Read' }).click()
+  await expect(page).toHaveURL(/\/adventures\/MFA\?section=0/)
+  await expect(page.getByRole('heading', { level: 1, name: 'The Lantern of Low Fen' })).toBeVisible()
+  await expect(page.getByLabel('Book')).toHaveCount(0)
   await expect(page.locator('.mimir-reader__levels')).toHaveText('Levels 1–3 · Mimir fixtures')
   await expect(page.getByRole('button', { name: 'Remove this adventure…' })).toBeVisible()
   const contents = page.getByRole('navigation', { name: 'Contents' })
@@ -84,7 +120,7 @@ test('an adventure in the reader: levels, boxes, maps, area links, homebrew file
   // The introduction: a sidebar, and an area link to the next-but-one chapter.
   await expect(pageBody.locator('.inset')).toContainText('Running This Adventure')
   await pageBody.locator('a.area-ref', { hasText: 'the gatehouse' }).click()
-  await expect(page).toHaveURL(/section=2&at=mfa-g1/)
+  await expect(page).toHaveURL(/\/adventures\/MFA\?section=2&at=mfa-g1/)
   await expect(pageBody.getByRole('heading', { name: '1. Gatehouse' })).toBeVisible()
   await expect(pageBody.locator('.inset-readaloud')).toContainText('rusted portcullis')
   // The map says it is a map, with its grid; the adventure's own monster links.
@@ -103,15 +139,20 @@ test('an adventure in the reader: levels, boxes, maps, area links, homebrew file
   await hb.locator('input[type=file]').setInputFiles({ name: 'bog.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(file)) })
   await hb.getByRole('button', { name: 'Import' }).click()
   await expect(hb.getByRole('status')).toHaveText(`Imported ${code}: 1 adventure, 0 entries.`)
-  await page.goto(`/reference?mode=reader&book=${code}&section=0`)
+  await page.goto(`/adventures/${code}?section=0`)
   await expect(page.locator('.mimir-reader__levels')).toHaveText('Level 2')
   await expect(page.locator('.mimir-book')).toContainText('Mud to the knees.')
 })
 
 test('an adventure becomes a campaign: plan, choices, the campaign', async ({ page }) => {
   await signIn(page)
-  await page.goto('/reference?mode=reader&book=MFA&section=0')
+  // From the reader of the adventure, and the quick button of its card.
+  await page.goto('/adventures/MFA?section=0')
   await page.getByRole('button', { name: 'Make a campaign…' }).click()
+  await expect(page.getByRole('dialog', { name: 'Make a campaign' }).getByLabel('Campaign name')).toHaveValue('The Lantern of Low Fen')
+  await page.getByRole('dialog', { name: 'Make a campaign' }).getByRole('button', { name: 'Cancel' }).click()
+  await page.goto('/adventures')
+  await page.getByRole('region', { name: 'The Lantern of Low Fen' }).getByRole('button', { name: 'Make a campaign…' }).click()
   const dialog = page.getByRole('dialog', { name: 'Make a campaign' })
   await expect(dialog.getByLabel('Campaign name')).toHaveValue('The Lantern of Low Fen')
   const name = `Fen ${Date.now() % 100000}`

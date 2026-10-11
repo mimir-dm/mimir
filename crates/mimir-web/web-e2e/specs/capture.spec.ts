@@ -446,6 +446,15 @@ for (const theme of themes) {
       await page.evaluate(() => document.fonts.ready)
       await page.screenshot({ path: `${outDir}/reference-book--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
     })
+    // The adventures (MIMIR-T-0745).
+    test(`adventures ${size.name} ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height })
+      await signIn(page, theme)
+      await page.goto('/adventures')
+      await expect(page.locator('img.mimir-adventure__cover').first()).toBeVisible()
+      await page.evaluate(() => document.fonts.ready)
+      await page.screenshot({ path: `${outDir}/adventures--${size.name}--${theme}.png`, animations: 'disabled', caret: 'hide' })
+    })
   }
   test(`reference-statblock desktop ${theme}`, async ({ page }) => {
     await signIn(page, theme)
