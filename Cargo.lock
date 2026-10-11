@@ -3979,6 +3979,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mimir-render"
+version = "0.7.3"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "mimir-server"
 version = "0.7.3"
 dependencies = [

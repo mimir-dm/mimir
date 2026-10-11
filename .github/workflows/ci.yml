@@ -166,8 +166,8 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Test mimir-wire, mimir-server and mimir-web
-        run: cargo test -p mimir-wire -p mimir-server -p mimir-web
+      - name: Test mimir-wire, mimir-server, mimir-web and mimir-render
+        run: cargo test -p mimir-wire -p mimir-server -p mimir-web -p mimir-render
 
       # The web app compiles against mimir-wire, so it must build for wasm.
       - name: Build mimir-wire for wasm32

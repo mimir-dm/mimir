@@ -5,6 +5,7 @@ members = [
     "crates/mimir-mapgen",
     "crates/mimir-mcp",
     "crates/mimir-print",
+    "crates/mimir-render",
     "crates/mimir-server",
     "crates/mimir-web",
     "crates/mimir-wire",
