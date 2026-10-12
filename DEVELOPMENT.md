@@ -239,8 +239,8 @@ mimir/
 │       │   └── sections/          # PDF section renderers
 │       └── Cargo.toml
 │
-├── docs/                            # Documentation (mdBook)
-│   └── src/                        # mdBook source
+├── docs/                            # Documentation (Astro Starlight)
+│   └── src/content/docs/           # Pages
 │
 ├── .metis/                         # Project management
 └── Cargo.toml                      # Workspace configuration

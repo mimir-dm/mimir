@@ -132,7 +132,7 @@ mimir/
 │   ├── mimir-mapgen/           # Procedural map generation (library + CLI)
 │   ├── mimir-mcp/              # MCP server for Claude integration
 │   └── mimir-print/            # PDF export / Typst rendering
-├── docs/                        # Documentation (mdBook)
+├── docs/                        # Documentation (Astro Starlight)
 └── .metis/                     # Project management
 ```
 
