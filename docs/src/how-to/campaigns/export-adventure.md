@@ -43,7 +43,7 @@ To import a pack, open **Settings**, then **Import a campaign**, and choose the 
 
 ## With Claude
 
-The MCP tool `export_adventure_file` exports the active campaign as an adventure file. `export_adventure_pack` writes a pack in a folder, and `import_adventure_pack` imports one. See [MCP Server Reference](../../reference/mcp-server.md).
+The MCP tool `export_adventure_file` exports the active campaign as an adventure file. `export_adventure_pack` gives a pack as a download, and `import_adventure_pack` imports an uploaded one. See [MCP Server Reference](../../reference/mcp-server.md).
 
 ## See Also
 

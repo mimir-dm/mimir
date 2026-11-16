@@ -18,6 +18,27 @@ use the same database and services as the web app. The tool list is in
 - **Plugin**: Claude Code plugin at `crates/mimir-mcp/plugin/` (it reads
   `MIMIR_URL` and `MIMIR_API_TOKEN`)
 
+### Files
+
+The tools run on the server. A tool does not read or write a path on the
+caller's computer. Files go over plain HTTP, with the DM token:
+
+- **Upload**: `POST <server>/api/v1/uploads`, multipart field `file`. The
+  answer is `{upload_id, filename, size_bytes, expires_in_seconds}`. Give
+  `upload_id` to `import_campaign`, `preview_archive`, `create_map` or
+  `import_adventure_pack`. The server keeps an upload for one hour.
+- **Download**: `export_campaign`, `export_adventure_pack`,
+  `print_adventure_book` and `generate_map` return
+  `{download_url, filename, size_bytes}`. `GET <server><download_url>` gives
+  the file. A link works one time, for one hour.
+
+```bash
+curl -sS -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+  -F "file=@campaign.mimir-campaign.tar.gz" "$MIMIR_URL/api/v1/uploads"
+curl -sS -f -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+  -o campaign.mimir-campaign.tar.gz "$MIMIR_URL/api/v1/downloads/<id>"
+```
+
 ### Errors
 
 Most tools operate on an active campaign. Until a campaign is selected with `set_active_campaign`, campaign-scoped tools return a `NoActiveCampaign` error (`No active campaign. Use set_active_campaign first.`). Each MCP session has its own active campaign; it is not stored, so a new session starts with no campaign selected.
@@ -37,15 +58,15 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 | `create_campaign` | Create a new campaign |
 | `update_campaign` | Update campaign name or description |
 | `delete_campaign` | Delete a campaign and all its data |
-| `export_campaign` | Export campaign as shareable archive |
+| `export_campaign` | Export campaign as shareable archive (a download) |
 | `preview_adventure_campaign` | Show how an adventure in the reader becomes a campaign |
 | `create_campaign_from_adventure` | Make a campaign from an adventure; it becomes the active campaign |
 | `export_adventure_file` | Export the active campaign as a 5etools homebrew adventure file |
-| `export_adventure_pack` | Write the active campaign as a Mimir adventure pack in a folder |
-| `import_adventure_pack` | Import a Mimir adventure pack as a new campaign |
-| `print_adventure_book` | Write the active campaign as one PDF book in a folder |
-| `import_campaign` | Import campaign from archive |
-| `preview_archive` | Preview archive contents without importing |
+| `export_adventure_pack` | Export the active campaign as a Mimir adventure pack (a download) |
+| `import_adventure_pack` | Import a Mimir adventure pack as a new campaign (an upload) |
+| `print_adventure_book` | Make the active campaign one PDF book (a download) |
+| `import_campaign` | Import campaign from archive (an upload) |
+| `preview_archive` | Preview archive contents without importing (an upload) |
 
 ### Module Management (8 tools)
 
@@ -96,7 +117,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 
 | Tool | Description |
 |------|-------------|
-| `create_map` | Upload UVTT file to create new map |
+| `create_map` | Create a new map from an uploaded UVTT file |
 | `list_maps` | List maps (optionally filtered by module) |
 | `get_map` | Get map details including token placements |
 | `update_map` | Update map metadata (name, description, lighting) |
@@ -109,7 +130,7 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 
 | Tool | Description |
 |------|-------------|
-| `generate_map` | Generate Dungeondraft map from YAML config or biome preset |
+| `generate_map` | Generate Dungeondraft map from YAML config or biome preset (a download) |
 | `list_map_presets` | List available biome presets |
 | `validate_map_config` | Validate YAML config without generating |
 

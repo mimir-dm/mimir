@@ -249,6 +249,14 @@ pub fn routes() -> Vec<ApiRoute> {
             &["POST"],
             post(ad::import_pack).layer(DefaultBodyLimit::max(ad::ARCHIVE_LIMIT)),
         ),
+        // Files for the MCP tools (MIMIR-T-0747).
+        route(
+            "/uploads",
+            Dm,
+            &["POST"],
+            post(ad::upload_for_mcp).layer(DefaultBodyLimit::max(ad::ARCHIVE_LIMIT)),
+        ),
+        route("/downloads/{id}", Dm, G, get(ad::download_for_mcp)),
         route(
             "/archives/preview",
             Dm,

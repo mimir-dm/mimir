@@ -10,12 +10,12 @@ use mimir_core::services::{
     UpdateCampaignInput,
 };
 use serde_json::{json, Value};
-use std::path::Path;
 use std::sync::Arc;
 
 use crate::context::McpContext;
 use crate::registry::RegisteredTool;
 use crate::response::McpResponse;
+use crate::transfer;
 use crate::{tool, tool_args, McpError};
 
 // =============================================================================
@@ -75,19 +75,19 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
         ),
         tool!(
             "export_campaign",
-            "Export the active campaign as a shareable archive file (.mimir-campaign.tar.gz). Requires an active campaign. The archive is written to the machine running this server (not the client).",
+            "Export the active campaign as a shareable archive file (.mimir-campaign.tar.gz). Requires an active campaign. Returns a download_url: GET it from the server with the DM token to get the file. The link works once, for one hour.",
             ExportCampaignArgs,
             export_campaign
         ),
         tool!(
             "import_campaign",
-            "Import a campaign from an archive file (.mimir-campaign.tar.gz). The imported campaign is automatically set active. The archive is read from the machine running this server (not the client).",
+            "Import a campaign from an archive file (.mimir-campaign.tar.gz). First upload the file to POST /api/v1/uploads (multipart field `file`, DM token) and give the upload_id that it returns. The imported campaign is automatically set active.",
             ImportCampaignArgs,
             import_campaign
         ),
         tool!(
             "preview_archive",
-            "Preview the contents of a campaign archive without importing it",
+            "Preview the contents of a campaign archive without importing it. First upload the file to POST /api/v1/uploads (multipart field `file`, DM token) and give the upload_id that it returns.",
             PreviewArchiveArgs,
             preview_archive
         ),
@@ -148,16 +148,13 @@ tool_args! {
 }
 
 tool_args! {
-    pub struct ExportCampaignArgs {
-        /// Absolute directory path (on the server host) where the archive will be saved
-        pub output_path: String,
-    }
+    pub struct ExportCampaignArgs {}
 }
 
 tool_args! {
     pub struct ImportCampaignArgs {
-        /// Absolute path (on the server host) to the archive file to import
-        pub archive_path: String,
+        /// The upload_id of the archive (upload the file to POST /api/v1/uploads first)
+        pub upload_id: String,
         /// Optional new name for the imported campaign
         pub new_name: Option<String>,
     }
@@ -165,8 +162,8 @@ tool_args! {
 
 tool_args! {
     pub struct PreviewArchiveArgs {
-        /// Path to the archive file to preview
-        pub archive_path: String,
+        /// The upload_id of the archive (upload the file to POST /api/v1/uploads first)
+        pub upload_id: String,
     }
 }
 
@@ -451,43 +448,39 @@ pub async fn delete_campaign(
 
 pub async fn export_campaign(
     ctx: &Arc<McpContext>,
-    args: ExportCampaignArgs,
+    _args: ExportCampaignArgs,
 ) -> Result<Value, McpError> {
     let campaign_id = ctx
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
     let mut db = ctx.connect()?;
-    let output_dir = Path::new(&args.output_path);
+    let (id, dir) = transfer::new_entry(&ctx.app_dir, transfer::Kind::Download)
+        .map_err(|e| McpError::Internal(format!("Export failed: {e}")))?;
     // Blob paths are relative to the app folder.
     let assets_dir = &ctx.app_dir;
 
-    let archive_path = ArchiveService::new(&mut db)
-        .export_campaign(&campaign_id, output_dir, assets_dir)
-        .map_err(|e| McpError::Internal(format!("Export failed: {}", e)))?;
+    if let Err(e) = ArchiveService::new(&mut db).export_campaign(&campaign_id, &dir, assets_dir) {
+        transfer::remove(&ctx.app_dir, transfer::Kind::Download, &id);
+        return Err(McpError::Internal(format!("Export failed: {}", e)));
+    }
+    let stored = transfer::find(&ctx.app_dir, transfer::Kind::Download, &id)
+        .ok_or_else(|| McpError::Internal("Export failed: no archive".to_string()))?;
 
-    // Get file size
-    let size_bytes = std::fs::metadata(&archive_path)
-        .map(|m| m.len())
-        .unwrap_or(0);
-
-    McpResponse::success(json!({
-        "archive_path": archive_path.display().to_string(),
-        "size_bytes": size_bytes
-    }))
+    McpResponse::success(transfer::download_json(&stored))
 }
 
 pub async fn import_campaign(
     ctx: &Arc<McpContext>,
     args: ImportCampaignArgs,
 ) -> Result<Value, McpError> {
+    let upload = transfer::uploaded(ctx, &args.upload_id)?;
     let mut db = ctx.connect()?;
-    let archive = Path::new(&args.archive_path);
     // Blob paths are relative to the app folder.
     let assets_dir = &ctx.app_dir;
 
     let result = ArchiveService::new(&mut db)
-        .import_campaign(archive, assets_dir, args.new_name.as_deref())
+        .import_campaign(&upload.path, assets_dir, args.new_name.as_deref())
         .map_err(|e| McpError::Internal(format!("Import failed: {}", e)))?;
 
     // Set the imported campaign as active
@@ -508,12 +501,12 @@ pub async fn import_campaign(
 }
 
 pub async fn preview_archive(
-    _ctx: &Arc<McpContext>,
+    ctx: &Arc<McpContext>,
     args: PreviewArchiveArgs,
 ) -> Result<Value, McpError> {
-    let archive = Path::new(&args.archive_path);
+    let upload = transfer::uploaded(ctx, &args.upload_id)?;
 
-    let preview = ArchiveService::preview_archive(archive)
+    let preview = ArchiveService::preview_archive(&upload.path)
         .map_err(|e| McpError::Internal(format!("Preview failed: {}", e)))?;
 
     McpResponse::ok(json!({

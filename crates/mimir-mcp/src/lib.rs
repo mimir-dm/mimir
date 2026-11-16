@@ -10,6 +10,7 @@ pub mod handler;
 pub mod registry;
 pub mod response;
 pub mod tools;
+pub mod transfer;
 
 pub use context::McpContext;
 pub use error::McpError;

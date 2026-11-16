@@ -1996,24 +1996,28 @@ mod tests {
         .await;
         assert_eq!(res["valid"], false);
 
-        // Generate from a preset into a temp file
-        let out =
-            std::env::temp_dir().join(format!("mimir-mcp-test-map-{}.json", std::process::id()));
+        // Generate from a preset: a download
         let res = call_ok(
             &handler,
             "generate_map",
-            json!({"preset": preset_name, "output_path": out.to_str().unwrap(), "seed": 42}),
+            json!({"preset": preset_name, "seed": 42}),
         )
         .await;
         assert_eq!(res["success"], true);
-        assert!(out.exists(), "generated map file should exist");
-        let _ = std::fs::remove_file(&out);
+        let url = res["download"]["download_url"].as_str().unwrap();
+        let id = url.strip_prefix("/api/v1/downloads/").unwrap();
+        let ctx = McpContext::for_testing();
+        let file = crate::transfer::find(&ctx.app_dir, crate::transfer::Kind::Download, id)
+            .expect("generated map should be kept as a download");
+        assert!(file.filename.ends_with(".dungeondraft_map"));
+        assert!(file.size_bytes > 0);
+        crate::transfer::remove(&ctx.app_dir, crate::transfer::Kind::Download, id);
 
         // Unknown preset is rejected
         let err = call_err(
             &handler,
             "generate_map",
-            json!({"preset": "definitely-not-a-preset", "output_path": "/dev/null"}),
+            json!({"preset": "definitely-not-a-preset"}),
         )
         .await;
         assert!(matches!(err, McpError::InvalidArguments(_)));
@@ -2030,11 +2034,19 @@ mod tests {
         let res = call_ok(&handler, "list_maps", json!({})).await;
         assert_eq!(res["maps"].as_array().map(|a| a.len()).unwrap_or(0), 0);
 
-        // Missing file
+        // No such upload
         let err = call_err(
             &handler,
             "create_map",
-            json!({"name": "Cave", "file_path": "/nonexistent/map.uvtt"}),
+            json!({"name": "Cave", "upload_id": "00000000-0000-0000-0000-000000000000"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+        // A path is not an upload id
+        let err = call_err(
+            &handler,
+            "create_map",
+            json!({"name": "Cave", "upload_id": "/etc/hosts"}),
         )
         .await;
         assert!(matches!(err, McpError::InvalidArguments(_)));
@@ -2060,28 +2072,24 @@ mod tests {
         )
         .await;
 
-        let out_dir =
-            std::env::temp_dir().join(format!("mimir-mcp-test-export-{}", std::process::id()));
-        std::fs::create_dir_all(&out_dir).unwrap();
-
-        // Export
-        let res = call_ok(
-            &handler,
-            "export_campaign",
-            json!({"output_path": out_dir.to_str().unwrap()}),
-        )
-        .await;
+        // Export: a download
+        let res = call_ok(&handler, "export_campaign", json!({})).await;
         assert_eq!(res["status"], "success");
-        let archive_path = res["data"]["archive_path"].as_str().unwrap().to_string();
-        assert!(std::path::Path::new(&archive_path).exists());
+        let url = res["data"]["download_url"].as_str().unwrap();
+        let id = url.strip_prefix("/api/v1/downloads/").unwrap();
+        let app = McpContext::for_testing().app_dir;
+        use crate::transfer::{self, Kind};
+        let archive = transfer::find(&app, Kind::Download, id).expect("the archive is kept");
+        assert!(archive.filename.ends_with(".mimir-campaign.tar.gz"));
+        assert_eq!(res["data"]["size_bytes"], archive.size_bytes);
+
+        // The caller uploads it again
+        let bytes = std::fs::read(&archive.path).unwrap();
+        transfer::remove(&app, Kind::Download, id);
+        let upload = transfer::save(&app, Kind::Upload, &archive.filename, &bytes).unwrap();
 
         // Preview
-        let res = call_ok(
-            &handler,
-            "preview_archive",
-            json!({"archive_path": archive_path}),
-        )
-        .await;
+        let res = call_ok(&handler, "preview_archive", json!({"upload_id": upload.id})).await;
         assert_eq!(res["campaign_name"], "Test Campaign");
         assert_eq!(res["counts"]["modules"], 1);
 
@@ -2089,7 +2097,7 @@ mod tests {
         let res = call_ok(
             &handler,
             "import_campaign",
-            json!({"archive_path": archive_path, "new_name": "Imported Copy"}),
+            json!({"upload_id": upload.id, "new_name": "Imported Copy"}),
         )
         .await;
         assert_eq!(res["status"], "success");
@@ -2099,7 +2107,7 @@ mod tests {
         let res = call_ok(&handler, "list_campaigns", json!({})).await;
         assert_eq!(res["campaigns"].as_array().unwrap().len(), 2);
 
-        let _ = std::fs::remove_dir_all(&out_dir);
+        transfer::remove(&app, Kind::Upload, &upload.id);
     }
 
     #[tokio::test]

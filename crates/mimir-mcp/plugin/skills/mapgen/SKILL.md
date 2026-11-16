@@ -59,12 +59,11 @@ Generate a Dungeondraft map file.
 **Parameters:**
 - `config_yaml` (string) — YAML configuration for map generation. Mutually exclusive with `preset`.
 - `preset` (string) — Biome preset name. Mutually exclusive with `config_yaml`.
-- `output_path` (string, **required**) — Absolute path for the output `.dungeondraft_map` file.
 - `seed` (integer) — Random seed for reproducible generation.
 
 **Rules:**
 - Must provide either `config_yaml` OR `preset`, not both, not neither.
-- `output_path` must be an absolute path and must end with `.dungeondraft_map`.
+- The result has `download.download_url`. Download it with `curl -f -H "Authorization: Bearer $MIMIR_API_TOKEN" -o <path> "$MIMIR_URL<download_url>"`. The link works one time, for one hour.
 - Always ask the user where they want the file saved before generating.
 
 ### `list_map_presets`
@@ -234,5 +233,5 @@ Generating a solid starting point that saves 80% of the work is a win. Trying to
 - Generation is fast (sub-second for typical map sizes)
 - The `seed` parameter overrides any seed in the YAML config
 - Maps do NOT require a Mimir campaign — mapgen is standalone
-- This does NOT upload maps to Mimir — use `create_map` from the map tools to import a UVTT file into a campaign
+- This does NOT add maps to a campaign — upload a UVTT file to `POST /api/v1/uploads` and use `create_map` with its `upload_id`
 - **Layouts are declarative** — you specify exact positions and dimensions. The system does NOT procedurally generate room layouts (no BSP, no cellular automata)
