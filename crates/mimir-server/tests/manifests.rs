@@ -27,3 +27,41 @@ fn every_crate_has_the_same_version() {
     );
     assert_eq!(env!("CARGO_PKG_VERSION"), first.as_str());
 }
+
+/// One Rust version (MIMIR-T-0748): the workflows and the Dockerfile use the
+/// channel of `rust-toolchain.toml`.
+#[test]
+fn the_rust_pins_agree() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |p: &str| std::fs::read_to_string(root.join(p)).unwrap();
+    let channel = read("rust-toolchain.toml")
+        .lines()
+        .find_map(|l| l.strip_prefix("channel = \""))
+        .and_then(|v| v.strip_suffix('"'))
+        .expect("rust-toolchain.toml has a channel")
+        .to_string();
+    for wf in [".github/workflows/ci.yml", ".github/workflows/release.yml"] {
+        let text = read(wf);
+        let pins: Vec<&str> = text
+            .lines()
+            .filter_map(|l| l.split("dtolnay/rust-toolchain@").nth(1))
+            .map(str::trim)
+            .collect();
+        assert!(!pins.is_empty(), "{wf} installs no Rust");
+        assert!(
+            pins.iter().all(|p| *p == channel),
+            "{wf} pins {pins:?}, rust-toolchain.toml says {channel}"
+        );
+    }
+    let minor = channel.rsplitn(2, '.').nth(1).unwrap();
+    let docker = read("Dockerfile");
+    let from = docker
+        .lines()
+        .find(|l| l.starts_with("FROM rust:"))
+        .expect("the Dockerfile builds FROM rust");
+    assert!(
+        from.starts_with(&format!("FROM rust:{minor}-"))
+            || from.starts_with(&format!("FROM rust:{channel}-")),
+        "Dockerfile: {from}, rust-toolchain.toml says {channel}"
+    );
+}

@@ -58,10 +58,8 @@ pub fn flatten_entry(entry: &Value) -> String {
 /// Tags like {@spell fireball|PHB} are preserved for render-time transformation.
 fn flatten_entry_recursive(entry: &Value, output: &mut Vec<String>) {
     match entry {
-        Value::String(s) => {
-            if !s.is_empty() {
-                output.push(s.clone());
-            }
+        Value::String(s) if !s.is_empty() => {
+            output.push(s.clone());
         }
         Value::Object(obj) => {
             // Handle name/title fields first

@@ -16,12 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Pinned so a new stable release cannot add lints and fail CI without
-      # notice. To bump: update the version here, run
-      # `cargo clippy --workspace --all-targets -- -D warnings` with it, and
-      # fix or allow what it reports in the same PR.
-      - name: install Rust 1.93.0 (rustfmt, clippy, wasm32)
-        uses: dtolnay/rust-toolchain@1.93.0
+      # The version of rust-toolchain.toml, so a new stable release cannot
+      # add lints and fail CI without notice.
+      - name: install Rust 1.95.0 (rustfmt, clippy, wasm32)
+        uses: dtolnay/rust-toolchain@1.95.0
         with:
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
@@ -41,8 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: install Rust 1.95.0
+        uses: dtolnay/rust-toolchain@1.95.0
 
       - name: Install angreal
         run: pip install 'angreal>=2'
@@ -56,8 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install Rust stable (wasm32)
-        uses: dtolnay/rust-toolchain@stable
+      - name: install Rust 1.95.0 (wasm32)
+        uses: dtolnay/rust-toolchain@1.95.0
         with:
           targets: wasm32-unknown-unknown
 
@@ -109,8 +107,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: install Rust 1.95.0
+        uses: dtolnay/rust-toolchain@1.95.0
 
       - name: Run Rust integration tests (SRD-seeded DB)
         run: cargo test -p mimir-core --test srd_smoke_test -- --test-threads=1
@@ -121,8 +119,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: install Rust 1.95.0
+        uses: dtolnay/rust-toolchain@1.95.0
 
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin
