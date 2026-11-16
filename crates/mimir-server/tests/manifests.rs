@@ -53,7 +53,7 @@ fn the_rust_pins_agree() {
             "{wf} pins {pins:?}, rust-toolchain.toml says {channel}"
         );
     }
-    let minor = channel.rsplitn(2, '.').nth(1).unwrap();
+    let minor = channel.rsplit_once('.').unwrap().0;
     let docker = read("Dockerfile");
     let from = docker
         .lines()

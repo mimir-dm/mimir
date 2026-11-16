@@ -912,12 +912,8 @@ fn segments_intersect(a1: (f64, f64), a2: (f64, f64), b1: (f64, f64), b2: (f64, 
     let d3 = cross_product_sign(a1, a2, b1);
     let d4 = cross_product_sign(a1, a2, b2);
 
-    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+    ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
         && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
-    {
-        return true;
-    }
-    false
 }
 
 fn cross_product_sign(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64 {

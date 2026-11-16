@@ -54,7 +54,7 @@ angreal web serve        # http://127.0.0.1:8740
 
 ### Rust
 - Format with `cargo fmt --all`. CI fails when `cargo fmt --all --check` finds a difference.
-- Clippy must be clean on the host and for wasm. CI runs it with Rust 1.95.0, the version of `rust-toolchain.toml`. If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
+- Clippy must be clean on the host and for wasm. CI runs it with Rust 1.100.0, the version of `rust-toolchain.toml`. If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
 - Write doc comments for public items.
 - Keep functions short and focused.
 

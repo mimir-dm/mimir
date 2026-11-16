@@ -282,8 +282,7 @@ fn validate_rooms(config: &MapConfig, errors: &mut Vec<ValidationError>) {
         }
 
         // Room overlap detection (check against all previous rooms)
-        for j in 0..i {
-            let other = &config.rooms[j];
+        for other in config.rooms.iter().take(i) {
             let overlaps = room.x < other.x + other.width
                 && room.x + room.width > other.x
                 && room.y < other.y + other.height

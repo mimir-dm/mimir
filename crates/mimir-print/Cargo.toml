@@ -34,7 +34,6 @@ walkdir = { workspace = true }
 # Image processing for map rendering
 image = { workspace = true }
 imageproc = { workspace = true }
-rusttype = { workspace = true }
 
 # Base64 encoding
 base64 = { workspace = true }

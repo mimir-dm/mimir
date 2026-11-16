@@ -8,7 +8,7 @@ How to build, run and test Mimir: the server (`mimir-server`) and the web app (`
 
 | Tool | Use |
 |------|-----|
-| Rust (via [rustup](https://rustup.rs/)) | Everything. `rust-toolchain.toml` pins Rust 1.95.0; rustup installs it. |
+| Rust (via [rustup](https://rustup.rs/)) | Everything. `rust-toolchain.toml` pins Rust 1.100.0; rustup installs it. |
 | `wasm32-unknown-unknown` target | The web app. `angreal web build` adds it. |
 | [trunk](https://trunkrs.dev/) | Builds the web app: `cargo install trunk --locked` |
 | Node.js LTS and npm | Only for the editor bundle (a trunk pre-build hook) and the Playwright e2e harness |

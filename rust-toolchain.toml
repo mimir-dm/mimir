@@ -3,6 +3,6 @@
 # workflows and the Dockerfile (the test `the_rust_pins_agree` checks them),
 # then fix what the new clippy reports in the same PR.
 [toolchain]
-channel = "1.95.0"
+channel = "1.100.0"
 components = ["rustfmt", "clippy"]
 targets = ["wasm32-unknown-unknown"]

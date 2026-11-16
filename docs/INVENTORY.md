@@ -108,7 +108,7 @@ Schema: `crates/mimir-core/src/schema.rs`; migrations in `crates/mimir-core/migr
 
 - Angreal tasks: `web build [--release]`, `web serve [--port --token --fresh]`, `web e2e`, `web screenshots [--themes]`, `web screenshots-diff --before [--after --fail]` (`.angreal/task_web.py`); `test unit`, `test coverage [--open]` (`.angreal/task_test.py`); `docs build/serve/watch/check/clean/init/production/test` (`.angreal/task_docs.py`)
 - Release binary: `angreal web build --release`, then `cargo build --release -p mimir-server --features embed-web`
-- CI (`.github/workflows/ci.yml`): fmt; clippy host and wasm (Rust 1.95.0, `rust-toolchain.toml`); `angreal test unit`; wasm build of `mimir-wire`, `trunk build --release`, Playwright smoke suite; SRD smoke test (pushes to main only); coverage (tarpaulin, does not fail CI)
+- CI (`.github/workflows/ci.yml`): fmt; clippy host and wasm (Rust 1.100.0, `rust-toolchain.toml`); `angreal test unit`; wasm build of `mimir-wire`, `trunk build --release`, Playwright smoke suite; SRD smoke test (pushes to main only); coverage (tarpaulin, does not fail CI)
 - Release (`.github/workflows/release.yml`): tag `v*.*.*` → `mimir-mapgen` binaries per platform → draft GitHub release. The workflow does not build the server.
 - Docs deploy (`.github/workflows/docs.yml`): mdBook build → GitHub Pages
 - Tests: Rust `--test-threads=1` (SQLite locking); `mimir-server/tests/` for API, auth, live, MCP; host tests of web logic; Playwright specs in `web-e2e/specs/`
