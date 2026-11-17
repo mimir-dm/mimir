@@ -213,7 +213,7 @@ pub async fn list(
                 .into_iter()
                 .map(|r| summary_of(&kind, r))
                 .collect();
-            rows.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+            rows.sort_by_key(|a| a.name.to_lowercase());
             Ok(rows)
         })
         .await

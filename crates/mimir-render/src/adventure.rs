@@ -1499,10 +1499,8 @@ pub fn rewrite_sources(text: &str, to: &dyn Fn(&Ref) -> Option<String>) -> Strin
 /// stat block it maps.
 pub fn rewrite_entry_sources(v: &mut Value, to: &dyn Fn(&Ref) -> Option<String>) {
     match v {
-        Value::String(s) => {
-            if s.contains("{@") {
-                *s = rewrite_sources(s, to);
-            }
+        Value::String(s) if s.contains("{@") => {
+            *s = rewrite_sources(s, to);
         }
         Value::Array(l) => l.iter_mut().for_each(|x| rewrite_entry_sources(x, to)),
         Value::Object(o) => {

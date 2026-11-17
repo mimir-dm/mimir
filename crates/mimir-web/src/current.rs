@@ -52,8 +52,8 @@ pub fn switcher_options(list: &[CampaignSummary]) -> Vec<(String, String)> {
         list.iter().filter(|c| c.archived_at.is_none()).collect();
     let mut archived: Vec<&CampaignSummary> =
         list.iter().filter(|c| c.archived_at.is_some()).collect();
-    active.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
-    archived.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    active.sort_by_key(|a| a.name.to_lowercase());
+    archived.sort_by_key(|a| a.name.to_lowercase());
     active
         .into_iter()
         .map(|c| (c.id.clone(), c.name.clone()))
