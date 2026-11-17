@@ -11,7 +11,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1: the web bundle and the release server binary
 # ---------------------------------------------------------------------------
-FROM rust:1.93-slim-trixie AS builder
+FROM rust:1.100-slim-trixie AS builder
 
 # - nodejs + npm: Trunk's pre_build hook runs crates/mimir-web/editor/build.sh
 #   (npm ci + esbuild, the TipTap bundle, MIMIR-T-0719).

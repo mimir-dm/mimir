@@ -272,10 +272,10 @@ pub fn DisplayView(
                     None => view.set(None),
                 }
             }
-            ServerMsg::MapChanged { map_id, .. } => {
-                if shown.get_untracked().as_deref() == Some(map_id.as_str()) {
-                    fetch(map_id);
-                }
+            ServerMsg::MapChanged { map_id, .. }
+                if shown.get_untracked().as_deref() == Some(map_id.as_str()) =>
+            {
+                fetch(map_id);
             }
             ServerMsg::CombatChanged { .. } => {
                 if let Some(m) = shown.get_untracked() {

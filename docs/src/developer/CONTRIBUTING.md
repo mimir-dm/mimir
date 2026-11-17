@@ -51,7 +51,7 @@ For a change to the screens, also run `angreal web screenshots` before and after
 ### Rust
 
 - Format with `cargo fmt --all`. CI fails when `cargo fmt --all --check` finds a difference.
-- Clippy must be clean, on the host and for wasm (`-p mimir-web --target wasm32-unknown-unknown`). CI runs clippy with Rust 1.93.0 (pinned in `.github/workflows/ci.yml`). If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
+- Clippy must be clean, on the host and for wasm (`-p mimir-web --target wasm32-unknown-unknown`). CI runs clippy with Rust 1.100.0, the version of `rust-toolchain.toml`. If a lint does not fit, add `#[allow(clippy::...)]` with a comment that gives the reason.
 - Write doc comments for public items.
 - Keep functions short and focused.
 
@@ -151,7 +151,7 @@ Fixes #123
 
 CI (`.github/workflows/ci.yml`) runs on pushes and pull requests to `main`:
 
-- **Format and Clippy**: fmt, clippy on the host, clippy for wasm (Rust 1.93.0)
+- **Format and Clippy**: fmt, clippy on the host, clippy for wasm (Rust 1.100.0)
 - **Rust Tests**: `angreal test unit`
 - **Web App**: builds `mimir-wire` for wasm, builds the bundle with `trunk build --release`, runs the Playwright smoke suite
 - **Integration Tests**: the SRD smoke test, only on pushes to `main`
