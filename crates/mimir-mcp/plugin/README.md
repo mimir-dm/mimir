@@ -69,9 +69,21 @@ active?", which calls `get_active_campaign`.
 
 Each MCP connection has its own active campaign.
 
-Note: tools that take a file path (`create_map`, `export_campaign`,
-`import_campaign`, `generate_map`) read and write on the computer that runs
-the server.
+Files: the tools run on the server, so they do not read or write files on
+your computer. A tool that needs a file (`import_campaign`, `preview_archive`,
+`create_map`, `import_adventure_pack`) takes an `upload_id`. Upload the file
+first:
+
+```bash
+curl -sS -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+  -F "file=@campaign.mimir-campaign.tar.gz" "$MIMIR_URL/api/v1/uploads"
+```
+
+A tool that makes a file (`export_campaign`, `export_adventure_pack`,
+`print_adventure_book`, `generate_map`) returns a `download_url`. Download it
+with the same header: `curl -f -H "Authorization: Bearer $MIMIR_API_TOKEN"
+-o <filename> "$MIMIR_URL<download_url>"`. An upload stays for one hour. A
+download link works one time, for one hour.
 
 ## Available Commands
 
@@ -212,7 +224,7 @@ the server.
 ### Uploading a Map
 
 ```
-1. create_map(module_id, name="Goblin Cave", file_path="/path/to/cave.uvtt")
+1. create_map(module_id, name="Goblin Cave", upload_id="<id from POST /api/v1/uploads>")
 2. add_monster_to_module(module_id, monster_name="Goblin", count=2)  # returns a module_monster id
 3. add_token_to_map(map_id, module_monster_id="<id from step 2>", grid_x=5, grid_y=3, label="Guard 1")
 4. add_token_to_map(map_id, module_monster_id="<id from step 2>", grid_x=7, grid_y=3, label="Guard 2")
@@ -222,13 +234,13 @@ the server.
 
 ```
 1. list_map_presets() — see available presets
-2. generate_map(preset="forest", output_path="/path/to/map.dungeondraft_map", seed=42)
+2. generate_map(preset="forest", seed=42)  # returns download.download_url
 ```
 
 Or with a custom YAML config:
 ```
 1. validate_map_config(config_yaml="name: My Map\nwidth: 16\nheight: 16\n...")
-2. generate_map(config_yaml="...", output_path="/path/to/map.dungeondraft_map")
+2. generate_map(config_yaml="...")
 ```
 
 ## Source Filtering

@@ -14,6 +14,7 @@ use std::sync::Arc;
 use crate::context::McpContext;
 use crate::registry::RegisteredTool;
 use crate::response::McpResponse;
+use crate::transfer;
 use crate::{tool, tool_args, McpError};
 
 // =============================================================================
@@ -25,7 +26,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
     vec![
         tool!(
             "create_map",
-            "Upload a UVTT file to create a new map in the active campaign. Requires an active campaign. file_path is an absolute path to a .uvtt file on the machine running this server (not the client) — confirm the path with the user if unsure.",
+            "Create a new map in the active campaign from a UVTT file. First upload the .uvtt file to POST /api/v1/uploads (multipart field `file`, DM token) and give the upload_id that it returns. Requires an active campaign.",
             CreateMapArgs,
             create_map
         ),
@@ -82,8 +83,8 @@ tool_args! {
     pub struct CreateMapArgs {
         /// Display name for the map
         pub name: String,
-        /// Absolute path to the .uvtt file on disk
-        pub file_path: String,
+        /// The upload_id of the .uvtt file (upload it to POST /api/v1/uploads first)
+        pub upload_id: String,
         /// Module ID to assign the map to (optional - omit for campaign-level map)
         pub module_id: Option<String>,
         /// Optional description of the map
@@ -198,17 +199,10 @@ pub async fn create_map(ctx: &Arc<McpContext>, args: CreateMapArgs) -> Result<Va
         .map(parse_lighting_mode)
         .transpose()?;
 
-    // Read the UVTT file from disk
-    let uvtt_data = std::fs::read(&args.file_path).map_err(|e| {
-        McpError::InvalidArguments(format!("Failed to read file '{}': {}", args.file_path, e))
-    })?;
-
-    // Extract filename from path
-    let filename = std::path::Path::new(&args.file_path)
-        .file_name()
-        .and_then(|f| f.to_str())
-        .unwrap_or("map.uvtt")
-        .to_string();
+    let upload = transfer::uploaded(ctx, &args.upload_id)?;
+    let uvtt_data = std::fs::read(&upload.path)
+        .map_err(|e| McpError::Internal(format!("Failed to read the upload: {e}")))?;
+    let filename = upload.filename;
 
     let mut db = ctx.connect()?;
     let data_dir = app_data_dir(ctx);

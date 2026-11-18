@@ -1,7 +1,8 @@
 //! Map Generation Tools
 //!
 //! MCP tools for procedural Dungeondraft map generation. This family is
-//! registry-based and needs no database context.
+//! registry-based and needs no database context. A generated map is a
+//! download (`crate::transfer`).
 
 use mimir_mapgen::biomes;
 use mimir_mapgen::pipeline::{generate, validate_config, MapConfig};
@@ -10,6 +11,7 @@ use std::sync::Arc;
 
 use crate::context::McpContext;
 use crate::registry::RegisteredTool;
+use crate::transfer;
 use crate::{tool, tool_args, McpError};
 
 // =============================================================================
@@ -21,7 +23,7 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
     vec![
         tool!(
             "generate_map",
-            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. The file is written to the machine running this server (not the client); output_path is an absolute path on that host. Returns the output file path. No active campaign required.",
+            "Generate a Dungeondraft .dungeondraft_map file from a YAML config string or biome preset. Returns a download_url: GET it from the server with the DM token to get the file. The link works once, for one hour. No active campaign required.",
             GenerateMapArgs,
             generate_map
         ),
@@ -50,8 +52,6 @@ tool_args! {
         pub config_yaml: Option<String>,
         /// Biome preset name. Call list_map_presets for the current set (includes forest, grassland, cave, desert, lake, arctic, swamp, and island variants). Mutually exclusive with config_yaml.
         pub preset: Option<String>,
-        /// Absolute path for the output .dungeondraft_map file (required)
-        pub output_path: Option<String>,
         /// Random seed override for reproducible generation
         pub seed: Option<i64>,
     }
@@ -72,17 +72,7 @@ tool_args! {
 // Handlers
 // =============================================================================
 
-pub async fn generate_map(
-    _ctx: &Arc<McpContext>,
-    args: GenerateMapArgs,
-) -> Result<Value, McpError> {
-    // output_path is enforced here rather than in the schema's required list
-    // to preserve the published contract (schema declares no required fields).
-    let output_path = args
-        .output_path
-        .as_deref()
-        .ok_or_else(|| McpError::InvalidArguments("output_path is required".to_string()))?;
-
+pub async fn generate_map(ctx: &Arc<McpContext>, args: GenerateMapArgs) -> Result<Value, McpError> {
     let config = match (args.config_yaml.as_deref(), args.preset.as_deref()) {
         (Some(_), Some(_)) => {
             return Err(McpError::InvalidArguments(
@@ -133,12 +123,15 @@ pub async fn generate_map(
         .to_json()
         .map_err(|e| McpError::Internal(format!("Failed to serialize map: {e}")))?;
 
-    std::fs::write(output_path, &map_json)
-        .map_err(|e| McpError::Internal(format!("Failed to write output file: {e}")))?;
+    let filename = format!(
+        "{}.dungeondraft_map",
+        args.preset.as_deref().unwrap_or("map")
+    );
+    let download = transfer::offer(ctx, &filename, map_json.as_bytes())?;
 
     Ok(json!({
         "success": true,
-        "output_path": output_path,
+        "download": download,
         "stats": {
             "objects_placed": result.stats.objects_placed,
             "paths_generated": result.stats.paths_generated,

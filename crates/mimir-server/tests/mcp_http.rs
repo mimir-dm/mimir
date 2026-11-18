@@ -81,6 +81,60 @@ fn rpc(body: &str) -> Value {
     panic!("no JSON-RPC message in {body:?}");
 }
 
+/// `GET path` with a token: the status and the bytes.
+async fn get_bytes(router: &Router, token: Option<&str>, path: &str) -> (StatusCode, Vec<u8>) {
+    let mut b = Request::builder().method(Method::GET).uri(path);
+    if let Some(t) = token {
+        b = b.header("authorization", format!("Bearer {t}"));
+    }
+    let res = router
+        .clone()
+        .oneshot(b.body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    let status = res.status();
+    let bytes = res.into_body().collect().await.unwrap().to_bytes();
+    (status, bytes.to_vec())
+}
+
+/// `POST /api/v1/uploads` (multipart `file`): the status and the answer.
+async fn upload(
+    router: &Router,
+    token: Option<&str>,
+    filename: &str,
+    bytes: &[u8],
+) -> (StatusCode, Value) {
+    let boundary = "mimir-test-boundary";
+    let mut body = format!(
+        "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\n\
+         Content-Type: application/octet-stream\r\n\r\n"
+    )
+    .into_bytes();
+    body.extend_from_slice(bytes);
+    body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+    let mut b = Request::builder()
+        .method(Method::POST)
+        .uri("/api/v1/uploads")
+        .header(
+            "content-type",
+            format!("multipart/form-data; boundary={boundary}"),
+        );
+    if let Some(t) = token {
+        b = b.header("authorization", format!("Bearer {t}"));
+    }
+    let res = router
+        .clone()
+        .oneshot(b.body(Body::from(body)).unwrap())
+        .await
+        .unwrap();
+    let status = res.status();
+    let bytes = res.into_body().collect().await.unwrap().to_bytes();
+    (
+        status,
+        serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+    )
+}
+
 struct Session<'a> {
     router: &'a Router,
     token: Option<String>,
@@ -382,29 +436,98 @@ async fn an_adventure_becomes_a_campaign_over_mcp() {
         file["adventureData"][0]["data"].as_array().unwrap().len(),
         3
     );
-    // A pack out to a folder, and in again as a new campaign (MIMIR-T-0741).
-    let out = tempfile::tempdir().unwrap();
-    let written = s
-        .call("export_adventure_pack", json!({"output_path": out.path().to_string_lossy(), "source": "McpFen", "name": "MCP Fen"}))
+    // A pack out as a download, and in again from an upload as a new
+    // campaign (MIMIR-T-0741, MIMIR-T-0747).
+    let offered = s
+        .call(
+            "export_adventure_pack",
+            json!({"source": "McpFen", "name": "MCP Fen"}),
+        )
         .await;
-    let path = written["path"].as_str().unwrap().to_string();
-    assert!(path.ends_with("McpFen.mimir-adventure.zip"));
+    assert_eq!(offered["filename"], "McpFen.mimir-adventure.zip");
+    let (status, pack) = get_bytes(&r, Some(DM), offered["download_url"].as_str().unwrap()).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(offered["size_bytes"], pack.len());
+    let (status, up) = upload(&r, Some(DM), "McpFen.mimir-adventure.zip", &pack).await;
+    assert_eq!(status, StatusCode::CREATED);
     let imported = s
         .call(
             "import_adventure_pack",
-            json!({"path": path, "name": "MCP Fen again"}),
+            json!({"upload_id": up["upload_id"], "name": "MCP Fen again"}),
         )
         .await;
     assert_eq!(imported["campaign_name"], "MCP Fen again");
     let active = s.call("get_active_campaign", json!({})).await;
     assert_eq!(active["campaign"]["id"], imported["campaign_id"]);
-    // The active campaign as one book (MIMIR-T-0742).
+    // The active campaign as one book (MIMIR-T-0742), a download.
     let book = s
+        .call("print_adventure_book", json!({"authors": "Robin"}))
+        .await;
+    let (status, bytes) = get_bytes(&r, Some(DM), book["download_url"].as_str().unwrap()).await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(bytes.starts_with(b"%PDF"));
+}
+
+/// Files in and out of the MCP tools over plain HTTP (MIMIR-T-0747): an
+/// upload id in, a one-time download link out, the DM only.
+#[tokio::test]
+async fn mcp_files_go_through_uploads_and_downloads() {
+    let (r, _dir, _) = server(Some(DM));
+    let (mut s, _) = Session::connect(&r, Some(DM)).await;
+    s.call("create_campaign", json!({"name": "Files"})).await;
+    let m = s.call("create_module", json!({"name": "One"})).await;
+    assert!(m.get("module").is_some() || m.get("data").is_some(), "{m}");
+
+    // Out: the archive is a download, which works once.
+    let out = s.call("export_campaign", json!({})).await;
+    let link = out["data"]["download_url"].as_str().unwrap().to_string();
+    assert!(link.starts_with("/api/v1/downloads/"), "{out}");
+    let (status, _) = get_bytes(&r, None, &link).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let (status, archive) = get_bytes(&r, Some(DM), &link).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(out["data"]["size_bytes"], archive.len());
+    let (status, _) = get_bytes(&r, Some(DM), &link).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+
+    // In: an upload, then the tools take its id.
+    let (status, _) = upload(&r, None, "files.mimir-campaign.tar.gz", &archive).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let (status, up) = upload(&r, Some(DM), "../files.mimir-campaign.tar.gz", &archive).await;
+    assert_eq!(status, StatusCode::CREATED, "{up}");
+    assert_eq!(up["filename"], "files.mimir-campaign.tar.gz");
+    assert_eq!(up["size_bytes"], archive.len());
+    let id = up["upload_id"].clone();
+    let preview = s.call("preview_archive", json!({"upload_id": id})).await;
+    assert_eq!(preview["campaign_name"], "Files");
+    let imported = s
         .call(
-            "print_adventure_book",
-            json!({"output_path": out.path().to_string_lossy(), "authors": "Robin"}),
+            "import_campaign",
+            json!({"upload_id": id, "new_name": "Files again"}),
         )
         .await;
-    let bytes = std::fs::read(book["path"].as_str().unwrap()).unwrap();
-    assert!(bytes.starts_with(b"%PDF"));
+    assert_eq!(imported["data"]["campaign_name"], "Files again");
+    let active = s.call("get_active_campaign", json!({})).await;
+    assert_eq!(active["campaign"]["name"], "Files again");
+
+    // A generated map is a download.
+    let map = s
+        .call("generate_map", json!({"preset": "forest", "seed": 1}))
+        .await;
+    let (status, bytes) = get_bytes(
+        &r,
+        Some(DM),
+        map["download"]["download_url"].as_str().unwrap(),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(!bytes.is_empty());
+
+    // An unknown upload id says how to upload.
+    let err = s
+        .call_error("import_campaign", json!({"upload_id": "/etc/passwd"}))
+        .await;
+    assert!(err.contains("POST /api/v1/uploads"), "{err}");
+    let (status, _) = get_bytes(&r, Some(DM), "/api/v1/downloads/..%2F..%2Fdata").await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
 }

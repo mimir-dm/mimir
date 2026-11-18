@@ -1,8 +1,9 @@
 //! Settings and admin (MIMIR-T-0724), DM only: campaign archives (export
 //! as a download; preview and import from an upload), catalog imports
 //! (5etools data and images) as background jobs, removing a source, and
-//! the source books of a campaign or a character. Uploads stream to a
-//! temporary file under the data folder; downloads stream from one.
+//! the source books of a campaign or a character, and the files of the MCP
+//! tools. Uploads stream to a temporary file under the data folder;
+//! downloads stream from one.
 
 use std::collections::HashMap;
 use std::path::Path as FsPath;
@@ -16,6 +17,7 @@ use futures::StreamExt;
 use mimir_core::dal::catalog as catalog_dal;
 use mimir_core::import::{import_images_from_tarball, CatalogImportService};
 use mimir_core::services::{ArchiveService, CampaignService, ServiceError, SourceService};
+use mimir_mcp::transfer;
 use mimir_wire as wire;
 use serde_json::Value;
 use tokio::io::AsyncWriteExt;
@@ -357,6 +359,76 @@ pub async fn import_archive(
             ))
         })
         .await
+}
+
+// --------------------------------------------------------------- MCP files
+
+/// `POST /uploads` (multipart `file`): keep a file for an MCP tool, which
+/// takes its `upload_id` (MIMIR-A-0012; `mimir_mcp::transfer`).
+pub async fn upload_for_mcp(
+    State(state): State<AppState>,
+    form: Multipart,
+) -> Result<(StatusCode, Json<Value>), ApiError> {
+    let mut up = save_upload(form, &tmp_dir(&state)).await?;
+    let (filename, path) = the_file(&mut up)?;
+    let app = state.config.data_dir.clone();
+    let stored = tokio::task::spawn_blocking(move || -> Result<transfer::Stored, ServiceError> {
+        let (id, dir) = transfer::new_entry(&app, transfer::Kind::Upload)?;
+        let name = transfer::clean_name(&filename, "upload");
+        path.persist(dir.join(&name))
+            .map_err(|e| ServiceError::Io(e.error))?;
+        transfer::find(&app, transfer::Kind::Upload, &id)
+            .ok_or_else(|| ServiceError::Io(std::io::Error::other("the upload is gone")))
+    })
+    .await
+    .map_err(|e| ApiError::internal(e.to_string()))??;
+    Ok((
+        StatusCode::CREATED,
+        Json(serde_json::json!({
+            "upload_id": stored.id,
+            "filename": stored.filename,
+            "size_bytes": stored.size_bytes,
+            "expires_in_seconds": transfer::TTL.as_secs(),
+        })),
+    ))
+}
+
+/// Removes a folder when dropped: the end of a download stream.
+struct RemoveOnDrop(std::path::PathBuf);
+
+impl Drop for RemoveOnDrop {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// `GET /downloads/{id}`: a file that an MCP tool made, once.
+pub async fn download_for_mcp(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Response, ApiError> {
+    let (stored, dir) = transfer::take(&state.config.data_dir, transfer::Kind::Download, &id)
+        .ok_or_else(|| ServiceError::not_found("Download", &id))?;
+    let gone = RemoveOnDrop(dir);
+    let file = tokio::fs::File::open(&stored.path)
+        .await
+        .map_err(ServiceError::Io)?;
+    let stream = tokio_util::io::ReaderStream::new(file).map(move |chunk| {
+        let _keep = &gone;
+        chunk
+    });
+    Ok((
+        [
+            (header::CONTENT_TYPE, "application/octet-stream".to_string()),
+            (header::CONTENT_LENGTH, stored.size_bytes.to_string()),
+            (
+                header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{}\"", stored.filename),
+            ),
+        ],
+        Body::from_stream(stream),
+    )
+        .into_response())
 }
 
 // ------------------------------------------------------------------ catalog

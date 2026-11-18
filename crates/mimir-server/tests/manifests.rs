@@ -28,6 +28,32 @@ fn every_crate_has_the_same_version() {
     assert_eq!(env!("CARGO_PKG_VERSION"), first.as_str());
 }
 
+/// The Claude Code plugin and its marketplace entry carry the same version
+/// (MIMIR-T-0747): Claude Code keeps a plugin per version, so a plugin that
+/// keeps an old version is not updated.
+#[test]
+fn the_plugin_manifests_have_the_version_of_the_crates() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |p: &str| -> serde_json::Value {
+        serde_json::from_str(&std::fs::read_to_string(root.join(p)).unwrap()).unwrap()
+    };
+    let version = env!("CARGO_PKG_VERSION");
+    let plugin = read("crates/mimir-mcp/plugin/.claude-plugin/plugin.json");
+    assert_eq!(plugin["version"], version, "plugin.json");
+    let market = read(".claude-plugin/marketplace.json");
+    assert_eq!(
+        market["metadata"]["version"], version,
+        "marketplace.json metadata"
+    );
+    for p in market["plugins"].as_array().unwrap() {
+        assert_eq!(
+            p["version"], version,
+            "marketplace.json plugin {}",
+            p["name"]
+        );
+    }
+}
+
 /// One Rust version (MIMIR-T-0748): the workflows and the Dockerfile use the
 /// channel of `rust-toolchain.toml`.
 #[test]

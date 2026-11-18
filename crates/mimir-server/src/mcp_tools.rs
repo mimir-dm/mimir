@@ -4,7 +4,7 @@
 use std::sync::{Arc, OnceLock};
 
 use mimir_mcp::registry::RegisteredTool;
-use mimir_mcp::{tool, tool_args, McpContext, McpError};
+use mimir_mcp::{tool, tool_args, transfer, McpContext, McpError};
 use serde_json::Value;
 
 use crate::error::ApiError;
@@ -77,8 +77,6 @@ pub async fn export_adventure_file(
 
 tool_args! {
     pub struct ExportPackArgs {
-        /// The folder to write the pack in
-        pub output_path: String,
         /// The adventure's source code: 6 or more letters, digits or - & + !, not an official source
         pub source: String,
         /// The adventure's name
@@ -94,15 +92,15 @@ tool_args! {
 
 tool_args! {
     pub struct ImportPackArgs {
-        /// The path of a .mimir-adventure.zip
-        pub path: String,
+        /// The upload_id of a .mimir-adventure.zip (upload it to POST /api/v1/uploads first)
+        pub upload_id: String,
         /// The new campaign's name (default: the pack's)
         pub name: Option<String>,
     }
 }
 
 /// `export_adventure_pack`: the active campaign as a Mimir adventure pack,
-/// written to `output_path`.
+/// a download (MIMIR-T-0747).
 pub async fn export_adventure_pack(
     ctx: &Arc<McpContext>,
     args: ExportPackArgs,
@@ -124,11 +122,7 @@ pub async fn export_adventure_pack(
     let mut conn = ctx.connect()?;
     let bytes = crate::adventure::export_pack(&mut conn, &ctx.app_dir, &campaign_id, &meta)
         .map_err(mcp_err)?;
-    let path = std::path::Path::new(&args.output_path)
-        .join(format!("{}.mimir-adventure.zip", meta.source));
-    std::fs::write(&path, &bytes)
-        .map_err(|e| McpError::Internal(format!("{}: {e}", path.display())))?;
-    Ok(serde_json::json!({"path": path.display().to_string(), "size_bytes": bytes.len()}))
+    transfer::offer(ctx, &format!("{}.mimir-adventure.zip", meta.source), &bytes)
 }
 
 /// `import_adventure_pack`: a pack as a new campaign, which becomes the
@@ -138,8 +132,9 @@ pub async fn import_adventure_pack(
     args: ImportPackArgs,
 ) -> Result<Value, McpError> {
     use diesel::Connection;
-    let bytes = std::fs::read(&args.path)
-        .map_err(|e| McpError::InvalidArguments(format!("{}: {e}", args.path)))?;
+    let upload = transfer::uploaded(ctx, &args.upload_id)?;
+    let bytes = std::fs::read(&upload.path)
+        .map_err(|e| McpError::Internal(format!("cannot read the upload: {e}")))?;
     let mut conn = ctx.connect()?;
     let r = conn
         .transaction::<_, ApiError, _>(|c| {
@@ -152,8 +147,6 @@ pub async fn import_adventure_pack(
 
 tool_args! {
     pub struct PrintBookArgs {
-        /// The folder to write the PDF in
-        pub output_path: String,
         /// Its authors, comma-separated, for the title page
         pub authors: Option<String>,
         /// The lowest character level, for the title page
@@ -193,10 +186,7 @@ pub async fn print_adventure_book(
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(data.pdf_base64)
         .map_err(|e| McpError::Internal(e.to_string()))?;
-    let path = std::path::Path::new(&args.output_path).join(format!("book-{campaign_id}.pdf"));
-    std::fs::write(&path, &bytes)
-        .map_err(|e| McpError::Internal(format!("{}: {e}", path.display())))?;
-    Ok(serde_json::json!({"path": path.display().to_string(), "size_bytes": bytes.len()}))
+    transfer::offer(ctx, &format!("book-{campaign_id}.pdf"), &bytes)
 }
 
 /// `preview_adventure_campaign`
@@ -252,19 +242,19 @@ pub fn server_tools() -> &'static [RegisteredTool] {
             ),
             tool!(
                 "export_adventure_pack",
-                "Write the active campaign as a Mimir adventure pack (.mimir-adventure.zip) in a folder: the adventure to be played, with its maps, walls, placements, module monsters and NPCs, for another Mimir. No player characters, notes, fog or combat state.",
+                "Export the active campaign as a Mimir adventure pack (.mimir-adventure.zip): the adventure to be played, with its maps, walls, placements, module monsters and NPCs, for another Mimir. No player characters, notes, fog or combat state. Returns a download_url: GET it from the server with the DM token. The link works once, for one hour.",
                 ExportPackArgs,
                 export_adventure_pack
             ),
             tool!(
                 "import_adventure_pack",
-                "Import a Mimir adventure pack (.mimir-adventure.zip) as a new campaign; it becomes the active campaign.",
+                "Import a Mimir adventure pack (.mimir-adventure.zip) as a new campaign; it becomes the active campaign. First upload the file to POST /api/v1/uploads (multipart field `file`, DM token) and give the upload_id that it returns.",
                 ImportPackArgs,
                 import_adventure_pack
             ),
             tool!(
                 "print_adventure_book",
-                "Write the active campaign as one PDF book in a folder: a title page (authors, levels), contents, the campaign documents, each module with its documents and maps, the appendices, and the stat blocks and items the text names.",
+                "Make the active campaign one PDF book: a title page (authors, levels), contents, the campaign documents, each module with its documents and maps, the appendices, and the stat blocks and items the text names. Returns a download_url: GET it from the server with the DM token. The link works once, for one hour.",
                 PrintBookArgs,
                 print_adventure_book
             ),
