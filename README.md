@@ -22,7 +22,7 @@ MIMIR_BIND=0.0.0.0:8740 \
 
 Open the server address in a browser and sign in with the DM token. Without `MIMIR_API_TOKEN` the server is in open mode: anyone who reaches it is the DM. Put the server on a private network.
 
-See [Run the Server](docs/src/how-to/run-server.md) and [Environment Variables](docs/src/reference/environment-variables.md). To run it with Docker on a tailnet, see [Deploy with Docker](docs/src/how-to/deploy-docker.md).
+See [Run the Server](docs/src/content/docs/how-to/run-server.md) and [Environment Variables](docs/src/content/docs/reference/environment-variables.md). To run it with Docker on a tailnet, see [Deploy with Docker](docs/src/content/docs/how-to/deploy-docker.md).
 
 ## Claude Code Plugin
 

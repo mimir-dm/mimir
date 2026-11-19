@@ -42,9 +42,6 @@ agent_test_results/
 # TypeScript build cache
 *.tsbuildinfo
 
-# mdBook build output
-docs/book/
-
 # Trunk output of the web app
 /crates/mimir-web/dist/
 

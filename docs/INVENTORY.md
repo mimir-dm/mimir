@@ -14,7 +14,7 @@ The surfaces of Mimir 1.0 (the web app) that the documentation must cover, with 
 | e2e harness (Playwright) | `crates/mimir-web/web-e2e` |
 | mapgen CLI binary | `crates/mimir-mapgen/src/main.rs` |
 | READMEs: root `README.md`, `DEVELOPMENT.md`, `CONTRIBUTING.md`, plugin `crates/mimir-mcp/plugin/README.md`, `crates/mimir-web/editor/README.md`, `crates/mimir-web/web-e2e/README.md` | — |
-| Docs site: mdBook at `docs/` (theme navy, mermaid, search) | `docs/book.toml` |
+| Docs site: Astro Starlight with starlight-aurora at `docs/` (mermaid, search) | `docs/astro.config.mjs` |
 
 Docs: [Architecture Overview](src/explanation/architecture-overview.md), [Architecture](src/developer/ARCHITECTURE.md), [Web App Architecture](src/developer/reference/frontend/README.md).
 
@@ -110,7 +110,7 @@ Schema: `crates/mimir-core/src/schema.rs`; migrations in `crates/mimir-core/migr
 - Release binary: `angreal web build --release`, then `cargo build --release -p mimir-server --features embed-web`
 - CI (`.github/workflows/ci.yml`): fmt; clippy host and wasm (Rust 1.100.0, `rust-toolchain.toml`); `angreal test unit`; wasm build of `mimir-wire`, `trunk build --release`, Playwright smoke suite; SRD smoke test (pushes to main only); coverage (tarpaulin, does not fail CI)
 - Release (`.github/workflows/release.yml`): tag `v*.*.*` → `mimir-mapgen` binaries per platform → draft GitHub release. The workflow does not build the server.
-- Docs deploy (`.github/workflows/docs.yml`): mdBook build → GitHub Pages
+- Docs (`.github/workflows/docs.yml`): Starlight build on pull requests; on a push to main, deploy → GitHub Pages
 - Tests: Rust `--test-threads=1` (SQLite locking); `mimir-server/tests/` for API, auth, live, MCP; host tests of web logic; Playwright specs in `web-e2e/specs/`
 
 Docs: `developer/DEVELOPMENT.md`, `developer/CONTRIBUTING.md`.
