@@ -12,7 +12,7 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 
 use crate::context::McpContext;
-use crate::registry::RegisteredTool;
+use crate::registry::{JsonArgType, RegisteredTool};
 use crate::response::McpResponse;
 use crate::{tool, tool_args, McpError};
 
@@ -84,14 +84,35 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
 // Arguments
 // =============================================================================
 
+/// A module type key; an unknown key is refused with the list.
+#[derive(Debug)]
+pub struct ModuleTypeKey(pub ModuleType);
+
+impl<'de> serde::Deserialize<'de> for ModuleTypeKey {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let key = String::deserialize(d)?;
+        ModuleType::parse(&key).map(ModuleTypeKey).ok_or_else(|| {
+            serde::de::Error::custom(format!(
+                "unknown module type {key:?}: use one of {}",
+                ModuleType::KEYS.join(", ")
+            ))
+        })
+    }
+}
+
+impl JsonArgType for ModuleTypeKey {
+    const JSON_TYPE: &'static str = "string";
+    const ENUM: &'static [&'static str] = &ModuleType::KEYS;
+}
+
 tool_args! {
     pub struct CreateModuleArgs {
         /// Name of the module
         pub name: String,
         /// Description of the module
         pub description: Option<String>,
-        /// Type of module: adventure, location, organization (default: adventure)
-        pub module_type: Option<String>,
+        /// Type of module, which picks its starting documents (default: general)
+        pub module_type: Option<ModuleTypeKey>,
     }
 }
 
@@ -188,7 +209,7 @@ pub async fn create_module(
         .get_active_campaign_id()
         .ok_or(McpError::NoActiveCampaign)?;
 
-    let module_type = ModuleType::from(args.module_type.as_deref());
+    let module_type = args.module_type.map(|k| k.0).unwrap_or_default();
 
     let mut db = ctx.connect()?;
     let mut service = ModuleService::new(&mut db);
@@ -457,4 +478,38 @@ pub async fn add_item_to_module(
     Err(McpError::Internal(
         "Module item tracking is not yet implemented. Items can be added to character inventories instead.".to_string()
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_module_publishes_the_module_types() {
+        let schema = serde_json::to_value(CreateModuleArgs::input_schema()).unwrap();
+        let values: Vec<&str> = schema["properties"]["module_type"]["enum"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap())
+            .collect();
+        assert_eq!(values, ModuleType::KEYS);
+    }
+
+    #[test]
+    fn create_module_refuses_an_unknown_type() {
+        let err = serde_json::from_value::<CreateModuleArgs>(
+            json!({"name": "Hall", "module_type": "adventure"}),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("unknown module type \"adventure\""), "{err}");
+        assert!(err.contains("general, mystery, dungeon"), "{err}");
+
+        let ok: CreateModuleArgs =
+            serde_json::from_value(json!({"name": "Hall", "module_type": "dungeon"})).unwrap();
+        assert_eq!(ok.module_type.map(|k| k.0), Some(ModuleType::Dungeon));
+        let none: CreateModuleArgs = serde_json::from_value(json!({"name": "Hall"})).unwrap();
+        assert!(none.module_type.is_none());
+    }
 }

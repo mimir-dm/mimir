@@ -14,7 +14,7 @@ The **campaign board** holds everything that outlives a single adventure: world-
 
 The split matters because the two kinds of content have different lifespans and different moments of use. Campaign content accumulates slowly and gets referenced for years; module content is prepared intensively for a few sessions and then becomes history. Keeping them on separate boards means each board only shows what is relevant at its level.
 
-For what each board actually contains, see the [Campaign Dashboard](../../reference/ui/campaign-dashboard/) and [Module Prep View](../../reference/ui/module-prep-view/) references.
+For what each board actually contains, see the [Campaign Dashboard](../../reference/ui/campaign-dashboard/) and [Module Page](../../reference/ui/module-page/) references.
 
 ## Workflow Philosophy
 
@@ -24,7 +24,7 @@ Campaign content persists across modules. You write the villain's backstory once
 
 ### Module-Focused Sessions
 
-When running a session, you enter Play Mode for one specific module. Everything you need for that session is already gathered on its board — no digging through campaign-wide content at the table.
+When running a session, you open the maps of one module. Its monsters, NPCs, documents and combat are already gathered on its board — no digging through campaign-wide content at the table.
 
 ### Progressive Preparation
 
@@ -34,8 +34,8 @@ You don't have to prepare everything up front. A campaign can start with little 
 
 ### Campaign → Module
 
-- NPCs can be assigned to modules
-- Campaign PCs appear in Play Mode
+- Campaign PCs join the initiative tracker of every module
+- Campaign homebrew monsters can join any module
 - Setting context informs module content
 
 ### Module → Campaign
@@ -66,4 +66,4 @@ You don't have to prepare everything up front. A campaign can start with little 
 - [Campaigns vs Modules](../campaign-vs-module/)
 - [Document Workflow](../document-workflow/)
 - [Campaign Dashboard](../../reference/ui/campaign-dashboard/)
-- [Module Prep View](../../reference/ui/module-prep-view/)
+- [Module Page](../../reference/ui/module-page/)

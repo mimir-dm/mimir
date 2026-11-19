@@ -22,7 +22,14 @@ pub struct Book {
     pub contents: Option<String>,
     /// Path to cover image (local asset path)
     pub cover_path: Option<String>,
+    /// "book" or "adventure" (MIMIR-T-0736).
+    pub kind: String,
+    /// An adventure's index entry from adventures.json, as JSON.
+    pub meta: Option<String>,
 }
+
+/// The `kind` of an adventure's book row.
+pub const KIND_ADVENTURE: &str = "adventure";
 
 /// Data for inserting a new book.
 #[derive(Debug, Clone, Insertable)]
@@ -33,6 +40,8 @@ pub struct NewBook<'a> {
     pub data: &'a str,
     pub contents: Option<&'a str>,
     pub cover_path: Option<&'a str>,
+    pub kind: &'a str,
+    pub meta: Option<&'a str>,
 }
 
 impl<'a> NewBook<'a> {
@@ -49,7 +58,16 @@ impl<'a> NewBook<'a> {
             data,
             contents: None,
             cover_path: None,
+            kind: "book",
+            meta: None,
         }
+    }
+
+    /// An adventure, with its index entry.
+    pub fn adventure(mut self, meta: &'a str) -> Self {
+        self.kind = KIND_ADVENTURE;
+        self.meta = Some(meta);
+        self
     }
 
     /// Set the table of contents.

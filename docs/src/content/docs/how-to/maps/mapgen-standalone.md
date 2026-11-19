@@ -2,7 +2,7 @@
 title: "Install and Use Mapgen as a Standalone Tool"
 ---
 
-`mimir-mapgen` is a self-contained procedural map generator that creates [Dungeondraft](https://dungeondraft.net/)-compatible `.dungeondraft_map` files. It has no dependency on Mimir's database, UI, or MCP server — you can build it independently and use it as a command-line tool anywhere.
+`mimir-mapgen` is a self-contained procedural map generator that creates [Dungeondraft](https://dungeondraft.net/)-compatible `.dungeondraft_map` files. It has no dependency on the Mimir server, its database or its web app — you can build it independently and use it as a command-line tool anywhere.
 
 Note that Mimir itself cannot open `.dungeondraft_map` files directly — Mimir's map upload accepts only UVTT (`.dd2vtt`, `.uvtt`) and image files. To use a generated map in Mimir, open it in Dungeondraft (a paid tool) and export it as Universal VTT.
 
@@ -166,4 +166,4 @@ The `crates/mimir-mapgen/examples/` directory contains YAML configs and pre-gene
 
 - [Mapgen Reference](../../../reference/mapgen/) — Full CLI, preset table, and YAML schema with all fields documented
 - [Dungeondraft Texture Catalog](../../../reference/dd-texture-catalog/) — Available `res://` texture paths
-- [Generate Maps (Mimir Integration)](../generate-map/) — Using mapgen through Mimir's UI and MCP tools
+- [Generate Maps (Mimir Integration)](../generate-map/) — Using mapgen with Mimir and its MCP tools

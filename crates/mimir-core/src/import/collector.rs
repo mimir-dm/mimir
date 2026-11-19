@@ -507,8 +507,8 @@ fn collect_book_content(
     }
 
     if let Ok(data) = discovery::load_json_file(&book_file) {
-        // The book content file has a "data" array containing all sections
-        if let Some(book_data) = data.get("data") {
+        // The sections: `data`, or `bookData[0].data` in current 5etools.
+        if let Some(book_data) = crate::import::corpus_body(&data) {
             collected.set_book_content(book_data.clone());
         }
     }

@@ -1,0 +1,13 @@
+# The image builds from the sources only (Dockerfile).
+.git
+target
+**/node_modules
+crates/mimir-web/dist
+crates/mimir-web/editor/dist
+crates/mimir-web/web-e2e/results
+crates/mimir-web/web-e2e/screenshots
+docs/book
+deploy
+*.db
+*.sqlite
+mimir-data

@@ -4,7 +4,9 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::dal::catalog as catalog_dal;
-use crate::models::campaign::{Character, CharacterResponse, NewCharacter, UpdateCharacter};
+use crate::models::campaign::{
+    Character, CharacterResponse, NewCharacter, NewCharacterClass, UpdateCharacter,
+};
 use crate::services::{ServiceError, ServiceResult};
 use crate::utils::now_rfc3339;
 
@@ -262,6 +264,13 @@ impl<'a> CharacterService<'a> {
             if let Ok(Some(class)) =
                 catalog_dal::get_class_by_name(self.conn, class_name, class_source)
             {
+                // The starting class at level 1 (MIMIR-T-0721: the desktop
+                // left a new character with no class).
+                let class_id = Uuid::new_v4().to_string();
+                dal::insert_character_class(
+                    self.conn,
+                    &NewCharacterClass::starting(&class_id, &char_id, &class.name, &class.source),
+                )?;
                 if let Ok(class_data) = serde_json::from_str::<serde_json::Value>(&class.data) {
                     let class_profs = extract_class_proficiencies(&class_data, selected_skills);
                     insert_proficiencies(self.conn, &char_id, &class_profs)?;
@@ -291,6 +300,28 @@ impl<'a> CharacterService<'a> {
         }
 
         dal::get_character(self.conn, &char_id).map_err(ServiceError::from)
+    }
+
+    /// Move a character to a campaign, or out of any (`None`).
+    pub fn set_campaign(
+        &mut self,
+        id: &str,
+        campaign_id: Option<&str>,
+    ) -> ServiceResult<Character> {
+        if let Some(c) = campaign_id {
+            if !dal::campaign_exists(self.conn, c)? {
+                return Err(ServiceError::not_found("Campaign", c));
+            }
+        }
+        if dal::set_character_campaign(self.conn, id, campaign_id)? == 0 {
+            return Err(ServiceError::not_found("Character", id));
+        }
+        dal::get_character(self.conn, id).map_err(ServiceError::from)
+    }
+
+    /// The characters in no campaign (PCs and NPCs).
+    pub fn list_unassigned(&mut self) -> ServiceResult<Vec<Character>> {
+        dal::list_unassigned_characters(self.conn).map_err(ServiceError::from)
     }
 
     /// List all characters for a campaign.
@@ -324,6 +355,18 @@ impl<'a> CharacterService<'a> {
         faction: &str,
     ) -> ServiceResult<Vec<Character>> {
         dal::list_npcs_by_faction(self.conn, campaign_id, faction).map_err(ServiceError::from)
+    }
+
+    /// The features a character chose (fighting style, metamagic,
+    /// maneuvers, invocations, pact boon).
+    pub fn list_features(
+        &mut self,
+        character_id: &str,
+    ) -> ServiceResult<Vec<crate::models::campaign::CharacterFeature>> {
+        if !dal::character_exists(self.conn, character_id)? {
+            return Err(ServiceError::not_found("Character", character_id));
+        }
+        Ok(dal::list_character_features(self.conn, character_id)?)
     }
 
     /// Get a character by ID.

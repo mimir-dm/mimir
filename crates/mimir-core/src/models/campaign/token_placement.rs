@@ -39,6 +39,9 @@ pub struct TokenPlacement {
     pub light_radius_ft: i32,
     /// ISO8601 timestamp of creation
     pub created_at: String,
+    /// The DM marked it dead (0 or 1).
+    #[serde(default)]
+    pub dead: i32,
 }
 
 impl TokenPlacement {
@@ -160,6 +163,7 @@ pub struct UpdateTokenPlacement<'a> {
     pub vision_dim_ft: Option<Option<i32>>,
     pub vision_dark_ft: Option<i32>,
     pub light_radius_ft: Option<i32>,
+    pub dead: Option<i32>,
 }
 
 impl<'a> UpdateTokenPlacement<'a> {

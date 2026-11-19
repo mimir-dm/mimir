@@ -1,108 +1,30 @@
-//! MCP Server Handler
+//! Tool dispatch
 //!
-//! Implements the ServerHandler trait to route tool calls to appropriate handlers.
+//! Runs a tool of the registry by name. The server's `/mcp` speaks the
+//! protocol; this is the tests' entry point to the tools.
 
-use async_trait::async_trait;
-use rust_mcp_sdk::mcp_server::ServerHandler;
-use rust_mcp_sdk::schema::{
-    CallToolRequestParams, CallToolResult, ContentBlock, ListToolsResult, PaginatedRequestParams,
-    RpcError, Tool,
-};
-use rust_mcp_sdk::McpServer;
 use serde_json::Value;
 use std::sync::Arc;
-use tracing::{error, info};
 
 use crate::context::McpContext;
 use crate::McpError;
 
-/// Mimir MCP Server Handler.
-///
-/// Routes incoming MCP requests to the appropriate tool implementations.
+/// Runs the registry's tools over one context.
 pub struct MimirHandler {
     context: Arc<McpContext>,
 }
 
 impl MimirHandler {
-    /// Create a new handler with initialized context.
-    pub fn new() -> Result<Self, McpError> {
-        let context = McpContext::new()?;
-        Ok(Self {
-            context: Arc::new(context),
-        })
-    }
-
-    /// Create a handler with an existing context.
+    /// A handler over an existing context.
     pub fn with_context(context: Arc<McpContext>) -> Self {
         Self { context }
     }
 
-    /// Get the list of available tools from the registry.
-    pub(crate) fn get_tools() -> Vec<Tool> {
-        crate::registry::all_tools()
-            .iter()
-            .map(|t| t.to_tool())
-            .collect()
-    }
-
-    /// Route a tool call through the registry.
-    async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
+    /// Run a tool of the registry.
+    pub async fn execute_tool(&self, name: &str, args: Value) -> Result<Value, McpError> {
         match crate::registry::find(name) {
             Some(tool) => (tool.handler)(&self.context, args).await,
             None => Err(McpError::ToolNotFound(name.to_string())),
-        }
-    }
-}
-
-#[async_trait]
-impl ServerHandler for MimirHandler {
-    async fn handle_list_tools_request(
-        &self,
-        _params: Option<PaginatedRequestParams>,
-        _runtime: Arc<dyn McpServer>,
-    ) -> Result<ListToolsResult, RpcError> {
-        info!("Handling list_tools request");
-        Ok(ListToolsResult {
-            tools: Self::get_tools(),
-            meta: None,
-            next_cursor: None,
-        })
-    }
-
-    async fn handle_call_tool_request(
-        &self,
-        params: CallToolRequestParams,
-        _runtime: Arc<dyn McpServer>,
-    ) -> Result<CallToolResult, rust_mcp_sdk::schema::schema_utils::CallToolError> {
-        info!(tool = %params.name, "Handling call_tool request");
-
-        let args = params
-            .arguments
-            .map(Value::Object)
-            .unwrap_or(Value::Object(Default::default()));
-
-        match self.execute_tool(&params.name, args).await {
-            Ok(result) => {
-                let content = vec![ContentBlock::text_content(
-                    serde_json::to_string_pretty(&result).unwrap_or_default(),
-                )];
-                Ok(CallToolResult {
-                    content,
-                    is_error: None,
-                    meta: None,
-                    structured_content: None,
-                })
-            }
-            Err(e) => {
-                error!(tool = %params.name, error = %e, "Tool execution failed");
-                let content = vec![ContentBlock::text_content(format!("Error: {}", e))];
-                Ok(CallToolResult {
-                    content,
-                    is_error: Some(true),
-                    meta: None,
-                    structured_content: None,
-                })
-            }
         }
     }
 }
@@ -123,8 +45,10 @@ mod tests {
 
     #[test]
     fn no_duplicate_tool_names() {
-        let tools = MimirHandler::get_tools();
-        let mut names: Vec<&str> = tools.iter().map(|t| t.name.as_str()).collect();
+        let mut names: Vec<&str> = crate::registry::all_tools()
+            .iter()
+            .map(|t| t.name)
+            .collect();
         names.sort();
         for window in names.windows(2) {
             assert_ne!(window[0], window[1], "Duplicate tool name: '{}'", window[0]);
@@ -133,10 +57,9 @@ mod tests {
 
     #[test]
     fn all_tools_have_descriptions() {
-        let tools = MimirHandler::get_tools();
-        for tool in &tools {
+        for tool in crate::registry::all_tools() {
             assert!(
-                tool.description.is_some() && !tool.description.as_ref().unwrap().is_empty(),
+                !tool.description.is_empty(),
                 "Tool '{}' is missing a description",
                 tool.name
             );
@@ -1941,7 +1864,7 @@ mod tests {
             res
         );
 
-        // Remove — case-insensitive, matching the desktop UI behavior
+        // Remove — case-insensitive, matching the app
         let res = call_ok(
             &handler,
             "remove_character_spell",
@@ -2073,24 +1996,28 @@ mod tests {
         .await;
         assert_eq!(res["valid"], false);
 
-        // Generate from a preset into a temp file
-        let out =
-            std::env::temp_dir().join(format!("mimir-mcp-test-map-{}.json", std::process::id()));
+        // Generate from a preset: a download
         let res = call_ok(
             &handler,
             "generate_map",
-            json!({"preset": preset_name, "output_path": out.to_str().unwrap(), "seed": 42}),
+            json!({"preset": preset_name, "seed": 42}),
         )
         .await;
         assert_eq!(res["success"], true);
-        assert!(out.exists(), "generated map file should exist");
-        let _ = std::fs::remove_file(&out);
+        let url = res["download"]["download_url"].as_str().unwrap();
+        let id = url.strip_prefix("/api/v1/downloads/").unwrap();
+        let ctx = McpContext::for_testing();
+        let file = crate::transfer::find(&ctx.app_dir, crate::transfer::Kind::Download, id)
+            .expect("generated map should be kept as a download");
+        assert!(file.filename.ends_with(".dungeondraft_map"));
+        assert!(file.size_bytes > 0);
+        crate::transfer::remove(&ctx.app_dir, crate::transfer::Kind::Download, id);
 
         // Unknown preset is rejected
         let err = call_err(
             &handler,
             "generate_map",
-            json!({"preset": "definitely-not-a-preset", "output_path": "/dev/null"}),
+            json!({"preset": "definitely-not-a-preset"}),
         )
         .await;
         assert!(matches!(err, McpError::InvalidArguments(_)));
@@ -2107,11 +2034,19 @@ mod tests {
         let res = call_ok(&handler, "list_maps", json!({})).await;
         assert_eq!(res["maps"].as_array().map(|a| a.len()).unwrap_or(0), 0);
 
-        // Missing file
+        // No such upload
         let err = call_err(
             &handler,
             "create_map",
-            json!({"name": "Cave", "file_path": "/nonexistent/map.uvtt"}),
+            json!({"name": "Cave", "upload_id": "00000000-0000-0000-0000-000000000000"}),
+        )
+        .await;
+        assert!(matches!(err, McpError::InvalidArguments(_)));
+        // A path is not an upload id
+        let err = call_err(
+            &handler,
+            "create_map",
+            json!({"name": "Cave", "upload_id": "/etc/hosts"}),
         )
         .await;
         assert!(matches!(err, McpError::InvalidArguments(_)));
@@ -2137,28 +2072,24 @@ mod tests {
         )
         .await;
 
-        let out_dir =
-            std::env::temp_dir().join(format!("mimir-mcp-test-export-{}", std::process::id()));
-        std::fs::create_dir_all(&out_dir).unwrap();
-
-        // Export
-        let res = call_ok(
-            &handler,
-            "export_campaign",
-            json!({"output_path": out_dir.to_str().unwrap()}),
-        )
-        .await;
+        // Export: a download
+        let res = call_ok(&handler, "export_campaign", json!({})).await;
         assert_eq!(res["status"], "success");
-        let archive_path = res["data"]["archive_path"].as_str().unwrap().to_string();
-        assert!(std::path::Path::new(&archive_path).exists());
+        let url = res["data"]["download_url"].as_str().unwrap();
+        let id = url.strip_prefix("/api/v1/downloads/").unwrap();
+        let app = McpContext::for_testing().app_dir;
+        use crate::transfer::{self, Kind};
+        let archive = transfer::find(&app, Kind::Download, id).expect("the archive is kept");
+        assert!(archive.filename.ends_with(".mimir-campaign.tar.gz"));
+        assert_eq!(res["data"]["size_bytes"], archive.size_bytes);
+
+        // The caller uploads it again
+        let bytes = std::fs::read(&archive.path).unwrap();
+        transfer::remove(&app, Kind::Download, id);
+        let upload = transfer::save(&app, Kind::Upload, &archive.filename, &bytes).unwrap();
 
         // Preview
-        let res = call_ok(
-            &handler,
-            "preview_archive",
-            json!({"archive_path": archive_path}),
-        )
-        .await;
+        let res = call_ok(&handler, "preview_archive", json!({"upload_id": upload.id})).await;
         assert_eq!(res["campaign_name"], "Test Campaign");
         assert_eq!(res["counts"]["modules"], 1);
 
@@ -2166,7 +2097,7 @@ mod tests {
         let res = call_ok(
             &handler,
             "import_campaign",
-            json!({"archive_path": archive_path, "new_name": "Imported Copy"}),
+            json!({"upload_id": upload.id, "new_name": "Imported Copy"}),
         )
         .await;
         assert_eq!(res["status"], "success");
@@ -2176,7 +2107,7 @@ mod tests {
         let res = call_ok(&handler, "list_campaigns", json!({})).await;
         assert_eq!(res["campaigns"].as_array().unwrap().len(), 2);
 
-        let _ = std::fs::remove_dir_all(&out_dir);
+        transfer::remove(&app, Kind::Upload, &upload.id);
     }
 
     #[tokio::test]

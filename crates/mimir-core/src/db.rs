@@ -23,8 +23,8 @@ pub const BUSY_TIMEOUT_MS: u32 = 5_000;
 /// - `foreign_keys=ON` for referential integrity
 /// - `synchronous=NORMAL` for better performance with WAL
 fn configure_connection(conn: &mut SqliteConnection) {
-    // The desktop app and the MCP server open the same file. Without a busy
-    // timeout, a write that meets another process's lock fails at once with
+    // Many connections (the API, /mcp, the jobs) open the same file. Without
+    // a busy timeout, a write that meets another connection's lock fails at once with
     // SQLITE_BUSY ("database is locked"). Set first so the WAL switch below
     // also waits. (MIMIR-T-0643)
     diesel::sql_query(format!("PRAGMA busy_timeout={}", BUSY_TIMEOUT_MS))
@@ -131,7 +131,7 @@ mod tests {
             .unwrap();
         drop(setup);
 
-        // Another connection (think: the desktop app) holds the write lock
+        // Another connection (another request) holds the write lock
         // for a short time, then commits.
         let (locked_tx, locked_rx) = mpsc::channel();
         let holder_url = url.clone();

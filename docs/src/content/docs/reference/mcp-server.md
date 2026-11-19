@@ -2,38 +2,54 @@
 title: "MCP Server Reference"
 ---
 
-Technical reference for Mimir's Model Context Protocol (MCP) server — the sidecar that enables AI assistant integration.
+Technical reference for Mimir's Model Context Protocol (MCP) endpoint, which lets an AI assistant work with your campaigns.
 
 ## Architecture
 
-The MCP server (`mimir-mcp`) runs as a Tauri sidecar process. It connects to the same SQLite database as the main app and exposes 54 tools across 8 categories.
+The Mimir server serves MCP at `/mcp` (MCP over streamable HTTP). The tools
+use the same database and services as the web app. The tool list is in
+`crates/mimir-mcp` (its registry); the server serves it.
 
 ### Components
 
-- **Binary**: `mimir-mcp` (built to `crates/mimir/binaries/mimir-mcp-{target-triple}`)
-- **Protocol**: MCP over stdio
-- **Database**: Shared SQLite database (same file the desktop app uses; default location varies by platform — see below)
-- **Plugin**: Claude Code plugin at `crates/mimir-mcp/plugin/`
+- **Endpoint**: `<server>/mcp`, for example `http://127.0.0.1:8740/mcp`
+- **Protocol**: MCP, streamable HTTP (sessions: the `Mcp-Session-Id` header)
+- **Access**: the DM token (`Authorization: Bearer <MIMIR_API_TOKEN>`). A
+  player link is refused (403); no token or a wrong token is refused (401).
+  A server in open mode (no `MIMIR_API_TOKEN`) lets every caller in.
+- **Plugin**: Claude Code plugin at `crates/mimir-mcp/plugin/` (it reads
+  `MIMIR_URL` and `MIMIR_API_TOKEN`)
 
-### Configuration
+### Files
 
-The database path is resolved from the `MIMIR_DATABASE_PATH` environment variable, falling back to a platform default:
+The tools run on the server. A tool does not read or write a path on the
+caller's computer. Files go over plain HTTP, with the DM token:
 
-| Platform | Default database path |
-|----------|----------------------|
-| macOS | `~/Library/Application Support/com.mimir.app/data/mimir.db` |
-| Linux | `$XDG_DATA_HOME/com.mimir.app/data/mimir.db` (falls back to `~/.local/share/com.mimir.app/data/mimir.db` when `XDG_DATA_HOME` is unset) |
-| Windows | No default — `MIMIR_DATABASE_PATH` must be set |
+- **Upload**: `POST <server>/api/v1/uploads`, multipart field `file`. The
+  answer is `{upload_id, filename, size_bytes, expires_in_seconds}`. Give
+  `upload_id` to `import_campaign`, `preview_archive`, `create_map` or
+  `import_adventure_pack`. The server keeps an upload for one hour.
+- **Download**: `export_campaign`, `export_adventure_pack`,
+  `print_adventure_book` and `generate_map` return
+  `{download_url, filename, size_bytes}`. `GET <server><download_url>` gives
+  the file. A link works one time, for one hour.
 
-See [Environment Variables](../environment-variables/) for details.
+```bash
+curl -sS -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+  -F "file=@campaign.mimir-campaign.tar.gz" "$MIMIR_URL/api/v1/uploads"
+curl -sS -f -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+  -o campaign.mimir-campaign.tar.gz "$MIMIR_URL/api/v1/downloads/<id>"
+```
 
 ### Errors
 
-Most tools operate on an active campaign. Until a campaign is selected with `set_active_campaign`, campaign-scoped tools return a `NoActiveCampaign` error (`No active campaign. Use set_active_campaign first.`). The active campaign is held in memory per server process — it is not persisted, so each new server process starts with no campaign selected.
+Most tools operate on an active campaign. Until a campaign is selected with `set_active_campaign`, campaign-scoped tools return a `NoActiveCampaign` error (`No active campaign. Use set_active_campaign first.`). Each MCP session has its own active campaign; it is not stored, so a new session starts with no campaign selected.
+
+A tool's failure comes back as a tool result with `isError: true` and the text `Error: …`; an unknown tool is a JSON-RPC error.
 
 ## Tool Reference
 
-### Campaign Management (10 tools)
+### Campaign Management (16 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -44,9 +60,15 @@ Most tools operate on an active campaign. Until a campaign is selected with `set
 | `create_campaign` | Create a new campaign |
 | `update_campaign` | Update campaign name or description |
 | `delete_campaign` | Delete a campaign and all its data |
-| `export_campaign` | Export campaign as shareable archive |
-| `import_campaign` | Import campaign from archive |
-| `preview_archive` | Preview archive contents without importing |
+| `export_campaign` | Export campaign as shareable archive (a download) |
+| `preview_adventure_campaign` | Show how an adventure in the reader becomes a campaign |
+| `create_campaign_from_adventure` | Make a campaign from an adventure; it becomes the active campaign |
+| `export_adventure_file` | Export the active campaign as a 5etools homebrew adventure file |
+| `export_adventure_pack` | Export the active campaign as a Mimir adventure pack (a download) |
+| `import_adventure_pack` | Import a Mimir adventure pack as a new campaign (an upload) |
+| `print_adventure_book` | Make the active campaign one PDF book (a download) |
+| `import_campaign` | Import campaign from archive (an upload) |
+| `preview_archive` | Preview archive contents without importing (an upload) |
 
 ### Module Management (8 tools)
 
@@ -97,7 +119,7 @@ Most tools operate on an active campaign. Until a campaign is selected with `set
 
 | Tool | Description |
 |------|-------------|
-| `create_map` | Upload UVTT file to create new map |
+| `create_map` | Create a new map from an uploaded UVTT file |
 | `list_maps` | List maps (optionally filtered by module) |
 | `get_map` | Get map details including token placements |
 | `update_map` | Update map metadata (name, description, lighting) |
@@ -110,7 +132,7 @@ Most tools operate on an active campaign. Until a campaign is selected with `set
 
 | Tool | Description |
 |------|-------------|
-| `generate_map` | Generate Dungeondraft map from YAML config or biome preset |
+| `generate_map` | Generate Dungeondraft map from YAML config or biome preset (a download) |
 | `list_map_presets` | List available biome presets |
 | `validate_map_config` | Validate YAML config without generating |
 

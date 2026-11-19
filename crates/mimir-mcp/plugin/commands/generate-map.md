@@ -25,22 +25,33 @@ If they provided a description or no arguments, help them choose:
 
 ## Step 2: Choose Output Location
 
-Ask the user where to save the `.dungeondraft_map` file. Suggest a reasonable default like their Desktop or current directory.
+Ask the user where to save the `.dungeondraft_map` file. Suggest a reasonable default like their Desktop or current directory. The tool returns a download link; you download the file to this location in step 4.
 
 ## Step 3: Generate
 
 **From preset:**
 ```
-generate_map(preset: "<name>", output_path: "<path>", seed: <random or user-specified>)
+generate_map(preset: "<name>", seed: <random or user-specified>)
 ```
 
 **From custom config:**
 1. Build the YAML config based on the discussion
 2. Validate first: `validate_map_config(config_yaml: "...")`
-3. If valid, generate: `generate_map(config_yaml: "...", output_path: "<path>")`
+3. If valid, generate: `generate_map(config_yaml: "...")`
 4. If errors, fix and re-validate
 
-## Step 4: Report Results
+## Step 4: Download the File
+
+The result has `download.download_url` and `download.filename`. Download the file to the location from step 2:
+
+```bash
+curl -sS -f -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+  -o "<path>" "$MIMIR_URL<download_url>"
+```
+
+The link works one time, for one hour.
+
+## Step 5: Report Results
 
 Show the generation stats:
 - Walls generated (room boundaries, corridors)

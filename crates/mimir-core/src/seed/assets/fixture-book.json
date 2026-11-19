@@ -1,0 +1,61 @@
+[
+  {
+    "type": "section",
+    "name": "Introduction",
+    "entries": [
+      "This short book is fixture data for the reader. It is not from any published book.",
+      {
+        "type": "entries",
+        "name": "Using This Book",
+        "id": "fixture-using",
+        "entries": [
+          "A wizard may cast {@spell fireball} when a {@creature goblin} band attacks the camp.",
+          {
+            "type": "inset",
+            "name": "Sidebar: Quiet Camps",
+            "entries": ["A camp with no fire is hard to find in the dark."]
+          },
+          {
+            "type": "entries",
+            "name": "A Deeper Heading",
+            "entries": ["Text under a second-level heading."]
+          }
+        ]
+      },
+      {
+        "type": "image",
+        "href": { "type": "internal", "path": "book/DMG/fixture-hideout.png" },
+        "title": "The hideout, from above"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "name": "Running Encounters",
+    "entries": [
+      {
+        "type": "entries",
+        "name": "Random Encounters",
+        "id": "fixture-random",
+        "entries": [
+          "Roll on the table at dusk.",
+          {
+            "type": "table",
+            "caption": "Road Encounters",
+            "colLabels": ["{@dice d4}", "Encounter"],
+            "rows": [
+              ["1", "{@dice 1d4} goblins"],
+              ["2", "A lone wolf"],
+              ["3", "A merchant with a {@item rope, hempen (50 feet)|phb|coil of rope}"],
+              ["4", "Rain"]
+            ]
+          }
+        ]
+      },
+      {
+        "type": "insetReadaloud",
+        "entries": ["The road bends into the trees. Something moves in the brush."]
+      }
+    ]
+  }
+]

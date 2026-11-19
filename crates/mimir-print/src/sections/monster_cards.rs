@@ -1062,6 +1062,111 @@ fn extract_entries_text(entries: Option<&Value>) -> String {
     parts.join(" ")
 }
 
+/// A creature's stat block in a document (MIMIR-T-0737): a full-width box
+/// with the name, type, AC, HP, speed, abilities, the details, the traits
+/// and the actions, as Typst markup.
+pub fn monster_statblock_typst(monster: &Value) -> String {
+    let lit = |s: &str| format!("#\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""));
+    let name = monster
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or("Creature");
+    let size = monster
+        .get("size")
+        .and_then(|v| v.as_array())
+        .and_then(|a| a.first())
+        .and_then(Value::as_str)
+        .map(|s| match s {
+            "T" => "Tiny",
+            "S" => "Small",
+            "M" => "Medium",
+            "L" => "Large",
+            "H" => "Huge",
+            "G" => "Gargantuan",
+            other => other,
+        })
+        .unwrap_or("");
+    let mut out = String::new();
+    out.push_str("#block(width: 100%, inset: 8pt, radius: 3pt, stroke: 0.5pt + luma(150), breakable: true)[\n");
+    out.push_str(&format!(
+        "#text(size: 12pt, weight: \"bold\")[{}] \\\n",
+        lit(name)
+    ));
+    out.push_str(&format!(
+        "#emph[{}]\n",
+        lit(format!(
+            "{} {}, {}",
+            size,
+            extract_creature_type(monster),
+            extract_alignment(monster)
+        )
+        .trim())
+    ));
+    out.push_str("#line(length: 100%, stroke: 0.5pt)\n");
+    let row = |label: &str, value: String| {
+        if value.trim().is_empty() {
+            String::new()
+        } else {
+            format!("*{label}* {} \\\n", lit(&strip_5etools_tags(&value)))
+        }
+    };
+    out.push_str(&row("Armor Class", extract_ac_full(monster)));
+    out.push_str(&row("Hit Points", extract_hp_full(monster)));
+    out.push_str(&row("Speed", extract_speed_full(monster)));
+    out.push_str("#line(length: 100%, stroke: 0.5pt)\n");
+    let scores: Vec<String> = ["str", "dex", "con", "int", "wis", "cha"]
+        .iter()
+        .map(|k| {
+            let v = monster.get(*k).and_then(Value::as_i64).unwrap_or(10);
+            format!("[{} ({})]", v, modifier(v))
+        })
+        .collect();
+    out.push_str(&format!(
+        "#table(columns: 6, stroke: none, align: center, [*STR*], [*DEX*], [*CON*], [*INT*], [*WIS*], [*CHA*], {})\n",
+        scores.join(", ")
+    ));
+    out.push_str("#line(length: 100%, stroke: 0.5pt)\n");
+    out.push_str(&row("Saving Throws", extract_saves(monster)));
+    out.push_str(&row("Senses", extract_senses(monster)));
+    out.push_str(&row("Languages", extract_languages(monster)));
+    out.push_str(&row("Challenge", extract_cr(monster)));
+    let section = |out: &mut String, title: Option<&str>, key: &str| {
+        let items = extract_ability_list(monster, key);
+        if items.is_empty() {
+            return;
+        }
+        if let Some(t) = title {
+            out.push_str(&format!("#v(4pt)\n#text(weight: \"bold\", size: 10.5pt)[{t}]\n#line(length: 100%, stroke: 0.3pt)\n"));
+        } else {
+            out.push_str("#v(4pt)\n");
+        }
+        for (n, d) in items {
+            out.push_str(&format!("*{}.* {}\n\n", lit(&n), lit(&d)));
+        }
+    };
+    section(&mut out, None, "trait");
+    section(&mut out, Some("Actions"), "action");
+    section(&mut out, Some("Bonus Actions"), "bonus");
+    section(&mut out, Some("Reactions"), "reaction");
+    section(&mut out, Some("Legendary Actions"), "legendary");
+    out.push_str("]\n\n");
+    out
+}
+
+/// 5etools tags as the words they show, for print: `{@creature goblin|MM|two
+/// goblins}` → "two goblins", `{@area the gate|g1|x}` → "the gate".
+pub fn plain_tags(text: &str) -> String {
+    let mut result = regex_replace(text, r"\{@area ([^|}]+)[^}]*\}", "$1");
+    result = regex_replace(
+        &result,
+        r"\{@(?:creature|item|spell|condition|status|background|race|feat|object|hazard|trap|deity|language|reward|vehicle|optfeature|action|table|variantrule|disease|sense|skill|creatureFluff) [^|}]*\|[^|}]*\|([^}]+)\}",
+        "$1",
+    );
+    result = regex_replace(&result, r"\{@(?:b|bold) ([^}]+)\}", "$1");
+    result = regex_replace(&result, r"\{@(?:i|italic) ([^}]+)\}", "$1");
+    strip_5etools_tags(&result)
+}
+
 /// Strip 5etools formatting tags and convert to plain text
 fn strip_5etools_tags(text: &str) -> String {
     let mut result = text.to_string();
@@ -1133,6 +1238,39 @@ fn escape_typst(s: &str) -> String {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn a_statblock_for_documents() {
+        let goblin = json!({"name": "Goblin", "size": ["S"], "type": {"type": "humanoid"},
+            "alignment": ["N", "E"], "ac": [{"ac": 15, "from": ["{@item leather armor|phb}"]}],
+            "hp": {"average": 7, "formula": "2d6"}, "speed": {"walk": 30},
+            "str": 8, "dex": 14, "con": 10, "int": 10, "wis": 8, "cha": 8, "cr": "1/4",
+            "action": [{"name": "Scimitar", "entries": ["{@atk mw} {@hit 4} to hit. {@h}5 ({@damage 1d6 + 2}) slashing damage."]}]});
+        let t = monster_statblock_typst(&goblin);
+        assert!(t.contains("#\"Goblin\""), "{t}");
+        assert!(t.contains("Small humanoid, neutral evil"), "{t}");
+        assert!(t.contains("15 (leather armor)"), "{t}");
+        assert!(t.contains("[14 (+2)]"), "{t}");
+        assert!(
+            t.contains("[Actions]") && t.contains("#\"Scimitar\""),
+            "{t}"
+        );
+        assert!(t.contains("Melee Weapon Attack: +4 to hit"), "{t}");
+    }
+
+    #[test]
+    fn tags_print_as_their_words() {
+        assert_eq!(
+            plain_tags(
+                "Meet {@creature goblin|MM|two goblins} at {@area the gate|g1|x}, {@b now}."
+            ),
+            "Meet two goblins at the gate, now."
+        );
+        assert_eq!(
+            plain_tags("A {@spell fireball} burns."),
+            "A fireball burns."
+        );
+    }
 
     #[test]
     fn test_monster_cards_empty() {

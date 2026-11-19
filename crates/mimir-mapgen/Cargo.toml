@@ -1,6 +1,6 @@
 [package]
 name = "mimir-mapgen"
-version = "0.7.3"
+version = "1.0.0"
 edition = "2021"
 description = "Declarative Dungeondraft map generation from YAML configs"
 
@@ -20,11 +20,8 @@ rand = { workspace = true }
 rand_chacha = { workspace = true }
 
 # Error handling
-anyhow = { workspace = true }
-thiserror = { workspace = true }
 
 # Logging
-tracing = { workspace = true }
 
 # CLI
 clap = { workspace = true }

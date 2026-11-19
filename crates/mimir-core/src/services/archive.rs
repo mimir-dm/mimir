@@ -155,6 +155,9 @@ pub struct MapWithRelated {
     pub traps: Vec<MapTrap>,
     pub light_sources: Vec<LightSource>,
     pub fog_areas: Vec<FogRevealedArea>,
+    /// Doors the DM opened or closed (archives before MIMIR-T-0728 have none).
+    #[serde(default)]
+    pub door_states: Vec<crate::models::campaign::MapDoorState>,
 }
 
 // =============================================================================
@@ -171,12 +174,14 @@ impl<'a> ArchiveService<'a> {
         Self { conn }
     }
 
-    /// Export a campaign to a tar.gz archive.
+    /// Export a campaign to a tar.gz archive. `app_data_dir`: the folder
+    /// the assets' `blob_path`s are relative to ("assets/<id>.<ext>"), as
+    /// the asset and map services.
     pub fn export_campaign(
         &mut self,
         campaign_id: &str,
         output_dir: &Path,
-        assets_dir: &Path,
+        app_data_dir: &Path,
     ) -> ServiceResult<PathBuf> {
         let campaign = dal::get_campaign(self.conn, campaign_id).map_err(|e| match e {
             diesel::result::Error::NotFound => ServiceError::not_found("Campaign", campaign_id),
@@ -186,7 +191,7 @@ impl<'a> ArchiveService<'a> {
         info!(campaign_id = %campaign_id, name = %campaign.name, "Exporting campaign");
 
         let archive_data = self.collect_campaign_data(campaign_id, campaign)?;
-        let asset_files = self.collect_asset_files(&archive_data, assets_dir)?;
+        let asset_files = self.collect_asset_files(&archive_data, app_data_dir)?;
         let catalog_refs = self.extract_catalog_references(&archive_data.documents);
 
         let manifest = ArchiveManifest {
@@ -225,10 +230,13 @@ impl<'a> ArchiveService<'a> {
     ///
     /// Creates a new campaign with all data from the archive, generating new UUIDs
     /// for all entities and remapping all references.
+    ///
+    /// `app_data_dir`: as [`Self::export_campaign`]; the assets land under
+    /// `assets/` in it.
     pub fn import_campaign(
         &mut self,
         archive_path: &Path,
-        assets_dir: &Path,
+        app_data_dir: &Path,
         campaign_name_override: Option<&str>,
     ) -> ServiceResult<ImportResult> {
         info!(path = %archive_path.display(), "Importing campaign archive");
@@ -242,7 +250,35 @@ impl<'a> ArchiveService<'a> {
         let data_content = fs::read_to_string(&data_path).map_err(ServiceError::Io)?;
         let data: ArchiveData = serde_json::from_str(&data_content)
             .map_err(|e| ServiceError::validation(format!("Invalid data.json: {}", e)))?;
+        self.import_data(data, temp_dir.path(), app_data_dir, campaign_name_override)
+    }
 
+    /// A campaign's data and its asset files (`<asset id>/<filename>` →
+    /// bytes), as an archive holds them: the Mimir adventure pack
+    /// (MIMIR-T-0741) is made from them.
+    pub fn campaign_data(
+        &mut self,
+        campaign_id: &str,
+        app_data_dir: &Path,
+    ) -> ServiceResult<(ArchiveData, HashMap<String, Vec<u8>>)> {
+        let campaign = dal::get_campaign(self.conn, campaign_id).map_err(|e| match e {
+            diesel::result::Error::NotFound => ServiceError::not_found("Campaign", campaign_id),
+            other => ServiceError::Database(other),
+        })?;
+        let data = self.collect_campaign_data(campaign_id, campaign)?;
+        let files = self.collect_asset_files(&data, app_data_dir)?;
+        Ok((data, files))
+    }
+
+    /// Import data as a new campaign; `unpacked` holds the asset files at
+    /// `assets/<asset id>/<filename>` (an unpacked archive or pack).
+    pub fn import_data(
+        &mut self,
+        data: ArchiveData,
+        unpacked: &Path,
+        app_data_dir: &Path,
+        campaign_name_override: Option<&str>,
+    ) -> ServiceResult<ImportResult> {
         // Determine campaign name
         let campaign_name = campaign_name_override
             .map(|s| s.to_string())
@@ -276,12 +312,27 @@ impl<'a> ArchiveService<'a> {
             &data,
             &mut id_maps,
             &new_campaign_id,
-            assets_dir,
-            temp_dir.path(),
+            app_data_dir,
+            unpacked,
         )?;
 
         // 3. Import modules
         self.import_modules(&data, &mut id_maps, &new_campaign_id)?;
+
+        // A module's asset goes back to its module (the assets came first,
+        // under the campaign, as the maps need them).
+        for asset in data.assets.iter().filter(|a| a.module_id.is_some()) {
+            let (Some(new_id), Some(new_module)) = (
+                id_maps.assets.get(&asset.id),
+                asset
+                    .module_id
+                    .as_ref()
+                    .and_then(|m| id_maps.modules.get(m)),
+            ) else {
+                continue;
+            };
+            dal::move_campaign_asset_to_module(self.conn, new_id, new_module)?;
+        }
 
         // 4. Import characters
         self.import_characters(&data, &mut id_maps, &new_campaign_id)?;
@@ -410,6 +461,7 @@ impl<'a> ArchiveService<'a> {
                 traps: dal::list_map_traps(self.conn, &m.id)?,
                 light_sources: dal::list_light_sources(self.conn, &m.id)?,
                 fog_areas: dal::list_fog_revealed_areas(self.conn, &m.id)?,
+                door_states: dal::list_map_door_states(self.conn, &m.id)?,
                 map: m,
             });
         }
@@ -422,8 +474,13 @@ impl<'a> ArchiveService<'a> {
             module_npcs.extend(dal::list_module_npcs(self.conn, &module.id)?);
         }
 
-        // All campaign assets (maps, tokens, images, etc.)
-        let assets = dal::list_campaign_assets(self.conn, campaign_id)?;
+        // All assets (maps, tokens, images): the campaign's and its
+        // modules'. (Module assets were left out before MIMIR-T-0731, so a
+        // module map came without its file.)
+        let mut assets = dal::list_campaign_assets(self.conn, campaign_id)?;
+        for module in &modules {
+            assets.extend(dal::list_module_assets(self.conn, &module.id)?);
+        }
 
         // Homebrew items
         let homebrew_items = dal::list_campaign_homebrew_items(self.conn, campaign_id)?;
@@ -454,13 +511,13 @@ impl<'a> ArchiveService<'a> {
     fn collect_asset_files(
         &self,
         data: &ArchiveData,
-        assets_dir: &Path,
+        app_data_dir: &Path,
     ) -> ServiceResult<HashMap<String, Vec<u8>>> {
         let mut files = HashMap::new();
 
         // Include all campaign assets - these are the actual binary files (maps, tokens, images)
         for asset in &data.assets {
-            let file_path = assets_dir.join(&asset.blob_path);
+            let file_path = app_data_dir.join(&asset.blob_path);
             if file_path.exists() {
                 match fs::read(&file_path) {
                     Ok(bytes) => {
@@ -615,7 +672,7 @@ impl<'a> ArchiveService<'a> {
         data: &ArchiveData,
         id_maps: &mut IdMaps,
         campaign_id: &str,
-        assets_dir: &Path,
+        app_data_dir: &Path,
         temp_dir: &Path,
     ) -> ServiceResult<()> {
         for asset in &data.assets {
@@ -627,8 +684,23 @@ impl<'a> ArchiveService<'a> {
                 .join("assets")
                 .join(&asset.id)
                 .join(&asset.filename);
-            let blob_path = format!("campaigns/{}/{}", campaign_id, asset.filename);
-            let dest_path = assets_dir.join(&blob_path);
+            // As the asset and map services: "assets/<id>.<ext>" under the
+            // app data folder (the archive's file name chooses only the
+            // extension, letters and digits only).
+            let ext: String = Path::new(&asset.filename)
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("bin")
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric())
+                .collect();
+            let ext = if ext.is_empty() {
+                "bin".to_string()
+            } else {
+                ext
+            };
+            let blob_path = format!("assets/{new_id}.{ext}");
+            let dest_path = app_data_dir.join(&blob_path);
 
             if src_path.exists() {
                 if let Some(parent) = dest_path.parent() {
@@ -637,13 +709,19 @@ impl<'a> ArchiveService<'a> {
                 fs::copy(&src_path, &dest_path).map_err(ServiceError::Io)?;
             }
 
-            let new_asset = NewCampaignAsset::for_campaign(
+            let mut new_asset = NewCampaignAsset::for_campaign(
                 &new_id,
                 campaign_id,
                 &asset.filename,
                 &asset.mime_type,
                 &blob_path,
             );
+            if let Some(d) = asset.description.as_deref() {
+                new_asset = new_asset.with_description(d);
+            }
+            if let Some(size) = asset.file_size {
+                new_asset = new_asset.with_file_size(size);
+            }
             dal::insert_campaign_asset(self.conn, &new_asset)?;
         }
         Ok(())
@@ -873,6 +951,29 @@ impl<'a> ArchiveService<'a> {
                 NewMap::for_campaign(&new_id, campaign_id, &m.name, &new_uvtt_asset_id)
             };
             dal::insert_map(self.conn, &new_map)?;
+            // The play state of the map (MIMIR-T-0728).
+            let now = Utc::now().to_rfc3339();
+            dal::update_map(
+                self.conn,
+                &new_id,
+                &crate::models::campaign::UpdateMap {
+                    lighting_mode: Some(&m.lighting_mode),
+                    fog_enabled: Some(m.fog_enabled),
+                    reveal_all: Some(m.reveal_all),
+                    line_of_sight: Some(m.line_of_sight),
+                    updated_at: Some(&now),
+                    ..Default::default()
+                },
+            )?;
+            for door in &map_data.door_states {
+                dal::set_map_door_state(
+                    self.conn,
+                    &crate::models::campaign::MapDoorState {
+                        map_id: new_id.clone(),
+                        ..door.clone()
+                    },
+                )?;
+            }
 
             // Import POIs
             for poi in &map_data.pois {
@@ -1388,6 +1489,107 @@ mod tests {
         let chars = dal::list_campaign_characters(&mut conn, &import_result.campaign_id).unwrap();
         assert_eq!(chars.len(), 1);
         assert_eq!(chars[0].name, "Test Hero");
+    }
+
+    #[test]
+    fn a_maps_play_state_round_trips() {
+        use crate::models::campaign::LightingMode;
+        use crate::services::map::{CreateMapInput, MapService, UpdateMapInput};
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let app_dir = TempDir::new().unwrap();
+        let output_dir = TempDir::new().unwrap();
+        let map = {
+            let mut maps = MapService::new(&mut conn, app_dir.path());
+            let map = maps
+                .create(CreateMapInput::for_campaign(
+                    &campaign_id,
+                    "Crypt",
+                    "crypt.uvtt",
+                    br#"{"resolution":{"pixels_per_grid":70}}"#.to_vec(),
+                ))
+                .unwrap();
+            maps.set_door(&map.id, 1, false).unwrap();
+            maps.update(
+                &map.id,
+                UpdateMapInput {
+                    lighting_mode: Some(LightingMode::Dim),
+                    reveal_all: Some(true),
+                    line_of_sight: Some(false),
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+        };
+        assert_eq!(map.lighting_mode, "dim");
+        let archive = ArchiveService::new(&mut conn)
+            .export_campaign(&campaign_id, output_dir.path(), app_dir.path())
+            .unwrap();
+        let imported = ArchiveService::new(&mut conn)
+            .import_campaign(&archive, app_dir.path(), Some("Copy"))
+            .unwrap();
+        let maps = dal::list_campaign_maps(&mut conn, &imported.campaign_id).unwrap();
+        assert_eq!(maps.len(), 1);
+        let m = &maps[0];
+        assert_eq!(
+            (m.lighting_mode.as_str(), m.reveal_all, m.line_of_sight),
+            ("dim", 1, 0)
+        );
+        let doors = MapService::new(&mut conn, app_dir.path())
+            .door_states(&m.id)
+            .unwrap();
+        assert_eq!(doors, vec![(1, false)]);
+    }
+
+    #[test]
+    fn module_files_and_image_titles_round_trip() {
+        use crate::services::asset::{AssetService, UploadAssetInput};
+        use crate::services::map::{CreateMapInput, MapService};
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let module_id = create_test_module(&mut conn, &campaign_id);
+        let app_dir = TempDir::new().unwrap();
+        let output_dir = TempDir::new().unwrap();
+        let uvtt =
+            br#"{"resolution":{"pixels_per_grid":70,"map_size":{"x":2,"y":2}},"image":"aGk="}"#;
+        MapService::new(&mut conn, app_dir.path())
+            .create(CreateMapInput::for_module(
+                &campaign_id,
+                &module_id,
+                "Cave",
+                "cave.uvtt",
+                uvtt.to_vec(),
+            ))
+            .unwrap();
+        AssetService::new(&mut conn, app_dir.path())
+            .upload(
+                UploadAssetInput::for_module(
+                    &module_id,
+                    "poster.png",
+                    "image/png",
+                    b"png".to_vec(),
+                )
+                .with_description("Wanted poster"),
+            )
+            .unwrap();
+
+        let archive = ArchiveService::new(&mut conn)
+            .export_campaign(&campaign_id, output_dir.path(), app_dir.path())
+            .unwrap();
+        let imported = ArchiveService::new(&mut conn)
+            .import_campaign(&archive, app_dir.path(), Some("Copy"))
+            .unwrap();
+        let new_module = dal::list_modules(&mut conn, &imported.campaign_id).unwrap()[0]
+            .id
+            .clone();
+        let assets = dal::list_module_assets(&mut conn, &new_module).unwrap();
+        let poster = assets.iter().find(|a| a.filename == "poster.png").unwrap();
+        assert_eq!(poster.description.as_deref(), Some("Wanted poster"));
+        assert!(poster.campaign_id.is_none(), "the module's again");
+        // The module map's file came along and reads.
+        let mut maps = MapService::new(&mut conn, app_dir.path());
+        let map = maps.list_for_module(&new_module).unwrap().remove(0);
+        assert_eq!(maps.read_uvtt_file(&map).unwrap(), uvtt.to_vec());
     }
 
     #[test]

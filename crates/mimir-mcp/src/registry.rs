@@ -6,15 +6,14 @@
 //! publication all consume the registry, so the published contract and the
 //! enforced contract cannot drift.
 //!
-//! Families migrate incrementally: `MimirHandler` consults the registry first
-//! and falls back to the legacy match for families not yet moved.
+//! The server's `/mcp` publishes and runs the tools from here.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, OnceLock};
 
-use rust_mcp_sdk::schema::{Tool, ToolInputSchema};
+use serde::Serialize;
 use serde_json::Value;
 
 use crate::context::McpContext;
@@ -27,6 +26,9 @@ pub trait JsonArgType {
     const JSON_TYPE: &'static str;
     /// Whether the field appears in the schema's `required` list.
     const REQUIRED: bool = true;
+    /// The values the field takes, published as the schema's `enum`
+    /// (empty: any value of the type).
+    const ENUM: &'static [&'static str] = &[];
 }
 
 impl JsonArgType for String {
@@ -47,9 +49,21 @@ impl JsonArgType for bool {
 impl<T: JsonArgType> JsonArgType for Option<T> {
     const JSON_TYPE: &'static str = T::JSON_TYPE;
     const REQUIRED: bool = false;
+    const ENUM: &'static [&'static str] = T::ENUM;
 }
 impl<T> JsonArgType for Vec<T> {
     const JSON_TYPE: &'static str = "array";
+}
+
+/// The JSON schema of a tool's arguments: an object; `properties` is left
+/// out when the tool takes no arguments.
+#[derive(Debug, Clone, Serialize)]
+pub struct ToolInputSchema {
+    #[serde(rename = "type")]
+    kind: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    properties: Option<BTreeMap<String, serde_json::Map<String, Value>>>,
+    required: Vec<String>,
 }
 
 /// Build a `ToolInputSchema` from collected field metadata.
@@ -58,21 +72,31 @@ impl<T> JsonArgType for Vec<T> {
 /// `properties` key at all when a tool takes no arguments.
 pub fn build_input_schema(
     required: Vec<String>,
-    fields: Vec<(&'static str, &'static str, String)>,
+    fields: Vec<(&'static str, &'static str, String, &'static [&'static str])>,
 ) -> ToolInputSchema {
     let properties = if fields.is_empty() {
         None
     } else {
-        let mut map = HashMap::new();
-        for (name, json_type, description) in fields {
+        let mut map = BTreeMap::new();
+        for (name, json_type, description, values) in fields {
             let mut inner = serde_json::Map::new();
             inner.insert("type".to_string(), Value::String(json_type.to_string()));
             inner.insert("description".to_string(), Value::String(description));
+            if !values.is_empty() {
+                inner.insert(
+                    "enum".to_string(),
+                    Value::Array(values.iter().map(|v| Value::from(*v)).collect()),
+                );
+            }
             map.insert(name.to_string(), inner);
         }
         Some(map)
     };
-    ToolInputSchema::new(required, properties, None)
+    ToolInputSchema {
+        kind: "object",
+        properties,
+        required,
+    }
 }
 
 /// Declare a tool's argument struct once; get `Deserialize` and a
@@ -110,11 +134,12 @@ macro_rules! tool_args {
 
         impl $name {
             /// Generate the JSON input schema from this struct's fields.
-            pub fn input_schema() -> rust_mcp_sdk::schema::ToolInputSchema {
+            pub fn input_schema() -> $crate::registry::ToolInputSchema {
                 #[allow(unused_mut)]
                 let mut required: Vec<String> = Vec::new();
                 #[allow(unused_mut)]
-                let mut fields: Vec<(&'static str, &'static str, String)> = Vec::new();
+                let mut fields: Vec<(&'static str, &'static str, String, &'static [&'static str])> =
+                    Vec::new();
                 $(
                     if <$fty as $crate::registry::JsonArgType>::REQUIRED {
                         required.push(stringify!($fname).to_string());
@@ -124,6 +149,7 @@ macro_rules! tool_args {
                         stringify!($fname),
                         <$fty as $crate::registry::JsonArgType>::JSON_TYPE,
                         docs.iter().map(|s| s.trim()).collect::<Vec<_>>().join(" "),
+                        <$fty as $crate::registry::JsonArgType>::ENUM,
                     ));
                 )*
                 $crate::registry::build_input_schema(required, fields)
@@ -150,23 +176,6 @@ pub struct RegisteredTool {
     pub input_schema: fn() -> ToolInputSchema,
     /// Decodes args and executes.
     pub handler: ToolHandler,
-}
-
-impl RegisteredTool {
-    /// Render as an MCP `Tool` for `list_tools`.
-    pub fn to_tool(&self) -> Tool {
-        Tool {
-            name: self.name.to_string(),
-            description: Some(self.description.to_string()),
-            input_schema: (self.input_schema)(),
-            title: None,
-            annotations: None,
-            icons: vec![],
-            execution: None,
-            output_schema: None,
-            meta: None,
-        }
-    }
 }
 
 /// Register one tool: name, description, arg struct, and handler path.

@@ -6,7 +6,33 @@
 	"properties": {
 		"data": {
 			"$ref": "../util.json#/$defs/adventureBookData"
+		},
+		"adventureData": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"$ref": "../util.json#/$defs/corpusId"
+					},
+					"source": {
+						"$ref": "../util.json#/$defs/source"
+					},
+					"data": {
+						"$ref": "../util.json#/$defs/adventureBookData"
+					}
+				},
+				"required": [
+					"id",
+					"source",
+					"data"
+				],
+				"additionalProperties": false
+			},
+			"minItems": 1
 		}
 	},
-	"additionalProperties": false
+	"additionalProperties": false,
+	"description": "A 5etools adventure file: `data` (older files) or `adventureData`, a wrapper with the id and source (current files and homebrew).",
+	"minProperties": 1
 }

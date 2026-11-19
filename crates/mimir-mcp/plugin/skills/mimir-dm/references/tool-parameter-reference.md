@@ -83,7 +83,7 @@ The MCP `level_up_character` tool likewise uses **individual parameters**, not a
 
 Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi_ability2: "Charisma", asi_increase2: 1`
 
-> **Note**: The Mimir desktop app's internal (Tauri) commands use `[STR, DEX, CON, INT, WIS, CHA]` and `[CP, SP, EP, GP, PP]` array formats. Those are **not** the MCP interface — through MCP, always use the named parameters above.
+> **Note**: The Mimir app's own API uses `[STR, DEX, CON, INT, WIS, CHA]` and `[CP, SP, EP, GP, PP]` array formats. Those are **not** the MCP interface — through MCP, always use the named parameters above.
 
 ## Enum Values
 
@@ -225,8 +225,8 @@ Give `title`, the `search`/`replace` pair, or both. A call with both changes the
 ### generate_map
 - `config_yaml` — YAML configuration string (mutually exclusive with `preset`)
 - `preset` — Biome preset name; call `list_map_presets` for the current set (`"forest"`, `"grassland"`, `"cave"`, `"desert"`, `"lake"`, `"ice_lake"`, `"arctic"`, `"swamp"`, `"forest_river"`, `"island_tropical"`, `"island_forest"`, `"island_arctic"`). Mutually exclusive with `config_yaml`
-- `output_path` (required) — Absolute path for the output `.dungeondraft_map` file
 - `seed` — Random seed override (integer) for reproducible generation
+- Returns `{ success, download: { download_url, filename, size_bytes }, stats }` (see "Files In and Out" in the skill)
 
 ### list_map_presets
 No parameters. Returns `{ presets: [{ name, description, default_size }] }`.
@@ -247,12 +247,12 @@ Returns `{ valid: bool, errors: [{ field, message }] }` or `{ valid: false, pars
 - `description` — New description
 
 ### export_campaign
-- `output_path` (required) — Directory (on the server host) where the archive is written
-- Returns the archive file path
+No parameters. Requires an active campaign.
+- Returns `{ download_url, filename, size_bytes }`; the link works one time, for one hour
 
 ### import_campaign
-- `archive_path` (required) — Path to the archive file to import
+- `upload_id` (required) — The id from `POST /api/v1/uploads`
 - `new_name` — Optional new name for the imported campaign
 
 ### preview_archive
-- `archive_path` (required) — Path to the archive file to inspect before importing
+- `upload_id` (required) — The id from `POST /api/v1/uploads`

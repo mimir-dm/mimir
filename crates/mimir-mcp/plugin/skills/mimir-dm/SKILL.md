@@ -32,6 +32,32 @@ description: >-
 
 All subsequent operations require an active campaign. `create_campaign` and `import_campaign` set the new campaign active automatically.
 
+## Files In and Out
+
+The tools run on the Mimir server, not on the user's computer. A tool does not read or write a file path on the user's computer. Use plain HTTP to move a file, with the server address in `$MIMIR_URL` and the DM token in `$MIMIR_API_TOKEN`.
+
+**To give a file to a tool** (`import_campaign`, `preview_archive`, `create_map`, `import_adventure_pack`):
+
+1. Upload the file:
+   ```bash
+   curl -sS -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+     -F "file=@/path/to/file" "$MIMIR_URL/api/v1/uploads"
+   ```
+2. The server returns `upload_id`. Give it to the tool as `upload_id`.
+3. The server keeps an upload for one hour. You can use the same `upload_id` again in that hour, for example for `preview_archive` and then `import_campaign`.
+
+**To get a file from a tool** (`export_campaign`, `export_adventure_pack`, `print_adventure_book`, `generate_map`):
+
+1. The tool returns `download_url` and `filename`.
+2. Download the file:
+   ```bash
+   curl -sS -f -H "Authorization: Bearer $MIMIR_API_TOKEN" \
+     -o "<filename>" "$MIMIR_URL<download_url>"
+   ```
+3. The link works one time, for one hour. If the download fails, call the tool again.
+
+Ask the user where to save a downloaded file.
+
 ## Important Patterns
 
 ### Read Before Edit
@@ -78,9 +104,9 @@ For the full guidelines on what requires approval vs what you can do autonomousl
 - `update_campaign` — Update campaign name or description
 - `set_active_campaign` — Set the working campaign
 - `get_campaign_sources` — View enabled source books
-- `export_campaign` — Export campaign to archive file
-- `import_campaign` — Import a campaign archive
-- `preview_archive` — Preview archive contents before importing
+- `export_campaign` — Export campaign to archive file (a download)
+- `import_campaign` — Import a campaign archive (an upload)
+- `preview_archive` — Preview archive contents before importing (an upload)
 - `delete_campaign` — Delete a campaign (irreversible)
 
 ### Create Campaign-Level Documents
@@ -134,7 +160,7 @@ Campaign-level documents are not tied to any module — use them for world lore,
 
 ### Upload and Populate a Map
 
-1. Upload a UVTT map file with `create_map` (module_id, name, file_path)
+1. Upload the `.uvtt` file (see "Files In and Out"), then create the map with `create_map` (module_id, name, upload_id)
 2. Add the monster to the module first with `add_monster_to_module` to get a `module_monster_id`
 3. Place it with `add_token_to_map` (map_id, module_monster_id, grid_x, grid_y, label) — coordinates are integer grid cells and default to (0,0)
 4. Place NPCs the same way with `add_token_to_map` (map_id, module_npc_id, grid_x, grid_y, label)

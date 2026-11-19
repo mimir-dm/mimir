@@ -38,6 +38,16 @@ pub struct Map {
     pub created_at: String,
     /// ISO8601 timestamp of last update
     pub updated_at: String,
+    /// The players see the whole map (no fog, no sight limits).
+    #[serde(default)]
+    pub reveal_all: i32,
+    /// Walls and closed doors block sight.
+    #[serde(default = "one")]
+    pub line_of_sight: i32,
+}
+
+fn one() -> i32 {
+    1
 }
 
 impl Map {
@@ -70,6 +80,14 @@ impl Map {
     pub fn is_fog_enabled(&self) -> bool {
         self.fog_enabled != 0
     }
+
+    pub fn is_revealed(&self) -> bool {
+        self.reveal_all != 0
+    }
+
+    pub fn has_line_of_sight(&self) -> bool {
+        self.line_of_sight != 0
+    }
 }
 
 /// Lighting mode for initial play state.
@@ -101,6 +119,32 @@ impl LightingMode {
             "dim" => Some(LightingMode::Dim),
             "dark" => Some(LightingMode::Dark),
             _ => None,
+        }
+    }
+
+    /// The mode of a map file's ambient light (ARGB hex), by brightness
+    /// (as the desktop app read it). No ambient light: bright.
+    pub fn from_ambient(argb: Option<&str>) -> Self {
+        let Some(hex) = argb.map(|a| a.trim_start_matches('#')) else {
+            return LightingMode::Bright;
+        };
+        if hex.len() < 6 {
+            return LightingMode::Bright;
+        }
+        let byte = |i: usize| {
+            hex.get(i..i + 2)
+                .and_then(|s| u8::from_str_radix(s, 16).ok())
+                .map(f64::from)
+                .unwrap_or(0.0)
+        };
+        let (r, g, b) = (byte(2), byte(4), byte(6));
+        let brightness = (r * 299.0 + g * 587.0 + b * 114.0) / 1000.0;
+        if brightness > 170.0 {
+            LightingMode::Bright
+        } else if brightness > 85.0 {
+            LightingMode::Dim
+        } else {
+            LightingMode::Dark
         }
     }
 }
@@ -192,6 +236,8 @@ pub struct UpdateMap<'a> {
     pub fog_enabled: Option<i32>,
     pub module_id: Option<Option<&'a str>>,
     pub updated_at: Option<&'a str>,
+    pub reveal_all: Option<i32>,
+    pub line_of_sight: Option<i32>,
 }
 
 impl<'a> UpdateMap<'a> {
@@ -287,6 +333,17 @@ mod tests {
         assert_eq!(map.name, "World Map");
         assert!(map.module_id.is_none());
         assert_eq!(map.lighting_mode, "bright");
+    }
+
+    #[test]
+    fn lighting_from_the_files_ambient_light() {
+        use LightingMode::*;
+        assert_eq!(LightingMode::from_ambient(None), Bright);
+        assert_eq!(LightingMode::from_ambient(Some("ffffffff")), Bright);
+        assert_eq!(LightingMode::from_ambient(Some("ff000000")), Dark);
+        assert_eq!(LightingMode::from_ambient(Some("ff808080")), Dim);
+        assert_eq!(LightingMode::from_ambient(Some("fff")), Bright);
+        assert_eq!(LightingMode::from_ambient(Some("#ff000000")), Dark);
     }
 
     #[test]

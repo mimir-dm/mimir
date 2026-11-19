@@ -97,6 +97,10 @@ pub struct UpdateMapInput {
     pub lighting_mode: Option<LightingMode>,
     /// Move to a module (Some(Some(id))) or to campaign level (Some(None))
     pub module_id: Option<Option<String>>,
+    /// Show the whole map to the players
+    pub reveal_all: Option<bool>,
+    /// Walls and closed doors block sight
+    pub line_of_sight: Option<bool>,
 }
 
 impl UpdateMapInput {
@@ -239,7 +243,13 @@ impl<'a> MapService<'a> {
 
         // Create the map record
         let map_id = Uuid::new_v4().to_string();
-        let lighting_mode = input.lighting_mode.unwrap_or_default();
+        // No mode given: the map file's ambient light (MIMIR-T-0728).
+        let lighting_mode = input.lighting_mode.unwrap_or_else(|| {
+            let ambient = crate::services::uvtt::parse_geometry(&input.uvtt_data, None)
+                .ok()
+                .and_then(|g| g.ambient_light);
+            LightingMode::from_ambient(ambient.as_deref())
+        });
         let description = input.description.as_deref();
 
         let mut new_map = if let Some(ref module_id) = input.module_id {
@@ -376,10 +386,40 @@ impl<'a> MapService<'a> {
             fog_enabled: None,
             module_id: module_id_ref,
             updated_at: Some(&now),
+            reveal_all: input.reveal_all.map(i32::from),
+            line_of_sight: input.line_of_sight.map(i32::from),
         };
 
         dal::update_map(self.conn, id, &update)?;
         self.get_required(id)
+    }
+
+    /// The doors of a map the DM opened or closed: (index in the file's
+    /// portals, closed). A door not listed is as the file has it.
+    pub fn door_states(&mut self, id: &str) -> ServiceResult<Vec<(i32, bool)>> {
+        Ok(dal::list_map_door_states(self.conn, id)?
+            .into_iter()
+            .map(|d| (d.portal_index, d.closed != 0))
+            .collect())
+    }
+
+    /// Open or close a door of the map file.
+    pub fn set_door(&mut self, id: &str, portal_index: i32, closed: bool) -> ServiceResult<()> {
+        if !dal::map_exists(self.conn, id)? {
+            return Err(ServiceError::not_found("Map", id));
+        }
+        if portal_index < 0 {
+            return Err(ServiceError::validation("The door index is below 0"));
+        }
+        dal::set_map_door_state(
+            self.conn,
+            &crate::models::campaign::MapDoorState {
+                map_id: id.to_string(),
+                portal_index,
+                closed: i32::from(closed),
+            },
+        )?;
+        Ok(())
     }
 
     /// Delete a map and its associated UVTT asset.
@@ -636,6 +676,15 @@ impl<'a> MapService<'a> {
                 scale_factor
             );
         }
+    }
+
+    /// The walls, doors and lights of a map, in grid units, with the pixels
+    /// per grid of the served image.
+    pub fn geometry(&mut self, map: &Map) -> ServiceResult<crate::services::uvtt::MapGeometry> {
+        let meta = self.ensure_resolution_meta(map);
+        let bytes = self.read_uvtt_file(map)?;
+        crate::services::uvtt::parse_geometry(&bytes, meta.map(|m| m.pixels_per_grid))
+            .map_err(ServiceError::Validation)
     }
 
     /// Read the cached resolution metadata sidecar for a map.
@@ -979,6 +1028,75 @@ mod tests {
         let updated = service.update(&map.id, update).expect("Failed to update");
 
         assert_eq!(updated.name, "New Name");
+    }
+
+    #[test]
+    fn a_new_map_takes_its_lighting_from_the_file() {
+        let (mut conn, temp_dir) = setup_test_env();
+        let campaign_id = create_test_campaign(&mut conn);
+        let mut service = MapService::new(&mut conn, temp_dir.path());
+        let dark = br#"{"resolution":{"pixels_per_grid":70,"map_size":{"x":2,"y":2}},
+            "environment":{"ambient_light":"ff101010"}}"#
+            .to_vec();
+        let map = service
+            .create(CreateMapInput::for_campaign(
+                &campaign_id,
+                "Crypt",
+                "crypt.uvtt",
+                dark,
+            ))
+            .expect("create");
+        assert_eq!(map.lighting_mode, "dark");
+        // A mode given wins over the file.
+        let dim = CreateMapInput::for_campaign(&campaign_id, "Hall", "hall.uvtt", fake_uvtt_data())
+            .with_lighting_mode(LightingMode::Dim);
+        assert_eq!(service.create(dim).expect("create").lighting_mode, "dim");
+    }
+
+    #[test]
+    fn play_state_reveal_line_of_sight_and_doors() {
+        let (mut conn, temp_dir) = setup_test_env();
+        let campaign_id = create_test_campaign(&mut conn);
+        let mut service = MapService::new(&mut conn, temp_dir.path());
+        let map = service
+            .create(CreateMapInput::for_campaign(
+                &campaign_id,
+                "Map",
+                "map.uvtt",
+                fake_uvtt_data(),
+            ))
+            .expect("create");
+        assert!(
+            !map.is_revealed() && map.has_line_of_sight(),
+            "the defaults"
+        );
+        let map = service
+            .update(
+                &map.id,
+                UpdateMapInput {
+                    reveal_all: Some(true),
+                    line_of_sight: Some(false),
+                    ..Default::default()
+                },
+            )
+            .expect("update");
+        assert!(map.is_revealed() && !map.has_line_of_sight());
+
+        assert!(service.door_states(&map.id).unwrap().is_empty());
+        service.set_door(&map.id, 2, false).unwrap();
+        service.set_door(&map.id, 0, true).unwrap();
+        service.set_door(&map.id, 2, true).unwrap();
+        assert_eq!(
+            service.door_states(&map.id).unwrap(),
+            vec![(0, true), (2, true)]
+        );
+        assert!(service.set_door(&map.id, -1, true).is_err());
+        assert!(service.set_door("no-such-map", 0, true).is_err());
+        // The doors go with the map.
+        service.delete(&map.id).unwrap();
+        assert!(dal::list_map_door_states(service.conn, &map.id)
+            .unwrap()
+            .is_empty());
     }
 
     #[test]

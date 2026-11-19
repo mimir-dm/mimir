@@ -2,8 +2,8 @@
 title: "Modules"
 ---
 
-How-to guides for creating adventure modules.
+How-to guides for adventure modules.
 
-- [Create a Module](create-module/) - Start a new adventure module
-- [Add Monsters](add-monsters/) - Add monsters from the catalog
-- [Module Documents](module-documents/) - Organize module content
+- [Create a Module](create-module/): start a new adventure module
+- [Add Monsters](add-monsters/): add monsters from the catalog or your homebrew
+- [Module Documents](module-documents/): organize module content

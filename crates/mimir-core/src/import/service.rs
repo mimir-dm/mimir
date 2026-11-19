@@ -83,7 +83,66 @@ impl ImportResult {
 /// - "screen" - DM Screen supplements
 /// - "homebrew" - Homebrew content
 /// - Other one-offs
-const DEFAULT_ALLOWED_GROUPS: &[&str] = &["core", "supplement"];
+///
+/// "adventure" here means the adventures of `adventures.json` (MIMIR-T-0736):
+/// they are imported, with their sources, unless a group list leaves the
+/// word out. (Their own `group` in that file is "supplement" or
+/// "supplement-alt".)
+const DEFAULT_ALLOWED_GROUPS: &[&str] = &["core", "supplement", ADVENTURE_GROUP];
+
+/// The group word that turns the import of adventures on.
+pub const ADVENTURE_GROUP: &str = "adventure";
+
+/// The sections of a 5etools book or adventure file: `data`, or the
+/// `data` of the first entry of `bookData` or `adventureData` (the wrapper
+/// of current 5etools files and of homebrew).
+pub fn corpus_body(file: &Value) -> Option<&Value> {
+    if let Some(d) = file.get("data").filter(|d| d.is_array()) {
+        return Some(d);
+    }
+    ["bookData", "adventureData"]
+        .iter()
+        .find_map(|k| file.get(*k)?.as_array()?.first()?.get("data"))
+}
+
+/// An adventure of `adventures.json`.
+#[derive(Debug, Clone)]
+pub struct AdventureMeta {
+    /// Its id: the key of its file and of its book row.
+    pub id: String,
+    pub name: String,
+    /// The catalog source of its monsters and items (usually the id).
+    pub source: String,
+    /// The whole index entry (level, storyline, authors, contents, cover).
+    pub index: Value,
+}
+
+/// The adventures of an `adventures.json`.
+pub fn parse_adventures(index: &Value) -> Vec<AdventureMeta> {
+    index
+        .get("adventure")
+        .and_then(Value::as_array)
+        .map(|l| {
+            l.iter()
+                .filter_map(|a| {
+                    let id = a.get("id")?.as_str()?.to_string();
+                    let name = a.get("name")?.as_str()?.to_string();
+                    let source = a
+                        .get("source")
+                        .and_then(Value::as_str)
+                        .unwrap_or(&id)
+                        .to_string();
+                    Some(AdventureMeta {
+                        id,
+                        name,
+                        source,
+                        index: a.clone(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
 
 /// Catalog import service for importing 5etools data.
 pub struct CatalogImportService<'a> {
@@ -344,12 +403,24 @@ impl<'a> CatalogImportService<'a> {
         };
 
         info!("Importing {} source books", books.len());
+        self.import_books_and_adventures(&json_files, &books, &mut result);
+        Ok(result)
+    }
 
-        for book in &books {
+    /// Import the sources `books` from in-memory 5etools files, then the
+    /// adventures of `data/adventures.json` and their sources (when the
+    /// groups allow them), then expand the magic variants.
+    fn import_books_and_adventures(
+        &mut self,
+        json_files: &HashMap<String, String>,
+        books: &[BookMeta],
+        result: &mut ImportResult,
+    ) {
+        for book in books {
             let source_code = &book.id;
             info!("Importing source: {} ({})", book.name, source_code);
 
-            match self.import_source_from_memory(&json_files, source_code, &book.name) {
+            match self.import_source_from_memory(json_files, source_code, &book.name) {
                 Ok(counts) => {
                     let total: usize = counts.values().sum();
                     info!(
@@ -372,9 +443,13 @@ impl<'a> CatalogImportService<'a> {
             }
         }
 
+        if self.adventures_allowed() {
+            self.import_adventures_from_memory(json_files, result);
+        }
+
         // Global magic variant expansion: expand all variants against all base items
         // regardless of source (e.g., DMG variants + PHB base items)
-        match self.expand_magic_variants_from_memory(&json_files) {
+        match self.expand_magic_variants_from_memory(json_files) {
             Ok(count) => {
                 if count > 0 {
                     *result
@@ -388,7 +463,175 @@ impl<'a> CatalogImportService<'a> {
                 warn!("Failed to expand magic variants: {}", e);
             }
         }
+    }
 
+    /// Whether this import takes adventures.
+    fn adventures_allowed(&self) -> bool {
+        self.allowed_groups
+            .as_ref()
+            .is_none_or(|g| g.iter().any(|x| x.eq_ignore_ascii_case(ADVENTURE_GROUP)))
+    }
+
+    /// The adventures of `data/adventures.json` (MIMIR-T-0736): each
+    /// adventure's source (its monsters, items, spells) when it is not a
+    /// source already in the catalog, then its text as a book row of kind
+    /// "adventure".
+    fn import_adventures_from_memory(
+        &mut self,
+        json_files: &HashMap<String, String>,
+        result: &mut ImportResult,
+    ) {
+        let Some(index) = json_files
+            .get("data/adventures.json")
+            .and_then(|c| serde_json::from_str::<Value>(c).ok())
+        else {
+            return;
+        };
+        let adventures = parse_adventures(&index);
+        let mut done: Vec<String> = Vec::new();
+        for adv in &adventures {
+            if done.iter().any(|s| s.eq_ignore_ascii_case(&adv.source)) {
+                continue;
+            }
+            done.push(adv.source.clone());
+            if catalog::source_exists(self.conn, &adv.source).unwrap_or(false) {
+                continue;
+            }
+            match self.import_source_from_memory(json_files, &adv.source, &adv.name) {
+                Ok(counts) => {
+                    let total: usize = counts.values().sum();
+                    result.sources_imported.push(adv.source.clone());
+                    result.total_entities += total;
+                    for (entity_type, count) in counts {
+                        *result.entity_counts.entry(entity_type).or_insert(0) += count;
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to import adventure source {}: {}", adv.source, e);
+                    result
+                        .sources_failed
+                        .push((adv.source.clone(), e.to_string()));
+                }
+            }
+        }
+        for adv in &adventures {
+            let file = format!("data/adventure/adventure-{}.json", adv.id.to_lowercase());
+            let Some(body) = json_files
+                .get(&file)
+                .and_then(|c| serde_json::from_str::<Value>(c).ok())
+                .and_then(|v| corpus_body(&v).cloned())
+            else {
+                continue;
+            };
+            match self.import_adventure(adv, &body) {
+                Ok(()) => {
+                    *result
+                        .entity_counts
+                        .entry("adventure".to_string())
+                        .or_insert(0) += 1;
+                }
+                Err(e) => {
+                    warn!("Failed to import adventure {}: {}", adv.id, e);
+                    result.sources_failed.push((adv.id.clone(), e.to_string()));
+                }
+            }
+        }
+    }
+
+    /// One adventure's text as a book row (upsert, keyed by its id). An id
+    /// that is not a catalog source (an adventure inside a book, such as
+    /// MOT-NSS) gets a source row of its own, for the reader.
+    fn import_adventure(&mut self, adv: &AdventureMeta, body: &Value) -> Result<()> {
+        if !catalog::source_exists(self.conn, &adv.id)? {
+            let now = now_rfc3339();
+            insert_source(
+                self.conn,
+                &NewCatalogSource::new(&adv.id, &adv.name, true, &now),
+            )?;
+        }
+        let data = if self.dest_img_dir.is_some() {
+            rewrite_book_image_paths(body)
+        } else {
+            body.clone()
+        };
+        let data_str = serde_json::to_string(&data)?;
+        let contents = adv
+            .index
+            .get("contents")
+            .map(serde_json::to_string)
+            .transpose()?;
+        let mut meta = adv.index.clone();
+        if let Some(m) = meta.as_object_mut() {
+            m.remove("contents");
+        }
+        let meta_str = serde_json::to_string(&meta)?;
+        let cover = adv
+            .index
+            .get("cover")
+            .and_then(|c| c.get("path"))
+            .and_then(Value::as_str)
+            .filter(|p| {
+                self.dest_img_dir
+                    .as_ref()
+                    .is_some_and(|d| crate::import::image_exists(d, p))
+            })
+            .map(str::to_string);
+        let mut book = NewBook::new(&adv.id, &adv.name, &data_str).adventure(&meta_str);
+        if let Some(ref c) = contents {
+            book = book.with_contents(c);
+        }
+        if let Some(ref c) = cover {
+            book = book.with_cover_path(c);
+        }
+        catalog::upsert_book(self.conn, &book)?;
+        Ok(())
+    }
+
+    /// Import a 5etools homebrew file (MIMIR-T-0736): its `_meta.sources`
+    /// become catalog sources with their entities (monsters, items, spells
+    /// and the other kinds the catalog holds), its books and its adventures
+    /// go to the reader. A source already in the catalog is refused: remove
+    /// it first.
+    pub fn import_homebrew(&mut self, file: &Value) -> Result<ImportResult> {
+        let sources: Vec<BookMeta> = file
+            .pointer("/_meta/sources")
+            .and_then(Value::as_array)
+            .map(|l| {
+                l.iter()
+                    .filter_map(|s| {
+                        let id = s.get("json")?.as_str()?.to_string();
+                        let name = s
+                            .get("full")
+                            .or_else(|| s.get("abbreviation"))
+                            .and_then(Value::as_str)
+                            .unwrap_or(&id)
+                            .to_string();
+                        Some(BookMeta {
+                            id,
+                            name,
+                            group: Some("homebrew".into()),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        if sources.is_empty() {
+            anyhow::bail!("not a homebrew file: _meta.sources is missing or empty");
+        }
+        for s in &sources {
+            if catalog::source_exists(self.conn, &s.id)? {
+                anyhow::bail!(
+                    "the source {} is already in the catalog: remove it first",
+                    s.id
+                );
+            }
+        }
+        let json_files = homebrew_files(file);
+        let mut result = ImportResult::default();
+        let allowed = self.allowed_groups.take();
+        self.allowed_groups = None;
+        self.import_books_and_adventures(&json_files, &sources, &mut result);
+        self.allowed_groups = allowed;
         Ok(result)
     }
 
@@ -1837,6 +2080,99 @@ struct BookMeta {
     group: Option<String>,
 }
 
+/// A homebrew file as the in-memory 5etools files of an import: each kind
+/// in the file its catalog import reads, books and adventures under
+/// `data/book/` and `data/adventure/`.
+fn homebrew_files(file: &Value) -> HashMap<String, String> {
+    let kinds: &[(&str, &str)] = &[
+        ("data/bestiary/bestiary-homebrew.json", "monster"),
+        ("data/spells/spells-homebrew.json", "spell"),
+        ("data/items.json", "item"),
+        ("data/items.json", "baseitem"),
+        ("data/magicvariants.json", "magicvariant"),
+        ("data/class/class-homebrew.json", "class"),
+        ("data/class/class-homebrew.json", "subclass"),
+        ("data/class/class-homebrew.json", "classFeature"),
+        ("data/class/class-homebrew.json", "subclassFeature"),
+        ("data/races.json", "race"),
+        ("data/races.json", "subrace"),
+        ("data/backgrounds.json", "background"),
+        ("data/feats.json", "feat"),
+        ("data/conditionsdiseases.json", "condition"),
+        ("data/conditionsdiseases.json", "disease"),
+        ("data/actions.json", "action"),
+        ("data/languages.json", "language"),
+        ("data/vehicles.json", "vehicle"),
+        ("data/objects.json", "object"),
+        ("data/trapshazards.json", "trap"),
+        ("data/trapshazards.json", "hazard"),
+        ("data/cultsboons.json", "cult"),
+        ("data/cultsboons.json", "boon"),
+        ("data/deities.json", "deity"),
+        ("data/optionalfeatures.json", "optionalfeature"),
+        ("data/psionics.json", "psionic"),
+        ("data/rewards.json", "reward"),
+        ("data/variantrules.json", "variantrule"),
+        ("data/tables.json", "table"),
+    ];
+    let mut files: HashMap<String, serde_json::Map<String, Value>> = HashMap::new();
+    let mut put = |path: &str, key: &str, v: &Value| {
+        files
+            .entry(path.to_string())
+            .or_default()
+            .insert(key.to_string(), v.clone());
+    };
+    for (path, key) in kinds {
+        if let Some(v) = file.get(*key) {
+            put(path, key, v);
+        }
+    }
+    if let Some(o) = file.as_object() {
+        for (k, v) in o.iter().filter(|(k, _)| k.ends_with("Fluff")) {
+            put("data/fluff-homebrew.json", k, v);
+        }
+    }
+    let mut out: HashMap<String, String> = files
+        .into_iter()
+        .map(|(p, m)| (p, Value::Object(m).to_string()))
+        .collect();
+    let list = |key: &str| file.get(key).cloned().unwrap_or(Value::Array(Vec::new()));
+    out.insert(
+        "data/books.json".into(),
+        serde_json::json!({ "book": list("book") }).to_string(),
+    );
+    // The reader marks the adventures of a homebrew file (MIMIR-T-0745).
+    let mut adventures = list("adventure");
+    for a in adventures.as_array_mut().into_iter().flatten() {
+        if let Some(o) = a.as_object_mut() {
+            o.insert("homebrew".into(), Value::Bool(true));
+        }
+    }
+    out.insert(
+        "data/adventures.json".into(),
+        serde_json::json!({ "adventure": adventures }).to_string(),
+    );
+    for (key, dir, prefix) in [
+        ("bookData", "book", "book"),
+        ("adventureData", "adventure", "adventure"),
+    ] {
+        for d in file
+            .get(key)
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            if let Some(id) = d.get("id").and_then(Value::as_str) {
+                out.insert(
+                    format!("data/{dir}/{prefix}-{}.json", id.to_lowercase()),
+                    serde_json::json!({ key: [d] }).to_string(),
+                );
+            }
+        }
+    }
+    out
+}
+
 /// Parse books.json from in-memory files to discover available sources.
 fn parse_books_from_memory(json_files: &HashMap<String, String>) -> Result<Vec<BookMeta>> {
     let books_content = json_files
@@ -2000,7 +2336,7 @@ fn collect_entities_from_memory(
     let book_file = format!("data/book/book-{}.json", source_code.to_lowercase());
     if let Some(content) = json_files.get(&book_file) {
         if let Ok(data) = serde_json::from_str::<Value>(content) {
-            if let Some(book_data) = data.get("data") {
+            if let Some(book_data) = corpus_body(&data) {
                 collected.book_content = Some(book_data.clone());
             }
         }

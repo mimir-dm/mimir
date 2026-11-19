@@ -2,45 +2,43 @@
 title: "Reference"
 ---
 
-This section contains detailed reference documentation for all of Mimir's features and interfaces.
+This section describes the screens, data and settings of Mimir.
 
 ## UI Reference
 
-Detailed documentation for each screen and interface:
-
-- [Home Screen](ui/home-screen/)
+- [Home Screen and Navigation](ui/home-screen/)
 - [Campaign Dashboard](ui/campaign-dashboard/)
-- [Module Prep View](ui/module-prep-view/)
-- [Play Mode](ui/play-mode/)
-- [DM Map Window](ui/dm-map-window/)
-- [Token Setup Modal](ui/token-setup-modal/)
+- [Module Page](ui/module-page/)
+- [DM Map](ui/dm-map/)
 - [Player Display](ui/player-display/)
-- [Sources Window](ui/sources-window/)
+- [Player Page](ui/player-page/)
+- [Characters and Character Sheet](ui/characters/)
+- [Reference Page](ui/reference-page/)
 - [Settings](ui/settings/)
 
 ## Data & Formats
 
-- [Data Model](data-model/) - Entities and how they relate
-- [Characters](characters/) - Character data reference
-- [Sources & Catalog](sources/) - Source books and catalog content
-- [File Formats](file-formats/) - Supported map and export formats
-- [Campaign Archive Format](campaign-archive-format/) - Export/import archive structure
-- [PDF Export](pdf-export/) - Character sheets, cards, and map printing
+- [Data Model](data-model/): entities and how they relate
+- [Characters](characters/): character data
+- [Sources & Catalog](sources/): source books and catalog content
+- [File Formats](file-formats/): map and export formats
+- [Campaign Archive Format](campaign-archive-format/): the export and import archive
+- [PDF Export](pdf-export/): sheets, cards and maps
 
 ## Systems & Tools
 
-- [Vision & Lighting](vision-and-lighting/) - D&D 5e vision rules in Mimir
-- [MCP Server](mcp-server/) - AI assistant integration reference
-- [Mapgen](mapgen/) - Procedural map generation
-- [Dungeondraft Texture Catalog](dd-texture-catalog/) - Textures available to mapgen
+- [Vision & Lighting](vision-and-lighting/): D&D 5e vision rules in Mimir
+- [MCP Server](mcp-server/): AI assistant integration
+- [Mapgen](mapgen/): procedural map generation
+- [Dungeondraft Texture Catalog](dd-texture-catalog/): textures for mapgen
 
 ## Quick References
 
-- [Keyboard Shortcuts](keyboard-shortcuts/) - All hotkeys and shortcuts
-- [Environment Variables](environment-variables/) - Configuration options
-- [Troubleshooting](troubleshooting/) - Symptoms, causes, and fixes
-- [Glossary](glossary/) - Definitions of Mimir terminology
+- [Keyboard and Pointer Controls](keyboard-shortcuts/)
+- [Environment Variables](environment-variables/): server settings
+- [Troubleshooting](troubleshooting/): symptoms, causes and fixes
+- [Glossary](glossary/): Mimir terms
 
 ---
 
-Looking for step-by-step instructions? Check out the [How-To Guides](../how-to/).
+Looking for step-by-step instructions? See the [How-To Guides](../how-to/).
