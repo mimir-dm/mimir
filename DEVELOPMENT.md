@@ -1,6 +1,6 @@
 # Development Guide
 
-The same guide is in the documentation: [Development Setup](docs/src/developer/DEVELOPMENT.md).
+The same guide is in the documentation: [Development Setup](docs/src/content/docs/reference/developer/development.md).
 
 How to build, run and test Mimir: the server (`mimir-server`) and the web app (`mimir-web`).
 
@@ -11,9 +11,8 @@ How to build, run and test Mimir: the server (`mimir-server`) and the web app (`
 | Rust (via [rustup](https://rustup.rs/)) | Everything. `rust-toolchain.toml` pins Rust 1.100.0; rustup installs it. |
 | `wasm32-unknown-unknown` target | The web app. `angreal web build` adds it. |
 | [trunk](https://trunkrs.dev/) | Builds the web app: `cargo install trunk --locked` |
-| Node.js LTS and npm | Only for the editor bundle (a trunk pre-build hook) and the Playwright e2e harness |
+| Node.js LTS and npm | The editor bundle (a trunk pre-build hook), the Playwright e2e harness, and the docs site (Node 22 or later) |
 | [angreal](https://github.com/angreal/angreal) | The task runner: `pip install 'angreal>=2'` |
-| [mdBook](https://rust-lang.github.io/mdBook/) and `mdbook-mermaid` | Only for the docs: `cargo install mdbook mdbook-mermaid` |
 
 No system libraries are needed beyond a C toolchain: SQLite is bundled.
 
@@ -64,7 +63,7 @@ angreal web build --release
 cargo build --release -p mimir-server --features embed-web
 ```
 
-`embed-web` bakes `crates/mimir-web/dist` into the binary. The result is one file: `target/release/mimir-server`. See [Run the Server](docs/src/how-to/run-server.md) and [Environment Variables](docs/src/reference/environment-variables.md).
+`embed-web` bakes `crates/mimir-web/dist` into the binary. The result is one file: `target/release/mimir-server`. See [Run the Server](docs/src/content/docs/how-to/run-server.md) and [Environment Variables](docs/src/content/docs/reference/environment-variables.md).
 
 ## Gates
 
@@ -152,10 +151,10 @@ crates/
 ├── mimir-print/    # PDF generation with Typst
 ├── mimir-render/   # 5etools JSON → HTML (catalog, reader, homebrew preview)
 └── mimir-mapgen/   # procedural map generator (library and CLI)
-docs/               # the documentation (mdBook)
+docs/               # the documentation (Astro Starlight)
 ```
 
-See [Architecture](docs/src/developer/ARCHITECTURE.md) and [Web App Architecture](docs/src/developer/reference/frontend/README.md).
+See [Architecture](docs/src/content/docs/reference/developer/architecture.md) and [Web App Architecture](docs/src/content/docs/reference/developer/reference/frontend/index.md).
 
 ## Common Tasks
 

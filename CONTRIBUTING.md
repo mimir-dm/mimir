@@ -120,7 +120,7 @@ mimir/
 │   ├── mimir-print/    # PDF export with Typst
 │   ├── mimir-render/   # 5etools JSON to HTML
 │   └── mimir-mapgen/   # Procedural map generation (library and CLI)
-└── docs/               # Documentation (mdBook)
+└── docs/               # Documentation (Astro Starlight)
 ```
 
 ## Documentation
