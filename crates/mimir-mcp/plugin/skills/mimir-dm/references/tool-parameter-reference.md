@@ -116,7 +116,6 @@ Example: +1 CON, +1 CHA → `asi_ability1: "Constitution", asi_increase1: 1, asi
 
 ### list_characters
 - `character_type` — `"pc"` or `"npc"`
-- `module_id` — Filter NPCs by module assignment
 - `location` — Filter NPCs by location string
 - `faction` — Filter NPCs by faction string
 

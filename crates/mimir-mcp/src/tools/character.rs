@@ -131,8 +131,6 @@ tool_args! {
     pub struct ListCharactersArgs {
         /// Filter by type: pc or npc
         pub character_type: Option<String>,
-        /// Filter by module assignment (NPCs only)
-        pub module_id: Option<String>,
         /// Filter NPCs by location
         pub location: Option<String>,
         /// Filter NPCs by faction
@@ -212,8 +210,6 @@ tool_args! {
         pub gp: Option<i64>,
         /// Platinum pieces
         pub pp: Option<i64>,
-        /// Assign to module (NPCs only)
-        pub module_id: Option<String>,
         /// NPC's role in the module
         pub npc_role: Option<String>,
         /// NPC's location

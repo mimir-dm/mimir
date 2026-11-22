@@ -586,3 +586,105 @@ async fn images_upload_list_serve_delete() {
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 }
+
+/// Module NPCs: add (also from a campaign NPC), change, remove
+/// (MIMIR-T-0750).
+#[tokio::test]
+async fn module_npcs_are_added_changed_and_removed() {
+    let f = fixture().await;
+    let campaigns = f.ok(Method::GET, "/campaigns", None).await;
+    let campaign = campaigns[0]["id"].as_str().unwrap().to_string();
+    let modules = f
+        .ok(Method::GET, &format!("/campaigns/{campaign}/modules"), None)
+        .await;
+    let module = modules[0]["id"].as_str().unwrap().to_string();
+    let path = format!("/modules/{module}/npcs");
+    let before = f
+        .ok(Method::GET, &path, None)
+        .await
+        .as_array()
+        .unwrap()
+        .len();
+
+    // A new NPC by hand.
+    let (status, npc) = f
+        .send(
+            Method::POST,
+            &path,
+            Some(json!({"name": " Merry Rumwell ", "role": "Innkeeper", "secrets": "Ervan in disguise"})),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{npc}");
+    assert_eq!(npc["name"], "Merry Rumwell");
+    assert_eq!(npc["module_id"], module);
+    let id = npc["id"].as_str().unwrap().to_string();
+
+    // From a campaign NPC: the name comes from the character.
+    let npcs = f
+        .ok(Method::GET, &format!("/campaigns/{campaign}/npcs"), None)
+        .await;
+    let character = &npcs[0];
+    let from = f
+        .ok(
+            Method::POST,
+            &path,
+            Some(json!({"character_id": character["id"], "role": "Ally in this module"})),
+        )
+        .await;
+    assert_eq!(from["name"], character["name"]);
+    assert_eq!(from["role"], "Ally in this module");
+    let list = f.ok(Method::GET, &path, None).await;
+    assert_eq!(list.as_array().unwrap().len(), before + 2);
+
+    // Change: a field given is set, empty text clears, the name stays.
+    let changed = f
+        .ok(
+            Method::PATCH,
+            &format!("/module-npcs/{id}"),
+            Some(json!({"role": "", "motivation": "Hatch the egg"})),
+        )
+        .await;
+    assert_eq!(changed["name"], "Merry Rumwell");
+    assert_eq!(changed["role"], Value::Null);
+    assert_eq!(changed["motivation"], "Hatch the egg");
+    assert_eq!(changed["secrets"], "Ervan in disguise");
+
+    // Refused: no name, an empty name, a PC or an unknown character.
+    for bad in [
+        json!({"role": "No name"}),
+        json!({"name": "   "}),
+        json!({"character_id": "no-such-character"}),
+    ] {
+        let (status, _) = f.send(Method::POST, &path, Some(bad.clone())).await;
+        assert!(status.is_client_error(), "{bad}: {status}");
+    }
+    let pcs = f
+        .ok(Method::GET, &format!("/campaigns/{campaign}/pcs"), None)
+        .await;
+    if let Some(pc) = pcs.as_array().unwrap().first() {
+        let (status, _) = f
+            .send(Method::POST, &path, Some(json!({"character_id": pc["id"]})))
+            .await;
+        assert_eq!(status, StatusCode::NOT_FOUND, "a PC is not an NPC");
+    }
+    let (status, _) = f
+        .send(
+            Method::PATCH,
+            &format!("/module-npcs/{id}"),
+            Some(json!({"name": ""})),
+        )
+        .await;
+    assert!(status.is_client_error());
+
+    // Remove.
+    let (status, _) = f
+        .send(Method::DELETE, &format!("/module-npcs/{id}"), None)
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = f
+        .send(Method::DELETE, &format!("/module-npcs/{id}"), None)
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let list = f.ok(Method::GET, &path, None).await;
+    assert_eq!(list.as_array().unwrap().len(), before + 1);
+}

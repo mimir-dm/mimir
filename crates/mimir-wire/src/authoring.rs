@@ -131,6 +131,49 @@ pub struct ModuleMonsterPatch {
     pub notes: Option<String>,
 }
 
+/// `POST /modules/{id}/npcs` (MIMIR-T-0750): a new module NPC. With
+/// `character_id` (a campaign NPC), the name, role and personality come
+/// from the character unless given.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct NewModuleNpc {
+    #[serde(default)]
+    pub character_id: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub role: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub appearance: Option<String>,
+    #[serde(default)]
+    pub personality: Option<String>,
+    #[serde(default)]
+    pub motivation: Option<String>,
+    #[serde(default)]
+    pub secrets: Option<String>,
+}
+
+/// `PATCH /module-npcs/{id}`: each field given is set; empty text clears
+/// it (not the name).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ModuleNpcPatch {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub appearance: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub personality: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub motivation: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub secrets: Option<String>,
+}
+
 /// `PATCH /maps/{id}`. (A new map is a multipart upload: the fields
 /// `name`, `description`, `module_id`, `lighting_mode` and the `file`.)
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]

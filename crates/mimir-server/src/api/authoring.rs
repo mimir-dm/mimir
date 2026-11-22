@@ -12,7 +12,7 @@ use mimir_core::models::campaign::{Document, LightingMode};
 use mimir_core::services::{
     AddMonsterInput, CampaignService, CreateCampaignInput, CreateDocumentInput, CreateMapInput,
     CreateModuleInput, DocumentService, HomebrewService, MapService, ModuleService, ModuleType,
-    MonsterRef, ServiceError, UpdateCampaignInput, UpdateDocumentInput, UpdateMapInput,
+    MonsterRef, NpcFields, ServiceError, UpdateCampaignInput, UpdateDocumentInput, UpdateMapInput,
     UpdateModuleInput,
 };
 use mimir_wire::{self as wire, MapPart};
@@ -378,6 +378,75 @@ pub async fn move_module(
         })
         .await
         .map(Json)
+}
+
+// ---------------------------------------------------------------- module NPCs
+
+/// `POST /modules/{id}/npcs` (MIMIR-T-0750). With `character_id`, a
+/// campaign NPC of the module's campaign gives the name, role and
+/// personality that the body does not.
+pub async fn add_module_npc(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    JsonBody(body): JsonBody<wire::NewModuleNpc>,
+) -> Created<wire::ModuleNpcSummary> {
+    let fields = NpcFields {
+        name: body.name,
+        role: body.role,
+        description: body.description,
+        appearance: body.appearance,
+        personality: body.personality,
+        motivation: body.motivation,
+        secrets: body.secrets,
+    };
+    let character = text(body.character_id);
+    state
+        .with_db(move |conn| {
+            let mut s = ModuleService::new(conn);
+            let npc = match character {
+                Some(cid) => s.add_npc_from_character(&id, &cid, fields)?,
+                None => s.add_npc(&id, &fields)?,
+            };
+            Ok((StatusCode::CREATED, Json(convert::module_npc(npc))))
+        })
+        .await
+}
+
+/// `PATCH /module-npcs/{id}`: each field given is set; empty text clears.
+pub async fn patch_module_npc(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    JsonBody(p): JsonBody<wire::ModuleNpcPatch>,
+) -> ApiResult<wire::ModuleNpcSummary> {
+    state
+        .with_db(move |conn| {
+            let fields = NpcFields {
+                name: p.name,
+                role: p.role,
+                description: p.description,
+                appearance: p.appearance,
+                personality: p.personality,
+                motivation: p.motivation,
+                secrets: p.secrets,
+            };
+            let npc = ModuleService::new(conn).update_npc(&id, &fields)?;
+            Ok(convert::module_npc(npc))
+        })
+        .await
+        .map(Json)
+}
+
+/// `DELETE /module-npcs/{id}`
+pub async fn delete_module_npc(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, ApiError> {
+    state
+        .with_db(move |conn| {
+            ModuleService::new(conn).remove_npc(&id)?;
+            Ok(StatusCode::NO_CONTENT)
+        })
+        .await
 }
 
 // ---------------------------------------------------------------- module monsters

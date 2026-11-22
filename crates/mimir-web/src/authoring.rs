@@ -1,5 +1,5 @@
 //! The DM's writing screens (MIMIR-T-0720): documents, campaigns,
-//! modules, module monsters, maps.
+//! modules, module monsters and NPCs, maps.
 
 pub mod adventure_export;
 pub mod campaigns;
@@ -10,5 +10,6 @@ pub mod maps;
 pub mod markers;
 pub mod modules;
 pub mod monsters;
+pub mod npcs;
 pub mod wizard;
 pub mod wizard_rules;

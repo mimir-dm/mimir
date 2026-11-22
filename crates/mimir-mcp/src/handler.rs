@@ -846,6 +846,98 @@ mod tests {
         res["module"]["id"].as_str().unwrap().to_string()
     }
 
+    /// Module NPCs over MCP (MIMIR-T-0750): by hand, from a campaign NPC,
+    /// changed, listed in the module's details, removed.
+    #[tokio::test]
+    async fn module_npc_tools() {
+        let handler = MimirHandler::with_context(test_ctx());
+        setup_campaign(&handler).await;
+        let module_id = setup_module(&handler).await;
+
+        let res = call_ok(
+            &handler,
+            "add_npc_to_module",
+            json!({"module_id": module_id, "name": "Merry Rumwell", "role": "Innkeeper", "secrets": "Ervan in disguise"}),
+        )
+        .await;
+        let merry = res["module_npc"]["id"].as_str().unwrap().to_string();
+        assert_eq!(res["module_npc"]["name"], "Merry Rumwell");
+
+        let npc = call_ok(
+            &handler,
+            "create_character",
+            json!({"name": "Alax Jadescales", "character_type": "npc"}),
+        )
+        .await;
+        let character_id = npc["character"]["id"].as_str().unwrap().to_string();
+        let res = call_ok(
+            &handler,
+            "add_npc_to_module",
+            json!({"module_id": module_id, "character_id": character_id, "role": "Prisoner"}),
+        )
+        .await;
+        assert_eq!(res["module_npc"]["name"], "Alax Jadescales");
+        assert_eq!(res["module_npc"]["role"], "Prisoner");
+
+        let res = call_ok(
+            &handler,
+            "update_module_npc",
+            json!({"module_npc_id": merry, "role": "", "motivation": "Hatch the egg"}),
+        )
+        .await;
+        assert_eq!(res["data"]["role"], Value::Null);
+        assert_eq!(res["data"]["motivation"], "Hatch the egg");
+
+        let details = call_ok(
+            &handler,
+            "get_module_details",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        let names: Vec<&str> = details["npcs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|n| n["name"].as_str().unwrap())
+            .collect();
+        assert_eq!(names.len(), 2, "{names:?}");
+        assert!(names.contains(&"Merry Rumwell") && names.contains(&"Alax Jadescales"));
+
+        // No name and no character; an unknown character; an unknown NPC.
+        call_err(
+            &handler,
+            "add_npc_to_module",
+            json!({"module_id": module_id, "role": "Nobody"}),
+        )
+        .await;
+        call_err(
+            &handler,
+            "add_npc_to_module",
+            json!({"module_id": module_id, "character_id": "nope"}),
+        )
+        .await;
+        call_err(
+            &handler,
+            "remove_npc_from_module",
+            json!({"module_npc_id": "nope"}),
+        )
+        .await;
+
+        call_ok(
+            &handler,
+            "remove_npc_from_module",
+            json!({"module_npc_id": merry}),
+        )
+        .await;
+        let details = call_ok(
+            &handler,
+            "get_module_details",
+            json!({"module_id": module_id}),
+        )
+        .await;
+        assert_eq!(details["npcs"].as_array().unwrap().len(), 1);
+    }
+
     #[tokio::test]
     async fn add_and_remove_catalog_monster() {
         let handler = MimirHandler::with_context(test_ctx());

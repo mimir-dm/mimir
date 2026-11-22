@@ -431,7 +431,18 @@ pub fn routes() -> Vec<ApiRoute> {
             &["PATCH", "DELETE"],
             patch(w::patch_module_monster).delete(w::delete_module_monster),
         ),
-        route("/modules/{id}/npcs", Dm, G, get(c::module_npcs)),
+        route(
+            "/modules/{id}/npcs",
+            Dm,
+            &["GET", "POST"],
+            get(c::module_npcs).post(w::add_module_npc),
+        ),
+        route(
+            "/module-npcs/{id}",
+            Dm,
+            &["PATCH", "DELETE"],
+            patch(w::patch_module_npc).delete(w::delete_module_npc),
+        ),
         route("/modules/{id}/maps", Dm, G, get(c::module_maps)),
         route(
             "/documents/{id}",
