@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- **PDF exports have their text.** The server image found no fonts, so every PDF came out without text. Inter and JetBrains Mono are now built into Mimir (SIL OFL 1.1), so a PDF looks the same on every machine (MIMIR-T-0751).
+
 ## 1.0.1
 
 - **Module NPCs.** A module's NPCs tab can add, edit and remove NPCs: their part in that module (role, description, appearance, personality, motivation, secrets), by hand or starting from a campaign NPC. Over MCP: `add_npc_to_module`, `update_module_npc`, `remove_npc_from_module`; `get_module_details` lists the NPCs (MIMIR-T-0750).

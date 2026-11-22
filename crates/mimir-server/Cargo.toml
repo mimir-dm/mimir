@@ -1,6 +1,6 @@
 [package]
 name = "mimir-server"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 description = "Mimir web server: the API over mimir-core and the Leptos app (COLLIERY-I-0612)."
 license = "MIT"
