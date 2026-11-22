@@ -25,10 +25,10 @@ pub const STYLES_TYP: &str = r##"// Mimir Print System - Shared Styles
 // TYPOGRAPHY
 // =============================================================================
 
-// Font stacks (with fallbacks)
-#let font-heading = ("Inter", "Helvetica", "Arial", "sans-serif")
-#let font-body = ("Inter", "Helvetica", "Arial", "sans-serif")
-#let font-mono = ("JetBrains Mono", "Consolas", "monospace")
+// Fonts: both are bundled with mimir-print (MIMIR-T-0751)
+#let font-heading = "Inter"
+#let font-body = "Inter"
+#let font-mono = "JetBrains Mono"
 
 // Text size scale
 #let sizes = (

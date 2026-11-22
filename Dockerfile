@@ -47,9 +47,10 @@ RUN cargo build --release --locked -p mimir-server --features embed-web
 # The same Debian release as the builder.
 FROM debian:trixie-slim AS runtime
 
-# - fonts: the PDF export (mimir-print, typst) loads the system fonts; its
-#   templates ask for Inter, then Helvetica or Arial, and JetBrains Mono or
-#   Consolas. DejaVu is the fallback for the rest.
+# - fonts: the PDF export (mimir-print, typst) has its Inter and JetBrains
+#   Mono compiled in (MIMIR-T-0751). DejaVu covers the symbols they lack;
+#   fontconfig-config gives /etc/fonts/fonts.conf, without which no system
+#   font is found.
 # - curl: the HEALTHCHECK.
 # - sqlite3: the backup service of deploy/docker-compose.yaml runs this image
 #   and copies the database with `.backup`.
@@ -61,8 +62,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         sqlite3 \
         tini \
-        fonts-inter \
-        fonts-jetbrains-mono \
+        fontconfig-config \
         fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 mimir \
