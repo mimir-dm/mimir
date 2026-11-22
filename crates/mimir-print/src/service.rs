@@ -207,7 +207,7 @@ mod tests {
     fn setup_test_template(dir: &TempDir) -> PathBuf {
         let template = r#"
 #set page(width: 8.5in, height: 11in, margin: 1in)
-#set text(font: "DejaVu Sans", size: 12pt)
+#set text(font: "Inter", size: 12pt)
 
 = Hello World
 

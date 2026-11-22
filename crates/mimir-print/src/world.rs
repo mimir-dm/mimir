@@ -24,13 +24,34 @@ use crate::error::{PrintError, Result};
 /// Static font database loaded once
 static FONT_DB: OnceLock<(LazyHash<FontBook>, Vec<Font>)> = OnceLock::new();
 
-/// Initialize the font database from system fonts
-fn init_fonts() -> (LazyHash<FontBook>, Vec<Font>) {
-    let mut db = Database::new();
-    db.load_system_fonts();
+/// The fonts compiled into Mimir (MIMIR-T-0751): the templates' Inter and
+/// JetBrains Mono, so a PDF has text whatever fonts the system has. A
+/// system without a fontconfig setup (the server image had none) gives
+/// `load_system_fonts` no fonts at all. Licenses: `fonts/*/OFL.txt`.
+pub(crate) const BUNDLED_FONTS: [&[u8]; 6] = [
+    include_bytes!("../fonts/inter/Inter-Regular.otf"),
+    include_bytes!("../fonts/inter/Inter-Bold.otf"),
+    include_bytes!("../fonts/inter/Inter-Italic.otf"),
+    include_bytes!("../fonts/inter/Inter-BoldItalic.otf"),
+    include_bytes!("../fonts/jetbrains-mono/JetBrainsMono-Regular.ttf"),
+    include_bytes!("../fonts/jetbrains-mono/JetBrainsMono-Bold.ttf"),
+];
 
+/// Initialize the font database: the bundled fonts first, then the system
+/// fonts as extras.
+fn init_fonts() -> (LazyHash<FontBook>, Vec<Font>) {
     let mut book = FontBook::new();
     let mut fonts = Vec::new();
+
+    for data in BUNDLED_FONTS {
+        for font in Font::iter(Bytes::from_static(data)) {
+            book.push(font.info().clone());
+            fonts.push(font);
+        }
+    }
+
+    let mut db = Database::new();
+    db.load_system_fonts();
 
     for face in db.faces() {
         let path = match &face.source {
@@ -289,6 +310,67 @@ mod tests {
     use super::*;
     use std::fs;
     use tempfile::TempDir;
+
+    /// The bundled fonts parse and give the families the templates name
+    /// (MIMIR-T-0751).
+    #[test]
+    fn bundled_fonts_give_the_template_families() {
+        let mut families = Vec::new();
+        for data in BUNDLED_FONTS {
+            let fonts: Vec<Font> = Font::iter(Bytes::from_static(data)).collect();
+            assert!(!fonts.is_empty(), "a bundled font does not parse");
+            families.extend(fonts.iter().map(|f| f.info().family.clone()));
+        }
+        assert_eq!(
+            families.iter().filter(|f| *f == "Inter").count(),
+            4,
+            "{families:?}"
+        );
+        assert_eq!(
+            families.iter().filter(|f| *f == "JetBrains Mono").count(),
+            2,
+            "{families:?}"
+        );
+        let (book, _) = get_fonts();
+        assert!(book.select_family("inter").next().is_some());
+        assert!(book.select_family("jetbrains mono").next().is_some());
+    }
+
+    /// A PDF has its text in the bundled fonts, with no "unknown font
+    /// family" warning — the server image once gave PDFs with no text.
+    #[test]
+    fn a_pdf_embeds_the_bundled_fonts() {
+        let temp = TempDir::new().unwrap();
+        let source = r#"#set text(font: "Inter")
+#show raw: set text(font: "JetBrains Mono")
+= The Inn Plain Sight
+
+*Hot wings* and _a closed door_. `Dimension Door`
+"#;
+        let world = MimirTypstWorld::from_content(source.to_string(), temp.path().to_path_buf());
+        let warned = typst::compile(&world);
+        let warnings: Vec<String> = warned
+            .warnings
+            .iter()
+            .map(|w| w.message.to_string())
+            .collect();
+        assert!(warnings.is_empty(), "{warnings:?}");
+        let document = warned.output.expect("the document compiles");
+        let pdf = typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).expect("a PDF");
+        let has = |needle: &[u8]| pdf.windows(needle.len()).any(|w| w == needle);
+        for font in [
+            &b"Inter-Regular"[..],
+            b"Inter-Bold",
+            b"Inter-Italic",
+            b"JetBrainsMono-Regular",
+        ] {
+            assert!(
+                has(font),
+                "{} is not embedded",
+                String::from_utf8_lossy(font)
+            );
+        }
+    }
 
     #[test]
     fn test_from_content() {
