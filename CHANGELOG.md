@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- **Module NPCs.** A module's NPCs tab can add, edit and remove NPCs: their part in that module (role, description, appearance, personality, motivation, secrets), by hand or starting from a campaign NPC. Over MCP: `add_npc_to_module`, `update_module_npc`, `remove_npc_from_module`; `get_module_details` lists the NPCs (MIMIR-T-0750).
+- The MCP tools `edit_character` and `list_characters` no longer take a `module_id` that they ignored.
+
 ## 1.0.0
 
 Mimir is a web app: one server, `mimir-server`, serves the app to the browser, its API, a live socket and an MCP endpoint. The desktop app (Tauri and Vue) is gone.

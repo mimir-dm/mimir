@@ -2996,7 +2996,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-core"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -3025,7 +3025,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-mapgen"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "chrono",
  "clap",
@@ -3040,7 +3040,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-mcp"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -3057,7 +3057,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-print"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "base64",
  "chrono",
@@ -3081,7 +3081,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-render"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "pulldown-cmark",
  "serde_json",
@@ -3089,7 +3089,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-server"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "axum",
  "base64",
@@ -3127,7 +3127,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-web"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "colliery-io-aurora",
  "console_error_panic_hook",
@@ -3148,7 +3148,7 @@ dependencies = [
 
 [[package]]
 name = "mimir-wire"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "serde",
  "serde_json",
