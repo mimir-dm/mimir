@@ -70,17 +70,20 @@ A tool's failure comes back as a tool result with `isError: true` and the text `
 | `import_campaign` | Import campaign from archive (an upload) |
 | `preview_archive` | Preview archive contents without importing (an upload) |
 
-### Module Management (8 tools)
+### Module Management (11 tools)
 
 | Tool | Description |
 |------|-------------|
 | `create_module` | Create new module in active campaign |
 | `list_modules` | List all modules in active campaign |
-| `get_module_details` | Get module info including documents, monsters, items |
+| `get_module_details` | Get module info including documents, monsters and NPCs |
 | `update_module` | Update module name or description |
 | `delete_module` | Delete module and all contents |
 | `add_monster_to_module` | Add monster from catalog or homebrew to module |
 | `remove_monster_from_module` | Remove monster from module |
+| `add_npc_to_module` | Add an NPC to a module, by hand or from a campaign NPC |
+| `update_module_npc` | Change a module NPC |
+| `remove_npc_from_module` | Remove an NPC from a module |
 | `add_item_to_module` | Add catalog item as loot to module |
 
 ### Document Management (6 tools)

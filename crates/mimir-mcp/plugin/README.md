@@ -117,10 +117,13 @@ download link works one time, for one hour.
 ### Module Management
 - `create_module` - Create a new module (adventure chapter)
 - `list_modules` - List all modules in the active campaign
-- `get_module_details` - Get module with its documents and monsters
+- `get_module_details` - Get module with its documents, monsters and NPCs
 - `update_module` - Update module name or description
 - `delete_module` - Delete a module and all its contents
 - `add_monster_to_module` - Add a monster from the catalog to a module
+- `add_npc_to_module` - Add an NPC to a module, by hand or from a campaign NPC (`character_id`)
+- `update_module_npc` - Change a module NPC (empty text clears a field)
+- `remove_npc_from_module` - Remove an NPC from a module
 - `add_item_to_module` - NOT YET IMPLEMENTED (always errors); use `add_item_to_character` for loot instead
 
 ### Document Management

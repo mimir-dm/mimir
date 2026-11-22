@@ -61,7 +61,8 @@ pub use map_state::{
     UpdatePoiInput, UpdateTrapInput,
 };
 pub use module::{
-    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
+    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, NpcFields,
+    UpdateModuleInput,
 };
 pub use party::{PartyMember, PartyService};
 pub use player_link::{hash_token, LinkHolder, PlayerLinkService};

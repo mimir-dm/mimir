@@ -7,8 +7,8 @@ use uuid::Uuid;
 
 use crate::dal::campaign as dal;
 use crate::models::campaign::{
-    Module, ModuleMonster, ModuleNpc, NewDocument, NewModule, NewModuleMonster,
-    UpdateModule as DalUpdateModule, UpdateModuleMonster,
+    Module, ModuleMonster, ModuleNpc, NewDocument, NewModule, NewModuleMonster, NewModuleNpc,
+    UpdateModule as DalUpdateModule, UpdateModuleMonster, UpdateModuleNpc,
 };
 use crate::services::{ServiceError, ServiceResult};
 use crate::templates;
@@ -489,10 +489,134 @@ impl<'a> ModuleService<'a> {
         Ok(dal::list_module_npcs(self.conn, module_id)?)
     }
 
+    /// Add an NPC to a module (MIMIR-T-0750). The name is required; empty
+    /// text in the other fields is no value.
+    pub fn add_npc(&mut self, module_id: &str, fields: &NpcFields) -> ServiceResult<ModuleNpc> {
+        if !self.exists(module_id)? {
+            return Err(ServiceError::NotFound {
+                entity_type: "Module".to_string(),
+                id: module_id.to_string(),
+            });
+        }
+        let name = fields
+            .name
+            .as_deref()
+            .and_then(clean)
+            .ok_or_else(|| ServiceError::validation("an NPC needs a name"))?;
+        let id = Uuid::new_v4().to_string();
+        let mut npc = NewModuleNpc::new(&id, module_id, name);
+        npc.role = fields.role.as_deref().and_then(clean);
+        npc.description = fields.description.as_deref().and_then(clean);
+        npc.appearance = fields.appearance.as_deref().and_then(clean);
+        npc.personality = fields.personality.as_deref().and_then(clean);
+        npc.motivation = fields.motivation.as_deref().and_then(clean);
+        npc.secrets = fields.secrets.as_deref().and_then(clean);
+        dal::insert_module_npc(self.conn, &npc)?;
+        Ok(dal::get_module_npc(self.conn, &id)?)
+    }
+
+    /// Add a campaign NPC to a module: the module NPC takes the
+    /// character's name, role and personality (traits) where `fields` gives
+    /// none. The character must be an NPC of the module's campaign.
+    pub fn add_npc_from_character(
+        &mut self,
+        module_id: &str,
+        character_id: &str,
+        mut fields: NpcFields,
+    ) -> ServiceResult<ModuleNpc> {
+        let module = self.get(module_id)?.ok_or_else(|| ServiceError::NotFound {
+            entity_type: "Module".to_string(),
+            id: module_id.to_string(),
+        })?;
+        let character = dal::get_character_optional(self.conn, character_id)?
+            .filter(|c| c.is_npc() && c.campaign_id.as_deref() == Some(module.campaign_id.as_str()))
+            .ok_or_else(|| ServiceError::NotFound {
+                entity_type: "NPC of this campaign".to_string(),
+                id: character_id.to_string(),
+            })?;
+        let given = |f: &Option<String>| f.as_deref().and_then(clean).is_some();
+        if !given(&fields.name) {
+            fields.name = Some(character.name);
+        }
+        if !given(&fields.role) {
+            fields.role = character.role;
+        }
+        if !given(&fields.personality) {
+            fields.personality = character.traits;
+        }
+        self.add_npc(module_id, &fields)
+    }
+
+    /// Change a module NPC: each field given is set; empty text clears it.
+    /// The name cannot be cleared.
+    pub fn update_npc(&mut self, npc_id: &str, fields: &NpcFields) -> ServiceResult<ModuleNpc> {
+        let name = match fields.name.as_deref() {
+            Some(n) => {
+                Some(clean(n).ok_or_else(|| ServiceError::validation("an NPC needs a name"))?)
+            }
+            None => None,
+        };
+        let now = now_rfc3339();
+        let update = UpdateModuleNpc {
+            name,
+            role: set(&fields.role),
+            description: set(&fields.description),
+            appearance: set(&fields.appearance),
+            personality: set(&fields.personality),
+            motivation: set(&fields.motivation),
+            secrets: set(&fields.secrets),
+            updated_at: Some(&now),
+            ..Default::default()
+        };
+        let rows = dal::update_module_npc(self.conn, npc_id, &update)?;
+        if rows == 0 {
+            return Err(ServiceError::NotFound {
+                entity_type: "ModuleNpc".to_string(),
+                id: npc_id.to_string(),
+            });
+        }
+        Ok(dal::get_module_npc(self.conn, npc_id)?)
+    }
+
+    /// Remove an NPC from a module.
+    pub fn remove_npc(&mut self, npc_id: &str) -> ServiceResult<()> {
+        let rows = dal::delete_module_npc(self.conn, npc_id)?;
+        if rows == 0 {
+            return Err(ServiceError::NotFound {
+                entity_type: "ModuleNpc".to_string(),
+                id: npc_id.to_string(),
+            });
+        }
+        Ok(())
+    }
+
     /// Check if a module exists.
     pub fn exists(&mut self, id: &str) -> ServiceResult<bool> {
         dal::module_exists(self.conn, id).map_err(ServiceError::from)
     }
+}
+
+/// The fields of a module NPC, to add or to change one (MIMIR-T-0750).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct NpcFields {
+    pub name: Option<String>,
+    pub role: Option<String>,
+    pub description: Option<String>,
+    pub appearance: Option<String>,
+    pub personality: Option<String>,
+    pub motivation: Option<String>,
+    pub secrets: Option<String>,
+}
+
+/// A field to change: given (`Some`), its trimmed text, or none to clear it.
+fn set(field: &Option<String>) -> Option<Option<&str>> {
+    field.as_deref().map(clean)
+}
+
+/// Trimmed text, or none when empty.
+fn clean(text: &str) -> Option<&str> {
+    let t = text.trim();
+    (!t.is_empty()).then_some(t)
 }
 
 #[cfg(test)]
@@ -507,6 +631,145 @@ mod tests {
         let campaign = NewCampaign::new(&campaign_id, "Test Campaign");
         insert_campaign(conn, &campaign).expect("Failed to create campaign");
         campaign_id
+    }
+
+    #[test]
+    fn module_npcs_are_added_changed_and_removed() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let mut service = ModuleService::new(&mut conn);
+        let module = service
+            .create(CreateModuleInput::new(&campaign_id, "Scene 3"))
+            .unwrap();
+
+        let fields = NpcFields {
+            name: Some("  Alax Jadescales ".into()),
+            role: Some("Prisoner".into()),
+            secrets: Some("   ".into()),
+            ..Default::default()
+        };
+        let npc = service.add_npc(&module.id, &fields).unwrap();
+        assert_eq!(npc.name, "Alax Jadescales");
+        assert_eq!(npc.role.as_deref(), Some("Prisoner"));
+        assert_eq!(npc.secrets, None, "empty text is no value");
+        assert_eq!(service.list_npcs(&module.id).unwrap().len(), 1);
+
+        // Each field given is set; empty text clears; the others stay.
+        let changed = service
+            .update_npc(
+                &npc.id,
+                &NpcFields {
+                    role: Some(String::new()),
+                    motivation: Some("Get the frying pan back".into()),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(changed.name, "Alax Jadescales");
+        assert_eq!(changed.role, None);
+        assert_eq!(
+            changed.motivation.as_deref(),
+            Some("Get the frying pan back")
+        );
+
+        service.remove_npc(&npc.id).unwrap();
+        assert!(service.list_npcs(&module.id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_campaign_npc_fills_a_module_npc() {
+        use crate::dal::campaign::insert_character;
+        use crate::models::campaign::NewCharacter;
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let other_campaign = create_test_campaign(&mut conn);
+        let alax = NewCharacter::new_npc("alax", Some(&campaign_id), "Alax Jadescales")
+            .with_npc_info(Some("Innkeeper"), None, None);
+        insert_character(&mut conn, &alax).unwrap();
+        let stranger = NewCharacter::new_npc("stranger", Some(&other_campaign), "Stranger");
+        insert_character(&mut conn, &stranger).unwrap();
+        let mut service = ModuleService::new(&mut conn);
+        let module = service
+            .create(CreateModuleInput::new(&campaign_id, "Scene 3"))
+            .unwrap();
+
+        let npc = service
+            .add_npc_from_character(
+                &module.id,
+                "alax",
+                NpcFields {
+                    description: Some("In the cell".into()),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(npc.name, "Alax Jadescales");
+        assert_eq!(npc.role.as_deref(), Some("Innkeeper"));
+        assert_eq!(npc.description.as_deref(), Some("In the cell"));
+
+        // A role given wins over the character's.
+        let npc = service
+            .add_npc_from_character(
+                &module.id,
+                "alax",
+                NpcFields {
+                    role: Some("Prisoner".into()),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(npc.role.as_deref(), Some("Prisoner"));
+
+        // An NPC of another campaign, or none, is refused.
+        for id in ["stranger", "nobody"] {
+            assert!(matches!(
+                service.add_npc_from_character(&module.id, id, NpcFields::default()),
+                Err(ServiceError::NotFound { .. })
+            ));
+        }
+    }
+
+    #[test]
+    fn a_module_npc_needs_a_name_and_a_module() {
+        let mut conn = setup_test_db();
+        let campaign_id = create_test_campaign(&mut conn);
+        let mut service = ModuleService::new(&mut conn);
+        let module = service
+            .create(CreateModuleInput::new(&campaign_id, "Scene 1"))
+            .unwrap();
+        let no_name = NpcFields {
+            role: Some("Innkeeper".into()),
+            ..Default::default()
+        };
+        assert!(matches!(
+            service.add_npc(&module.id, &no_name),
+            Err(ServiceError::Validation(_))
+        ));
+        let named = NpcFields {
+            name: Some("Merry Rumwell".into()),
+            ..Default::default()
+        };
+        assert!(matches!(
+            service.add_npc("no-such-module", &named),
+            Err(ServiceError::NotFound { .. })
+        ));
+        let npc = service.add_npc(&module.id, &named).unwrap();
+        let clear_name = NpcFields {
+            name: Some(" ".into()),
+            ..Default::default()
+        };
+        assert!(matches!(
+            service.update_npc(&npc.id, &clear_name),
+            Err(ServiceError::Validation(_))
+        ));
+        assert!(matches!(
+            service.update_npc("nope", &named),
+            Err(ServiceError::NotFound { .. })
+        ));
+        assert!(matches!(
+            service.remove_npc("nope"),
+            Err(ServiceError::NotFound { .. })
+        ));
     }
 
     #[test]

@@ -135,6 +135,7 @@ Campaign-level documents are not tied to any module — use them for world lore,
 4. Set currency with `edit_character` using the named integer params `cp`, `sp`, `ep`, `gp`, `pp` (no `currency` array)
 5. Equip with `add_item_to_character` (item_name, equipped: true, attuned: true if applicable)
 6. Verify with `get_character`
+7. Put them in each module they appear in with `add_npc_to_module` (module_id, character_id, plus their role, description and secrets in that module). The module's NPCs tab lists them; `module_npc_id` places their token on a map.
 
 ### Create a Full PC
 

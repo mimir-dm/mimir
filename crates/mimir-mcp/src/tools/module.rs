@@ -6,7 +6,8 @@
 
 use mimir_core::dal::campaign as dal;
 use mimir_core::services::{
-    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, UpdateModuleInput,
+    AddMonsterInput, CreateModuleInput, ModuleService, ModuleType, MonsterRef, NpcFields,
+    UpdateModuleInput,
 };
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -70,6 +71,24 @@ pub fn registered_tools() -> Vec<RegisteredTool> {
             "Remove a monster from a module",
             RemoveMonsterArgs,
             remove_monster_from_module
+        ),
+        tool!(
+            "add_npc_to_module",
+            "Add an NPC to a module: their part in this module (role, description, appearance, personality, motivation, DM-only secrets). Give name, or character_id of a campaign NPC: the name, role and personality then come from the character unless given. A recurring NPC can be in several modules.",
+            AddModuleNpcArgs,
+            add_npc_to_module
+        ),
+        tool!(
+            "update_module_npc",
+            "Change a module NPC. Each field given is set; an empty string clears it (not the name).",
+            UpdateModuleNpcArgs,
+            update_module_npc
+        ),
+        tool!(
+            "remove_npc_from_module",
+            "Remove an NPC from a module. The campaign NPC, if any, stays.",
+            RemoveModuleNpcArgs,
+            remove_npc_from_module
         ),
         tool!(
             "add_item_to_module",
@@ -174,6 +193,57 @@ tool_args! {
         pub display_name: Option<String>,
         /// New notes
         pub notes: Option<String>,
+    }
+}
+
+tool_args! {
+    pub struct AddModuleNpcArgs {
+        /// The ID of the module
+        pub module_id: String,
+        /// The NPC's name (required unless character_id is given)
+        pub name: Option<String>,
+        /// A campaign NPC to take the name, role and personality from
+        pub character_id: Option<String>,
+        /// Their role in this module (e.g. Innkeeper, Villain)
+        pub role: Option<String>,
+        /// What the DM needs to know about them here
+        pub description: Option<String>,
+        /// How they look
+        pub appearance: Option<String>,
+        /// How they act
+        pub personality: Option<String>,
+        /// What they want
+        pub motivation: Option<String>,
+        /// DM-only information
+        pub secrets: Option<String>,
+    }
+}
+
+tool_args! {
+    pub struct UpdateModuleNpcArgs {
+        /// The ID of the module NPC
+        pub module_npc_id: String,
+        /// New name
+        pub name: Option<String>,
+        /// New role (empty clears)
+        pub role: Option<String>,
+        /// New description (empty clears)
+        pub description: Option<String>,
+        /// New appearance (empty clears)
+        pub appearance: Option<String>,
+        /// New personality (empty clears)
+        pub personality: Option<String>,
+        /// New motivation (empty clears)
+        pub motivation: Option<String>,
+        /// New secrets (empty clears)
+        pub secrets: Option<String>,
+    }
+}
+
+tool_args! {
+    pub struct RemoveModuleNpcArgs {
+        /// The ID of the module NPC to remove
+        pub module_npc_id: String,
     }
 }
 
@@ -314,6 +384,13 @@ pub async fn get_module_details(
         })
         .collect();
 
+    let npc_data: Vec<Value> = ModuleService::new(&mut db)
+        .list_npcs(module_id)
+        .map_err(|e| McpError::Internal(e.to_string()))?
+        .iter()
+        .map(module_npc_json)
+        .collect();
+
     McpResponse::ok(json!({
         "module": {
             "id": module.id,
@@ -322,7 +399,8 @@ pub async fn get_module_details(
             "module_number": module.module_number
         },
         "documents": doc_data,
-        "monsters": monster_data
+        "monsters": monster_data,
+        "npcs": npc_data
     }))
 }
 
@@ -468,6 +546,77 @@ pub async fn remove_monster_from_module(
         .map_err(McpError::caller_fault)?;
 
     McpResponse::removed(&args.module_monster_id)
+}
+
+fn module_npc_json(n: &mimir_core::models::campaign::ModuleNpc) -> Value {
+    json!({
+        "id": n.id,
+        "module_id": n.module_id,
+        "name": n.name,
+        "role": n.role,
+        "description": n.description,
+        "appearance": n.appearance,
+        "personality": n.personality,
+        "motivation": n.motivation,
+        "secrets": n.secrets
+    })
+}
+
+/// `add_npc_to_module` (MIMIR-T-0750)
+pub async fn add_npc_to_module(
+    ctx: &Arc<McpContext>,
+    args: AddModuleNpcArgs,
+) -> Result<Value, McpError> {
+    let mut db = ctx.connect()?;
+    let fields = NpcFields {
+        name: args.name,
+        role: args.role,
+        description: args.description,
+        appearance: args.appearance,
+        personality: args.personality,
+        motivation: args.motivation,
+        secrets: args.secrets,
+    };
+    let mut service = ModuleService::new(&mut db);
+    let npc = match args.character_id.filter(|c| !c.trim().is_empty()) {
+        Some(cid) => service.add_npc_from_character(&args.module_id, &cid, fields),
+        None => service.add_npc(&args.module_id, &fields),
+    }
+    .map_err(McpError::caller_fault)?;
+    McpResponse::created("module_npc", module_npc_json(&npc))
+}
+
+/// `update_module_npc`
+pub async fn update_module_npc(
+    ctx: &Arc<McpContext>,
+    args: UpdateModuleNpcArgs,
+) -> Result<Value, McpError> {
+    let mut db = ctx.connect()?;
+    let fields = NpcFields {
+        name: args.name,
+        role: args.role,
+        description: args.description,
+        appearance: args.appearance,
+        personality: args.personality,
+        motivation: args.motivation,
+        secrets: args.secrets,
+    };
+    let npc = ModuleService::new(&mut db)
+        .update_npc(&args.module_npc_id, &fields)
+        .map_err(McpError::caller_fault)?;
+    McpResponse::success(module_npc_json(&npc))
+}
+
+/// `remove_npc_from_module`
+pub async fn remove_npc_from_module(
+    ctx: &Arc<McpContext>,
+    args: RemoveModuleNpcArgs,
+) -> Result<Value, McpError> {
+    let mut db = ctx.connect()?;
+    ModuleService::new(&mut db)
+        .remove_npc(&args.module_npc_id)
+        .map_err(McpError::caller_fault)?;
+    McpResponse::removed(&args.module_npc_id)
 }
 
 pub async fn add_item_to_module(
